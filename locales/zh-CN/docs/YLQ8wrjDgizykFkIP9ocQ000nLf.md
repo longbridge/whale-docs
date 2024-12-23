@@ -101,16 +101,30 @@ sidebar_position: 3
 <p>港股半日市如何提前日切</p>
 </div>
 
-在下午 2 点后先操作提前日切，再操作日终。详见台风天处理的提前日切部分操作
+1.在下午 1 点后先操作提前日切（日终任务 - 数据汇总步骤前）
+
+<img src="/assets/Yj2lbWh0ZoOyt1xRUSVcLzlensh.png" src-width="3584" src-height="1764" align="center"/>
+
+2.操作后需要进行工单审批
+
+<img src="/assets/ZNO6bi99mocK6bxepjIcFWE4n1c.png" src-width="3584" src-height="1764" align="center"/>
+
+3.日切点旁的账务日期切换为下一天，这代表提前日切成功。租户可以正式操作日终清结算
+
+<img src="/assets/BbYkbARFlowZfCxIzMJc3E35nWc.png" src-width="3584" src-height="1764" align="center"/>
 
 <div class="callout callout-bg-2 callout-border-2">
 <div class='callout-emoji'>❓</div>
-<p>可否在日切点前进行清算</p>
+<p>平时可否在日切点前进行清算</p>
 </div>
 
-可以，但是必须在行情文件、费率文件到位后进行。在操作前必须操作提前日切
+可以，但是必须在行情文件、IBOND 利率文件到位后进行。
 
-<img src="/assets/W6bxbB4cLofNx4xg9sec8tyrn4b.png" src-width="3578" src-height="1798" align="center"/>
+例子：券商的日切时间点是下午 17:00。非半日市在 16:30 之前可以进行提前日切。但是，因为港股未收市，港股的股票信息和收盘价数据是没有的，一直需要等到 16:30 后才能执行日终任务。
+
+<b>所以，非半日市或者非港股假日，不建议在 16:30 之前操作提前日切</b>
+
+<img src="/assets/DVVobAnPMoIA6mxkWHecUk5CnTf.png" src-width="3584" src-height="1764" align="center"/>
 
 ## 后台补单
 
