@@ -194,6 +194,23 @@ sidebar_position: 3
 
 <img src="/assets/Zx7dbuYBeojUMyxxToec6OGBnwg.png" src-width="3584" src-height="1696" align="center"/>
 
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>CTF 交易文件自动导入</p>
+</div>
+
+<b>开通</b>
+
+EP 模式的券商，可联系客服开通。开通后每个交易日，系统会自动从港交所的 SFTP 获取交易文件
+
+<img src="/assets/BWXubhuBCoDyvdxkqZJcC83Lnbh.png" src-width="3584" src-height="1764" align="center"/>
+
+<b>到点文件没有</b>
+
+系统会从下午 13:00 开始，自动获取港交所文件。如果一直没获取到文件的（手动导入的也算导入），每隔 10 分钟跑一次，一直跑到下午 5 点
+
+如果租户在 16 点 35 或者半日市的 13:05 前，发现没自动导入的，可直接手动导入
+
 ## 持仓对账
 
 <div class="callout callout-bg-2 callout-border-2">

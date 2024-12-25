@@ -194,6 +194,23 @@ sidebar_position: 3
 
 <img src="/assets/Zx7dbuYBeojUMyxxToec6OGBnwg.png" src-width="3584" src-height="1696" align="center"/>
 
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>CTF 交易文件自動導入</p>
+</div>
+
+<b>開通</b>
+
+EP 模式的券商，可聯繫客服開通。開通後每個交易日，系統會自動從港交所的 SFTP 獲取交易文件
+
+<img src="/assets/BWXubhuBCoDyvdxkqZJcC83Lnbh.png" src-width="3584" src-height="1764" align="center"/>
+
+<b>到點文件沒有</b>
+
+系統會從下午 13:00 開始，自動獲取港交所文件。如果一直沒獲取到文件的（手動導入的也算導入），每隔 10 分鐘跑一次，一直跑到下午 5 點
+
+如果租戶在 16 點 35 或者半日市的 13:05 前，發現沒自動導入的，可直接手動導入
+
 ## 持倉對賬
 
 <div class="callout callout-bg-2 callout-border-2">
