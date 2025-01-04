@@ -1,7 +1,7 @@
 ---
 title: 系统介绍
 slug: KSAHw715uivJOckDIjhcL8avnZf
-sidebar_position: 4
+sidebar_position: 5
 ---
 
 
@@ -67,6 +67,8 @@ ADR（ADR 费用）
 SO（剥离）
 
 IP（利息支付）
+
+       VT（股东大会）
 
 # 二、系统设定
 
@@ -556,6 +558,7 @@ BE 类各方案的数量之和必须等于可行权数量（持仓数量）
 <tr><td><p>ADR 执行</p></td><td><img src="/assets/NcBYbOwUDoe0cyxqkKxcDeIAnBe.png" src-width="1268" src-height="222" align="center"/></td></tr>
 <tr><td><p>红利、红股</p></td><td><img src="/assets/MunrbSleWoqnCoxWhDTcTy2in46.png" src-width="1210" src-height="274" align="center"/></td></tr>
 <tr><td><p>期权公司行动</p></td><td><img src="/assets/YkosbXVRsovl39xdOGOcEIamnBc.png" src-width="1182" src-height="334" align="center"/></td></tr>
+<tr><td><p>股东大会</p></td><td><img src="/assets/U7PCbViUNoCdrixpEuNcC3DqnDe.png" src-width="1238" src-height="310" align="center"/></td></tr>
 </tbody>
 </table>
 
