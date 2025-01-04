@@ -1,7 +1,7 @@
 ---
 title: 系統介紹
 slug: KSAHw715uivJOckDIjhcL8avnZf
-sidebar_position: 4
+sidebar_position: 5
 ---
 
 
@@ -67,6 +67,8 @@ ADR（ADR 費用）
 SO（剝離）
 
 IP（利息支付）
+
+       VT（股東大會）
 
 # 二、系統設定
 
@@ -556,6 +558,7 @@ BE 類各方案的數量之和必須等於可行權數量（持倉數量）
 <tr><td><p>ADR 執行</p></td><td><img src="/assets/NcBYbOwUDoe0cyxqkKxcDeIAnBe.png" src-width="1268" src-height="222" align="center"/></td></tr>
 <tr><td><p>紅利、紅股</p></td><td><img src="/assets/MunrbSleWoqnCoxWhDTcTy2in46.png" src-width="1210" src-height="274" align="center"/></td></tr>
 <tr><td><p>期權公司行動</p></td><td><img src="/assets/YkosbXVRsovl39xdOGOcEIamnBc.png" src-width="1182" src-height="334" align="center"/></td></tr>
+<tr><td><p>股東大會</p></td><td><img src="/assets/U7PCbViUNoCdrixpEuNcC3DqnDe.png" src-width="1238" src-height="310" align="center"/></td></tr>
 </tbody>
 </table>
 
