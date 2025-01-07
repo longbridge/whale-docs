@@ -72,6 +72,7 @@
         - [快速上手 - 普通红股红利（BE）](VK4bwFoGyifITykmGaucY7fSncc.md)
         - [快速上手 - 自愿类红股红利（BE） ](NiQDwy0cziZ2b5kKIg5c0ExAn6f.md)
         - [快速上手 - 牛熊证、债券回收、私有化（TM）](ODm8wYemyiS9WZkNGUmcbZ3Qnlc.md)
+        - [快速上手 - 股东大会（VT）](QSpJwHQVUi9qDEkTwBtcmHTPnjd.md)
         - [系统介绍](KSAHw715uivJOckDIjhcL8avnZf.md)
         - [常见问题](SHybwQn9aiVZFSkVAwKcAuH7nDc.md)
       - [风控管理](LjNDwiZERi4r4skdM8dc6PbOnkc.md)
