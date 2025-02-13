@@ -102,3 +102,9 @@ xxx 证券
 
 <em>1.1G 圖四</em>
 
+## 1.1H 問：為什麼系統的開戶表格沒有客戶的賬戶號碼？
+
+<img src="/assets/Tze7bPGwhoe0hexWrNIcecW6nZd.png" src-width="2322" src-height="1094" align="center"/>
+
+答：只有轉賬開戶的開戶表格因提早生成賬戶號碼，才能在開戶表格中顯示客戶賬戶號碼，其他認證方式都沒有。
+

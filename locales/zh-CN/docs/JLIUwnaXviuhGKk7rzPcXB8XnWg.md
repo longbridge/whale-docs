@@ -85,3 +85,9 @@ sidebar_position: 9
 
 <em>10J 图三</em>
 
+## 10K 问：为什么新股认购扣款后，「账户详情」的「现金明细」会把该笔扣款计算在「总金额」上？
+
+<img src="/assets/F5VFbvYp0oktstxXxcucaAgNnIe.png" src-width="1846" src-height="1392" align="center"/>
+
+答：「总金额」是有计算「在途现金」，「在途现金」有计算正在申购新股的资金，能更实际反映客户资产；而客户实际能使用的是「总可用现金」，是没有加上这笔申购新股的资金。
+

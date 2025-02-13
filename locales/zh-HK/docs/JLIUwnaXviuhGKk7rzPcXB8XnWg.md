@@ -85,3 +85,9 @@ sidebar_position: 9
 
 <em>10J 圖三</em>
 
+## 10K 問：為什麼新股認購扣款後，「賬戶詳情」的「現金明細」會把該筆扣款計算在「總金額」上？
+
+<img src="/assets/F5VFbvYp0oktstxXxcucaAgNnIe.png" src-width="1846" src-height="1392" align="center"/>
+
+答：「總金額」是有計算「在途現金」，「在途現金」有計算正在申購新股的資金，能更實際反映客戶資產；而客戶實際能使用的是「總可用現金」，是沒有加上這筆申購新股的資金。
+

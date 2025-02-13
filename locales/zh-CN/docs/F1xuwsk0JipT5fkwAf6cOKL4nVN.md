@@ -88,3 +88,13 @@ CR 是非欠款
 
 <img src="/assets/NSM7b7mGCo0iWJxk6JrcRi1UnTd.png" src-width="2820" src-height="1264" align="center"/>
 
+## 12G 问：为什么 RDR027 和 RDR028 报表没有数据。
+
+答： RDR027、RDR028 报表数据产生时间：
+
+上午的数据：11:30
+
+下午的数据：17:30；
+
+下午的数据产生后上午的数据不再保存显示。
+

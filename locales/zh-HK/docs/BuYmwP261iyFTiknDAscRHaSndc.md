@@ -96,3 +96,9 @@ sidebar_position: 15
 
 <img src="/assets/DBdebJWzZo6cp8xHGWScwcMUnNe.png" src-width="2848" src-height="1116" align="center"/>
 
+## 16H 問：如何重設 APP 的「交易密碼」？
+
+答：在「客户/賬户信息」的「解鎖密碼」按「新建」，解鎖對象選擇「交易密碼」為客戶解凍。
+
+<img src="/assets/Pj0zbbyBRooaPdx9Je3cXjHunff.png" src-width="1004" src-height="742" align="center"/>
+

@@ -99,3 +99,11 @@ App 的未作 PI 認購不能認購。
 
 「內部代碼（來自上手）」：租戶自行選擇用以識別標的的唯一碼。
 
+## 9K 問：基金合單交易中，為什麼「基金清算」的總交易份額和所有客戶分配的份額總和不一樣？
+
+<img src="/assets/HXiBbuVA0ovnMYx95kFc4mPrnkc.png" src-width="2866" src-height="964" align="center"/>
+
+<img src="/assets/EdxYbzJbgogLa7xJtFPc4mYOnHb.png" src-width="2864" src-height="916" align="center"/>
+
+答：系統現在計算基金合單交易的份額是以「個體客戶的認購金額/總認購金額*基金淨值」來計算，因此出現小數位差異。租戶可以用手工調賬方式幫助客戶調整份額。
+
