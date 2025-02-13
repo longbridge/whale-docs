@@ -99,3 +99,11 @@ App 的未作 PI 认购不能认购。
 
 「内部代码（来自上手）」：租户自行选择用以识别标的的唯一码。
 
+## 9K 问：基金合单交易中，为什么「基金清算」的总交易份额和所有客户分配的份额总和不一样？
+
+<img src="/assets/HXiBbuVA0ovnMYx95kFc4mPrnkc.png" src-width="2866" src-height="964" align="center"/>
+
+<img src="/assets/EdxYbzJbgogLa7xJtFPc4mYOnHb.png" src-width="2864" src-height="916" align="center"/>
+
+答：系统现在计算基金合单交易的份额是以「个体客户的认购金额/总认购金额*基金净值」来计算，因此出现小数位差异。租户可以用手工调账方式帮助客户调整份额。
+
