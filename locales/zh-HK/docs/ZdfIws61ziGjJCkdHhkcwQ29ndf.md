@@ -65,3 +65,9 @@ sidebar_position: 1
 
 <img src="/assets/HoYHbTspjos9Ayxm2yAcZUctn3P.png" src-width="2206" src-height="1160" align="center"/>
 
+## 2E 問：如何設置不同貨幣出金收取不同手續費。
+
+答：在「計費管理」中設置某一貨幣出金收取固定手續費，把最高收費、最低收費設置為固定數值。
+
+<img src="/assets/EYpQb5aaWoN4j5xBl3BcxexPneL.png" src-width="2226" src-height="1366" align="center"/>
+
