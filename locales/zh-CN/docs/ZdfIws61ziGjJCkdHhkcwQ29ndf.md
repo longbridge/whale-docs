@@ -65,3 +65,9 @@ sidebar_position: 1
 
 <img src="/assets/HoYHbTspjos9Ayxm2yAcZUctn3P.png" src-width="2206" src-height="1160" align="center"/>
 
+## 2E 问：如何设置不同货币出金收取不同手续费。
+
+答：在「计费管理」中设置某一货币出金收取固定手续费，把最高收费、最低收费设置为固定数值。
+
+<img src="/assets/EYpQb5aaWoN4j5xBl3BcxexPneL.png" src-width="2226" src-height="1366" align="center"/>
+
