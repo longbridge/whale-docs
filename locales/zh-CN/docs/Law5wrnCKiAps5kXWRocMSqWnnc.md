@@ -102,3 +102,9 @@ xxx 证券
 
 <em>1.1G 图四</em>
 
+## 1.1H 问：为什么系统的开户表格没有客户的账户号码？
+
+<img src="/assets/Tze7bPGwhoe0hexWrNIcecW6nZd.png" src-width="2322" src-height="1094" align="center"/>
+
+答：只有转账开户的开户表格因提早生成账户号码，才能在开户表格中显示客户账户号码，其他认证方式都没有。
+
