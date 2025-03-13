@@ -34,6 +34,10 @@ Whale 系统包含了处理出金申请、提现处理、对账、单独处理�
 
 <img src="/assets/VPYlbZJfjokg7ZxkLf1c0MMdn6g.png" src-width="1192" src-height="2434" align="center"/>
 
+- 提交（<b>可批量操作</b>）：经过操作人员初步审查无误后，可以将申请提交至下一节点的操作人员进行审核 - 提现
+
+操作
+
 - 驳回（<b>可批量操作）</b>：若客户递交的出金申请资料有误或使用者反馈本次申请无效时，操作员可以进行【驳回】操作
 - 删除：若客户递交的出金申请资料有误或使用者反馈本次申请无效时，操作员也可以透过【删除】按钮直接删除目标记录
 - 修改：若在提交出金申请前，发现客户递交的某笔具出金申请有问题，可在与客户确认无误后可以透过【编辑】按钮进行修正，修改后需进行工单审批，审批通过后修改内容生效。
@@ -42,10 +46,6 @@ Whale 系统包含了处理出金申请、提现处理、对账、单独处理�
 <img src="/assets/KygmbMCcfo4HVxxNuvVcCWmHnnd.png" src-width="3824" src-height="1418" align="center"/>
 
 <img src="/assets/UtkubpN0Fo09CpxtRRRcmQBonOd.png" src-width="3322" src-height="1674" align="center"/>
-
-- 提交（<b>可批量操作</b>）：经过操作人员初步审查无误后，可以将申请提交至下一节点的操作人员进行审核 - 提现
-
-操作
 
 ## 提现处理
 
