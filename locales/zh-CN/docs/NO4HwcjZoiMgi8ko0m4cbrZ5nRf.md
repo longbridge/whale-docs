@@ -126,66 +126,156 @@ sidebar_position: 2
 
 ### 计费配置
 
-#### 收费场景
+#### 基础概念
 
-可在收费场景配置配置各个证券市场、融资、融券的基础收费场景，为套餐创建做准备。场景为业务类型 + 收费类型的组合
+<b>合单规则和收费场景</b>：是系统的基础配置元素，通常在系统初始化时设置。
+
+<b>套餐收费和个性化收费</b>：是根据业务需求灵活配置的功能，可根据实际情况选择是否启用。两者在配置中需要选择合单规则和收费场景
+
+<b>套餐收费</b>：通常依据用户群体进行添加，例如经纪人 A 套餐、现金账户套餐。系统具备在客户开户时自动分配相应套餐的功能。
+
+<b>个性化收费</b>：一般根据客户个性化需求单独进行设置。
+
+<img src="/assets/OuYAwSctjhK8svbL9licXJnhnkb-board.png"/>
+
+#### 收费场景
 
 <b>字段说明</b>
 
-业务类型包括股票交易、融资利息、存款利息、出金交易、期权交易、转仓手续费
-匹配条件之一，满足此条件的流水，按计算规则收费。只能选择，不能新增
+<table>
+<colgroup>
+<col width="200"/>
+<col width="200"/>
+<col width="397"/>
+</colgroup>
+<tbody>
+<tr><td><p><b>字段用途</b></p></td><td><p><b>字段名称</b></p></td><td><p><b>字段说明</b></p></td></tr>
+<tr><td><p><b>匹配条件</b></p></td><td><p>业务类型</p></td><td><p>包括股票交易、融资利息、存款利息、出金交易、期权交易、转仓手续费等。满足此条件的流水，按计算规则收费。只能选择，不能新增。</p></td></tr>
+<tr><td></td><td><p>计费依据</p></td><td><p>股票交易选择市场，融资交易选择币种。满足此条件的，按此规则计费。</p></td></tr>
+<tr><td><p><b>计费规则</b></p></td><td><p>计费方式</p></td><td><p>包括股数、交易金额等。</p></td></tr>
+<tr><td></td><td><p>计费精度</p></td><td><p>分为合约、订单、成交记录。不同精度影响收费明细和尾差处理的口径。<br/>按合约计费：<br/>收费明细：1 条合约生成 1 条收费明细。<br/>尾差处理：按合约分别处理尾差。<br/>按订单计费：<br/>收费明细：1 条合约含 3 条订单，生成 3 条收费明细。<br/>尾差处理：按订单分别处理尾差。<br/>按成交记录计费：<br/>收费明细：1 条合约含 3 条订单，每条订单含 3 条成交记录，生成 9 条收费明细。<br/>尾差处理：按成交记录分别处理尾差</p></td></tr>
+<tr><td></td><td><p>年费率天数</p></td><td><p>费用金额 = 计算金额 / 年费率天数。例子：融资利息的计费天数填 1，计费分母填 365。</p></td></tr>
+<tr><td></td><td><p>结果截取方式</p></td><td><p>与截取位数搭配使用。包括四舍五入、向上截取、向下截取三种方式。</p></td></tr>
+<tr><td></td><td><p>截取位数</p></td><td><p>与结果截取方式搭配使用，决定最终费用金额的精度。</p></td></tr>
+<tr><td><p><b>输出结果</b></p></td><td><p>收费类型</p></td><td><p>包括佣金、平台费、印花税等。满足匹配条件的流水，收取该费用。只能选择，不能新增。</p></td></tr>
+</tbody>
+</table>
 
-收费类型包括佣金、平台费、印花税等
-计算规则之一，满足匹配条件的流水，收取该费用。只能选择，不能新增
+---
 
-计费依据：匹配条件之一。满足此条件的，按此规则计费。股票交易选择市场，融资交易选择币种
+<b>说明：</b>
 
-计费方式：计算规则之一，含股数，交易金额等
+1. <b>匹配条件</b>：用于确定哪些流水需要进入计费流程。
+2. <b>计费规则</b>：用于定义如何计算费用金额，包括计费方式、精度、天数和截取方式等。
+3. <b>输出结果</b>：最终的计费结果
 
-计费精度：计算规则之一。在股票交易中使用，分为合约、订单、成交记录，计费精度为合约的，收费明细（一条合约生成一条收费明细）和尾差处理都按照合约口径（每条合约分别进行尾差处理）；计费精度为订单的，则收费明细（一条合约含三条订单，则生成三条收费明细）和尾差处理都按照订单口径；计费精度为成交记录的，则收费明细口径（一条合约含三条订单，每条订单含，三条成交记录，则生成九条收费明细）和尾差处理都按照成交记录口径
-
-年费率天数：费用金额=计算金额/年费率天数。例子：融资利息设置的参数为年利率的，则计费天数填 1，计费分母填 365
-
-结果截取方式、截取位数：搭配使用。有四舍五入、向上截取、向下截取三种
+---
 
 <img src="/assets/MhgcbTcFaolc12xafw8crlbUn6y.png" src-width="3548" src-height="1806" align="center"/>
 
-#### 客户组管理
+#### 客户收费配置
 
-在客户组计费配置可维护客户组。支持增、删、改。全局客户组（默认客户组）不支持删除
+一个个性化收费只包含一个收费
 
-<img src="/assets/M3cubDB6foOYUyxdjuUc8vjAnj6.png" src-width="3548" src-height="1806" align="center"/>
+一个客户只能绑定多个个性化收费
+<b>新建个性化收费示例</b>
+<img src="/assets/HraNbOt5QoNmADxKuK4cg2pin3e.png" src-width="2900" src-height="682" align="center"/>
+<img src="/assets/TWCNbkmnBooOtGxex53cN7zAnmh.png" src-width="2870" src-height="1428" align="center"/>
+<img src="/assets/FdM6btGyqosWmxxkRJScrlW4nfS.png" src-width="2870" src-height="1428" align="center"/>
+<img src="/assets/BcbibYCv8opQnoxeaVHco6von0g.png" src-width="2870" src-height="1428" align="center"/>
+<b>添加客户示例</b>
+<img src="/assets/CU9UbwTP5oBPt2x68IqcEDz9nMh.png" src-width="2944" src-height="998" align="center"/>
+<img src="/assets/Vk0Ub1wKaocHo6xWHfdc9R4Bnqd.png" src-width="2944" src-height="998" align="center"/>
+<img src="/assets/LVZ6bvVjwo4pw1xORQBcYF9AnIb.png" src-width="2940" src-height="1516" align="center"/>
+##### 套餐收费
+如果客户具有功能画像（比如同一个经纪人，同是现金账户，多个费用收费标准一致），可以使用套餐收费功能
+一个客户只能绑定一个套餐
+一个套餐里可包含多个收费场景
 
-<b>字段说明</b>
-客户组类型：用于区分套餐的类别
-通用套餐：有别于默认套餐，有通用套餐的先用通用套餐的规则
-FD 机构：在 FD 模式中针对 FD 机构设置的套餐，用于筛选不同机构的套餐。一般多租户用不到
+<b>新建套餐示例</b>
 
-套餐名称：用户可自定义，方便筛选用
+<img src="/assets/B4apbdN4VoAn1GxYMyecmnS7nDf.png" src-width="2900" src-height="1428" align="center"/>
 
-合单规则（未选择不合单）。设置值后，对应市场的套餐将按合单规则进行合单
+<img src="/assets/QQuyboS0BoEsUGx4YKScb4jlnpb.png" src-width="2900" src-height="1428" align="center"/>
 
-阈值（计费门槛）：大于设置值的流水才进行收费。该字段对其计算方式的设置值。例子：计费方式设置为交易金额，阈值（计费门槛）设置为 1000，则交易金额&gt;1000 才收费
-费率：
-<b>固定费率：收费金额=值</b><b>x</b><b>费率</b>
-计算方式为交易金额、持仓市值，则费率值为交。费率，不带%。例子：按照交易金额的 1% 收费，则费率填 0.01
-计算方式为交易股数、按期权张数、计费合约数量、订单笔数、成交笔数，则费率值填写每股（张、订单……）的收费金额。
-计算方式为非预期上游回报费用的，填写 0，实际不起作用，收费金额=上游收费值
-<b>单笔阶梯费率：针对单笔统计单位生效。收费金额=阶梯结束值 1</b><b>x</b><b>费率 1+ （阶梯结束值 2-阶梯结束值 1）</b><b>x</b><b>费率 2+……+ （阶梯结束值 N-阶梯结束值 N-1）</b><b>x</b><b>费率 N</b>
-阶梯输入规则：输入时，左开右闭，最后一个阶梯值为 0。如图阶梯为大于 1&lt;=3
+<img src="/assets/MlwLb56dToHZAvxGMkpcWczbn9g.png" src-width="2900" src-height="1428" align="center"/>
 
-<img src="/assets/XIJFb9aG1oMdFixZFJFcKmH2nTh.png" src-width="1398" src-height="432" align="center"/>
+##### 客户计费查询
 
-按月阶梯费率：后台统计每月的交易金额总量，系统判断到该笔累计的交易处于哪一梯度，则按该梯度的费率计费
-收费金额= 该笔交易金额（交易笔数等）x 费率
-跨梯度的则将交易金额拆开计算，用各自的费率计算后再叠加
-按月阶梯的累积值从月初开始统计，而不是设置是时开始统计
+该功能用于查询客户的收费信息
 
-费率币种：收费币种，计算方式的枚举值自带币种的，按照枚举值的币种。若计算方式为交易金额的，收费币种按照交易金额的币种
+<b>优先级处理</b>
 
-最低、最高收费：略
+<b>特殊收费</b>(个性化收费&gt;普通套餐&gt;全局套餐)&gt;<b>普通收费</b>(个性化收费&gt;普通套餐&gt;全局套餐)
 
-不超过交易金额比例：收费的金额不大于交易金额 x 设置值/100。业务类型为股票交易、期权交易的才可选择设置。
+<img src="/assets/VkFRbzMFboH0bcxUbGkcJfvsnUi.png" src-width="2940" src-height="1438" align="center"/>
+
+<img src="/assets/ZZ0ObpQI5o1ODSxwAwxc9NMCnxb.png" src-width="2852" src-height="1322" align="center"/>
+
+<img src="/assets/DBUvbmYcMovIHRx2Pw3crQq9nff.png" src-width="2852" src-height="1322" align="center"/>
+
+<img src="/assets/JIyJbPxNlooCn2xRKB9cQ4zUneb.png" src-width="2852" src-height="1322" align="center"/>
+
+<img src="/assets/A5EKbkA8Yofc1TxvYwmc1rDBnJf.png" src-width="2852" src-height="1322" align="center"/>
+
+### 其它相关计费项目配配置
+
+#### 香港市场印花税豁免字段配置
+
+#### <b>可交易债券利率配置</b>
+
+功能权限清单
+
+<table>
+<colgroup>
+<col width="146"/>
+<col width="360"/>
+<col width="235"/>
+</colgroup>
+<tbody>
+<tr><td><p>操作</p></td><td><p>工单标识</p></td><td><p>操作日志</p></td></tr>
+<tr><td><p>编辑清算参数配置</p></td><td><p>clearing.update_system_config.exec</p></td><td><p>清算 - 修改系统配置</p></td></tr>
+<tr><td><p>删除债券利率信息</p></td><td><p>clearing.bond.delete</p></td><td><p>清算 - 新增债券信息与利率</p></td></tr>
+<tr><td><p>新增债券利率信息</p></td><td><p>clearing.bond.insert</p></td><td><p>清算 - 删除债券信息与利率</p></td></tr>
+<tr><td><p>编辑债券利率信息</p></td><td><p>clearing.bond.update</p></td><td><p>清算 - 更新债券信息与利率</p></td></tr>
+</tbody>
+</table>
+
+<b>总开关</b>
+
+开启总开关后才会正式启用可交易债券的计息功能
+
+<img src="/assets/LZZObVt0CoZ1o9xw5fFc7vmFnLl.png" src-width="2852" src-height="1322" align="center"/>
+
+<b>利率配置</b>
+
+配置注意事项
+
+利息公布后务必及时更新日历
+
+在派息日期 -4 个交易日内未更新利率的，可能会导致利息计算错误
+
+必须一次性将所欲日历配置上，未来的派息日留空
+
+配置的使用
+
+累计利息=数量*账面价格*上期派息利率*累计计息天数/一年天数
+
+累计计息天数=交收日 - 派息日
+
+系统针对配置的检查
+
+-7 个自然日内，系统在清算前准备会兜底性检查
+
+报错时如果未到派息日期 -4 个交易日的，可先手动通过
+
+报错时如果已到派息日期 -4 个交易日的，建议先按上期利率更新且持续跟踪利息计算情况
+
+新建利率信息案例
+
+<img src="/assets/Q8dybBZJToPdxFxBzhkc7XhMnSc.png" src-width="2910" src-height="1322" align="center"/>
+
+<img src="/assets/E0zeboYvloqUkQx4XgscmlScnrf.png" src-width="2852" src-height="1322" align="center"/>
 
 ### 结单配置
 
