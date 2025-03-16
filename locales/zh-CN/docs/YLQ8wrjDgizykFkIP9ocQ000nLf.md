@@ -7,7 +7,7 @@ sidebar_position: 3
 
 # 常见问题
 
-## 日终配置问题
+## 日终初始化配置问题
 
 <div class="callout callout-bg-2 callout-border-2">
 <div class='callout-emoji'>❓</div>
@@ -94,7 +94,16 @@ sidebar_position: 3
 
 <img src="/assets/U8BNbbktGocitjxcKxHcEbVRnGV.png" src-width="3578" src-height="1798" align="center"/>
 
-## 日切点问题
+## 日志执行问题
+
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>如果查询未来的账务日期</p>
+</div>
+
+<img src="/assets/CTPfbW8zPo4Piax7AUIcJcXAnkh.png" src-width="2852" src-height="1322" align="center"/>
+
+<img src="/assets/WZgUbWhKhoeHqtxv46pco78in4c.png" src-width="2852" src-height="1322" align="center"/>
 
 <div class="callout callout-bg-2 callout-border-2">
 <div class='callout-emoji'>❓</div>
