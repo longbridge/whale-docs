@@ -7,7 +7,7 @@ sidebar_position: 3
 
 # 常见问题
 
-## 日终配置问题
+## 日终初始化配置问题
 
 <div class="callout callout-bg-2 callout-border-2">
 <div class='callout-emoji'>❓</div>
@@ -50,7 +50,14 @@ sidebar_position: 3
 
 <img src="/assets/M4WcbtDdLoZFnUxtlLdcv2L5nsc.png" src-width="3574" src-height="1774" align="center"/>
 
-## 费用配置问题
+## 日终任务执行先关问题
+
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>如果当天想修改某个客户的交易收费怎么处理</p>
+</div>
+
+## 费用配置和查询
 
 <div class="callout callout-bg-2 callout-border-2">
 <div class='callout-emoji'>❓</div>
@@ -94,7 +101,16 @@ sidebar_position: 3
 
 <img src="/assets/U8BNbbktGocitjxcKxHcEbVRnGV.png" src-width="3578" src-height="1798" align="center"/>
 
-## 日切点问题
+## 日志执行问题
+
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>如果查询未来的账务日期</p>
+</div>
+
+<img src="/assets/CTPfbW8zPo4Piax7AUIcJcXAnkh.png" src-width="2852" src-height="1322" align="center"/>
+
+<img src="/assets/WZgUbWhKhoeHqtxv46pco78in4c.png" src-width="2852" src-height="1322" align="center"/>
 
 <div class="callout callout-bg-2 callout-border-2">
 <div class='callout-emoji'>❓</div>
@@ -289,7 +305,7 @@ EP 模式的券商，可联系客服开通。开通后每个交易日，系统�
 
 <img src="/assets/TNFubCMOyofC61xiJgQcFDcdnAc.png" src-width="2516" src-height="740" align="center"/>
 
-## 切换上手时的内部转仓
+## 切换上手时如何内部转仓
 
 <div class="callout callout-bg-2 callout-border-2">
 <div class='callout-emoji'>❓</div>

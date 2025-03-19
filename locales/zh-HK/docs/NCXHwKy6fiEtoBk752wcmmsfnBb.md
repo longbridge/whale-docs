@@ -173,11 +173,14 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 對於券商公司獲取的銀行賬單可以自定義資金類型。
 
-<img src="/assets/TopPbU9GCosOBdx3qzrc7SehnDe.png" src-width="3792" src-height="1462" align="center"/>
+<img src="/assets/CbO5bqH4NoyrnGxk8umcMzsrnqg.png" src-width="3282" src-height="596" align="center"/>
+
+<img src="/assets/DJo2bpt9nogXbPxGC4rcl87Vnsd.png" src-width="3314" src-height="1236" align="center"/>
 
 <b>操作按鈕說明</b>
 
 - 新建：可根據券商公司銀行賬單新建不同資金類型標籤。
+- 編輯：對於已添加的資金類型進行多語言編輯
 - 刪除：對已經添加的资金类型可以進行刪除。
 
 <b>專有名詞解釋</b>
@@ -204,15 +207,16 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 如果券商公司導出的財務報表需要合併，則可以自定義合併規則。
 
-<img src="/assets/Luehblccxoh7rXxR4jOceML8njg.png" src-width="3776" src-height="794" align="center"/>
+<img src="/assets/VpgcbD4qqoUK8xxkDBXcanf3nUe.png" src-width="3276" src-height="780" align="center"/>
 
 <img src="/assets/X0XUbWrqSozvP7xnBUOc9DoBnWg.png" src-width="1846" src-height="735" align="center"/>
 
 <b>操作按鈕說明</b>
 
 - 新建：可根據券商公司需求新增報表的合併規則。
-- 編輯：對已經添加的合并规则可以進行人工編輯。
-- 刪除：對已經添加的合并规则可以進行刪除。
+- 編輯：對已經添加的合併規則可以進行人工編輯。
+- 複製：通過複製已有的合併規則進行快速新建。
+- 刪除：對已經添加的合併規則可以進行刪除。
 
 <b>專有名詞解釋</b>
 
@@ -321,7 +325,7 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 會計分錄中新增【報表導出】按鈕，方便按照財務軟件格式要求進行報表導出
 
-<img src="/assets/FpfgbBv56ouzM3xraQTcXk5unWb.png" src-width="3248" src-height="1606" align="center"/>
+<img src="/assets/ItVpbgmJToeGBNxWdqic4SAVnxe.png" src-width="3400" src-height="1842" align="center"/>
 
 提供合併會計分錄查詢功能，合併會計分錄時，系統會按賬帳日期獲取匯率
 

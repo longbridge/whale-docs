@@ -173,11 +173,14 @@ Whale 会计系统提供了一套可以自动获取数据源，按照预设的�
 
 对于券商公司获取的银行账单可以自定义资金类型。
 
-<img src="/assets/TopPbU9GCosOBdx3qzrc7SehnDe.png" src-width="3792" src-height="1462" align="center"/>
+<img src="/assets/CbO5bqH4NoyrnGxk8umcMzsrnqg.png" src-width="3282" src-height="596" align="center"/>
+
+<img src="/assets/DJo2bpt9nogXbPxGC4rcl87Vnsd.png" src-width="3314" src-height="1236" align="center"/>
 
 <b>操作按钮说明</b>
 
 - 新建：可根据券商公司银行账单新建不同资金类型标签。
+- 编辑：对于已添加的资金类型进行多语言编辑
 - 删除：对已经添加的资金类型可以进行删除。
 
 <b>专有名词解释</b>
@@ -204,7 +207,7 @@ Whale 会计系统提供了一套可以自动获取数据源，按照预设的�
 
 如果券商公司导出的财务报表需要合并，则可以自定义合并规则。
 
-<img src="/assets/Luehblccxoh7rXxR4jOceML8njg.png" src-width="3776" src-height="794" align="center"/>
+<img src="/assets/VpgcbD4qqoUK8xxkDBXcanf3nUe.png" src-width="3276" src-height="780" align="center"/>
 
 <img src="/assets/X0XUbWrqSozvP7xnBUOc9DoBnWg.png" src-width="1846" src-height="735" align="center"/>
 
@@ -212,6 +215,7 @@ Whale 会计系统提供了一套可以自动获取数据源，按照预设的�
 
 - 新建：可根据券商公司需求新增报表的合并规则。
 - 编辑：对已经添加的合并规则可以进行人工编辑。
+- 复制：通过复制已有的合并规则进行快速新建。
 - 删除：对已经添加的合并规则可以进行删除。
 
 <b>专有名词解释</b>
@@ -321,7 +325,7 @@ Whale 会计系统提供了一套可以自动获取数据源，按照预设的�
 
 会计分录中新增【报表导出】按钮，方便按照财务软件格式要求进行报表导出
 
-<img src="/assets/FpfgbBv56ouzM3xraQTcXk5unWb.png" src-width="3248" src-height="1606" align="center"/>
+<img src="/assets/ItVpbgmJToeGBNxWdqic4SAVnxe.png" src-width="3400" src-height="1842" align="center"/>
 
 提供合并会计分录查询功能，合并会计分录时，系统会按账帐日期获取汇率
 
