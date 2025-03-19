@@ -17,7 +17,158 @@ Whale 系統包含了處理出金申請、提現處理、對賬、單獨處理�
 
 <img src="/assets/QSsob9ZMtoHJE1x051hcwIFgnhn.png" src-width="2146" src-height="256" align="center"/>
 
-## 二、操作說明
+# 二、操作說明
+
+# 出金配置
+
+## 資金參數配置
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>業務參數設置 &gt; 資金參數&gt;公司銀行賬戶</p>
+</div>
+
+<img src="/assets/TbVabk6CjoC8ZhxW2JwcJHFynig.png" src-width="2844" src-height="1304" align="center"/>
+
+- 點選【新建】，進入二級頁面補充出金頻道訊息（券商公司用户付款的銀行賬户和出金方式組合，比如：工銀亞洲 001-支票轉賬）
+
+<img src="/assets/CuVHbCYkzo2Z5xxwroIcQ4G8n3g.png" src-width="2846" src-height="1330" align="center"/>
+
+1. 打開幣種的出金功能開關
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>📍</div>
+<p>菜單入口：業務參數設定&gt;資金參數&gt;幣種</p>
+</div>
+
+<img src="/assets/IqrUbXkcNovfIFxuCEIcsmHnnGb.png" src-width="2858" src-height="1318" align="center"/>
+
+- 點選【新建】，進入二級頁面，將出金功能的選項設為「是」
+
+<img src="/assets/Yt2JbNWOGomiGAxNZAPcuw5Jndc.png" src-width="2864" src-height="1330" align="center"/>
+
+## 自動出金規則
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>業務參數設置&gt;出金規則&gt;自動出金規則</p>
+</div>
+
+配置出金渠道打包規則，用以控制出金批量是自動還是手工處理。同時還能通過規則控制出金的單筆限額，以及服務窗口期以及支持的客戶銀行等。
+
+目前可支持的出金策略包括：單筆實時、定時打包人工審核、手工打包和批量自動
+
+<img src="/assets/Ya5Mbr5qxohQ5Axme55ccPGMnwB.png" src-width="3304" src-height="878" align="center"/>
+
+<b>操作按鈕說明</b>
+
+- 新建：可以根據券商公司對應出金渠道新建自動出金規則
+- 編輯：對已添加的自動出金規則可選擇編輯
+- 刪除：刪除已有的自動出金規則
+
+## 日限額以及變動表
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>業務參數設置&gt;出金規則&gt;日限額</p>
+</div>
+
+客戶相應出金的渠道可能存在日限額，所以為了降低出金異常情況，建立了出金日限額監控提示以及管理。
+
+<img src="/assets/UWPcbehjCoe0dYxJnqBcYX89nlc.png" src-width="3292" src-height="730" align="center"/>
+
+<b>操作按鈕說明</b>
+
+- 新建：可以根據需求配置出金銀行相關日限額
+- 編輯：對已添加的日限額可選擇編輯
+- 刪除：刪除已有的日限額
+- 調整：調整當前出金銀行對應的日限額額度
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>業務參數設置&gt;出金規則&gt;日限額變動表</p>
+</div>
+
+可以查詢出金銀行的日限額歷史變動記錄
+
+<img src="/assets/JIYcbu9GRocx9UxYonfcZkQVn8d.png" src-width="3264" src-height="1102" align="center"/>
+
+對於日限額達到日剩餘額度警戒線，系統會自動推送消息告警
+
+<img src="/assets/LgHIbt2srolFVQxL9sEc6V94nU0.png" src-width="1156" src-height="138" align="center"/>
+
+## 餘額攔截
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>業務參數設置&gt;出金規則&gt;餘額攔截</p>
+</div>
+
+目前指用於出金業務。在出金業務中，系統會根據財務人員選擇的出金銀行進行餘額查詢，根據查詢到的餘額對待出金的金額進行判斷，如果餘額不足以支持用户提交的出金請求，則會將相應的出金進行攔截，等待財務後續人工處理。
+
+<img src="/assets/RnVrbxfDYouO2exUgLDcmJzFnlh.png" src-width="3308" src-height="1048" align="center"/>
+
+<b>操作按鈕說明</b>
+
+- 編輯：對於已接入 API 銀行的餘額查詢記錄可以編輯提示餘額和攔截餘額
+- 啟用：對於已接入 API 銀行的餘額查詢記錄選擇啟用
+- 停用：對於已接入 API 銀行的餘額查詢記錄選擇停用
+
+對於銀行餘額達到提示餘額時，系統會自動推送訊息警告
+
+<img src="/assets/UFmPbJktKoGNQLx3MGfcEhBRnKh.png" src-width="830" src-height="194" align="center"/>
+
+對於銀行餘額達到攔截餘額時，系統會自動攔截對應出金並且進行告警"
+
+<img src="/assets/DC7Wb2jcpomV0GxHbsecQW8lnbg.png" src-width="772" src-height="220" align="center"/>
+
+## 自動審核規則
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>業務參數設置&gt;出金規則&gt;自動審核規則</p>
+</div>
+
+對於客戶提交出金申請是否需要後台人工審核，可以在「自動審核規則」進行設定。目前可支援的審核規則包括：人工審批需工單、人工審批無需工單、自動提交和自動駁回
+
+<img src="/assets/X9Xobr0m6o8EinxwtWzc5G4gnjg.png" src-width="3280" src-height="672" align="center"/>
+
+<b>操作按鈕說明</b>
+
+- 新建：可以根據需求配置自動審核規則
+- 編輯：對已添加的自動審核規則可選擇編輯
+- 啟用：對於已添加的自動審核規則選擇啟用
+- 停用：對於已添加的自動審核規則選擇停用
+
+## 更多設置
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>業務參數設置&gt;出金規則&gt;更多設置</p>
+</div>
+
+對於在「款項管理 - 出金 - 提現處理 - 待處理」對應操作的【直接出賬】提交後是否需要工單審批，可以在「更多設置」進行配置
+
+<img src="/assets/Pa9jbbo4Wojt40xHrTucjJSvnMb.png" src-width="3302" src-height="366" align="center"/>
+
+## 出金參數
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>業務參數設置&gt;出金規則&gt;出金參數</p>
+</div>
+
+可根據客戶出金銀行區分配置預計到賬時間、預估費用等參數
+
+<img src="/assets/ORbybTFORo7KFAxEG5scNd2GnMe.png" src-width="3262" src-height="1084" align="center"/>
+
+<b>操作按鈕說明</b>
+
+- 新建：可以根據需求配置出金參數
+- 編輯：對已添加的出金參數可選擇編輯
+- 複製：通過複製已有的出金參數進行快速新建
+
+# 出金操作
 
 <div class="callout callout-bg-6 callout-border-6">
 <div class='callout-emoji'>📍</div>
@@ -34,6 +185,10 @@ Whale 系統包含了處理出金申請、提現處理、對賬、單獨處理�
 
 <img src="/assets/VPYlbZJfjokg7ZxkLf1c0MMdn6g.png" src-width="1192" src-height="2434" align="center"/>
 
+- 提交（<b>可批量操作</b>）：經過操作人員初步審查無誤後，可以將申請提交至下一節點的操作人員進行審核 - 提現
+
+操作
+
 - 駁回（<b>可批量操作）</b>：若客戶遞交的出金申請資料有誤或使用者反饋本次申請無效時，操作員可以進行【駁回】操作
 - 删除：若客戶遞交的出金申請資料有誤或使用者反饋本次申請無效時，操作員也可以透過【删除】按鈕直接刪除目標記錄
 - 修改：若在提交出金申請前，發現客戶遞交的某筆具出金申請有問題，可在與客戶確認無誤後可以透過【編輯】按鈕進行修正，修改後需進行工單審批，審批通過後修改內容生效。
@@ -42,10 +197,6 @@ Whale 系統包含了處理出金申請、提現處理、對賬、單獨處理�
 <img src="/assets/KygmbMCcfo4HVxxNuvVcCWmHnnd.png" src-width="3824" src-height="1418" align="center"/>
 
 <img src="/assets/UtkubpN0Fo09CpxtRRRcmQBonOd.png" src-width="3322" src-height="1674" align="center"/>
-
-- 提交（<b>可批量操作</b>）：經過操作人員初步審查無誤後，可以將申請提交至下一節點的操作人員進行審核 - 提現
-
-操作
 
 ## 提現處理
 

@@ -104,13 +104,13 @@ Whale 會計中臺系統全面支持券商證券業務記賬流程，包括記�
 
 <b>步驟一：查看合併規則</b>
 
-<img src="/assets/V39XbXqLDoGnzpxOThDcOfLXnjg.png" src-width="2866" src-height="1162" align="center"/>
+<img src="/assets/PFenbzw4Rot25Oxir2xc93Y4nkb.png" src-width="3276" src-height="780" align="center"/>
 
 <b>步驟二：合併規則配置</b>
 
 點選『合併規則』右上角：‘新建’，設定對應券商公司的合併規則。
 
-<img src="/assets/C0cfb4CyDoi4itxlHZkcFoi7nBe.png" src-width="952" src-height="1776"/>
+<img src="/assets/Hgw9bKAjIoA1lDxqBiDcw7kMnPg.png" src-width="2456" src-height="2810"/>
 
 ### 業務類型<b>配置</b>
 
@@ -136,7 +136,7 @@ Whale 會計中臺系統全面支持券商證券業務記賬流程，包括記�
 
 <img src="/assets/A3FsbMxe4ociJOx6ilicWwvyn6b.png" src-width="2830" src-height="860" align="center"/>
 
-<img src="/assets/W3NQbrKN0oigoDx5Y9TcFiyvnAf.png" src-width="952" src-height="1250"/>
+<img src="/assets/Irz6blu1QoLO2QxAr8YcvXySn8g.png" src-width="962" src-height="1782"/>
 
 ### 明細會計分錄
 

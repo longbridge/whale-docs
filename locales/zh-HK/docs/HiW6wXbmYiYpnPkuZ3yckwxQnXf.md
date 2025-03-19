@@ -120,7 +120,7 @@ Whale 系統包含了處理入金申請、匹配銀行流水、入金審核、�
 <p>款項管理&gt;App 管理&gt;卡所屬銀行</p>
 </div>
 
-<img src="/assets/UOVXbO2yqo3QdzxXBDlcS61en5d.png" src-width="3260" src-height="866" align="center"/>
+<img src="/assets/GMfcbRsw7oxBruxvhzdcURGonsd.png" src-width="3284" src-height="762" align="center"/>
 
 <b>操作按鈕說明</b>
 
@@ -134,7 +134,7 @@ Whale 系統包含了處理入金申請、匹配銀行流水、入金審核、�
 <p>款項管理&gt;App 管理&gt;用戶綁卡 - 國家/地區</p>
 </div>
 
-<img src="/assets/GeynbddGsoMSjNxxDXoceiYhnPd.png" src-width="3282" src-height="814" align="center"/>
+<img src="/assets/RXoqbKWNZofQqixXwW4cEL2enEe.png" src-width="3260" src-height="774" align="center"/>
 
 ### 3.銀行區域列表
 
@@ -143,11 +143,11 @@ Whale 系統包含了處理入金申請、匹配銀行流水、入金審核、�
 <p>款項管理&gt;App 管理&gt;銀行區域列表</p>
 </div>
 
-<img src="/assets/XFM2bgF7goWUyrxyoPRcImLun2g.png" src-width="3302" src-height="694" align="center"/>
+<img src="/assets/S3tmbT8Vio1qcYxtpz6ctPSrnAe.png" src-width="3290" src-height="978" align="center"/>
 
 <b>操作按鈕說明</b>
 
-- 新增：單筆增加銀行區域列表信息
+- 新建：單筆增加銀行區域列表信息
 - 編輯：對於已添加的銀行區域列表信息進行編輯
 - 删除：删除銀行區域列表信息
 
@@ -157,11 +157,32 @@ Whale 系統包含了處理入金申請、匹配銀行流水、入金審核、�
 
 ### 1.入金指引
 
-<img src="/assets/IiJQb7nEWoXEJIx846ZcTwG6nuh.png" src-width="3252" src-height="956" align="center"/>
+<img src="/assets/AK7jbhzoqonEhIxXa0kcfu90noe.png" src-width="3286" src-height="980" align="center"/>
 
 ### 2.入金參數
 
-<img src="/assets/EkmUbMB7XoD1agxvXc5cz7Pmnjb.png" src-width="3268" src-height="1108" align="center"/>
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>款項管理&gt;App 管理&gt;入金參數</p>
+</div>
+
+<img src="/assets/XoehbngXxoqlidxs115cGbUQnje.png" src-width="3260" src-height="1726" align="center"/>
+
+<b>操作按鈕說明</b>
+
+- 新建：單筆新建入金參數
+- 編輯：對於已添加的入金參數列表信息進行編輯
+- 刪除：刪除入金參數列表信息
+- 上架：是指配置的入金參數需應用於客戶端展示，則可以將參數上架
+- 下架：是指配置的入金參數無法適用於客戶端展示，則可以將參數下架
+- 複製：通過複製原本參數信息進行快速新建新的入金參數
+- 審批：對於入金參數如果開通了工單審批，則上述的所有操作提交之後，需要工單審批
+
+<b>多家收款銀行配置</b>
+
+- 如客戶端需要根據客戶選擇的銀行，在同一個入金方式下需要展示多個收款銀行，則可以參考如下截圖的配置。
+
+<img src="/assets/JTldbcQgio6BvKxqiw5c8EYOnMz.png" src-width="3278" src-height="706" align="center"/>
 
 # 入金操作
 
