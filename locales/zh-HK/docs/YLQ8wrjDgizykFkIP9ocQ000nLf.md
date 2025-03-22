@@ -7,7 +7,7 @@ sidebar_position: 3
 
 # 常見問題
 
-## 日终配置问题
+## 日终初始化配置
 
 <div class="callout callout-bg-2 callout-border-2">
 <div class='callout-emoji'>❓</div>
@@ -50,7 +50,70 @@ sidebar_position: 3
 
 <img src="/assets/M4WcbtDdLoZFnUxtlLdcv2L5nsc.png" src-width="3574" src-height="1774" align="center"/>
 
-## 費用配置問題
+## 日终任務執行
+
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>如何查詢未來的賬務日期</p>
+</div>
+
+<img src="/assets/ABEzb115VoqvCvxxOzvcW6ADnrc.png" src-width="2864" src-height="1368" align="center"/>
+
+<img src="/assets/TuXNbfRnNoQEeGxaJ3icnBqAn6q.png" src-width="2864" src-height="1368" align="center"/>
+
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>港股半日市如何提前執行日終</p>
+</div>
+
+<img src="/assets/WcgmbbpZWocXckx8XxKcqg3pnNc.png" src-width="2864" src-height="1368" align="center"/>
+
+<img src="/assets/ABKVbBirYoYjiKxAzstcjflBnKc.png" src-width="2864" src-height="1368" align="center"/>
+
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>平時可否在日切點前進行清算</p>
+</div>
+
+可以，但是必須在公有庫的行情文件文件到位後進行。
+
+例子：券商的日切時間點是下午 17:00。非半日市在 16:30 之前可以進行提前日切。但是，因為港股未收市，港股的股票信息和收盤價數據是沒有的，一直需要等到 16:30 後才能執行日終任務。
+
+<b>所以，非半日市或者非港股假日，不建議在 16:30 之前操作提前日切</b>
+
+<img src="/assets/K7dXb8ifQoAsEwxbAzKcy3Lsndd.png" src-width="3584" src-height="1764" align="center"/>
+
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>如果當天想修改某個客戶某一筆交易收費怎麼處理</p>
+<p>方式一：修改收費渠道</p>
+</div>
+
+<img src="/assets/X2habxE0doeHjixpNDvcD7xJnNb.png" src-width="2878" src-height="1364" align="center"/>
+
+<img src="/assets/SincbLUkxoao67xOcEocd5qNnte.png" src-width="2878" src-height="1364" align="center"/>
+
+<img src="/assets/HJombiLhqo0cwTxhL6Dc6Ej1nKh.png" src-width="2878" src-height="1364" align="center"/>
+
+<img src="/assets/TZl1bCXTjowkzbxVVEichRUknWf.png" src-width="2602" src-height="490" align="center"/>
+
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>如果當天想修改某個客戶某一筆交易的收費怎麼處理</p>
+<p>方式二：修改合約</p>
+</div>
+
+<img src="/assets/M8wfbt8NUo843Wx63QWcg3pDnde.png" src-width="2854" src-height="1358" align="center"/>
+
+<img src="/assets/P0ogbmMDxoC6BDxl6oIcmYvznuC.png" src-width="2854" src-height="1358" align="center"/>
+
+<img src="/assets/X2apbQPTYoD4C8xNE3BcVLClnAc.png" src-width="2854" src-height="1358" align="center"/>
+
+<img src="/assets/Trseb9uJ9ot4noxeNP3cjGC3npf.png" src-width="2854" src-height="1358" align="center"/>
+
+<img src="/assets/SwgHbIcaso3GzHxia3XccrAHnah.png" src-width="2602" src-height="490" align="center"/>
+
+## 費用配置和查询
 
 <div class="callout callout-bg-2 callout-border-2">
 <div class='callout-emoji'>❓</div>
@@ -63,23 +126,49 @@ sidebar_position: 3
 
 <div class="callout callout-bg-2 callout-border-2">
 <div class='callout-emoji'>❓</div>
-<p>如何修改交易的費用</p>
+<p>修改股票交易費用配置後，何時生效；怎麼判斷是否生效</p>
 </div>
 
-當天交易在清算計費步驟後，可編輯費用。如果已經日切的，需要使用合約修正功能，或者直接調賬
-
-<div class="callout callout-bg-2 callout-border-2">
-<div class='callout-emoji'>❓</div>
-<p>修改費用配置後，何時生效；怎麼判斷是否生效</p>
-</div>
-
-最快 10 分鐘生效
+請在對應市場的清算計費步驟前，修改收費规则后。修改後 10 分鐘內生效
 
 可以在客戶計費查詢頁面（路徑：業務參數設置 - 計費管理 - 客戶計費查詢），此頁面查詢的數據為最新數據
 
-<img src="/assets/BMX0bOQ0fovYcpxJuZIcZMDfnWf.png" src-width="3578" src-height="1798" align="center"/>
+如果想提前生效，可點擊<b>刷新配置</b>按鈕
 
-<img src="/assets/RKcFbqlRVoKvxWxsNKqcndfan6d.png" src-width="3578" src-height="1798" align="center"/>
+<img src="/assets/RNZIb7GNYoPZypxca1CcTm8Xnwf.png" src-width="2854" src-height="1358" align="center"/>
+
+<img src="/assets/M1jvbLhlsoNRnNxTwjwccwFBnTh.png" src-width="2854" src-height="1358" align="center"/>
+
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>修改收費配置後打算馬上生效</p>
+</div>
+
+<img src="/assets/MsgsbH8QBooAW5xYrwScxzAEnSf.png" src-width="830" src-height="396" align="center"/>
+
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>想要查看之前某一筆交易的的佣金是基於什麼配置計算的</p>
+</div>
+
+<img src="/assets/VjREbYNfxoQpMdxbd6ccl24snHe.png" src-width="2864" src-height="1368" align="center"/>
+
+<img src="/assets/Q7CJbGlvloy8JKxJyVychEHwnMd.png" src-width="2864" src-height="1368" align="center"/>
+
+<img src="/assets/NHlLbJBReow7tAxngrHcL8Nanrg.png" src-width="2864" src-height="1368" align="center"/>
+
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>和客戶協商了佣金，如果進行修改</p>
+</div>
+
+<img src="/assets/OMCSboEiwofsY1xYwxsc9I2nnuf.png" src-width="2864" src-height="1368" align="center"/>
+
+<img src="/assets/WzOibrUkuo3orIxIR7SchjHLnVe.png" src-width="2864" src-height="1368" align="center"/>
+
+<img src="/assets/Wu6jbi9BkofEodxVFEGcAk9nnte.png" src-width="1079" src-height="1329" align="center"/>
+
+<img src="/assets/X8l2b3VjZouThGxfAERcQMqDnQh.png" src-width="830" src-height="396" align="center"/>
 
 <div class="callout callout-bg-2 callout-border-2">
 <div class='callout-emoji'>❓</div>
@@ -94,37 +183,37 @@ sidebar_position: 3
 
 <img src="/assets/U8BNbbktGocitjxcKxHcEbVRnGV.png" src-width="3578" src-height="1798" align="center"/>
 
-## 日切點問題
+## 標的信息修改
 
 <div class="callout callout-bg-2 callout-border-2">
 <div class='callout-emoji'>❓</div>
-<p>港股半日市如何提前日切</p>
+<p>公共標的庫和私有標的區別</p>
 </div>
 
-1.在下午 1 點後先操作提前日切（日終任務 - 數據匯總步驟前）
-
-<img src="/assets/Yj2lbWh0ZoOyt1xRUSVcLzlensh.png" src-width="3584" src-height="1764" align="center"/>
-
-2.操作後需要進行工單審批
-
-<img src="/assets/ZNO6bi99mocK6bxepjIcFWE4n1c.png" src-width="3584" src-height="1764" align="center"/>
-
-3.日切點旁的賬務日期切換為下一天，這代表提前日切成功。租戶可以正式操作日終清結算
-
-<img src="/assets/BbYkbARFlowZfCxIzMJc3E35nWc.png" src-width="3584" src-height="1764" align="center"/>
+公共標庫的信息由 Whale 依據港交所等數據進行加工處理，券商僅擁有臨時修改的權限；私有庫的信息則由券商自行維護全部內容。
 
 <div class="callout callout-bg-2 callout-border-2">
 <div class='callout-emoji'>❓</div>
-<p>平時可否在日切點前進行清算</p>
+<p>如果臨時修改公有庫的信息</p>
 </div>
 
-可以，但是必須在行情文件、IBOND 利率文件到位後進行。
+當日券商可對公共標庫中的標的進行臨時修改，並需及時將修改後的信息反饋給 Whale 客服，以便進行後續的數據更新與維護。
 
-例子：券商的日切時間點是下午 17:00。非半日市在 16:30 之前可以進行提前日切。但是，因為港股未收市，港股的股票信息和收盤價數據是沒有的，一直需要等到 16:30 後才能執行日終任務。
+<img src="/assets/WzRJbMFhnoJtPyxbyD7cElv3nRf.png" src-width="2864" src-height="1368" align="center"/>
 
-<b>所以，非半日市或者非港股假日，不建議在 16:30 之前操作提前日切</b>
+<img src="/assets/UdGxbrLA9oPEc8xhQj2cz6o7nqg.png" src-width="2864" src-height="1368" align="center"/>
 
-<img src="/assets/DVVobAnPMoIA6mxkWHecUk5CnTf.png" src-width="3584" src-height="1764" align="center"/>
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>何時可以對公有庫中的標的信息及收市價進行臨時修改</p>
+</div>
+
+- 數據同步後可進行操作：
+    - 若在數據匯總前進行操作，無需額外處理。
+    - 若在資金清算前進行操作，需重新執行數據匯總及清算檢查。
+    - 資金清算後，則不可進行修改。
+
+<img src="/assets/J6tCbyJMPovu5xxH1FscNt86ntd.png" src-width="2864" src-height="1368" align="center"/>
 
 ## 后台补单
 
@@ -137,7 +226,7 @@ sidebar_position: 3
 
 <div class="callout callout-bg-2 callout-border-2">
 <div class='callout-emoji'>❓</div>
-<p>代理商是要租戶在市場管理配置嗎？</p>
+<p>新增代理商需要配置什麼？</p>
 </div>
 
 路徑：清算參數設置 - 市場管理 - 服務商：配置基本信息和持倉對賬方式
@@ -289,7 +378,7 @@ EP 模式的券商，可聯繫客服開通。開通後每個交易日，系統�
 
 <img src="/assets/TNFubCMOyofC61xiJgQcFDcdnAc.png" src-width="2516" src-height="740" align="center"/>
 
-## 切換上手時的內部轉倉
+## 切換上手時如何內部轉倉
 
 <div class="callout callout-bg-2 callout-border-2">
 <div class='callout-emoji'>❓</div>

@@ -85,9 +85,9 @@ sidebar_position: 2
 
 <img src="/assets/DhT1bf3GBosoANxxVULcDMAAnwb.png" src-width="2862" src-height="800" align="center"/>
 
-- 关联客户加款明细后，系统将自动将入金见证状态设为「已见证」
+- 关联客户加款明细后或者可以不关联入金记录，系统将自动将入金见证状态设为「已见证」
 
-<img src="/assets/VRJNbJ7YwoJAUxxbs2scnkHQnSQ.png" src-width="2354" src-height="1224" align="center"/>
+<img src="/assets/SQEZbTMIHoyzCuxFWE2cVM2Bn2b.png" src-width="3314" src-height="1748" align="center"/>
 
 <img src="/assets/FEx9bqjA4oneQuxII94cqlvgnWt.png" src-width="2360" src-height="676" align="center"/>
 
