@@ -85,9 +85,9 @@ sidebar_position: 2
 
 <img src="/assets/DhT1bf3GBosoANxxVULcDMAAnwb.png" src-width="2862" src-height="800" align="center"/>
 
-- 關聯客戶加款明細後，系統將自動將入金見證狀態設為「已見證」
+- 關聯客戶加款明細後或者可以不關聯入金記錄，系統將自動將入金見證狀態設為「已見證」
 
-<img src="/assets/VRJNbJ7YwoJAUxxbs2scnkHQnSQ.png" src-width="2354" src-height="1224" align="center"/>
+<img src="/assets/SQEZbTMIHoyzCuxFWE2cVM2Bn2b.png" src-width="3314" src-height="1748" align="center"/>
 
 <img src="/assets/FEx9bqjA4oneQuxII94cqlvgnWt.png" src-width="2360" src-height="676" align="center"/>
 

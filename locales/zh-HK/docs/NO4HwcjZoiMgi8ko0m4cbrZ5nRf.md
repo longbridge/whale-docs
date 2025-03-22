@@ -126,66 +126,190 @@ sidebar_position: 2
 
 ### 計費配置
 
-#### 收費場景
+#### 基礎概念
 
-可在收費場景配置配置各個證券市場、融資、融券的基礎收費場景，爲套餐創建做準備。場景爲業務類型 + 收費類型的組合
+<b>合单规则和收费场景</b>：是系统的基础配置元素，通常在系统初始化时设置。
+
+<b>套餐收费和个性化收费</b>：是根据业务需求灵活配置的功能，可根据实际情况选择是否启用。兩者在配置中需要選擇合單規則和收費場景
+
+<b>套餐收费</b>：通常依据用户群体进行添加，例如经纪人 A 套餐、现金账户套餐。系统具备在客户开户时自动分配相应套餐的功能。
+
+<b>个性化收费</b>：一般根据客户个性化需求单独进行设置。
+
+<img src="/assets/OuYAwSctjhK8svbL9licXJnhnkb-board.png"/>
+
+#### 收費場景
 
 <b>字段說明</b>
 
-業務類型包括股票交易、融資利息、存款利息、出金交易、期權交易、轉倉手續費
-匹配條件之一，滿足此條件的流水，按計算規則收費。只能選擇，不能新增
+<table>
+<colgroup>
+<col width="200"/>
+<col width="200"/>
+<col width="397"/>
+</colgroup>
+<tbody>
+<tr><td><p><b>字段用途</b></p></td><td><p><b>字段名稱</b></p></td><td><p><b>字段說明</b></p></td></tr>
+<tr><td><p><b>匹配條件</b></p></td><td><p>業務類型</p></td><td><p>包括股票交易、融資利息、存款利息、出金交易、期權交易、轉倉手續費等。滿足此條件的流水，按計算規則收費。只能選擇，不能新增。</p></td></tr>
+<tr><td></td><td><p>計費依據</p></td><td><p>股票交易選擇市場，融資交易選擇幣種。滿足此條件的，按此規則計費。</p></td></tr>
+<tr><td><p><b>計費規則</b></p></td><td><p>計費方式</p></td><td><p>包括股數、交易金額等。</p></td></tr>
+<tr><td></td><td><p>計費精度</p></td><td><p>分爲合約、訂單、成交記錄。不同精度影響收費明細和尾差處理的口徑。<br/>按合约计费：<br/>收费明细：1 条合约生成 1 条收费明细。<br/>尾差处理：按合约分别处理尾差。<br/>按订单计费：<br/>收费明细：1 条合约含 3 条订单，生成 3 条收费明细。<br/>尾差处理：按订单分别处理尾差。<br/>按成交记录计费：<br/>收费明细：1 条合约含 3 条订单，每条订单含 3 条成交记录，生成 9 条收费明细。<br/>尾差处理：按成交记录分别处理尾差</p></td></tr>
+<tr><td></td><td><p>年費率天數</p></td><td><p>費用金額 = 計算金額 / 年費率天數。例子：融資利息的計費天數填 1，計費分母填 365。</p></td></tr>
+<tr><td></td><td><p>結果截取方式</p></td><td><p>與截取位數搭配使用。包括四捨五入、向上截取、向下截取三種方式。</p></td></tr>
+<tr><td></td><td><p>截取位數</p></td><td><p>與結果截取方式搭配使用，決定最終費用金額的精度。</p></td></tr>
+<tr><td><p><b>輸出結果</b></p></td><td><p>收費類型</p></td><td><p>包括佣金、平臺費、印花稅等。滿足匹配條件的流水，收取該費用。只能選擇，不能新增。</p></td></tr>
+</tbody>
+</table>
 
-收費類型包括佣金、平臺費、印花稅等
-計算規則之一，滿足匹配條件的流水，收取該費用。只能選擇，不能新增
+---
 
-計費依據：匹配條件之一。滿足此條件的，按此規則計費。股票交易選擇市場，融資交易選擇幣種
+<b>說明：</b>
 
-計費方式：計算規則之一，含股數，交易金額等
+1. <b>匹配條件</b>：用於確定哪些流水需要進入計費流程。
+2. <b>計費規則</b>：用於定義如何計算費用金額，包括計費方式、精度、天數和截取方式等。
+3. <b>輸出結果</b>：最終的計費結果
 
-計費精度：計算規則之一。在股票交易中使用，分爲合約、訂單、成交記錄，計費精度爲合約的，收費明細（一條合約生成一條收費明細）和尾差處理都按照合約口徑（每條合約分別進行尾差處理）；計費精度爲訂單的，則收費明細（一條合約含三條訂單，則生成三條收費明細）和尾差處理都按照訂單口徑；計費精度爲成交記錄的，則收費明細口徑（一條合約含三條訂單，每條訂單含，三條成交記錄，則生成九條收費明細）和尾差處理都按照成交記錄口徑
-
-年費率天數：費用金額=計算金額/年費率天數。例子：融資利息設置的參數爲年利率的，則計費天數填 1，計費分母填 365
-
-結果截取方式、截取位數：搭配使用。有四捨五入、向上截取、向下截取三種
+---
 
 <img src="/assets/MhgcbTcFaolc12xafw8crlbUn6y.png" src-width="3548" src-height="1806" align="center"/>
 
-#### 客戶組管理
+#### 客戶收費配置
 
-在客戶組計費配置可維護客戶組。支持增、刪、改。全局客戶組（默認客戶組）不支持刪除
+一个個性化收費只包含一個收費
 
-<img src="/assets/M3cubDB6foOYUyxdjuUc8vjAnj6.png" src-width="3548" src-height="1806" align="center"/>
+一个客户只能绑定多個個性化收費
+<b>新建個性化收費示例</b>
+<img src="/assets/HraNbOt5QoNmADxKuK4cg2pin3e.png" src-width="2900" src-height="682" align="center"/>
+<img src="/assets/TWCNbkmnBooOtGxex53cN7zAnmh.png" src-width="2870" src-height="1428" align="center"/>
+<img src="/assets/FdM6btGyqosWmxxkRJScrlW4nfS.png" src-width="2870" src-height="1428" align="center"/>
+<img src="/assets/BcbibYCv8opQnoxeaVHco6von0g.png" src-width="2870" src-height="1428" align="center"/>
+<b>添加客戶示例</b>
+<img src="/assets/CU9UbwTP5oBPt2x68IqcEDz9nMh.png" src-width="2944" src-height="998" align="center"/>
+<img src="/assets/Vk0Ub1wKaocHo6xWHfdc9R4Bnqd.png" src-width="2944" src-height="998" align="center"/>
+<img src="/assets/LVZ6bvVjwo4pw1xORQBcYF9AnIb.png" src-width="2940" src-height="1516" align="center"/>
+##### 套餐收费
+如果客戶具有功能畫像（比如同一個經紀人，同是現金賬戶，多個費用收費標準一致），可以使用套餐收費功能
+一个客户只能绑定一个套餐
+一个套餐里可包含多个收费场景
 
-<b>字段說明</b>
-客戶組类型：用于区分套餐的类别
-通用套餐：有別於默認套餐，有通用套餐的先用通用套餐的規則
-FD 機構：在 FD 模式中針對 FD 機構設置的套餐，用於篩選不同機構的套餐。一般多租戶用不到
+<b>新建套餐示例</b>
 
-套餐名稱：用戶可自定義，方便篩選用
+<img src="/assets/W4kEbAUKwovaLBxj9Y6cFXRFnde.png" src-width="2502" src-height="1130" align="center"/>
 
-合單規則（未選擇不合單）。设置值后，对应市场的套餐将按合单规则进行合单
+<img src="/assets/CunmbeoEvosnKlxIkx3chzhInXe.png" src-width="2502" src-height="1096" align="center"/>
 
-閾值（計費門檻）：大於設置值的流水才進行收費。該字段對其計算方式的設置值。例子：計費方式設置爲交易金額，閾值（計費門檻）設置爲 1000，則交易金額&gt;1000 才收費
-費率：
-<b>固定費率：收費金額=值</b><b>x</b><b>費率</b>
-計算方式爲交易金額、持倉市值，則費率值爲交。費率，不帶%。例子：按照交易金額的 1% 收費，則費率填 0.01
-計算方式爲交易股數、按期權張數、計費合約數量、訂單筆數、成交筆數，則費率值填寫每股（張、訂單……）的收費金額。
-計算方式爲非預期上游回報費用的，填寫 0，實際不起作用，收費金額=上游收費值
-<b>單筆階梯費率：針對單筆統計單位生效。收費金額=階梯結束值 1</b><b>x</b><b>費率 1+ （階梯結束值 2-階梯結束值 1）</b><b>x</b><b>費率 2+……+ （階梯結束值 N-階梯結束值 N-1）</b><b>x</b><b>費率 N</b>
-階梯輸入規則：輸入時，左開右閉，最後一個階梯值爲 0。如圖階梯爲大於 1&lt;=3
+<img src="/assets/Fi4PbsSSwo5ZLSxrFeWcvRtznTf.png" src-width="2502" src-height="1096" align="center"/>
 
-<img src="/assets/XIJFb9aG1oMdFixZFJFcKmH2nTh.png" src-width="1398" src-height="432" align="center"/>
+##### 客戶計費查詢
 
-按月階梯費率：後臺統計每月的交易金額總量，系統判斷到該筆累計的交易處於哪一梯度，則按該梯度的費率計費
-收費金額= 該筆交易金額（交易筆數等）x 費率
-跨梯度的則將交易金額拆開計算，用各自的費率計算後再疊加
-按月階梯的累積值從月初開始統計，而不是設置是時開始統計
+該功能用於查詢客戶的收費信息
 
-費率幣種：收費幣種，計算方式的枚舉值自帶幣種的，按照枚舉值的幣種。若計算方式爲交易金額的，收費幣種按照交易金額的幣種
+<b>優先級處理</b>
 
-最低、最高收費：略
+<b>特殊收費</b>(個性化收費&gt;普通套餐&gt;全局套餐)&gt;<b>普通收費</b>(個性化收費&gt;普通套餐&gt;全局套餐)
 
-不超過交易金額比例：收費的金額不大於交易金額 x 設置值/100。業務類型爲股票交易、期權交易的纔可選擇設置。
+<img src="/assets/K25bbfVTKor8U1xFbSXceZ6Snxc.png" src-width="2502" src-height="1096" align="center"/>
+
+<img src="/assets/AgHebOomkowyumxc9RAcV656nUg.png" src-width="2502" src-height="1096" align="center"/>
+
+<img src="/assets/BvCdbUYXfoTwaNxZo31cmE2jnze.png" src-width="2502" src-height="1096" align="center"/>
+
+<img src="/assets/RyBkbD7Hxoss7DxA311cNz21nAe.png" src-width="2502" src-height="1096" align="center"/>
+
+<img src="/assets/AgChbtdSXoORFdxzA2ycqCtln6f.png" src-width="2502" src-height="1096" align="center"/>
+
+### 其它計費項目
+
+功能清單
+
+<table>
+<colgroup>
+<col width="146"/>
+<col width="360"/>
+<col width="235"/>
+</colgroup>
+<tbody>
+<tr><td><p>操作</p></td><td><p>工單標識</p></td><td><p>操作日誌</p></td></tr>
+<tr><td><p><b>更新標的資訊</b></p></td><td><p>clearing.ods_stock.edit</p></td><td><p>标的管理 - 更新标的信息</p></td></tr>
+</tbody>
+</table>
+
+#### 香港市場印花稅豁免
+
+配置注意事项
+
+1. <b>資料自動更新</b>
+    - 該欄位的資料將<b>自動從港交所獲取</b>，並<b>每日更新</b>。
+
+2. <b>資料修改指南</b>
+    - 如發現資料有誤，您可以在<b>清算计費步驟之前</b>修改標的資訊。請注意，所做修改將在次日被更新的資料覆蓋，因此修改後請<b>務必聯繫 Whale 客戶服務</b>反饋資料問題。
+
+3. <b>適用範圍限制</b>
+    - 非香港市場的標的，該欄位將<b>不適用</b>。
+
+4. <b>特定標的稅收規則</b>
+    - 以ETF/（ETF）和WT/（渦輪）開頭的標的，將<b>強制不收取印花稅</b>。
+
+<b>配置案例</b>
+
+<img src="/assets/AFTIb5XYwonWfjxJWnEcmpfZndh.png" src-width="2878" src-height="1172" align="center"/>
+
+<img src="/assets/RvwubfFROoDrPMxCLP2cneTun64.png" src-width="2878" src-height="1172" align="center"/>
+
+#### <b>可交易債券利率配置</b>
+
+<b>功能清單</b>
+
+<table>
+<colgroup>
+<col width="146"/>
+<col width="360"/>
+<col width="235"/>
+</colgroup>
+<tbody>
+<tr><td><p>操作</p></td><td><p>工單標識</p></td><td><p>操作日誌</p></td></tr>
+<tr><td><p>編輯清算參數配置</p></td><td><p>clearing.update_system_config.exec</p></td><td><p>清算 - 修改系统配置</p></td></tr>
+<tr><td><p>刪除債券利率信息</p></td><td><p>clearing.bond.delete</p></td><td><p>清算 - 新增债券信息与利率</p></td></tr>
+<tr><td><p>新增債券利率信息</p></td><td><p>clearing.bond.insert</p></td><td><p>清算 - 删除债券信息与利率</p></td></tr>
+<tr><td><p>編輯債券利率信息</p></td><td><p>clearing.bond.update</p></td><td><p>清算 - 更新债券信息与利率</p></td></tr>
+</tbody>
+</table>
+
+<b>總開關</b>
+
+開啟總開關後才會正式啟用可交易債券的計息功能
+
+<img src="/assets/T5Qbbc0iVoNrEVxeb4tcVQp0nFh.png" src-width="2502" src-height="1110" align="center"/>
+
+<b>利率配置</b>
+
+配置注意事項
+
+利息公佈後務必及時更新日曆
+
+在派息日期 -4 個交易日內未更新利率的，可能會導致利息計算錯誤
+
+必須一次性將所欲日曆配置上，未來的派息日留空
+
+配置的使用
+
+累計利息=數量*賬面價格*上期派息利率*累計計息天數/一年天數
+
+累計计息天數=交收日 - 派息日
+
+系統針對配置的檢查
+
+-7 個自然日內，系統在清算前準備會兜底性檢查
+
+報錯時如果未到派息日期 -4 個交易日的，可先手動通過
+
+報錯時如果已到派息日期 -4 個交易日的，建議先按上期利率更新且持續跟蹤利息計算情況
+
+新建利率信息案例
+
+<img src="/assets/RVNmbYBHMowUHLxIVntc7V1In0F.png" src-width="2502" src-height="1110" align="center"/>
+
+<img src="/assets/U2hgbfkqWoMJ1wxtJeucBEDVnYc.png" src-width="2502" src-height="1110" align="center"/>
 
 ### 结单配置
 
