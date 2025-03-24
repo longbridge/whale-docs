@@ -17,7 +17,158 @@ Whale 系统包含了处理出金申请、提现处理、对账、单独处理�
 
 <img src="/assets/QSsob9ZMtoHJE1x051hcwIFgnhn.png" src-width="2146" src-height="256" align="center"/>
 
-## 二、操作说明
+# 二、操作说明
+
+# 出金配置
+
+## 资金参数配置
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>业务参数设置 &gt; 资金参数&gt;公司银行账户</p>
+</div>
+
+<img src="/assets/TbVabk6CjoC8ZhxW2JwcJHFynig.png" src-width="2844" src-height="1304" align="center"/>
+
+- 点选【新建】，进入二级页面补充出金频道讯息（券商公司用户付款的银行账户和出金方式组合，比如：工银亚洲 001-支票转账）
+
+<img src="/assets/CuVHbCYkzo2Z5xxwroIcQ4G8n3g.png" src-width="2846" src-height="1330" align="center"/>
+
+1. 打开币种的出金功能开关
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>📍</div>
+<p>菜单入口：业务参数设定&gt;资金参数&gt;币种</p>
+</div>
+
+<img src="/assets/IqrUbXkcNovfIFxuCEIcsmHnnGb.png" src-width="2858" src-height="1318" align="center"/>
+
+- 点选【新建】，进入二级页面，将出金功能的选项设为「是」
+
+<img src="/assets/Yt2JbNWOGomiGAxNZAPcuw5Jndc.png" src-width="2864" src-height="1330" align="center"/>
+
+## 自动出金规则
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>业务参数设置&gt;出金规则&gt;自动出金规则</p>
+</div>
+
+配置出金渠道打包规则，用以控制出金批量是自动还是手工处理。同时还能通过规则控制出金的单笔限额，以及服务窗口期以及支持的客户银行等。
+
+目前可支持的出金策略包括：单笔实时、定时打包人工审核、手工打包和批量自动
+
+<img src="/assets/Ya5Mbr5qxohQ5Axme55ccPGMnwB.png" src-width="3304" src-height="878" align="center"/>
+
+<b>操作按钮说明</b>
+
+- 新建：可以根据券商公司对应出金渠道新建自动出金规则
+- 编辑：对已添加的自动出金规则可选择编辑
+- 删除：删除已有的自动出金规则
+
+## 日限额以及变动表
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>业务参数设置&gt;出金规则&gt;日限额</p>
+</div>
+
+客户相应出金的渠道可能存在日限额，所以为了降低出金异常情况，建立了出金日限额监控提示以及管理。
+
+<img src="/assets/UWPcbehjCoe0dYxJnqBcYX89nlc.png" src-width="3292" src-height="730" align="center"/>
+
+<b>操作按钮说明</b>
+
+- 新建：可以根据需求配置出金银行相关日限额
+- 编辑：对已添加的日限额可选择编辑
+- 删除：删除已有的日限额
+- 调整：调整当前出金银行对应的日限额额度
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>业务参数设置&gt;出金规则&gt;日限额变动表</p>
+</div>
+
+可以查询出金银行的日限额历史变动记录
+
+<img src="/assets/JIYcbu9GRocx9UxYonfcZkQVn8d.png" src-width="3264" src-height="1102" align="center"/>
+
+对于日限额达到日剩余额度警戒线，系统会自动推送消息告警
+
+<img src="/assets/LgHIbt2srolFVQxL9sEc6V94nU0.png" src-width="1156" src-height="138" align="center"/>
+
+## 余额拦截
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>业务参数设置&gt;出金规则&gt;余额拦截</p>
+</div>
+
+目前指用于出金业务。在出金业务中，系统会根据财务人员选择的出金银行进行余额查询，根据查询到的余额对待出金的金额进行判断，如果余额不足以支持用户提交的出金请求，则会将相应的出金进行拦截，等待财务后续人工处理。
+
+<img src="/assets/RnVrbxfDYouO2exUgLDcmJzFnlh.png" src-width="3308" src-height="1048" align="center"/>
+
+<b>操作按钮说明</b>
+
+- 编辑：对于已接入 API 银行的余额查询记录可以编辑提示余额和拦截余额
+- 启用：对于已接入 API 银行的余额查询记录选择启用
+- 停用：对于已接入 API 银行的余额查询记录选择停用
+
+对于银行余额达到提示余额时，系统会自动推送讯息警告
+
+<img src="/assets/UFmPbJktKoGNQLx3MGfcEhBRnKh.png" src-width="830" src-height="194" align="center"/>
+
+对于银行余额达到拦截余额时，系统会自动拦截对应出金并且进行告警"
+
+<img src="/assets/DC7Wb2jcpomV0GxHbsecQW8lnbg.png" src-width="772" src-height="220" align="center"/>
+
+## 自动审核规则
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>业务参数设置&gt;出金规则&gt;自动审核规则</p>
+</div>
+
+对于客户提交出金申请是否需要后台人工审核，可以在「自动审核规则」进行设定。目前可支援的审核规则包括：人工审批需工单、人工审批无需工单、自动提交和自动驳回
+
+<img src="/assets/X9Xobr0m6o8EinxwtWzc5G4gnjg.png" src-width="3280" src-height="672" align="center"/>
+
+<b>操作按钮说明</b>
+
+- 新建：可以根据需求配置自动审核规则
+- 编辑：对已添加的自动审核规则可选择编辑
+- 启用：对于已添加的自动审核规则选择启用
+- 停用：对于已添加的自动审核规则选择停用
+
+## 更多设置
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>业务参数设置&gt;出金规则&gt;更多设置</p>
+</div>
+
+对于在「款项管理 - 出金 - 提现处理 - 待处理」对应操作的【直接出账】提交后是否需要工单审批，可以在「更多设置」进行配置
+
+<img src="/assets/Pa9jbbo4Wojt40xHrTucjJSvnMb.png" src-width="3302" src-height="366" align="center"/>
+
+## 出金参数
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>业务参数设置&gt;出金规则&gt;出金参数</p>
+</div>
+
+可根据客户出金银行区分配置预计到账时间、预估费用等参数
+
+<img src="/assets/ORbybTFORo7KFAxEG5scNd2GnMe.png" src-width="3262" src-height="1084" align="center"/>
+
+<b>操作按钮说明</b>
+
+- 新建：可以根据需求配置出金参数
+- 编辑：对已添加的出金参数可选择编辑
+- 复制：通过复制已有的出金参数进行快速新建
+
+# 出金操作
 
 <div class="callout callout-bg-6 callout-border-6">
 <div class='callout-emoji'>📍</div>
@@ -34,6 +185,10 @@ Whale 系统包含了处理出金申请、提现处理、对账、单独处理�
 
 <img src="/assets/VPYlbZJfjokg7ZxkLf1c0MMdn6g.png" src-width="1192" src-height="2434" align="center"/>
 
+- 提交（<b>可批量操作</b>）：经过操作人员初步审查无误后，可以将申请提交至下一节点的操作人员进行审核 - 提现
+
+操作
+
 - 驳回（<b>可批量操作）</b>：若客户递交的出金申请资料有误或使用者反馈本次申请无效时，操作员可以进行【驳回】操作
 - 删除：若客户递交的出金申请资料有误或使用者反馈本次申请无效时，操作员也可以透过【删除】按钮直接删除目标记录
 - 修改：若在提交出金申请前，发现客户递交的某笔具出金申请有问题，可在与客户确认无误后可以透过【编辑】按钮进行修正，修改后需进行工单审批，审批通过后修改内容生效。
@@ -42,10 +197,6 @@ Whale 系统包含了处理出金申请、提现处理、对账、单独处理�
 <img src="/assets/KygmbMCcfo4HVxxNuvVcCWmHnnd.png" src-width="3824" src-height="1418" align="center"/>
 
 <img src="/assets/UtkubpN0Fo09CpxtRRRcmQBonOd.png" src-width="3322" src-height="1674" align="center"/>
-
-- 提交（<b>可批量操作</b>）：经过操作人员初步审查无误后，可以将申请提交至下一节点的操作人员进行审核 - 提现
-
-操作
 
 ## 提现处理
 
