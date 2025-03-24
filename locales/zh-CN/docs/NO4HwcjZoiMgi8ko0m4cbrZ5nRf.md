@@ -87,7 +87,7 @@ sidebar_position: 2
 
 路径：清算管理&gt;市场清算&gt;日终任务&gt;日终设置
 
-<img src="/assets/GA3hb6ICYoiMPdxyDfzcogw0nJg.png" src-width="3574" src-height="1774" align="center"/>
+<img src="/assets/Bd7gba1vsohhuuxxa0KcLL0Nnlh.png" src-width="2852" src-height="1374" align="center"/>
 
 <b>市场交收配置</b>
 
@@ -126,66 +126,189 @@ sidebar_position: 2
 
 ### 计费配置
 
-#### 收费场景
+#### 基础概念
 
-可在收费场景配置配置各个证券市场、融资、融券的基础收费场景，为套餐创建做准备。场景为业务类型 + 收费类型的组合
+合单规则和收费场景是系统的基础配置元素，通常在系统初始化时进行设置
+
+套餐收费和个性化收费是根据业务需求灵活配置的功能，用户可根据实际情况选择是否启用。套餐收费通常依据用户群体进行添加，例如经纪人 A 套餐、现金账户套餐。系统具备在客户开户时自动分配相应套餐的功能；个性化收费一般根据客户个性化需求单独进行设置
+
+<img src="/assets/OuYAwSctjhK8svbL9licXJnhnkb-board.png"/>
+
+#### 收费场景
 
 <b>字段说明</b>
 
-业务类型包括股票交易、融资利息、存款利息、出金交易、期权交易、转仓手续费
-匹配条件之一，满足此条件的流水，按计算规则收费。只能选择，不能新增
+<table>
+<colgroup>
+<col width="200"/>
+<col width="200"/>
+<col width="397"/>
+</colgroup>
+<tbody>
+<tr><td><p><b>字段用途</b></p></td><td><p><b>字段名称</b></p></td><td><p><b>字段说明</b></p></td></tr>
+<tr><td rowspan="2"><p><b>匹配条件</b></p></td><td><p>业务类型</p></td><td><p>包括股票交易、融资利息、存款利息、出金交易、期权交易、转仓手续费等。满足此条件的流水，按计算规则收费。只能选择，不能新增</p></td></tr>
+<tr><td><p>计费依据</p></td><td><p>股票交易选择市场，融资交易选择币种。满足此条件的，按此规则计费</p></td></tr>
+<tr><td rowspan="5"><p><b>计费规则</b></p></td><td><p>计费方式</p></td><td><p>包括股数、交易金额等</p></td></tr>
+<tr><td><p>计费精度</p></td><td><p>分为合约、订单、成交记录。不同精度影响收费明细和尾差处理的口径。<br/>以客户 A 一天提交了 3 笔订单，每笔订单都分成 3 次成交为例子：<br/>按合约计费<br/>收费明细：1 条合约生成 1 条收费明细。<br/>尾差处理：按合约分别处理尾差。<br/>按订单计费：<br/>收费明细：1 条合约含 3 条订单，生成 3 条收费明细。<br/>尾差处理：按订单分别处理尾差。<br/>按成交记录计费：<br/>收费明细：1 条合约含 3 条订单，每条订单含 3 条成交记录，生成 9 条收费明细。<br/>尾差处理：按成交记录分别处理尾差。</p></td></tr>
+<tr><td><p>年费率天数</p></td><td><p>费用金额 = 计算金额 / 年费率天数。例子：融资利息的计费天数填 1，计费分母填 365</p></td></tr>
+<tr><td><p>结果截取方式</p></td><td><p>与截取位数搭配使用。包括四舍五入、向上截取、向下截取三种方式</p></td></tr>
+<tr><td><p>截取位数</p></td><td><p>与结果截取方式搭配使用，决定最终费用金额的精度。</p></td></tr>
+<tr><td><p><b>输出结果</b></p></td><td><p>收费类型</p></td><td><p>包括佣金、平台费、印花税等。满足匹配条件的流水，收取该费用。只能选择，不能新增</p></td></tr>
+</tbody>
+</table>
 
-收费类型包括佣金、平台费、印花税等
-计算规则之一，满足匹配条件的流水，收取该费用。只能选择，不能新增
+---
 
-计费依据：匹配条件之一。满足此条件的，按此规则计费。股票交易选择市场，融资交易选择币种
+<b>说明：</b>
 
-计费方式：计算规则之一，含股数，交易金额等
+匹配条件：用于确定哪些流水需要进入计费流程
 
-计费精度：计算规则之一。在股票交易中使用，分为合约、订单、成交记录，计费精度为合约的，收费明细（一条合约生成一条收费明细）和尾差处理都按照合约口径（每条合约分别进行尾差处理）；计费精度为订单的，则收费明细（一条合约含三条订单，则生成三条收费明细）和尾差处理都按照订单口径；计费精度为成交记录的，则收费明细口径（一条合约含三条订单，每条订单含，三条成交记录，则生成九条收费明细）和尾差处理都按照成交记录口径
+计费规则：用于定义如何计算费用金额，包括计费方式、精度、天数和截取方式等
 
-年费率天数：费用金额=计算金额/年费率天数。例子：融资利息设置的参数为年利率的，则计费天数填 1，计费分母填 365
+输出结果：最终的计费结果
 
-结果截取方式、截取位数：搭配使用。有四舍五入、向上截取、向下截取三种
+---
 
 <img src="/assets/MhgcbTcFaolc12xafw8crlbUn6y.png" src-width="3548" src-height="1806" align="center"/>
 
-#### 客户组管理
+#### 客户收费配置
 
-在客户组计费配置可维护客户组。支持增、删、改。全局客户组（默认客户组）不支持删除
+<b>新建个性化收费示例</b>
+<img src="/assets/ArJ4bsEIEoXxgVx7w2hc6YKNnxc.png" src-width="2852" src-height="1374" align="center"/>
+<img src="/assets/Jx4gbQoocod7oyxF4dtcDm7Zn7b.png" src-width="2852" src-height="1374" align="center"/>
+<img src="/assets/A5WdbSXokooIfQxasbBc0mbInwg.png" src-width="2874" src-height="1312" align="center"/>
 
-<img src="/assets/M3cubDB6foOYUyxdjuUc8vjAnj6.png" src-width="3548" src-height="1806" align="center"/>
+<b>添加客户示例</b>
+<img src="/assets/VJB7bAF8go3VEzxdxmPcjnRqnHB.png" src-width="2874" src-height="1312" align="center"/>
+<img src="/assets/Y4ZDbNdd6o8FPRx7WI2cI3t1nvb.png" src-width="2874" src-height="1312" align="center"/>
+<img src="/assets/Y5Kmb7AXyoBhgmxRp5BcgExanpd.png" src-width="2522" src-height="1102" align="center"/>
 
-<b>字段说明</b>
-客户组类型：用于区分套餐的类别
-通用套餐：有别于默认套餐，有通用套餐的先用通用套餐的规则
-FD 机构：在 FD 模式中针对 FD 机构设置的套餐，用于筛选不同机构的套餐。一般多租户用不到
+##### 套餐收费
 
-套餐名称：用户可自定义，方便筛选用
+如果客户具有功能画像（比如同一个经纪人，同是现金账户，多个费用收费标准一致），可以使用套餐收费功能
 
-合单规则（未选择不合单）。设置值后，对应市场的套餐将按合单规则进行合单
+一个客户只能绑定一个套餐
 
-阈值（计费门槛）：大于设置值的流水才进行收费。该字段对其计算方式的设置值。例子：计费方式设置为交易金额，阈值（计费门槛）设置为 1000，则交易金额&gt;1000 才收费
-费率：
-<b>固定费率：收费金额=值</b><b>x</b><b>费率</b>
-计算方式为交易金额、持仓市值，则费率值为交。费率，不带%。例子：按照交易金额的 1% 收费，则费率填 0.01
-计算方式为交易股数、按期权张数、计费合约数量、订单笔数、成交笔数，则费率值填写每股（张、订单……）的收费金额。
-计算方式为非预期上游回报费用的，填写 0，实际不起作用，收费金额=上游收费值
-<b>单笔阶梯费率：针对单笔统计单位生效。收费金额=阶梯结束值 1</b><b>x</b><b>费率 1+ （阶梯结束值 2-阶梯结束值 1）</b><b>x</b><b>费率 2+……+ （阶梯结束值 N-阶梯结束值 N-1）</b><b>x</b><b>费率 N</b>
-阶梯输入规则：输入时，左开右闭，最后一个阶梯值为 0。如图阶梯为大于 1&lt;=3
+一个套餐里可包含多个收费场景
 
-<img src="/assets/XIJFb9aG1oMdFixZFJFcKmH2nTh.png" src-width="1398" src-height="432" align="center"/>
+<b>新建套餐示例</b>
 
-按月阶梯费率：后台统计每月的交易金额总量，系统判断到该笔累计的交易处于哪一梯度，则按该梯度的费率计费
-收费金额= 该笔交易金额（交易笔数等）x 费率
-跨梯度的则将交易金额拆开计算，用各自的费率计算后再叠加
-按月阶梯的累积值从月初开始统计，而不是设置是时开始统计
+<img src="/assets/LXQ3bNmaboV1yqxoYTScDLTUnxh.png" src-width="2852" src-height="1374" align="center"/>
 
-费率币种：收费币种，计算方式的枚举值自带币种的，按照枚举值的币种。若计算方式为交易金额的，收费币种按照交易金额的币种
+<img src="/assets/CunmbeoEvosnKlxIkx3chzhInXe.png" src-width="2502" src-height="1096" align="center"/>
 
-最低、最高收费：略
+<img src="/assets/Fi4PbsSSwo5ZLSxrFeWcvRtznTf.png" src-width="2502" src-height="1096" align="center"/>
 
-不超过交易金额比例：收费的金额不大于交易金额 x 设置值/100。业务类型为股票交易、期权交易的才可选择设置。
+##### 客户计费查询
+
+该功能用于查询客户的收费信息
+
+<b>优先级处理</b>
+
+<b>特殊收费</b>(个性化收费&gt;普通套餐&gt;全局套餐)&gt;<b>普通收费</b>(个性化收费&gt;普通套餐&gt;全局套餐)
+
+<img src="/assets/K25bbfVTKor8U1xFbSXceZ6Snxc.png" src-width="2502" src-height="1096" align="center"/>
+
+<img src="/assets/AgHebOomkowyumxc9RAcV656nUg.png" src-width="2502" src-height="1096" align="center"/>
+
+<img src="/assets/BvCdbUYXfoTwaNxZo31cmE2jnze.png" src-width="2502" src-height="1096" align="center"/>
+
+<img src="/assets/RyBkbD7Hxoss7DxA311cNz21nAe.png" src-width="2502" src-height="1096" align="center"/>
+
+<img src="/assets/AgChbtdSXoORFdxzA2ycqCtln6f.png" src-width="2502" src-height="1096" align="center"/>
+
+### 其它计费项目
+
+功能清单
+
+<table>
+<colgroup>
+<col width="146"/>
+<col width="360"/>
+<col width="235"/>
+</colgroup>
+<tbody>
+<tr><td><p>操作</p></td><td><p>工单标识</p></td><td><p>操作日志</p></td></tr>
+<tr><td><p><b>更新标的资讯</b></p></td><td><p>clearing.ods_stock.edit</p></td><td><p>标的管理 - 更新标的信息</p></td></tr>
+</tbody>
+</table>
+
+#### 香港市场印花税豁免
+
+配置注意事项
+
+1. <b>资料自动更新</b>
+    - 该栏位的资料将<b>自动从港交所获取</b>，并<b>每日更新</b>。
+
+2. <b>资料修改指南</b>
+    - 如发现资料有误，您可以在<b>清算计费步骤之前</b>修改标的资讯。请注意，所做修改将在次日被更新的资料覆盖，因此修改后请<b>务必联系 Whale 客户服务</b>反馈资料问题。
+
+3. <b>适用范围限制</b>
+    - 非香港市场的标的，该栏位将<b>不适用</b>。
+
+4. <b>特定标的税收规则</b>
+    - 以ETF/（ETF）和WT/（涡轮）开头的标的，将<b>强制不收取印花税</b>。
+
+<b>配置案例</b>
+
+<img src="/assets/AFTIb5XYwonWfjxJWnEcmpfZndh.png" src-width="2878" src-height="1172" align="center"/>
+
+<img src="/assets/RvwubfFROoDrPMxCLP2cneTun64.png" src-width="2878" src-height="1172" align="center"/>
+
+#### <b>可交易债券利率配置</b>
+
+<b>功能清单</b>
+
+<table>
+<colgroup>
+<col width="146"/>
+<col width="360"/>
+<col width="235"/>
+</colgroup>
+<tbody>
+<tr><td><p>操作</p></td><td><p>工单标识</p></td><td><p>操作日志</p></td></tr>
+<tr><td><p>编辑清算参数配置</p></td><td><p>clearing.update_system_config.exec</p></td><td><p>清算 - 修改系统配置</p></td></tr>
+<tr><td><p>删除债券利率信息</p></td><td><p>clearing.bond.delete</p></td><td><p>清算 - 新增债券信息与利率</p></td></tr>
+<tr><td><p>新增债券利率信息</p></td><td><p>clearing.bond.insert</p></td><td><p>清算 - 删除债券信息与利率</p></td></tr>
+<tr><td><p>编辑债券利率信息</p></td><td><p>clearing.bond.update</p></td><td><p>清算 - 更新债券信息与利率</p></td></tr>
+</tbody>
+</table>
+
+<b>总开关</b>
+
+开启总开关后才会正式启用可交易债券的计息功能
+
+<img src="/assets/T5Qbbc0iVoNrEVxeb4tcVQp0nFh.png" src-width="2502" src-height="1110" align="center"/>
+
+<b>利率配置</b>
+
+配置注意事项
+
+利息公布后务必及时更新日历
+
+在派息日期 -4 个交易日内未更新利率的，可能会导致利息计算错误
+
+必须一次性将所欲日历配置上，未来的派息日留空
+
+配置的使用
+
+累计利息=数量*账面价格*上期派息利率*累计计息天数/一年天数
+
+累计计息天数=交收日 - 派息日
+
+系统针对配置的检查
+
+-7 个自然日内，系统在清算前准备会兜底性检查
+
+报错时如果未到派息日期 -4 个交易日的，可先手动通过
+
+报错时如果已到派息日期 -4 个交易日的，建议先按上期利率更新且持续跟踪利息计算情况
+
+新建利率信息案例
+
+<img src="/assets/RVNmbYBHMowUHLxIVntc7V1In0F.png" src-width="2502" src-height="1110" align="center"/>
+
+<img src="/assets/U2hgbfkqWoMJ1wxtJeucBEDVnYc.png" src-width="2502" src-height="1110" align="center"/>
 
 ### 结单配置
 
@@ -292,16 +415,15 @@ DA 帐户开户后会默认配置为按 3 月/6 月/9 月/12 月这四个月生�
 
 市场清算完成交易文件导入，确认当前账务日期准确后，可点击执行清算前准备
 
-<img src="/assets/U5D2b9haIocbEtxskspcDZrzn5d.png" src-width="2908" src-height="1540" align="center"/>
+<img src="/assets/Xtp1bMvQ5oRWlax8IehcJTMWnuh.png" src-width="2852" src-height="1374" align="center"/>
 
 执行后，5 秒内会返回检查结果。全部检查都通过的，可以进行后续操作
 检查报错的，点击检查项目右上角可查看检查项目的规则和操作指引
-
-<img src="/assets/HyXnbsgDMoWndSx7NEVclBnPnch.png" src-width="2906" src-height="1548" align="center"/>
+<img src="/assets/WHSFb0TtNoAklmxFVvFcdo2cn2f.png" src-width="2852" src-height="1374" align="center"/>
 
 部分检查会提供异常详情
 
-<img src="/assets/U2ZUbrNkbokVQ7xXGRqcSxPunTc.png" src-width="2904" src-height="1540" align="center"/>
+<img src="/assets/ENWTbTaXso0p2Ix6d2Uct32GnJ1.png" src-width="2852" src-height="1374" align="center"/>
 
 结算人员核对后，确认有问题的，在完成相关业务操作后，可点击“重新执行”
 
@@ -318,12 +440,9 @@ DA 帐户开户后会默认配置为按 3 月/6 月/9 月/12 月这四个月生�
 <img src="/assets/OM0lbFaZ4owtSZx0HAscsiMNnkd.png" src-width="2920" src-height="1550" align="center"/>
 
 结算人员核对后，因为业务流程有差别，需要永久关闭检查项目的，可以联系客服处理
+  当审核通过后，清算前准备就算完成（文字会提示：已手动通过）
 
-<img src="/assets/IbSjb8fK2obBUExKEiTcoLtNnqg.png" src-width="2926" src-height="1556" align="center"/>
-
-当审核通过后，清算前准备就算完成（文字会提示：已手动通过）
-
-<img src="/assets/QgJFbyxOLoffepxwQbQc6qsynjh.png" src-width="2926" src-height="1558" align="center"/>
+<img src="/assets/E8B5bi1jxoOEbVxHTNhc43d5nw4.png" src-width="2852" src-height="1374" align="center"/>
 
 清算前准备检查项目
 
@@ -371,11 +490,13 @@ DA 帐户开户后会默认配置为按 3 月/6 月/9 月/12 月这四个月生�
 
 注意：若有需要可点选 '暂停一键清算'，但系统会等当时作业执行完毕后，才开始暂停下一动作（功能键会变灰）
 
-<img src="/assets/JAr5bv4jNoNv5DxiH47csq1vnhc.png" src-width="2916" src-height="1546" align="center"/>
+<img src="/assets/WAikboAUAo5YxbxX1f2ctdBknkf.png" src-width="2852" src-height="1374" align="center"/>
 
-如果要进行后台补单，或者修正合约的，在清算计费步骤后进行。可在数据同步直接点击“暂停一键清算”，然后逐步执行，避免遗忘错过暂停时机
+如果要进行后台补单，或者修正合约的，在清算计费步骤后进行。可在数据同步直接点击“暂停一键清算”
 
-<img src="/assets/RxXPb7rJ5oAzvnxZ3cPcmv8tnZm.png" src-width="2922" src-height="1548" align="center"/>
+<img src="/assets/FMuObyrXXoBb2WxhRK1cjGkznDf.png" src-width="2852" src-height="1374" align="center"/>
+
+<img src="/assets/JxUZbyjw6oBmVax2mfaclVNYngt.png" src-width="2852" src-height="1374" align="center"/>
 
 中间若有作业执行错误，则一键清算将会暂停，并停在相关错误的作业程序上，用户可以参考错误讯息提示进行后续修正处理
 
@@ -387,17 +508,17 @@ DA 帐户开户后会默认配置为按 3 月/6 月/9 月/12 月这四个月生�
 
 <img src="/assets/PZbibMo0yozKWYx4DX1cNbC4nqg.png" src-width="2922" src-height="1556" align="center"/>
 
-#### 数据同步（Client Trade）
+#### 数据同步
 
 点击执行后会同步系统数据（交易、日切点前的出入金、交易、开户等数据）
 
-#### 清算前检查（Trade Match）
+#### 清算前检查
 
 在日终流程中点击清算前检查步骤会：自动触发当日的交易对帐
 
 交易对帐失败的，可快速跳转到交易对账界面（清算管理 - 市场清算 - 清算检查 - 交易对账）查询结果
 
-<img src="/assets/HujDbj6wko4Zrgx3o0CcBGYXntf.png" src-width="2904" src-height="1544" align="center"/>
+<img src="/assets/Z5wObSdPiowJBKxsWOacozLknwg.png" src-width="2852" src-height="1374" align="center"/>
 
 <b>对帐结果查询</b>
 
@@ -458,10 +579,6 @@ DA 帐户开户后会默认配置为按 3 月/6 月/9 月/12 月这四个月生�
 检查是否完成了当天所有的业务操作
 操作方式同市场清算，详见上文
 
-<img src="/assets/JJVQbvFSuoMkdXxs9sRc8cBfnAe.png" src-width="2492" src-height="1412" align="center"/>
-
-<img src="/assets/P69dbSKKvodCRhx3XzDc9UJPnaf.png" src-width="2434" src-height="1418" align="center"/>
-
 ### 日终清算一键清算
 
 当清算前准备执行完毕后，就可以点选有上方【开始一键清算】功能键
@@ -470,7 +587,7 @@ DA 帐户开户后会默认配置为按 3 月/6 月/9 月/12 月这四个月生�
 
 结单后可通过报表或者结单进行检查
 
-<img src="/assets/Hi7Lbn8ufoHjJAxccc6cPRV7nTc.png" src-width="2912" src-height="1522" align="center"/>
+<img src="/assets/J0wjbyoqZo5PyaxdDDjczSYDn9g.png" src-width="2852" src-height="1374" align="center"/>
 
 #### 数据汇总
 

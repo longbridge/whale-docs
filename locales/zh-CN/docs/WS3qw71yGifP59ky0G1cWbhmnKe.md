@@ -104,13 +104,13 @@ Whale 会计中台系统全面支持券商证券业务记账流程，包括记�
 
 <b>步骤一：查看合并规则</b>
 
-<img src="/assets/V39XbXqLDoGnzpxOThDcOfLXnjg.png" src-width="2866" src-height="1162" align="center"/>
+<img src="/assets/PFenbzw4Rot25Oxir2xc93Y4nkb.png" src-width="3276" src-height="780" align="center"/>
 
 <b>步骤二：合并规则配置</b>
 
 点选『合并规则』右上角：‘新建’，设定对应券商公司的合并规则。
 
-<img src="/assets/C0cfb4CyDoi4itxlHZkcFoi7nBe.png" src-width="952" src-height="1776"/>
+<img src="/assets/Hgw9bKAjIoA1lDxqBiDcw7kMnPg.png" src-width="2456" src-height="2810"/>
 
 ### 业务类型<b>配置</b>
 
@@ -136,7 +136,7 @@ Whale 会计中台系统全面支持券商证券业务记账流程，包括记�
 
 <img src="/assets/A3FsbMxe4ociJOx6ilicWwvyn6b.png" src-width="2830" src-height="860" align="center"/>
 
-<img src="/assets/W3NQbrKN0oigoDx5Y9TcFiyvnAf.png" src-width="952" src-height="1250"/>
+<img src="/assets/Irz6blu1QoLO2QxAr8YcvXySn8g.png" src-width="962" src-height="1782"/>
 
 ### 明细会计分录
 
