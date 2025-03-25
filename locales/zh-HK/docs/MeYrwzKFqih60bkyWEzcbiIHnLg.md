@@ -34,6 +34,10 @@ Whale 系統提供了換匯的基礎參數設定與業務主流程操作功能�
 
 <img src="/assets/NLBabyI57oXTZ6xfpErcN8fPn4e.png" src-width="3820" src-height="1864" align="center"/>
 
+1. 設定相應幣種的匯率精度、金額精度以及金額取數邏輯
+
+<img src="/assets/G9PkbioGAoPiG2xy2Mwcw8DinEf.png" src-width="3266" src-height="604" align="center"/>
+
 1. 然後先設定支援的幣種對並制定相應的換匯策略。如果使用匯兌池換匯策略，還需要設定匯兌池的換匯額度。詳見第二節操作說明。
 
 # 二、操作說明
