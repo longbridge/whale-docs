@@ -77,7 +77,7 @@ WHALE 的款项管理系统提供了多情境的入金功能，使用者可以�
 
 如果客户需要进行 eDDA 入金，则需要进行 eDDA 授权，如果客户进行 eDDA 授权之后，则后台可以查到对应记录。
 
-<img src="/assets/LTkEbYO7soCcypx1XbRcnuHdnPb.png" src-width="3260" src-height="1306" align="center"/>
+<img src="/assets/PUIRbWAK3o3ImSxHZaKcHtgfnqg.png" src-width="3278" src-height="962" align="center"/>
 
 ## 银行相关信息配置
 

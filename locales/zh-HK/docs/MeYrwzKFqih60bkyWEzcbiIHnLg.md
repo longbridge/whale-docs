@@ -59,9 +59,9 @@ Whale 系統提供了換匯的基礎參數設定與業務主流程操作功能�
 
 點選【新建】，選擇兌入幣種與兌出幣種。其中：兌出幣種為單選，兌入幣種為多選
 
-<img src="/assets/W9hdbZiGNoT1xPxl1nQcysDEnKf.png" src-width="3342" src-height="1248" align="center"/>
+<img src="/assets/FJxwbNeMSowFbYx8Xfkc3w5HnYb.png" src-width="3306" src-height="1242" align="center"/>
 
-幣種設定完成後，系統將以卡片的形式展示，針對已設定完成的幣種，用戶可依實際情況進行【編輯】、【刪除】對應的幣種。
+幣種設定完成後，系統將以卡片的形式展示，針對已設定完成的幣種，用戶可依實際情況進行【設置默認幣種對】、【編輯】、【刪除】對應的幣種。
 
 ### 換匯策略
 
@@ -114,8 +114,29 @@ Whale 系統提供了換匯的基礎參數設定與業務主流程操作功能�
     - 加點的方式有「值」與「比值」2 種方式
     - 「參考匯率」上設定加點數值：
     <img src="/assets/S454bEII8omUagx8cNKcwQfRnZb.png" src-width="3320" src-height="1760" align="center"/>
+    - 參考匯率加點是指在提交換匯時，根據匯兌的匯率基礎上進行加點，計算舉例如下：
+        1. 根据用户选择的币种兑，比如 USD 兑换 CNH，计算出未加点的汇率=7.8147➗1.095=7.1367（汇率小数点截取 4 位，汇率精度取自币种配置）
+            參考匯率公式=兌出幣種的買入價➗兌入幣種的賣出價
+        |   |   |   |   |
+|---|---|---|---|
+|基準貨幣 | 折算幣種 | 買入價 | 賣出價|
+|HKD|CNH|1.0962|1.095|
+|HKD|USD|7.8147|7.8132|
+        1. 根據 i 中的兌出幣種選擇參考加點，比如 USD 兌換 CNH，計算結果如下：
+        <table>
+        <colgroup>
+        <col width="137"/>
+        <col width="423"/>
+        </colgroup>
+        <tbody>
+        <tr><td><p><b>加點方式</b></p></td><td><p><b>USD 兌換 CNH 加點值</b></p></td></tr>
+        <tr><td><p>比值 0.001</p></td><td><p>=USD 兌換 CNH 未加點的參考匯率 - 比值=7.1367-0.001=7.1366</p></td></tr>
+        <tr><td><p>比率 0.1%</p></td><td><p>=USD 兌換 CNH 未加點的參考匯率（1-比率）=7.1367（1-0.1%）=7.1295</p></td></tr>
+        </tbody>
+        </table>
     - 「成交匯率」上設定加點數值：
     <img src="/assets/BNrZbW1ZPoQI6CxAPMmc8HI6nYc.png" src-width="2360" src-height="1642" align="center"/>
+    - 成交匯率加點是指在客戶匯兌成交時，根據匯兌的匯率基礎上進行成交加點，舉例參考參考匯率加點
 
 ### 大額設置
 

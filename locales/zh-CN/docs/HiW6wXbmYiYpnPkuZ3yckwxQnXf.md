@@ -101,13 +101,14 @@ Whale 系统包含了处理入金申请、匹配银行流水、入金审核、�
 
 如果客户需要进行 eDDA 入金，则需要进行 eDDA 授权，如果客户进行 eDDA 授权之后，则后台可以查到对应记录。
 
-<img src="/assets/UsNJb31KZoqkElxU7L2c9BhQnid.png" src-width="3248" src-height="870" align="center"/>
+<img src="/assets/Nbo3bOe0io6NQoxqFplcCne1n2f.png" src-width="3282" src-height="838" align="center"/>
 
 <b>操作按钮说明</b>
 
 - 刷新：重新获取最新的 eDDA 的授权记录
 - 备注：对授权记录进行配置
 - 修改状态：修改授权记录的状态
+- 删除：对于授权中的授权记录可以进行人工后台删除
 
 ## 银行相关信息配置
 

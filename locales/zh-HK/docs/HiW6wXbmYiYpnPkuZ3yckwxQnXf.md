@@ -101,13 +101,14 @@ Whale 系統包含了處理入金申請、匹配銀行流水、入金審核、�
 
 如果客戶需要進行 eDDA 入金，則需要進行 eDDA 授权，如果客戶进行 eDDA 授权之后，則後臺可以查到對應記錄。
 
-<img src="/assets/UsNJb31KZoqkElxU7L2c9BhQnid.png" src-width="3248" src-height="870" align="center"/>
+<img src="/assets/Nbo3bOe0io6NQoxqFplcCne1n2f.png" src-width="3282" src-height="838" align="center"/>
 
 <b>操作按鈕說明</b>
 
 - 刷新：重新獲取最新的 eDDA 的授權記錄
 - 備註：對授權記錄進行配置
 - 修改狀態：修改授權記錄的狀態
+- 刪除：對於授權中的授權記錄可以進行人工後台刪除
 
 ## 銀行相關信息配置
 
