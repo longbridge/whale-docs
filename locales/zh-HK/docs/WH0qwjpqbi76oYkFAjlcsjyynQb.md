@@ -49,7 +49,7 @@ Whale 系统支持基金下单交易操作，同时支持下单后的委托查�
 - 支持撤单。
 
 <div class="callout callout-bg-2 callout-border-2">
-<div class='callout-emoji'>🦄</div>
+<div class='callout-emoji'>💡</div>
 <p>注意：若基金后台开始获取前台基金订单的时候。此时后台基金录入订单就不可撤销。</p>
 </div>
 

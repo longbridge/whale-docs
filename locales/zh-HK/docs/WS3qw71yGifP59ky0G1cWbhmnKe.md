@@ -21,8 +21,8 @@ Whale 會計中臺系統全面支持券商證券業務記賬流程，包括記�
 
 <table header_row="1">
 <colgroup>
-<col width="437"/>
-<col width="393"/>
+<col width="244"/>
+<col width="576"/>
 </colgroup>
 <thead>
 <tr><th><p>權限名稱</p></th><th><p>權限說明</p></th></tr>
