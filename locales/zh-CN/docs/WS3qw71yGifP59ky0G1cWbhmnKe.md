@@ -21,8 +21,8 @@ Whale 会计中台系统全面支持券商证券业务记账流程，包括记�
 
 <table header_row="1">
 <colgroup>
-<col width="437"/>
-<col width="393"/>
+<col width="244"/>
+<col width="576"/>
 </colgroup>
 <thead>
 <tr><th><p>权限名称</p></th><th><p>权限说明</p></th></tr>
