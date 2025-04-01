@@ -212,6 +212,17 @@ sidebar_position: 3
 
 <img src="/assets/J6tCbyJMPovu5xxH1FscNt86ntd.png" src-width="2864" src-height="1368" align="center"/>
 
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>停牌 3 天以上收盘价会改成 0 吗？</p>
+</div>
+
+系统会根据第三方数据判断停牌是否已达到 3 个交易以上，如果已到 3 个交易日，结单收盘价（停牌标的用）会将结单收盘价置为 0，如果停牌天数计算有问题，或者停牌时想提前将收盘价置为 0 的，可直接修改该字段。
+
+除了结单，部分报表在进行收盘价计算时，
+
+<img src="/assets/WmvYbQQe8of9O1xHy2FcqD53ngg.png" src-width="2876" src-height="1346" align="center"/>
+
 ## 后台补单
 
 <div class="callout callout-bg-2 callout-border-2">
