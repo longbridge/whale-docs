@@ -1,10 +1,17 @@
-import { defineConfig } from "vitepress";
+import { defineConfig } from "vitepress"
 // @ts-ignore
-import { siteMetadata } from "./site-meta";
-import siderbarConfig from "./../scripts/siderbar";
-import alias from "@rollup/plugin-alias";
-const editLinkPattern =
-  "https://github.com/longbridgeapp/whale-docs/edit/main/locales/:path";
+import { siteMetadata } from "./site-meta"
+import siderbarConfig from "./../scripts/siderbar"
+import alias from "@rollup/plugin-alias"
+const editLinkPattern = "https://github.com/longbridgeapp/whale-docs/edit/main/locales/:path"
+
+// Supported versions
+const VERSIONS = ["stable", "lts"]
+const DEFAULT_VERSION = "stable"
+
+function getVersionPath(version) {
+  return version === DEFAULT_VERSION ? "" : `${version}/`
+}
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -26,9 +33,7 @@ export default defineConfig({
     },
     plugins: [
       alias({
-        entries: [
-          { find: "/assets", replacement: "../../assets" },
-        ],
+        entries: [{ find: "/assets", replacement: "../../assets" }],
       }),
     ],
   },
@@ -43,34 +48,30 @@ export default defineConfig({
     ],
     ...siteMetadata,
   ],
+
+  // 定义支持的语言
+  // TODO: when en docs ready, uncomment en locale
   locales: {
-    // en: {
-    //   label: "English",
-    //   lang: "en",
-    //   link: "/en/docs",
-    //   themeConfig: {
-    //     nav: [{ text: "Whale Home", link: "https://longbridgewhale.com" }],
-    //     siteTitle: "Whale docs",
-    //     editLink: {
-    //       pattern: editLinkPattern,
-    //     },
-    //   },
-    // },
     "zh-CN": {
       label: "简体中文",
       lang: "zh-CN",
-      link: "/zh-CN/docs",
       themeConfig: {
         siteTitle: "帮助中心",
         outline: "deep",
         nav: [
           { text: "Whale 首页", link: "/", target: "_self" },
-
           {
             text: "OpenAPI",
             link: "https://open.longportapp.com",
           },
           { text: "关于我们", link: "/zh-CN/about", target: "_self" },
+          {
+            text: "版本",
+            items: [
+              { text: "稳定版", link: "/zh-CN/docs" },
+              { text: "长期维护版", link: "/zh-CN/lts/docs" },
+            ],
+          },
         ],
         editLink: {
           pattern: editLinkPattern,
@@ -88,7 +89,6 @@ export default defineConfig({
     "zh-HK": {
       label: "繁体中文",
       lang: "zh-HK",
-      link: "/zh-HK/docs",
       themeConfig: {
         siteTitle: "幫助中心",
         nav: [
@@ -98,6 +98,13 @@ export default defineConfig({
             link: "https://open.longportapp.com/zh-HK",
           },
           { text: "關於我們", link: "/zh-HK/about", target: "_self" },
+          {
+            text: "版本",
+            items: [
+              { text: "穩定版", link: "/zh-HK/docs" },
+              { text: "長期維護版", link: "/zh-HK/lts/docs" },
+            ],
+          },
         ],
         editLink: {
           pattern: editLinkPattern,
@@ -112,6 +119,39 @@ export default defineConfig({
         },
       },
     },
+    // en: {
+    //   label: "English",
+    //   lang: "en",
+    //   themeConfig: {
+    //     siteTitle: "Help Center",
+    //     nav: [
+    //       { text: "Whale Home", link: "/", target: "_self" },
+    //       {
+    //         text: "OpenAPI",
+    //         link: "https://open.longportapp.com/en",
+    //       },
+    //       { text: "About Us", link: "/en/about", target: "_self" },
+    //       {
+    //         text: "Version",
+    //         items: [
+    //           { text: "Stable", link: "/en/docs" },
+    //           { text: "Long-term support", link: "/en/lts/docs" },
+    //         ],
+    //       },
+    //     ],
+    //     editLink: {
+    //       pattern: editLinkPattern,
+    //       text: "Edit this page",
+    //     },
+    //     lastUpdated: {
+    //       text: "Last Updated",
+    //     },
+    //     docFooter: {
+    //       prev: "Previous",
+    //       next: "Next",
+    //     },
+    //   },
+    // },
   },
 
   // https://vitepress.dev/reference/default-theme-config
@@ -120,6 +160,20 @@ export default defineConfig({
     search: {
       provider: "local",
       options: {
+        miniSearch: {
+          searchOptions: {
+            filter: ({ id }) => {
+              const currentPath = window.location.pathname
+              const isLtsVersion = currentPath.includes("/lts/")
+
+              if (isLtsVersion) {
+                return id.includes("/lts/")
+              } else {
+                return !id.includes("/lts/")
+              }
+            },
+          },
+        },
         locales: {
           "zh-CN": {
             translations: {
@@ -155,17 +209,35 @@ export default defineConfig({
               },
             },
           },
+          en: {
+            translations: {
+              button: {
+                buttonText: "Search documents",
+                buttonAriaLabel: "Search documents",
+              },
+              modal: {
+                noResultsText: "No results found",
+                resetButtonTitle: "Clear search conditions",
+                footer: {
+                  selectText: "Select",
+                  navigateText: "Switch",
+                  closeText: "Close",
+                },
+              },
+            },
+          },
         },
       },
     },
     sidebar: {
-      // en: docsSidebarEN,
-      // "zh-CN": docsSidebarZHCN,
-      // "zh-HK": docsSidebarZHHK,
-      "zh-CN": siderbarConfig["zh-CN"],
       "zh-HK": siderbarConfig["zh-HK"],
+      "zh-HK/lts": siderbarConfig["zh-HK-lts"],
+      "zh-CN": siderbarConfig["zh-CN"],
+      "zh-CN/lts": siderbarConfig["zh-CN-lts"],
+      en: siderbarConfig["en"],
+      "en/lts": siderbarConfig["en-lts"],
     },
     outline: [2, 3],
     socialLinks: [],
   },
-});
+})
