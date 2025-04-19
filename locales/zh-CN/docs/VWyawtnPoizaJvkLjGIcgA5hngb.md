@@ -414,6 +414,17 @@ sidebar_position: 2
 
 <img src="/assets/GixebJJjMoXwxFxNY9PcBNmcnug.png" src-width="3198" src-height="1070" align="center"/>
 
+#### 快照
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>风控管理 &gt; 授信额度 &gt; 借币提醒 &gt; 快照</p>
+</div>
+
+<b>菜单功能介绍</b>：该菜单主要用于查询快照时刻的欠款/可兑换金额以及现金/余额通数据。
+
+<img src="/assets/YXbGb7ywSowhQWxrlibc7bMkn7k.png" src-width="3314" src-height="1558" align="center"/>
+
 #### 自动还款开通查询
 
 <div class="callout callout-bg-6 callout-border-6">
@@ -731,21 +742,25 @@ sidebar_position: 2
 
 1. 列表展示所有客户多头股票保证金设置
 
-<img src="/assets/TJ0ObmeAho1xstxzB4fcdgNKnPe.png" src-width="3222" src-height="1062" align="center"/>
+<img src="/assets/OqMsbvtiEoeUAFxXDVScc0xAnze.png" src-width="3064" src-height="1178" align="center"/>
 
 1. 新建客户保证金：点击页面的【新建】可以打开创建弹窗页；客户和股票选择均支持选择单个客户/股票和客户组/股票组（客户组可在「风控管理」-「名单管理」-「客户组」配置；股票组可在「业务参数设置」-「风控」-「股票组」配置）；页面配置后提交即可完成创建
 
-<img src="/assets/AlpNbLX9coV5D9xe3rOchCKVnUF.png" src-width="3210" src-height="1068" align="center"/>
+<img src="/assets/Pc8jbndnuoIm9AxKKLjcHM35nme.png" src-width="3060" src-height="1174" align="center"/>
 
 <img src="/assets/MuggblAOJoxOmDxvKJccvr6DnEh.png" src-width="3226" src-height="1698" align="center"/>
 
 1. 同时，也可以通过【导入保证金数据】来新增客户保证金；进入弹窗下载模版根据模版填写后上传
 
-<img src="/assets/EjxobkrYvo2HtYxvNk8ckl3lnXc.png" src-width="2292" src-height="800" align="center"/>
+<img src="/assets/TT0ObpTYFoqClBxUSstcg0rFn5d.png" src-width="3064" src-height="1298" align="center"/>
 
 1. 文件上传【确认】后，在客户保证金列表中生成状态为生效中的记录；如需修改保证金比例，可以通过操作的【编辑】修改；也可以通过【置为失效】来失效客户保证金比例设置
 
-<img src="/assets/EobibaNTeoVjlyxSTYycqQgxngJ.png" src-width="2288" src-height="672" align="center"/>
+<img src="/assets/FqCQbfKSRoPLdvxx0F6ciPQinVo.png" src-width="3060" src-height="1180" align="center"/>
+
+1. 如需查看客户多头保证金历史设置记录，可在页面点击【变更记录】进行查询
+
+<img src="/assets/MyhObCtsSo79e1xUtdHcrIyynuh.png" src-width="3072" src-height="1174" align="center"/>
 
 #### 空头股票
 
@@ -982,17 +997,21 @@ sidebar_position: 2
 
 1. 列表页面
 
-<img src="/assets/XUsEbZsdLoFYxCxj354cTQicnDf.png" src-width="2784" src-height="1400" align="center"/>
+<img src="/assets/UtxFbzUDfoAsmhxcC6dcq5J6nbh.png" src-width="3084" src-height="1654" align="center"/>
 
 1. 可以点击【新建】按钮，新增一个黑名单客户。
-    1. 名单维度：支持证券账号和客户编号，若选择证券账号仅对指定账号生效；若为客户编号，即针对该客户下的所有账户
-    2. 业务标签：支持配置不同业务标签黑名单，系统支持授信、资产调拨两种业务黑名单标签控制。可以同时选择两个业务标签，生成记录会根据业务标签分别生成两条记录
+    1. 名单维度：支持证券账号和客户编号，若选择证券账号仅对指定账号生效；若为客户编号，即针对该客户下的所有账户。
+    2. 业务标签：支持配置不同业务标签黑名单，系统支持授信、资产调拨两种业务黑名单标签控制。可以同时选择两个业务标签，生成记录会根据业务标签分别生成两条记录。
 
-<img src="/assets/ViUtb4jZpoAzhVxDmnCcn7xzn0g.png" src-width="3246" src-height="1228" align="center"/>
+<img src="/assets/RzDwbGdcXosmi9xkoyRct80Xnwb.png" src-width="3080" src-height="1668" align="center"/>
 
-1. 若黑名单量较大，可选择批量上传，实现批量新增黑名单，填写说明可参考模板说明提示
+1. 若黑名单量较大，可选择批量上传，实现批量新增黑名单，填写说明可参考模板说明提示。
 
-<img src="/assets/O6b0bFHnaoOKdhx7bP4cdX4fnZf.png" src-width="2818" src-height="1190" align="center"/>
+<img src="/assets/D8vDb8T6GoWh6Px5oBKcGBzbnqb.png" src-width="3082" src-height="1640" align="center"/>
+
+1. 如需临时禁用黑名单，可以在【操作】列选择“禁用”；如后续需重新启用则再操作“启用”即可。如果需要将该名单彻底删除，则可直接操作“删除”。
+
+<img src="/assets/GQNTbi5R1oVHtoxfeNqcPvgpn2b.png" src-width="3072" src-height="1492" align="center"/>
 
 ### 客户组
 
