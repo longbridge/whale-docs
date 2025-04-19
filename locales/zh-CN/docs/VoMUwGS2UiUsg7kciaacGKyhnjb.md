@@ -9,7 +9,7 @@ sidebar_position: 0
 
 ## 0. 准备
 
-- FTP 工具 Filezilla 下载地址：https://www.filezilla.cn/download
+- FTP 工具 Filezilla 下载地址：https://www.filezilla.cn/download (选取客户端)
 - 长桥提供：
     - SFTP 主持人：`sftp.longbridgewhale.com`
     - 企业编号

@@ -414,6 +414,17 @@ sidebar_position: 2
 
 <img src="/assets/GixebJJjMoXwxFxNY9PcBNmcnug.png" src-width="3198" src-height="1070" align="center"/>
 
+#### 快照
+
+<div class="callout callout-bg-6 callout-border-6">
+<div class='callout-emoji'>⚓</div>
+<p>風控管理 &gt; 授信額度 &gt; 借幣提醒 &gt; 快照</p>
+</div>
+
+<b>菜單功能介紹</b>：該菜單主要用於查詢快照時刻的欠款/可兌換金額以及現金/餘額通數據。
+
+<img src="/assets/YXbGb7ywSowhQWxrlibc7bMkn7k.png" src-width="3314" src-height="1558" align="center"/>
+
 #### 自動還款開通查詢
 
 <div class="callout callout-bg-6 callout-border-6">
@@ -731,21 +742,25 @@ sidebar_position: 2
 
 1. 列表展示所有客戶多頭股票保證金設置
 
-<img src="/assets/TJ0ObmeAho1xstxzB4fcdgNKnPe.png" src-width="3222" src-height="1062" align="center"/>
+<img src="/assets/OqMsbvtiEoeUAFxXDVScc0xAnze.png" src-width="3064" src-height="1178" align="center"/>
 
 1. 新建客戶保證金：點擊頁面的【新建】可以打開創建彈窗頁；客戶和股票選擇均支持選擇單個客戶/股票和客戶組/股票組（客戶組可在「風控管理」-「名單管理」-「客戶組」配置；股票組可在「業務參數設置」-「風控」-「股票組」配置）；頁面配置後提交即可完成創建
 
-<img src="/assets/AlpNbLX9coV5D9xe3rOchCKVnUF.png" src-width="3210" src-height="1068" align="center"/>
+<img src="/assets/Pc8jbndnuoIm9AxKKLjcHM35nme.png" src-width="3060" src-height="1174" align="center"/>
 
 <img src="/assets/MuggblAOJoxOmDxvKJccvr6DnEh.png" src-width="3226" src-height="1698" align="center"/>
 
 1. 同時，也可以通過【導入保證金數據】來新增客戶保證金；進入彈窗下載模版根據模版填寫後上傳
 
-<img src="/assets/EjxobkrYvo2HtYxvNk8ckl3lnXc.png" src-width="2292" src-height="800" align="center"/>
+<img src="/assets/TT0ObpTYFoqClBxUSstcg0rFn5d.png" src-width="3064" src-height="1298" align="center"/>
 
 1. 文件上傳【確認】後，在客戶保證金列表中生成狀態為生效中的記錄；如需修改保證金比例，可以通過操作的【編輯】修改；也可以通過【置為失效】來失效客戶保證金比例設置
 
-<img src="/assets/EobibaNTeoVjlyxSTYycqQgxngJ.png" src-width="2288" src-height="672" align="center"/>
+<img src="/assets/FqCQbfKSRoPLdvxx0F6ciPQinVo.png" src-width="3060" src-height="1180" align="center"/>
+
+1. 如需查看客戶多頭保證金歷史設置記錄，可在頁面點擊【變更記錄】進行查詢
+
+<img src="/assets/MyhObCtsSo79e1xUtdHcrIyynuh.png" src-width="3072" src-height="1174" align="center"/>
 
 #### 空頭股票
 
@@ -982,17 +997,21 @@ sidebar_position: 2
 
 1. 列表頁面
 
-<img src="/assets/XUsEbZsdLoFYxCxj354cTQicnDf.png" src-width="2784" src-height="1400" align="center"/>
+<img src="/assets/UtxFbzUDfoAsmhxcC6dcq5J6nbh.png" src-width="3084" src-height="1654" align="center"/>
 
 1. 可以點擊【新建】按钮，新增一個黑名單客戶。
-    1. 名單維度：支持證券賬號和客戶編號，若選擇證券賬號僅對指定賬號生效；若為客戶編號，即針對該客戶下的所有賬戶
-    2. 業務標籤：支持配置不同業務標籤黑名單，系統支持授信、資產調撥兩種業務黑名單標籤控制。可以同時選擇兩個業務標籤，生成記錄會根據業務標籤分別生成兩條記錄
+    1. 名單維度：支持證券賬號和客戶編號，若選擇證券賬號僅對指定賬號生效；若為客戶編號，即針對該客戶下的所有賬戶。
+    2. 業務標籤：支持配置不同業務標籤黑名單，系統支持授信、資產調撥兩種業務黑名單標籤控制。可以同時選擇兩個業務標籤，生成記錄會根據業務標籤分別生成兩條記錄。
 
-<img src="/assets/ViUtb4jZpoAzhVxDmnCcn7xzn0g.png" src-width="3246" src-height="1228" align="center"/>
+<img src="/assets/RzDwbGdcXosmi9xkoyRct80Xnwb.png" src-width="3080" src-height="1668" align="center"/>
 
-1. 若黑名單量較大，可選擇批量上傳，實現批量新增黑名單，填寫說明可參考模板說明提示
+1. 若黑名單量較大，可選擇批量上傳，實現批量新增黑名單，填寫說明可參考模板說明提示。
 
-<img src="/assets/O6b0bFHnaoOKdhx7bP4cdX4fnZf.png" src-width="2818" src-height="1190" align="center"/>
+<img src="/assets/D8vDb8T6GoWh6Px5oBKcGBzbnqb.png" src-width="3082" src-height="1640" align="center"/>
+
+1. 如需臨時禁用黑名單，可以在【操作】列選擇“禁用”；如後續需重新啟用則再操作“啟用”即可。如果需要將該名單徹底刪除，則可直接操作“刪除”。
+
+<img src="/assets/GQNTbi5R1oVHtoxfeNqcPvgpn2b.png" src-width="3072" src-height="1492" align="center"/>
 
 ### 客戶組
 
