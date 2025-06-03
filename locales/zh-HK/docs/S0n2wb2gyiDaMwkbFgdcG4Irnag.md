@@ -1,7 +1,7 @@
 ---
 title: 2023-10-12 更新日誌
 slug: 23-10-12
-sidebar_position: 39
+sidebar_position: 40
 ---
 
 
