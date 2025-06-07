@@ -109,9 +109,9 @@ sidebar_position: 2
 <img src="/assets/A7HibUnVrolrjLxlU51cn7cjnue.png" src-width="2570" src-height="988" align="center"/>
 
 1. 账户查询页面会展示「最近浏览」，支持快速点击查看结果
-2. 查询结果：侧边栏展示查询结果，默认展示资产总览页，可切换页面查看客户资料、银行卡信息、计费明细、出入金和砖仓流水。侧边栏信息同快捷查询结果
+2. 查询结果：侧边栏展示查询结果，默认展示资产总览页，可切换页面查看客户资料、银行卡信息、计费明细、出入金、转仓流水等。侧边栏信息同快捷查询结果
 
-<img src="/assets/WuXFbXkTXorIRCx8X83cEHknnsh.png" src-width="3304" src-height="1666" align="center"/>
+<img src="/assets/XoJZbTglmozGNzxzCIycefLEnkC.png" src-width="3272" src-height="1750" align="center"/>
 
 账户快捷查询入口：
 
@@ -264,12 +264,14 @@ sidebar_position: 2
 <b>操作说明</b>：
 
 1. 手工调账主页面：根据不同调账类型 (现金/股票/基金/债劵/OTC 其他/虚拟资产）分 Tab 页展示，如需调账需要根据调账的资产类型进入对应页面
-    <img src="/assets/PJVkbUzlyoV1T8xQdIncyM6HnFc.png" src-width="3342" src-height="1152" align="center"/>
 
-2. 新建手工调账：点击【新建】，即可打开新增调账页面
-    <img src="/assets/ZZ3Jb4yRyonh62xW0Gock16gnQg.png" src-width="3220" src-height="958" align="center"/>
+<img src="/assets/PJVkbUzlyoV1T8xQdIncyM6HnFc.png" src-width="3342" src-height="1152" align="center"/>
 
-3. 填写调账信息：
+1. 新建手工调账：点击【新建】，即可打开新增调账页面
+
+<img src="/assets/ZZ3Jb4yRyonh62xW0Gock16gnQg.png" src-width="3220" src-height="958" align="center"/>
+
+1. 填写调账信息：
     1. 业务分类：即业务码，选择调账流水需要添加的业务场景
     2. 公司银行卡&客户银行卡：非必填项，若调账为出入金场景可以根据实际业务情况选择对应银行卡信息，便于数据记录
     3. 调账标记：非必填项，第三方和支票仅根据实际调账场景做标记使用
@@ -479,11 +481,11 @@ sidebar_position: 2
 
 1. 进入菜单，查看所有业务码分组
 
-<img src="/assets/UjufbgoGNoBHWoxgZ1HccNdKnjb.png" src-width="3170" src-height="630" align="center"/>
+<img src="/assets/XmhebJJDyoqJomxEsTncZTZ9nSe.png" src-width="3216" src-height="626" align="center"/>
 
 1. 详情仅支持查看，如需更改分组信息，点击编辑进入；业务码选择框勾选业务码则会在对应类型调账的业务分类展示，取消勾选则不展示
 
-<img src="/assets/L0zib6BL1oiCbfxkWwfcbbI6nlg.png" src-width="3156" src-height="1552" align="center"/>
+<img src="/assets/BiI7b3ZUhomS9vxa8jFc29mSnch.png" src-width="3250" src-height="1758" align="center"/>
 
 <img src="/assets/D52cbO4mZofAEgxOaQ3cTNxsnlg.png" src-width="3240" src-height="1768" align="center"/>
 
