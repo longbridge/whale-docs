@@ -42,9 +42,9 @@ sidebar_position: 2
 
 1. 列表为所有融资授信客户，打开列表页的调整弹窗为已授信客户调整额度
 
-<img src="/assets/GAHxb4K9QomHCAxWJtLcretjntg.png" src-width="3702" src-height="1456" align="center"/>
+<img src="/assets/CxZdbK9Aqo40AKxRkdRcrCQSn5g.png" src-width="3272" src-height="1394" align="center"/>
 
-<img src="/assets/CtWwb9ZhGo2giVxCaUTckYAgnZe.png" src-width="2166" src-height="1348" align="center"/>
+<img src="/assets/STahb2N8MohAnyxdV6ocDyM6n8g.png" src-width="3250" src-height="1754" align="center"/>
 
 - 页面字段说明
 
@@ -60,7 +60,7 @@ sidebar_position: 2
 <tr><td><p>融资额度</p></td><td><p>客户当前的融资额度</p></td></tr>
 <tr><td><p>已用融资额度</p></td><td><p>客户当前已经使用的融资额度</p></td></tr>
 <tr><td><p>剩余融资额度</p></td><td><p>客户剩余还可以使用的额度，剩余融资额度=融资额度 - 已用融资额度</p></td></tr>
-<tr><td><p>实时计算额度</p></td><td><p>同“自动授信”计算逻辑</p></td></tr>
+<tr><td><p>实时计算授信额度</p></td><td><p>同“自动授信”计算逻辑</p></td></tr>
 <tr><td><p>调整后额度</p></td><td><p>由人工填入</p></td></tr>
 <tr><td><p>调整额度</p></td><td><p>根据人工填入的调整后额度自动计算，调整额度=调整后额度 - 融资额度</p></td></tr>
 <tr><td><p>备注</p></td><td><p>由人工填入，若填入则会在「额度审批」页面的列表“备注”列展示</p></td></tr>
@@ -69,21 +69,19 @@ sidebar_position: 2
 
 1. 确定【调整后额度】，提交则需要进入额度审批页面的对应记录进行额度审批；见「[额度审批](./VWyawtnPoizaJvkLjGIcgA5hngb)」
 
-<img src="/assets/HvREbEXKFoMelIxT5XMc2dWrn0f.png" src-width="876" src-height="202" align="center"/>
-
 <b>新建授信客户</b>
 
 1. 若客户未有资产入账，需要给未授信的客户授予额度，可以在列表页【新建授信客户】可以单个新增授信客户
 
-<img src="/assets/G87Bbnr2do29d3xc3fycwWWun1e.png" src-width="3260" src-height="334" align="center"/>
+<img src="/assets/XxEYbbUpJohgGDx2dBQcTBFsneU.png" src-width="3250" src-height="1396" align="center"/>
 
 1. 弹窗页填写相关信息（若客户已在授信列表，提交时会提示，可以在主列表查看客户额度）
 
-<img src="/assets/CO4Qb71BBoKxrMxgpK1cVtiznVd.png" src-width="3254" src-height="1308" align="center"/>
+<img src="/assets/Rg5Ebf0TgoPQLZx1Msec5oRQn4c.png" src-width="3252" src-height="1398" align="center"/>
 
 1. 若需一次性给多个客户授信，可以在列表右上方的【批量新增】操作
 
-<img src="/assets/Pb1Zb5SfuoKgezxuTUIcTpiJnac.png" src-width="3246" src-height="1274" align="center"/>
+<img src="/assets/QBslbDMvEo5JxbxPRv9cQ8hmnxg.png" src-width="3262" src-height="1764" align="center"/>
 
 1. 无论是单个还是批量新增，提交后都需在工单系统审批。审批通过后方可对客户额度生效
 
@@ -93,7 +91,7 @@ sidebar_position: 2
 
 1. 筛选注销状态的授信客户
 
-<img src="/assets/NQbnbrDDvoOkyYxYDlfcMx7InJh.png" src-width="3268" src-height="338" align="center"/>
+<img src="/assets/QY71bhCkqouZlDxsNS5c4ITDnUb.png" src-width="3244" src-height="1392" align="center"/>
 
 1. 选择并删除已注销的授信客户
 
@@ -103,13 +101,11 @@ sidebar_position: 2
 
 1. 根据客户整体额度汇总情况，若需同步调整公司额度进行额度管控，可以在页面列表上方【设置公司额度】进入相关页面操作
 
-<img src="/assets/Ne9ob0KPRoIWo6xonbbc4LPlnpg.png" src-width="3178" src-height="1442" align="center"/>
+<img src="/assets/MbS8byHoZo0blix3SjgcP7wBnvg.png" src-width="3256" src-height="1390" align="center"/>
 
 1. 公司额度设置：租户上线时，系统会默认初始化额度，后租户可根据业务需求进行自定义修改；修改各维度额度，可通过页面【编辑】操作。修改后，需要走工单审批通过即可完成修改
 
-<img src="/assets/VbZSbz9N1oAmd0xj4gbc4IKSnvb.png" src-width="3270" src-height="1060" align="center"/>
-
-公司额度设置页面
+<img src="/assets/KqzubACiWoatnmxGrFIcBkmxnCc.png" src-width="3276" src-height="1730" align="center"/>
 
 - 页面字段说明
 
@@ -129,7 +125,8 @@ sidebar_position: 2
 </blockquote></td></tr>
 <tr><td><p>已批融资额度</p></td><td><p>系统计算的已经批给客户的总额度</p></td></tr>
 <tr><td><p>已批融资额度预警阈值</p></td><td><p>人工设定的批核额度阈值</p></td></tr>
-<tr><td rowspan="4"><p>融资额度​<br/>*分币种 HKD&amp;USD</p></td><td><p>最大融资额度</p></td><td><p>人工设定的公司层面最大可融资额度</p></td></tr>
+<tr><td rowspan="5"><p>融资额度​<br/>*分币种 HKD&amp;USD</p></td><td><p>最大融资额度</p></td><td><p>人工设定的公司层面最大可融资额度</p></td></tr>
+<tr><td><p>融资额度预警</p></td><td><p>人工设定的分币种融资额度预警阈值</p></td></tr>
 <tr><td><p>已用融资额度</p></td><td><p>系统计算的客户已经使用的融资额度</p></td></tr>
 <tr><td><p>垫资预警阈值</p></td><td><p>人工设定的垫资额度阈值</p></td></tr>
 <tr><td><p>已垫资金额</p></td><td><p>系统计算的公司已垫资金额</p></td></tr>
@@ -147,7 +144,7 @@ sidebar_position: 2
 
 1. 在列表页的操作【提交审批】打开弹窗页面
 
-<img src="/assets/VzuKblIFGohXstxAbe3cBEChndo.png" src-width="3686" src-height="1038" align="center"/>
+<img src="/assets/GkWzbYssBocw1jxKgdOcn5W5nhh.png" src-width="3276" src-height="1216" align="center"/>
 
 1. 提交审批弹窗页面确认额度并进行额度批注；同时，若确认不同意本次额度申请，可直接【拒绝】，无需提交工单审批
 
@@ -177,7 +174,7 @@ sidebar_position: 2
 
 ❤️Tips：
 
-提交工单审批可以根据额度区间条件设置审批流程，对应审批流程“BSS-风控管理 - 授信额度 - 额度审核 - 提交审核”
+提交工单审批可以根据额度区间条件设置审批流程，对应审批流工单标识`credit.credit_adjust `       
 
 #### 客户 FPS
 
@@ -186,13 +183,13 @@ sidebar_position: 2
 <p>风控管理  &gt; 授信额度 &gt; 融资授信 &gt; 客户 FPS</p>
 </div>
 
-<b>菜单功能介绍</b>：该菜单主要用于查询客户保证金融资授信的 FPS 值（FPS 初始配置可在「客户参数」查看）及配置自定义 FPS 规则（可在全局 FPS 初始值上按定义维度配置值进行增减计算）。
+<b>菜单功能介绍</b>：该菜单主要用于查询客户保证金融资授信的 FPS 值（FPS 初始配置可在「业务参数设置」-「风控」-「授信客户参数」查看）及配置自定义 FPS 规则（可在全局 FPS 初始值上按定义维度配置值进行增减计算）。
 
 <b>配置 FPS 规则</b>
 
 1. 页面点击【规则配置】打开规则页面
 
-<img src="/assets/RMpob3eDWoJZU0x0mfCc5VREncd.png" src-width="3762" src-height="820" align="center"/>
+<img src="/assets/NYEybucEzoRS4ix3avHcmLTLn0x.png" src-width="3288" src-height="796" align="center"/>
 
 1. 规则配置：可以根据客户各方面维度设定阈值配置增减阈值，确定后生效规则
 
@@ -244,7 +241,7 @@ sidebar_position: 2
 
 <b>菜单功能介绍</b>：该菜单主要用于查询所有客户的历史每一次的授信记录，若需具体定位额度变更情况可以使用该功能。
 
-<img src="/assets/Z8zibSmsAobzduxg5r9cZIOvn1g.png" src-width="3825" src-height="1473" align="center"/>
+<img src="/assets/Xwp5b7MHno2ZKgx11SichmidnOd.png" src-width="3246" src-height="1664" align="center"/>
 
 #### 批量变更
 
@@ -259,7 +256,7 @@ sidebar_position: 2
 
 1. 页面右上角可以操作【导入授信】
 
-<img src="/assets/RgX4bxlKioVLHlxPQWjce5kOnEg.png" src-width="3722" src-height="1016" align="center"/>
+<img src="/assets/CFeUb44VsoEpb4xdI8fcGlo4nsh.png" src-width="3234" src-height="1062" align="center"/>
 
 1. 操作导入：根据下载的模版按模版字段要求填写；填写完成后上传档；【确定】后则会在列表页生成一个“待确认”状态的任务
 
@@ -310,7 +307,7 @@ sidebar_position: 2
 <p>风控管理 &gt; 授信额度 &gt; 交易额度 &gt; 客户交易额度</p>
 </div>
 
-<b>菜单功能介绍</b>：该菜单用于查询所有给过交易额度的客户，并支持新增、修改和生效/失效额度。
+<b>菜单功能介绍</b>：该菜单用于查询所有给过交易额度的客户，并支持新增、修改和生效/失效额度。交易额度在客户交易时会计入购买力，额度到期时则会自动失效。
 
 <b>操作流程如下</b>：
 
@@ -383,9 +380,10 @@ sidebar_position: 2
     1. 必配项的欠款金额和其他币种可提金额默认为主币种，所有币种转化为主币种计算
     2. 单币种规则和必配项规则只要有其一满足规则，即会提醒
     3. 单币种规则可以设置不同币种规则，支持添加和删除
-    <img src="/assets/GUJXbCmYGop6dfxrqOdcvao0nHe.png" src-width="3312" src-height="1716" align="center"/>
 
-2. 规则配置后，选择开启并提交工单审核。审核通过后，系统则会运行规则，捞取符合规则的客户，结果在「提醒查询」列表展示。此外，交易日均会定期执行规则并给符合规则的客户发送借币提醒消息，通知客户主动换汇。页面操作【换汇用户捞取】可刷新列表，过滤不再满足规则的客户
+<img src="/assets/GUJXbCmYGop6dfxrqOdcvao0nHe.png" src-width="3312" src-height="1716" align="center"/>
+
+1. 规则配置后，选择开启并提交工单审核。审核通过后，系统则会运行规则，捞取符合规则的客户，结果在「提醒查询」列表展示。此外，交易日均会定期执行规则并给符合规则的客户发送借币提醒消息，通知客户主动换汇。页面操作【换汇用户捞取】可刷新列表，过滤不再满足规则的客户
 
 <img src="/assets/HlKsbk6ruot71rxggRjcKx6infe.png" src-width="3286" src-height="970" align="center"/>
 
@@ -396,10 +394,12 @@ sidebar_position: 2
     <img src="/assets/BFmWbrCjIoiyV1xTGJBcz7hDnIg.png" src-width="3216" src-height="682" align="center"/>
 
 2. 兑换：开启自动还款的客户会默认系统自动兑换；在系统自动兑换之前，页面可支持人工兑换。列表操作【详情】支持查看客户实时数据、消息记录和兑换记录；人工兑换弹窗页面也可查看当前客户现金情况，配置兑入/兑出金额和币种确认兑换即可
-    <img src="/assets/S4kJbnbZgoQyjAxUlbVcRPUpn69.png" src-width="3274" src-height="1640" align="center"/>
-    <img src="/assets/Dxo0bPGLkoBbDRxAOlvcd48unih.png" src-width="3222" src-height="1220" align="center"/>
 
-3. 兑换结果查看：人工/自动兑换完成后，若剩余资产仍命中规则，则仍会在提醒查询列表；若不再命中规则则会进入历史记录，可在「[历史记录](./VWyawtnPoizaJvkLjGIcgA5hngb)」查看相关详情；若命中换汇审核/换汇失败，可在【换汇异常】页面查看异常单（换汇审核中需在「款项管理」-「换汇」-「客户汇兑」页面进行人工审核）
+<img src="/assets/S4kJbnbZgoQyjAxUlbVcRPUpn69.png" src-width="3274" src-height="1640" align="center"/>
+
+<img src="/assets/Dxo0bPGLkoBbDRxAOlvcd48unih.png" src-width="3222" src-height="1220" align="center"/>
+
+1. 兑换结果查看：人工/自动兑换完成后，若剩余资产仍命中规则，则仍会在提醒查询列表；若不再命中规则则会进入历史记录，可在「[历史记录](./VWyawtnPoizaJvkLjGIcgA5hngb)」查看相关详情；若命中换汇审核/换汇失败，可在【换汇异常】页面查看异常单（换汇审核中需在「款项管理」-「换汇」-「客户汇兑」页面进行人工审核）
 
 <img src="/assets/GS1dbmbnSooY1NxBRzWcakSSnme.png" src-width="3290" src-height="1072" align="center"/>
 
@@ -432,9 +432,9 @@ sidebar_position: 2
 <p>风控管理 &gt; 授信额度 &gt; 借币提醒 &gt; 自动还款开通查询</p>
 </div>
 
-<b>菜单功能介绍</b>：该菜单可以查询已开通自动还款功能的客户。
+<b>菜单功能介绍</b>：该菜单可以查询开通自动还款功能的客户（只要历史开通过的客户均支持查询，根据状态区分当前是否开通）。
 
-<img src="/assets/Pn7lbnygJoE0gexpPCUcigrtnSb.png" src-width="3294" src-height="1462" align="center"/>
+<img src="/assets/FkxgbzK19ogwMuxk4cXcoZgEnef.png" src-width="3248" src-height="1642" align="center"/>
 
 ## Margin Call
 
@@ -742,7 +742,7 @@ sidebar_position: 2
 
 1. 列表展示所有客户多头股票保证金设置
 
-<img src="/assets/OqMsbvtiEoeUAFxXDVScc0xAnze.png" src-width="3064" src-height="1178" align="center"/>
+<img src="/assets/MXpWbRkVwojADnxYPi9cSQ5nn8f.png" src-width="1280" src-height="492" align="center"/>
 
 1. 新建客户保证金：点击页面的【新建】可以打开创建弹窗页；客户和股票选择均支持选择单个客户/股票和客户组/股票组（客户组可在「风控管理」-「名单管理」-「客户组」配置；股票组可在「业务参数设置」-「风控」-「股票组」配置）；页面配置后提交即可完成创建
 
@@ -888,13 +888,17 @@ sidebar_position: 2
 
 1. 新增客户限额规则
 
-<img src="/assets/OBtBbM8lVoDRTjx7bcVchGksnUg.png" src-width="3238" src-height="690" align="center"/>
+<img src="/assets/UEBcboEDSoPYl0xY5VucHe4lnag.png" src-width="3244" src-height="1082" align="center"/>
 
 1. 客户限额规则配置：支持单个客户录入和批量上传创建；此处的限额名称支持自定义，即本次限额规则的名称；规则配置完成后需要工单审批方可生效
 
-<img src="/assets/WvtEbOr7bopN2zxj2cccUHqcn80.png" src-width="3252" src-height="1636" align="center"/>
+<img src="/assets/UsWdbRJrjo3pLRxFQkLcbtnEnic.png" src-width="3270" src-height="1740" align="center"/>
 
-注：选择限额代码后会展示限额代码启用标识，标识状态即全局限额下的代码状态，若修改此处标识可一并更改全局限额下的代码状态
+❤️注：选择限额代码后会展示限额代码启用标识，标识状态即全局限额下的代码状态，若修改此处标识可一并更改全局限额下的代码状态
+
+1. 批量新建客户限额，需根据模板字段说明的要求填写上传文件
+
+<img src="/assets/HlgHbV2KsoGrVmxilzRcpMDwnxg.png" src-width="3282" src-height="1746" align="center"/>
 
 1. 如需修改客户限额规则或更改规则状态，可在列表操作项的【编辑】【设为生效】【设为失效】操作；编辑完成后需要工单审批方可生效
 
@@ -911,15 +915,19 @@ sidebar_position: 2
 
 1. 新增证券限额规则
 
-<img src="/assets/YOP7b9M50owNr2xHDO4cgmLBnTg.png" src-width="3220" src-height="698" align="center"/>
+<img src="/assets/WDQBbqejUoo6IAx7Wp9cXYJ4nly.png" src-width="3252" src-height="1090" align="center"/>
 
 1. 证券限额规则配置：支持单个证券代码录入和批量上传创建；此处的限额名称支持自定义，即本次限额规则的名称；规则配置完成后需要工单审批方可生效
 
-<img src="/assets/FQ8TbYv32otNW3xktu0cifj7nd4.png" src-width="3262" src-height="1628" align="center"/>
+<img src="/assets/Jl4bbC88zo35p5x7smncIOzUnBe.png" src-width="3276" src-height="1750" align="center"/>
 
-注：选择限额代码后会展示限额代码启用标识，标识状态即全局限额下的代码状态，若修改此处标识可一并更改全局限额下的代码状态
+❤️注：选择限额代码后会展示限额代码启用标识，标识状态即全局限额下的代码状态，若修改此处标识可一并更改全局限额下的代码状态
 
-1. 如需修改证券限额规则或更改规则状态，可在列表操作项的【编辑】【设为生效】【设为失效】操作；编辑完成后需要工单审批方可生效
+1. 批量新建证券限额，需根据模板字段说明的要求填写上传文件
+
+<img src="/assets/RA6EbnvTloZzJ8xfDCfcN7nrnad.png" src-width="3345" src-height="1816" align="center"/>
+
+1. 如需修改证券限额规则或更改规则状态，可在列表操作项的【编辑】【设为生效】【设为失效】操作；编辑完成后需要工单审批方可生效。同「客户限额」操作
 
 ### 交易员限额
 
@@ -932,15 +940,15 @@ sidebar_position: 2
 
 1. 新增交易员限额规则
 
-<img src="/assets/YtXCb9aEfow7gCxHuP7cjgcsndg.png" src-width="3244" src-height="710" align="center"/>
+<img src="/assets/Iv8Gbz5WHoZ0vSx0sSRcWaUinKe.png" src-width="3256" src-height="1082" align="center"/>
 
 1. 交易员限额规则配置：此处的限额名称支持自定义，即本次限额规则的名称；规则配置完成后需要工单审批方可生效
 
 <img src="/assets/ITuYbhyfUo5estxVnZocbcFlngb.png" src-width="3298" src-height="1640" align="center"/>
 
-注：选择限额代码后会展示限额代码启用标识，标识状态即全局限额下的代码状态，若修改此处标识可一并更改全局限额下的代码状态
+❤️注：选择限额代码后会展示限额代码启用标识，标识状态即全局限额下的代码状态，若修改此处标识可一并更改全局限额下的代码状态
 
-1. 如需修改交易员限额规则或更改规则状态，可在列表操作项的【编辑】【设为生效】【设为失效】操作；编辑完成后需要工单审批方可生效
+1. 如需修改交易员限额规则或更改规则状态，可在列表操作项的【编辑】【设为生效】【设为失效】操作；编辑完成后需要工单审批方可生效。同「客户限额」操作
 
 ### 客户类别限额
 
@@ -961,7 +969,11 @@ sidebar_position: 2
 
 注：选择限额代码后会展示限额代码启用标识，标识状态即全局限额下的代码状态，若修改此处标识可一并更改全局限额下的代码状态
 
-1. 如需修改客户类别限额规则或更改规则状态，可在列表操作项的【编辑】【设为生效】【设为失效】操作；编辑完成后需要工单审批方可生效
+1. 批量新建证券限额，需根据模板字段说明的要求填写上传文件
+
+<img src="/assets/KeWLbI9tuomNhmxQqlfcUSVGn6d.png" src-width="3334" src-height="1829" align="center"/>
+
+1. 如需修改客户类别限额规则或更改规则状态，可在列表操作项的【编辑】【设为生效】【设为失效】操作；编辑完成后需要工单审批方可生效。同「客户限额」操作
 
 ### 多维度限额
 
