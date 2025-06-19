@@ -50,6 +50,34 @@ sidebar_position: 3
 
 <img src="/assets/M4WcbtDdLoZFnUxtlLdcv2L5nsc.png" src-width="3574" src-height="1774" align="center"/>
 
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>若想依賴公有庫市場資料，但希望自行維護收盤價且不讓公有庫資料覆寫，在清算流程中應如何處理？</p>
+</div>
+
+<b>推薦直接在私有標的庫增加標的，而不是使用公有庫</b>
+
+如果確實有需要，可以按如下操作：
+
+- 在市場規則中將股票資訊來源設置為不依賴公有庫
+
+<img src="/assets/QvZ9bJCAgoyCsfxM5LDcxwoFnLg.png" src-width="3020" src-height="1452" align="center"/>
+
+- 如果需要新增標的，可以選擇同步公有庫的資訊然後進行二次維護。
+
+<img src="/assets/Ff3sbQxqVoPWGnxcqDLcELSvnxc.png" src-width="3020" src-height="1452" align="center"/>
+
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>如果某个市场只有 OTC 业务，不想单独维护市场日历怎么办？</p>
+</div>
+
+- <b>將該市場配置為 OTC 簡化流程</b>
+    - 配置後，該市場<b>無需</b>設定日曆，<b>非週末皆可視為交易日</b>
+    -  配置後，該市場<b>即便未加入日終流程，亦可進行補單</b>。執行日終時，將<b>跟隨主市場一併進行市場清算</b>
+
+<img src="/assets/EuLpbj7M1omeqDxPqoEcbq8enae.png" src-width="3020" src-height="1452" align="center"/>
+
 ## 日终任務執行
 
 <div class="callout callout-bg-2 callout-border-2">
@@ -251,6 +279,23 @@ sidebar_position: 3
 <img src="/assets/JdwzbeXNRoYmbpxlD8XcoAlanLf.png" src-width="3564" src-height="1768" align="center"/>
 
 <img src="/assets/RQ9sbqzHjoupK8x35Vsc5iMgnUc.png" src-width="3564" src-height="1768" align="center"/>
+
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>場外交易如何單獨設置收費</p>
+</div>
+
+新增收費場景
+
+<img src="/assets/HUOqbLPsZoS2HwxWKM6c4hddnse.png" src-width="3020" src-height="1452" align="center"/>
+
+- 在套餐收費或個人化收費中設定具體費率並添加客戶
+
+<img src="/assets/KKGdbJmyGoPrY7xQSL4csBQUnIg.png" src-width="3020" src-height="1452" align="center"/>
+
+- 在客戶計費查詢頁面查詢最終的配置效果
+
+<img src="/assets/WWYobDlX7ofhSUxDJVecjfecn2c.png" src-width="3020" src-height="1452" align="center"/>
 
 ## 交易對賬
 

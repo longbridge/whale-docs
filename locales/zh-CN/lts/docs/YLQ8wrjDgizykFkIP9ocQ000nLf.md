@@ -50,6 +50,34 @@ sidebar_position: 3
 
 <img src="/assets/M4WcbtDdLoZFnUxtlLdcv2L5nsc.png" src-width="3574" src-height="1774" align="center"/>
 
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>若想依赖公有库市场资料，但希望自行维护收盘价且不让公有库资料覆写，在清算流程中应如何处理？</p>
+</div>
+
+<b>推荐直接在私有标的库增加标的，而不是使用公有库</b>
+
+如果确实有需要，可以按如下操作：
+
+- 在市场规则中将股票资讯来源设置为不依赖公有库
+
+<img src="/assets/QvZ9bJCAgoyCsfxM5LDcxwoFnLg.png" src-width="3020" src-height="1452" align="center"/>
+
+- 如果需要新增标的，可以选择同步公有库的资讯然后进行二次维护。
+
+<img src="/assets/Ff3sbQxqVoPWGnxcqDLcELSvnxc.png" src-width="3020" src-height="1452" align="center"/>
+
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>如果某个市场只有 OTC 业务，不想单独维护市场日历怎么办？</p>
+</div>
+
+- <b>将该市场配置为 OTC 简化流程</b>
+    - 配置后，该市场<b>无需</b>设定日历，<b>非周末皆可视为交易日</b>
+    -  配置后，该市场<b>即便未加入日终流程，亦可进行补单</b>。执行日终时，将<b>跟随主市场一并进行市场清算</b>
+
+<img src="/assets/EuLpbj7M1omeqDxPqoEcbq8enae.png" src-width="3020" src-height="1452" align="center"/>
+
 ## 日终任务执行
 
 <div class="callout callout-bg-2 callout-border-2">
@@ -251,6 +279,23 @@ sidebar_position: 3
 <img src="/assets/JdwzbeXNRoYmbpxlD8XcoAlanLf.png" src-width="3564" src-height="1768" align="center"/>
 
 <img src="/assets/RQ9sbqzHjoupK8x35Vsc5iMgnUc.png" src-width="3564" src-height="1768" align="center"/>
+
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>场外交易如何单独设置收费</p>
+</div>
+
+新增收费场景
+
+<img src="/assets/HUOqbLPsZoS2HwxWKM6c4hddnse.png" src-width="3020" src-height="1452" align="center"/>
+
+- 在套餐收费或个人化收费中设定具体费率并添加客户
+
+<img src="/assets/KKGdbJmyGoPrY7xQSL4csBQUnIg.png" src-width="3020" src-height="1452" align="center"/>
+
+- 在客户计费查询页面查询最终的配置效果
+
+<img src="/assets/WWYobDlX7ofhSUxDJVecjfecn2c.png" src-width="3020" src-height="1452" align="center"/>
 
 ## 交易对账
 

@@ -11,7 +11,7 @@ sidebar_position: 2
 
 清算系统主要通过日终任务串联功能。日終任務分成兩個模塊，一個是市場清算，一個是日終管理。市場清算處理交易數據為主，用於各市場的計費、交收流程。日終清算處理涵蓋交易、調帳、公司行動在內的全部數據，進行利息計算，最終輸出報表和結單
 
-<img src="/assets/QuCmw0vBohsEoubCvE3c7D4Gnbg-board.png"/>
+<img src="/assets/QuCmw0vBohsEoubCvE3c7D4Gnbg-board.jpeg"/>
 
 ## 二、系統設定
 
@@ -132,7 +132,7 @@ sidebar_position: 2
 
 套餐收費和個性化收費是根據業務需求靈活配置的功能，用戶可根據實際情況選擇是否啟用。套餐收費通常依據用戶群體進行添加，例如經紀人 A 套餐、現金賬戶套餐。系統具備在客戶開戶時自動分配相應套餐的功能；個性化收費一般根據客戶個性化需求單獨進行設置
 
-<img src="/assets/OuYAwSctjhK8svbL9licXJnhnkb-board.png"/>
+<img src="/assets/OuYAwSctjhK8svbL9licXJnhnkb-board.jpeg"/>
 
 #### 收費場景
 
@@ -1030,10 +1030,11 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 </colgroup>
 <tbody>
 <tr><td><p>場景</p></td><td><p>清算撤銷表單</p></td><td><p>後續操作</p></td></tr>
-<tr><td><p>日切點後調賬，下一日的流水到當日<br/>日切點後調賬，當日的流水調整到下日<br/>資金清算後，調整收盤價</p></td><td><img src="/assets/WdXbbx8DIoxkh8xrRn8cnQd8nMf.png" src-width="3578" src-height="1798" align="center"/></td><td><p>清算撤銷 - 流水管理界面編輯日期 - 重新執行日終<br/>注意：找不到流水的可點擊更新數據</p></td></tr>
-<tr><td><p>月底融資利息結算異常<br/>例子：某客戶的融資利息需要調整後再結算</p></td><td><img src="/assets/P392bR0z8oKdoBxiVwsckkzinZg.png" src-width="3578" src-height="1798" align="center"/></td><td><p>清算撤銷 - 融資利息管理編輯利息 - 重新執行日終</p></td></tr>
-<tr><td><p>颱風天已經進行提前交收，需要撤銷<br/>量大的租戶建議謹慎操作提前交收</p></td><td><img src="/assets/PNBeb43c5or1aExSrUKcJYttn6J.png" src-width="3578" src-height="1798" align="center"/></td><td><p>清算撤銷 - 颱風天處理 - 執行日終</p></td></tr>
-<tr><td><p>日切前發現計費有問題需要調整</p></td><td><img src="/assets/Gnl7bnAxco1tuyxYKNAcoHAvnuh.png" src-width="3578" src-height="1798" align="center"/></td><td><p>清算撤銷 - 執行日終 - 暫停 - 清算計費 - 編輯費用 - 繼續日終</p></td></tr>
+<tr><td><p>日切點後調賬，下一日的流水改到當日<br/>日切點後調賬，當日的流水調整到下日<br/>資金清算後，調整收盤價</p></td><td><img src="/assets/JlADbfgXZovqwZxztGTcQUKpnlU.png" src-width="3020" src-height="1452" align="center"/></td><td><p>清算撤銷 - 流水管理界面編輯日期 - 重新執行日終<br/>注意：找不到流水的可點擊更新數據</p></td></tr>
+<tr><td><p>日切前發現計費（合約收費、補單）有問題需要調整</p></td><td><img src="/assets/AxcRbGjA1od525xAFjActXHpnSe.png" src-width="3020" src-height="1452" align="center"/></td><td><p>清算撤銷 - 修改費用</p></td></tr>
+<tr><td><p>月底融資利息結算異常<br/>例子：某客戶的融資利息需要調整後再結算</p></td><td><img src="/assets/CW1tbKZ3bogpwIxVGXnc4S23n8f.png" src-width="3020" src-height="1452" align="center"/></td><td><p>清算撤銷 - 融資利息管理編輯利息 - 重新執行日終</p></td></tr>
+<tr><td><p>颱風天已經進行提前交收，需要撤銷</p></td><td><img src="/assets/Stl1bzr1qoFQtSxdOVkcnlnenFb.png" src-width="3020" src-height="1452" align="center"/></td><td><p>清算撤銷 - 颱風天處理 - 執行日終</p></td></tr>
+<tr><td><p>日切后發現計費有問題需要調整<br/>量大的券商建議聯繫客服技術介入</p></td><td><img src="/assets/JfLKbbMImoO1W9xWWbvcjQqQnJd.png" src-width="3020" src-height="1452" align="center"/></td><td><p>清算撤銷 - 執行日終 - 暫停 - 清算計費 - 編輯費用 - 繼續日終</p></td></tr>
 </tbody>
 </table>
 
