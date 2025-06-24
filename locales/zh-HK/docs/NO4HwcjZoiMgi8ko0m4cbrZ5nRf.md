@@ -146,7 +146,7 @@ sidebar_position: 2
 </colgroup>
 <tbody>
 <tr><td><p><b>字段用途</b></p></td><td><p><b>字段名稱</b></p></td><td><p><b>字段說明</b></p></td></tr>
-<tr><td rowspan="2"><p><b>匹配條件</b></p></td><td><p>業務類型</p></td><td><p>包括股票交易、融資利息、存款利息、出金交易、期權交易、轉倉手續費等。滿足此條件的流水，按計算規則收費。只能選擇，不能新增</p></td></tr>
+<tr><td rowspan="2"><p><b>匹配條件</b></p></td><td><p>業務類型</p></td><td><p>包括股票交易、場外交易、融資利息、存款利息、出金交易、期權交易、轉倉手續費等。滿足此條件的流水，按計算規則收費。只能選擇，不能新增</p></td></tr>
 <tr><td><p>計費依據</p></td><td><p>股票交易選擇市場，融資交易選擇幣種。滿足此條件的，按此規則計費</p></td></tr>
 <tr><td rowspan="5"><p><b>計費規則</b></p></td><td><p>計費方式</p></td><td><p>包括股數、交易金額等</p></td></tr>
 <tr><td><p>計費精度</p></td><td><p>分爲合約、訂單、成交記錄。不同精度影響收費明細和尾差處理的口徑。<br/>以客戶 A 一天提交了 3 筆訂單，每筆訂單都分成 3 次成交為例子：<br/>按合約計費<br/>收費明細：1 條合約生成 1 條收費明細。<br/>尾差處理：按合約分別處理尾差。<br/>按訂單計費：<br/>收費明細：1 條合約含 3 條訂單，生成 3 條收費明細。<br/>尾差處理：按訂單分別處理尾差。<br/>按成交記錄計費：<br/>收費明細：1 條合約含 3 條訂單，每條訂單含 3 條成交記錄，生成 9 條收費明細。<br/>尾差處理：按成交記錄分別處理尾差。</p></td></tr>
@@ -550,7 +550,7 @@ DA 帳戶開戶後會默認配置為按 3 月/6 月/9 月/12 月這四個月生�
 
 該步驟暫停執行的，可以編輯前台訂單的收費
 
-#### 清算入帳
+#### 清算入帳（已清算交收合併）
 
 執行完畢後：
 根據計費帳單，股票本金和手續費作業務帳戶處理
@@ -725,45 +725,39 @@ T+2 日的早上可導出 ATI 交收指令，上傳到 CCASS
 
 點擊新建客戶補單
 
-<img src="/assets/LZKObyXjiokJkMxLdOccYsZMnze.png" src-width="2900" src-height="1546" align="center"/>
+<img src="/assets/NqYpbxbs5oH1ZHxGRxZce97FnOe.png" src-width="3008" src-height="1494" align="center"/>
 
-先補充基礎信息
+先補充基礎信息，系統會自動進行部分字段的試算（可人工進一步修改）
+
+<img src="/assets/Q5rmbwYDroNseixNOsecisCLnCd.png" src-width="3008" src-height="1494" align="center"/>
 
 系統已支持歷史交易日補單（最多前 5 個交易日），補單後交易日期為歷史日期，帳務日期為當日
 
-<img src="/assets/ViwZbcGhUo4uQZxHw2Ecq8genTE.png" src-width="2256" src-height="1274" align="center"/>
+<img src="/assets/LPGTbFJ9yokwBAxyeFtcFAUfnOd.png" src-width="3008" src-height="1594" align="center"/>
 
 提交後數據有錯誤，可進一步編輯後台合約的基礎信息
 
-<img src="/assets/FeNob3t1joxVFDxSR6CcT3vqnoh.png" src-width="2906" src-height="1550" align="center"/>
+<img src="/assets/THrVbX64vo1E26xaUrbcst8Rnvd.png" src-width="3008" src-height="1494" align="center"/>
 
-结算幣種和交易幣種不一致的可進一步编辑基本信息。詳見结算幣種编辑功能
+<img src="/assets/UmGWb0VUoom0vzxpZjfc4YNQnFf.png" src-width="3008" src-height="1494" align="center"/>
 
-<img src="/assets/F7WsbmKQToNB5lxvFcNcpaASnye.png" src-width="2904" src-height="1544" align="center"/>
-
-若商品是 OTC 產品或者交易通道未進行系統對接的，則結算渠道要對應選擇 OTC 結算渠道
-
-<img src="/assets/TIqQbcK3xooNrox7zPkczvDtnpg.png" src-width="2910" src-height="1554" align="center"/>
-
-<img src="/assets/YnDQbxCbFoLi2jx9CdqcpDTanXe.png" src-width="2896" src-height="1552" align="center"/>
-
-后台訂单號、后台成交流水號可直接複製合约號，有多筆成交的后台成交流水號不能相同。系统將根據交易金额和交易數量計算價格，最多保留 4 位小數
-
-<img src="/assets/WnrkbW1jgolOwTxplptcShvvn5d.png" src-width="2914" src-height="1552" align="center"/>
-
-點擊試算可以自動計算費用
+點擊計費可以自動計算費用
 
 試算後可進一步編輯費用，詳見費用查詢和編輯
 
-注意：只要操作過試算、添加、編輯的，即使刪除了全部費用，在清算計費步驟中不會再計算費用；如果在費用信息頁面未進行過任何操作的，在清算計費步驟會自動基於配置的規則計算費用
+注意：只要操作過計費、添加、編輯的，即使刪除了全部費用，在清算計費步驟中不會再計算費用；如果在費用信息頁面未進行過任何操作的，在清算計費步驟會自動基於配置的規則計算費用
 
-<img src="/assets/MemKbQGqwoRpHixBj7rcIZzRnbh.png" src-width="2900" src-height="1540" align="center"/>
+<img src="/assets/Ip1kbvPqYoXosIxHN6ecXl4on1f.png" src-width="3008" src-height="1494" align="center"/>
+
+若商品是 OTC 產品或者交易通道未進行系統對接的，則結算渠道要對應選擇 OTC 結算渠道
+
+<img src="/assets/DH5mblrQNoq53XxQE3XcibiCngb.png" src-width="3008" src-height="1594" align="center"/>
 
 OTC 補單系統會按大賬號自動計算託管商、子倉
 
 託管商、子倉可進一步編輯，詳見倉位信息查詢和編輯
 
-<img src="/assets/XnMzb87Uxof2FWxUlRwc6Wkfn1b.png" src-width="2900" src-height="1550" align="center"/>
+<img src="/assets/Yj2abb7WBoIPd8xQkjrcaigCnNb.png" src-width="3008" src-height="1494" align="center"/>
 
 ### <b>券商快捷補單</b>
 
@@ -954,9 +948,9 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 
 <img src="/assets/QYNFbQugJoZLuPxT8K8c6jEhnZc.png" src-width="2928" src-height="1558" align="center"/>
 
-按發生額調整：系統將根據輸入額，調整利息。
+按發生額調整：系統將根據輸入額，調整利息。按發生額調整支持同時修改多天
 
-<img src="/assets/Nnl3b5ypgooGaVxHYZ3cTsTmnHV.png" src-width="2914" src-height="1548" align="center"/>
+<img src="/assets/G23JbFuJUorjlNxdKeEcmT7On7f.png" src-width="3008" src-height="1494" align="center"/>
 
 調整的流水可在<b>差錯流水</b>頁面查詢
 

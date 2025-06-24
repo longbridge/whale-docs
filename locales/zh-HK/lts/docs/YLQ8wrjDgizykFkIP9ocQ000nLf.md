@@ -297,6 +297,16 @@ sidebar_position: 3
 
 <img src="/assets/WWYobDlX7ofhSUxDJVecjfecn2c.png" src-width="3020" src-height="1452" align="center"/>
 
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>在補單時，債券如何使用面值輸入</p>
+</div>
+
+- 在添加成交記錄時，點擊切換
+- 注意：切換功能僅對私有庫的債券有效
+
+<img src="/assets/Ra9XbD4aIo2AhSxz7i6cn4mFnyc.png" src-width="3008" src-height="1494" align="center"/>
+
 ## 交易對賬
 
 <div class="callout callout-bg-2 callout-border-2">

@@ -146,7 +146,7 @@ sidebar_position: 2
 </colgroup>
 <tbody>
 <tr><td><p><b>字段用途</b></p></td><td><p><b>字段名称</b></p></td><td><p><b>字段说明</b></p></td></tr>
-<tr><td rowspan="2"><p><b>匹配条件</b></p></td><td><p>业务类型</p></td><td><p>包括股票交易、融资利息、存款利息、出金交易、期权交易、转仓手续费等。满足此条件的流水，按计算规则收费。只能选择，不能新增</p></td></tr>
+<tr><td rowspan="2"><p><b>匹配条件</b></p></td><td><p>业务类型</p></td><td><p>包括股票交易、场外交易、融资利息、存款利息、出金交易、期权交易、转仓手续费等。满足此条件的流水，按计算规则收费。只能选择，不能新增</p></td></tr>
 <tr><td><p>计费依据</p></td><td><p>股票交易选择市场，融资交易选择币种。满足此条件的，按此规则计费</p></td></tr>
 <tr><td rowspan="5"><p><b>计费规则</b></p></td><td><p>计费方式</p></td><td><p>包括股数、交易金额等</p></td></tr>
 <tr><td><p>计费精度</p></td><td><p>分为合约、订单、成交记录。不同精度影响收费明细和尾差处理的口径。<br/>以客户 A 一天提交了 3 笔订单，每笔订单都分成 3 次成交为例子：<br/>按合约计费<br/>收费明细：1 条合约生成 1 条收费明细。<br/>尾差处理：按合约分别处理尾差。<br/>按订单计费：<br/>收费明细：1 条合约含 3 条订单，生成 3 条收费明细。<br/>尾差处理：按订单分别处理尾差。<br/>按成交记录计费：<br/>收费明细：1 条合约含 3 条订单，每条订单含 3 条成交记录，生成 9 条收费明细。<br/>尾差处理：按成交记录分别处理尾差。</p></td></tr>
@@ -550,7 +550,7 @@ DA 帐户开户后会默认配置为按 3 月/6 月/9 月/12 月这四个月生�
 
 该步骤暂停执行的，可以编辑前台订单的收费
 
-#### 清算入帐
+#### 清算入帐（已清算交收合并）
 
 执行完毕后：
 根据计费帐单，股票本金和手续费作业务帐户处理
@@ -725,45 +725,39 @@ T+2 日的早上可导出 ATI 交收指令，上传到 CCASS
 
 点击新建客户补单
 
-<img src="/assets/LZKObyXjiokJkMxLdOccYsZMnze.png" src-width="2900" src-height="1546" align="center"/>
+<img src="/assets/NqYpbxbs5oH1ZHxGRxZce97FnOe.png" src-width="3008" src-height="1494" align="center"/>
 
-先补充基础信息
+先补充基础信息，系统会自动进行部分字段的试算（可人工进一步修改）
+
+<img src="/assets/Q5rmbwYDroNseixNOsecisCLnCd.png" src-width="3008" src-height="1494" align="center"/>
 
 系统已支持历史交易日补单（最多前 5 个交易日），补单后交易日期为历史日期，帐务日期为当日
 
-<img src="/assets/ViwZbcGhUo4uQZxHw2Ecq8genTE.png" src-width="2256" src-height="1274" align="center"/>
+<img src="/assets/LPGTbFJ9yokwBAxyeFtcFAUfnOd.png" src-width="3008" src-height="1594" align="center"/>
 
 提交后数据有错误，可进一步编辑后台合约的基础信息
 
-<img src="/assets/FeNob3t1joxVFDxSR6CcT3vqnoh.png" src-width="2906" src-height="1550" align="center"/>
+<img src="/assets/THrVbX64vo1E26xaUrbcst8Rnvd.png" src-width="3008" src-height="1494" align="center"/>
 
-结算币种和交易币种不一致的可进一步编辑基本信息。详见结算币种编辑功能
+<img src="/assets/UmGWb0VUoom0vzxpZjfc4YNQnFf.png" src-width="3008" src-height="1494" align="center"/>
 
-<img src="/assets/F7WsbmKQToNB5lxvFcNcpaASnye.png" src-width="2904" src-height="1544" align="center"/>
-
-若商品是 OTC 产品或者交易通道未进行系统对接的，则结算渠道要对应选择 OTC 结算渠道
-
-<img src="/assets/TIqQbcK3xooNrox7zPkczvDtnpg.png" src-width="2910" src-height="1554" align="center"/>
-
-<img src="/assets/YnDQbxCbFoLi2jx9CdqcpDTanXe.png" src-width="2896" src-height="1552" align="center"/>
-
-后台订单号、后台成交流水号可直接复制合约号，有多笔成交的后台成交流水号不能相同。系统将根据交易金额和交易数量计算价格，最多保留 4 位小数
-
-<img src="/assets/WnrkbW1jgolOwTxplptcShvvn5d.png" src-width="2914" src-height="1552" align="center"/>
-
-点击试算可以自动计算费用
+点击计费可以自动计算费用
 
 试算后可进一步编辑费用，详见费用查询和编辑
 
-注意：只要操作过试算、添加、编辑的，即使删除了全部费用，在清算计费步骤中不会再计算费用；如果在费用信息页面未进行过任何操作的，在清算计费步骤会自动基于配置的规则计算费用
+注意：只要操作过计费、添加、编辑的，即使删除了全部费用，在清算计费步骤中不会再计算费用；如果在费用信息页面未进行过任何操作的，在清算计费步骤会自动基于配置的规则计算费用
 
-<img src="/assets/MemKbQGqwoRpHixBj7rcIZzRnbh.png" src-width="2900" src-height="1540" align="center"/>
+<img src="/assets/Ip1kbvPqYoXosIxHN6ecXl4on1f.png" src-width="3008" src-height="1494" align="center"/>
+
+若商品是 OTC 产品或者交易通道未进行系统对接的，则结算渠道要对应选择 OTC 结算渠道
+
+<img src="/assets/DH5mblrQNoq53XxQE3XcibiCngb.png" src-width="3008" src-height="1594" align="center"/>
 
 OTC 补单系统会按大账号自动计算托管商、子仓
 
 托管商、子仓可进一步编辑，详见仓位信息查询和编辑
 
-<img src="/assets/XnMzb87Uxof2FWxUlRwc6Wkfn1b.png" src-width="2900" src-height="1550" align="center"/>
+<img src="/assets/Yj2abb7WBoIPd8xQkjrcaigCnNb.png" src-width="3008" src-height="1494" align="center"/>
 
 ### <b>券商快捷补单</b>
 
@@ -954,9 +948,9 @@ OTC 补单系统会按大账号自动计算托管商、子仓
 
 <img src="/assets/QYNFbQugJoZLuPxT8K8c6jEhnZc.png" src-width="2928" src-height="1558" align="center"/>
 
-按发生额调整：系统将根据输入额，调整利息。
+按发生额调整：系统将根据输入额，调整利息。按发生额调整支持同时修改多天
 
-<img src="/assets/Nnl3b5ypgooGaVxHYZ3cTsTmnHV.png" src-width="2914" src-height="1548" align="center"/>
+<img src="/assets/G23JbFuJUorjlNxdKeEcmT7On7f.png" src-width="3008" src-height="1494" align="center"/>
 
 调整的流水可在<b>差错流水</b>页面查询
 
