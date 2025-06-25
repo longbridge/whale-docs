@@ -297,6 +297,16 @@ sidebar_position: 3
 
 <img src="/assets/WWYobDlX7ofhSUxDJVecjfecn2c.png" src-width="3020" src-height="1452" align="center"/>
 
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>在补单时，债券如何使用面值输入</p>
+</div>
+
+- 在添加成交记录时，点击切换
+- 注意：切换功能仅对私有库的债券有效
+
+<img src="/assets/Ra9XbD4aIo2AhSxz7i6cn4mFnyc.png" src-width="3008" src-height="1494" align="center"/>
+
 ## 交易对账
 
 <div class="callout callout-bg-2 callout-border-2">
