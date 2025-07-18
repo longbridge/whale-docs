@@ -101,20 +101,23 @@ const getPageTitle = (pageData: any): string => {
 }
 
 // 转换页面信息
-const convertInfo = (data: any, parent_node_token = '', depth = 0, position = 0): INotionPageInfo => ({
-  depth,
-  title: getPageTitle(data),
-  node_token: data.id,
-  parent_node_token,
-  obj_create_time: data.created_time ? new Date(data.created_time).getTime() : 0,
-  obj_edit_time: data.last_edited_time ? new Date(data.last_edited_time).getTime() : 0,
-  slug: data.id,
-  position,
-  filename: `${data.id}.md`,
-  has_child: false,
-  children: [],
-  notion_slug: data.id,
-});
+const convertInfo = (data: any, parent_node_token = '', depth = 0, position = 0): INotionPageInfo => {
+  const pureId = data.id.replace(/-/g, '');
+  return {
+    depth,
+    title: getPageTitle(data),
+    node_token: pureId,
+    parent_node_token,
+    obj_create_time: data.created_time ? new Date(data.created_time).getTime() : 0,
+    obj_edit_time: data.last_edited_time ? new Date(data.last_edited_time).getTime() : 0,
+    slug: pureId,
+    position,
+    filename: `${pureId}.md`,
+    has_child: false,
+    children: [],
+    notion_slug: data.id,
+  }
+};
 
 // 生成md文件的frontmatter
 const generateFrontmatter = (title = '', originalMeta: any = {}, slug = '', sidebar_position = 0) => {
