@@ -1,7 +1,7 @@
 ---
 title: 2025-06-30 更新日誌
 slug: BGLywY6Y2iVtP4kNZ1WcvxyFnJt
-sidebar_position: 0
+sidebar_position: 1
 version: lts
 ---
 

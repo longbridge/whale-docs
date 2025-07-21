@@ -1,7 +1,7 @@
 ---
 title: 2024-06-11 更新日誌
 slug: 24-06-11
-sidebar_position: 27
+sidebar_position: 28
 ---
 
 
