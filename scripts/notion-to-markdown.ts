@@ -39,7 +39,7 @@ interface ICacheLog {
   };
 }
 
-const OUTPUT_DIR = path.resolve(process.env.OUTPUT_DIR || "./notion-pages");
+const OUTPUT_DIR = path.resolve(process.env.NOTION_OUTPUT_DIR || "./notion-pages");
 const DOCS_DIR = path.join(OUTPUT_DIR, "docs");
 const CACHE_DIR = path.join(OUTPUT_DIR, ".cache");
 
