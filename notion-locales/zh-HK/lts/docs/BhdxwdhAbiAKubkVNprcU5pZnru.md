@@ -1,0 +1,275 @@
+---
+slug: BhdxwdhAbiAKubkVNprcU5pZnru
+title: 快速上手
+sidebar_position: 1
+---
+
+
+# 快速上手
+
+
+# 概述
+
+
+Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功能，幫助管理人員進行賬戶相關的管理工作。
+
+
+# 前置條件
+
+
+您需要獲取以下授權後方可正常使用系統功能
+
+
+| 權限名稱                  | 權限說明                 |
+| --------------------- | -------------------- |
+| ClientAccountInfoFull | 管理賬户列表、BCAN碼、工單中心的權限 |
+
+
+# 賬戶列表
+
+
+## 查询账户信息
+
+
+可以查詢所有已開戶的客戶帳戶狀態資料
+
+
+![image.png](/assets/8637a2fe56aedf624d0dae79ee3518ec.png)
+
+
+也可在右側記錄操作區：點選【詳情】， 查看客戶細部基本資料，同時也提供資產交易/操作記錄/登錄設備/代理人/關係人 這些特定事項的 Tab 頁籤資料
+
+
+![image.png](/assets/2ce30bcaa7a77a9a5ab539847f44e3aa.png)
+
+
+ 資產記錄的入金記錄
+
+
+![image.png](/assets/a6a09d13a1d8fc139a5b2a1899df7ef6.png)
+
+
+一些歷史登錄設備記錄
+
+
+![image.png](/assets/84910a3838da09c232e1b87a379c76d8.png)
+
+
+本作業也可以對客戶帳戶作交易權益的變更，在記錄右側操作區點選【交易權限】
+
+
+![image.png](/assets/05a2f73d8c9c3f8c3cff9bfffec551c3.png)
+
+
+本作業也可以對客戶作帳戶安全事項管理，在記錄右側操作區點選【...】，選擇對應安全事項管理（凍結/解鎖/注銷等....)
+
+
+![image.png](/assets/757f8a9d3c5a7c9754e2cf87d8fe61df.png)
+
+
+在帳戶列表作業中，增加帳戶標識篩選 查詢條件，方便定位查詢數據
+
+
+![image.png](/assets/eb951b8645ddd6ec19d8950b89313afb.png)
+
+
+# BCAN碼
+
+
+## HKIDR報送
+
+
+本作業可以處理 HKIDR 機制的 BCAN-CID 檔案上傳（分成 SFTP 自動上傳與手動上傳 兩種模式）
+
+- 注： 有關中華通的 BCAN 說明 將在系統開放支持時說明
+
+![image.png](/assets/cae8d88d7ff2e4193486b9b36189e93a.png)
+
+
+其中申報邏輯：上報的數據是 已開通帳戶、有 BCAN 碼且同意授權協議的全量客戶，申報給港交易所後，獲取交易所返回的檔內容，將 BCAN 生效的狀態同步更新；
+
+1. **若是劵商是 EP 租戶**： 本作業是支持自動申報上傳（透過 SFTP 的 SDNet/2 线路）
+
+    SFTP 申報方式說明如下：
+
+    - 交易日 08:00 am- 03:00 pm 時間段內，自動生成 BCAN-CID 檔
+    - 產生檔案後自動通過 SFTP 的方式提交給交易所
+    - 交易所返回的應答檔展示在後台，支持下載
+    - 返回的全景檔自動解析，將客戶的 BCAN 狀態自動更新
+
+![image.png](/assets/babd362290925d6a9c18402aaa28360f.png)
+
+1. **若是劵商是 OB 租戶**： 是要手動產生 BCAN-CID 檔後，再人工透過 SFC Web ECP 網站上傳資料
+
+    SFC Wings 申報方式說明如下：
+
+    - 通过本作業先行下载申报文件
+
+    ![image.png](/assets/ca4ce5051ad155523c745760432fa99f.png)
+
+- 去 ECP 2.0 SFC 入口官网上傳申報文件，将交易所返回的全景文件導入后台
+
+![image.png](/assets/498ffbcd6785e5329a9491b6ba9d7d0b.png)
+
+- 将交易所返回的全景文件，在本作業導入后台
+
+![image.png](/assets/a81d2556c8ccb32fee1a7ed22bd9f6ff.png)
+
+
+同時客户的 BCAN 生效狀態結果將同步更新
+
+
+![image.png](/assets/198991353105b22920f1156e2cedb845.png)
+
+
+## BCAN 區間
+
+
+本作業可以維護參與者的角色（CCEP）所自行維護本身 BCAN 碼區間段或（TTEP）被上手劵商分配的 BCAN 碼區間段
+
+
+當 BCAN 區間分配後，系統就會對新開戶的客戶自動分配一個 BCAN 碼
+
+
+至于存量現有客戶，長橋科技將會協助在實名制實施前，批量完成現有客戶分配 BCAN 碼
+
+
+![image.png](/assets/31a07a50333bf405b76ef01d713fb08e.png)
+
+
+點選右方上側【新建區間】， 新建一筆新的 BCAN 區間
+
+
+![image.png](/assets/797cc384cbbac4f128754ef22418acaa.png)
+
+
+其中欄位說明如下：
+
+
+| **港股EP模式**                                               | **港股Non-EP模式**                                            |
+| -------------------------------------------------------- | --------------------------------------------------------- |
+| CCEP：選擇當前租戶選項
+使用者：選擇當前租戶選項
+是否上報：選擇‘是’
+起始編號/結束編號：手動輸入配置·  | CCEP：選擇‘lb’選項
+使用者：選擇當前租戶選項
+ 是否上報：選擇‘是’
+ 起始編號/結束編號：手動輸入配置· |
+| 注意：（‘1’-‘99’是交易所自測區間，不可使用，不可用‘0’前置占位，建議按lb提供的區間配置）       |                                                           |
+
+
+# 參與者管理
+
+
+本作業可以配置管理 實名制中有關劵商參與者的公司資料以及參與者的角色安排（CCEP/TTEP）
+
+
+![image.png](/assets/7ab0a098965b002b272d2b418d3a2553.png)
+
+
+點選右方上側【新建參與者】， 建一筆新的參與者信息
+
+
+![image.png](/assets/e5f154a475d56d6d7dc5685905bc0528.png)
+
+
+其中欄位說明如下：
+
+
+[%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A1%A8%E6%A0%BC.xlsx](https://prod-files-secure.s3.us-west-2.amazonaws.com/1445bab0-c2cc-8114-afe4-000302ebb560/0a6767cb-7717-407b-b8f3-cae4c8e8ea10/%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A1%A8%E6%A0%BC.xlsx?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB466ZNZHQITZ%2F20250718%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250718T061609Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEG4aCXVzLXdlc3QtMiJHMEUCIGGjFay252TXnInwleSBt%2B8ACnLG1HdT5bPXODaoKfwSAiEAxxXs5t4r5Lwtej0QpFg5Oni7dhSMIXSaYwxs3HgMPcwqiAQIh%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgw2Mzc0MjMxODM4MDUiDJ6t1s3ESbp7jyeRASrcA%2Fmhf7vKsTI2oO23q9vKhcvl1z3oVX9FygfEV6aj6v8w%2BQn3a0Ih8F2OoG7oehL36AMNssKsCtQddvb02FzN9CjKlWUFtbdO6wXVJ1g%2BDQmL8Q181C6ZiVc%2BWWpkx7k0Ja230PYQuFXO9RAnLsWrDdmZhR0W7dvgkxdPVIDqD6GdP22QHtrw629%2BOZSbxMZvQ9twvRK2ZVVLadFOEnDaxi0nN6kpuwQcHl7ASDLcHFhFVy3agqv2v12f9WsBi9vxLqr09Z8z4ww2fvv48hilXTuxkZ4iQbJYzP9ktF%2B%2Fi9A9l5c%2Bqf1RgwurtDQ2RnsCzW6B5kjLW2Rx6ByJtFN6WwnDXfP8N73PssAmuUP6gwwMGZq97wKH%2FBkjFupCz96a2oHis3okzG56kT6u9fZR1txCkQ3Fwqmp7xfl0ImQyIFaYB8zKFiRyycTcfV4RnXLY57nJHQBaWl2XSd5%2B8eGCT4uh9g0ul5%2FOK1G9VBi2FTJA8p2LHTX%2Bs90khGK8Pf7L7z%2Bn%2FN6c%2BFrG%2FJXVWUBtl6fQ9I%2B5pQAMJJQvuuy496FFYy2Q%2FGG0iJJwxiV9fQmmFqSF0VQxdPFZltFyaGRJIY%2F43Ti%2BJAdDzhySfjuK5pbpy9RPaAUNGHAcOUYMM2758MGOqUBcLkPdSNxpKez8jB13HF%2FJuxngsAucUVKTbPjnKdSMPwPeifQ5EImrrhFBV%2Bb2fJHKE6jdkBfQCY0IrWr%2BliiyF9%2BYxNU2gKY9ueypCGSsjC4qealA5PUoN9JYidhSXBeqn5fXz9EkIts%2BMV2X56UAgloqSCLMXDShjzvojPECzBPlhEM5zem3qoTqjbzXYGkpDz1tqcl2o6LtoeMMqxX8WuwIGjp&X-Amz-Signature=a20910eaabafa43de424e716889be1182bfab711dd1321b2c956bcc05002385c&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject)
+
+
+| 港股EP模式                                                                                                | 港股Non-EP模式                                                                                                                                                                                                    |
+| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 新增一條參與者記錄：
+參與者名稱：選擇當前租戶選項
+類型：選擇‘House’選項
+ BCAN類別：選擇‘CCEP&TTEP’選項
+參與者編號：手動輸入Firm ID
+中央編號：手動輸入CE number | 新增兩條參與者記錄:
+記錄1
+參與者名稱：選擇當前租戶選項
+類型：選擇‘House’選項
+BCAN類別：選擇‘TTEP’選項
+參與者編號：手動輸入Firm ID
+中央編號：手動輸入CE numbe
+記錄2
+參與者名稱：選擇'lb'選項
+類型：選擇‘Thrid’選項
+BCAN類別：選擇‘CCEP’選項
+參與者編號：手動輸入Firm ID=‘2195’
+中央編號：手動輸入CE numbe=‘BPX066’；·  |
+| 港股EP模式                                                                                                | 港股Non-EP模式                                                                                                                                                                                                    |
+| 新增一條參與者記錄：
+參與者名稱：選擇當前租戶選項
+類型：選擇‘House’選項
+ BCAN類別：選擇‘CCEP&TTEP’選項
+參與者編號：手動輸入Firm ID
+中央編號：手動輸入CE number | 新增兩條參與者記錄:
+記錄1
+參與者名稱：選擇當前租戶選項
+類型：選擇‘House’選項
+BCAN類別：選擇‘TTEP’選項
+參與者編號：手動輸入Firm ID
+中央編號：手動輸入CE numbe
+記錄2
+參與者名稱：選擇'lb'選項
+類型：選擇‘Thrid’選項
+BCAN類別：選擇‘CCEP’選項
+參與者編號：手動輸入Firm ID=‘2195’
+中央編號：手動輸入CE numbe=‘BPX066’；·  |
+
+
+# 工單中心
+
+
+## 凍結客戶
+
+
+支持在後台操作客戶的賬號凍結，凍結後，當前賬號將無法登錄 App、桌面端等。
+
+
+**單個賬號凍結**
+
+
+點擊「新建工單」，選擇「凍結客戶」
+
+
+![image.png](/assets/f54a6bd80c3692d57d77bd318d7b6f29.png)
+
+
+在「新建凍結客戶」彈窗內，選擇需要凍結的客戶編號，填寫備注說明及附件後，提交工單申請
+
+
+![image.png](/assets/7fac0f7e60df1b65fde71827cacd689f.png)
+
+
+點擊「詳情」，或批量勾選數據後，可單次/批量審核工單，審核通過後，客戶的狀態將發生變更
+
+
+![image.png](/assets/e0a9ae54b8411d5ff2245e54513e2948.png)
+
+
+**批量客戶凍結**
+
+
+在凍結客戶的列表頁，點擊「批量導入」按鈕
+
+
+![image.png](/assets/58ab7c41432798594c5123b67988da20.png)
+
+
+下載批量導入的文件模板，按要求填入待處理的數據，再在後台點擊上傳文件
+
+
+![image.png](/assets/7c370d33590ba893f08b636c2d0b65c1.png)
+
+
+提交後，再在凍結客戶的列表頁，單次/批量審核數據。審核完成後，客戶的狀態發生變更
+
+
+![image.png](/assets/d1850c8af0cab4a0d6845eb2725c7c4d.png)
+
+
+其他客戶/賬戶操作的流程，與凍結客戶類似
+
