@@ -138,7 +138,7 @@ sidebar_position: 3
 
 <img src="/assets/SwgHbIcaso3GzHxia3XccrAHnah.png" src-width="2602" src-height="490" align="center"/>
 
-## 费用配置和查询
+## 客户费用配置和查询
 
 <div class="callout callout-bg-2 callout-border-2">
 <div class='callout-emoji'>❓</div>
@@ -486,4 +486,15 @@ a.<b>筛选数据</b>
 - 基础仓位调整的模板，将不会修改待交收的合约。基础仓位调整的模板，可同时调整 Sreet、Nominee、Own。用来操作内部转仓时，必须有配套的数据（两条）
 
 <img src="/assets/MOxDby2MtoLWjgxxMJuczzginIb.png" src-width="3570" src-height="1774" align="center"/>
+
+## 经纪人分佣如何重算
+
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>重新配置佣金分成套餐后，想要针对之前的日期重新计算分佣如果处理？</p>
+</div>
+
+<img src="/assets/I7Dab7dvNoqaafxhkaacJGHCnJe.png" src-width="3024" src-height="1500" align="center"/>
+
+<img src="/assets/Bv6vbd5AKoIP8UxlEhXc3C1FnVf.png" src-width="3024" src-height="1500" align="center"/>
 

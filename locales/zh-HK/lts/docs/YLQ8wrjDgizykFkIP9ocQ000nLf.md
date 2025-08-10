@@ -138,7 +138,7 @@ sidebar_position: 3
 
 <img src="/assets/SwgHbIcaso3GzHxia3XccrAHnah.png" src-width="2602" src-height="490" align="center"/>
 
-## 費用配置和查询
+## 客戶費用配置和查询
 
 <div class="callout callout-bg-2 callout-border-2">
 <div class='callout-emoji'>❓</div>
@@ -486,4 +486,15 @@ a.<b>篩選數據</b>
 - 基礎倉位調整的模板，將不會修改待交收的合約。基礎倉位調整的模板，可同時調整 Sreet、Nominee、Own。用來操作內部轉倉時，必須有配套的數據（兩條）
 
 <img src="/assets/MOxDby2MtoLWjgxxMJuczzginIb.png" src-width="3570" src-height="1774" align="center"/>
+
+## 經紀人分佣如何重算
+
+<div class="callout callout-bg-2 callout-border-2">
+<div class='callout-emoji'>❓</div>
+<p>重新配置佣金分成套餐後，想要針對之前的日期重新計算分佣如果處理？</p>
+</div>
+
+<img src="/assets/I7Dab7dvNoqaafxhkaacJGHCnJe.png" src-width="3024" src-height="1500" align="center"/>
+
+<img src="/assets/Bv6vbd5AKoIP8UxlEhXc3C1FnVf.png" src-width="3024" src-height="1500" align="center"/>
 
