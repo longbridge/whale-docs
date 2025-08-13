@@ -315,6 +315,7 @@
     - [业务场景 2](P3GcwwOXpiHLCXkbyCRckoFpnmv.md)
   - [Release Notes](Cn7Wws0goic2tDkpXpJcwagUnXb.md)
     - [Whale Console](E5L0wVGoPic5ejk7Ra4crCYWnsh.md)
+      - [2025-08-12 Release Notes](VctqwGnZTiNOt9kYmwkcJOHznjc.md)
       - [2025-07-21 Release Notes ](MP6XwY7ACi4XAikhDGJcyQBHnSd.md)
       - [2025-06-30 Release Notes](Jc4IwDMCriexT9kHos7ckseJnod.md)
       - [2025-06-23 Release Notes](HnARwRrtviAzMAkyrpgcefRnntf.md)
