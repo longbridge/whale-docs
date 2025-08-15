@@ -1,0 +1,206 @@
+---
+slug: KgzbwrUGhiVyctkAgP8cJgbsnSd
+title: 5. 清算問題
+sidebar_position: 4
+---
+
+
+# 5. 清算問題
+
+
+# 5A 問：清算能重跑昨天的數據？
+
+
+**答：**在「清算管理＞清算撤銷」頁面點擊「新增」，不能跳過賬務日，需一天一天撤回。（見 5A 圖一）
+
+
+![image.png](/assets/98967c3b84b28385088dd9da86a8dabb.png)
+
+
+_5A 圖一_
+
+
+_如不用重新計算利息／交收數據，資產類回撤可選不操作_
+
+
+# 5B 問：為什麼操作提前交收沒反應？
+
+
+**答：**提前交收需要完成日終後操作，如下日為假期操作會有報錯提醒：市埸日歷不存在
+
+
+![image.png](/assets/24c575c6c9c3d0accf08f7ce110f46a0.png)
+
+
+# 5C 問：半日市清算需要什麼操作／注意？
+
+
+**答：**最早當天 2 點在「清算管理＞日終任務」點擊「提前日切」可提早進行清算 或 等到系統截數時間（如：4 點半）後操作。
+
+
+![image.png](/assets/3d7d50f508b9916f1d1584dde3034e1a.png)
+
+
+# 5D 問：日終 "清算前準備" 有報錯提醒如何處理？
+
+
+![image.png](/assets/161667f6ac9f9c58b9a7b618580e5340.png)
+
+
+**答：**彈出提醒信息檢查後沒問題，作「手動審核」通過。
+
+
+[%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A1%A8%E6%A0%BC.xlsx](https://prod-files-secure.s3.us-west-2.amazonaws.com/1445bab0-c2cc-8114-afe4-000302ebb560/ce9d0bed-f91a-4dfe-9d61-c13a0c44792c/%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A1%A8%E6%A0%BC.xlsx?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB466U326UBZ2%2F20250718%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250718T062517Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEG4aCXVzLXdlc3QtMiJGMEQCIGmNMHJAlkkM3LLhzT3xLpcyYkZ2%2FmmYi1KqiTkDn3gdAiAcVlD7aWYUKsLrJavMQ25Rc2Yhz0bMELA6zbevWBVd3SqIBAiH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAAaDDYzNzQyMzE4MzgwNSIME5xftweZA9zyVzQOKtwDZdA%2B09iMGc8HA6aUT%2F9MRFqzAJFvYZG9PE%2BZ%2B0%2FmLYHMRmDjIQENsLIUPZ%2BYkh8gHras80Mhmq4kTB55f5ZyeXzv%2BjP0MxX1Q%2FU8dwoOQ8OYtHuquBScDTFVXXdTvNsh0dsYPyMFnVRGvd%2FuRVN%2Fm1OSlJn1%2BFc1DImPxEXXOSnO%2BiSz8PdKvGNPc9TjuQRbVPONtNO4bwqMoplolPA1v%2FcklunK5rnmNc3IQqv9eEI9ckvnw%2FoK7lRdOMtr1Np%2F6Hj13jIuab35OmArEq7W%2BsuS%2F7O2Urcr52E%2BOePKBEerVAeXzJMhW2GoSLIzNFnNDqDvG8qJXBht7qq2WCGT8MgHEW0qoPTT41%2BYbZRVJzb8nysv8aTnktzGMKkFv1Ny%2Fxj46SGxmohFTPhs1SNiAiDxy3Gip%2FJUB4wCjuiTrJfj6gl36i%2FozVJC0YbB5ljiSnIAHZPfBxgs10DNr7i%2Fpc%2BNIF3CADMVHk8eEw2Jc819lBxlhINSw1hzywNJ5uHPrfjDPHoNMkNVsKGJ0itrmttLsntg2JhyTjD8%2BqMCL5ZKRp3gIXJ2AoxK6u1VzdNpMj88F12XuPzwqoX1y6KD33b8I40I46grc4vK5y99xY6sJsmUYwe5X2%2Fi75UwxLvnwwY6pgGmmOT7TJmoH7PuuRCh5NJMCMbtAtCyKe6BdyolLQRq9SyxLHD6fJSXqWJuSDJ8%2BKQ4DexgCvnkprhFS0diNcGHnGHVS5d%2FB3zpPT6DgisYT%2BU1cJjmAkYE%2FUQExlsQq1fGhCRrLWEIIuDlDgSjByGEcdsZmay5aIRK05qkVTISlqQ6G8JPpH7ni1RQZI%2BfjN0iOGPxODty3oi3IX%2B1c%2BkmHAB7X0OQ&X-Amz-Signature=7e36092fbf7346593b2a7ffb9bad7b478db1594dcaf8df9830b05a368127d8cd&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject)
+
+
+| 清算前準備提醒 | 處理方法                                                  |
+| ------- | ----------------------------------------------------- |
+| 公司行動    | 未完成的公司行動會有提醒，如不用處理可審批通過                               |
+| 收盤價確認   | 股票股權沒錄取到行情，收盤價會為 0。如需修改可點擊「收盤價管理」處理                   |
+| 市埸規則配置  | 需要在「業務參數設置>市埸管理>市埸規則」點擊「新建」添加市埸（見5D 圖一）               |
+| 股票資訊    | 未到系統設置的日切時間點作清算，早過這個時間點操作會有報錯提醒。在過了時間點後重新操作。
+（見5G 圖二） |
+| 清算前準備提醒 | 處理方法                                                  |
+| 公司行動    | 未完成的公司行動會有提醒，如不用處理可審批通過                               |
+| 收盤價確認   | 股票股權沒錄取到行情，收盤價會為 0。如需修改可點擊「收盤價管理」處理                   |
+| 市埸規則配置  | 需要在「業務參數設置>市埸管理>市埸規則」點擊「新建」添加市埸（見5D 圖一）               |
+| 股票資訊    | 未到系統設置的日切時間點作清算，早過這個時間點操作會有報錯提醒。在過了時間點後重新操作。
+（見5G 圖二） |
+
+
+![image.png](/assets/0475821d28932dd5239a7ea87a2f84b6.png)
+
+
+![image.png](/assets/c0c4ba5a0b29c3beafea99d7fa0c7976.png)
+
+
+![image.png](/assets/4b4e64deacb94299303b827b11a80bff.png)
+
+
+_5D 圖一_
+
+
+![image.png](/assets/dec4fa4ae0e8ff1475ee9b340981b4bb.png)
+
+
+_5D 圖二_
+
+
+# 5E 問：清算前準備出現「前台流水全部納入清算」的提醒，如何處理？
+
+
+![image.png](/assets/9b4d42f5c5cea0d683111a923f11b985.png)
+
+
+**答：**檢查流水是否在系統清算時間後操作。在「清算管理＞流水管理」頁面選持倉／資金流水點擊「編輯日期」，改回當天賬務日期。完成日終後，當天結單會顯示到該流水。
+
+> 如不用在當天結單顯示流水，可保持原來的賬務日，不作修改，點擊通過繼續日終。
+
+![image.png](/assets/50015e8b4b7f2d5952b32c0831a52c30.png)
+
+
+# 5F 問：清算檢查的「IBOND 交易檢查」是否須作處理？
+
+
+**答：**可以人手檢查通過提醒。如需關閉檢查配置，在「業務參數設置＞日終設置＞清算前準備＞IBOND 交易檢查」處理（見下圖）。
+
+
+![image.png](/assets/07a13b2c83bafd49a5c16f2657f78293.png)
+
+
+![image.png](/assets/14c777987a181fe74caa9d411f1f5ffe.png)
+
+
+# 5G 問：日終時數據同步出現「執行失敗！市埸表配置錯誤」如何處理？
+
+
+**答：**報錯會提醒缺失那個市埸
+（i）。 添加市埸：「業務參數設置>市埸管理>市埸規則」新增相關市場配置。（見 5G 圖一、圖二）
+
+
+(ii). 添加幣種：「款項管理>滙率>參考滙率」的新增該市場的貨幣。（見 5G 圖三、圖四）
+
+
+(iii). 日終設置加回市埸：「業務參數設置>日終設置>市埸交收」點擊「編輯」加上市埸。（見 5G 圖五、圖六）
+
+
+![image.png](/assets/f8b265ce65119cfd0c4f2ffb98ee3d97.png)
+
+
+_5G 圖一_
+
+
+![image.png](/assets/b4855ba4142541ebc619b6ca723ee8ba.png)
+
+
+_5G 圖二_
+
+
+![image.png](/assets/00017a20e5e6d3ec4562fdd06dbdd6c8.png)
+
+
+_5G 圖三_
+
+
+![image.png](/assets/f05e26938657be471443fe842aa619fd.png)
+
+
+_5G 圖四_
+
+
+![image.png](/assets/cfd9c6b274ac9f66e84ee98545e66c3b.png)
+
+
+_5G 圖五_
+
+
+![image.png](/assets/8adae9b73675160217e6b6d070af7b96.png)
+
+
+_5G 圖六_
+
+
+# 5H 問：清算中檢查報錯，如何處理？
+
+
+![image.png](/assets/cf9a45a3f4bde2630634979c3e52d974.png)
+
+
+**答：**確認情況是否**同股票同客户持倉在不同托管商**上。
+
+
+在「清算管理＞清算檢查＞檢查結果」頁面是否出現“**同客户、同標的跨子倉**”出現檢查失敗，因同客户及同股票在不同上手的托管商會有提醒報錯。
+
+- 方法一：確認股票放在兩個不同上手的倉位，可點擊「工單詳情」手動通過（見 5H 圖一），回到「清算管理＞日終任務」頁面繼續完成日終。如持倉保持在不同上手，日後的清算中檢查會一直有報錯提醒。
+- 方法二：可在「清算管理＞倉位管理＞倉位查詢」操作内部轉倉，把股票放到同一上手托管商倉位（見 5H 圖二）。之後回到日終任務，在清算中檢查點擊「重新執行」完成日終。
+
+![image.png](/assets/5a21941680a14b04d73f7a3286dd4e16.png)
+
+
+_5H 圖一_
+
+
+![image.png](/assets/4d36eaf43e802cb6296d03fd0c2c3a87.png)
+
+
+_5H 圖二_
+
+
+# 5I 問：颱風天操作如何處理？（2024 年 9 月 23 日後不適用）
+
+
+**答：**一般 ccass 會發通知券商延後錢或貨
+
+
+
+(i). 在「清算管理 > 颱風天處理」頁面操作
+
+
+![image.png](/assets/1ca0f8f72ff3e4b446ae3b9e6e31d5b2.png)
+
+
+(ii). 選擇「市場」及 根據 CCASS 通知選擇「錢貨同時延後」或「錢延後」
+
+
+![image.png](/assets/6e92a9185b43cd5c6a3630baddfc82ac.png)
+
