@@ -13,23 +13,23 @@ import crypto from 'crypto';
 interface INotionPageInfo {
   depth?: number;
   title?: string;
-  // NOTE: 迁移的文件用飞书文档的token，新文档用notion的id
+  // NOTE: 迁移的文件用飞书文档的 token，新文档用 notion 的 id
   node_token?: string;
-  // NOTE: 迁移的文件用飞书文档的token，新文档用notion的id
+  // NOTE: 迁移的文件用飞书文档的 token，新文档用 notion 的 id
   parent_node_token?: string;
-  // NOTE: 迁移的文件用飞书文档的token，新文档用notion的id
+  // NOTE: 迁移的文件用飞书文档的 token，新文档用 notion 的 id
   slug?: string;
   obj_create_time?: number;
   obj_edit_time?: number;
-  // NOTE: notion的id
+  // NOTE: notion 的 id
   notion_slug?: string;
   position?: number;
   filename?: string;
   has_child?: boolean;
   children?: INotionPageInfo[];
   meta?: Record<string, any>; // 页面元数据
-  // obj_token: string; // 飞书文档的token，备注一下，暂时用不到
-}
+  // obj_token: string; // 飞书文档的 token，备注一下，暂时用不到
+};
 
 interface ICacheLog {
   [key: string]: {
@@ -37,7 +37,7 @@ interface ICacheLog {
     meta?: Record<string, any>;
     position?: number;
   };
-}
+};
 
 const OUTPUT_DIR = path.resolve(process.env.NOTION_OUTPUT_DIR || "./notion-pages");
 const DOCS_DIR = path.join(OUTPUT_DIR, "docs");
@@ -46,12 +46,12 @@ const CACHE_DIR = path.join(OUTPUT_DIR, ".cache");
 const NOTION_PAGE_ID = process.env.NOTION_PAGE_ID;
 if (!NOTION_PAGE_ID) {
   throw new Error('NOTION_PAGE_ID is not set');
-}
+};
 
 const NOTION_API_KEY = process.env.NOTION_API_KEY;
 if (!NOTION_API_KEY) {
   throw new Error('NOTION_API_KEY is not set');
-}
+};
 
 // 初始化客户端
 // NOTE: https://www.notion.so/22c5bab0c2cc8154b7f6eb28360b28b3?source=copy_link
@@ -61,15 +61,15 @@ const n2m = new NotionToMarkdown({ notionClient: notion, config: { convertImages
 
 // 获取页面标题
 const getPageTitle = (pageData: any): string => {
-  // 情况1: 数据库页面
+  // 情况 1: 数据库页面
   if (pageData.object === "database") {
     return pageData.title.map(t => t?.plain_text).join("");
   }
 
-  // 情况2: 普通页面
+  // 情况 2: 普通页面
   const properties = pageData.properties;
 
-  // 查找title类型的属性
+  // 查找 title 类型的属性
   const titleKey = Object.keys(properties).find(key =>
     properties[key].type === "title"
   );
@@ -80,14 +80,14 @@ const getPageTitle = (pageData: any): string => {
       .join("");
   }
 
-  // 情况3: 旧版API结构
+  // 情况 3: 旧版 API 结构
   if (pageData.title) {
     return pageData.title
       .map(rt => rt.plain_text)
       .join("");
   }
 
-  // 情况4: 从其他位置获取
+  // 情况 4: 从其他位置获取
   if (properties["Title"]) {
     return properties["Title"].rich_text[0]?.plain_text || "无标题";
   }
@@ -98,7 +98,7 @@ const getPageTitle = (pageData: any): string => {
 
   // 最终回退
   return "未命名文档 " + new Date().toISOString().slice(0, 10);
-}
+};
 
 // 转换页面信息
 const convertInfo = (data: any, parent_node_token = '', depth = 0, position = 0): INotionPageInfo => {
@@ -119,7 +119,7 @@ const convertInfo = (data: any, parent_node_token = '', depth = 0, position = 0)
   }
 };
 
-// 生成md文件的frontmatter
+// 生成 md 文件的 frontmatter
 const generateFrontmatter = (title = '', originalMeta: any = {}, slug = '', sidebar_position = 0) => {
   const { originalSlug, ...others } = originalMeta;
   const meta = Object.assign(
@@ -150,7 +150,7 @@ const generateFrontmatter = (title = '', originalMeta: any = {}, slug = '', side
   return output;
 };
 
-// 等待毫秒, Notion API 有每秒3-5次请求的限制
+// 等待毫秒，Notion API 有每秒 3-5 次请求的限制
 const wait = (ms = 350) => new Promise(resolve => setTimeout(resolve, ms));
 
 // 下载文件
@@ -158,7 +158,7 @@ const downloadFiles = async (url: string, blockId: string, retryCount = 0) => {
   try {
     const urlWithoutQuery = url.split('?')[0];
     const extension = path.extname(urlWithoutQuery);
-    // 对url进行hash，生成唯一文件名
+    // 对 url 进行 hash，生成唯一文件名
     const filename = crypto.createHash('md5').update(urlWithoutQuery + blockId).digest('hex');
     const assetFilename = `${filename}${extension}`;
 
@@ -213,7 +213,7 @@ const getBlockListFromNotion = async (params: {
     }
   }
   return response;
-}
+};
 
 // 获取页面的所有块（处理分页）
 const getAllBlocks = async (pageId = ''): Promise<BlockObjectResponse[]> => {
@@ -234,12 +234,12 @@ const getAllBlocks = async (pageId = ''): Promise<BlockObjectResponse[]> => {
   }
 
   return allBlocks;
-}
+};
 
 let countForPageRetry = 0;
 const RETRY_COUNT_FOR_PAGE = 500;
 
-// 获取页面n2m用的块结构信息
+// 获取页面 n2m 用的块结构信息
 const getPageToMarkdownFromNotion = async (pageId: string) => {
   let mdBlocks: MdBlock[] = [];
   try {
@@ -255,7 +255,7 @@ const getPageToMarkdownFromNotion = async (pageId: string) => {
     }
   }
   return mdBlocks;
-}
+};
 
 // 下载资源文件（目前只处理图片）
 const downloadAssetFiles = async (blocks: MdBlock[] = []) => {
@@ -273,16 +273,16 @@ const downloadAssetFiles = async (blocks: MdBlock[] = []) => {
       await downloadAssetFiles(block.children);
     }
   }
-}
+};
 
 // 递归获取页面块信息
 const getPageBlocks = async (pageInfo: INotionPageInfo) => {
-  // 子页面块ID列表
+  // 子页面块 ID 列表
   const childPageIdList: string[] = [];
   // 获取页面所有块信息
   const allBlocks = await getAllBlocks(pageInfo.notion_slug);
 
-  // 如果文档的第一个文件是飞书文档的原始链接，则用飞书的token来覆盖node_token、slug、filename
+  // 如果文档的第一个文件是飞书文档的原始链接，则用飞书的 token 来覆盖 node_token、slug、filename
   // NOTE: 用 meta 的 slug 代替
   // const firstBlock = allBlocks[0];
   // if (firstBlock?.type === 'paragraph') {
@@ -307,7 +307,7 @@ const getPageBlocks = async (pageInfo: INotionPageInfo) => {
   for (const allBlock of allBlocks) {
     // 获取代码块中的元数据
     if (allBlock.type === 'code') {
-      // 只处理YAML代码块
+      // 只处理 YAML 代码块
       if (allBlock?.code?.language === 'yaml') {
         const text = (allBlock?.code?.['rich_text'] || []).reduce((prev, curr) => {
           return prev + '\n' + (curr?.plain_text || '')
@@ -317,7 +317,7 @@ const getPageBlocks = async (pageInfo: INotionPageInfo) => {
           try {
             pageInfo.meta = { ...pageInfo.meta, ...yaml.load(text) };
           } catch (error) {
-            console.error(`解析YAML代码块失败: ${text}`, error);
+            console.error(`解析 YAML 代码块失败：${text}`, error);
           }
         }
       }
@@ -359,11 +359,11 @@ const getPageBlocks = async (pageInfo: INotionPageInfo) => {
     // 递归获取子页面的子页面
     await getPageBlocks(childNode);
   }
-}
+};
 
 // 生成md文件
 const generateMarkdownFiles = async (pageInfoList: INotionPageInfo[]) => {
-  // 读取cache 日志文件
+  // 读取 cache 日志文件
   let cacheLog: ICacheLog = {};
   const cacheLogPath = path.join(CACHE_DIR, 'log.json');
   try {
@@ -384,7 +384,7 @@ const generateMarkdownFiles = async (pageInfoList: INotionPageInfo[]) => {
         continue;
       }
 
-      // 获取页面n2m用的块结构信息
+      // 获取页面 n2m 用的块结构信息
       const mdBlocks = await getPageToMarkdownFromNotion(notion_slug);
 
       const finalMdBlocks = mdBlocks.filter((block, index) => {
@@ -401,36 +401,36 @@ const generateMarkdownFiles = async (pageInfoList: INotionPageInfo[]) => {
 
       // 下载资源文件
       await downloadAssetFiles(finalMdBlocks);
-      // 生成md文件
+      // 生成 md 文件
       const mdString = n2m.toMarkdownString(finalMdBlocks);
 
       fs.writeFileSync(outputPath, `${generateFrontmatter(title, meta, slug, position)}\n\n# ${title}\n\n${mdString.parent || ''}`);
 
-      // NOTE: 更新缓存日志，每次生成md文件后更新一次是为了中途崩掉不用重头再来
+      // NOTE: 更新缓存日志，每次生成 md 文件后更新一次是为了中途崩掉不用重头再来
       cacheLog[slug] = { obj_edit_time, meta, position };
       fs.writeFileSync(cacheLogPath, JSON.stringify(cacheLog, null, 2));
     }
   }
-}
+};
 
 const shouldHide = (pageInfo: INotionPageInfo) => {
   const { title = '', meta = {} } = pageInfo || {};
   return title.includes('[hide]') || title.includes('[隐藏]') || String(meta.hide) === 'true';
-}
+};
 
-// 当meta.hide=true时，删除当前元素
+// 当 meta.hide=true 时，删除当前元素
 const deleteHideNode = (pageInfo: INotionPageInfo) => {
   pageInfo.children = (pageInfo.children || []).filter(child => !shouldHide(child));
   for (const child of pageInfo.children) {
     deleteHideNode(child);
   }
-}
+};
 
 // 查找 Markdown 中的附件
 const findAttachments = (content: string) => {
-  // 图片匹配: ![...](...)
+  // 图片匹配：![...](...)
   const imageRegex = /!\[[^\]]*\]\((.*?)\)/g;
-  // 文件链接匹配: [...](...)
+  // 文件链接匹配：[...](...)
   const fileRegex = /\[[^\]]*\]\((.*?)\)/g;
 
   const attachments: Array<{ url: string; original: string; type: string; }> = [];
@@ -467,7 +467,7 @@ const findAttachments = (content: string) => {
   }
 
   return attachments;
-}
+};
 
 let countForPageInfoRetry = 0;
 const RETRY_COUNT_FOR_PAGE_INFO = 500;
@@ -488,7 +488,7 @@ const getPageInfoFromNotion = async (pageId: string) => {
     }
   }
   return pageInfo;
-}
+};
 
 // 删除不在docs.json里的多余的md文件
 const removeExtraMdFiles = (pageInfoList: INotionPageInfo[]) => {
@@ -505,9 +505,9 @@ const removeExtraMdFiles = (pageInfoList: INotionPageInfo[]) => {
     // 忽略错误
   }
   return removedCount;
-}
+};
 
-// 生成summary内容
+// 生成 summary 内容
 const generateSummary = (pageInfoList: INotionPageInfo[]): string => {
   let output = '';
   for (const pageInfo of pageInfoList) {
@@ -522,12 +522,12 @@ const generateSummary = (pageInfoList: INotionPageInfo[]): string => {
   return output;
 };
 
-// 生成summary.md文件
+// 生成 summary.md 文件
 const generateSummaryFile = (pageInfoList: INotionPageInfo[] = []) => {
   fs.writeFileSync(path.join(DOCS_DIR, 'SUMMARY.md'), generateSummary(pageInfoList));
-}
+};
 
-// 循环递归pageInfo的children，去掉children扁平成一级数组，并返回List
+// 循环递归 pageInfo 的 children，去掉 children 扁平成一级数组，并返回 List
 const flattenPageInfo = (pageInfo: INotionPageInfo): INotionPageInfo[] => {
   const flatPageInfo: INotionPageInfo[] = [];
   if ((pageInfo.depth ?? 0) >= 0) {
@@ -539,12 +539,12 @@ const flattenPageInfo = (pageInfo: INotionPageInfo): INotionPageInfo[] => {
     }
   }
   return flatPageInfo;
-}
+};
 
 const notion2mk = async () => {
   const start = new Date();
 
-  // docs.json内容，根目录-1不用展示
+  // docs.json 内容，根目录 -1 不用展示
   const info: INotionPageInfo = { depth: -1, slug: NOTION_PAGE_ID, notion_slug: NOTION_PAGE_ID, children: [] };
 
   // 创建目录
@@ -559,7 +559,7 @@ const notion2mk = async () => {
 
   fs.writeFileSync(path.join(OUTPUT_DIR, 'docs.json'), JSON.stringify(info.children, null, 2));
 
-  // 生成summary.md 飞书侧debug的逻辑？可能不用但是也先写上
+  // 生成 summary.md 飞书侧 debug 的逻辑？可能不用但是也先写上
   generateSummaryFile(info.children);
 
   // TODO: 临时绕过生成页面信息，用于测试后续步骤
@@ -567,18 +567,18 @@ const notion2mk = async () => {
   // const docsJsonData = JSON.parse(docsJson);
   // info.children = docsJsonData || [];
 
-  // 扁平化pageInfo方便之后的操作
+  // 扁平化 pageInfo 方便之后的操作
   const flatPageInfoList = flattenPageInfo(info);
 
-  // 生成md文件
+  // 生成 md 文件
   await generateMarkdownFiles(flatPageInfoList);
 
-  // 删除不在docs.json里的多余的md文件
+  // 删除不在 docs.json 里的多余的 md 文件
   const removedMdCount = removeExtraMdFiles(flatPageInfoList);
-  removedMdCount > 0 && console.log(`删除多余md文件数量: ${removedMdCount}`);
+  removedMdCount > 0 && console.log(`删除多余 md 文件数量：${removedMdCount}`);
 
-  console.log(`总耗时: ${((Date.now() - start.getTime()) / 1000).toFixed(2)}s`);
-}
+  console.log(`总耗时：${((Date.now() - start.getTime()) / 1000).toFixed(2)}s`);
+};
 
 // App entry
 (async () => {
