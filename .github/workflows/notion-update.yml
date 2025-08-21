@@ -1,0 +1,56 @@
+name: Update Notion Pages
+on:
+  workflow_dispatch:
+    inputs:
+      cache:
+        description: "if use notion-pages cache"
+        required: false
+        default: "true"
+  schedule:
+    # Every 3 days at 00:00
+    - cron: "0 0 */3 * *"
+
+jobs:
+  export:
+    name: Download notion pages
+    timeout-minutes: 180
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          branch: main
+
+      - name: Clear cache if cache is false
+        if: ${{ inputs.cache == 'false' }}
+        run: |
+          rm -rf ./notion-pages/.cache
+
+      - uses: oven-sh/setup-bun@v1
+
+      - name: Start export notion pages then Copy Pages to repo
+        env:
+          NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_OUTPUT_DIR: ./notion-pages
+        run: |
+          bun run notion-export
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "Longbridge Whale docs bot"
+          git config --global user.email "longbridge-whale-docs@users.noreply.github.com"
+
+      - name: Create PR for notion-locales/ updates
+        run: |
+          BRANCH_NAME=update-notion-pages-$(date +'%Y%m%d%H%M%S')
+          git checkout -b $BRANCH_NAME
+          git status
+          git add notion-locales/
+          git add notion-pages/*.json
+          git add notion-pages/.cache
+          git commit -m "Commit notion updated pages to repo"
+          git push origin $BRANCH_NAME
+
+          # Create Pull Request
+          curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d '{"title":"Update notion pages","head":"'$BRANCH_NAME'","base":"main"}' https://api.github.com/repos/${{ github.repository }}/pulls
