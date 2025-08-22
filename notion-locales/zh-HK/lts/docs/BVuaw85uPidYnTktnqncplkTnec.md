@@ -8,11 +8,11 @@ sidebar_position: 0
 # Web Trade 產品使用說明
 
 
-選擇進入Web Trade方式：
+選擇進入 Web Trade 方式：
 
-1. 直接打開web trade鏈接入口：https://trade.longportapp.com
-2. 登入longport 官網：https://longportapp.com，點擊菜單欄位''交易''
-3. 券商的專屬鏈接：*請向長橋科技PM/CS申請
+1. 直接打開 web trade 鏈接入口：https://trade.longportapp.com
+2. 登入 longport 官網：https://longportapp.com，點擊菜單欄位''交易''
+3. 券商的專屬鏈接：*請向長橋科技 PM/CS 申請
 
 ![image.png](/assets/783b4bb3fd767b8b1078a5cc0bbdc1fc.png)
 
@@ -20,7 +20,7 @@ sidebar_position: 0
 # 1、登錄註冊 
 
 
-1.1 券商賬戶選擇
+## 1.1 券商賬戶選擇
 
 
 打開登錄頁面，可以點擊「券商賬戶登錄」按鈕，進行券商渠道選擇，選擇完成後繼續登錄
@@ -32,7 +32,7 @@ sidebar_position: 0
 ![image.png](/assets/0ae01744a95d31121a3bc5f4f5200ca3.png)
 
 
-# 1.2 驗證碼登錄
+## 1.2 驗證碼登錄
 
 
 可以通過輸入手機號碼，發送短信驗證碼進行登錄
@@ -41,7 +41,7 @@ sidebar_position: 0
 ![image.png](/assets/b488a07f7dcafe672547df97c6c181d8.png)
 
 
-# 1.3 賬號密碼登錄
+## 1.3 賬號密碼登錄
 
 
 點擊底部的「密碼登錄」，可切換到賬號密碼登錄，直接輸入賬號密碼，選同意用戶協議之後，點擊「登錄」按鈕
@@ -53,19 +53,19 @@ sidebar_position: 0
 ![image.png](/assets/c5812939bbf875e480e48821c36b5b42.png)
 
 
-# 1.4 掃碼登錄
+## 1.4 掃碼登錄
 
 
-（1）點擊右上角二維碼，切換到掃碼登錄頁，通過對應手機App進行掃碼登錄
+（1）點擊右上角二維碼，切換到掃碼登錄頁，通過對應手機 App 進行掃碼登錄
 
 
 ![image.png](/assets/540571a30ffe5756a41ed54d0b2a6250.png)
 
 
-（2）不同券商賬戶對應不同的App，掃碼登錄上有提示需要使用哪個移動端進行掃碼登錄。
+（2）不同券商賬戶對應不同的 App，掃碼登錄上有提示需要使用哪個移動端進行掃碼登錄。
 
 
-例如：Longport券商渠道對應需要使用Longport移動端掃碼登錄
+例如：Longport 券商渠道對應需要使用 Longport 移動端掃碼登錄
 
 
 ![image.png](/assets/776e11631f8a6c9b88d87240680109e4.png)
@@ -80,7 +80,7 @@ sidebar_position: 0
 # 2、交易版面
 
 
-# 2.1 自選
+## 2.1 自選
 
 
 （1）展示用戶關注的自選股列表和自選股分組，可以快速切換不同的自選股分組，如持倉股、美股、港股等，和移動端數據同步。
@@ -95,16 +95,16 @@ sidebar_position: 0
 ![image.png](/assets/b51ab8b963c99cf83e01edc7ae267e93.png)
 
 
-# 2.2 圖表
+## 2.2 圖表
 
 
-（1）圖表版塊，可詳細查看股票的分時圖、日k、週k、月k、年k以及分鐘k走勢圖，方便進行股票的行情走勢分析。
+（1）圖表版塊，可詳細查看股票的分時圖、日 k、週 k、月 k、年 k 以及分鐘 k 走勢圖，方便進行股票的行情走勢分析。
 
 
 ![image.png](/assets/5145a20f737588fa645e5fecac698914.png)
 
 
-（2）針對日k、週k、月k、年k以及分鐘k 走勢圖，我們對接的Trading View圖表，支持上百種技術指標，可如圖所示，點擊指標進行快速搜索切換
+（2）針對日 k、週 k、月 k、年 k 以及分鐘 k 走勢圖，我們對接的 Trading View 圖表，支持上百種技術指標，可如圖所示，點擊指標進行快速搜索切換
 
 
 ![image.png](/assets/03c9f34d6eaa9de4f2fec0a2717c258f.png)
@@ -116,7 +116,7 @@ sidebar_position: 0
 ![image.png](/assets/8bc5c01f80a406e61567a7816805c413.png)
 
 
-# 2.3 行情報價
+## 2.3 行情報價
 
 
 （1）右上角的行情報價顯示股票的基本盤口信息字段，包括當日的最高、最低、開市價、收市價以及市盈率、總市值等資訊。股票資訊右方，可剔選❤️添加當前股票到關注列表中，也可以點擊❤️取消關注。
@@ -125,7 +125,7 @@ sidebar_position: 0
 ![image.png](/assets/3d2585292c25482423bdbfa54b4206ab.png)
 
 
-（2）可以點擊股票名稱，快速跳轉至longport 官網，查看股票更多基本簡況，例如公司基本介紹、財務報表、全景分析等更多詳情資料。
+（2）可以點擊股票名稱，快速跳轉至 longport 官網，查看股票更多基本簡況，例如公司基本介紹、財務報表、全景分析等更多詳情資料。
 
 
 ![image.png](/assets/665d8ad606e6e713d50d53f523902623.png)
@@ -134,7 +134,7 @@ sidebar_position: 0
 ![image.png](/assets/5a8d454f80a77e97b1f6098b02410e6e.png)
 
 
-# 2.4 交易下單
+## 2.4 交易下單
 
 
 （1）目前交易支持的訂單類型
@@ -169,13 +169,13 @@ sidebar_position: 0
 ![image.png](/assets/c580188898b1ab7e6ca298b9348628de.png)
 
 
-# 2.5 持倉
+## 2.5 持倉
 
 
 ![image.png](/assets/52bc3b3fcf748f3f1acf32561976271c.png)
 
 - 查看當前持倉，區分市場進行展示；
-- 可支持查看的數據：持倉市值、持倉數量、最新價、成本價、可賣數量、浮動盈虧、浮動盈虧率、                                    當日盈虧、當日盈虧率、持倉佔比；
+- 可支持查看的數據：持倉市值、持倉數量、最新價、成本價、可賣數量、浮動盈虧、浮動盈虧率、當日盈虧、當日盈虧率、持倉佔比；
 - 持倉佔比：當前股票的持倉市值 / 當前股票市場持倉市值 * 100%
 - 當前持倉列表數據實效性：實時更新；
 - 左側操作欄位 支持快速操作“買入”、“賣出”，點擊後將彈出快捷交易窗口，可對相應股票進行快捷買入、賣出；
@@ -183,7 +183,7 @@ sidebar_position: 0
     ![image.png](/assets/c61b13126da58705aea30d89aa4cd70e.png)
 
 
-# 2.6 當日訂單
+## 2.6 當日訂單
 
 
 ![image.png](/assets/abdc4ad5b5716d6d125a65875599eb3d.png)
@@ -198,7 +198,7 @@ sidebar_position: 0
 
 - 訂單支持查看的數據信息：訂單狀態、市場、代碼、名稱、方向、委託類型、委託價格、委託數量、成交、委託時間、成交金額、有效期、訂單號；
 
-# 2.7 歷史訂單
+## 2.7 歷史訂單
 
 
 ![image.png](/assets/bdfae43363ddf8f7517209bab451d3f4.png)
@@ -218,7 +218,7 @@ sidebar_position: 0
 # 3、資產版面
 
 
-# 3.1 資產總覽
+## 3.1 資產總覽
 
 
 ![image.png](/assets/71daa9ca5d75650caa83c8258f4160d9.png)
@@ -244,12 +244,12 @@ sidebar_position: 0
 
 ![image.png](/assets/8b4ae287f3d1ec71a70064224d979734.png)
 
-- 結單查詢：點擊展開結單列表窗口，支持下載日結單、月結單，結單為PDF格式，並設有密碼保護，密碼統一為手機號碼末四位+開戶證件號末四位。
+- 結單查詢：點擊展開結單列表窗口，支持下載日結單、月結單，結單為 PDF 格式，並設有密碼保護，密碼統一為手機號碼末四位 + 開戶證件號末四位。
 
     ![image.png](/assets/9b1112afb920f3d58a73a5b13c2461ff.png)
 
 
-# 3.2 現金明細
+## 3.2 現金明細
 
 
 ![image.png](/assets/0aeff6db6de42958ecd6a76a11acbb36.png)
@@ -259,7 +259,7 @@ sidebar_position: 0
 - 港幣、美元等詳細幣種：對於不同幣種下的現金餘額獨立展示，支持展示數據：當前幣種下的現金總額、可用現金、凍結現金、現金可提；
 - 用戶可通過該頁面查看不同幣種下的餘額及可提取的現金，更便於用戶對自己的資金安排；
 
-# 3.3 融資狀態
+## 3.3 融資狀態
 
 
 ![image.png](/assets/feee6e02cc483e48e0e0198111fb6d2c.png)
@@ -268,7 +268,7 @@ sidebar_position: 0
 - 保證金要求：當前持倉股票的初始、維持保證金的要求金額，需滿足該要求風控狀態可為安全；
 - 融資額度情況：當前用戶已使用的融資金額，及可提供給用戶的融資總額度；
 
-# 3.4 賬戶資產概況 & 持倉
+## 3.4 賬戶資產概況 & 持倉
 
 
 ![image.png](/assets/82ddcd25a60b57624406f2802963f1e5.png)
@@ -286,14 +286,14 @@ sidebar_position: 0
     ![image.png](/assets/37faba4c2fd91b6fd1e20ee44d985e1d.png)
 
 
-# 3.4 當日訂單
+## 3.4 當日訂單
 
 
 ![image.png](/assets/cab538e56f2558513e7b8ef2034a6155.png)
 
 - 資產頁面中支持查看當日訂單，跟踪當日交易訂單的狀態及成交情況；具體可支持顯示的數據與交易面板中“當日訂單”一致；
 
-# 公版Web Trade功能介紹記錄
+# 公版 Web Trade 功能介紹記錄
 
 
 [e%2F1%2FFMGvb1snuoEWRTxPvlScM6eAnwg%2Fmeeting_01.mp4](https://lb-lark-backup.s3.ap-east-1.amazonaws.com/e%2F1%2FFMGvb1snuoEWRTxPvlScM6eAnwg%2Fmeeting_01.mp4)

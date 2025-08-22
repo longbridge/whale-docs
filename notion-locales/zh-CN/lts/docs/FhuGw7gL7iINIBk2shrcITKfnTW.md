@@ -26,29 +26,26 @@ Whale CRM 系统能够解决以下问题：
 
 同时在核心开户业务上，Whale CRM 系统的设计中，是将开户业务三种前中后环结同步在一起，对开户活动作全方位管理：
 
-- 开户前: 从注册用户至有效户的推动进程管理 (CRM 管理)
-- 开户中: 开户资料提交后 KYC 审核流程 (KYC 流程)
+- 开户前：从注册用户至有效户的推动进程管理 (CRM 管理)
+- 开户中：开户资料提交后 KYC 审核流程 (KYC 流程)
 - 开户后 :开户后帐户安全的工单管理 (帐户管理)
 
 Whale CRM 的整体业务流如下图所示：
 
 
-需要更新图表到飞书的白板：https://longbridge.larkenterprise.com/wiki/ZcWRdJwwVoapwbxKpNMcteS8nmb
+![%E6%B5%81%E7%A8%8B%E5%9B%BE-2.jpg](/assets/c4425525382dc0916ffe445d5c664d4d.jpg)
 
 
-![%E6%B5%81%E7%A8%8B%E5%9B%BE_%2813%29.jpg](/assets/d51ac0be5a9382b27abfe04e229d2bec.jpg)
+# 首页 Dashboard
 
 
-# 首页Dashboard
-
-
-在 CRM 首页上 ，增加工作流节点数量统计与提供摘要性的 Dashboard ，可以点选进入该作业区，方便快速操作
+在 CRM 首页上，增加工作流节点数量统计与提供摘要性的 Dashboard，可以点选进入该作业区，方便快速操作
 
 
 ![image.png](/assets/b780d128567d1652f0da321e2ffa6c04.png)
 
 
-系统提供 一段区间的 开户平均耗时与近期开户成功统计率作为参考 （系统会自动计算）
+系统提供 一段区间的开户平均耗时与近期开户成功统计率作为参考（系统会自动计算）
 
 
 ![image.png](/assets/8208a6f0b1a9d2f248c0916949f187c9.png)

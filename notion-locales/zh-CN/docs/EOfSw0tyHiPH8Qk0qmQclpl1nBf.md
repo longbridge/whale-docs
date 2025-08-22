@@ -1,7 +1,7 @@
 ---
 slug: EOfSw0tyHiPH8Qk0qmQclpl1nBf
 title: 2024-07-30 更新日志
-sidebar_position: 23
+sidebar_position: 25
 ---
 
 
@@ -16,7 +16,7 @@ sidebar_position: 23
 
 # 🪀 改进与修复
 
-- CRM风险测试记录的问卷选项更新
+- CRM 风险测试记录的问卷选项更新
     - 问卷的第一题、第三题、第四题选项值更新
     - 路径：「客户管理系统」-「风险测评管理」-「风险测评详情」
 

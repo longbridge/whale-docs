@@ -8,11 +8,11 @@ sidebar_position: 0
 # Web Trade 产品使用说明
 
 
-选择进入Web Trade方式：
+选择进入 Web Trade 方式：
 
-1. 直接打开web trade链接入口：https://trade.longportapp.com
-2. 登入longport 官网：https://longportapp.com，点击菜单栏位''交易''
-3. 券商的专属链接：*请向长桥科技PM/CS申请
+1. 直接打开 web trade 链接入口：https://trade.longportapp.com
+2. 登入 longport 官网：https://longportapp.com，点击菜单栏位''交易''
+3. 券商的专属链接：*请向长桥科技 PM/CS 申请
 
 ![image.png](/assets/783b4bb3fd767b8b1078a5cc0bbdc1fc.png)
 
@@ -20,7 +20,7 @@ sidebar_position: 0
 # 1、登录注册 
 
 
-1.1 券商账户选择
+## 1.1 券商账户选择
 
 
 打开登录页面，可以点击「券商账户登录」按钮，进行券商渠道选择，选择完成后继续登录
@@ -32,7 +32,7 @@ sidebar_position: 0
 ![image.png](/assets/0ae01744a95d31121a3bc5f4f5200ca3.png)
 
 
-# 1.2 验证码登录
+## 1.2 验证码登录
 
 
 可以通过输入手机号码，发送短信验证码进行登录
@@ -41,7 +41,7 @@ sidebar_position: 0
 ![image.png](/assets/b488a07f7dcafe672547df97c6c181d8.png)
 
 
-# 1.3 账号密码登录
+## 1.3 账号密码登录
 
 
 点击底部的「密码登录」，可切换到账号密码登录，直接输入账号密码，选同意用户协议之后，点击「登录」按钮
@@ -53,19 +53,19 @@ sidebar_position: 0
 ![image.png](/assets/c5812939bbf875e480e48821c36b5b42.png)
 
 
-# 1.4 扫码登录
+## 1.4 扫码登录
 
 
-（1）点击右上角二维码，切换到扫码登录页，通过对应手机App进行扫码登录
+（1）点击右上角二维码，切换到扫码登录页，通过对应手机 App 进行扫码登录
 
 
 ![image.png](/assets/540571a30ffe5756a41ed54d0b2a6250.png)
 
 
-（2）不同券商账户对应不同的App，扫码登录上有提示需要使用哪个移动端进行扫码登录。
+（2）不同券商账户对应不同的 App，扫码登录上有提示需要使用哪个移动端进行扫码登录。
 
 
-例如：Longport券商渠道对应需要使用Longport移动端扫码登录
+例如：Longport 券商渠道对应需要使用 Longport 移动端扫码登录
 
 
 ![image.png](/assets/776e11631f8a6c9b88d87240680109e4.png)
@@ -80,7 +80,7 @@ sidebar_position: 0
 # 2、交易版面
 
 
-# 2.1 自选
+## 2.1 自选
 
 
 （1）展示用户关注的自选股列表和自选股分组，可以快速切换不同的自选股分组，如持仓股、美股、港股等，和移动端数据同步。
@@ -95,16 +95,16 @@ sidebar_position: 0
 ![image.png](/assets/b51ab8b963c99cf83e01edc7ae267e93.png)
 
 
-# 2.2 图表
+## 2.2 图表
 
 
-（1）图表版块，可详细查看股票的分时图、日k、周k、月k、年k以及分钟k走势图，方便进行股票的行情走势分析。
+（1）图表版块，可详细查看股票的分时图、日 k、周 k、月 k、年 k 以及分钟 k 走势图，方便进行股票的行情走势分析。
 
 
 ![image.png](/assets/5145a20f737588fa645e5fecac698914.png)
 
 
-（2）针对日k、周k、月k、年k以及分钟k 走势图，我们对接的Trading View图表，支持上百种技术指标，可如图所示，点击指标进行快速搜索切换
+（2）针对日 k、周 k、月 k、年 k 以及分钟 k 走势图，我们对接的 Trading View 图表，支持上百种技术指标，可如图所示，点击指标进行快速搜索切换
 
 
 ![image.png](/assets/03c9f34d6eaa9de4f2fec0a2717c258f.png)
@@ -116,7 +116,7 @@ sidebar_position: 0
 ![image.png](/assets/8bc5c01f80a406e61567a7816805c413.png)
 
 
-# 2.3 行情报价
+## 2.3 行情报价
 
 
 （1）右上角的行情报价显示股票的基本盘口信息字段，包括当日的最高、最低、开市价、收市价以及市盈率、总市值等资讯。股票资讯右方，可剔选❤️添加当前股票到关注列表中，也可以点击❤️取消关注。
@@ -125,7 +125,7 @@ sidebar_position: 0
 ![image.png](/assets/3d2585292c25482423bdbfa54b4206ab.png)
 
 
-（2）可以点击股票名称，快速跳转至longport 官网，查看股票更多基本简况，例如公司基本介绍、财务报表、全景分析等更多详情资料。
+（2）可以点击股票名称，快速跳转至 longport 官网，查看股票更多基本简况，例如公司基本介绍、财务报表、全景分析等更多详情资料。
 
 
 ![image.png](/assets/665d8ad606e6e713d50d53f523902623.png)
@@ -134,7 +134,7 @@ sidebar_position: 0
 ![image.png](/assets/5a8d454f80a77e97b1f6098b02410e6e.png)
 
 
-# 2.4 交易下单
+## 2.4 交易下单
 
 
 （1）目前交易支持的订单类型
@@ -169,13 +169,13 @@ sidebar_position: 0
 ![image.png](/assets/c580188898b1ab7e6ca298b9348628de.png)
 
 
-# 2.5 持仓
+## 2.5 持仓
 
 
 ![image.png](/assets/52bc3b3fcf748f3f1acf32561976271c.png)
 
 - 查看当前持仓，区分市场进行展示；
-- 可支持查看的数据：持仓市值、持仓数量、最新价、成本价、可卖数量、浮动盈亏、浮动盈亏率、                                    当日盈亏、当日盈亏率、持仓占比；
+- 可支持查看的数据：持仓市值、持仓数量、最新价、成本价、可卖数量、浮动盈亏、浮动盈亏率、当日盈亏、当日盈亏率、持仓占比；
 - 持仓占比：当前股票的持仓市值 / 当前股票市场持仓市值 * 100%
 - 当前持仓列表数据实效性：实时更新；
 - 左侧操作栏位 支持快速操作“买入”、“卖出”，点击后将弹出快捷交易窗口，可对相应股票进行快捷买入、卖出；
@@ -183,7 +183,7 @@ sidebar_position: 0
     ![image.png](/assets/c61b13126da58705aea30d89aa4cd70e.png)
 
 
-# 2.6 当日订单
+## 2.6 当日订单
 
 
 ![image.png](/assets/abdc4ad5b5716d6d125a65875599eb3d.png)
@@ -198,7 +198,7 @@ sidebar_position: 0
 
 - 订单支持查看的数据信息：订单状态、市场、代码、名称、方向、委托类型、委托价格、委托数量、成交、委托时间、成交金额、有效期、订单号；
 
-# 2.7 历史订单
+## 2.7 历史订单
 
 
 ![image.png](/assets/bdfae43363ddf8f7517209bab451d3f4.png)
@@ -218,7 +218,7 @@ sidebar_position: 0
 # 3、资产版面
 
 
-# 3.1 资产总览
+## 3.1 资产总览
 
 
 ![image.png](/assets/71daa9ca5d75650caa83c8258f4160d9.png)
@@ -244,12 +244,12 @@ sidebar_position: 0
 
 ![image.png](/assets/8b4ae287f3d1ec71a70064224d979734.png)
 
-- 结单查询：点击展开结单列表窗口，支持下载日结单、月结单，结单为PDF格式，并设有密码保护，密码统一为手机号码末四位+开户证件号末四位。
+- 结单查询：点击展开结单列表窗口，支持下载日结单、月结单，结单为 PDF 格式，并设有密码保护，密码统一为手机号码末四位 + 开户证件号末四位。
 
     ![image.png](/assets/9b1112afb920f3d58a73a5b13c2461ff.png)
 
 
-# 3.2 现金明细
+## 3.2 现金明细
 
 
 ![image.png](/assets/0aeff6db6de42958ecd6a76a11acbb36.png)
@@ -259,7 +259,7 @@ sidebar_position: 0
 - 港币、美元等详细币种：对于不同币种下的现金余额独立展示，支持展示数据：当前币种下的现金总额、可用现金、冻结现金、现金可提；
 - 用户可通过该页面查看不同币种下的余额及可提取的现金，更便于用户对自己的资金安排；
 
-# 3.3 融资状态
+## 3.3 融资状态
 
 
 ![image.png](/assets/feee6e02cc483e48e0e0198111fb6d2c.png)
@@ -268,7 +268,7 @@ sidebar_position: 0
 - 保证金要求：当前持仓股票的初始、维持保证金的要求金额，需满足该要求风控状态可为安全；
 - 融资额度情况：当前用户已使用的融资金额，及可提供给用户的融资总额度；
 
-# 3.4 账户资产概况 & 持仓
+## 3.4 账户资产概况 & 持仓
 
 
 ![image.png](/assets/82ddcd25a60b57624406f2802963f1e5.png)
@@ -286,14 +286,14 @@ sidebar_position: 0
     ![image.png](/assets/37faba4c2fd91b6fd1e20ee44d985e1d.png)
 
 
-# 3.4 当日订单
+## 3.4 当日订单
 
 
 ![image.png](/assets/cab538e56f2558513e7b8ef2034a6155.png)
 
 - 资产页面中支持查看当日订单，跟踪当日交易订单的状态及成交情况；具体可支持显示的数据与交易面板中“当日订单”一致；
 
-# 公版Web Trade功能介绍记录
+# 公版 Web Trade 功能介绍记录
 
 
 [e%2F1%2FFMGvb1snuoEWRTxPvlScM6eAnwg%2Fmeeting_01.mp4](https://lb-lark-backup.s3.ap-east-1.amazonaws.com/e%2F1%2FFMGvb1snuoEWRTxPvlScM6eAnwg%2Fmeeting_01.mp4)

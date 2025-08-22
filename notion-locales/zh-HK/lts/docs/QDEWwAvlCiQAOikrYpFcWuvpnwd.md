@@ -11,7 +11,7 @@ sidebar_position: 2
 # 概述
 
 
-賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功能，幫助管理人員進行賬戶信息的查詢、權限管理、BCAN碼管理、工單處理和操作記錄查詢等。這些功能有助于提高賬戶管理的效率和准確性，並爲客戶提供更好的服務體驗。
+賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功能，幫助管理人員進行賬戶信息的查詢、權限管理、BCAN 碼管理、工單處理和操作記錄查詢等。這些功能有助于提高賬戶管理的效率和准確性，並爲客戶提供更好的服務體驗。
 
 
 # 賬戶列表
@@ -26,7 +26,7 @@ sidebar_position: 2
 ![image.png](/assets/7eaa981a9a0aa637b1a20789855cbc29.png)
 
 
-也可在右側記錄操作區：點選【詳情】， 查看客戶細部基本資料，同時也提供資產交易/操作記錄/登錄設備/代理人/關係人 這些特定事項的 Tab 頁籤資料
+也可在右側記錄操作區：點選【詳情】，查看客戶細部基本資料，同時也提供資產交易/操作記錄/登錄設備/代理人/關係人 這些特定事項的 Tab 頁籤資料
 
 
 ![image.png](/assets/9ca6081077c7fc8a586d8141638e42c7.png)
@@ -62,7 +62,7 @@ sidebar_position: 2
 ![image.png](/assets/5ee1db6111491d3dcaf4bdd6592278fe.png)
 
 
-# BCAN碼
+# BCAN 碼
 
 
 > ⚓ 菜單入口：帳戶管理>BCAN 管理
@@ -77,7 +77,7 @@ sidebar_position: 2
 ![image.png](/assets/ca2c3df23aa1f83d8311f45fc913c116.png)
 
 
-同時也可以在下方功能鍵操作： 北向交易與香港交易 的允許或禁止操作
+同時也可以在下方功能鍵操作：北向交易與香港交易 的允許或禁止操作
 
 
 ![image.png](/assets/c1fa620258adb2aac20ef39116af3aef.png)
@@ -89,7 +89,7 @@ sidebar_position: 2
 ![image.png](/assets/f38070621b207107ca3ac260884f396a.png)
 
 
-同時在交易操作時將會有下列控制處理 ：所有客戶在開戶過程中會自動分配 BCAN 碼
+同時在交易操作時將會有下列控制處理：所有客戶在開戶過程中會自動分配 BCAN 碼
 
 
 **HKIDR 用戶未同意授權：**客戶將僅能操作賣單交易，買單交易將會被拒絕
@@ -101,19 +101,19 @@ sidebar_position: 2
 **HKIDR 用戶已授權，已生效**：客戶可以正常買單貨賣單操作
 
 
-根據SFC 證監會規定,須將客戶HKIDR 配對檔案做報送,有關報送操作請參考下列：
+根據 SFC 證監會規定，須將客戶 HKIDR 配對檔案做報送，有關報送操作請參考下列：
 
 
 [HKIDR 報送](https://longbridge.feishu.cn/wiki/T8IiwGsqdih0XDkLsfFc3hNcnqf?from=from_copylink) 
 
 
-同時為完成相關BCAN 數據處理, 須事先配置BCAN區間與 參與者管理,有關報送操作請參考下列：
+同時為完成相關 BCAN 數據處理，須事先配置 BCAN 區間與 參與者管理，有關報送操作請參考下列：
 
 
 [配置-BCAN 區間](https://longbridge.feishu.cn/wiki/Intlw1TqbijZw2kFGqXcx2ZrnPg?from=from_copylink) 
 
 
-[配置-參與者管理](https://longbridge.feishu.cn/wiki/DUjAw62kGicB7jken4CcBaYpnCd?from=from_copylink) 
+[配置 - 參與者管理](https://longbridge.feishu.cn/wiki/DUjAw62kGicB7jken4CcBaYpnCd?from=from_copylink) 
 
 
 # 工單中心
@@ -128,7 +128,7 @@ sidebar_position: 2
 ![image.png](/assets/5a9bc017aec30586026d1d1850d98bfb.png)
 
 
-也可以點選【新建工單】， 建一筆新的工單信息
+也可以點選【新建工單】，建一筆新的工單信息
 
 
 ![image.png](/assets/c9621d279052078a804e40adbc21ba5d.png)
@@ -146,7 +146,7 @@ sidebar_position: 2
 ![image.png](/assets/bc19fd9ce30e2b3055b563ff35b137b6.png)
 
 
-新增批量導入  來批量 註銷客戶/註銷帳戶的功能
+新增批量導入來批量 註銷客戶/註銷帳戶的功能
 
 
 ![image.png](/assets/f213aa1acc44f5fb97ca38052b66d6d3.png)

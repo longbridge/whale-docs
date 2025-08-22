@@ -23,11 +23,12 @@ WTT 組件工具箱中，交易相關組件使用操作入口
 
     ![image.png](/assets/f092ed5d63385dbbd6aa9491a00ed567.png)
 
-- 如無權限打開組件時，可提交權限申請，管理員在WBO後台審批通過後，再此刷新或重新登錄即可使用組件功能
+- 如無權限打開組件時，可提交權限申請，管理員在 WBO 後台審批通過後，再此刷新或重新登錄即可使用組件功能
 
     | 組件功能                  | 功能權限                             |
     | --------------------- | -------------------------------- |
-    | 下單權限 （交易員可代客下單，非組件功能） | wtt_trading.permission           |
+    | 下單權限
+    （交易員可代客下單，非組件功能） | wtt_trading.permission           |
     | 人手單                   | wtt_panel.hand_order             |
     | 碎股撮合                  | wtt_panel.odd_lot_match          |
     | 批量撤單                  | wtt_component.batch_cancel_order |

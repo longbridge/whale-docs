@@ -44,7 +44,7 @@ sidebar_position: 19
 ![image.png](/assets/cfbfa2bcf209906ea81a0f4bd1cb9d1f.png)
 
 
-# 20D 问：App Push如何向指定客户进行推送。
+# 20D 问：App Push 如何向指定客户进行推送。
 
 
 答：
@@ -62,7 +62,7 @@ sidebar_position: 19
 ![image.png](/assets/ff58f38bc654834486bca3d7ab39ed2c.png)
 
 
-3. 选择「定时型-单次」和「触发时间」
+3. 选择「定时型 - 单次」和「触发时间」
 
 
 ![image.png](/assets/f0497c616d630dc9ff3f04c02cf625be.png)

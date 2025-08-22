@@ -15,18 +15,28 @@ sidebar_position: 5
 
 > 公司行动完成后，一般需要约 5 分钟时间更新成本价
 
-| 预告类型                                                                               | 05 文件 - 对应数据  | 系统作业对照 |
-| ---------------------------------------------------------------------------------- | ------------- | ------ |
-| TM (Take-Over (Compulsory) / Auto-Exercise of Structured PRSducts ) 未到期而被行使的牛熊证、窝轮 | TM            | 牛熊证回收  |
-| BE ( Benefit Entitlemen)  含红利、红股、选股选息、供股权发放、公开发售权益发放等信息                            | BE            | 分股分红   |
-| CA ( Corporate Action )  拆合股等企业行动                                                  | CA            | 拆合股    |
-| DS ( Delisted、Expired、Lapsed)  股权回收                                                | DS            | 股权回收   |
-| OO ( Open Offer )  普通公开发售行权                                                        | OO（APP 尚未对接）  | 认购     |
-| EO ( Excess Open Offer)  额外公开发售行权                                                  | EO（APP 尚未对接）  |        |
-| RS ( Rights Subscription)  普通供股权行权                                                 | RS（APP 尚未对接）  |        |
-| ER ( Excess Rights Subscription)  额外供股权行权                                          | ER（APP 尚未对接）  |        |
-| TC ( Take-Over (Conditional) )  部分要约                                               | TC（APP 尚未对接）  | 要约     |
-| TU ( Take-Over (Unconditional) )  全面要约                                             | TU（APP 尚未对接）  |        |
+| 预告类型                                                                                | 05 文件 - 对应数据  | 系统作业对照 |
+| ----------------------------------------------------------------------------------- | ------------- | ------ |
+| TM (Take-Over (Compulsory) / Auto-Exercise of Structured PRSducts ) 
+未到期而被行使的牛熊证、窝轮 | TM            | 牛熊证回收  |
+| BE ( Benefit Entitlemen)  
+含红利、红股、选股选息、供股权发放、公开发售权益发放等信息                            | BE            | 分股分红   |
+| CA ( Corporate Action )  
+拆合股等企业行动                                                  | CA            | 拆合股    |
+| DS ( Delisted、Expired、Lapsed)  
+股权回收                                                | DS            | 股权回收   |
+| OO ( Open Offer )  
+普通公开发售行权                                                        | OO（APP 尚未对接）  | 认购     |
+| EO ( Excess Open Offer)  
+额外公开发售行权                                                  | EO（APP 尚未对接）  |        |
+| RS ( Rights Subscription)  
+普通供股权行权                                                 | RS（APP 尚未对接）  |        |
+| ER ( Excess Rights Subscription)  
+额外供股权行权                                          | ER（APP 尚未对接）  |        |
+| TC ( Take-Over (Conditional) )  
+部分要约                                               | TC（APP 尚未对接）  | 要约     |
+| TU ( Take-Over (Unconditional) )  
+全面要约                                             | TU（APP 尚未对接）  |        |
 
 
 # 6B. 问：美股的公司行动如何操作？
@@ -34,9 +44,9 @@ sidebar_position: 5
 
 **答：**需要依据上手通知操作美股的公司行动，
 
-- 如 BE 类别可参考 [快速上手-普通红股红利（BE）](https://longbridge.feishu.cn/wiki/VK4bwFoGyifITykmGaucY7fSncc)、[快速上手-自愿类红股红利（BE） ](https://longbridge.feishu.cn/wiki/NiQDwy0cziZ2b5kKIg5c0ExAn6f)
-> 如美股发生 CA 类的公司行动需要完成美股日终的 “清算交收”以拉取到最新新数据。  
-> 例如：NVDA 在 2024 年 6 月 7 日收盘后进行 1 拆 10 股的公司行动。系统需要完成 6 月 10 日的美股 “清算交收" 后， CA 类公司行动的股权记登记日为 6 月 10 日，支付日期为 6 月 11 日。
+- 如 BE 类别可参考 [快速上手 - 普通红股红利（BE）](https://longbridge.feishu.cn/wiki/VK4bwFoGyifITykmGaucY7fSncc)、[快速上手 - 自愿类红股红利（BE） ](https://longbridge.feishu.cn/wiki/NiQDwy0cziZ2b5kKIg5c0ExAn6f)
+> 如美股发生 CA 类的公司行动需要完成美股日终的“清算交收”以拉取到最新新数据。  
+> 例如：NVDA 在 2024 年 6 月 7 日收盘后进行 1 拆 10 股的公司行动。系统需要完成 6 月 10 日的美股“清算交收" 后，CA 类公司行动的股权记登记日为 6 月 10 日，支付日期为 6 月 11 日。
 
 # 6C 问：为何按了「登记」没有客户数据？
 
@@ -62,7 +72,7 @@ sidebar_position: 5
 ![image.png](/assets/99b31ec0ee62421d49a8d1e828d39262.png)
 
 
-(ii). 在 “明细汇总” 中点击「尾差调整」可选金额／份额，之后作「提交执行」。
+(ii). 在“明细汇总”中点击「尾差调整」可选金额／份额，之后作「提交执行」。
 
 
 ![image.png](/assets/3eb6f9c6996841f451d0314b26bbbd85.png)
@@ -96,17 +106,17 @@ sidebar_position: 5
 ![image.png](/assets/d91f2b49be495280a703c4cde2122b57.png)
 
 
-（iii） “行权信息” 查到客户的行权数量，点击「行权」可作修改
-“收费信息” 查到该客户的公司行动费用，点击「编辑」可作调整
+（iii） “行权信息”查到客户的行权数量，点击「行权」可作修改
+“收费信息”查到该客户的公司行动费用，点击「编辑」可作调整
 
 
-“权益信息” 查到派出标的，点击「编辑」可修改
+“权益信息”查到派出标的，点击「编辑」可修改
 
 
 ![image.png](/assets/5d5eb26d62bfcbffb300f9cc89f0303b.png)
 
 
-# 6G 问：如客户的供股权 （RS 类） 不作认购，系统会自动删除掉吗？
+# 6G 问：如客户的供股权（RS 类）不作认购，系统会自动删除掉吗？
 
 
 **答：**需要操作 DS 类别的公司行动回收股权。 
@@ -140,11 +150,11 @@ RS 类别处理的是已认购上报的，DS 类别处理的是未申请的股�
 # 6J 问：公司行动在那个报表显示出来？
 
 
-**答：** 可以查看 SDR040 类别的报表。执行方式为 “强制执行” 的派息派股公司行动在 SDR040-09  Corporate Action Detail Report（BE/IP/SO） 报表显示；
-“可选择” 的选股选息公司行动在 SDR040-10 Corporate Action Detail Report（BE With Selection） 报表显示。
+**答：** 可以查看 SDR040 类别的报表。执行方式为“强制执行”的派息派股公司行动在 SDR040-09  Corporate Action Detail Report（BE/IP/SO）报表显示；
+“可选择”的选股选息公司行动在 SDR040-10 Corporate Action Detail Report（BE With Selection）报表显示。
 
 
-# 6K 问：哪类别的公司行动需要上报埸外证券交易汇报制度（ OTCR ）？
+# 6K 问：哪类别的公司行动需要上报埸外证券交易汇报制度（OTCR）？
 
 
 **答：**不收印花税的公司行动不需要上报埸外证券交易汇报制度（OTCR），现金要约类别的公司行动需要作上传，可使用报表 `SDR070 - OTCR Report`，注意需要**导出 EXCEL 档**才会展示要约收购的股份转让记录，页面查询和 CSV 导出不支持。

@@ -1,7 +1,7 @@
 ---
 slug: CpczwPiXXiBCKnkfy5HcEvJgnCc
 title: 2024-07-22 更新日志
-sidebar_position: 24
+sidebar_position: 26
 ---
 
 
@@ -16,10 +16,10 @@ sidebar_position: 24
 
 # 🪀 改进与修复
 
-- 主子账户转仓支持到member
+- 主子账户转仓支持到 member
     - 账户间转仓支持到同一客户（member）
-        - 企业OB客户：仅支持同一客户的子账户间转
-        - 非企业OB客户：支持同一客户的主账户间、子账户间和主子账户双向划转
+        - 企业 OB 客户：仅支持同一客户的子账户间转
+        - 非企业 OB 客户：支持同一客户的主账户间、子账户间和主子账户双向划转
     - 路径：「资产账户」-「资产调拨」-「账户间转仓」
 
     ![image.png](/assets/1ccc9ec0bf83735202daadf16704e490.png)

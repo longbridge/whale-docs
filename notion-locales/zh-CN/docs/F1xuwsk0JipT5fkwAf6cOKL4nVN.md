@@ -74,7 +74,7 @@ IDR019 - Suspected Order Activities Report（单一客户更改或取消订单�
 # 12E 问：如何导出客户股票集中度（Stock Concentration）的历史数据？
 
 
-答：报表 RDR010 - Concentration Risk 包含到一周的数据。如需要先前的历史数据可从 SDR003 Client Stock Holding Report（By Stock） 取得客户每天的持仓数值，再按港交所的股票发行市值，手工计算股票集中度。
+答：报表 RDR010 - Concentration Risk 包含到一周的数据。如需要先前的历史数据可从 SDR003 Client Stock Holding Report（By Stock）取得客户每天的持仓数值，再按港交所的股票发行市值，手工计算股票集中度。
 
 
 ![image.png](/assets/2aaa2ad617a6ac197bf470a57d2281ed.png)
@@ -114,10 +114,10 @@ CR 是非欠款
 ![image.png](/assets/0c5b5d694980db60b841faefaaa4191c.png)
 
 
-# 12G问：为什么RDR027和RDR028报表没有数据。
+# 12G 问：为什么 RDR027 和 RDR028 报表没有数据。
 
 
-答： RDR027、RDR028报表数据产生时间：
+答： RDR027、RDR028 报表数据产生时间：
 
 
 上午的数据：11:30

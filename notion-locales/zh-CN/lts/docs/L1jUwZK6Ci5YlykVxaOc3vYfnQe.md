@@ -1,7 +1,7 @@
 ---
 slug: 24-06-11
 title: 2024-06-11 更新日志
-sidebar_position: 27
+sidebar_position: 29
 ---
 
 
@@ -40,7 +40,7 @@ sidebar_position: 27
 
     ![image.png](/assets/efb9e902e0a6c2f0840e05ff12077a90.png)
 
-- **会计中台新增报表导出-Sage300 AOM （GL）**
+- **会计中台新增报表导出-Sage300 AOM（GL）**
 
     ![image.png](/assets/4fcbf0c57eb13bb34cdd03d64ca544b8.png)
 

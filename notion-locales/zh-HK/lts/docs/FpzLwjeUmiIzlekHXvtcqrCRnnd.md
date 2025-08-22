@@ -62,10 +62,10 @@ _如不用重新計算利息／交收數據，資產類回撤可選不操作_
 ![image.png](/assets/19bcfe24958296e1a68e9c056a73d523.png)
 
 
-# 4E 問：調賬時 Street， Nominee， Own 是什麼？ 
+# 4E 問：調賬時 Street，Nominee，Own 是什麼？ 
 
 
-**答：**Street、未過户未被登記為經紀行名義的股票 （一般情況在 Street 輸入數量） 
+**答：**Street、未過户未被登記為經紀行名義的股票（一般情況在 Street 輸入數量） 
 
 
 Nominee、已過户被登記為經紀行名義的股票

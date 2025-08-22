@@ -1,7 +1,7 @@
 ---
 slug: RZYZwbpBCia6TYkzJBNcgsqcnCh
 title: 2024-11-19 更新日志
-sidebar_position: 12
+sidebar_position: 14
 ---
 
 
@@ -12,7 +12,7 @@ sidebar_position: 12
 
 - 企业户的开户信息中，新增公司实控人信息
     - 在线下开户及 kyc 审核页面，公司结构模块中新增公司实控人信息
-        - 当「企业实体」（ Entity Type ）选择 ' CRS101 = Passive Non-Financial Entity with – one or more controlling person that is a Reportable Person ' 时，公司实控人为必填模块
+        - 当「企业实体」（Entity Type）选择 ' CRS101 = Passive Non-Financial Entity with – one or more controlling person that is a Reportable Person ' 时，公司实控人为必填模块
     - 支持新增/编辑/删除操作多个实控人信息
     - 路径：「KYC」-「开户审核」-「开户列表」
 

@@ -22,7 +22,7 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 
 | 權限名稱                  | 權限說明                 |
 | --------------------- | -------------------- |
-| ClientAccountInfoFull | 管理賬户列表、BCAN碼、工單中心的權限 |
+| ClientAccountInfoFull | 管理賬户列表、BCAN 碼、工單中心的權限 |
 
 
 # 賬戶列表
@@ -37,7 +37,7 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 ![image.png](/assets/8637a2fe56aedf624d0dae79ee3518ec.png)
 
 
-也可在右側記錄操作區：點選【詳情】， 查看客戶細部基本資料，同時也提供資產交易/操作記錄/登錄設備/代理人/關係人 這些特定事項的 Tab 頁籤資料
+也可在右側記錄操作區：點選【詳情】，查看客戶細部基本資料，同時也提供資產交易/操作記錄/登錄設備/代理人/關係人 這些特定事項的 Tab 頁籤資料
 
 
 ![image.png](/assets/2ce30bcaa7a77a9a5ab539847f44e3aa.png)
@@ -73,22 +73,22 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 ![image.png](/assets/eb951b8645ddd6ec19d8950b89313afb.png)
 
 
-# BCAN碼
+# BCAN 碼
 
 
-## HKIDR報送
+## HKIDR 報送
 
 
 本作業可以處理 HKIDR 機制的 BCAN-CID 檔案上傳（分成 SFTP 自動上傳與手動上傳 兩種模式）
 
-- 注： 有關中華通的 BCAN 說明 將在系統開放支持時說明
+- 注：有關中華通的 BCAN 說明 將在系統開放支持時說明
 
 ![image.png](/assets/cae8d88d7ff2e4193486b9b36189e93a.png)
 
 
 其中申報邏輯：上報的數據是 已開通帳戶、有 BCAN 碼且同意授權協議的全量客戶，申報給港交易所後，獲取交易所返回的檔內容，將 BCAN 生效的狀態同步更新；
 
-1. **若是劵商是 EP 租戶**： 本作業是支持自動申報上傳（透過 SFTP 的 SDNet/2 线路）
+1. **若是劵商是 EP 租戶**：本作業是支持自動申報上傳（透過 SFTP 的 SDNet/2 线路）
 
     SFTP 申報方式說明如下：
 
@@ -99,7 +99,7 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 
 ![image.png](/assets/babd362290925d6a9c18402aaa28360f.png)
 
-1. **若是劵商是 OB 租戶**： 是要手動產生 BCAN-CID 檔後，再人工透過 SFC Web ECP 網站上傳資料
+1. **若是劵商是 OB 租戶**：是要手動產生 BCAN-CID 檔後，再人工透過 SFC Web ECP 網站上傳資料
 
     SFC Wings 申報方式說明如下：
 
@@ -137,7 +137,7 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 ![image.png](/assets/31a07a50333bf405b76ef01d713fb08e.png)
 
 
-點選右方上側【新建區間】， 新建一筆新的 BCAN 區間
+點選右方上側【新建區間】，新建一筆新的 BCAN 區間
 
 
 ![image.png](/assets/797cc384cbbac4f128754ef22418acaa.png)
@@ -146,7 +146,7 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 其中欄位說明如下：
 
 
-| **港股EP模式**                                               | **港股Non-EP模式**                                            |
+| **港股 EP 模式**                                               | **港股 Non-EP 模式**                                            |
 | -------------------------------------------------------- | --------------------------------------------------------- |
 | CCEP：選擇當前租戶選項
 使用者：選擇當前租戶選項
@@ -155,7 +155,7 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 使用者：選擇當前租戶選項
  是否上報：選擇‘是’
  起始編號/結束編號：手動輸入配置· |
-| 注意：（‘1’-‘99’是交易所自測區間，不可使用，不可用‘0’前置占位，建議按lb提供的區間配置）       |                                                           |
+| 注意：（‘1’ - ‘99’是交易所自測區間，不可使用，不可用‘0’前置占位，建議按 lb 提供的區間配置）       | 同左                                                        |
 
 
 # 參與者管理
@@ -167,7 +167,7 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 ![image.png](/assets/7ab0a098965b002b272d2b418d3a2553.png)
 
 
-點選右方上側【新建參與者】， 建一筆新的參與者信息
+點選右方上側【新建參與者】，建一筆新的參與者信息
 
 
 ![image.png](/assets/e5f154a475d56d6d7dc5685905bc0528.png)
@@ -176,48 +176,48 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 其中欄位說明如下：
 
 
-[%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A1%A8%E6%A0%BC.xlsx](https://prod-files-secure.s3.us-west-2.amazonaws.com/1445bab0-c2cc-8114-afe4-000302ebb560/0a6767cb-7717-407b-b8f3-cae4c8e8ea10/%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A1%A8%E6%A0%BC.xlsx?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB466ZNZHQITZ%2F20250718%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250718T061609Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEG4aCXVzLXdlc3QtMiJHMEUCIGGjFay252TXnInwleSBt%2B8ACnLG1HdT5bPXODaoKfwSAiEAxxXs5t4r5Lwtej0QpFg5Oni7dhSMIXSaYwxs3HgMPcwqiAQIh%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FARAAGgw2Mzc0MjMxODM4MDUiDJ6t1s3ESbp7jyeRASrcA%2Fmhf7vKsTI2oO23q9vKhcvl1z3oVX9FygfEV6aj6v8w%2BQn3a0Ih8F2OoG7oehL36AMNssKsCtQddvb02FzN9CjKlWUFtbdO6wXVJ1g%2BDQmL8Q181C6ZiVc%2BWWpkx7k0Ja230PYQuFXO9RAnLsWrDdmZhR0W7dvgkxdPVIDqD6GdP22QHtrw629%2BOZSbxMZvQ9twvRK2ZVVLadFOEnDaxi0nN6kpuwQcHl7ASDLcHFhFVy3agqv2v12f9WsBi9vxLqr09Z8z4ww2fvv48hilXTuxkZ4iQbJYzP9ktF%2B%2Fi9A9l5c%2Bqf1RgwurtDQ2RnsCzW6B5kjLW2Rx6ByJtFN6WwnDXfP8N73PssAmuUP6gwwMGZq97wKH%2FBkjFupCz96a2oHis3okzG56kT6u9fZR1txCkQ3Fwqmp7xfl0ImQyIFaYB8zKFiRyycTcfV4RnXLY57nJHQBaWl2XSd5%2B8eGCT4uh9g0ul5%2FOK1G9VBi2FTJA8p2LHTX%2Bs90khGK8Pf7L7z%2Bn%2FN6c%2BFrG%2FJXVWUBtl6fQ9I%2B5pQAMJJQvuuy496FFYy2Q%2FGG0iJJwxiV9fQmmFqSF0VQxdPFZltFyaGRJIY%2F43Ti%2BJAdDzhySfjuK5pbpy9RPaAUNGHAcOUYMM2758MGOqUBcLkPdSNxpKez8jB13HF%2FJuxngsAucUVKTbPjnKdSMPwPeifQ5EImrrhFBV%2Bb2fJHKE6jdkBfQCY0IrWr%2BliiyF9%2BYxNU2gKY9ueypCGSsjC4qealA5PUoN9JYidhSXBeqn5fXz9EkIts%2BMV2X56UAgloqSCLMXDShjzvojPECzBPlhEM5zem3qoTqjbzXYGkpDz1tqcl2o6LtoeMMqxX8WuwIGjp&X-Amz-Signature=a20910eaabafa43de424e716889be1182bfab711dd1321b2c956bcc05002385c&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject)
+[%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A1%A8%E6%A0%BC.xlsx](https://prod-files-secure.s3.us-west-2.amazonaws.com/1445bab0-c2cc-8114-afe4-000302ebb560/0a6767cb-7717-407b-b8f3-cae4c8e8ea10/%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A1%A8%E6%A0%BC.xlsx?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB466RAVJMCQR%2F20250822%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250822T070811Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjELb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCICF89UqC9dYXUcD32GeOq%2FW20Xw1lkfxZwz0Uwfzt%2BK%2BAiAzRHLjuxeaimGw3V0MQyY5dnbsdGft8qIW7qsD2llLFSqIBAj%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAAaDDYzNzQyMzE4MzgwNSIMOJDDkv8fNOhy%2FOkfKtwDUgDFy%2FB%2FD7Ae2xyANJ8FBtthODiCgc6%2BDcynBkqDkLkAMeVLOBcpr0OiQ2WbEhEryUxsNGECTMBUYX10gqSpoK7cf9aKMR080ig5Hn%2F3aZ%2FtWI%2FA%2FeCa%2BLh4yoaraAP8s%2FvdBV1e5XFGgReymZH9U6v7QB7YRGZFkJV3cXOE%2FekDfo2YE%2FgsbPxo7sULyVxiRqsTv8RLJqfApd%2Fd6hJNU9IPkR9QmaGnlNWwiJXoFmWlOY3qjXJ6h6NHCx4sQ9IZL5GobrjCES70oTaKr6codasDIiWgYX4DJPS4YpenmhspvjzaoO7212l3ELldAAoLRa6ztMuIPuZwaVIr%2Fk%2BX%2BlMvFF%2FX%2BnsxF1jM8cMCXuCGVkB1pB4a%2BXx%2F6aaxp1ijFu2xrmTYy7z4Q39fuNCX1Ji74KH3lKAPQxaqB8V0WgGIS1iLI3iJx0qVbm%2F17OnCPKoOSmHCRynV6fjnnaOcM5duFxMwPDpF6X09SEeKYmDQp3oEe6GDLRKlSPX%2FCTlzCotal%2Bo%2Bzm1xI5gWmkjCif9IcAT2E%2F0PSLPX0JAjveEegceLk3BgAyPt4ng6ga9tsCDcmfJ77lbpzcpVrU1M4QVhfvOgihIKqWgz898LDQgzRaGLE1kyr1axyC4wipSgxQY6pgEoFg2RqetO5XFUkGY2dZILHKbBWYF6QPB7YOC5sD0tduOw5AYdeSPj6HzeeL8wqtufMJJxXCChvQrv7uTBKo9KVCU67tFXbLNMO9ubMoGniCSkF%2BogNYrZMaG5GDD38G9jKMVjGVSPfTMGFzDRvWIh1VHH6V%2FWOPOqpe5jSHKjqc55kuZgrdKyjVcTJE8wVc5Tc0kK1XFE8lXDbhDnx9K9cORjjeNN&X-Amz-Signature=eb04ebf74f234c64817fe88254c712be938e2a79ac2e290518787f5b15c03fb6&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject)
 
 
-| 港股EP模式                                                                                                | 港股Non-EP模式                                                                                                                                                                                                    |
+| 港股 EP 模式                                                                                                | 港股 Non-EP 模式                                                                                                                                                                                                    |
 | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 新增一條參與者記錄：
 參與者名稱：選擇當前租戶選項
 類型：選擇‘House’選項
- BCAN類別：選擇‘CCEP&TTEP’選項
-參與者編號：手動輸入Firm ID
-中央編號：手動輸入CE number | 新增兩條參與者記錄:
-記錄1
+ BCAN 類別：選擇‘CCEP&TTEP’選項
+參與者編號：手動輸入 Firm ID
+中央編號：手動輸入 CE number | 新增兩條參與者記錄：
+記錄 1
 參與者名稱：選擇當前租戶選項
 類型：選擇‘House’選項
-BCAN類別：選擇‘TTEP’選項
-參與者編號：手動輸入Firm ID
-中央編號：手動輸入CE numbe
-記錄2
+BCAN 類別：選擇‘TTEP’選項
+參與者編號：手動輸入 Firm ID
+中央編號：手動輸入 CE numbe
+記錄 2
 參與者名稱：選擇'lb'選項
 類型：選擇‘Thrid’選項
-BCAN類別：選擇‘CCEP’選項
-參與者編號：手動輸入Firm ID=‘2195’
-中央編號：手動輸入CE numbe=‘BPX066’；·  |
-| 港股EP模式                                                                                                | 港股Non-EP模式                                                                                                                                                                                                    |
+BCAN 類別：選擇‘CCEP’選項
+參與者編號：手動輸入 Firm ID=‘2195’
+中央編號：手動輸入 CE numbe=‘BPX066’；·  |
+| 港股 EP 模式                                                                                                | 港股 Non-EP 模式                                                                                                                                                                                                    |
 | 新增一條參與者記錄：
 參與者名稱：選擇當前租戶選項
 類型：選擇‘House’選項
- BCAN類別：選擇‘CCEP&TTEP’選項
-參與者編號：手動輸入Firm ID
-中央編號：手動輸入CE number | 新增兩條參與者記錄:
-記錄1
+ BCAN 類別：選擇‘CCEP&TTEP’選項
+參與者編號：手動輸入 Firm ID
+中央編號：手動輸入 CE number | 新增兩條參與者記錄：
+記錄 1
 參與者名稱：選擇當前租戶選項
 類型：選擇‘House’選項
-BCAN類別：選擇‘TTEP’選項
-參與者編號：手動輸入Firm ID
-中央編號：手動輸入CE numbe
-記錄2
+BCAN 類別：選擇‘TTEP’選項
+參與者編號：手動輸入 Firm ID
+中央編號：手動輸入 CE numbe
+記錄 2
 參與者名稱：選擇'lb'選項
 類型：選擇‘Thrid’選項
-BCAN類別：選擇‘CCEP’選項
-參與者編號：手動輸入Firm ID=‘2195’
-中央編號：手動輸入CE numbe=‘BPX066’；·  |
+BCAN 類別：選擇‘CCEP’選項
+參與者編號：手動輸入 Firm ID=‘2195’
+中央編號：手動輸入 CE numbe=‘BPX066’；·  |
 
 
 # 工單中心

@@ -1,7 +1,7 @@
 ---
 slug: 24-03-18
 title: 2024-03-18 更新日誌
-sidebar_position: 33
+sidebar_position: 35
 ---
 
 
@@ -11,7 +11,7 @@ sidebar_position: 33
 # 🎉 新功能
 
 - 支持港股國配
-    - IPO支持港股國配
+    - IPO 支持港股國配
     - 路徑：「新股認購」-「新股認購」-「港股國配」
 
     ![image.png](/assets/396937ad7a203d30c2f8dbe64a3b9a21.png)
@@ -25,14 +25,14 @@ sidebar_position: 33
     - 客戶保證金支持選擇客戶組和股票組創建
     - 路徑：「風控管理」-「保證金」-「客戶保證金」
 
-    [output.gif](https://prod-files-secure.s3.us-west-2.amazonaws.com/1445bab0-c2cc-8114-afe4-000302ebb560/c99770d6-b573-447c-9412-12aa9aec7a87/output.gif?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB466VL626FUM%2F20250718%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250718T063338Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEG4aCXVzLXdlc3QtMiJGMEQCIC1wS7mVuYKuBua4zDGWjDlPV21s74YkElf44rBOqvuvAiAWftsDNeyHoice6HjfXuYq%2FGEOy9z16xQniZZup7wYWyqIBAiH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAAaDDYzNzQyMzE4MzgwNSIMdBzE9DHUIYmOPBlJKtwDoU5NcYgh0bqBk2F5nbGXgtI1Ttv%2BxHfm4vfnve9CBFzJwzhE45YDBvkVwZubwKW8jt1iLcwBDxDy0sM510fruAAFivQLMcu0uw2mtDp4k2EYfX%2FrHL1v%2FBJ7pah11J2Ngc396pPPnb62oap8j3uAG4HlQjzzhi95N42Sx0ESYw5hfgSzVN8TnsOkib7EKlpJtLhRil45q0dugDQib%2Fa9D5FzMWmbXhgD5bNBBumM3fd8595wfzVQIY7XTqEGi9ymyTKddPdvsZ11IO6fIPTVq3PJ4xmKBmtpveNf7kR%2F7g4r2lHgJU%2FKdBRALqp2KLonUJ75cgn8w4cIDPA3G7TcbZEU7fdHTZV9a9ZPlMN%2FBmav%2BZFyJZGTdZVIC9cFEDGKnKilqlinEGKK%2BdYQs2OP%2FXTrj4KqMPMb6wpi3u9ERjP7BQhph6YWZyWpx8TWiNPSDna4vRnXMZZ18Ki2qGFKOQpKz4UxWAAudKW9CmkzoZYxlXHNVmzmDfp6kdYWJdq5q4lX3kFW7kNX0Cq%2FG30%2BrJ8edHn8or434SV4owe%2Fn8zkxDawUZM0vs36ZttooVFD8NEH%2BQgOoANXdecsRB9h9kea7b6GwC%2BHVkqCxmbRvi%2FnHGO9dgLXLaOgI%2FUw67vnwwY6pgEAwsYeSRi1CoQdegX%2FtVLmUemOtboPdF5Hsr89de%2BZxkZThGuYXCqGPzqSw03mKKTrJcTTkoFKW8CNl5j7mNFgD%2FpdMmLP6XR7qfZUxgoPoMYU3IBbS4XNYa%2B%2FdPAc0LPlZZMZoMFdd%2FRU3kysR6agqxv8FyCmK7yZH2NFxUMEMVx31rLYE1xtwKQh6kQJxJ2PhUImBaoS0WEM4Bv2M6n4XrpkTwt0&X-Amz-Signature=b017ce009a7650144707d3971a0edf5c596fd26a1156fd470e91a608b06e4dfa&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject)
+    [output.gif](https://prod-files-secure.s3.us-west-2.amazonaws.com/1445bab0-c2cc-8114-afe4-000302ebb560/c99770d6-b573-447c-9412-12aa9aec7a87/output.gif?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB466ZUV5WY2J%2F20250822%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250822T071448Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjELb%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIBAZFWY7LHFS0vRwdf3pgDlLfGYibe4szXJZeu15oVxmAiBvWliayNWDDbGPK8ROjk%2F9nwPawgPAhkxffS6RanyDKyqIBAj%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAAaDDYzNzQyMzE4MzgwNSIM6d94NbJCYvtR%2B7fYKtwDyltYVfdLSK9EMjgdBuSNGRI2ZwrXYwFh%2FYujaprAv7lTb3f9m%2B7rFWfEJddzo45NuX4AsY1nq4JzGNqtg5FAQoFDy%2Fg2cfh%2FFAqf3jlwFOsqdlvbELS9cnAx3qKOsncbYXc9vXR6919n8cY8ZMR2Z7HC92U7aY6C5YPGBK%2FW%2BSHoGV9HsxwNJLrLp0NW5sJQ4QaBhVWVg%2B9WQXF%2BnpUFPGa9TbPrhEjauwZHFuHJuMQ8NssQ4KliwJNIFnl4oUISOf1ANgmloDmcSRy1eorbQKSezxIzCCT1XAQ9HruTI%2FEM%2Fw%2F%2BwVEGEV%2FwH3Yojh%2B3BS%2FpxmzAFq1LCjTieeZPkLx1A8L4WOFSCB90OkJa6M7R%2FYoJJ8VzCv3QfNFQS9nqNY%2Flx%2BwXrTlUnVT7q2xSyEAY1QLr146hMPMphPCCcQ9lNCWdfs9D2n1UQoi%2FRXLDVzzxuaclwGvBq66tqGFCI3Zlcbxrerwej5mIw11UrKqG91A4uRXxajAQn6gKVOturMrXEi9ci5YvmFK2G0dyGTU6St2dD%2B64MK8zq7J5h9WPiC7SdRKLRsbVBDuTO4pRTme2%2BhgzyMgrMp95oxtPRnudGO4nTRAA%2B30d6muMgb5pZ%2FUuoeSQvdcMv1UwipegxQY6pgG6Wo%2FDJEtI7%2B8YJw20idqyKM4M5XFV21zIKADQJoSPWLri5i%2BQmsGfZj16f2zYjBlyJA9vnPS1tjSRuJwbzSJmUcIo4scisTOXVymhmklvOcM2IGW5Cb1UNUM6Nh%2FBJAYMYj915c9RCm%2F8MSMWGttYEGUgEpbCVdD2jPyBZGNsHqf0dFg4Fm%2BVh4pmjlInPUd4ERomnEANSz2BjCfPFEyOxiFXhHxB&X-Amz-Signature=3db513702be3fc944b6e084164372a1d65bc4000e39610cd6d8afbab579004cd&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject)
 
 - 在計費前修改下單渠道
     - 場景：在計費前修改用戶的下單渠道，並基於此進行清算
     - 操作：開始一鍵清算->暫停一鍵清算（數據同步步驟）-》編輯下單渠道
     - 編輯下單渠道路徑：「清算管理」-「流水管理」-「交易訂單」
-    - 注意1：在清算計費後不支持編輯收費渠道
-    - 注意2：清算計費後不再支持重新點擊數據同步。如先重新點擊的，先操作清算撤銷
+    - 注意 1：在清算計費後不支持編輯收費渠道
+    - 注意 2：清算計費後不再支持重新點擊數據同步。如先重新點擊的，先操作清算撤銷
 
     ![image.png](/assets/f120a896fbaa20f8f1d15ea7aa4fc6c4.png)
 
@@ -54,7 +54,7 @@ sidebar_position: 33
     ![執行預覽增加註銷客戶數量提示](/assets/12dba2c5207f28c7b3d779dcd131e58c.png)
 
 - 開戶列表詳情可配置交易權限
-    - 開戶列表詳情-「關聯賬戶列表」增加：未開通賬戶，可在 KYC 審核過程中修改賬戶的交易市場和權限
+    - 開戶列表詳情 -「關聯賬戶列表」增加：未開通賬戶，可在 KYC 審核過程中修改賬戶的交易市場和權限
     - 路徑：「客戶管理系統」-「KYC」-「開戶列表」-「詳情」
     - 注意：交易權限配置需結合客戶開通賬戶的類型，是後台選擇的市場權限與開通賬戶功能的交集。如：後台選擇開通港股及虛擬資產交易權限，賬戶類型為虛擬資產賬戶，最終開通的賬戶僅虛擬資產交易權限
     - 權限：
@@ -76,13 +76,13 @@ sidebar_position: 33
 # 🪀 改進與修復
 
 - 臨時結單支持自定義語言
-    - 創建臨時結單支持選擇結單語言，默認為跟隨App語言（注：此處的App語言以臨時結單選擇的截止日期對應設置為準），可以自定義切換指定語言
+    - 創建臨時結單支持選擇結單語言，默認為跟隨 App 語言（注：此處的 App 語言以臨時結單選擇的截止日期對應設置為準），可以自定義切換指定語言
     - 路徑：「清算管理」-「日終管理」-「結單管理」-「結單查詢」
 
     ![image.png](/assets/f3b21c75ff77b24419c7ba57ea8a55b0.png)
 
 - 平倉增加交易時段選擇
-    - margin call下平倉彈窗頁面 美股限價單平倉支持自定義選擇“交易時段”，默認僅盤中
+    - margin call 下平倉彈窗頁面 美股限價單平倉支持自定義選擇“交易時段”，默認僅盤中
     - 路徑：「風控管理」-「Margin Call」-「風險預警」
 
     ![image.png](/assets/95306f3dd71e48fb0f15d324311cede5.png)

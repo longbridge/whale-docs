@@ -17,7 +17,7 @@ sidebar_position: 14
 ![image.png](/assets/bdc07cbae264d652176e434245442cd7.png)
 
 
-(ii). 在 「身份管理 > 人員」頁面點擊「添加人員」
+(ii). 在「身份管理 > 人員」頁面點擊「添加人員」
 
 
 ![image.png](/assets/225861b85789ea1557f0284b5c092644.png)
@@ -30,7 +30,7 @@ sidebar_position: 14
 ![image.png](/assets/b8a7d7a3fcb0b2741211d8153b533c45.png)
 
 
-“人員類型” 可選普通管理員 或 交易員。
+“人員類型”可選普通管理員 或 交易員。
 
 - 普通管理員：可以登錄證券後台，不能登錄 WTT 客戶端
 - 交易員：可以登錄證券後台和 WTT 客戶端
@@ -47,7 +47,7 @@ sidebar_position: 14
 ![image.png](/assets/1702fdc0e8102adbe49ca157ea4bd1da.png)
 
 
-(v). 需要為用户添加權限操作：可選擇 "個人權限" 或 "角色列表" 點擊 “綁定權限” 或 ”綁定角色” 分配權限。
+(v). 需要為用户添加權限操作：可選擇 "個人權限" 或 "角色列表" 點擊“綁定權限”或”綁定角色”分配權限。
 
 
 ![image.png](/assets/79aa111f549804fc5d783eddf496b125.png)

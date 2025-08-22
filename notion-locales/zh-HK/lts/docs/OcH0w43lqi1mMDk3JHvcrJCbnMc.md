@@ -15,18 +15,28 @@ sidebar_position: 5
 
 > 公司行動完成後，一般需要約 5 分鐘時間更新成本價
 
-| 預告類型                                                                               | 05 文件 - 對應數據  | 系統作業對照 |
-| ---------------------------------------------------------------------------------- | ------------- | ------ |
-| TM (Take-Over (Compulsory) / Auto-Exercise of Structured PRSducts ) 未到期而被行使的牛熊證、窩輪 | TM            | 牛熊證回收  |
-| BE ( Benefit Entitlemen)  含紅利、紅股、選股選息、供股權發放、公開發售權益發放等信息                            | BE            | 分股分紅   |
-| CA ( Corporate Action )  拆合股等企業行動                                                  | CA            | 拆合股    |
-| DS ( Delisted、Expired、Lapsed)  股權回收                                                | DS            | 股權回收   |
-| OO ( Open Offer )  普通公開發售行權                                                        | OO（APP 尚未對接）  | 認購     |
-| EO ( Excess Open Offer)  額外公開發售行權                                                  | EO（APP 尚未對接）  |        |
-| RS ( Rights Subscription)  普通供股權行權                                                 | RS（APP 尚未對接）  |        |
-| ER ( Excess Rights Subscription)  額外供股權行權                                          | ER（APP 尚未對接）  |        |
-| TC ( Take-Over (Conditional) )  部分要約                                               | TC（APP 尚未對接）  | 要約     |
-| TU ( Take-Over (Unconditional) )  全面要約                                             | TU（APP 尚未對接）  |        |
+| 預告類型                                                                                | 05 文件 - 對應數據  | 系統作業對照 |
+| ----------------------------------------------------------------------------------- | ------------- | ------ |
+| TM (Take-Over (Compulsory) / Auto-Exercise of Structured PRSducts ) 
+未到期而被行使的牛熊證、窩輪 | TM            | 牛熊證回收  |
+| BE ( Benefit Entitlemen)  
+含紅利、紅股、選股選息、供股權發放、公開發售權益發放等信息                            | BE            | 分股分紅   |
+| CA ( Corporate Action )  
+拆合股等企業行動                                                  | CA            | 拆合股    |
+| DS ( Delisted、Expired、Lapsed)  
+股權回收                                                | DS            | 股權回收   |
+| OO ( Open Offer )  
+普通公開發售行權                                                        | OO（APP 尚未對接）  | 認購     |
+| EO ( Excess Open Offer)  
+額外公開發售行權                                                  | EO（APP 尚未對接）  |        |
+| RS ( Rights Subscription)  
+普通供股權行權                                                 | RS（APP 尚未對接）  |        |
+| ER ( Excess Rights Subscription)  
+額外供股權行權                                          | ER（APP 尚未對接）  |        |
+| TC ( Take-Over (Conditional) )  
+部分要約                                               | TC（APP 尚未對接）  | 要約     |
+| TU ( Take-Over (Unconditional) )  
+全面要約                                             | TU（APP 尚未對接）  |        |
 
 
 # 6B. 問：美股的公司行動如何操作？
@@ -34,9 +44,9 @@ sidebar_position: 5
 
 **答：**需要依據上手通知操作美股的公司行動，
 
-- 如 BE 類別可參考 [快速上手-普通紅股紅利（BE）](https://longbridge.feishu.cn/wiki/VK4bwFoGyifITykmGaucY7fSncc)、[快速上手-自願類紅股紅利（BE） ](https://longbridge.feishu.cn/wiki/NiQDwy0cziZ2b5kKIg5c0ExAn6f)
-> 如美股發生 CA 類的公司行動需要完成美股日終的 “清算交收”以拉取到最新新數據。  
-> 例如：NVDA 在 2024 年 6 月 7 日收盤後進行 1 拆 10 股的公司行動。系統需要完成 6 月 10 日的美股 “清算交收" 後， CA 類公司行動的股權記登記日為 6 月 10 日，支付日期為 6 月 11 日。
+- 如 BE 類別可參考 [快速上手 - 普通紅股紅利（BE）](https://longbridge.feishu.cn/wiki/VK4bwFoGyifITykmGaucY7fSncc)、[快速上手 - 自願類紅股紅利（BE） ](https://longbridge.feishu.cn/wiki/NiQDwy0cziZ2b5kKIg5c0ExAn6f)
+> 如美股發生 CA 類的公司行動需要完成美股日終的“清算交收”以拉取到最新新數據。  
+> 例如：NVDA 在 2024 年 6 月 7 日收盤後進行 1 拆 10 股的公司行動。系統需要完成 6 月 10 日的美股“清算交收" 後，CA 類公司行動的股權記登記日為 6 月 10 日，支付日期為 6 月 11 日。
 
 # 6C 問：為何按了「登記」沒有客户數據？
 
@@ -62,7 +72,7 @@ sidebar_position: 5
 ![image.png](/assets/99b31ec0ee62421d49a8d1e828d39262.png)
 
 
-(ii). 在 “明細彙總” 中點擊「尾差調整」可選金額／份額，之後作「提交執行」。
+(ii). 在“明細彙總”中點擊「尾差調整」可選金額／份額，之後作「提交執行」。
 
 
 ![image.png](/assets/3eb6f9c6996841f451d0314b26bbbd85.png)
@@ -96,17 +106,17 @@ sidebar_position: 5
 ![image.png](/assets/d91f2b49be495280a703c4cde2122b57.png)
 
 
-（iii） “行權信息” 查到客户的行權數量，點擊「行權」可作修改
-“收費信息” 查到該客户的公司行動費用，點擊「編輯」可作調整
+（iii） “行權信息”查到客户的行權數量，點擊「行權」可作修改
+“收費信息”查到該客户的公司行動費用，點擊「編輯」可作調整
 
 
-“權益信息” 查到派出標的，點擊「編輯」可修改
+“權益信息”查到派出標的，點擊「編輯」可修改
 
 
 ![image.png](/assets/5d5eb26d62bfcbffb300f9cc89f0303b.png)
 
 
-# 6G 問：如客户的供股權 （RS 類） 不作認購，系統會自動刪除掉嗎？
+# 6G 問：如客户的供股權（RS 類）不作認購，系統會自動刪除掉嗎？
 
 
 **答：**需要操作 DS 類別的公司行動回收股權。 
@@ -140,11 +150,11 @@ RS 類別處理的是已認購上報的，DS 類別處理的是未申請的股�
 # 6J 問：公司行動在那個報表顯示出來？
 
 
-**答：** 可以查看 SDR040 類別的報表。執行方式為 “強制執行” 的派息派股公司行動在 SDR040-09  Corporate Action Detail Report（BE/IP/SO） 報表顯示；
-“可選擇” 的選股選息公司行動在 SDR040-10 Corporate Action Detail Report（BE With Selection） 報表顯示。
+**答：** 可以查看 SDR040 類別的報表。執行方式為“強制執行”的派息派股公司行動在 SDR040-09  Corporate Action Detail Report（BE/IP/SO）報表顯示；
+“可選擇”的選股選息公司行動在 SDR040-10 Corporate Action Detail Report（BE With Selection）報表顯示。
 
 
-# 6K 問：哪類別的公司行動需要上報埸外證券交易滙報制度（ OTCR ）？
+# 6K 問：哪類別的公司行動需要上報埸外證券交易滙報制度（OTCR）？
 
 
 **答：**不收印花稅的公司行動不需要上報埸外證券交易滙報制度（OTCR），現金要約類別的公司行動需要作上傳，可使用報表 `SDR070 - OTCR Report`，注意需要**導出 EXCEL 檔**才會展示要約收購的股份轉讓記錄，頁面查詢和 CSV 導出不支持。

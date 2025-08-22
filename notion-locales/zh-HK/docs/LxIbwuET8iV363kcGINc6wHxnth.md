@@ -8,7 +8,7 @@ sidebar_position: 6
 # 7. 佣金計費問題
 
 
-# 7A 問： 如何查詢客戶佣金收費？
+# 7A 問：如何查詢客戶佣金收費？
 
 
 **答：**見以下步驟，
@@ -59,7 +59,7 @@ _7B 圖三_
 # 7C 問：如何修改政府雜費或佣金費率？ （客户組計費修改）
 
 
-**答：**（i）在「業務參數設置＞計費管理＞客户組計費配置」頁面中的 “默認客户組” 點擊「編輯」。
+**答：**（i）在「業務參數設置＞計費管理＞客户組計費配置」頁面中的“默認客户組”點擊「編輯」。
 
 
 ![image.png](/assets/3111e72f16acb8a8c5eb6ac94c42f649.png)
@@ -137,7 +137,7 @@ _7B 圖三_
 # 7E 問：計算精度的 Contract、Order、Trade done 如何區分？
 
 
-**答：**Contract 、Order 、Trade done 見以下例子說明。
+**答：**Contract、Order、Trade done 見以下例子說明。
 
 - 如：想合單計算，選 Contract，會按客户當天買同一隻股票的總交易金額計算佣金
 - 則：客户下單 3 次 10000，合成 30000 計算一次佣金
@@ -145,7 +145,7 @@ _7B 圖三_
 - 則：客户下單 3 次 10000，逐筆計算 會收取 3 次平台費
 - 如：收取政府雜費，選 Trade done，會按訂單成交的次數計算
 - 則：客户下單 3 次 10000，每筆分了 3 次成交，會逐條成交計算稅花稅，總共計算 9 次費用
-> 選了 Contract 是依照合約進行計費。 如果沒開啟合單功能，一個 Contract 對應的是一個 Order；如果已經開啟了合單功能，多個 Order 才會合併成一個 Contract 計算（見 7E 圖一），這樣 Contract 和按 Order 才有差別
+> 選了 Contract 是依照合約進行計費。如果沒開啟合單功能，一個 Contract 對應的是一個 Order；如果已經開啟了合單功能，多個 Order 才會合併成一個 Contract 計算（見 7E 圖一），這樣 Contract 和按 Order 才有差別
 
 ![image.png](/assets/90d92f1d77f5c420d55c1c75a4767aba.png)
 
@@ -202,7 +202,7 @@ _7H 圖二_
 _7H 圖三_
 
 
-# 7I 問：收費渠道 Longport， Pro， App， Web， WTT 的分別表示什麼？
+# 7I 問：收費渠道 Longport，Pro，App，Web，WTT 的分別表示什麼？
 
 
 答：Longport 是公版 App；Pro 是豪華版 Longport Pro；App 是白標 App；Web 是網頁版 Web Trade；WTT 是前台 Whale Trade Terminal。

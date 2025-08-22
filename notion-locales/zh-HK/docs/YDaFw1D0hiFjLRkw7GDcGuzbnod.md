@@ -60,6 +60,3 @@ Whale 帮助中心主要支持各類面向客戶的文章內容的創建和管�
 
 ![image.png](/assets/43e0d454a574acee4d9db5f4cbe9b199.png)
 
-
-# 
-

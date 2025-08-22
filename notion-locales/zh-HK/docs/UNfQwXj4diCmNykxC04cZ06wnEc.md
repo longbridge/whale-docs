@@ -25,7 +25,7 @@ sidebar_position: 0
 ![image.png](/assets/4373dbfc0510a18d146e767620bcd6c0.png)
 
 
-(iii). 設置審批類型及審批人：剔選 “人員”或“角色” 支持多個人員及角色審批。
+(iii). 設置審批類型及審批人：剔選“人員”或“角色”支持多個人員及角色審批。
 
 
 ![image.png](/assets/d66c12291f817dc4113f4f395390a8dd.png)
