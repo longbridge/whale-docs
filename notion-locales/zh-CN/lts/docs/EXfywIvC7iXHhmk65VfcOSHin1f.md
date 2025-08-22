@@ -11,12 +11,13 @@ sidebar_position: 0
 # 前置条件
 
 
-您需要获取以下授权后方可正常使用PageHub
+您需要获取以下授权后方可正常使用 PageHub
 
 
 | **权限名称**                 | **权限说明**                             |
 | ------------------------ | ------------------------------------ |
-| 管理PageHub的权限 PageHubFull | Pagehub是一种页面管理工具，可以用于查询、编辑、删除和查看历史记录 |
+| 管理 PageHub 的权限
+PageHubFull | Pagehub 是一种页面管理工具，可以用于查询、编辑、删除和查看历史记录 |
 
 
 # 操作说明
@@ -70,7 +71,7 @@ sidebar_position: 0
 ![image.png](/assets/5be99571b8f16463accbaeeecbf9d75f.png)
 
 
-以下是一个通过PageHub搭建的页面效果示例：
+以下是一个通过 PageHub 搭建的页面效果示例：
 
 
 ![img_v3_027p_6c8b8415-9f58-4c72-b828-2979f05584dg.png](/assets/a0dcf160d57739cd4c67d007f497602e.png)

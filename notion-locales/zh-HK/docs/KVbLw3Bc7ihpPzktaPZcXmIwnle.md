@@ -1,7 +1,7 @@
 ---
 slug: 24-04-08
 title: 2024-04-08 更新日誌
-sidebar_position: 31
+sidebar_position: 33
 ---
 
 
@@ -10,10 +10,10 @@ sidebar_position: 31
 
 # 🎉 新功能
 
-- 新增SFC要求的Shortfall壓力測試
-    - 支持創建Shortfall壓力測試任務
-    - 系統自動計算單一客戶是Shortfall
-    - 系統自動計算股票不可抵押後的Shortfall變化Top 10
+- 新增 SFC 要求的 Shortfall 壓力測試
+    - 支持創建 Shortfall 壓力測試任務
+    - 系統自動計算單一客戶是 Shortfall
+    - 系統自動計算股票不可抵押後的 Shortfall 變化 Top 10
     - 路徑：「證券後台」-「風控管理」-「壓力測試」-「速動資金短欠」
     - 新增權限：
         - `risk.elc_test_management`
@@ -21,8 +21,8 @@ sidebar_position: 31
 
     ![image.png](/assets/824e6d608b6a89dca6bb5b543e6c0d9a.png)
 
-- KYC詳情頁導出的文件列表新增簽名文件
-    - KYC詳情頁導出的文件列表新增簽名文件
+- KYC 詳情頁導出的文件列表新增簽名文件
+    - KYC 詳情頁導出的文件列表新增簽名文件
     - 路徑：「客戶管理系統」-「KYC」-「開戶審核」-「開戶列表」
 
     ![image.png](/assets/849af7ae90f9b6085055dc8f01e22c99.png)

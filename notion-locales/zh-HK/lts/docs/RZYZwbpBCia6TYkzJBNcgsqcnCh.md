@@ -1,7 +1,7 @@
 ---
 slug: RZYZwbpBCia6TYkzJBNcgsqcnCh
 title: 2024-11-19 更新日誌
-sidebar_position: 12
+sidebar_position: 14
 ---
 
 
@@ -12,7 +12,7 @@ sidebar_position: 12
 
 - 企業戶的開戶信息中，新增公司實控人信息
     - 在線下開戶及 kyc 審核頁面，公司結構模塊中新增公司實控人信息
-        - 當「企業實體」（ Entity Type ）選擇 ' CRS101 = Passive Non-Financial Entity with – one or more controlling person that is a Reportable Person ' 時，公司實控人爲必填模塊
+        - 當「企業實體」（Entity Type）選擇 ' CRS101 = Passive Non-Financial Entity with – one or more controlling person that is a Reportable Person ' 時，公司實控人爲必填模塊
     - 支持新增/編輯/刪除操作多個實控人信息
     - 路徑：「KYC」-「開戶審核」-「開戶列表」
 

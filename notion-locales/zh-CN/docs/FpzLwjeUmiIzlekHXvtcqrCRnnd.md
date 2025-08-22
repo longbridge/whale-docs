@@ -62,10 +62,10 @@ _如不用重新计算利息／交收数据，资产类回撤可选不操作_
 ![image.png](/assets/19bcfe24958296e1a68e9c056a73d523.png)
 
 
-# 4E 问：调账时 Street， Nominee， Own 是什么？ 
+# 4E 问：调账时 Street，Nominee，Own 是什么？ 
 
 
-**答：**Street、未过户未被登记为经纪行名义的股票 （一般情况在 Street 输入数量） 
+**答：**Street、未过户未被登记为经纪行名义的股票（一般情况在 Street 输入数量） 
 
 
 Nominee、已过户被登记为经纪行名义的股票

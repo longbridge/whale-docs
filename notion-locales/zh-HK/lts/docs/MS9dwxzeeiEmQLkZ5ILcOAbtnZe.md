@@ -29,7 +29,7 @@ sidebar_position: 3
 ❤️Tip：
 
 
-私有標的請根據對應類型選擇調賬類型頁面，其中「其他」對應調賬頁面「OTC其他」
+私有標的請根據對應類型選擇調賬類型頁面，其中「其他」對應調賬頁面「OTC 其他」
 
 
 ![image.png](/assets/f85406bdf8cd135ef26e5aeacc9e4da9.png)

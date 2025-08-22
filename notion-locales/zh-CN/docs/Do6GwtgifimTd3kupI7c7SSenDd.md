@@ -17,7 +17,7 @@ sidebar_position: 14
 ![image.png](/assets/bdc07cbae264d652176e434245442cd7.png)
 
 
-(ii). 在 「身份管理 > 人员」页面点击「添加人员」
+(ii). 在「身份管理 > 人员」页面点击「添加人员」
 
 
 ![image.png](/assets/225861b85789ea1557f0284b5c092644.png)
@@ -30,7 +30,7 @@ sidebar_position: 14
 ![image.png](/assets/b8a7d7a3fcb0b2741211d8153b533c45.png)
 
 
-“人员类型” 可选普通管理员 或 交易员。
+“人员类型”可选普通管理员 或 交易员。
 
 - 普通管理员：可以登录证券后台，不能登录 WTT 客户端
 - 交易员：可以登录证券后台和 WTT 客户端
@@ -47,7 +47,7 @@ sidebar_position: 14
 ![image.png](/assets/1702fdc0e8102adbe49ca157ea4bd1da.png)
 
 
-(v). 需要为用户添加权限操作：可选择 "个人权限" 或 "角色列表" 点击 “绑定权限” 或 ”绑定角色” 分配权限。
+(v). 需要为用户添加权限操作：可选择 "个人权限" 或 "角色列表" 点击“绑定权限”或”绑定角色”分配权限。
 
 
 ![image.png](/assets/79aa111f549804fc5d783eddf496b125.png)

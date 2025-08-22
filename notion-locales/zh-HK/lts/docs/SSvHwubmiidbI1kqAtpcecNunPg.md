@@ -14,7 +14,7 @@ sidebar_position: 1
 報表管理系統是用於證券公司和金融機構的關鍵系統，用於處理、管理和生成各種與證券業務相關的報表。該系統旨在幫助公司確保遵守監管要求，提供準確和及時的財務和業務信息。
 
 
-Whale報表管理系統通常具有以下功能和特點：
+Whale 報表管理系統通常具有以下功能和特點：
 
 1. 數據收集和整合：系統能夠從多個源頭（如交易系統、結算系統、帳戶系統、風控系統等）收集和整合數據。它可以從不同的業務部門和系統中提取數據，以生成全面的報表。
 2. 報表打印功能：系統可以根據公司的需求生成各種報表，如財務報表、結算報表、風險報表、合規報表、交易報表、客戶報表、財政監管報表等。系統提供報表列自定義的功能，使用戶可以根據自己的需求生成特定列的報表。
@@ -59,12 +59,12 @@ Whale報表管理系統通常具有以下功能和特點：
 | SDR004-1   | Client Stock Location Report(By Client)                       | 按客戶分組展示客戶倉位的股票持倉                                          | CSV、PDF、EXCEL |
 | SDR005     | Stock Location Report(By Stock)                               | 按股票分組展示公司所有股票的倉位持倉                                        | CSV、PDF、EXCEL |
 | SDR005-1   | Stock Location Report(By Depot)                               | 按倉位分組展示公司所有股票的倉位持倉                                        | CSV、PDF、EXCEL |
-| SDR006     | Monthly Trading Fee And Levy Report                           | 顯示客戶direct類交易的交易征費、交易費的明細及統計資訊                            | CSV、PDF、EXCEL |
+| SDR006     | Monthly Trading Fee And Levy Report                           | 顯示客戶 direct 類交易的交易征費、交易費的明細及統計資訊                            | CSV、PDF、EXCEL |
 | SDR006-1   | Monthly Trading Fee And Levy Summary Report                   | 交易征費、交易費報表                                                | CSV、PDF、EXCEL |
-| SDR007     | Monthly Stamp Duty Report                                     | 顯示客戶某月港股direct交易的印花稅                                      | CSV、PDF、EXCEL |
+| SDR007     | Monthly Stamp Duty Report                                     | 顯示客戶某月港股 direct 交易的印花稅                                      | CSV、PDF、EXCEL |
 | SDR008     | Stock Movement In-Out Report                                  | 除了交易以外當天所有股票進出                                            | CSV、PDF、EXCEL |
 | SDR008-1   | Stock Movement In-Out Report(Real Time)                       | 查詢客戶實時的持倉變動信息（不包括交易）                                      |               |
-| SDR009     | Turnover Listing Report                                       | 統計客戶一段時間內的傭金費用和成交量資訊,考慮交易取消                               | CSV、PDF、EXCEL |
+| SDR009     | Turnover Listing Report                                       | 統計客戶一段時間內的傭金費用和成交量資訊，考慮交易取消                               | CSV、PDF、EXCEL |
 | SDR010     | Daily Stamp Duty Report                                       | 查詢某天印花稅資訊                                                 | CSV、EXCEL     |
 | SDR010-1   |  HKEX Daily Stamp Duty Form                                   | 查詢某天印花稅資訊                                                 | CSV、PDF、EXCEL |
 | SDR011     | Daily Summary Report By HK                                    | 查詢港股某天B/C買賣成交匯總資訊，包括成交金額，各種費用等                            | CSV、PDF、EXCEL |
@@ -79,32 +79,32 @@ Whale報表管理系統通常具有以下功能和特點：
 | SDR014     | Interest Detail Report                                        | 查詢某月關於客戶利息、客戶罰息、客戶每日的利息及當月累計利息的資金流水資訊                     | CSV、PDF、EXCEL |
 | SDR015     | UnMatched Report                                              | 配對結果報表，顯示客戶訂單和券商的訂單差異                                     | CSV、PDF、EXCEL |
 | SDR015-2   | Trade UnMatched Report                                        | 實時交易對賬報表，清算前檢查任務完成後可以查詢                                   | CSV、PDF、EXCEL |
-| SDR016     | ATI Settlement Report                                         | 報表展示某個交收日的滿足條件的合約，對應的ATI淨買入/淨賣出資訊。以及相關客戶的ATI明細            | CSV、PDF、EXCEL |
+| SDR016     | ATI Settlement Report                                         | 報表展示某個交收日的滿足條件的合約，對應的 ATI 淨買入/淨賣出資訊。以及相關客戶的 ATI 明細            | CSV、PDF、EXCEL |
 | SDR017     | Client Bargain Report                                         | 客戶合約詳情表                                                   | CSV、PDF、EXCEL |
-| SDR018     | Bargain Detail Report-HK                                      | 交易合約資訊明細表-港股                                              | CSV、PDF、EXCEL |
-| SDR018-1   | Bargain Detail Report-US                                      | 交易合約資訊明細表-美股                                              | CSV、PDF、EXCEL |
-| SDR018-2   | Bargain Detail Report-USOP                                    | 交易合約資訊明細表-期權                                              | CSV、PDF、EXCEL |
-| SDR018-3   | Bargain Detail Report-CN                                      | 交易合約資訊明細表-A股                                              | CSV、PDF、EXCEL |
-| SDR018-4   | Bargain Detail Report-SG                                      | 交易合約資訊明細表-新加坡股票                                           | CSV、PDF、EXCEL |
-| SDR018-5   | Bargain Detail Report-VA                                      | 交易合約資訊明細表-虛擬資產                                            | CSV、PDF、EXCEL |
-| SDR018-6   | Bargain Detail Report-ID                                      | 交易合約資訊明細表-印尼市場                                            | CSV、PDF、EXCEL |
+| SDR018     | Bargain Detail Report-HK                                      | 交易合約資訊明細表 - 港股                                              | CSV、PDF、EXCEL |
+| SDR018-1   | Bargain Detail Report-US                                      | 交易合約資訊明細表 - 美股                                              | CSV、PDF、EXCEL |
+| SDR018-2   | Bargain Detail Report-USOP                                    | 交易合約資訊明細表 - 期權                                              | CSV、PDF、EXCEL |
+| SDR018-3   | Bargain Detail Report-CN                                      | 交易合約資訊明細表-A 股                                              | CSV、PDF、EXCEL |
+| SDR018-4   | Bargain Detail Report-SG                                      | 交易合約資訊明細表 - 新加坡股票                                           | CSV、PDF、EXCEL |
+| SDR018-5   | Bargain Detail Report-VA                                      | 交易合約資訊明細表 - 虛擬資產                                            | CSV、PDF、EXCEL |
+| SDR018-6   | Bargain Detail Report-ID                                      | 交易合約資訊明細表 - 印尼市場                                            | CSV、PDF、EXCEL |
 | SDR019     | Outstanding Settlement Report                                 | 待交收合約報表                                                   | CSV、PDF、EXCEL |
 | SDR021     | Daily Broker Settlement Report(By Broker)                     | 經紀商當日交收報表                                                 | CSV、PDF、EXCEL |
-| SDR023-01  | CA Announcement Event List                                    | 展示當前公司行動CA預告和方案                                           | CSV、PDF、EXCEL |
-| SDR023-03  | BE Announcement Event List                                    | 展示當前公司行動BE預告和方案                                           | CSV、PDF、EXCEL |
-| SDR023-04  | DS Announcement Event List                                    | 展示當前公司行動DS預告和方案                                           | CSV、PDF、EXCEL |
-| SDR023-05  | OO Announcement Event List                                    | 展示當前公司行動OO預告和方案                                           | CSV、PDF、EXCEL |
-| SDR023-06  | EO Announcement Event List                                    | 展示當前公司行動EO預告和方案                                           | CSV、PDF、EXCEL |
-| SDR023-07  | RS Announcement Event List                                    | 展示當前公司行動RS預告和方案                                           | CSV、PDF、EXCEL |
-| SDR023-08  | ER Announcement Event List                                    | 展示當前公司行動ER預告和方案                                           | CSV、PDF、EXCEL |
-| SDR023-09  | TU Announcement Event List                                    | 展示當前公司行動TU預告和方案                                           | CSV、PDF、EXCEL |
-| SDR023-10  | TC Announcement Event List                                    | 展示當前公司行動TC預告和方案                                           | CSV、PDF、EXCEL |
-| SDR024     | Corporate Action Past Due Report                              | 展示當天需要執行的公司行動，CA在當日日終後操作。注意：需要以上手實際執行為準，只取最近5個自然日的數據；實時報表 | CSV、PDF、EXCEL |
+| SDR023-01  | CA Announcement Event List                                    | 展示當前公司行動 CA 預告和方案                                           | CSV、PDF、EXCEL |
+| SDR023-03  | BE Announcement Event List                                    | 展示當前公司行動 BE 預告和方案                                           | CSV、PDF、EXCEL |
+| SDR023-04  | DS Announcement Event List                                    | 展示當前公司行動 DS 預告和方案                                           | CSV、PDF、EXCEL |
+| SDR023-05  | OO Announcement Event List                                    | 展示當前公司行動 OO 預告和方案                                           | CSV、PDF、EXCEL |
+| SDR023-06  | EO Announcement Event List                                    | 展示當前公司行動 EO 預告和方案                                           | CSV、PDF、EXCEL |
+| SDR023-07  | RS Announcement Event List                                    | 展示當前公司行動 RS 預告和方案                                           | CSV、PDF、EXCEL |
+| SDR023-08  | ER Announcement Event List                                    | 展示當前公司行動 ER 預告和方案                                           | CSV、PDF、EXCEL |
+| SDR023-09  | TU Announcement Event List                                    | 展示當前公司行動 TU 預告和方案                                           | CSV、PDF、EXCEL |
+| SDR023-10  | TC Announcement Event List                                    | 展示當前公司行動 TC 預告和方案                                           | CSV、PDF、EXCEL |
+| SDR024     | Corporate Action Past Due Report                              | 展示當天需要執行的公司行動，CA 在當日日終後操作。注意：需要以上手實際執行為準，只取最近 5 個自然日的數據；實時報表 | CSV、PDF、EXCEL |
 | SDR025     | Stock Reconciliation Report                                   | 根據託管商子倉的持倉對賬                                              | CSV、PDF、EXCEL |
 | SDR026     |  Client Trustee Balance Report                                | 客戶托管資金餘額報表                                                | CSV、PDF、EXCEL |
-| SDR027     | CCASS Securities Market Value Report                          | CCASS的中證券市值報表，以及停牌超過3天的股票列表及市值情況                          | CSV、PDF、EXCEL |
-| SDR028     | IPO Detail Report                                             | 獲取客戶當前歷史IPO申購資訊（包括白表黃表數據），實時報表                            | CSV、PDF、EXCEL |
-| SDR028-1   | IPO Infos                                                     | 統計一段時間內IPO的信息及訂單                                          | CSV、PDF、EXCEL |
+| SDR027     | CCASS Securities Market Value Report                          | CCASS 的中證券市值報表，以及停牌超過 3 天的股票列表及市值情況                          | CSV、PDF、EXCEL |
+| SDR028     | IPO Detail Report                                             | 獲取客戶當前歷史 IPO 申購資訊（包括白表黃表數據），實時報表                            | CSV、PDF、EXCEL |
+| SDR028-1   | IPO Infos                                                     | 統計一段時間內 IPO 的信息及訂單                                          | CSV、PDF、EXCEL |
 | SDR029     | Stock Frozen Report                                           | 股票凍結報表                                                    | CSV、PDF、EXCEL |
 | SDR030     | Cash Frozen Report                                            | 現金凍結報表                                                    | CSV、PDF、EXCEL |
 | SDR032     | Client Trade Amendment Report                                 | 顯示訂單被動修改紀錄                                                | CSV、PDF、EXCEL |
@@ -129,7 +129,7 @@ Whale報表管理系統通常具有以下功能和特點：
 | SDR062     | Short Sell Borrow Fee Summary                                 | 融券利息匯總表                                                   | CSV、PDF、EXCEL |
 | SDR063     |  List Of Stock Holdings Suspended                             | 持倉股票停牌清單                                                  | CSV、PDF、EXCEL |
 | SDR064     | Daily Trading Report By HK                                    | 香港市場客戶合約詳情表，包含對手方成交明細                                     | CSV、PDF、EXCEL |
-| SDR070     | OTCR Report                                                   | OTCR匯報報表                                                  | EXCEL         |
+| SDR070     | OTCR Report                                                   | OTCR 匯報報表                                                  | EXCEL         |
 
 
 ## 財務報表
@@ -147,13 +147,13 @@ Whale報表管理系統通常具有以下功能和特點：
 | FDR006   | Daily Trial Balance Report                        | 每日成交金額/費用/應收應付款匯總     | CSV、PDF、EXCEL  |
 | FDR009   |  AE Performance Report                            | 經紀人佣金報表               | CSV、PDF、EXCEL  |
 | FDR009-1 |  AE Performance Report By Client                  | 按照年月日統計經紀人下的客戶佣金      | CSV、PDF、EXCEL  |
-| FDR012   | FD Commissions detail                             | FD分成明細                | CSV、PDF、EXCEL  |
-| FDR013   | FD Commissions Daily Report With AE               | FD分成明細，按經紀人按日匯總       | CSV、PDF、EXCEL  |
-| FDR014   | FD Commissions Monthly Report With AE             | FD分成明細，按經紀人按月匯總       | CSV、PDF、EXCEL  |
-| FDR015   | FD Commissions Yearly Report With AE              | FD分成明細，按經紀人按年匯總       | CSV、PDF、EXCEL  |
-| FDR016   | FD Commissions Monthly Report Without AE          | FD分成明細，按月匯總           | CSV、PDF、EXCEL  |
+| FDR012   | FD Commissions detail                             | FD 分成明細                | CSV、PDF、EXCEL  |
+| FDR013   | FD Commissions Daily Report With AE               | FD 分成明細，按經紀人按日匯總       | CSV、PDF、EXCEL  |
+| FDR014   | FD Commissions Monthly Report With AE             | FD 分成明細，按經紀人按月匯總       | CSV、PDF、EXCEL  |
+| FDR015   | FD Commissions Yearly Report With AE              | FD 分成明細，按經紀人按年匯總       | CSV、PDF、EXCEL  |
+| FDR016   | FD Commissions Monthly Report Without AE          | FD 分成明細，按月匯總           | CSV、PDF、EXCEL  |
 | FDR017   | Cash In-Out Detail Report By CCY                  | 實時的現金變動報表             | CSV、PDF、EXCEL  |
-| FDR018   | Client Cash Balance Report By Client（Real Time ）  | 客戶分幣種的現金餘額實時報表        | CSV、PDF、EXCEL  |
+| FDR018   | Client Cash Balance Report By Client（Real Time）  | 客戶分幣種的現金餘額實時報表        | CSV、PDF、EXCEL  |
 | FDR019   | Cash Movement Summary Report                      | 客戶資金變得分類匯總表           | CSV、PDF、EXCEL  |
 | FDR020   | Commission Rebate Report                          | 經紀人佣金匯總               | CSV、PDF、EXCEL  |
 | FDR020-1 | Commission Rebate Detail Report                   | 經紀人佣金明細               | CSV、PDF、EXCEL  |
@@ -167,16 +167,16 @@ Whale報表管理系統通常具有以下功能和特點：
 | **报表編號** | **报表名称**                       | **報表說明**             | **支持格式**      |
 | -------- | ------------------------------ | -------------------- | ------------- |
 | CDR001   | Client Master Listing Report   | 顯示客戶帳戶基本資料           | CSV、PDF、EXCEL |
-| CDR001-1 | BCAN Information Report        | BCAN資訊報表             | CSV、PDF、EXCEL |
+| CDR001-1 | BCAN Information Report        | BCAN 資訊報表             | CSV、PDF、EXCEL |
 | CDR009   | Stock Information Excel Export | 顯示股票重要欄位訊息           | CSV、PDF、EXCEL |
 | CDR008   |  Allow Trading Status Report   | 證券可買賣標誌信息            | CSV、PDF、EXCEL |
-| CDR010   | AE Listing                     | 查詢AE 經紀人 基本資料        | CSV、PDF、EXCEL |
+| CDR010   | AE Listing                     | 查詢 AE 經紀人 基本資料        | CSV、PDF、EXCEL |
 | CDR013   | Member Agent Person            | 客戶在券商記錄的代理人信息，以客戶為維度 | CSV、PDF、EXCEL |
 | CDR014   | Member Related Person          | 客戶在券商記錄的关系人信息，以客戶為維度 | CSV、PDF、EXCEL |
-| CDR015   | Client Related Group Report    | FRR關聯組客戶信息查詢         | CSV、PDF、EXCEL |
+| CDR015   | Client Related Group Report    | FRR 關聯組客戶信息查詢         | CSV、PDF、EXCEL |
 
 
-## FRR報表
+## FRR 報表
 
 
 | **报表編號**  | **报表名称**                                                                         | **報表說明**                                          | **支持格式**      |
@@ -187,17 +187,17 @@ Whale報表管理系統通常具有以下功能和特點：
 | FRR003    | Margin Clients With The Largest Unadjusted Loan Balances Report
 （Form 4 Table 1) | 客戶資金資訊，證券市值資訊                                     | CSV、PDF、EXCEL |
 | FRR004    | Margin Client With Adjusted Loan Balances Report（Form 4 Table 2)                 | 所有Margin客戶資產/流動性詳情:統計Margin客戶，其負債及資產流動性明細及分類匯總。   | CSV、PDF、EXCEL |
-| FRR004-1  | Margin Clients With Adjusted Loan Balances Report By Stock (Form 4 Table 2)      | 統計Margin客戶，其負債及資產流動性明細及分類匯總，並關聯股票                 | CSV、PDF、EXCEL |
-| FRR005    | Ananlysis of Securities Collateral Report（Form 5 （A))                            | 以股票的維度來查看:所有Margin客戶的股票保證金情況:統計search_str=M的客戶數據。 | CSV、PDF、EXCEL |
+| FRR004-1  | Margin Clients With Adjusted Loan Balances Report By Stock (Form 4 Table 2)      | 統計 Margin 客戶，其負債及資產流動性明細及分類匯總，並關聯股票                 | CSV、PDF、EXCEL |
+| FRR005    | Ananlysis of Securities Collateral Report（Form 5（A))                            | 以股票的維度來查看：所有 Margin 客戶的股票保證金情況：統計 search_str=M 的客戶數據。 | CSV、PDF、EXCEL |
 | FRR006    | FRR006 - Rolling Balance Cash Client Analysis Report(Form 6)                     | 現金帳戶欠款客戶                                          |               |
 | FRR007    | Profit And Loss Account Report（Form 7）                                           | 客戶成交量和傭金資訊                                        | CSV、PDF、EXCEL |
-| FRR008    | Analysis of Client Securities Report（Form 8 Table1）                              | 統計CCASS及其他託管商不同倉位上的市值                             | CSV、PDF、EXCEL |
+| FRR008    | Analysis of Client Securities Report（Form 8 Table1）                              | 統計 CCASS 及其他託管商不同倉位上的市值                             | CSV、PDF、EXCEL |
 | FRR008-1  | Analysis of Client Securities Report By CCY(Form 8 Table1)                       | 分幣種統計 CCASS 及其他托管商不同倉位上的市值                        | CSV、PDF、EXCEL |
 | FRR008-2  | Analysis of Client Securities Report By CCY-2(Form 8 Table1)                     | 分幣種統計 CCASS 及其他托管商不同倉位上的市值                        | CSV、PDF、EXCEL |
 | FRR009    | Analysis of Client Segregated Funds Report(Form 8 Table 2)                       | 應向客戶支付的款項及須獨立存放的客戶款項報表                            | CSV、PDF、EXCEL |
 | FRR010    | Active Client Summary Report (Form 12)                                           | 活躍客戶數量統計                                          | CSV、PDF、EXCEL |
 | FRR010-1  |  Active Client Detail Report (form 12)                                           | 活躍客戶賬戶及資產明細                                       | CSV、PDF、EXCEL |
-| FRR011    | Option FRR Report                                                                | 期權FRR                                             | CSV、PDF、EXCEL |
+| FRR011    | Option FRR Report                                                                | 期權 FRR                                             | CSV、PDF、EXCEL |
 | FRR012    | Monthly Options Trade Summary Report                                             | 期權月度交易量                                           | CSV、PDF、EXCEL |
 
 
@@ -206,7 +206,7 @@ Whale報表管理系統通常具有以下功能和特點：
 
 | **报表編號** | **报表名称**                                         | **報表說明**                                      | **支持格式**      |
 | -------- | ------------------------------------------------ | --------------------------------------------- | ------------- |
-| RDR001   | Client Portfolio Details                         | 統計在發生日起以及2個帳務日，客戶的總資金、總市值、總抵押值、追保金額，以及持倉明細等信息 | CSV、PDF、EXCEL |
+| RDR001   | Client Portfolio Details                         | 統計在發生日起以及 2 個帳務日，客戶的總資金、總市值、總抵押值、追保金額，以及持倉明細等信息 | CSV、PDF、EXCEL |
 | RDR003   | Margin Call Summary Report                       | 分析統計客戶歷史按本位幣匯總的追保資訊                           | CSV、PDF、EXCEL |
 | RDR003-1 | Margin Call Summary(Margin Client) Report        | 融資賬戶的日終後追保金額                                  | CSV、PDF、EXCEL |
 | RDR005   | Client Asset Summary Report By Client Type       | 分析統計客戶歷史的資產資訊                                 | CSV、PDF、EXCEL |
@@ -252,11 +252,11 @@ Whale報表管理系統通常具有以下功能和特點：
 | IDR002   | S181 Holding Report                                                                | 按照 SFC 的要求模版提交客戶持倉                                   | CSV、PDF、EXCEL |
 | IDR008   | SPAC Post Trade Report                                                             | 指定時間段內特定股票交易的成交清單                                    | CSV、PDF、EXCEL |
 | IDR003   | Client Trade With IP(SFC)                                                          | 指定時間段內某個客戶或某只股票的交易清單，帶 IP                            | CSV、PDF、EXCEL |
-| IDR011   | Top N Client Turnover                                                              | 10大客戶交易總額                                            | CSV、PDF、EXCEL |
-| IDR012   | Top N Order Turnover                                                               | 最高10大訂單成交量                                           | CSV、PDF、EXCEL |
-| IDR013   | Top N Client No. of Transactions                                                   | 10大客戶交易次數                                            | CSV、PDF、EXCEL |
+| IDR011   | Top N Client Turnover                                                              | 10 大客戶交易總額                                            | CSV、PDF、EXCEL |
+| IDR012   | Top N Order Turnover                                                               | 最高 10 大訂單成交量                                           | CSV、PDF、EXCEL |
+| IDR013   | Top N Client No. of Transactions                                                   | 10 大客戶交易次數                                            | CSV、PDF、EXCEL |
 | IDR014   | Top N Price Deviation In Percentage                                                | 成交價參數                                                | CSV、PDF、EXCEL |
-| IDR015   | Y trade                                                                            | Y盤                                                   | CSV、PDF、EXCEL |
+| IDR015   | Y trade                                                                            | Y 盤                                                   | CSV、PDF、EXCEL |
 | IDR016   | Transactions Report By Staff                                                       | 员工交易报表                                               | CSV、PDF、EXCEL |
 | IDR017   | Transactions Report By High Risk Client                                            | 高度風險客戶交易报表                                           | CSV、PDF、EXCEL |
 | IDR018   | Matched trades Wash trades                                                         | 配對交易 虛售交易                                            | CSV、PDF、EXCEL |
@@ -267,7 +267,7 @@ Whale報表管理系統通常具有以下功能和特點：
 | IDR028   | Transactions done at At-auction period                                             | 競價時段成交                                               | CSV、PDF、EXCEL |
 | IDR029   | IPO share trades on first listed date                                              | 新股首日上市交易                                             | CSV、PDF、EXCEL |
 | IDR038   | Suspicious Trading Report                                                          | 根据成交明细的维度来筛选，同一客户，成交时间相同（秒级），成交数量相等，成交价格相同，买卖方向相反的数据 | CSV、PDF、EXCEL |
-| IDR040   | Transaction Monitoring - cash in and out（including stock in and out）-normal client | 出入金的交易監察（包括股票轉入和轉出）-一般用戶                             | CSV、PDF、EXCEL |
+| IDR040   | Transaction Monitoring - cash in and out（including stock in and out）-normal client | 出入金的交易監察（包括股票轉入和轉出）- 一般用戶                             | CSV、PDF、EXCEL |
 | IDR041   | Transaction Monitoring - cash in and out（including stock in and out）-watchlist     | 出入金的交易監察（包括股票轉入和轉出）-watchlist                        | CSV、PDF、EXCEL |
 
 
@@ -298,10 +298,10 @@ Whale報表管理系統通常具有以下功能和特點：
 # 功能操作
 
 
-# 一、基礎輔助功能及頁面佈局介紹
+## 一、基礎輔助功能及頁面佈局介紹
 
 
-## 報表業務分類
+### 報表業務分類
 
 
 可以在右側切換業務報表分類。中間區會顯示可執行到報表清單列表
@@ -322,7 +322,7 @@ Whale報表管理系統通常具有以下功能和特點：
 ![image.png](/assets/a2f47dbca811a93c95035f05e7d7d269.png)
 
 
-## 報表標籤分類
+### 報表標籤分類
 
 
 也可以編輯自己的報表標籤說明，可以對單一報表赋予相應的「標籤」，同时系统會根據「標籤」對相關報表做自動分類，便於快速查找
@@ -331,13 +331,13 @@ Whale報表管理系統通常具有以下功能和特點：
 ![image.png](/assets/cf888fd2dbc5ab3914c429ed4ba36e69.png)
 
 
-此時可以選擇現有標籤（支持多個標籤同時存在） 或 重新 新建一個 標籤
+此時可以選擇現有標籤（支持多個標籤同時存在）或 重新 新建一個 標籤
 
 
 ![image.png](/assets/a7dc546d053e12378ef5c3ccb916bc9d.png)
 
 
-## 標籤管理
+### 標籤管理
 
 
 同時左上角 提供標籤管理功能，可以維護標籤內容：
@@ -355,7 +355,7 @@ Whale報表管理系統通常具有以下功能和特點：
 ![image.png](/assets/d3af552554bd981c7605cb87c2e7b0fb.png)
 
 
-## 報表收藏
+### 報表收藏
 
 
 也提供 星狀圖示報表收藏，點選後就會出現在 自己的「我的收藏」入口菜單區內，方便快速點選操作
@@ -364,7 +364,7 @@ Whale報表管理系統通常具有以下功能和特點：
 ![image.png](/assets/7f59832a8d5d78524158243a299c58d3.png)
 
 
-## 參數設置
+### 參數設置
 
 - 可以通過報表參數設置完成部分報表需要的參數設置
 
@@ -374,20 +374,20 @@ Whale報表管理系統通常具有以下功能和特點：
 ![參數設置](/assets/61af306ac62941c49b8102cd72c1a888.png)
 
 
-## 查看更新日誌
+### 查看更新日誌
 
-- 通過更新日誌用戶可以及時了解Whale系統報表的最新更新紀錄
+- 通過更新日誌用戶可以及時了解 Whale 系統報表的最新更新紀錄
 
 ![image.png](/assets/0af5e27b940b115cbdecd922ddff3f9f.png)
 
 
-# 二、報表打印功能
+## 二、報表打印功能
 
 
 > ⚓ 菜單入口：報表管理 >報表打印
 
 
-## 報表數據查詢
+### 報表數據查詢
 
 
 報表打印首頁提供兩種報表選擇進入方式 
@@ -417,7 +417,7 @@ Whale報表管理系統通常具有以下功能和特點：
 ![image.png](/assets/f95e3860f75234a29f3b57d872cf3ea1.png)
 
 
-## 報表預覽
+### 報表預覽
 
 - 如果報表配置了支持 PDF 格式則可以預覽檔案
 - 預覽只支持預覽前 30 條明細記錄生成的檔案；
@@ -429,17 +429,17 @@ Whale報表管理系統通常具有以下功能和特點：
 ![image.png](/assets/3008374d89fb9ddab762614f74a64060.png)
 
 
-## 報表導出
+### 報表導出
 
 
 ![image.png](/assets/e88a9d55ce010257d66c9d73052269ed.png)
 
 
-導出功能可以選擇導出的檔案類型，大部分報表支持CSV、PDF、EXCEL格式，部分特定報表只支持特定的格式，詳情見報表列表
+導出功能可以選擇導出的檔案類型，大部分報表支持 CSV、PDF、EXCEL 格式，部分特定報表只支持特定的格式，詳情見報表列表
 
-- CSV 默認支持 ：按頁面列表展示的列欄位導出
-- PDF 配置支持 ：按定義的列印模板欄位導出，支持分組總計以及報表組合
-- EXCEL 配置支持： 按定義的列印模板欄位導出，支持分組總計以及報表組合
+- CSV 默認支持：按頁面列表展示的列欄位導出
+- PDF 配置支持：按定義的列印模板欄位導出，支持分組總計以及報表組合
+- EXCEL 配置支持：按定義的列印模板欄位導出，支持分組總計以及報表組合
 
 點擊後會會自動產生一個報表導出任務，後續可以在導出列表頁面查看進度並作下載操作
 
@@ -447,7 +447,7 @@ Whale報表管理系統通常具有以下功能和特點：
 ![image.png](/assets/eba3596a8b775268bfc5752d28eb586c.png)
 
 
-## 導出文件
+### 導出文件
 
 
 > ⚓ 報表管理 >導出列表
@@ -459,13 +459,13 @@ Whale報表管理系統通常具有以下功能和特點：
 ![image.png](/assets/d5eda81b640f5e62a1a9a3c5c5b577e1.png)
 
 
-# 三、批量打印功能
+## 三、批量打印功能
 
 
 > ⚓ 菜單入口：報表管理 >批量打印
 
 
-## 設置打印批次
+### 設置打印批次
 
 
 系统也支持批量打印报表功能，可以自行新增一个批量作业，点选右上方【新增】，增加批量打印名称与批量报表组成
@@ -499,7 +499,7 @@ Whale報表管理系統通常具有以下功能和特點：
 ![image.png](/assets/c92bc4679a100a23bd853b8dbb8d9345.png)
 
 
-## 編輯打印批次
+### 編輯打印批次
 
 
 批次詳情可以进行下列操作：
@@ -512,7 +512,7 @@ Whale報表管理系統通常具有以下功能和特點：
 ![批次詳細](/assets/77c222498d146e5de70a30862c4f2c6f.png)
 
 
-## 批量打印
+### 批量打印
 
 
 可以在现有批量作业纪录右侧功能区，操作【详情】或【批量导出】或【删除】
@@ -524,10 +524,10 @@ Whale報表管理系統通常具有以下功能和特點：
 ![批次列表頁面](/assets/0a32e42025dd44cf81a453115fff4f62.png)
 
 
-## 導出批量文件
+### 導出批量文件
 
 
-若批量导出执行后，可以在导出列表作业上查看 ，也可以将文件夹整个下载操作
+若批量导出执行后，可以在导出列表作业上查看，也可以将文件夹整个下载操作
 
 
 ![image.png](/assets/3f6f7f323c5ae93b848e612938f91b20.png)
@@ -539,7 +539,7 @@ Whale報表管理系統通常具有以下功能和特點：
 ![image.png](/assets/0647488bafdd01787e85d4bfb6ebfc8d.png)
 
 
-# 四、導出日誌
+## 四、導出日誌
 
 
 > ⚓ 菜單入口：報表管理>導出日誌
@@ -553,10 +553,10 @@ Whale報表管理系統通常具有以下功能和特點：
 ![image.png](/assets/db70b6eb56e3b54ac4e6bec7d0476049.png)
 
 
-# 五、CRS文件生成
+## 五、CRS 文件生成
 
 
-> ⚓ 菜單入口：報表管理>CRS文件生成
+> ⚓ 菜單入口：報表管理>CRS 文件生成
 
 
 ## 功能操作說明
@@ -565,7 +565,7 @@ Whale報表管理系統通常具有以下功能和特點：
 本作業提供年度 CRS 文件的操作處理，支持新消息與更正消息類型
 
 
-注意： 租戶需要 增加下列權限 才能操作 相關 CRS 文件
+注意：租戶需要 增加下列權限 才能操作 相關 CRS 文件
 
 
 ![報表全部權限](/assets/10641cc489253440c4854817fa66bec5.png)
@@ -574,22 +574,22 @@ Whale報表管理系統通常具有以下功能和特點：
 ![image.png](/assets/f56abc5d35c772d4a8be75520a1eed7e.png)
 
 
-CRS文件權限
+CRS 文件權限
 
 
-## **計算收益**： 
+### **計算收益**： 
 
 
-    首先在右上角點選'計算收益' ，輸入報送年度與編號（公司名稱） 後就會產生文件製作的任務工作（ 在**任務列表** Tab 頁籤）
+首先在右上角點選'計算收益' ，輸入報送年度與編號（公司名稱）後就會產生文件製作的任務工作（在**任務列表** Tab 頁籤）
 
 
-    注意： 在计算收益視窗上，在外部报税文件上傳的網站了會提供供一個编号【AEOI ID】的，公司名稱就是券商的公司名稱，要跟外部報税系统里面名稱要一致的
+注意：在计算收益視窗上，在外部报税文件上傳的網站了會提供供一個编号【AEOI ID】的，公司名稱就是券商的公司名稱，要跟外部報税系统里面名稱要一致的
 
 
 ![image.png](/assets/97460ef3323c179f50f7318ef172fc4b.png)
 
 
-    就會產生一個的系統任務，當系統任務完成後（這會需要點時間產生全年資料），就會產生報送的參考數據，可以在 CRS 數據 Tab 頁籤上 查看或修改
+就會產生一個的系統任務，當系統任務完成後（這會需要點時間產生全年資料），就會產生報送的參考數據，可以在 CRS 數據 Tab 頁籤上 查看或修改
 
 
 ![image.png](/assets/1d1ee9093b6b0708cae7f7119c526a05.png)
@@ -601,22 +601,22 @@ CRS文件權限
 ![image.png](/assets/68825fcabff827e2abda7f46e849c22e.png)
 
 
-可根據需要 刪除紀錄（不報送） 或修改數據資料
+可根據需要 刪除紀錄（不報送）或修改數據資料
 
 
 ![image.png](/assets/a17fde558a867f81edb961864d1796dc.png)
 
 
-## **生成文件**： 
+### **生成文件**
 
 
-    當 CRS 數據 Tab 頁籤上 查看或修改正確後，可以點選右上角【生成文件】就會產生一個的系統任務來產生報稅規格的文檔（注意：這會需要點時間產生全年資料）
+當 CRS 數據 Tab 頁籤上 查看或修改正確後，可以點選右上角【生成文件】就會產生一個的系統任務來產生報稅規格的文檔（注意：這會需要點時間產生全年資料）
 
 
 ![image.png](/assets/ec41c739e293c8586bd54734220e0de0.png)
 
 
-## **文件下載**
+### **文件下載**
 
 
 當生成文件任務完成後，就可以點選下載檔案，去外部網站傳送了
@@ -631,10 +631,10 @@ CRS文件權限
 ![image.png](/assets/310cb60a6da2760f71b6c36a569f451e.png)
 
 
-建議： 此文件不要自行編輯，容易誤操作造成文檔規格不對，無法上傳
+建議：此文件不要自行編輯，容易誤操作造成文檔規格不對，無法上傳
 
 
-## **生成文件上傳**： 
+### **生成文件上傳**： 
 
 
 將上傳到外部系统的一个 XML 文件。这文件在外部系统上傳以后，在外部系统它會返回一个文件序列号，可以在任務列表 Tab 頁籤這，更新状态把外部系统序列号输入
@@ -643,7 +643,7 @@ CRS文件權限
 ![image.png](/assets/eb53c36955a793dd4a48035fe1f0dfbd.png)
 
 
-這等于 將 產生的 CRS 數據 打上這批次的 文件序列號，方便以後對數據查詢或更正已報送資料
+這等于將產生的 CRS 數據 打上這批次的 文件序列號，方便以後對數據查詢或更正已報送資料
 
 
 ![image.png](/assets/a55aedfd2e62dd1f051849607aac1874.png)
@@ -658,5 +658,5 @@ CRS文件權限
 ![image.png](/assets/4ddb33aa78bc215207df4af2666a73cb.png)
 
 
-當發現數據需要變更時，可以點選右側 【編輯】 來操作修改數據或 【刪除】 已報送數據，此時後面一樣操作產生文件並上傳報送網站，同樣 也會取的最新的文件序列號，也一樣更新即可
+當發現數據需要變更時，可以點選右側【編輯】來操作修改數據或【刪除】已報送數據，此時後面一樣操作產生文件並上傳報送網站，同樣 也會取的最新的文件序列號，也一樣更新即可
 

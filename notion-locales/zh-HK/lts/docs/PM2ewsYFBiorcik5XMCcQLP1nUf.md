@@ -1,7 +1,7 @@
 ---
 slug: PM2ewsYFBiorcik5XMCcQLP1nUf
 title: 2024-12-19 更新日誌
-sidebar_position: 9
+sidebar_position: 11
 ---
 
 
@@ -11,7 +11,7 @@ sidebar_position: 9
 # 🪀 改進與修復
 
 - 熱銷基金新增自定義和按收益率排序
-    - 路徑：「基金管理」-「App展示管理」
+    - 路徑：「基金管理」-「App 展示管理」
 
         ![image.png](/assets/eb3583cd2759be83dad81a06a4878e6d.png)
 

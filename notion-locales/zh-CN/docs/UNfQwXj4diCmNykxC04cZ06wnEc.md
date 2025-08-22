@@ -25,7 +25,7 @@ sidebar_position: 0
 ![image.png](/assets/4373dbfc0510a18d146e767620bcd6c0.png)
 
 
-(iii). 设置审批类型及审批人：剔选 “人员”或“角色” 支持多个人员及角色审批。
+(iii). 设置审批类型及审批人：剔选“人员”或“角色”支持多个人员及角色审批。
 
 
 ![image.png](/assets/d66c12291f817dc4113f4f395390a8dd.png)
