@@ -2,7 +2,7 @@
 version: stable
 slug: Vjohwb9L4iLTkpkwMbqczOD4nGc
 title: 2025-06-03 更新日誌
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 
@@ -16,7 +16,7 @@ sidebar_position: 3
     - 列表新增撤銷批次號字段；如需縮減列表展示字段可使用“自定義列表”功能
     - 路徑：證券後台-資產賬戶-調賬-手工調賬
 
-    ![image.png](/assets/3f429fa97063fcae61580373100c342b.png)
+    ![1.png](/assets/f0a03f76562d2418539859ca2b59f800.png)
 
 - 授信組額度變更增加工單審批流程
     - 調整授信組額度及調整授信組內賬戶額度增加工單審批流程，涉及功能入口見圖示。支持根據額度區間設置不同的審批流。
@@ -33,7 +33,7 @@ sidebar_position: 3
     - 客戶限額/證券限額/交易員限額批量創建功能優化，更換為批量新建統一組件，可按批次差異化設置限額規則。
     - 路徑：證券後台-風控管理-交易限額-客戶限額/證券限額/交易員限額
 
-![image.png](/assets/c56eb5faa90f06256b989570d87f802b.png)
+![3.png](/assets/46b05f4398429c885dc2fb21aa1873b8.png)
 
 - 公司行動對接工單審批
     - 新增公司行動模塊的審批功能，用戶在配寘相關工作流後在下列節點發起審批：
@@ -84,5 +84,5 @@ sidebar_position: 3
     - 列表移除「客戶姓名」展示，將客戶編號設為可點擊跳轉項目。
     - 路徑：證券後台 - 款項管理 - 換匯 - 客戶匯兌
 
-![image.png](/assets/0990a019b95602fad2d89d43bce44d20.png)
+![10.png](/assets/4f8cc7325ebe45825dbfe5a29b4f981b.png)
 

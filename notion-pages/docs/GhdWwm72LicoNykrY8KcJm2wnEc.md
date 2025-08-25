@@ -10,6 +10,3 @@ sidebar_position: 1
 
 本使用手冊適用於 Longbridge Whale-活動系統， 運營系統管理員和使用成員使用。閱讀此手冊，你將瞭解Whale-活動系統作業功能操作
 
-
-## 
-

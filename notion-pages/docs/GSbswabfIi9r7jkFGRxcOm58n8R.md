@@ -120,19 +120,19 @@ _1.2F 圖二_
 ![image.png](/assets/593a9880838bdcd7cac3a50e4ae1fde0.png)
 
 
-    1.2G 圖一
+    _1.2G 圖一_
 
 1. 「工單信息」的「風險等級」默認為「低風險」，需要後台操作人員判斷去更新。
 
 ![image.png](/assets/b4911cd4a387d73211482c91d726dd4f.png)
 
 
-## 1.2G 圖二
+    _1.2G 圖二_
 
 1. 客戶自行在APP進行的風險評測則在「風險測評」顯示。
 
 ![image.png](/assets/05cd58325a44d8680040f0e6eac2c550.png)
 
 
-## 1.2G 圖三
+    _1.2G 圖三_
 

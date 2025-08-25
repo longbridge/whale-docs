@@ -7,6 +7,3 @@ sidebar_position: 3
 
 # PageHub
 
-
-[Unsupported block type: Unknown]
-

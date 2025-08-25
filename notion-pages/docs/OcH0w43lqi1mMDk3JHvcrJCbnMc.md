@@ -15,18 +15,28 @@ sidebar_position: 5
 
 > 公司行動完成後，一般需要約 5 分鐘時間更新成本價
 
-| 預告類型                                                                               | 05 文件 - 對應數據  | 系統作業對照 |
-| ---------------------------------------------------------------------------------- | ------------- | ------ |
-| TM (Take-Over (Compulsory) / Auto-Exercise of Structured PRSducts ) 未到期而被行使的牛熊證、窩輪 | TM            | 牛熊證回收  |
-| BE ( Benefit Entitlemen)  含紅利、紅股、選股選息、供股權發放、公開發售權益發放等信息                            | BE            | 分股分紅   |
-| CA ( Corporate Action )  拆合股等企業行動                                                  | CA            | 拆合股    |
-| DS ( Delisted、Expired、Lapsed)  股權回收                                                | DS            | 股權回收   |
-| OO ( Open Offer )  普通公開發售行權                                                        | OO（APP 尚未對接）  | 認購     |
-| EO ( Excess Open Offer)  額外公開發售行權                                                  | EO（APP 尚未對接）  |        |
-| RS ( Rights Subscription)  普通供股權行權                                                 | RS（APP 尚未對接）  |        |
-| ER ( Excess Rights Subscription)  額外供股權行權                                          | ER（APP 尚未對接）  |        |
-| TC ( Take-Over (Conditional) )  部分要約                                               | TC（APP 尚未對接）  | 要約     |
-| TU ( Take-Over (Unconditional) )  全面要約                                             | TU（APP 尚未對接）  |        |
+| 預告類型                                                                                | 05 文件 - 對應數據  | 系統作業對照 |
+| ----------------------------------------------------------------------------------- | ------------- | ------ |
+| TM (Take-Over (Compulsory) / Auto-Exercise of Structured PRSducts ) 
+未到期而被行使的牛熊證、窩輪 | TM            | 牛熊證回收  |
+| BE ( Benefit Entitlemen)  
+含紅利、紅股、選股選息、供股權發放、公開發售權益發放等信息                            | BE            | 分股分紅   |
+| CA ( Corporate Action )  
+拆合股等企業行動                                                  | CA            | 拆合股    |
+| DS ( Delisted、Expired、Lapsed)  
+股權回收                                                | DS            | 股權回收   |
+| OO ( Open Offer )  
+普通公開發售行權                                                        | OO（APP 尚未對接）  | 認購     |
+| EO ( Excess Open Offer)  
+額外公開發售行權                                                  | EO（APP 尚未對接）  |        |
+| RS ( Rights Subscription)  
+普通供股權行權                                                 | RS（APP 尚未對接）  |        |
+| ER ( Excess Rights Subscription)  
+額外供股權行權                                          | ER（APP 尚未對接）  |        |
+| TC ( Take-Over (Conditional) )  
+部分要約                                               | TC（APP 尚未對接）  | 要約     |
+| TU ( Take-Over (Unconditional) )  
+全面要約                                             | TU（APP 尚未對接）  |        |
 
 
 # 6B. 問：美股的公司行動如何操作？

@@ -33,10 +33,7 @@ Whale CRM 系統能夠解決以下問題：
 Whale CRM 的整体業務流如下图所示：
 
 
-需要更新图表到飞书的白板：https://longbridge.larkenterprise.com/wiki/ZcWRdJwwVoapwbxKpNMcteS8nmb
-
-
-![%E6%B5%81%E7%A8%8B%E5%9B%BE_%2813%29.jpg](/assets/d51ac0be5a9382b27abfe04e229d2bec.jpg)
+![%E6%B5%81%E7%A8%8B%E5%9B%BE-2.jpg](/assets/c4425525382dc0916ffe445d5c664d4d.jpg)
 
 
 # 首頁Dashboard
@@ -48,7 +45,7 @@ Whale CRM 的整体業務流如下图所示：
 ![image.png](/assets/b780d128567d1652f0da321e2ffa6c04.png)
 
 
-系統提供 一段區間的 開戶平均耗時與近期開戶成功統計率作為參考 （系統會自動計算）
+系統提供 一段區間的開戶平均耗時與近期開戶成功統計率作為參考 （系統會自動計算）
 
 
 ![image.png](/assets/8208a6f0b1a9d2f248c0916949f187c9.png)
