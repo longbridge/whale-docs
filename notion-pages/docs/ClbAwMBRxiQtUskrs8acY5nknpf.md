@@ -1,7 +1,7 @@
 ---
 slug: 24-05-20
 title: 2024-05-20 更新日誌
-sidebar_position: 28
+sidebar_position: 30
 ---
 
 
@@ -83,6 +83,54 @@ sidebar_position: 28
     | 計費管理-客户組配置-客户組變更（添加）  | Billing Management-Rate Setups (By Group) -Change client group (add)      | billing_package_aaid_add       | 超級管理員審批  |        |
     | 計費管理-客户組配置-變更客户組（移出）  | Billing Management-Rate Setups (By Group) -Change client group (move out) | billing_package_aaid_del       | 超級管理員審批  |        |
     | 計費管理-客户組配置-批量變更客户組    | Billing Management-Rate Setups (By Group) -Batch client  change group     | billing_package_aaid_add_batch | 超級管理員審批  |        |
+
+
+    工单审批案例：
+
+    1. 計費管理-客戶群組計費配置-新增
+
+        ![image.png](/assets/e1fddb3fed643e536b2376b32e888b48.png)
+
+
+        新增時，狀態為待生效,可在工單頁面進行審批
+
+
+        ![image.png](/assets/e4bd17f7808f4333efc4bd64adcf4924.png)
+
+    2. 計費管理-客戶群組計費配置-編輯
+
+        ![image.png](/assets/9e65f7c699ec4e8b3e3a464e0d34e100.png)
+
+
+        可分別展開新、舊數據
+
+    3. 計費管理-客戶群組計費配置-刪除
+
+        ![image.png](/assets/319c0867a442d5e5240400e8ee6ba4a7.png)
+
+    4. 計費管理-客戶計費配置-新增
+
+        ![image.png](/assets/8a2b576c165d93527697a5ba3ed8f4df.png)
+
+    5. 計費管理-客戶計費配置-編輯
+
+        ![image.png](/assets/54833a71fabb80d412df348448980736.png)
+
+    6. 計費管理-客戶計費配置-刪除
+
+        ![image.png](/assets/0cb72f626d7e78d60ce100c053f4a406.png)
+
+    7. 計費管理-客户組配置-客户組變更（添加）
+
+        ![image.png](/assets/2f60c5993fdbccb5fb92dd3c35341d72.png)
+
+    8. 計費管理-客户組配置-變更客户組（移出）
+
+        ![image.png](/assets/6551df0c603ad6fc893f964d76aa5753.png)
+
+    9. 計費管理-客户組配置-批量變更客户組
+
+        ![image.png](/assets/9511a1f9fb7b1a0fbd68d986976f69f4.png)
 
 
 # 🪀 改進與修復

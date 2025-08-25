@@ -50,17 +50,8 @@ _如不用重新計算利息／交收數據，資產類回撤可選不操作_
 **答：**彈出提醒信息檢查後沒問題，作「手動審核」通過。
 
 
-[%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A1%A8%E6%A0%BC.xlsx](https://prod-files-secure.s3.us-west-2.amazonaws.com/1445bab0-c2cc-8114-afe4-000302ebb560/ce9d0bed-f91a-4dfe-9d61-c13a0c44792c/%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A1%A8%E6%A0%BC.xlsx?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB466U326UBZ2%2F20250718%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250718T062517Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEG4aCXVzLXdlc3QtMiJGMEQCIGmNMHJAlkkM3LLhzT3xLpcyYkZ2%2FmmYi1KqiTkDn3gdAiAcVlD7aWYUKsLrJavMQ25Rc2Yhz0bMELA6zbevWBVd3SqIBAiH%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAAaDDYzNzQyMzE4MzgwNSIME5xftweZA9zyVzQOKtwDZdA%2B09iMGc8HA6aUT%2F9MRFqzAJFvYZG9PE%2BZ%2B0%2FmLYHMRmDjIQENsLIUPZ%2BYkh8gHras80Mhmq4kTB55f5ZyeXzv%2BjP0MxX1Q%2FU8dwoOQ8OYtHuquBScDTFVXXdTvNsh0dsYPyMFnVRGvd%2FuRVN%2Fm1OSlJn1%2BFc1DImPxEXXOSnO%2BiSz8PdKvGNPc9TjuQRbVPONtNO4bwqMoplolPA1v%2FcklunK5rnmNc3IQqv9eEI9ckvnw%2FoK7lRdOMtr1Np%2F6Hj13jIuab35OmArEq7W%2BsuS%2F7O2Urcr52E%2BOePKBEerVAeXzJMhW2GoSLIzNFnNDqDvG8qJXBht7qq2WCGT8MgHEW0qoPTT41%2BYbZRVJzb8nysv8aTnktzGMKkFv1Ny%2Fxj46SGxmohFTPhs1SNiAiDxy3Gip%2FJUB4wCjuiTrJfj6gl36i%2FozVJC0YbB5ljiSnIAHZPfBxgs10DNr7i%2Fpc%2BNIF3CADMVHk8eEw2Jc819lBxlhINSw1hzywNJ5uHPrfjDPHoNMkNVsKGJ0itrmttLsntg2JhyTjD8%2BqMCL5ZKRp3gIXJ2AoxK6u1VzdNpMj88F12XuPzwqoX1y6KD33b8I40I46grc4vK5y99xY6sJsmUYwe5X2%2Fi75UwxLvnwwY6pgGmmOT7TJmoH7PuuRCh5NJMCMbtAtCyKe6BdyolLQRq9SyxLHD6fJSXqWJuSDJ8%2BKQ4DexgCvnkprhFS0diNcGHnGHVS5d%2FB3zpPT6DgisYT%2BU1cJjmAkYE%2FUQExlsQq1fGhCRrLWEIIuDlDgSjByGEcdsZmay5aIRK05qkVTISlqQ6G8JPpH7ni1RQZI%2BfjN0iOGPxODty3oi3IX%2B1c%2BkmHAB7X0OQ&X-Amz-Signature=7e36092fbf7346593b2a7ffb9bad7b478db1594dcaf8df9830b05a368127d8cd&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject)
-
-
 | 清算前準備提醒 | 處理方法                                                  |
 | ------- | ----------------------------------------------------- |
-| 公司行動    | 未完成的公司行動會有提醒，如不用處理可審批通過                               |
-| 收盤價確認   | 股票股權沒錄取到行情，收盤價會為 0。如需修改可點擊「收盤價管理」處理                   |
-| 市埸規則配置  | 需要在「業務參數設置>市埸管理>市埸規則」點擊「新建」添加市埸（見5D 圖一）               |
-| 股票資訊    | 未到系統設置的日切時間點作清算，早過這個時間點操作會有報錯提醒。在過了時間點後重新操作。
-（見5G 圖二） |
-| 清算前準備提醒 | 處理方法                                                  |
 | 公司行動    | 未完成的公司行動會有提醒，如不用處理可審批通過                               |
 | 收盤價確認   | 股票股權沒錄取到行情，收盤價會為 0。如需修改可點擊「收盤價管理」處理                   |
 | 市埸規則配置  | 需要在「業務參數設置>市埸管理>市埸規則」點擊「新建」添加市埸（見5D 圖一）               |
@@ -115,7 +106,7 @@ _5D 圖二_
 
 
 **答：**報錯會提醒缺失那個市埸
-（i）。 添加市埸：「業務參數設置>市埸管理>市埸規則」新增相關市場配置。（見 5G 圖一、圖二）
+(i). 添加市埸：「業務參數設置>市埸管理>市埸規則」新增相關市場配置。（見 5G 圖一、圖二）
 
 
 (ii). 添加幣種：「款項管理>滙率>參考滙率」的新增該市場的貨幣。（見 5G 圖三、圖四）

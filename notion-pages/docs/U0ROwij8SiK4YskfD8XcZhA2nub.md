@@ -14,7 +14,7 @@ sidebar_position: 3
 對於出金、入金以及公司銀行帳單對接過程中，都會使用到銀行卡，該功能是一個基礎資訊配置的功能。所涉相關模關係組主要如下：
 
 
-![P5VTwJAiChg4GMb9cVQclD7Wngd.png](/assets/7b3bc896a694efe6b34d3a3d03b63b56.png)
+![whiteboard_exported_image-2.png](/assets/0bea740c3f4fd930744768df7d18b448.png)
 
 
 # 二、操作說明

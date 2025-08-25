@@ -1,7 +1,7 @@
 ---
 slug: D3WNwhY8UiPbBrkNEhFctPDznVf
 title: 2025-01-20 更新日誌
-sidebar_position: 6
+sidebar_position: 8
 ---
 
 
@@ -20,6 +20,9 @@ sidebar_position: 6
 
 
 附幫助中心：[快速上手-股東大會（VT）](https://www.notion.so/22b5bab0c2cc81778e0cc87d6bf18196)
+
+
+[快速上手-股東大會（VT）](./QSpJwHQVUi9qDEkTwBtcmHTPnjd)
 
 - 增加美股TAXFEE退還功能
     - 針對上年度因美股公司行動產生的TAXFEE，在本年度可以進行退還，新增了退稅頁面統一管理系統所產生的所有TAXFEE收費記錄，並根據上手返還的金額同比例返還給客戶
