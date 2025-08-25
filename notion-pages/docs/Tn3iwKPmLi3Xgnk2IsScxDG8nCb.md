@@ -22,8 +22,8 @@ sidebar_position: 1
 | • ActivityCenterFull
 管理活動、邀請關係配置的權限 | 增刪改查標準活動，非標准活動，邀請關係  |
 
-- 如需對活動設置實物、卡券獎勵，請先在[權益系统](https://www.notion.so/22b5bab0c2cc81d3998fddd85e717253)中進行創建
-- 如需對活動參與用戶進行限制，請先取得創建用戶分羣權限，參見[投放系统](https://www.notion.so/22b5bab0c2cc81ec8ddddda54e755a7a)
+- 如需對活動設置實物、卡券獎勵，請先在[權益系統](./Nohgwdf4midxtCkmYPtcemFenog)中進行創建
+- 如需對活動參與用戶進行限制，請先取得創建用戶分羣權限，參見[投放系统](./HFS5wXhvXi0yh7kKbllc8Xp4n9c)
 
 # 活動達標任務類型及說明
 

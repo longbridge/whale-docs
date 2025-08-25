@@ -63,7 +63,7 @@ sidebar_position: 0
 目前创建活动时可设置三种奖励类型：实物、卡券、现金
 
 
-实物和卡券的创建参见[权益系统](https://www.notion.so/22b5bab0c2cc81d3998fddd85e717253)介绍
+实物和卡券的创建参见[权益系统](./Nohgwdf4midxtCkmYPtcemFenog)介绍
 
 
 ## 1.4 活动配置流程

@@ -11,7 +11,7 @@ sidebar_position: 4
 # 1.5A 问：如何操作 BCAN 资料申报？
 
 
-**答：**请参考 HKIDR 操作文档  [HKIDR 操作文档](https://www.notion.so/22b5bab0c2cc816891a6c0a61832cab5)。
+**答：**请参考 HKIDR 操作文档 [HKIDR 操作文档](./AnubwQdN9i1KGHkt9tmccZ9hnXf)。
 
 
 # 1.5B 问：申报 BCAN 的时间点是什么？

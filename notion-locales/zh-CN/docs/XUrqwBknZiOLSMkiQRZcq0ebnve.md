@@ -78,7 +78,7 @@ sidebar_position: 1
 运营计划是投放系统的基础模块，可以帮助企业的运营和营销人员在无需耗费研发资源支持的情况下完成对用户的个性化触达。通过运营计划模块，客户可以自助创建自动化的运营计划：选择精准的目标受众，在合适的时间，通过正确的触达通道，给用户传递感兴趣或所需的内容，并监测活动效果，从而提升关键指标和运营效率。
 
 
-运营计划的创建过程详见：[快速上手](https://www.notion.so/22b5bab0c2cc8187aaebed7bb5951e2e)
+运营计划的创建过程详见：[快速上手](./GdSVwFnmjiJU1IkugcWcIEc8nzz)
 
 
 ![image.png](/assets/e34206c96cf6cd0accef75f2932bc580.png)
@@ -178,7 +178,7 @@ APP Banner，即应用程式横幅，是一种在移动应用程式介面中常�
 ![image.png](/assets/065475ba8031b8d21ddda92110a86643.png)
 
 
-在运营后台配置相应类型的 Banner 并上架后，即可在 App 上看到上述图形中的呈现效果，具体配置方法请参见：[快速上手](https://www.notion.so/22b5bab0c2cc8187aaebed7bb5951e2e)
+在运营后台配置相应类型的 Banner 并上架后，即可在 App 上看到上述图形中的呈现效果，具体配置方法请参见：[快速上手](./GdSVwFnmjiJU1IkugcWcIEc8nzz)
 
 
 当您选择订阅互联网 App + 解决方案中 White Label 版本的零售终端产品时，系统将有能力为您提供 Banner 和弹窗投放效果的即时数据分析能力，让您可以及时掌握曝光、点击、转化率数据，便于您基于数据快速调整投放内容和策略。
@@ -205,7 +205,7 @@ APP Banner，即应用程式横幅，是一种在移动应用程式介面中常�
 ![image.png](/assets/2445884387df8d9122bcf53eebb9be7a.png)
 
 
-在运营后台配置相应类型的弹窗并上架后，即可在 App 上看到上述图形中的呈现效果，具体配置方法请参见：[快速上手](https://www.notion.so/22b5bab0c2cc8187aaebed7bb5951e2e)
+在运营后台配置相应类型的弹窗并上架后，即可在 App 上看到上述图形中的呈现效果，具体配置方法请参见：[快速上手](./GdSVwFnmjiJU1IkugcWcIEc8nzz)
 
 
 ## 消息模板
