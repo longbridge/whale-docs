@@ -22,8 +22,8 @@ sidebar_position: 1
 | • ActivityCenterFull
 管理活动、邀请关系配置的权限 | 增删改查标准活动，非标准活动，邀请关系  |
 
-- 如需对活动设置实物、卡券奖励，请先在[权益系统](https://www.notion.so/22b5bab0c2cc81d3998fddd85e717253)中进行创建
-- 如需对活动参与用户进行限制，请先取得创建用户分群权限，参见[投放系统](https://www.notion.so/22b5bab0c2cc81ec8ddddda54e755a7a)
+- 如需对活动设置实物、卡券奖励，请先在[权益系统](./Nohgwdf4midxtCkmYPtcemFenog)中进行创建
+- 如需对活动参与用户进行限制，请先取得创建用户分群权限，参见[投放系统](./HFS5wXhvXi0yh7kKbllc8Xp4n9c)
 
 # 活动达标任务类型及说明
 

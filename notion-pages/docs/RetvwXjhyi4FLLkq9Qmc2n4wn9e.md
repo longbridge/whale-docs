@@ -63,7 +63,7 @@ sidebar_position: 0
 目前創建活動時可設置三種獎勵類型：實物、卡券、現金
 
 
-實物和卡券的創建參見[權益系统](https://www.notion.so/22b5bab0c2cc81d3998fddd85e717253)介紹
+實物和卡券的創建參見[權益系統](./Nohgwdf4midxtCkmYPtcemFenog)介紹
 
 
 ## 1.4 活動配置流程

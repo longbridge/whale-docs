@@ -78,7 +78,7 @@ sidebar_position: 1
 運營計劃是投放系統的基礎模塊，可以幫助企業的運營和營銷人員在無需耗費研發資源支持的情況下完成對用戶的個性化觸達。通過運營計劃模塊，客戶可以自助創建自動化的運營計劃：選擇精準的目標受眾，在合適的時間，通過正確的觸達通道，給用戶傳遞感興趣或所需的內容，並監測活動效果，從而提升關鍵指標和運營效率。
 
 
-運營計劃的創建過程詳見：[快速上手](https://www.notion.so/22b5bab0c2cc8187aaebed7bb5951e2e)
+運營計劃的創建過程詳見：[快速上手](./GdSVwFnmjiJU1IkugcWcIEc8nzz)
 
 
 ![image.png](/assets/e34206c96cf6cd0accef75f2932bc580.png)
@@ -178,7 +178,7 @@ APP Banner，即應用程式橫幅，是一種在移動應用程式介面中常�
 ![image.png](/assets/065475ba8031b8d21ddda92110a86643.png)
 
 
-在運營後台配置相應類型的Banner並上架後，即可在App上看到上述圖形中的呈現效果，具體配置方法請參見：[快速上手](https://www.notion.so/22b5bab0c2cc8187aaebed7bb5951e2e)
+在運營後台配置相應類型的Banner並上架後，即可在App上看到上述圖形中的呈現效果，具體配置方法請參見：[快速上手](./GdSVwFnmjiJU1IkugcWcIEc8nzz)
 
 
 當您選擇訂閱互聯網 App + 解決方案中 White Label 版本的零售終端產品時，系統將有能力為您提供 Banner 和彈窗投放效果的即時數據分析能力，讓您可以及時掌握曝光、點擊、轉化率數據，便於您基於數據快速調整投放內容和策略。
@@ -205,7 +205,7 @@ APP Banner，即應用程式橫幅，是一種在移動應用程式介面中常�
 ![image.png](/assets/2445884387df8d9122bcf53eebb9be7a.png)
 
 
-在運營後台配置相應類型的弹窗並上架後，即可在App上看到上述圖形中的呈現效果，具體配置方法請參見：[快速上手](https://www.notion.so/22b5bab0c2cc8187aaebed7bb5951e2e)
+在運營後台配置相應類型的弹窗並上架後，即可在App上看到上述圖形中的呈現效果，具體配置方法請參見：[快速上手](./GdSVwFnmjiJU1IkugcWcIEc8nzz)
 
 
 ## 消息模板
