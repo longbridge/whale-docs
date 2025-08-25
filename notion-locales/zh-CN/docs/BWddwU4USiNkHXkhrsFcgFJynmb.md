@@ -27,8 +27,7 @@ WTT 组件工具箱中，交易相关组件使用操作入口
 
     | 组件功能                  | 功能权限                             |
     | --------------------- | -------------------------------- |
-    | 下单权限
-    （交易员可代客下单，非组件功能） | wtt_trading.permission           |
+    | 下单权限（交易员可代客下单，非组件功能） | wtt_trading.permission           |
     | 人手单                   | wtt_panel.hand_order             |
     | 碎股撮合                  | wtt_panel.odd_lot_match          |
     | 批量撤单                  | wtt_component.batch_cancel_order |

@@ -20,7 +20,10 @@ sidebar_position: 1
 每一个投放运营计划都是在：触发条件/受众用户/触达配置/目标设置 的维度下作运营计划项目的管理
 
 
-![%E6%B5%81%E7%A8%8B%E5%9B%BE-2.jpg](/assets/05caf2b70c2b6de0c40acbcc0687704e.jpg)
+需要更新图表到飞书的白板：https://longbridge.larkenterprise.com/wiki/Bdz9dMfORov2OjxJhUHcBtdRngc
+
+
+![%E6%B5%81%E7%A8%8B%E5%9B%BE_%284%29.jpg](/assets/e63f2ffd638fb46cf3e08c903e1df9d9.jpg)
 
 
 # 基本概念

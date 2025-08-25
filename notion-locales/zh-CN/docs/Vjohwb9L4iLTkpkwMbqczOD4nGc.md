@@ -2,7 +2,7 @@
 version: stable
 slug: Vjohwb9L4iLTkpkwMbqczOD4nGc
 title: 2025-06-03 更新日志
-sidebar_position: 4
+sidebar_position: 3
 ---
 
 
@@ -16,7 +16,7 @@ sidebar_position: 4
     - 列表新增撤销批次号字段；如需缩减列表展示字段可使用“自定义列表”功能
     - 路径：证券后台 - 资产账户 - 调账 - 手工调账
 
-    ![1.png](/assets/f0a03f76562d2418539859ca2b59f800.png)
+    ![image.png](/assets/3f429fa97063fcae61580373100c342b.png)
 
 - 授信组额度变更增加工单审批流程
     - 调整授信组额度及调整授信组内账户额度增加工单审批流程，涉及功能入口见图示。支持根据额度区间设置不同的审批流。
@@ -33,7 +33,7 @@ sidebar_position: 4
     - 客户限额/证券限额/交易员限额批量创建功能优化，更换为批量新建统一组件，可按批次差异化设置限额规则。
     - 路径：证券后台 - 风控管理 - 交易限额 - 客户限额/证券限额/交易员限额
 
-![3.png](/assets/46b05f4398429c885dc2fb21aa1873b8.png)
+![image.png](/assets/c56eb5faa90f06256b989570d87f802b.png)
 
 - 公司行动对接工单审批
     - 新增公司行动模块的审批功能，用户在配寘相关工作流后在下列节点发起审批：
@@ -84,5 +84,5 @@ sidebar_position: 4
     - 列表移除「客户姓名」展示，将客户编号设为可点击跳转项目。
     - 路径：证券后台 - 款项管理 - 换汇 - 客户汇兑
 
-![10.png](/assets/4f8cc7325ebe45825dbfe5a29b4f981b.png)
+![image.png](/assets/0990a019b95602fad2d89d43bce44d20.png)
 

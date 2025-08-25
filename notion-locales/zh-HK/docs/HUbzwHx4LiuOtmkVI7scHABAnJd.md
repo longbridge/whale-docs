@@ -11,10 +11,7 @@ sidebar_position: 3
 # 1.4A 問：如何導出/修改 CRS 文件？
 
 
-**答：**在「報表管理＞CRS 文件生成」可導出 XML 文檔，請參考操作文檔
-
-
- [CRS 操作文檔](https://www.notion.so/22b5bab0c2cc815e8706c23228d20251)
+**答：**在「報表管理＞CRS 文件生成」可導出 XML 文檔，請參考操作文檔 [CRS 操作文檔](https://www.notion.so/22b5bab0c2cc815e8706c23228d20251)
 
 
 

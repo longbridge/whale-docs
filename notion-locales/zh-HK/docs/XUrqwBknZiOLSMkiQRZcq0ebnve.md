@@ -20,7 +20,10 @@ sidebar_position: 1
 每一個投放運營計畫都是在：觸發條件/受眾用戶/觸達配置/目標設置 的維度下作運營計畫項目的管理
 
 
-![%E6%B5%81%E7%A8%8B%E5%9B%BE-2.jpg](/assets/05caf2b70c2b6de0c40acbcc0687704e.jpg)
+需要更新图表到飞书的白板：https://longbridge.larkenterprise.com/wiki/Bdz9dMfORov2OjxJhUHcBtdRngc
+
+
+![%E6%B5%81%E7%A8%8B%E5%9B%BE_%284%29.jpg](/assets/e63f2ffd638fb46cf3e08c903e1df9d9.jpg)
 
 
 # 基本概念
@@ -121,7 +124,7 @@ sidebar_position: 1
 ![image.png](/assets/f8c1ddfad952dae3d24ab9c70e508404.png)
 
 
-## 用户標籤
+## 用户标签
 
 
 > ⚓ 菜單入口：投放系統>用戶標籤

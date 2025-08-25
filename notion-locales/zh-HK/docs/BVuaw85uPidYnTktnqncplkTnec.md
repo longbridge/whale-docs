@@ -20,7 +20,7 @@ sidebar_position: 0
 # 1、登錄註冊 
 
 
-## 1.1 券商賬戶選擇
+1.1 券商賬戶選擇
 
 
 打開登錄頁面，可以點擊「券商賬戶登錄」按鈕，進行券商渠道選擇，選擇完成後繼續登錄
@@ -32,7 +32,7 @@ sidebar_position: 0
 ![image.png](/assets/0ae01744a95d31121a3bc5f4f5200ca3.png)
 
 
-## 1.2 驗證碼登錄
+# 1.2 驗證碼登錄
 
 
 可以通過輸入手機號碼，發送短信驗證碼進行登錄
@@ -41,7 +41,7 @@ sidebar_position: 0
 ![image.png](/assets/b488a07f7dcafe672547df97c6c181d8.png)
 
 
-## 1.3 賬號密碼登錄
+# 1.3 賬號密碼登錄
 
 
 點擊底部的「密碼登錄」，可切換到賬號密碼登錄，直接輸入賬號密碼，選同意用戶協議之後，點擊「登錄」按鈕
@@ -53,7 +53,7 @@ sidebar_position: 0
 ![image.png](/assets/c5812939bbf875e480e48821c36b5b42.png)
 
 
-## 1.4 掃碼登錄
+# 1.4 掃碼登錄
 
 
 （1）點擊右上角二維碼，切換到掃碼登錄頁，通過對應手機 App 進行掃碼登錄
@@ -80,7 +80,7 @@ sidebar_position: 0
 # 2、交易版面
 
 
-## 2.1 自選
+# 2.1 自選
 
 
 （1）展示用戶關注的自選股列表和自選股分組，可以快速切換不同的自選股分組，如持倉股、美股、港股等，和移動端數據同步。
@@ -95,7 +95,7 @@ sidebar_position: 0
 ![image.png](/assets/b51ab8b963c99cf83e01edc7ae267e93.png)
 
 
-## 2.2 圖表
+# 2.2 圖表
 
 
 （1）圖表版塊，可詳細查看股票的分時圖、日 k、週 k、月 k、年 k 以及分鐘 k 走勢圖，方便進行股票的行情走勢分析。
@@ -116,7 +116,7 @@ sidebar_position: 0
 ![image.png](/assets/8bc5c01f80a406e61567a7816805c413.png)
 
 
-## 2.3 行情報價
+# 2.3 行情報價
 
 
 （1）右上角的行情報價顯示股票的基本盤口信息字段，包括當日的最高、最低、開市價、收市價以及市盈率、總市值等資訊。股票資訊右方，可剔選❤️添加當前股票到關注列表中，也可以點擊❤️取消關注。
@@ -134,7 +134,7 @@ sidebar_position: 0
 ![image.png](/assets/5a8d454f80a77e97b1f6098b02410e6e.png)
 
 
-## 2.4 交易下單
+# 2.4 交易下單
 
 
 （1）目前交易支持的訂單類型
@@ -169,7 +169,7 @@ sidebar_position: 0
 ![image.png](/assets/c580188898b1ab7e6ca298b9348628de.png)
 
 
-## 2.5 持倉
+# 2.5 持倉
 
 
 ![image.png](/assets/52bc3b3fcf748f3f1acf32561976271c.png)
@@ -183,7 +183,7 @@ sidebar_position: 0
     ![image.png](/assets/c61b13126da58705aea30d89aa4cd70e.png)
 
 
-## 2.6 當日訂單
+# 2.6 當日訂單
 
 
 ![image.png](/assets/abdc4ad5b5716d6d125a65875599eb3d.png)
@@ -198,7 +198,7 @@ sidebar_position: 0
 
 - 訂單支持查看的數據信息：訂單狀態、市場、代碼、名稱、方向、委託類型、委託價格、委託數量、成交、委託時間、成交金額、有效期、訂單號；
 
-## 2.7 歷史訂單
+# 2.7 歷史訂單
 
 
 ![image.png](/assets/bdfae43363ddf8f7517209bab451d3f4.png)
@@ -218,7 +218,7 @@ sidebar_position: 0
 # 3、資產版面
 
 
-## 3.1 資產總覽
+# 3.1 資產總覽
 
 
 ![image.png](/assets/71daa9ca5d75650caa83c8258f4160d9.png)
@@ -249,7 +249,7 @@ sidebar_position: 0
     ![image.png](/assets/9b1112afb920f3d58a73a5b13c2461ff.png)
 
 
-## 3.2 現金明細
+# 3.2 現金明細
 
 
 ![image.png](/assets/0aeff6db6de42958ecd6a76a11acbb36.png)
@@ -259,7 +259,7 @@ sidebar_position: 0
 - 港幣、美元等詳細幣種：對於不同幣種下的現金餘額獨立展示，支持展示數據：當前幣種下的現金總額、可用現金、凍結現金、現金可提；
 - 用戶可通過該頁面查看不同幣種下的餘額及可提取的現金，更便於用戶對自己的資金安排；
 
-## 3.3 融資狀態
+# 3.3 融資狀態
 
 
 ![image.png](/assets/feee6e02cc483e48e0e0198111fb6d2c.png)
@@ -268,7 +268,7 @@ sidebar_position: 0
 - 保證金要求：當前持倉股票的初始、維持保證金的要求金額，需滿足該要求風控狀態可為安全；
 - 融資額度情況：當前用戶已使用的融資金額，及可提供給用戶的融資總額度；
 
-## 3.4 賬戶資產概況 & 持倉
+# 3.4 賬戶資產概況 & 持倉
 
 
 ![image.png](/assets/82ddcd25a60b57624406f2802963f1e5.png)
@@ -286,7 +286,7 @@ sidebar_position: 0
     ![image.png](/assets/37faba4c2fd91b6fd1e20ee44d985e1d.png)
 
 
-## 3.4 當日訂單
+# 3.4 當日訂單
 
 
 ![image.png](/assets/cab538e56f2558513e7b8ef2034a6155.png)

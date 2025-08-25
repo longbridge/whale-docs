@@ -1,7 +1,7 @@
 ---
 slug: 24-05-06
 title: 2024-05-06 更新日誌
-sidebar_position: 31
+sidebar_position: 29
 ---
 
 
@@ -34,7 +34,7 @@ sidebar_position: 31
     - 失敗後處理釋義：僅提醒（不會攔截流程，僅提示）、工單審覈（會攔截流程，但是可以手動通過）、強制校驗（會攔截流程，必須通過）
     - 支持的操作：開啓/關閉，選擇失敗後的處理方式
     - 可編輯時間段：操作日終任務之前
-    - 編輯時需要審批，工單標識：clearing.before_clearing_ready.settiing
+    - 編輯時需要審批，工單標識：clearing.before_clearing_ready.setting
     - 其它：部分檢查項目要求強制檢查，不允許編輯
 
     ![image.png](/assets/5d0fbf0fdc102469eaf34a49c9c85395.png)
@@ -52,29 +52,15 @@ sidebar_position: 31
     ![打开日任务步骤，查看最后一个市場和日終清算是否合并](/assets/6a85d424ce576e04b1d6ad987be5d300.png)
 
 - 公司行動執行完畢後增加郵件通知
-    - 供股類 RS、ER、OO、RS
 
-    ![image.png](/assets/f45c19183809e0fe92197dcfe884ea40.png)
-
-    - 要約類
-
-    ![image.png](/assets/1689f42dd48e1c7e2fc1797ac02e9854.png)
-
-    - 拆合股、換股
-
-    ![image.png](/assets/4f685c846a05bdc3cda989a7b9c1fd12.png)
-
-    - ADR 執行
-
-    ![image.png](/assets/011a1febe7188da7b4e720d67d147f8d.png)
-
-    - 紅利、紅股
-
-    ![image.png](/assets/f05d39f723ca2eaf9854e0ab1d995b23.png)
-
-    - 期權公司行動
-
-    ![image.png](/assets/b425c9e9fc85836590bee4ecc2fab88c.png)
+| 公司行動類型          | 消息模板  |
+| --------------- | ----- |
+| 供股類 RS、ER、OO、RS |       |
+| 要約類             |       |
+| 拆合股、換股          |       |
+| ADR 執行          |       |
+| 紅利、紅股           |       |
+| 期權公司行動          |       |
 
 - WBO 換匯新增撤銷功能
     - 針對客戶提交上的換匯申請，需要根據“客戶匯兌狀態”進行判斷，决定是否可以進行撤銷。其中：當“客戶匯兌狀態”=「已提交」、「匯兌中」時，可以進行撤銷。

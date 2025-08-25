@@ -92,7 +92,7 @@ _1.6C 图一_
 ![image.png](/assets/b6bb895c42b4d4fb7e6b508d477b8d5c.png)
 
 
- _1.6F 图一                                1.6F 图二                               1.6F 图三_
+ _1.6F 图一                                                         1.6F 图二                                                       1.6F 图三_
 
 
 ![image.png](/assets/07e11a59e7ed85ccdeb8f15a4a78df55.png)

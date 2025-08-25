@@ -17,5 +17,8 @@ sidebar_position: 0
 將 CRM 客務節點，透過細分的 業務狀態來進行 CRM 的 推進工作，以拆分任務方式來管理推進工作
 
 
-![%E6%B5%81%E7%A8%8B%E5%9B%BE.jpg](/assets/401afa45fe31d23d43a4df8147195dd9.jpg)
+![image.png](/assets/178f4fa0793106b1c735703fb049184b.png)
+
+
+需要更新图表到飞书的白板：https://longbridge.larkenterprise.com/wiki/Cxm5djAXQolI3sxiwC9cVt3Vnf6
 
