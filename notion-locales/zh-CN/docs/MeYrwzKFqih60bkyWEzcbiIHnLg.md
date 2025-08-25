@@ -186,7 +186,7 @@ Whale 系统提供了换汇的基础参数设定与业务主流程操作功能�
 ![whiteboard_exported_image-5.png](/assets/80722f5d7c60048fffdf2f927cc2f162.png)
 
 
-详细操作顺序，可参考[快速上手](https://www.notion.so/22b5bab0c2cc8198b517e1ce0964a6aa)描述
+详细操作顺序，可参考[快速上手](./Oq3wwTJvJiqpB6kWoz2cy5jFnFd)描述
 
 
 ### 参考汇率
@@ -211,7 +211,7 @@ Whale 系统提供了换汇的基础参数设定与业务主流程操作功能�
 ### 异常换汇记录
 
 
-详细操作顺序，可参考[快速上手](https://www.notion.so/22b5bab0c2cc8198b517e1ce0964a6aa)描述
+详细操作顺序，可参考[快速上手](/21c5bab0c2cc81aca35de1b5b7b8a67b)描述
 
 
 ### 汇兑池额度

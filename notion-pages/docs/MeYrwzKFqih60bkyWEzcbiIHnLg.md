@@ -186,7 +186,7 @@ Whale系統提供了換匯的基礎參數設定與業務主流程操作功能。
 ![whiteboard_exported_image-5.png](/assets/80722f5d7c60048fffdf2f927cc2f162.png)
 
 
-詳細操作順序，可參考[快速上手](https://www.notion.so/22b5bab0c2cc8198b517e1ce0964a6aa)描述
+詳細操作順序，可參考[快速上手](./Oq3wwTJvJiqpB6kWoz2cy5jFnFd)描述
 
 
 ### 參考匯率
@@ -211,7 +211,7 @@ Whale系統提供了換匯的基礎參數設定與業務主流程操作功能。
 ### 異常換匯記錄
 
 
-詳細操作順序，可參考[快速上手](https://www.notion.so/22b5bab0c2cc8198b517e1ce0964a6aa)描述
+詳細操作順序，可參考[快速上手](/21c5bab0c2cc81aca35de1b5b7b8a67b)描述
 
 
 ### 匯兌池額度
