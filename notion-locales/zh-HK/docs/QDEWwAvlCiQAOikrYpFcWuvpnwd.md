@@ -146,7 +146,7 @@ sidebar_position: 2
 ![image.png](/assets/bc19fd9ce30e2b3055b563ff35b137b6.png)
 
 
-新增批量導入來批量 註銷客戶/註銷帳戶的功能
+新增批量導入  來批量 註銷客戶/註銷帳戶的功能
 
 
 ![image.png](/assets/f213aa1acc44f5fb97ca38052b66d6d3.png)

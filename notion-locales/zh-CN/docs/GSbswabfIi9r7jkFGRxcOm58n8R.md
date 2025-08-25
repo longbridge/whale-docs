@@ -120,19 +120,19 @@ _1.2F 图二_
 ![image.png](/assets/593a9880838bdcd7cac3a50e4ae1fde0.png)
 
 
-    _1.2G 图一_
+    1.2G 图一
 
 1. 「工单信息」的「风险等级」默认为「低风险」，需要后台操作人员判断去更新。
 
 ![image.png](/assets/b4911cd4a387d73211482c91d726dd4f.png)
 
 
-    _1.2G 图二_
+## 1.2G 图二
 
 1. 客户自行在 APP 进行的风险评测则在「风险测评」显示。
 
 ![image.png](/assets/05cd58325a44d8680040f0e6eac2c550.png)
 
 
-    _1.2G 图三_
+## 1.2G 图三
 

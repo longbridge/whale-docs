@@ -1,7 +1,7 @@
 ---
 slug: 24-05-20
 title: 2024-05-20 更新日志
-sidebar_position: 30
+sidebar_position: 28
 ---
 
 
@@ -83,54 +83,6 @@ sidebar_position: 30
     | 计费管理 - 客户组配置 - 客户组变更（添加）  | Billing Management-Rate Setups (By Group) -Change client group (add)      | billing_package_aaid_add       | 超级管理员审批  |        |
     | 计费管理 - 客户组配置 - 变更客户组（移出）  | Billing Management-Rate Setups (By Group) -Change client group (move out) | billing_package_aaid_del       | 超级管理员审批  |        |
     | 计费管理 - 客户组配置 - 批量变更客户组    | Billing Management-Rate Setups (By Group) -Batch client  change group     | billing_package_aaid_add_batch | 超级管理员审批  |        |
-
-
-    工单审批案例：
-
-    1. 计费管理 - 客户群组计费配置 - 新增
-
-        ![image.png](/assets/e1fddb3fed643e536b2376b32e888b48.png)
-
-
-        新增时，状态为待生效，可在工单页面进行审批
-
-
-        ![image.png](/assets/e4bd17f7808f4333efc4bd64adcf4924.png)
-
-    2. 计费管理 - 客户群组计费配置 - 编辑
-
-        ![image.png](/assets/9e65f7c699ec4e8b3e3a464e0d34e100.png)
-
-
-        可分别展开新、旧数据
-
-    3. 计费管理 - 客户群组计费配置 - 删除
-
-        ![image.png](/assets/319c0867a442d5e5240400e8ee6ba4a7.png)
-
-    4. 计费管理 - 客户计费配置 - 新增
-
-        ![image.png](/assets/8a2b576c165d93527697a5ba3ed8f4df.png)
-
-    5. 计费管理 - 客户计费配置 - 编辑
-
-        ![image.png](/assets/54833a71fabb80d412df348448980736.png)
-
-    6. 计费管理 - 客户计费配置 - 删除
-
-        ![image.png](/assets/0cb72f626d7e78d60ce100c053f4a406.png)
-
-    7. 计费管理 - 客户组配置 - 客户组变更（添加）
-
-        ![image.png](/assets/2f60c5993fdbccb5fb92dd3c35341d72.png)
-
-    8. 计费管理 - 客户组配置 - 变更客户组（移出）
-
-        ![image.png](/assets/6551df0c603ad6fc893f964d76aa5753.png)
-
-    9. 计费管理 - 客户组配置 - 批量变更客户组
-
-        ![image.png](/assets/9511a1f9fb7b1a0fbd68d986976f69f4.png)
 
 
 # 🪀 改进与修复

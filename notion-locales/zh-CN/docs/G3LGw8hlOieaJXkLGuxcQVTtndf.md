@@ -7,3 +7,6 @@ sidebar_position: 0
 
 # Whale Console
 
+
+[Unsupported block type: Unknown]
+

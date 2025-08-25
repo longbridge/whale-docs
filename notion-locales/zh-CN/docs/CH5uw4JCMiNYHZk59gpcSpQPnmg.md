@@ -1,7 +1,7 @@
 ---
 slug: 24-05-06
 title: 2024-05-06 更新日志
-sidebar_position: 31
+sidebar_position: 29
 ---
 
 
@@ -34,7 +34,7 @@ sidebar_position: 31
     - 失败后处理释义：仅提醒（不会拦截流程，仅提示）、工单审核（会拦截流程，但是可以手动通过）、强制校验（会拦截流程，必须通过）
     - 支持的操作：开启/关闭，选择失败后的处理方式
     - 可编辑时间段：操作日终任务之前
-    - 编辑时需要审批，工单标识：clearing.before_clearing_ready.settiing
+    - 编辑时需要审批，工单标识：clearing.before_clearing_ready.setting
     - 其它：部分检查项目要求强制检查，不允许编辑
 
     ![image.png](/assets/5d0fbf0fdc102469eaf34a49c9c85395.png)
@@ -52,29 +52,15 @@ sidebar_position: 31
     ![打开日任务步骤，查看最后一个市场和日终清算是否合并](/assets/6a85d424ce576e04b1d6ad987be5d300.png)
 
 - 公司行动执行完毕后增加邮件通知
-    - 供股类 RS、ER、OO、RS
 
-    ![image.png](/assets/f45c19183809e0fe92197dcfe884ea40.png)
-
-    - 要约类
-
-    ![image.png](/assets/1689f42dd48e1c7e2fc1797ac02e9854.png)
-
-    - 拆合股、换股
-
-    ![image.png](/assets/4f685c846a05bdc3cda989a7b9c1fd12.png)
-
-    - ADR 执行
-
-    ![image.png](/assets/011a1febe7188da7b4e720d67d147f8d.png)
-
-    - 红利、红股
-
-    ![image.png](/assets/f05d39f723ca2eaf9854e0ab1d995b23.png)
-
-    - 期权公司行动
-
-    ![image.png](/assets/b425c9e9fc85836590bee4ecc2fab88c.png)
+| 公司行动类型          | 消息模板  |
+| --------------- | ----- |
+| 供股类 RS、ER、OO、RS |       |
+| 要约类             |       |
+| 拆合股、换股          |       |
+| ADR 执行          |       |
+| 红利、红股           |       |
+| 期权公司行动          |       |
 
 - WBO 换汇新增撤销功能
     - 针对客户提交上的换汇申请，需要根据“客户汇兑状态”进行判断，决定是否可以进行撤销。其中：当“客户汇兑状态”=「已提交」、「汇兑中」时，可以进行撤销。

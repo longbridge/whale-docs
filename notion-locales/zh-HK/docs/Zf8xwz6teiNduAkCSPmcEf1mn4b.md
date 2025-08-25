@@ -33,16 +33,10 @@ sidebar_position: 2
 整個 CSR 文件操作基本上 下列流程的順序
 
 
-![%E6%B5%81%E7%A8%8B%E5%9B%BE.jpg](/assets/9a71011ffe64e7166f31cd42fccdec32.jpg)
+需要更新图表到飞书的白板：https://longbridge.larkenterprise.com/wiki/IWiQd25SSoP63JxVS8JcSbXrnQb
 
 
-## **1. 計算收益**： 
-
-
-首先在右上角點選'計算收益' ，輸入報送年度與編號（公司名稱）後就會產生文件製作的任務工作（在**任務列表** Tab 頁籤）
-
-
-注意：在計算收益視窗上，在外部報税文件上傳的網站了會提供一個編號的，公司名稱就是券商的公司名稱，要跟外部報税系統里面名稱要一致
+## **計算收益**： 
 
 
 ![image.png](/assets/e294a0b1ccce49b2452bc7534607b7a4.png)
@@ -69,31 +63,7 @@ sidebar_position: 2
 ![image.png](/assets/918ef9ec00e57bd44bb3b6cd93a89d2d.png)
 
 
-## **2. 生成文件**： 
-
-
-當 CSR 數據 Tab 頁籤上 查看或修改正確後，系統會根據 數據的狀態：標記為
-
-- CRS701 = The message contains new information，指上傳新數據
-
-新消息[CRS701]：new[CRS701]
-
-- CRS702 = The message contains corrections for previously sent information，指更正或删除數據
-
-更正消息[CRS702 ]：corrections[CRS702 ]
-
-
-此時 可根據需要 先查詢 下列條件後（以下 僅為參考示意）
-
-
-輸入： **年度 /消息類型/編號/批次/消息編號**  查詢後。生成文件的功能鍵就可以操作了
-
-
-![image-9.png](/assets/e08d95c06f0d609463448ffe71433e0f.png)
-
-
-就可以點選右上角【生成文件】就會產生一個的系統任務來產生報稅規格的文檔
-（注意：這會需要點時間產生全年資料）
+## **生成文件**： 
 
 
 ![image.png](/assets/d20289937288188ecc21363dcca90c9c.png)
@@ -115,7 +85,7 @@ sidebar_position: 2
 建議：此文件不要自行編輯，容易誤操作造成文檔規格不對，無法上傳
 
 
-## **3. 生成文件上傳**： 
+## **生成文件上傳**： 
 
 
 將上傳到外部系統的一個 XML 文件。這文件在外部系統上傳以後，在外部系統它會返回一個文件序列號，可以在任務列表 Tab 頁籤，更新狀態把外部系統序列號輸入
@@ -127,13 +97,13 @@ sidebar_position: 2
 ![image.png](/assets/ccf9783d0d7fbed9686a590ea5bb89b7.png)
 
 
-這等于將產生的 CRS 數據 打上這批次的 文件序列號，方便以後對數據查詢或更正已報送資料
+這等于 將 產生的 CRS 數據 打上這批次的 文件序列號，方便以後對數據查詢或更正已報送資料
 
 
 ![image.png](/assets/9339c6eaa67854b79d3d97a756c9e11e.png)
 
 
-## **4. 更正資料再上傳**： 
+## **更正資料再上傳**： 
 
 
 正常情況下，已報送資料其狀態是‘文件已報送'
