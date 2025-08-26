@@ -19,10 +19,7 @@ sidebar_position: 8
     ![image.png](/assets/97d64292758f28a351d510700a457f31.png)
 
 
-附帮助中心：[快速上手 - 股东大会（VT）](https://www.notion.so/22b5bab0c2cc81778e0cc87d6bf18196)
-
-
-[快速上手 - 股东大会（VT）](./QSpJwHQVUi9qDEkTwBtcmHTPnjd)
+附帮助中心：[快速上手 - 股东大会（VT）](./QSpJwHQVUi9qDEkTwBtcmHTPnjd)
 
 - 增加美股 TAXFEE 退还功能
     - 针对上年度因美股公司行动产生的 TAXFEE，在本年度可以进行退还，新增了退税页面统一管理系统所产生的所有 TAXFEE 收费记录，并根据上手返还的金额同比例返还给客户
