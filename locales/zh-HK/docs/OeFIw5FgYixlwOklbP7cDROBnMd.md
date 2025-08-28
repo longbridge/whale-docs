@@ -1,7 +1,7 @@
 ---
 title: 2025-08-12 更新日誌
 slug: OeFIw5FgYixlwOklbP7cDROBnMd
-sidebar_position: 0
+sidebar_position: 1
 version: stable
 ---
 

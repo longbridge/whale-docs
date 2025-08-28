@@ -1,7 +1,7 @@
 ---
 title: 2025-07-21 更新日誌
 slug: KbC0wq5LWi6gCok7jK6cSGTtn3f
-sidebar_position: 1
+sidebar_position: 2
 version: stable
 ---
 
