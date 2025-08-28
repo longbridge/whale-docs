@@ -71,7 +71,7 @@ sidebar_position: 2
 | 调整额度     | 根据人工填入的调整后额度自动计算，调整额度=调整后额度 - 融资额度 |
 | 备注       | 由人工填入，若填入则会在「额度审批」页面的列表“备注”列展示   |
 
-1. 确定【调整后额度】，提交则需要进入额度审批页面的对应记录进行额度审批；见「[额度审批](https://longbridge.feishu.cn/wiki/VWyawtnPoizaJvkLjGIcgA5hngb#YsEtdZBPcoHY0dxGyukc6Fdyn4g)」
+1. 确定【调整后额度】，提交则需要进入额度审批页面的对应记录进行额度审批；见「[额度审批](/21c5bab0c2cc8135a5f7d0bec6a92c28)」
 
 **新建授信客户**
 
@@ -409,7 +409,7 @@ sidebar_position: 2
 
 ![image.png](/assets/454ef791e2ef10a0b45841a6323846a8.png)
 
-1. 兑换结果查看：人工/自动兑换完成后，若剩余资产仍命中规则，则仍会在提醒查询列表；若不再命中规则则会进入历史记录，可在「[历史记录](https://longbridge.feishu.cn/wiki/VWyawtnPoizaJvkLjGIcgA5hngb#Js0LdvCMpo8xMPx6fCtcDPLPnYc)」查看相关详情；若命中换汇审核/换汇失败，可在【换汇异常】页面查看异常单（换汇审核中需在「款项管理」-「换汇」-「客户汇兑」页面进行人工审核）
+1. 兑换结果查看：人工/自动兑换完成后，若剩余资产仍命中规则，则仍会在提醒查询列表；若不再命中规则则会进入历史记录，可在「[历史记录](./VWyawtnPoizaJvkLjGIcgA5hngb#Js0LdvCMpo8xMPx6fCtcDPLPnYc)」查看相关详情；若命中换汇审核/换汇失败，可在【换汇异常】页面查看异常单（换汇审核中需在「款项管理」-「换汇」-「客户汇兑」页面进行人工审核）
 
 ![image.png](/assets/71eb49edc98f4311865628ccc4753bc3.png)
 
@@ -674,7 +674,7 @@ sidebar_position: 2
 
 ![image.png](/assets/50ed0858abe93b874aa651f7eb6f60f9.png)
 
-1. 无论是单个新建还是批量上传，都会在「设置记录」生成记录，操作见「[设置纪录](https://longbridge.feishu.cn/wiki/VWyawtnPoizaJvkLjGIcgA5hngb#VU88dsTDzoH3O4xLR25c9v94nic)」菜单
+1. 无论是单个新建还是批量上传，都会在「设置记录」生成记录，操作见「[设置纪录](/21c5bab0c2cc8039aef7d3be3c96c11b)」菜单
 2. 若股票保证金设置已存在，需要修改比例，则可以在列表操作【编辑】，编辑操作流程同新增；如需删除某只股票的保证集比例设置，可以操作【删除】
 
 ![image.png](/assets/44d962a9af1ba1901842e0210dd64ace.png)
@@ -802,7 +802,7 @@ sidebar_position: 2
 > ⚓ 风控管理 > 保证金  > 客户保证金 > 空头股票
 
 
-客户空头股票保证金比例设置逻辑同「[多头股票](https://longbridge.feishu.cn/wiki/VWyawtnPoizaJvkLjGIcgA5hngb#N5wCdP2R2otsIyxgtSdctCoQnvd)」，唯一不同的是空头股票多了“可卖空状态”和融券池规则设置，其卖空状态及融券池规则设置逻辑同「空头保证金」页面。
+客户空头股票保证金比例设置逻辑同「[多头股票](/2325bab0c2cc8191a23cea6bc81fd001)」，唯一不同的是空头股票多了“可卖空状态”和融券池规则设置，其卖空状态及融券池规则设置逻辑同「空头保证金」页面。
 
 
 ![image.png](/assets/06243552dc033f99ac26ed0d42d6b2ef.png)

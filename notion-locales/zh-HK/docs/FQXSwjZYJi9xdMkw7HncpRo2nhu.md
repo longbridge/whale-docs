@@ -92,7 +92,7 @@ sidebar_position: 3
 > ❓ 問：不通過港交所做的 IPO 如何公佈中籤
 
 
-答：待上手把中籤結果返回後，需要先把中籤結果，轉化為 Whale 系統自定義中籤的格式，導入系統操作即可，詳情請參考：[公佈中籤操作](https://longbridge.feishu.cn/wiki/CfQ1wR31ViDOdJkaiB0cs1ipnJf)
+答：待上手把中籤結果返回後，需要先把中籤結果，轉化為 Whale 系統自定義中籤的格式，導入系統操作即可，詳情請參考：[公佈中籤操作](./CfQ1wR31ViDOdJkaiB0cs1ipnJf)
 
 
 > ❓ 問：對接了 FINI 平台的 API，如何操作中籤

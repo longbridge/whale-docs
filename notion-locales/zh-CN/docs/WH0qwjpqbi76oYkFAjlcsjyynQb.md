@@ -11,7 +11,7 @@ sidebar_position: 2
 # 概述
 
 
-Whale 系统支持基金下单交易操作，同时支持下单后的委托查询。基金申赎的详细流程可见此目录：[系统介绍](https://longbridge.feishu.cn/wiki/R1lWwBSSFiWgUAkUJKScIOXrn6d?from=from_copylink)
+Whale 系统支持基金下单交易操作，同时支持下单后的委托查询。基金申赎的详细流程可见此目录：[系统介绍](/2455bab0c2cc81d8add3ce1ec1c3ef5f)
 
 
 ## 基金交易

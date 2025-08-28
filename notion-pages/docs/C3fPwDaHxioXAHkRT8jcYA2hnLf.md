@@ -11,7 +11,7 @@ sidebar_position: 13
 # 14A 問：如何設置 SFTP？
 
 
-**答：**請參考操作文檔 [SFTP 軟件操作指引](https://longbridge.feishu.cn/wiki/VoMUwGS2UiUsg7kciaacGKyhnjb)
+**答：**請參考操作文檔 [SFTP 軟件操作指引](./VoMUwGS2UiUsg7kciaacGKyhnjb)
 
 
 # 14B 問：為什麼 SFTP 裡面 DB 備份的資料遺失了幾天？
@@ -34,4 +34,7 @@ sidebar_position: 13
 
 **答：**目前僅為租用戶開通了 `bingo,member-auth,msg-box,togo-proxy` 四個服務的日誌會上傳到 SFTP。
 另外，我們預設為租戶保存最近 14 天的日誌，超過 14 天的日誌會看不到記錄。
+
+
+[SFTP 軟件操作指引](./VoMUwGS2UiUsg7kciaacGKyhnjb)
 
