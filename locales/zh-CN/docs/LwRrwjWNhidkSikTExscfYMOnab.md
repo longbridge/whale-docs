@@ -1,7 +1,7 @@
 ---
 title: 2025-06-23 更新日志
 slug: LwRrwjWNhidkSikTExscfYMOnab
-sidebar_position: 3
+sidebar_position: 4
 version: stable
 ---
 

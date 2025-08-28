@@ -1,7 +1,7 @@
 ---
 title: 2025-06-03 更新日志
 slug: Vjohwb9L4iLTkpkwMbqczOD4nGc
-sidebar_position: 4
+sidebar_position: 5
 version: stable
 ---
 
