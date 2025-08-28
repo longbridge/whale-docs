@@ -44,7 +44,7 @@ sidebar_position: 5
 
 **答：**需要依据上手通知操作美股的公司行动，
 
-- 如 BE 类别可参考 [快速上手 - 普通红股红利（BE）](https://longbridge.feishu.cn/wiki/VK4bwFoGyifITykmGaucY7fSncc)、[快速上手 - 自愿类红股红利（BE） ](https://longbridge.feishu.cn/wiki/NiQDwy0cziZ2b5kKIg5c0ExAn6f)
+- 如 BE 类别可参考 [快速上手 - 普通红股红利（BE）](./VK4bwFoGyifITykmGaucY7fSncc)、[快速上手 - 自愿类红股红利（BE） ](./NiQDwy0cziZ2b5kKIg5c0ExAn6f)
 > 如美股发生 CA 类的公司行动需要完成美股日终的“清算交收”以拉取到最新新数据。  
 > 例如：NVDA 在 2024 年 6 月 7 日收盘后进行 1 拆 10 股的公司行动。系统需要完成 6 月 10 日的美股“清算交收" 后，CA 类公司行动的股权记登记日为 6 月 10 日，支付日期为 6 月 11 日。
 

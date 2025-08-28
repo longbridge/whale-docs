@@ -57,14 +57,14 @@ sidebar_position: 43
 
 - 改进：入金&出金功能全面优化
 
-    详见：[入金&出金优化说明 ](https://longbridge.feishu.cn/wiki/Vvpkw7jqeitbhjkQVTncStRBn4c) 
+    详见：[入金&出金优化说明 ](/21a5bab0c2cc81cc92a9ec128e3eebf2) 
 
 - 改进：风控菜单调整优化
     - 「客户参数」移动到「业务参数设置」-「风控」-「授信客户参数」
     - 「保证金」-「保证金风险指标」和「风控报表」移动到「报表管理」--在报表发布后会同步下线原菜单
     - 部分菜单位置及菜单名称调整
 
-    详见：[风控菜单调整优化](https://longbridge.feishu.cn/wiki/Ifv0wLOvhifRslkFuvLc0zAvnwe) 
+    详见：[风控菜单调整优化](/21c5bab0c2cc81a0bd38e7e5a4b80e94) 
 
 
     ![image.png](/assets/da44787e6642b484fa80179e0b973b32.png)

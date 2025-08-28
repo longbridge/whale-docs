@@ -77,7 +77,7 @@ sidebar_position: 2
 ![image.png](/assets/ca2c3df23aa1f83d8311f45fc913c116.png)
 
 
-同時也可以在下方功能鍵操作：北向交易與香港交易 的允許或禁止操作
+同時也可以在下方功能鍵操作：北向交易與香港交易的允許或禁止操作
 
 
 ![image.png](/assets/c1fa620258adb2aac20ef39116af3aef.png)
@@ -104,16 +104,16 @@ sidebar_position: 2
 根據 SFC 證監會規定，須將客戶 HKIDR 配對檔案做報送，有關報送操作請參考下列：
 
 
-[HKIDR 報送](https://longbridge.feishu.cn/wiki/T8IiwGsqdih0XDkLsfFc3hNcnqf?from=from_copylink) 
+[HKIDR 報送](/2315bab0c2cc800f81c5cdff60dadfe7) 
 
 
 同時為完成相關 BCAN 數據處理，須事先配置 BCAN 區間與 參與者管理，有關報送操作請參考下列：
 
 
-[配置-BCAN 區間](https://longbridge.feishu.cn/wiki/Intlw1TqbijZw2kFGqXcx2ZrnPg?from=from_copylink) 
+[配置-BCAN 區間](./Intlw1TqbijZw2kFGqXcx2ZrnPg?from=from_copylink) 
 
 
-[配置 - 參與者管理](https://longbridge.feishu.cn/wiki/DUjAw62kGicB7jken4CcBaYpnCd?from=from_copylink) 
+[配置 - 參與者管理](./DUjAw62kGicB7jken4CcBaYpnCd?from=from_copylink) 
 
 
 # 工單中心

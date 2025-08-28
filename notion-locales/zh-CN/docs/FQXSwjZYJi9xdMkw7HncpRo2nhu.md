@@ -92,7 +92,7 @@ sidebar_position: 3
 > ❓ 问：不通过港交所做的 IPO 如何公布中签
 
 
-答：待上手把中签结果返回后，需要先把中签结果，转化为 Whale 系统自定义中签的格式，导入系统操作即可，详情请参考：[公布中签操作](https://longbridge.feishu.cn/wiki/CfQ1wR31ViDOdJkaiB0cs1ipnJf)
+答：待上手把中签结果返回后，需要先把中签结果，转化为 Whale 系统自定义中签的格式，导入系统操作即可，详情请参考：[公布中签操作](./CfQ1wR31ViDOdJkaiB0cs1ipnJf)
 
 
 > ❓ 问：对接了 FINI 平台的 API，如何操作中签

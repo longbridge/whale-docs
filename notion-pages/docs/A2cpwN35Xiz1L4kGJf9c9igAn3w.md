@@ -57,14 +57,14 @@ sidebar_position: 43
 
 - 改進：入金&出金功能全面優化
 
-    詳見：[入金&出金優化說明 ](https://longbridge.feishu.cn/wiki/Vvpkw7jqeitbhjkQVTncStRBn4c) 
+    詳見：[入金&出金優化說明 ](/21a5bab0c2cc81cc92a9ec128e3eebf2) 
 
 - 改進：風控菜單調整優化
     - 「客戶參數」移動到「業務參數設置」-「風控」-「授信客戶參數」
     - 「保證金」-「保證金風險指標」和「風控報表」移動到「報表管理」--在報表發佈後會同步下線原菜單
     - 部分菜單位置及菜單名稱調整
 
-    詳見：[風控菜單調整優化](https://longbridge.feishu.cn/wiki/Ifv0wLOvhifRslkFuvLc0zAvnwe) 
+    詳見：[風控菜單調整優化](/21c5bab0c2cc81a0bd38e7e5a4b80e94) 
 
 
     ![image.png](/assets/da44787e6642b484fa80179e0b973b32.png)
