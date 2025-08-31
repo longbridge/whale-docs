@@ -104,16 +104,16 @@ sidebar_position: 2
 根據SFC 證監會規定,須將客戶HKIDR 配對檔案做報送,有關報送操作請參考下列：
 
 
-[HKIDR 報送](/2315bab0c2cc800f81c5cdff60dadfe7) 
+[HKIDR 報送](./T8IiwGsqdih0XDkLsfFc3hNcnqf) 
 
 
 同時為完成相關BCAN 數據處理, 須事先配置BCAN區間與 參與者管理,有關報送操作請參考下列：
 
 
-[配置-BCAN 區間](./Intlw1TqbijZw2kFGqXcx2ZrnPg?from=from_copylink) 
+[配置-BCAN 區間](./Intlw1TqbijZw2kFGqXcx2ZrnPg) 
 
 
-[配置-參與者管理](./DUjAw62kGicB7jken4CcBaYpnCd?from=from_copylink) 
+[配置-參與者管理](./DUjAw62kGicB7jken4CcBaYpnCd) 
 
 
 # 工單中心
