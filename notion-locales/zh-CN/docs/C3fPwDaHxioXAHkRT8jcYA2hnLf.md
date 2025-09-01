@@ -35,6 +35,3 @@ sidebar_position: 13
 **答：**目前仅为租用户开通了 `bingo,member-auth,msg-box,togo-proxy` 四个服务的日志会上传到 SFTP。
 另外，我们预设为租户保存最近 14 天的日志，超过 14 天的日志会看不到记录。
 
-
-[SFTP 软件操作指引](./VoMUwGS2UiUsg7kciaacGKyhnjb)
-

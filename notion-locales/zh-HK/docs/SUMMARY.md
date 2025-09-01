@@ -217,6 +217,7 @@
       - [12.1 批量報表打印](Pv1iwdUS7irds2kU6HBcVq2UnCc.md)
     - [13. 消息中心（郵件／短訊）](KyCEwH6KXide7wkP3mXcRFN9nXb.md)
     - [14. SFTP 問題](C3fPwDaHxioXAHkRT8jcYA2hnLf.md)
+      - [SFTP 軟件操作指引](VoMUwGS2UiUsg7kciaacGKyhnjb.md)
     - [15. 業務參數問題](Do6GwtgifimTd3kupI7c7SSenDd.md)
       - [15.1 審批流程配置](UNfQwXj4diCmNykxC04cZ06wnEc.md)
     - [16. App 操作問題](BuYmwP261iyFTiknDAscRHaSndc.md)
