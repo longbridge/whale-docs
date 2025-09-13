@@ -134,40 +134,40 @@ Whale KYC 系统支持处理客户的开户资料相关的流程，包括 开户
 选择客户：选择已注册客户（APP 用户），可通过客户编号、电话、email、真实姓名、身份证进行搜索
 
 
-    ![image.png](/assets/e6fddea406ea843674bae8c91c55fd25.png)
+![image.png](/assets/e6fddea406ea843674bae8c91c55fd25.png)
 
 
-    新建客户：未在系统注册的客户，可通过本作业创建。当前系统提供了多元的登录方式供选择
+新建客户：未在系统注册的客户，可通过本作业创建。当前系统提供了多元的登录方式供选择
 
 
-    **系统预设产生 APP 帐号登录**
+**系统预设产生 APP 帐号登录**
 
 
-    **手机号码验证码登录**
+**手机号码验证码登录**
 
 
-    **邮箱验证登入**
+**邮箱验证登入**
 
 
-    ![image.png](/assets/7b70cbb6a345a6cc5b0bb078fa256793.png)
+![image.png](/assets/7b70cbb6a345a6cc5b0bb078fa256793.png)
 
 
-    选择客户类型，可选择：个人客户 /联名客户 /企业客户
+选择客户类型，可选择：个人客户 /联名客户 /企业客户
 
 
-        ![image.png](/assets/8fb968405b1a099bc1b3a37d25f48bdc.png)
+![image.png](/assets/8fb968405b1a099bc1b3a37d25f48bdc.png)
 
 
-        注意：若是企业帐户，可以修改预设的公司户的 CRS 企业实体类型
+注意：若是企业帐户，可以修改预设的公司户的 CRS 企业实体类型
 
 
-        ![image.png](/assets/5b9a4f84a23d201b664f43b28d321565.png)
+![image.png](/assets/5b9a4f84a23d201b664f43b28d321565.png)
 
 
-    选择客户国籍，系统支持 200 + 国籍
+选择客户国籍，系统支持 200 + 国籍
 
 
-        ![image.png](/assets/16a33df247629e05f627dec66cfb68e2.png)
+![image.png](/assets/16a33df247629e05f627dec66cfb68e2.png)
 
 
 ### **第二步**：上传身份证件
@@ -212,7 +212,7 @@ Whale KYC 系统支持处理客户的开户资料相关的流程，包括 开户
 纳税资讯，需填写用户纳税的国家/地区及纳税编号，最多支持填写 10 个。包含以下字段：纳税国家/地区  与 纳税人编号
 
 
-    ![image.png](/assets/0eff880b1874d39e21ea76c040b3678a.png)
+![image.png](/assets/0eff880b1874d39e21ea76c040b3678a.png)
 
 
 电子邮箱：用户用于接收结单、通知等通知。一个 App 的用户邮箱唯一
@@ -221,7 +221,7 @@ Whale KYC 系统支持处理客户的开户资料相关的流程，包括 开户
 填写联系手机号，多个客户可使用相同的联系手机号
 
 
-    ![image.png](/assets/32687fc337fcfae80049b4b240733742.png)
+![image.png](/assets/32687fc337fcfae80049b4b240733742.png)
 
 
 ### **第五步**：填写资产投资信息
@@ -265,11 +265,11 @@ Whale KYC 系统支持处理客户的开户资料相关的流程，包括 开户
 帐户类型：可选择开通融资帐户、现金帐户，系统支持同时多开帐户
 
 
-    ![image.png](/assets/9ad31e8fb0143bf081b418efbde92930.png)
+![image.png](/assets/9ad31e8fb0143bf081b418efbde92930.png)
 
 
 其他配置资讯，包括：是否接收线下结单 /经纪人 /见证员工姓名 /牌照号码 /证券号码（可自定义输入客户帐号） /客户声明资讯确认
 
 
-    ![image.png](/assets/f54315d1746be527204521577605aef0.png)
+![image.png](/assets/f54315d1746be527204521577605aef0.png)
 
