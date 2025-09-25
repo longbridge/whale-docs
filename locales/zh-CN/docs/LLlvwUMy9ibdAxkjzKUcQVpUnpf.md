@@ -84,5 +84,57 @@ sidebar_position: 0
 
 ## 17.1I 问：系统能否限制自成交交易（客户自己的买盘跟自己的卖盘对盘）？
 
-自成交交易会被限制，同一个客户双向订单，若价格是可成交的，第二笔下单会被拒绝。
+答：自成交交易会被限制，同一个客户双向订单，若价格是可成交的，第二笔下单会被拒绝。
+
+## 17.1J 问：能否设置 VA 产品的交易限额？
+
+答：可以在「证券限额」批量上传相关产品的代码，然后限额代码选择 SDB，最后选择限制的交易金额。
+
+## 17.1K 问：美股沽空前期配置？
+
+答：1.客户权限
+
+客户端填了对应的问卷，这边才会有卖空的权限：
+
+<img src="/assets/XmwrbAYUxoFEj2xIZnJcT77LnPd.png" src-width="2966" src-height="1670" align="center"/>
+
+2.股票空头保证金
+
+<img src="/assets/Ly2kbr6zYoEl8OxjQrgcb65Vnib.png" src-width="2968" src-height="1662" align="center"/>
+
+3.客户空头保证金
+
+<img src="/assets/Fo7LbAKxMoNAjNxSUT3cCNmIn9d.png" src-width="2962" src-height="1422" align="center"/>
+
+4.业务参数配置 - 融券配置
+
+<img src="/assets/Ha9jbJWWRopjV8xi5IpcDEVTnLc.png" src-width="2954" src-height="1654" align="center"/>
+
+<img src="/assets/CfYfb6zyconR79xoW6acXZfbn7q.png" src-width="2962" src-height="1530" align="center"/>
+
+融资利息=卖空市值*融券费率
+
+融券利息=（卖空数量*收市价*融券结算价转化系数）*Max（IB 提供的融券费率*系数乘 + 系数加，0.03）/365
+
+max=（IB 提供的融券费率*系数乘 + 系数加，0.03）就是下图的【对客费率（%）】，IB 提供的融券费率就是下图中的【原费率（%）】
+
+<img src="/assets/LlMwbtlSxojmXBxXBXmc7fytncc.png" src-width="2956" src-height="456" align="center"/>
+
+5.融券管理 - 融券费率管理
+
+下图的结果就是根据 4 配置得到结果，可以二次编辑对客费率。
+
+<img src="/assets/CwICbBXnmolwMtx7n0AcgRihnSG.png" src-width="2938" src-height="1666" align="center"/>
+
+6.融券费率场景配置
+
+<img src="/assets/OVAcb1zVVoeoJqxESpwc7NTGn3b.png" src-width="2960" src-height="586" align="center"/>
+
+7.融券利息需要后算
+
+<img src="/assets/MVPqbaAzYowyGaxc5Rfck2DbnPe.png" src-width="2944" src-height="986" align="center"/>
+
+8.帮助中心文章检查
+
+<img src="/assets/IwBdbMUVhoeV9nxsJvYcRZrenug.png" src-width="2954" src-height="426" align="center"/>
 
