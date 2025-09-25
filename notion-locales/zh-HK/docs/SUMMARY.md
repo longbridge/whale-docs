@@ -280,6 +280,6 @@
       - [2023-10-10 更新日誌](I315w0dP7iuN0bkgEUXcnRzunOd.md)
       - [2023-10-9 更新日誌](SVGqw2QYViqRZGkTGMqc0VbRnOn.md)
     - [WTT](GWDLwfuyVitlLUk5VjpcHd9XnOg.md)
-      - [2025-Q3 What‘s New](2025-Q3-What-s-New.md)
       - [2025-08 What's New（RC）](2025-08-What-s-New-RC.md)
       - [2025-09 What's New（RC）](26b5bab0c2cc80eb8c03e16cddf0d44b.md)
+      - [2025-Q3 What‘s New](2025-Q3-What-s-New.md)

@@ -2,17 +2,12 @@
 slug: 2025-08-What-s-New-RC
 version: stable
 title: 2025-08 What's New (RC)
-sidebar_position: 1
+sidebar_position: 0
 ---
 
 
 # 2025-08 What's New (RC)
 
-
-## v 2.32.0
-
-> 发布时间   2025.09.03
-- 一些技术及交互优化
 
 ## v 2.31.1
 

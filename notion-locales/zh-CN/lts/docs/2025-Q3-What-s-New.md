@@ -2,12 +2,31 @@
 slug: 2025-Q3-What-s-New
 version: lts
 title: 2025-Q3 What‘s New
-sidebar_position: 0
+sidebar_position: 2
 ---
 
 
 # 2025-Q3 What‘s New
 
+
+## v 2.33.0
+
+
+## 🎉 新功能
+
+- Order Book 中添加拒绝来源信息，可以更准确清楚的定位知晓订单是被系统拒绝还是上手券商拒绝。
+
+    ![image.png](/assets/c540d32a6fe86ff3c0f362eff28e7108.png)
+
+- WTT 相关的操作日志均可在 WBO 中查看管理，WTT 上用户的操作行为（例如：导出、新增、编辑修改等）均可追踪到。
+
+    ![image.png](/assets/ef8fd9f5e4f24b71c3bab55b25394d7e.png)
+
+- 交易组件内的资产数据优化，最大购买力修改为“最大可开仓金额”，该数据会通过最大购买力及当前标的的初始保证金比例来结合计算。
+
+## 📌 改进与修复
+
+- 一些技术及交互优化
 
 ## v 2.32.0
 
