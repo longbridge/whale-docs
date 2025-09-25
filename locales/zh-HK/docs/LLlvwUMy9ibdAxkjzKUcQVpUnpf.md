@@ -84,5 +84,57 @@ sidebar_position: 0
 
 ## 17.1I 問：系統能否限制自成交交易（客戶自己的買盤跟自己的賣盤對盤）？
 
-自成交交易會被限制，同一個客戶雙向訂單，若價格是可成交的，第二筆下單會被拒絕。
+答：自成交交易會被限制，同一個客戶雙向訂單，若價格是可成交的，第二筆下單會被拒絕。
+
+## 17.1J 問：能否設置 VA 產品的交易限額？
+
+答：可以在「證券限額」批量上傳相關產品的代碼，然後限額代碼選擇 SDB，最後選擇限制的交易金額。
+
+## 17.1K 問：美股沽空前期配置？
+
+答：1.客戶權限
+
+客戶端填了對應的問卷，這邊才會有賣空的權限：
+
+<img src="/assets/XmwrbAYUxoFEj2xIZnJcT77LnPd.png" src-width="2966" src-height="1670" align="center"/>
+
+2.股票空頭保證金
+
+<img src="/assets/Ly2kbr6zYoEl8OxjQrgcb65Vnib.png" src-width="2968" src-height="1662" align="center"/>
+
+3.客戶空頭保證金
+
+<img src="/assets/Fo7LbAKxMoNAjNxSUT3cCNmIn9d.png" src-width="2962" src-height="1422" align="center"/>
+
+4.業務參數配置 - 融券配置
+
+<img src="/assets/Ha9jbJWWRopjV8xi5IpcDEVTnLc.png" src-width="2954" src-height="1654" align="center"/>
+
+<img src="/assets/CfYfb6zyconR79xoW6acXZfbn7q.png" src-width="2962" src-height="1530" align="center"/>
+
+融資利息=賣空市值*融券費率
+
+融券利息=（賣空數量*收市價*融券結算價轉化係數）*Max（IB 提供的融券費率*係數乘 + 係數加，0.03）/365
+
+max=（IB 提供的融券費率*係數乘 + 係數加，0.03）就是下圖的【對客費率（%）】，IB 提供的融券費率就是下圖中的【原費率（%）】
+
+<img src="/assets/LlMwbtlSxojmXBxXBXmc7fytncc.png" src-width="2956" src-height="456" align="center"/>
+
+5.融券管理 - 融券費率管理
+
+下圖的結果就是根據 4 配置得到結果，可以二次編輯對客費率。
+
+<img src="/assets/CwICbBXnmolwMtx7n0AcgRihnSG.png" src-width="2938" src-height="1666" align="center"/>
+
+6.融券費率場景配置
+
+<img src="/assets/OVAcb1zVVoeoJqxESpwc7NTGn3b.png" src-width="2960" src-height="586" align="center"/>
+
+7.融券利息需要後算
+
+<img src="/assets/MVPqbaAzYowyGaxc5Rfck2DbnPe.png" src-width="2944" src-height="986" align="center"/>
+
+8.幫助中心文章檢查
+
+<img src="/assets/IwBdbMUVhoeV9nxsJvYcRZrenug.png" src-width="2954" src-height="426" align="center"/>
 

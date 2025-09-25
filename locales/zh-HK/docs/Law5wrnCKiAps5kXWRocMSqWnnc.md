@@ -108,3 +108,19 @@ xxx 证券
 
 答：只有轉賬開戶的開戶表格因提早生成賬戶號碼，才能在開戶表格中顯示客戶賬戶號碼，其他認證方式都沒有。
 
+## 1.1I 問：客戶使用支票驗證開戶流程？
+
+答：使用支票開戶要先在「銀行賬單」按「新建」選「單文件」導入這筆入金（見 1.1I 圖一）。之後在「入金匹配」中關聯這筆入金以完成開戶身份認證（見 1.1I 圖二）（見 1.1I 圖三）。
+
+<img src="/assets/O5iob29zboqQZ3xZUxBcqarAnah.png" src-width="3820" src-height="979" align="center"/>
+
+                                                      <em>  1.1I 圖一</em>
+
+<img src="/assets/TVnzbP9Qlo7hEvxNI8Ncy7Rqnkf.png" src-width="3823" src-height="854" align="center"/>
+
+                                                      <em>1.1I 圖二</em>
+
+<img src="/assets/IR0rbESUQo5Xp0xdYI4cNWQnnOB.png" src-width="3744" src-height="1812" align="center"/>
+
+                                                      <em>    1.1I 圖三</em>
+
