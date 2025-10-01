@@ -236,6 +236,7 @@
     - [20. 运营系统问题](Ew4Ywa1mYiQX5ckZMJscJh3Xndb.md)
     - [21. 网页版（web trade）问题](PsNuwqSv3i0dafkworPcEyhen5g.md)
       - [Web Trade 产品使用说明 ](BVuaw85uPidYnTktnqncplkTnec.md)
+    - [22. 虚拟资产问题](FHKjwNF35ilA1MkrgwWcl9RCnce.md)
   - [更新日志](JuxhwPm1xiZ025k4GBcc2NdDnfe.md)
     - [Whale Console](G3LGw8hlOieaJXkLGuxcQVTtndf.md)
       - [2025-09-01 更新日志](Jdb7wCe9OiXdsuk2MjZcJh4OnnR.md)

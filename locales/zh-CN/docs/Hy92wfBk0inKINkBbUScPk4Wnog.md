@@ -47,3 +47,11 @@ sidebar_position: 0
 
 <img src="/assets/MoejbBHQpo3vZlxkQ89c6P51nZ7.png" src-width="734" src-height="1464" align="center"/>
 
+## 16.1F 问：当日盈亏率的计算公式？
+
+<b>答：</b>当日盈亏率＝当日股票的当日盈亏额 ➗ 昨收持仓*昨收价+∑当日买入*买入成交价格
+
+
+​
+
+
