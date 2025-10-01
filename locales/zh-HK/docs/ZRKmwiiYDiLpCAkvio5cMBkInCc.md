@@ -46,3 +46,7 @@ sidebar_position: 17
 
 <img src="/assets/Il5qbFVIro8BDixGBnmcR6aynff.png" src-width="2808" src-height="1330" align="center"/>
 
+# 18G 問：客戶持有港元沒有美元，但也能購買美股？
+
+答：如果有配置借幣功能，客戶的購買力模式可以以不同貨幣換用，所以港元沒有美元也能購買美股。
+

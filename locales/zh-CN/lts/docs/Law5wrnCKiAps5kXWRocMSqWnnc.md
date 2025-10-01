@@ -108,3 +108,19 @@ xxx 证券
 
 答：只有转账开户的开户表格因提早生成账户号码，才能在开户表格中显示客户账户号码，其他认证方式都没有。
 
+## 1.1I 问：客户使用支票验证开户流程？
+
+答：使用支票开户要先在「银行账单」按「新建」选「单文件」导入这笔入金（见 1.1I 图一）。之后在「入金匹配」中关联这笔入金以完成开户身份认证（见 1.1I 图二）（见 1.1I 图三）。
+
+<img src="/assets/O5iob29zboqQZ3xZUxBcqarAnah.png" src-width="3820" src-height="979" align="center"/>
+
+                                                      <em>  1.1I 图一</em>
+
+<img src="/assets/TVnzbP9Qlo7hEvxNI8Ncy7Rqnkf.png" src-width="3823" src-height="854" align="center"/>
+
+                                                      <em>1.1I 图二</em>
+
+<img src="/assets/IR0rbESUQo5Xp0xdYI4cNWQnnOB.png" src-width="3744" src-height="1812" align="center"/>
+
+                                                      <em>    1.1I 图三</em>
+
