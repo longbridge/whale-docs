@@ -67,3 +67,7 @@ sidebar_position: 0
 
 <img src="/assets/HyvfbF71koZJr0xszX2cMb0Snew.png" src-width="1398" src-height="202" align="center"/>
 
+## 5.1D 問：美股是交易日，但不是交收日？
+
+答：美股銀行假期，所以有交易但沒有交收。
+
