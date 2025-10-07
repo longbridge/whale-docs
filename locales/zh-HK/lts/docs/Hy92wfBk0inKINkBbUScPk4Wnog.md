@@ -47,3 +47,11 @@ sidebar_position: 0
 
 <img src="/assets/MoejbBHQpo3vZlxkQ89c6P51nZ7.png" src-width="734" src-height="1464" align="center"/>
 
+## 16.1F 問：當日盈虧率的計算公式？
+
+<b>答：</b>當日盈虧率＝當日股票的當日盈虧額 ➗ 昨收持倉*昨收價+∑當日買入*買入成交價格
+
+
+​
+
+
