@@ -59,3 +59,15 @@ sidebar_position: 19
 
 <img src="/assets/Lw35bIS9ToE3x2xRc8tcVIyWnMf.png" src-width="2790" src-height="1454" align="center"/>
 
+## 20E 問：行情卡的到期時間是如何計算？
+
+答：行情卡是以自然日計算到期日，1 個月行情卡是 30 天，3 個月行情卡是 90 天，1 年行情卡是 365 天。
+
+<img src="/assets/XhmEbMH1toINuNxXBxGlYfJtgNc.png" src-width="2820" src-height="1144" align="center"/>
+
+## 20F 問：客戶未領取的行情卡怎樣收回？
+
+答：在「卡券管理」按刪除便可收回卡券。
+
+<img src="/assets/OzAnbIODrovsTDx9NWels69TgFg.png" src-width="3808" src-height="566" align="center"/>
+
