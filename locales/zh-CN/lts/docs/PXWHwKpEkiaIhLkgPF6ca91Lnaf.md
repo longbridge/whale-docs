@@ -75,3 +75,9 @@ sidebar_position: 2
 
 <em>5.3E 图二</em>
 
+## 5.3F 问：暗盘交易成交在后台补单后 WTT 是否会同步反映？
+
+答：在「后台补单」形式输入交易便能同步至 WTT 平台。
+
+<img src="/assets/FsfibAgMqoTKhlxDyxncm21hnTc.png" src-width="3818" src-height="893" align="center"/>
+
