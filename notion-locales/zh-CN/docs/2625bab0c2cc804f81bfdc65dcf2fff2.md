@@ -2,7 +2,7 @@
 version: stable
 title: 2025-09-01 更新日志
 slug: 2625bab0c2cc804f81bfdc65dcf2fff2
-sidebar_position: 1
+sidebar_position: 2
 ---
 
 
