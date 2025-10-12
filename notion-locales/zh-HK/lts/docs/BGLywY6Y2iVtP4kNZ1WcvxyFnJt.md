@@ -2,7 +2,7 @@
 version: lts
 slug: BGLywY6Y2iVtP4kNZ1WcvxyFnJt
 title: 2025-06-30 更新日誌
-sidebar_position: 4
+sidebar_position: 5
 ---
 
 
