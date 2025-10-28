@@ -285,3 +285,4 @@
       - [2025-08 What's New（RC）](2025-08-What-s-New-RC.md)
       - [2025-09 What's New（RC）](26b5bab0c2cc80eb8c03e16cddf0d44b.md)
       - [2025-Q3 What‘s New](2025-Q3-What-s-New.md)
+      - [2025-10 What's New（RC）](2995bab0c2cc80d5ad6aeea42fbe1bf2.md)
