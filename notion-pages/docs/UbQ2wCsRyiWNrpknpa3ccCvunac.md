@@ -43,10 +43,10 @@ WHALE的款項管理系統提供了多情境的入金功能，使用者可以在
 在客戶入金前，需要在後臺添加對應公司銀行賬戶，並且配置公司銀行賬戶下對應的入金方式。
 
 
-![image.png](/assets/de9d4b89a6ee9474465c867f4b8bbff4.png)
+![image.png](/assets/dc4678c3a07c05c17aeb6d86ce33f8a5.png)
 
 
-![image.png](/assets/8e232278d527511a51290333022a9006.png)
+![image.png](/assets/9efb90b8aae06ee41f7db5b623a6ed1a.png)
 
 
 ## 2.币种
@@ -55,7 +55,7 @@ WHALE的款項管理系統提供了多情境的入金功能，使用者可以在
 在客戶入金前，需要進行入金幣種設置。
 
 
-![image.png](/assets/8786970448483ca0b63327a3f921dbe5.png)
+![image.png](/assets/79a4f150322484a4a7ccb5eb943ee9fc.png)
 
 
 # 客戶銀行卡
@@ -64,19 +64,19 @@ WHALE的款項管理系統提供了多情境的入金功能，使用者可以在
 客戶需要在券商配置好客戶自己的銀行卡信息，添加方式包括：客戶客戶端 App 自行添加、後臺添加。
 
 
-![image.png](/assets/c53a34d4869394b32a54190667138c9c.png)
+![image.png](/assets/34ed6981b477ff6b7f46aae2b71df39a.png)
 
 
 單筆新增
 
 
-![image.png](/assets/78d6664d64ea37082e21f6d66041c22d.png)
+![image.png](/assets/6447b20830528a447d3d9a7a46bb22c0.png)
 
 
 批量添加
 
 
-![image.png](/assets/4a806210e58d3adf4b8c9d68a24c8f7e.png)
+![image.png](/assets/537fecbfe9814f82d77cc3714041ab79.png)
 
 
 # 銀證開戶
@@ -85,7 +85,7 @@ WHALE的款項管理系統提供了多情境的入金功能，使用者可以在
 如果客戶需要進行銀證入金，則需要進行銀證開戶，如果客戶提交了銀證開戶請求，則後臺可以查到對應記錄。
 
 
-![image.png](/assets/24ea5c59d5586c0e6d9f70973860fb8c.png)
+![image.png](/assets/18b846ba9d29ad54cb843b31240008f4.png)
 
 
 # eDDA授權
@@ -94,7 +94,7 @@ WHALE的款項管理系統提供了多情境的入金功能，使用者可以在
 如果客戶需要進行eDDA入金，則需要進行eDDA授权，如果客戶进行eDDA授权之后，則後臺可以查到對應記錄。
 
 
-![image.png](/assets/a9f3ce3f723684073128e8f8dd2155d7.png)
+![image.png](/assets/5c11d1a897c308a430c307326a4c384a.png)
 
 
 # 銀行相關信息配置
@@ -106,19 +106,19 @@ WHALE的款項管理系統提供了多情境的入金功能，使用者可以在
 ## 1.卡所屬銀行
 
 
-![image.png](/assets/5c8ec126e6044c17cbd9fd8001a54e3a.png)
+![image.png](/assets/ac5aa52133fa0586c1142045728ba912.png)
 
 
 ## 2.用戶綁卡-國家/地區
 
 
-![image.png](/assets/e4fc458552cf8ac98f104d43dbb3458e.png)
+![image.png](/assets/ee7b39f9b0694c23e324a0193f3edbdc.png)
 
 
 ## 3.銀行區域列表
 
 
-![image.png](/assets/51739eb5bc7e45e884f131b901df7c67.png)
+![image.png](/assets/0bf2098fb033697185e43798dc2dca89.png)
 
 
 # 入金操作
@@ -137,7 +137,7 @@ WHALE的款項管理系統提供了多情境的入金功能，使用者可以在
 
 1. **客戶端提交入金申請，後臺查詢**
 
-![image.png](/assets/188e43567d3e910867323cc993444d38.png)
+![image.png](/assets/20192ee1ab82f051b3dd68c3856a99c4.png)
 
 1. **後臺手動【新建】**
 
@@ -147,7 +147,7 @@ WHALE的款項管理系統提供了多情境的入金功能，使用者可以在
 **選擇客戶，錄入銀行、入金方式、入金金額、入金幣種、憑證以及備註等等資訊。**
 
 
-![image.png](/assets/c643ae8ac18547bbf67842eb90bac2a0.png)
+![image.png](/assets/529d2205ca60460ed707f4d3c11e0b44.png)
 
 
 ## 1.2 操作入賬
@@ -165,24 +165,24 @@ WHALE的款項管理系統提供了多情境的入金功能，使用者可以在
 - 提交申請資料是否有誤
 - 補充此筆申請對應的銀行流水（若暫無銀行流水，也可先提交審批，後續再補充流水資訊）
 
-![image.png](/assets/40570efae1c32928a33f9b266ae6a758.png)
+![image.png](/assets/51c5e469009b68da73be805c635aa9cd.png)
 
 - 當入金方式爲支票，可根據實際業務訴求選擇是否凍結。如選擇凍結，則可以人爲修改預計解凍時間。
 
-![image.png](/assets/94cdfaa39a2bc69d89d23101fc6e8a4d.png)
+![image.png](/assets/ba041b898f85c06d68dc89cb80d641f7.png)
 
 1. 【憑證關聯】
 - 如果操作入賬的申請是多筆，則可以進入憑證關聯頁面進行批量操作入賬
 
-![image.png](/assets/caefb2fc6cfbc00925fb0c5276f599e2.png)
+![image.png](/assets/09b7051182e73bb1ed99724ce074698a.png)
 
 - 進入憑證關聯頁面，會篩選出所有等待入賬的申請單，由操作者進行選擇，在覈對無誤後提交入賬
 
-![image.png](/assets/06d8db836f0112a0b2d38a3c2349706d.png)
+![image.png](/assets/0dd683fc5c902d23a800c2875fdaba49.png)
 
 - 當入金方式爲支票，可根據實際業務訴求選擇是否凍結。如選擇凍結，則可以人爲修改預計解凍時間。
 
-![image.png](/assets/d5a944ff976103916b83a142de39aa7a.png)
+![image.png](/assets/7b11b10b42646004e7938ff7117d8dde.png)
 
 
 ## 1.3 入金审核
@@ -191,21 +191,21 @@ WHALE的款項管理系統提供了多情境的入金功能，使用者可以在
 **進入入金審核tab，找到對應的紀錄，點選【審批】，召喚出工單，核准通過後入金即可入賬**
 
 
-![image.png](/assets/519e89458989596bab866e50656939a8.png)
+![image.png](/assets/9f7e63f9cdc549b680225e39d8d5b376.png)
 
 
-![image.png](/assets/1ec5df75145bc5d1d225dba59a21fb13.png)
+![image.png](/assets/fbbf9fc1b00af1139d95b2777e47551a.png)
 
 
-![image.png](/assets/cd5677f3a09161c7165c60f1f1eca08f.png)
+![image.png](/assets/3b800cc9a400d0c35946de1f392195de.png)
 
 - 如果需要审批的工单有多笔，可以勾选出对应记录进行批量审批
 
-![image.png](/assets/dd511284971c6f332a453156da0c6212.png)
+![image.png](/assets/b554d31207dd4d472e104706c8b402c6.png)
 
 - 入金審覈時，當入金方式爲支票，會展示是否凍結相應信息。
 
-![image.png](/assets/28c122861302498b90b239b3ce9b1802.png)
+![image.png](/assets/e6df960a6265786ee6f2b608ed264a4b.png)
 
 
 ## 2.以銀行流水為准入賬
@@ -224,22 +224,22 @@ WHALE的款項管理系統提供了多情境的入金功能，使用者可以在
 在銀行資金到賬後，系統可以通過銀行API直接獲取銀行流水
 
 
-![image.png](/assets/713f20e89c4cb3a226f33f208fcd4f4a.png)
+![image.png](/assets/0dc128e59c1b83f7c48dd3a091f97e2e.png)
 
 
 如果沒有對接銀行API，則可以人工在後臺按照網銀模板進行賬單導入
 
 
-![image.png](/assets/116caa048da731b26ab97a9bcae7cb27.png)
+![image.png](/assets/db5b827ec1eae3a6e67a1ccf74132730.png)
 
 
-![image.png](/assets/d711313d0dab97e83d8c6b9ff6819746.png)
+![image.png](/assets/eb1e034efbc031df78a9e2907e975451.png)
 
 
-![image.png](/assets/3e274acb182501cbcaa0885a769349b7.png)
+![image.png](/assets/0259ca61e002843285a68d2b93617eaa.png)
 
 
-![image.png](/assets/376c2fab3d335112e8f75953a75d70c8.png)
+![image.png](/assets/e054fbed98f4af73edacaa3c42c7a457.png)
 
 1. 銀行即時消息
 
@@ -257,24 +257,24 @@ WHALE的款項管理系統提供了多情境的入金功能，使用者可以在
 步骤一：選擇銀行流水記錄，點選關聯進入二級頁面
 
 
-![image.png](/assets/2f812369d286a350031eed3d63bb1211.png)
+![image.png](/assets/163683cd85bd6ad61a95cfeebe1921d8.png)
 
 
 步驟二：選擇銀行流水記錄，點選關聯進入二級頁面，关联到对应入金申请，根據頁面中的校對結果，確認無誤後點選【關聯】，記錄即可流轉到審批節點 
 
 
-![image.png](/assets/77da335a483ba7cbe5c03e5b3b4e389f.png)
+![image.png](/assets/1c7217a65b359e3ccb9920c7a4964d5c.png)
 
 - 當入金方式爲支票，可根據實際業務訴求選擇是否凍結。如選擇凍結，則可以人爲修改預計解凍時間。
 
-![image.png](/assets/84ec0f0a97b36ac25a7e600a93160bfe.png)
+![image.png](/assets/37399975a886fabc6820451d6a19faff.png)
 
 1. 關聯銀行卡
 
 如果客戶未提交入金申請以及後臺操作者也未創建，則銀行流水可以直接關聯客戶銀行卡進行入賬。
 
 
-![image.png](/assets/e1a14d3199392299fd8de2191a9eed50.png)
+![image.png](/assets/aa91667d0349899677cda58d01abb213.png)
 
 1. 直接關聯證券賬戶
 - 包含兩類客戶：已開戶且未提交入金申請、認證類型爲支票驗證的開戶入金
@@ -282,7 +282,7 @@ WHALE的款項管理系統提供了多情境的入金功能，使用者可以在
 通過銀行流水可以直接關聯關聯證券賬戶進行入賬。
 
 
-![image.png](/assets/6f2ffce51bf7dc5006d6fb636de93a93.png)
+![image.png](/assets/c07b7f7411267760adb64d3b0ca4b317.png)
 
 
 ## 2.3 **入金審覈**
@@ -302,17 +302,17 @@ WHALE的款項管理系統提供了多情境的入金功能，使用者可以在
 **步驟一：進入開戶中入金tab頁面（該頁面中的入金已經通過，需要等待開户完成）**
 
 
-![image.png](/assets/1d38292cf9f49b2d66200ccc16aa2125.png)
+![image.png](/assets/4b45c21456e5830aee7912d4e36bd2b1.png)
 
 
 **步驟二：關注清單中的開戶狀態與加款狀態，若該客戶的賬戶最終未能開戶成功，開戶狀態將會體現為「審核未通過」，需要進入步驟三**
 
 
-![image.png](/assets/c0c3c6133f90d2cf04605447a7b8992b.png)
+![image.png](/assets/864c05988df2b1570bfdaff2a138174a.png)
 
 
 **步驟三：選中客戶未能開戶成功的入金記錄，點選駁回，需要重頭進行入金流程**
 
 
-![image.png](/assets/f45f72ae5c14b342277b050061e90b3a.png)
+![image.png](/assets/6801a95cc47d9997a5b7899e1da99d34.png)
 
