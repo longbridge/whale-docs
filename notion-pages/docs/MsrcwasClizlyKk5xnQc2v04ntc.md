@@ -1,7 +1,7 @@
 ---
 slug: jijinguanli
 title: 基金管理
-sidebar_position: 4
+sidebar_position: 5
 ---
 
 
