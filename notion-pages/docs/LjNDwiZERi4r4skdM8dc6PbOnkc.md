@@ -1,7 +1,7 @@
 ---
 slug: LjNDwiZERi4r4skdM8dc6PbOnkc
 title: 風控管理
-sidebar_position: 7
+sidebar_position: 8
 ---
 
 

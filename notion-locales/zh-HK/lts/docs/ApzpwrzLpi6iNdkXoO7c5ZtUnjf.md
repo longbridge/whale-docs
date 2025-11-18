@@ -1,7 +1,7 @@
 ---
 slug: ApzpwrzLpi6iNdkXoO7c5ZtUnjf
 title: 公告管理
-sidebar_position: 12
+sidebar_position: 13
 ---
 
 
