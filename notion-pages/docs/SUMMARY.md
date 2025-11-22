@@ -247,6 +247,7 @@
       - [Web Trade 產品使用說明](BVuaw85uPidYnTktnqncplkTnec.md)
   - [更新日誌](JuxhwPm1xiZ025k4GBcc2NdDnfe.md)
     - [Whale Console](G3LGw8hlOieaJXkLGuxcQVTtndf.md)
+      - [2025-11-24 更新日誌](2b05bab0c2cc80198b77d51a268c3006.md)
       - [2025-11-03 更新日誌](29a5bab0c2cc8040a885c4ed19b64a68.md)
       - [2025-10-11 更新日誌 ](2885bab0c2cc8037af7deec10162ad2a.md)
       - [2025-09-29 更新日誌](2795bab0c2cc80979af4f5a744274fb5.md)
