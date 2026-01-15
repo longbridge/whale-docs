@@ -119,39 +119,39 @@ export default defineConfig({
         },
       },
     },
-    // en: {
-    //   label: "English",
-    //   lang: "en",
-    //   themeConfig: {
-    //     siteTitle: "Help Center",
-    //     nav: [
-    //       { text: "Whale Home", link: "/", target: "_self" },
-    //       {
-    //         text: "OpenAPI",
-    //         link: "https://open.longportapp.com/en",
-    //       },
-    //       { text: "About Us", link: "/en/about", target: "_self" },
-    //       {
-    //         text: "Version",
-    //         items: [
-    //           { text: "Stable", link: "/en/docs" },
-    //           { text: "Long-term support", link: "/en/lts/docs" },
-    //         ],
-    //       },
-    //     ],
-    //     editLink: {
-    //       pattern: editLinkPattern,
-    //       text: "Edit this page",
-    //     },
-    //     lastUpdated: {
-    //       text: "Last Updated",
-    //     },
-    //     docFooter: {
-    //       prev: "Previous",
-    //       next: "Next",
-    //     },
-    //   },
-    // },
+    en: {
+      label: "English",
+      lang: "en",
+      themeConfig: {
+        siteTitle: "Help Center",
+        nav: [
+          { text: "Whale Home", link: "/", target: "_self" },
+          {
+            text: "OpenAPI",
+            link: "https://open.longportapp.com/en",
+          },
+          { text: "About Us", link: "/en/about", target: "_self" },
+          {
+            text: "Version",
+            items: [
+              { text: "Stable", link: "/en/docs" },
+              { text: "Long-term support", link: "/en/lts/docs" },
+            ],
+          },
+        ],
+        editLink: {
+          pattern: editLinkPattern,
+          text: "Edit this page",
+        },
+        lastUpdated: {
+          text: "Last Updated",
+        },
+        docFooter: {
+          prev: "Previous",
+          next: "Next",
+        },
+      },
+    },
   },
 
   // https://vitepress.dev/reference/default-theme-config
