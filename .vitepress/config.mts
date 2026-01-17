@@ -43,7 +43,7 @@ export default defineConfig({
       {
         type: "image/x-icon",
         rel: "icon",
-        href: "https://pub.lbkrs.com/files/202205/xAwaQmCk1cD1AUsm/favicon.png",
+        href: "https://assets.lbctrl.com/uploads/0a9e3791-acd0-4829-9944-4892a874572a/favicon.png",
       },
     ],
     ...siteMetadata,
@@ -156,7 +156,7 @@ export default defineConfig({
 
   // https://vitepress.dev/reference/default-theme-config
   themeConfig: {
-    logo: "https://assets.lbkrs.com/uploads/d29e591d-0c3d-4def-b837-cd06dfb4d738/whale-logo.svg",
+    logo: "https://assets.lbctrl.com/uploads/c6aa665c-62a3-4d6f-a823-e178588c8329/logo-light.png",
     search: {
       provider: "local",
       options: {
