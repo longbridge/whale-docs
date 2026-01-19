@@ -308,3 +308,4 @@
       - [2025-11 What's New（RC）](2af5bab0c2cc809e870bde33b568a1c4.md)
       - [2025-12 What's New（RC）](2be5bab0c2cc8074b254c081f75b9215.md)
       - [2026-01 What's New（RC）](2e75bab0c2cc803299b0e13cdab70db3.md)
+      - [2025-Q4 What‘s New](2025-Q4-What-s-New.md)
