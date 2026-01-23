@@ -1,13 +1,17 @@
 /**
- * 飞书 API 客户端
- * 封装所有与飞书 API 的交互
+ * Lark API 客户端
+ * 封装所有与Lark API 的交互
  */
 import * as lark from '@larksuiteoapi/node-sdk';
+import axios from 'axios';
 import * as fs from 'fs-extra';
 import path from 'path';
+import { getConfig } from './config';
+import { Config } from './types';
 
 export class LarkClient {
     private client: lark.Client;
+    private config: Config;
 
     constructor(appId: string, appSecret: string) {
         this.client = new lark.Client({
@@ -16,6 +20,7 @@ export class LarkClient {
             disableTokenCache: false,
             domain: lark.Domain.Lark,
         });
+        this.config = getConfig();
     }
 
     /**
@@ -81,8 +86,44 @@ export class LarkClient {
         return res.data?.node?.obj_token || '';
     }
 
+    async getAppAccessToken(): Promise<string> {
+        const res = await axios.post('https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal', {
+            app_id: this.config.appId,
+            app_secret: this.config.appSecret,
+        })
+        return res.data?.tenant_access_token || '';
+    }
+
     /**
-     * 上传图片到飞书
+     * 添加知识库空间成员
+     */
+    async addKnowledgeSpaceMember(spaceId: string): Promise<void> {
+        const appAccessToken = await this.getAppAccessToken();
+        try {
+            const app = await axios.get('https://open.larksuite.com/open-apis/bot/v3/info', {
+                headers: {
+                    Authorization: `Bearer ${appAccessToken}`,
+                },
+            })
+            console.log('----app', JSON.stringify(app.data));
+            const res = await this.client.wiki.spaceMember.create({
+                data: {
+                    member_id: app.data.bot.open_id,
+                    member_type: 'openid',
+                    member_role: 'admin',
+                },
+                path: {
+                    space_id: spaceId,
+                },
+            });
+            console.log('添加知识库成员成功', JSON.stringify(res));
+        } catch (e: any) {
+            console.error(`添加知识库空间成员失败: ${e.message}`);
+        }
+    }
+
+    /**
+     * 上传图片到Lark
      * @param filePath 本地图片路径
      * @param parentToken 父节点（文档 objToken）
      */
@@ -96,7 +137,7 @@ export class LarkClient {
                 // 每次重试都重新创建流
                 const fileStream = fs.createReadStream(filePath);
 
-                // 使用 drive.media.uploadAll（不带 v1，不带 extra）
+                // 使用 drive.media.uploadAll
                 const res = await this.client.drive.v1.media.uploadAll({
                     data: {
                         file_name: fileName,
@@ -107,20 +148,14 @@ export class LarkClient {
                         extra: JSON.stringify({ drive_route_token: wikiObjToken })
                     },
                 });
-
-                if (res && res.file_token) {
+                if (res?.file_token) {
                     return res.file_token;
                 }
 
                 throw new Error(`上传图片返回空 token: ${fileName}`);
             } catch (e: any) {
-                // 如果是资源限制错误，不重试
-                if (e.response?.data?.code === 1770035 || e.message?.includes('resource count exceed limit')) {
-                    console.warn(`[警告] 图片 ${fileName} 因资源限制跳过: ${e.message}`);
-                    return '';
-                }
                 console.warn(`[警告] 第 ${i + 1} 次上传图片失败 ${fileName}: ${e.message}`);
-                if (i === MAX_RETRIES - 1) throw e;
+                if (i === MAX_RETRIES - 1) throw JSON.stringify(e);
                 await this.delay(1000 * Math.pow(2, i));
             }
         }
@@ -275,7 +310,7 @@ export class LarkClient {
         }
     }
 
-    private delay(ms: number): Promise<void> {
+    delay(ms: number): Promise<void> {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 }

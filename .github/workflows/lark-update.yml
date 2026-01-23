@@ -1,0 +1,76 @@
+name: Update Lark Wiki Pages
+on:
+  workflow_dispatch:
+    inputs:
+      cache:
+        description: "Clear cache before running"
+        required: false
+        default: "true"
+        type: choice
+        options:
+        - "true"
+        - "false"
+  # schedule:
+  #   # Every 3 days at 00:00
+  #   - cron: "0 0 */3 * *"
+
+jobs:
+  export:
+    name: Download lark wiki pages
+    timeout-minutes: 180
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          branch: main
+
+      - name: Clear cache if cache is false
+        if: ${{ inputs.cache == 'false' }}
+        run: |
+          rm -rf ./lark-pages/.cache/wiki
+
+      - uses: oven-sh/setup-bun@v1
+
+      - name: Download lark wiki pages
+        env:
+          # LARK_APP_ID: ${{ secrets.LARK_APP_ID }}
+          # LARK_APP_SECRET: ${{ secrets.LARK_APP_SECRET }}
+          LARK_APP_ID: 'cli_a9eacfc6cab8de1b'
+          LARK_APP_SECRET: 'N5jO7ZXUDxTZHUlt8OkNJf6VXyZCWPqK'
+          LARK_SPACE_ID: "7593201728850284053"
+          LARK_OUTPUT_DIR: ./lark-pages
+        run: |
+          bun install
+          uses: longbridgeapp/feishu-pages@main
+
+      - name: Process and copy pages
+        run: |
+          bun run lark-setup
+
+      # - name: Setup Git
+      #   run: |
+      #     git config --global user.name "Longbridge Whale docs bot"
+      #     git config --global user.email "longbridge-whale-docs@users.noreply.github.com"
+
+      # - name: Create PR for notion-locales/ updates
+      #   run: |
+      #     BRANCH_NAME=lark-update-$(date +'%Y%m%d%H%M%S')
+      #     git checkout -b $BRANCH_NAME
+      #     git status
+      #     git add notion-locales/
+      #     git add lark-pages/docs.json
+      #     git commit -m "Commit lark updated pages to repo"
+      #     git push origin $BRANCH_NAME
+
+      #     # Create Pull Request
+      #     curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d '{"title":"Update lark wiki pages","head":"'$BRANCH_NAME'","base":"main"}' https://api.github.com/repos/${{ github.repository }}/pulls
+
+      # - name: Push lark-pages/.cache to main branch
+      #   run: |
+      #     git checkout main
+      #     git add lark-pages/.cache
+      #     git config --global user.name "Longbridge Whale docs bot"
+      #     git config --global user.email "longbridge-whale-docs@users.noreply.github.com"
+      #     git commit -m "Update lark-pages/.cache" || echo "No changes to commit"
+      #     git push origin main

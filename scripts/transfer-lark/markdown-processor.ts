@@ -1,10 +1,10 @@
 /**
  * Markdown 处理器
- * 将 Markdown 转换为飞书文档块格式
+ * 将 Markdown 转换为Lark文档块格式
  */
 import path from 'path';
 
-// 飞书块类型常量
+// Lark块类型常量
 const BLOCK_TYPES = {
     PAGE: 1,
     TEXT: 2,
@@ -53,7 +53,7 @@ export class MarkdownProcessor {
     }
 
     /**
-     * 将 Markdown 转换为飞书文档块
+     * 将 Markdown 转换为Lark文档块
      */
     async processToBlocks(markdown: string): Promise<LarkBlock[]> {
         const processor = await this.getProcessor();
@@ -169,7 +169,9 @@ export class MarkdownProcessor {
         return {
             block_type: BLOCK_TYPES.CODE,
             code: {
-                language: this.mapLanguage(node.lang),
+                style: {
+                    language: this.mapLanguage(node.lang),
+                },
                 elements: [{ text_run: { content: node.value || '' } }],
             },
         };
@@ -364,7 +366,7 @@ export class MarkdownProcessor {
             rust: 13,
             shell: 8, bash: 8, sh: 8,
             sql: 15,
-            yaml: 18, yml: 18,
+            yaml: 67, yml: 67,
             html: 5,
             css: 7,
             c: 10,

@@ -1,6 +1,6 @@
 /**
  * 上传器
- * 负责将本地 Markdown 文件上传到飞书知识库
+ * 负责将本地 Markdown 文件上传到Lark知识库
  */
 import { readFileSync, existsSync } from 'fs';
 import path from 'path';
@@ -36,13 +36,13 @@ export class Uploader {
     }
 
     /**
-     * 同步目录结构到飞书 Wiki
+     * 同步目录结构到Lark Wiki
      */
     private async syncStructure(node: LocalNode, parentToken?: string): Promise<void> {
-        if (this.config.dryRun) {
-            await this.syncStructureDryRun(node, parentToken);
-            return;
-        }
+        // if (this.config.dryRun) {
+        //     await this.syncStructureDryRun(node, parentToken);
+        //     return;
+        // }
 
         try {
             // 获取标题
@@ -87,45 +87,14 @@ export class Uploader {
     }
 
     /**
-     * Dry Run 模式下的结构同步
-     */
-    private async syncStructureDryRun(node: LocalNode, parentToken?: string): Promise<void> {
-        const title = this.getNodeTitle(node);
-        let isFolderContent = false;
-
-        if (node.type === 'file' && node.parent) {
-            const siblingFolder = this.findSiblingFolder(node);
-            if (siblingFolder) {
-                console.log(`  [DryRun] 文件 ${node.relativePath} 是文件夹 ${siblingFolder.relativePath} 的内容`);
-                isFolderContent = true;
-                this.pathMap[node.path] = {
-                    nodeToken: 'mock_' + siblingFolder.relativePath,
-                    objToken: 'mock_obj_' + siblingFolder.relativePath,
-                    type: node.type,
-                };
-            }
-        }
-
-        if (!isFolderContent) {
-            console.log(`  [DryRun] 创建 ${node.type}: ${title} (${node.relativePath})`);
-            this.pathMap[node.path] = {
-                nodeToken: 'mock_' + node.relativePath,
-                objToken: 'mock_obj_' + node.relativePath,
-                type: node.type,
-            };
-        }
-
-        for (const child of node.children) {
-            await this.syncStructureDryRun(child, this.pathMap[node.path]?.nodeToken);
-        }
-    }
-
-    /**
      * 上传文档内容
      */
     private async uploadContent(node: LocalNode): Promise<void> {
         if (node.type === 'file') {
             await this.processFile(node);
+        } else if (node.type === 'folder') {
+            // 处理文件夹节点的内容（查找同名的 .md 文件）
+            await this.processFolderContent(node);
         }
 
         for (const child of node.children) {
@@ -143,11 +112,6 @@ export class Uploader {
             return;
         }
 
-        if (this.config.dryRun) {
-            console.log(`  [DryRun] 处理内容: ${node.relativePath}`);
-            return;
-        }
-
         try {
             const content = readFileSync(node.path, 'utf-8');
             const docDir = path.dirname(node.path);
@@ -159,9 +123,8 @@ export class Uploader {
                 docDir
             );
 
-            // 转换为飞书块
+            // 转换为Lark块
             const blocks = await processor.processToBlocks(body);
-
             if (blocks.length > 0) {
                 // 先写入文档内容（创建块，获取块 ID）
                 await this.client.writeDocContent(mapEntry.objToken, blocks);
@@ -177,9 +140,60 @@ export class Uploader {
     }
 
     /**
+     * 处理文件夹节点的内容（查找同名的 .md 文件）
+     */
+    private async processFolderContent(node: LocalNode): Promise<void> {
+        const mapEntry = this.pathMap[node.path];
+        if (!mapEntry || !mapEntry.nodeToken) {
+            return;
+        }
+
+        // 查找同名的 .md 文件
+        const folderName = path.basename(node.path);
+        const mdFilePath = path.join(path.dirname(node.path), `${folderName}.md`);
+
+        if (!existsSync(mdFilePath)) {
+            // 没有同名的 .md 文件，跳过
+            return;
+        }
+
+        try {
+            const content = readFileSync(mdFilePath, 'utf-8');
+            const docDir = path.dirname(mdFilePath);
+            const { body } = parseMarkdownFrontmatter(content);
+
+            // 创建 Markdown 处理器
+            const processor = new MarkdownProcessor(
+                async (url) => this.replaceLink(url, docDir),
+                docDir
+            );
+
+            // 转换为Lark块
+            const blocks = await processor.processToBlocks(body);
+            if (blocks.length > 0) {
+                // 先写入文档内容（创建块，获取块 ID）
+                await this.client.writeDocContent(mapEntry.objToken, blocks);
+                console.log(`  ✅ 上传目录内容: ${node.relativePath} (${blocks.length} 个顶级块)`);
+
+                // 后处理：上传图片并替换，更新表格
+                const folderContentNode: LocalNode = {
+                    path: mdFilePath,
+                    relativePath: path.relative(process.cwd(), mdFilePath),
+                    type: 'file',
+                    children: []
+                };
+                await this.postProcessBlocks(blocks, mapEntry.objToken, mapEntry.nodeToken, folderContentNode);
+            }
+        } catch (e: any) {
+            console.error(`  ❌ 处理目录内容失败: ${node.relativePath}`, e.message);
+            this.errors.push({ path: node.relativePath, error: e });
+        }
+    }
+
+    /**
      * 后处理：上传图片并替换，更新表格
      */
-    private async postProcessBlocks(
+    async postProcessBlocks(
         blocks: any[],
         objToken: string,
         nodeToken: string,
@@ -203,10 +217,10 @@ export class Uploader {
                                     replace_image: { token: imageToken },
                                 });
                             }
-                            // 在图片上传之间加延迟，避免触发API限制
-                            await new Promise(resolve => setTimeout(resolve, 500));
+                            // 在图片上传之间加延迟，避免触发API限制，因为QPS=5
+                            await this.client.delay(300);
                         } catch (e: any) {
-                            console.error(`    ❌ 图片上传失败: ${localPath}`, e.message);
+                            // console.error(`    ❌ 图片上传失败: ${localPath}`, e.message);
                             this.errors.push({ path: node.relativePath, error: `图片上传失败: ${localPath}` });
                         }
                     } else {
@@ -256,7 +270,7 @@ export class Uploader {
                 }
                 // 批次间稍作延迟
                 if (i + batchSize < batchRequests.length) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await this.client.delay(1000);
                 }
             }
         }
@@ -265,7 +279,7 @@ export class Uploader {
     /**
      * 替换链接
      */
-    private async replaceLink(url: string, docDir: string): Promise<string> {
+    async replaceLink(url: string, docDir: string): Promise<string> {
         // 外部链接直接返回
         if (url.startsWith('http')) return url;
 
@@ -303,7 +317,7 @@ export class Uploader {
             return path.basename(node.path);
         }
 
-        // 尝试从文件内容读取标题
+        // 从文件内容读取标题
         try {
             const content = readFileSync(node.path, 'utf-8');
             const { title } = parseMarkdownFrontmatter(content);
@@ -349,8 +363,6 @@ export class Uploader {
         } else {
             console.log('🎉 所有文件处理成功！');
         }
-
-        console.log('='.repeat(50));
     }
 
     /**
@@ -367,7 +379,7 @@ export class Uploader {
     }
 
     /**
-     * 同步 JSON 结构到飞书 Wiki
+     * 同步 JSON 结构到Lark Wiki
      */
     private async syncJsonStructure(nodes: JsonDocNode[], parentToken?: string): Promise<void> {
         for (const node of nodes) {
@@ -375,6 +387,7 @@ export class Uploader {
                 // 跳过没有 children 的根节点，直接处理其子节点
                 if (node.depth === 0 && node.children.length > 0) {
                     await this.syncJsonStructure(node.children, parentToken);
+
                     continue;
                 }
 
@@ -384,29 +397,19 @@ export class Uploader {
                     continue;
                 }
 
-                // 创建 Wiki 节点
-                if (this.config.dryRun) {
-                    console.log(`📁 [试运行] 创建节点: ${node.title} (${node.filename})`);
-                    this.pathMap[node.filename] = {
-                        nodeToken: 'dry-run-token',
-                        objToken: 'dry-run-obj-token',
-                        type: node.has_child ? 'folder' : 'file'
-                    };
-                } else {
-                    const result = await this.client.createWikiNode(
-                        node.title,
-                        this.config.wikiSpaceId,
-                        parentToken
-                    );
+                const result = await this.client.createWikiNode(
+                    node.title,
+                    this.config.wikiSpaceId,
+                    parentToken
+                );
 
-                    this.pathMap[node.filename] = {
-                        nodeToken: result.nodeToken,
-                        objToken: result.objToken,
-                        type: node.has_child ? 'folder' : 'file'
-                    };
+                this.pathMap[node.filename] = {
+                    nodeToken: result.nodeToken,
+                    objToken: result.objToken,
+                    type: node.has_child ? 'folder' : 'file'
+                };
 
-                    console.log(`✅ 创建节点: ${node.title}`);
-                }
+                console.log(`✅ 创建节点: ${node.title}：${node.slug}`);
 
                 // 递归处理子节点
                 if (node.children && node.children.length > 0) {
@@ -414,7 +417,11 @@ export class Uploader {
                 }
 
             } catch (e: any) {
-                console.error(`❌ 创建节点失败: ${node.title}`, e.message);
+                console.error(`❌ 创建节点失败: ${node.title} (depth=${node.depth}, filename=${node.filename})`);
+                console.error(`   错误详情: ${e.message}`);
+                if (e.stack) {
+                    console.error(`   堆栈: ${e.stack}`);
+                }
                 this.errors.push({ path: node.filename, error: e });
             }
         }
@@ -432,40 +439,40 @@ export class Uploader {
                     continue;
                 }
 
-                // 只处理文件节点（没有子节点的文件）
-                if (node.has_child) {
-                    // 递归处理子节点
-                    if (node.children && node.children.length > 0) {
-                        await this.uploadJsonContent(node.children);
-                    }
-                    continue;
-                }
-
                 const mapping = this.pathMap[node.filename];
                 if (!mapping || !mapping.objToken) {
                     console.warn(`⚠️ 跳过无映射的节点: ${node.title}`);
+                    // 递归处理子节点
+                    if (node.has_child && node.children && node.children.length > 0) {
+                        await this.uploadJsonContent(node.children);
+                    }
                     continue;
                 }
 
                 // 查找对应的 MD 文件
                 const mdFilePath = path.join(process.cwd(), 'translate', 'en', 'docs', node.filename);
                 if (!existsSync(mdFilePath)) {
-                    console.warn(`⚠️ MD 文件不存在: ${mdFilePath}`);
-                    this.errors.push({ path: node.filename, error: `MD 文件不存在: ${mdFilePath}` });
+                    // 如果是文件夹节点且没有对应的 MD 文件，不报错，只是跳过
+                    if (!node.has_child) {
+                        console.warn(`⚠️ MD 文件不存在: ${mdFilePath}`);
+                        this.errors.push({ path: node.filename, error: `MD 文件不存在: ${mdFilePath}` });
+                    }
+                    // 递归处理子节点
+                    if (node.has_child && node.children && node.children.length > 0) {
+                        await this.uploadJsonContent(node.children);
+                    }
                     continue;
                 }
 
-                if (this.config.dryRun) {
-                    console.log(`📄 [试运行] 上传内容: ${node.title} -> ${mdFilePath}`);
-                } else {
-                    // 读取并处理 Markdown 内容
-                    const content = readFileSync(mdFilePath, 'utf-8');
-                    const processor = new MarkdownProcessor(
-                        (url: string) => url, // 链接替换器
-                        path.dirname(mdFilePath)
-                    );
-                    const blocks = await processor.processToBlocks(content);
+                // 读取并处理 Markdown 内容
+                const content = readFileSync(mdFilePath, 'utf-8');
+                const processor = new MarkdownProcessor(
+                    (url: string) => url, // 链接替换器
+                    path.dirname(mdFilePath)
+                );
+                const blocks = await processor.processToBlocks(content);
 
+                if (blocks.length > 0) {
                     // 上传文档内容
                     await this.client.writeDocContent(mapping.objToken, blocks);
 
@@ -475,12 +482,22 @@ export class Uploader {
                         path: mdFilePath
                     } as any);
 
-                    console.log(`✅ 上传内容: ${node.title}`);
+                    const nodeType = node.has_child ? '目录' : '文件';
+                    console.log(`✅ 上传${nodeType}内容: ${node.title}`);
+                }
+
+                // 递归处理子节点
+                if (node.has_child && node.children && node.children.length > 0) {
+                    await this.uploadJsonContent(node.children);
                 }
 
             } catch (e: any) {
                 console.error(`❌ 上传内容失败: ${node.title}`, e.message);
                 this.errors.push({ path: node.filename, error: e });
+                // 即使上传失败，也继续处理子节点
+                if (node.has_child && node.children && node.children.length > 0) {
+                    await this.uploadJsonContent(node.children);
+                }
             }
         }
     }

@@ -2,17 +2,22 @@
  * Translation script for converting Chinese markdown documents to English
  * Uses Dify API for translation
  * 
- * Usage: 
- *   DIFY_API_KEY=your_api_key bun run ./scripts/notion-translate-en.ts
- *   
- * To translate a single file:
- *   DIFY_API_KEY=your_api_key bun run ./scripts/notion-translate-en.ts --file ApzpwrzLpi6iNdkXoO7c5ZtUnjf.md
- * 
- * Or create a .env file in project root with:
+ * create a .env file in project root with:
  *   DIFY_API_KEY=your_api_key
  * 
- * Environment variables:
- *   - DIFY_API_KEY: Required. Your Dify API key
+ * Usage: 
+ * To translate all md files to en:
+ *   bun run ./scripts/translate-cn-to-en.ts
+ *   
+ * To translate a single file:
+ *   bun run ./scripts/translate-cn-to-en.ts --filePath ../notion-locales/zh-CN/docs/ApzpwrzLpi6iNdkXoO7c5ZtUnjf.md
+ * 
+ * To translate docs.json:
+ *   bun run ./scripts/translate-cn-to-en.ts --json-only
+ * 
+ * To translate all md files to en:
+ *   bun run ./scripts/translate-cn-to-en.ts --docs-only
+ * 
  * 
  * Features:
  *   - Automatically tracks translated files in translate/en/already.json
@@ -24,15 +29,17 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs"
 import { resolve, dirname, basename } from "path"
 import { sync } from "glob"
 import axios from "axios"
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 
 const DIFY_API_URL = "https://dify.longbridge-inc.com/v1/completion-messages"
 const DIFY_API_KEY = process.env.DIFY_API_KEY
 const DIFY_INPUT_VAR = "query"
-const VERSIONS = ["stable", "lts"]
-const DEFAULT_VERSION = "stable"
 const BASE_NOTION_PAGE_URL = "../notion-pages"
 const BASE_NOTION_LOCALES_URL = "../notion-locales"
+const OUTPUT_DIR = "../translate/en/docs" // output directory for translated files
 
 if (!DIFY_API_KEY) {
   console.error("Error: DIFY_API_KEY environment variable is required")
@@ -40,7 +47,8 @@ if (!DIFY_API_KEY) {
 }
 
 // Rate limiting configuration
-const DELAY_BETWEEN_REQUESTS = 1000 // 1 second delay between API calls
+const DELAY_BETWEEN_REQUESTS = 300 // 0.3 seconds delay between API calls
+const DIFY_REQUEST_TIMEOUT = 600000 // 10 minutes timeout for long documents
 
 // Already translated files tracking
 const ALREADY_TRANSLATED_FILE = resolve(__dirname, "../translate/en/already.json")
@@ -111,28 +119,6 @@ function markAsTranslated(alreadyTranslated: Set<string>, filename: string): voi
 }
 
 /**
- * Clean up translated title by removing common Chinese prefix patterns
- */
-function cleanTranslatedTitle(translatedTitle: string): string {
-  // Remove patterns like "xxx的美式英语翻译为：", "xxx的英文翻译是：", etc.
-  const patterns = [
-    /^.*?的美式英语翻译为[：:]\s*/,
-    /^.*?的英文翻译[是为][：:]\s*/,
-    /^.*?的翻译[是为][：:]\s*/,
-    /^.*?翻译[为成][：:]\s*/,
-    /^The translation of.*?is[：:]\s*/i,
-    /^Translation[：:]\s*/i,
-  ]
-
-  let result = translatedTitle
-  for (const pattern of patterns) {
-    result = result.replace(pattern, "")
-  }
-
-  return result.trim()
-}
-
-/**
  * Call Dify API to translate text from Chinese to English
  */
 async function translateWithDify(text: string, userId: string = "translator"): Promise<string> {
@@ -152,7 +138,7 @@ async function translateWithDify(text: string, userId: string = "translator"): P
           "Authorization": `Bearer ${DIFY_API_KEY}`,
           "Content-Type": "application/json",
         },
-        timeout: 120000, // 2 minutes timeout for long documents
+        timeout: DIFY_REQUEST_TIMEOUT, // 10 minutes timeout for long documents
       }
     )
 
@@ -205,7 +191,7 @@ function buildMarkdown(frontmatter: Record<string, string>, body: string): strin
     .map(([key, value]) => `${key}: ${value}`)
     .join("\n")
 
-  return `---\n${frontmatterLines}\n---\n${body}`
+  return `\`\`\`yaml\n${frontmatterLines}\n\`\`\`\n${body}`
 }
 
 /**
@@ -213,28 +199,20 @@ function buildMarkdown(frontmatter: Record<string, string>, body: string): strin
  */
 async function translateMarkdownFile(inputPath: string, outputPath: string): Promise<void> {
   const content = readFileSync(inputPath, "utf-8")
-  const { frontmatter, body } = parseMarkdown(content)
-
-  // Translate title if exists
-  if (frontmatter.title) {
-    try {
-      const rawTitle = await translateWithDify(frontmatter.title)
-      frontmatter.title = cleanTranslatedTitle(rawTitle)
-      await delay(DELAY_BETWEEN_REQUESTS)
-    } catch (error) {
-      console.error(`  Failed to translate title, keeping original`)
+  const translatedRes = await translateWithDify(content)
+  let { frontmatter, body } = parseMarkdown(translatedRes)
+  if (!frontmatter.slug) {
+    // dify接口偶尔会将frontmatter省略
+    const { frontmatter: originalFrontmatter } = parseMarkdown(content)
+    const rawTitle = await translateWithDify(originalFrontmatter.title)
+    frontmatter = {
+      ...originalFrontmatter,
+      title: rawTitle,
     }
+    await delay(100)
   }
-
-  let translatedBody = body
-  try {
-    translatedBody = await translateWithDify(body)
-  } catch (error) {
-    console.error(`  Failed to translate body, keeping original`)
-  }
-
   // Build translated markdown
-  const translatedContent = buildMarkdown(frontmatter, translatedBody)
+  const translatedContent = buildMarkdown(frontmatter, body)
 
   // Ensure output directory exists
   if (!existsSync(dirname(outputPath))) {
@@ -242,6 +220,7 @@ async function translateMarkdownFile(inputPath: string, outputPath: string): Pro
   }
 
   writeFileSync(outputPath, translatedContent)
+
 }
 
 /**
@@ -253,7 +232,8 @@ async function translateDocNode(node: DocNode): Promise<DocNode> {
   // Translate title
   try {
     const rawTitle = await translateWithDify(node.title)
-    translatedNode.title = cleanTranslatedTitle(rawTitle)
+    translatedNode.title = rawTitle
+    console.log(`  Translated node title: ${node.title} -> ${translatedNode.title}`)
     await delay(DELAY_BETWEEN_REQUESTS)
   } catch (error) {
     console.error(`  Failed to translate node title: ${node.title}`)
@@ -279,51 +259,56 @@ async function translateDocsJson(): Promise<void> {
   const docsMeta: DocNode[] = JSON.parse(docsMetaString)
 
   const translatedMeta: DocNode[] = []
+  console.log("translate docs.json start...")
   for (const node of docsMeta) {
     translatedMeta.push(await translateDocNode(node))
   }
 
   const outputPath = resolve(__dirname, `${BASE_NOTION_PAGE_URL}/docs-en.json`)
   writeFileSync(outputPath, JSON.stringify(translatedMeta, null, 2))
+  console.log("translate docs.json success")
 }
 
 /**
  * Translate all markdown files from Chinese to English
  */
-async function translateAllDocs(): Promise<void> {
-  const docsPath = resolve(__dirname, `${BASE_NOTION_LOCALES_URL}/zh-CN/docs`)
+async function translateAllDocs({ inputDir = `${BASE_NOTION_LOCALES_URL}/zh-CN/docs`, outputDir = OUTPUT_DIR }: { inputDir?: string, outputDir?: string } = {}): Promise<void> {
+  const docsPath = resolve(__dirname, inputDir)
   const docs = sync(`${docsPath}/**/*.md`).filter(
     doc => !doc.endsWith("SUMMARY.md") && !doc.endsWith("index.md")
   )
+  const _outputDir = resolve(__dirname, outputDir)
+
+  if (!existsSync(_outputDir)) {
+    mkdirSync(_outputDir, { recursive: true })
+  }
 
   // Load already translated files
   const alreadyTranslated = loadAlreadyTranslated()
 
-  for (const version of VERSIONS) {
-    for (const docPath of docs) {
-      const relativePath = docPath.replace(`${docsPath}/`, "")
-      const outputPath = resolve(__dirname, `../translate/en/docs/${relativePath}`)
+  for (const docPath of docs) {
+    const relativePath = docPath.replace(`${docsPath}/`, "")
+    const outputPath = resolve(_outputDir, `${relativePath}`)
 
-      // Skip if already in the translated list
-      if (alreadyTranslated.has(relativePath)) {
-        console.warn(`  Skipping (already translated): ${relativePath}`)
-        continue
-      }
+    // Skip if already in the translated list
+    if (alreadyTranslated.has(relativePath)) {
+      console.warn(`  Skipping (already translated): ${relativePath}`)
+      continue
+    }
 
-      // Skip if output file exists
-      if (existsSync(outputPath)) {
-        markAsTranslated(alreadyTranslated, relativePath)
-        continue
-      }
+    // Skip if output file exists
+    if (existsSync(outputPath)) {
+      markAsTranslated(alreadyTranslated, relativePath)
+      continue
+    }
 
-      try {
-        await translateMarkdownFile(docPath, outputPath)
-        markAsTranslated(alreadyTranslated, relativePath)
-        console.log(`  ✓ Completed: ${relativePath}`)
-        await delay(DELAY_BETWEEN_REQUESTS)
-      } catch (error) {
-        console.error(`  ✗ Failed to translate: ${relativePath}`)
-      }
+    try {
+      await translateMarkdownFile(docPath, outputPath)
+      markAsTranslated(alreadyTranslated, relativePath)
+      console.log(`  ✓ Completed: ${relativePath}`)
+      await delay(DELAY_BETWEEN_REQUESTS)
+    } catch (error) {
+      console.error(`  ✗ Failed to translate: ${relativePath}`)
     }
   }
 }
@@ -331,29 +316,20 @@ async function translateAllDocs(): Promise<void> {
 /**
  * Translate a single file (for testing)
  */
-async function translateSingleFile(filename: string): Promise<void> {
-  const docsPath = resolve(__dirname, `${BASE_NOTION_LOCALES_URL}/zh-CN/docs`)
-  const inputPath = resolve(docsPath, filename)
+async function translateSingleFile(filePath: string): Promise<void> {
+  const inputPath = resolve(__dirname, filePath)
+  const filename = basename(filePath)
 
   if (!existsSync(inputPath)) {
     console.error(`  File not found: ${filename}`)
     process.exit(1)
   }
 
-  // Load already translated files
-  const alreadyTranslated = loadAlreadyTranslated()
-
-  // Check if already translated
-  if (alreadyTranslated.has(filename)) {
-    console.warn(`  File already translated: ${filename}`)
-    return
-  }
-
   // Output to stable version by default
   const outputPath = resolve(__dirname, `../translate/en/docs/${filename}`)
   try {
+    console.log("translate single file start...")
     await translateMarkdownFile(inputPath, outputPath)
-    markAsTranslated(alreadyTranslated, filename)
     console.log(`  ✓ Translated successfully: ${filename}`)
   } catch (error) {
     console.error(`  ✗ Failed to translate: ${filename}`)
@@ -364,26 +340,26 @@ async function translateSingleFile(filename: string): Promise<void> {
 async function run(): Promise<void> {
   const args = process.argv.slice(2)
 
-  // Check for --file argument for single file translation
-  const fileArgIndex = args.indexOf("--file")
+  // Check for --filePath argument for single file translation
+  const fileArgIndex = args.indexOf("--filePath")
   if (fileArgIndex !== -1 && args[fileArgIndex + 1]) {
     const filename = args[fileArgIndex + 1]
     await translateSingleFile(filename)
     return
   }
 
-  // Check for --json-only argument
+  // 只翻译目录json
   if (args.includes("--json-only")) {
     await translateDocsJson()
     return
   }
 
-  // Check for --docs-only argument
+  // 只翻译md文件
   if (args.includes("--docs-only")) {
     await translateAllDocs()
     return
   }
-
+  console.log("translate start everything...")
   // Default: translate everything
   await translateDocsJson()
   await translateAllDocs()

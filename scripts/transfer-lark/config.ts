@@ -12,30 +12,16 @@ export function getConfig(): Config {
 
     program
         .name('transfer-lark')
-        .description('将本地 Markdown 文档上传至飞书知识库')
+        .description('将本地 Markdown 文档上传至Lark知识库')
         .option('-e, --entry <path>', '入口文件或目录路径')
         .option('-t, --target <token>', '目标父节点 Token', process.env.LARK_PARENT_NODE_TOKEN)
-        .option('-s, --space <id>', '飞书 Wiki 空间 ID', process.env.LARK_SPACE_ID)
-        .option('--app-id <id>', '飞书 App ID', process.env.LARK_APP_ID)
-        .option('--app-secret <secret>', '飞书 App Secret', process.env.LARK_APP_SECRET)
+        .option('-s, --space <id>', 'Lark Wiki 空间 ID', process.env.LARK_SPACE_ID)
+        .option('--app-id <id>', 'Lark App ID', process.env.LARK_APP_ID)
+        .option('--app-secret <secret>', 'Lark App Secret', process.env.LARK_APP_SECRET)
         .option('--assets-dir <path>', '资源文件目录（图片等）')
-        .option('--dry-run', '试运行模式（不实际创建）', process.env.DRY_RUN === 'true')
-        .option('--list-spaces', '列出可用的 Wiki 空间')
         .parse(process.argv);
 
     const options = program.opts();
-
-    // 列出空间模式
-    if (options.listSpaces) {
-        return {
-            appId: options.appId || process.env.LARK_APP_ID || '',
-            appSecret: options.appSecret || process.env.LARK_APP_SECRET || '',
-            wikiSpaceId: '',
-            entryPath: '',
-            dryRun: false,
-            listSpaces: true,
-        };
-    }
 
     // 验证必需参数
     if (!options.entry) {
@@ -60,7 +46,6 @@ export function getConfig(): Config {
         targetParentToken: options.target,
         entryPath: options.entry,
         assetsDir: options.assetsDir,
-        dryRun: options.dryRun || false,
     };
 }
 

@@ -62,7 +62,7 @@ export interface Config {
     targetParentToken?: string;
     entryPath: string;
     assetsDir?: string;
-    dryRun: boolean;
-    listSpaces?: boolean;
+    //     dryRun: boolean;
+    //     listSpaces?: boolean;
 }
 
