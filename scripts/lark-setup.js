@@ -126,12 +126,12 @@ function setupEnDocs() {
 // Copy lark-pages/assets/* to notion-locales/assets
 function setupAssets() {
   // Temporarily commented out - not copying assets to notion-locales/assets for now
-  const assetsPath = resolve(__dirname, "../lark-pages/assets");
+  const assetsPath = resolve(__dirname, "../lark-pages/docs/assets");
   // Find png, jpg, jpeg, gif files
   const assets = sync(`${assetsPath}/*.{png,jpg,jpeg,gif}`);
 
   assets.forEach((asset) => {
-    const targetAssetsPath = asset.replace("lark-pages/", "notion-locales/");
+    const targetAssetsPath = asset.replace("lark-pages/docs/", "notion-locales/");
 
     if (!existsSync(dirname(targetAssetsPath))) {
       mkdirSync(dirname(targetAssetsPath), { recursive: true });
