@@ -2,8 +2,9 @@
  * Lark知识库上传工具
  * 将本地 Markdown 文档上传至Lark知识库
  *
- * 使用方法:
- *   bun run ./scripts/transfer-lark/index.ts -e <JSON文件路径> -s <空间ID>
+ * 使用方法: 如果不指定命令行参数，则使用 .env 中的配置
+ *   注意：指定父节点后，需要确保在Lark上选中父节点，然后在界面的右上角“三个点”点击“更多”，选择“添加文档应用”，搜索“文档上传”应用，并添加，才有权限上传文档
+ *   bun run ./scripts/transfer-lark/index.ts -e <JSON文件路径> -s <空间ID> -t <父节点Token>
  * 
  * 上传单个文件
  *   bun run ./scripts/transfer-lark/index.ts ./path/to/file.md "自定义标题" "parent-node-token"
@@ -13,20 +14,21 @@
  *   LARK_APP_SECRET=xxx
  *   LARK_SPACE_ID=xxx          # 知识库空间ID
  *   LARK_PARENT_NODE_TOKEN=xxx  # 父节点token
+ *   ENTRY_MD_PATH=./translate/en/docs  # 本地md文档目录路径
+ *   ENTRY_JSON_PATH=./notion-pages/docs-en.json  # 入口json文件路径
  *
  * 命令行选项:
- *   -e, --entry <path>     JSON 文件路径 (notion-pages/docs-en.json)
+ *   -e, --entry <path>     JSON 文件路径 (./notion-pages/docs-en.json)
+ *   -d, --dir <path>      本地md文档目录路径
  *   -t, --target <token>   目标父节点 Token
  *   -s, --space <id>       Lark Wiki 空间 ID
  *   --app-id <id>          Lark App ID
  *   --app-secret <secret>  Lark App Secret
  *   --assets-dir <path>    资源文件目录
- *   --dry-run              试运行模式
- *   --list-spaces          列出可用的 Wiki 空间
  *
  * 工作流程:
  * 1. 解析 JSON 文件结构（从第一级 children 开始）
- * 2. 根据 filename 在 /translate/en/docs/ 下查找对应的 MD 文件
+ * 2. 根据 filename 在 entryMdPath 下查找对应的 MD 文件
  * 3. 按照层级结构创建Lark Wiki 节点
  * 4. 上传 Markdown 内容到对应的 Wiki 文档
  */
@@ -185,10 +187,13 @@ async function main() {
         // 解析 JSON 文件
         const jsonFilePath = path.resolve(process.cwd(), config.entryPath);
         const jsonNodes = parseJsonStructure(jsonFilePath);
-
+        const parentToken = config.targetParentToken;
+        if (!parentToken) {
+            throw new Error('需要目标父节点 Token（.env 中设置 LARK_PARENT_NODE_TOKEN 环境变量）或 -t 命令行参数');
+        }
         // 使用 JSON 结构上传
         const uploader = new Uploader(client, config);
-        await uploader.runFromJson(jsonNodes, config.targetParentToken);
+        await uploader.runFromJson(jsonNodes, parentToken);
     } catch (e: any) {
         console.error('\n❌ 上传失败:', e.message);
         process.exit(1);

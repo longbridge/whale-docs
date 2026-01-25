@@ -232,8 +232,7 @@ export class MarkdownProcessor {
 
             // 处理绝对路径（如 /assets/xxx.png）
             if (decodedUrl.startsWith('/')) {
-                // 从项目根目录解析 translate/assets
-                const projectRoot = path.resolve(this.baseDir, '..', '..');
+                const projectRoot = path.resolve(this.baseDir);
                 absPath = path.join(projectRoot, decodedUrl.substring(1));
             } else {
                 // 相对路径直接解析

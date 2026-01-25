@@ -39,11 +39,6 @@ export class Uploader {
      * 同步目录结构到Lark Wiki
      */
     private async syncStructure(node: LocalNode, parentToken?: string): Promise<void> {
-        // if (this.config.dryRun) {
-        //     await this.syncStructureDryRun(node, parentToken);
-        //     return;
-        // }
-
         try {
             // 获取标题
             let title = this.getNodeTitle(node);
@@ -443,14 +438,14 @@ export class Uploader {
                 if (!mapping || !mapping.objToken) {
                     console.warn(`⚠️ 跳过无映射的节点: ${node.title}`);
                     // 递归处理子节点
-                    if (node.has_child && node.children && node.children.length > 0) {
+                    if (node.children?.length > 0) {
                         await this.uploadJsonContent(node.children);
                     }
                     continue;
                 }
 
                 // 查找对应的 MD 文件
-                const mdFilePath = path.join(process.cwd(), 'translate', 'en', 'docs', node.filename);
+                const mdFilePath = path.join(this.config.entryMdPath!, node.filename);
                 if (!existsSync(mdFilePath)) {
                     // 如果是文件夹节点且没有对应的 MD 文件，不报错，只是跳过
                     if (!node.has_child) {
@@ -466,11 +461,13 @@ export class Uploader {
 
                 // 读取并处理 Markdown 内容
                 const content = readFileSync(mdFilePath, 'utf-8');
+                const { body } = parseMarkdownFrontmatter(content);
+
                 const processor = new MarkdownProcessor(
                     (url: string) => url, // 链接替换器
                     path.dirname(mdFilePath)
                 );
-                const blocks = await processor.processToBlocks(content);
+                const blocks = await processor.processToBlocks(body);
 
                 if (blocks.length > 0) {
                     // 上传文档内容

@@ -13,7 +13,8 @@ export function getConfig(): Config {
     program
         .name('transfer-lark')
         .description('将本地 Markdown 文档上传至Lark知识库')
-        .option('-e, --entry <path>', '入口文件或目录路径')
+        .option('-e, --entry <path>', '入口文件或json目录路径', process.env.ENTRY_JSON_PATH)
+        .option('-d, --dir <path>', '本地md文档目录路径', process.env.ENTRY_MD_PATH)
         .option('-t, --target <token>', '目标父节点 Token', process.env.LARK_PARENT_NODE_TOKEN)
         .option('-s, --space <id>', 'Lark Wiki 空间 ID', process.env.LARK_SPACE_ID)
         .option('--app-id <id>', 'Lark App ID', process.env.LARK_APP_ID)
@@ -46,6 +47,7 @@ export function getConfig(): Config {
         targetParentToken: options.target,
         entryPath: options.entry,
         assetsDir: options.assetsDir,
+        entryMdPath: options.dir,
     };
 }
 

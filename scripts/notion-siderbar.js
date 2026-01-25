@@ -24,9 +24,10 @@
  * */
 import docsMeta from "../notion-pages/docs.json"
 import docsCnMeta from "../notion-pages/docs-zh-cn.json"
+import docsEnMeta from "../notion-pages/docs-en.json"
 const hkMetadata = docsMeta.find((doc) => (doc.meta?.originalSlug || doc.meta?.slug) === "zh-HK")
 const cnMetadata = docsCnMeta.find((doc) => (doc.meta?.originalSlug || doc.meta?.slug) === "zh-HK")
-const enMetadata = docsMeta.find((doc) => (doc.meta?.originalSlug || doc.meta?.slug) === "en")
+const enMetadata = docsEnMeta.find((doc) => (doc.meta?.originalSlug || doc.meta?.slug) === "en")
 // Supported versions
 const VERSIONS = ["stable", "lts"]
 const DEFAULT_VERSION = "stable"

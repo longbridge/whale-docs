@@ -12,12 +12,15 @@
  * To translate a single file:
  *   bun run ./scripts/translate-cn-to-en.ts --filePath ../notion-locales/zh-CN/docs/ApzpwrzLpi6iNdkXoO7c5ZtUnjf.md
  * 
- * To translate docs.json:
+ * To only translate docs.json:
  *   bun run ./scripts/translate-cn-to-en.ts --json-only
  * 
- * To translate all md files to en:
+ * To only translate all md files to en:
  *   bun run ./scripts/translate-cn-to-en.ts --docs-only
  * 
+ * To fix slug mismatches (make slug match filename):
+ *   bun run ./scripts/translate-cn-to-en.ts --fix-slugs
+ *   bun run ./scripts/translate-cn-to-en.ts --fix-slugs --dir ../translate/en/docs
  * 
  * Features:
  *   - Automatically tracks translated files in translate/en/already.json
@@ -157,6 +160,22 @@ async function translateWithDify(text: string, userId: string = "translator"): P
   }
 }
 
+function parseEnFormatter(content: string): { frontmatter: Record<string, string>, body: string } {
+  const formatterMatch = content.match(/^```yaml\n([\s\S]*?)\n```\n([\s\S]*)$/)
+  if (!formatterMatch) {
+    return { frontmatter: {}, body: content }
+  }
+  const frontmatter = formatterMatch[1].split("\n").reduce((acc, line) => {
+    const [key, value] = line.split(":")
+    acc[key] = value.trim()
+    return acc
+  }, {} as Record<string, string>)
+  return {
+    frontmatter,
+    body: formatterMatch[2]
+  }
+}
+
 /**
  * Parse markdown frontmatter and content
  */
@@ -200,6 +219,7 @@ function buildMarkdown(frontmatter: Record<string, string>, body: string): strin
 async function translateMarkdownFile(inputPath: string, outputPath: string): Promise<void> {
   const content = readFileSync(inputPath, "utf-8")
   const translatedRes = await translateWithDify(content)
+  const jsonSlug = basename(inputPath, ".md")
   let { frontmatter, body } = parseMarkdown(translatedRes)
   if (!frontmatter.slug) {
     // dify接口偶尔会将frontmatter省略
@@ -208,8 +228,11 @@ async function translateMarkdownFile(inputPath: string, outputPath: string): Pro
     frontmatter = {
       ...originalFrontmatter,
       title: rawTitle,
+      slug: jsonSlug, // 防止部分md中slug与文件名不一致，用文件名做slug
     }
     await delay(100)
+  } else if (frontmatter.slug !== jsonSlug) {
+    frontmatter.slug = jsonSlug
   }
   // Build translated markdown
   const translatedContent = buildMarkdown(frontmatter, body)
@@ -297,12 +320,13 @@ async function translateAllDocs({ inputDir = `${BASE_NOTION_LOCALES_URL}/zh-CN/d
     }
 
     // Skip if output file exists
-    if (existsSync(outputPath)) {
-      markAsTranslated(alreadyTranslated, relativePath)
-      continue
-    }
+    // if (existsSync(outputPath)) {
+    //   markAsTranslated(alreadyTranslated, relativePath)
+    //   continue
+    // }
 
     try {
+      console.log("translating file:", relativePath)
       await translateMarkdownFile(docPath, outputPath)
       markAsTranslated(alreadyTranslated, relativePath)
       console.log(`  ✓ Completed: ${relativePath}`)
@@ -337,6 +361,43 @@ async function translateSingleFile(filePath: string): Promise<void> {
   }
 }
 
+/**
+ * Fix slug mismatches in markdown files
+ * Finds files where slug doesn't match filename and updates them
+ */
+async function fixSlugMismatches(targetDir: string = OUTPUT_DIR): Promise<void> {
+  const docsPath = resolve(__dirname, targetDir)
+  const docs = sync(`${docsPath}/**/*.md`).filter(
+    doc => !doc.endsWith("SUMMARY.md") && !doc.endsWith("index.md")
+  )
+
+  console.log(`Checking ${docs.length} files for slug mismatches...`)
+
+  for (const docPath of docs) {
+    const filename = basename(docPath, ".md")
+
+    try {
+      const content = readFileSync(docPath, "utf-8")
+      const { frontmatter, body } = parseEnFormatter(content)
+
+      if (!frontmatter.slug) {
+        console.warn(`  ⚠ No slug found in: ${basename(docPath)}`)
+        continue
+      }
+
+      if (frontmatter.slug.trim() !== filename) {
+        // Update slug to match filename
+        frontmatter.slug = filename
+        const updatedContent = buildMarkdown(frontmatter, body)
+        writeFileSync(docPath, updatedContent)
+        console.log(`    ✓ Fixed! ${filename}`)
+      }
+    } catch (error) {
+      console.error(`  ✗ Error processing: ${basename(docPath)}`, error)
+    }
+  }
+}
+
 async function run(): Promise<void> {
   const args = process.argv.slice(2)
 
@@ -345,6 +406,16 @@ async function run(): Promise<void> {
   if (fileArgIndex !== -1 && args[fileArgIndex + 1]) {
     const filename = args[fileArgIndex + 1]
     await translateSingleFile(filename)
+    return
+  }
+
+  // Fix slug mismatches
+  if (args.includes("--fix-slugs")) {
+    const dirArgIndex = args.indexOf("--dir")
+    const targetDir = dirArgIndex !== -1 && args[dirArgIndex + 1]
+      ? args[dirArgIndex + 1]
+      : OUTPUT_DIR
+    await fixSlugMismatches(targetDir)
     return
   }
 

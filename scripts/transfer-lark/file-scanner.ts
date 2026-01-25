@@ -91,10 +91,14 @@ export function parseMarkdownFrontmatter(content: string): { title: string; body
     }
 
     const frontmatterStr = frontmatterMatch[1];
-    const body = frontmatterMatch[2];
+    const restContent = frontmatterMatch[2];
 
     const titleMatch = frontmatterStr.match(/^title:\s*(.+)$/m);
     const title = titleMatch ? titleMatch[1].trim() : 'Untitled';
+
+    // 将 frontmatter 转换为代码块格式
+    const codeBlockFrontmatter = '```yaml\n' + frontmatterStr + '\n```\n';
+    const body = codeBlockFrontmatter + restContent;
 
     return { title, body };
 }

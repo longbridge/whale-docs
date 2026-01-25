@@ -105,7 +105,6 @@ export class LarkClient {
                     Authorization: `Bearer ${appAccessToken}`,
                 },
             })
-            console.log('----app', JSON.stringify(app.data));
             const res = await this.client.wiki.spaceMember.create({
                 data: {
                     member_id: app.data.bot.open_id,
