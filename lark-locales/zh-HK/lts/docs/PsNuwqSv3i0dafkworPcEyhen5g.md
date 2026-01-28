@@ -1,0 +1,21 @@
+---
+title: 21. 網頁版（web trade）問題
+slug: PsNuwqSv3i0dafkworPcEyhen5g
+sidebar_position: 20
+---
+
+
+# 21. 網頁版（web trade）問題
+
+# 21A 問：網頁版（web trade） 如何更換顯示的語言？
+
+答：網頁版的語言是跟隨 App 語言設置。需在 App 的「我的」-&gt;「設置」-&gt;「通用」-&gt;「語言設置」修改顯示語言并掃描網頁版登錄，語言便會變更。
+
+<img src="/assets/ZtUTbjtP5oQ3AuxvAjijTZ8epzg.png" src-width="682" src-height="754" align="center"/>
+
+<img src="/assets/CxAFbFtgHoSi1VxHKyxjyTR6pTM.png" src-width="2700" src-height="1256" align="center"/>
+
+# 21B 問：Web Trade 和 App 能否同時使用？
+
+答：Web Trade 和 App 可以同時使用。
+

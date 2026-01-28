@@ -1,0 +1,24 @@
+---
+title: 2025-10 What's New（RC）
+slug: 2995bab0c2cc80d5ad6aeea42fbe1bf2
+sidebar_position: 3
+---
+
+
+# 2025-10 What's New（RC）
+
+# v 2.34.0
+
+<div class="callout callout-bg-5 callout-border-5 callout-color-1">
+<div class='callout-emoji'>🎁</div>
+<p>发布时间   2025.10.30</p>
+</div>
+
+# 🎉 新功能
+
+- 逐笔明细现已新增时段切换功能，可分别查看夜盘、盘前、盘中、盘后或全部时段的成交数据；同时新增「交易所」栏位，方便用户快速识别每笔成交所属的交易市场，助您更精准解读市场动态。
+
+# 📌 改进与修复
+
+- 一些技术及交互优化
+
