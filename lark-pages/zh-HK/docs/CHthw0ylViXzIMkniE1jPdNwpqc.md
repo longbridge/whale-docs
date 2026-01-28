@@ -21,31 +21,31 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 
 可以查詢所有已開戶的客戶帳戶狀態資料
 
-<img src="PH36bE67Jo1qezxdAg6jeS1YpKe" src-width="3234" src-height="1606" align="center"/>
+<img src="/assets/PH36bE67Jo1qezxdAg6jeS1YpKe.png" src-width="3234" src-height="1606" align="center"/>
 
 也可在右側記錄操作區：點選【詳情】， 查看客戶細部基本資料，同時也提供資產交易/操作記錄/登錄設備/代理人/關係人 這些特定事項的 Tab 頁籤資料
 
-<img src="Dn4xbYzzEowwwhxpm7mjNjJPpLf" src-width="3246" src-height="1228" align="center"/>
+<img src="/assets/Dn4xbYzzEowwwhxpm7mjNjJPpLf.png" src-width="3246" src-height="1228" align="center"/>
 
 資產記錄的入金記錄
 
-<img src="InhNbSJIwokmNyx71jmjdbHHppd" src-width="2384" src-height="1248" align="center"/>
+<img src="/assets/InhNbSJIwokmNyx71jmjdbHHppd.png" src-width="2384" src-height="1248" align="center"/>
 
 一些歷史登錄設備記錄
 
-<img src="UZNKbT71Gorpy7xSbAmjpsFwphf" src-width="2420" src-height="744" align="center"/>
+<img src="/assets/UZNKbT71Gorpy7xSbAmjpsFwphf.png" src-width="2420" src-height="744" align="center"/>
 
 本作業也可以對客戶帳戶作交易權益的變更，在記錄右側操作區點選【交易權限】
 
-<img src="LuKHbOPT8oDIW5xaAFij5vXxprh" src-width="1802" src-height="1364" align="center"/>
+<img src="/assets/LuKHbOPT8oDIW5xaAFij5vXxprh.png" src-width="1802" src-height="1364" align="center"/>
 
 本作業也可以對客戶作帳戶安全事項管理，在記錄右側操作區點選【...】，選擇對應安全事項管理（凍結/解鎖/注銷等....)
 
-<img src="LnbUbxEraoVc8FxuOPljqkYFpKh" src-width="3428" src-height="1504" align="center"/>
+<img src="/assets/LnbUbxEraoVc8FxuOPljqkYFpKh.png" src-width="3428" src-height="1504" align="center"/>
 
 在帳戶列表作業中，增加帳戶標識篩選 查詢條件，方便定位查詢數據
 
-<img src="LJ36bzyPDohmjyxbs6zjsMMqpwP" src-width="3248" src-height="808" align="center"/>
+<img src="/assets/LJ36bzyPDohmjyxbs6zjsMMqpwP.png" src-width="3248" src-height="808" align="center"/>
 
 # BCAN碼
 
@@ -55,7 +55,7 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 
 - 注： 有關中華通的 BCAN 說明 將在系統開放支持時說明
 
-<img src="LSFtbF6UMoKwDXxHvcnjJ2UPpPg" src-width="1280" src-height="586" align="center"/>
+<img src="/assets/LSFtbF6UMoKwDXxHvcnjJ2UPpPg.png" src-width="1280" src-height="586" align="center"/>
 
 其中申報邏輯：上報的數據是 已開通帳戶、有 BCAN 碼且同意授權協議的全量客戶，申報給港交易所後，獲取交易所返回的檔內容，將 BCAN 生效的狀態同步更新；
 
@@ -66,24 +66,24 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
     - 交易所返回的應答檔展示在後台，支持下載
     - 返回的全景檔自動解析，將客戶的 BCAN 狀態自動更新
 
-<img src="S1tobBzKso858uxufdzjZ1Qrp6d" src-width="3250" src-height="1542" align="center"/>
+<img src="/assets/S1tobBzKso858uxufdzjZ1Qrp6d.png" src-width="3250" src-height="1542" align="center"/>
 
 1. <b>若是劵商是 OB 租戶</b>： 是要手動產生 BCAN-CID 檔後，再人工透過 SFC Web ECP 網站上傳資料
     SFC Wings 申報方式說明如下：
-    <img src="VBDvb22Kvo3t9Gxig8WjqWbCpee" src-width="3222" src-height="1618" align="center"/>
+    <img src="/assets/VBDvb22Kvo3t9Gxig8WjqWbCpee.png" src-width="3222" src-height="1618" align="center"/>
     - 通过本作業先行下载申报文件
 
 - 去 ECP 2.0 SFC 入口官网上傳申報文件，将交易所返回的全景文件導入后台
 
-<img src="OwflbXL3boW0fqxl2W7jSqYjp2f" src-width="1280" src-height="904" align="center"/>
+<img src="/assets/OwflbXL3boW0fqxl2W7jSqYjp2f.png" src-width="1280" src-height="904" align="center"/>
 
 - 将交易所返回的全景文件，在本作業導入后台
 
-<img src="WVzibpxYXoTL6mxsIfmjltqBpTd" src-width="3246" src-height="1624" align="center"/>
+<img src="/assets/WVzibpxYXoTL6mxsIfmjltqBpTd.png" src-width="3246" src-height="1624" align="center"/>
 
 同時客户的 BCAN 生效狀態結果將同步更新
 
-<img src="KBx9byjL7ozdyuxr68NjoG6Mp5f" src-width="3218" src-height="1228" align="center"/>
+<img src="/assets/KBx9byjL7ozdyuxr68NjoG6Mp5f.png" src-width="3218" src-height="1228" align="center"/>
 
 ## BCAN 區間
 
@@ -93,11 +93,11 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 
 至于存量現有客戶，長橋科技將會協助在實名制實施前，批量完成現有客戶分配 BCAN 碼
 
-<img src="Rv0gbdLJRoPeAfxdyLGjtjZYpDf" src-width="3242" src-height="810" align="center"/>
+<img src="/assets/Rv0gbdLJRoPeAfxdyLGjtjZYpDf.png" src-width="3242" src-height="810" align="center"/>
 
 點選右方上側【新建區間】， 新建一筆新的 BCAN 區間
 
-<img src="V29abzfbkoypfLxwDvDjt633phe" src-width="3248" src-height="1624" align="center"/>
+<img src="/assets/V29abzfbkoypfLxwDvDjt633phe.png" src-width="3248" src-height="1624" align="center"/>
 
 其中欄位說明如下：
 
@@ -105,11 +105,11 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 
 本作業可以配置管理 實名制中有關劵商參與者的公司資料以及參與者的角色安排（CCEP/TTEP）
 
-<img src="TsoZbn2lvo9YMJxaolZj1sAFpig" src-width="3132" src-height="1046" align="center"/>
+<img src="/assets/TsoZbn2lvo9YMJxaolZj1sAFpig.png" src-width="3132" src-height="1046" align="center"/>
 
 點選右方上側【新建參與者】， 建一筆新的參與者信息
 
-<img src="VaLab9T3lo8xFYxuIeQjEH12pde" src-width="3248" src-height="1630" align="center"/>
+<img src="/assets/VaLab9T3lo8xFYxuIeQjEH12pde.png" src-width="3248" src-height="1630" align="center"/>
 
 其中欄位說明如下：
 
@@ -123,29 +123,29 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 
 點擊「新建工單」，選擇「凍結客戶」
 
-<img src="FrKubYQV1oQlpYxwEP6jWAlCpNd" src-width="1998" src-height="824" align="center"/>
+<img src="/assets/FrKubYQV1oQlpYxwEP6jWAlCpNd.png" src-width="1998" src-height="824" align="center"/>
 
 在「新建凍結客戶」彈窗內，選擇需要凍結的客戶編號，填寫備注說明及附件後，提交工單申請
 
-<img src="PAJObM5qRo1ON8xE18PjRsMIpnr" src-width="1952" src-height="1006" align="center"/>
+<img src="/assets/PAJObM5qRo1ON8xE18PjRsMIpnr.png" src-width="1952" src-height="1006" align="center"/>
 
 點擊「詳情」，或批量勾選數據後，可單次/批量審核工單，審核通過後，客戶的狀態將發生變更
 
-<img src="ZUdBbcZLWoRydPxcELsjGbdQpTe" src-width="1948" src-height="988" align="center"/>
+<img src="/assets/ZUdBbcZLWoRydPxcELsjGbdQpTe.png" src-width="1948" src-height="988" align="center"/>
 
 <b>批量客戶凍結</b>
 
 在凍結客戶的列表頁，點擊「批量導入」按鈕
 
-<img src="L6N0bZpcGob7mOxh2nljtz4Dp8e" src-width="1960" src-height="854" align="center"/>
+<img src="/assets/L6N0bZpcGob7mOxh2nljtz4Dp8e.png" src-width="1960" src-height="854" align="center"/>
 
 下載批量導入的文件模板，按要求填入待處理的數據，再在後台點擊上傳文件
 
-<img src="XEPWbNcwKoUuIUx5E1tjJcwJpwg" src-width="1976" src-height="1000" align="center"/>
+<img src="/assets/XEPWbNcwKoUuIUx5E1tjJcwJpwg.png" src-width="1976" src-height="1000" align="center"/>
 
 提交後，再在凍結客戶的列表頁，單次/批量審核數據。審核完成後，客戶的狀態發生變更
 
-<img src="BcRqbDOOMoTki0xFuK5jnlAdpyf" src-width="1948" src-height="988" align="center"/>
+<img src="/assets/BcRqbDOOMoTki0xFuK5jnlAdpyf.png" src-width="1948" src-height="988" align="center"/>
 
 其他客戶/賬戶操作的流程，與凍結客戶類似
 

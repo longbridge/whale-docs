@@ -15,7 +15,7 @@ WTT 客戶列表、客戶信息組件可讓交易員一站式存取客戶資產�
 
 通過 WTT 右上角組件工具箱 - 客戶分類中找到這兩個組件，可將組件拖動至面板或獨立使用。
 
-<img src="XoqVbx0Lmoex5ixbA0hjFGyapjb" src-width="600" src-height="128" align="center"/>
+<img src="/assets/XoqVbx0Lmoex5ixbA0hjFGyapjb.png" src-width="600" src-height="128" align="center"/>
 
-<img src="AF2CbXNy4oo3H3x1VAWjCSE2pPb" src-width="1348" src-height="898" align="center"/>
+<img src="/assets/AF2CbXNy4oo3H3x1VAWjCSE2pPb.png" src-width="1348" src-height="898" align="center"/>
 

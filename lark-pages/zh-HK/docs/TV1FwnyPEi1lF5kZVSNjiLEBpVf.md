@@ -44,7 +44,7 @@ sidebar_position: 0
 2. 點擊「新增」或「編輯」，完善目標加密貨幣的基礎信息（如幣種代碼、名稱、認證規則等）；
 3. 核實信息無誤後提交生效，確保後續認證、出入幣業務可正常對接。
 
-<img src="UQiVb0OiIoqZbHx7KscjMmgapbc" src-width="3260" src-height="1124" align="center"/>
+<img src="/assets/UQiVb0OiIoqZbHx7KscjMmgapbc.png" src-width="3260" src-height="1124" align="center"/>
 
 ## <b>渠道存管賬戶導入</b>
 
@@ -57,7 +57,7 @@ sidebar_position: 0
 2. 點擊「批量新建」，上傳經審核的渠道存管賬戶清單（需符合系統指定格式）
 3. 導入完成後，核實賬戶信息無誤，點擊「確定」，用於客戶認證前的自動分配
 
-<img src="ZoHobE0azoJMWxxyqOUjP2N8pdd" src-width="2510" src-height="1362" align="center"/>
+<img src="/assets/ZoHobE0azoJMWxxyqOUjP2N8pdd.png" src-width="2510" src-height="1362" align="center"/>
 
 ## <b>認證記錄監控</b>
 
@@ -70,7 +70,7 @@ sidebar_position: 0
 2. 支持按「認證狀態」「創建時間」「客戶編號」等條件篩選查詢，點擊單條記錄可查看詳情（含分配的存管賬戶、支付信息、校驗結果等）
 3. 對「未認證」的記錄，可協助客戶排查問題（如核實轉賬是否到賬、地址是否匹配）
 
-<img src="Tt8bbVXU2oIeCsxflgtjVWJnpCf" src-width="3288" src-height="1076" align="center"/>
+<img src="/assets/Tt8bbVXU2oIeCsxflgtjVWJnpCf.png" src-width="3288" src-height="1076" align="center"/>
 
 ## <b>加白與後續管理</b>
 
@@ -83,7 +83,7 @@ sidebar_position: 0
 2. 支持對已加白地址進行狀態管理（如删除），應對異常風險
 3. 定期導出認證與加白記錄，完成合規備案與數據歸檔
 
-<img src="FdBebKmwmoJZONxuicwjwGDZpEg" src-width="3274" src-height="1082" align="center"/>
+<img src="/assets/FdBebKmwmoJZONxuicwjwGDZpEg.png" src-width="3274" src-height="1082" align="center"/>
 
 ## 注意事項
 

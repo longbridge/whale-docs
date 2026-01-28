@@ -20,10 +20,10 @@ sidebar_position: 29
         - 在賬戶開通狀態下修改，工單審核通過後，才會生效。修改成功後，當前的交易通道會同步變更
     - 新增工單：kyc.update_application_client_detail_type
 
-<img src="B51xb5FyRoQRsjxxZKBjnpdupxd" src-width="2138" src-height="886" align="center"/>
+<img src="/assets/B51xb5FyRoQRsjxxZKBjnpdupxd.png" src-width="2138" src-height="886" align="center"/>
 
 - 客戶資料頁支持賬戶名稱的展示
-    <img src="NglfbDn0XoUZFjxO5jdjeZaxprd" src-width="2452" src-height="1616" align="center"/>
+    <img src="/assets/NglfbDn0XoUZFjxO5jdjeZaxprd.png" src-width="2452" src-height="1616" align="center"/>
     - 路徑：「客戶管理系統」-「賬戶管理」-「賬戶列表」-「詳情」
     - 在客戶資料頁面，新增展示當前證券賬戶的賬戶名稱，包括關聯賬戶的賬戶名稱
 

@@ -19,5 +19,5 @@ WTT 提供美股、港股、新加坡、滬深以及虛擬資產等多市場的�
 - **選股器：**提供標的範圍、行情與估值、財務數據等選股指標，用戶可根據自定義指標篩選符合條件的股票，幫助精準發現投資機會。
 - **行情商店：**支持用戶申請港股 LV2、美股綜合行情、美股 Nasdaq Totalview 等高級行情。
 
-<img src="DqjWbOQnWofVoyxnHvHjdcTjpRf" src-width="3828" src-height="1878" align="center"/>
+<img src="/assets/DqjWbOQnWofVoyxnHvHjdcTjpRf.png" src-width="3828" src-height="1878" align="center"/>
 

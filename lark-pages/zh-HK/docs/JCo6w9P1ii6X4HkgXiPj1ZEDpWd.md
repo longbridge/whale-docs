@@ -22,13 +22,13 @@ sidebar_position: 2
 
 在客戶出幣前，需要進行出幣加密貨幣設置。
 
-<img src="Ppz8bJ8PWoSuqkxOzo2jqTzQpVS" src-width="2048" src-height="706" align="center"/>
+<img src="/assets/Ppz8bJ8PWoSuqkxOzo2jqTzQpVS.png" src-width="2048" src-height="706" align="center"/>
 
 ## 客户錢包地址
 
 出幣前完成錢包地址認證是保障資產安全的關鍵前置環節。
 
-<img src="B0hdbJE3boGkEkxDYFAjjPbzpNb" src-width="3288" src-height="1076" align="center"/>
+<img src="/assets/B0hdbJE3boGkEkxDYFAjjPbzpNb.png" src-width="3288" src-height="1076" align="center"/>
 
 ## 出幣<b>操作</b>
 
@@ -41,9 +41,9 @@ sidebar_position: 2
 
 - 客戶端提交出幣請求後，系統自動接收請求信息，並生成唯一入幣記錄（含記錄編號、用戶證券賬號、入幣幣種、金額、目標地址、交易哈希 TXID、請求時間、狀態等核心信息）。
 
-<img src="FbDHbOdhXoMWUmxRQIIjKzjMpwc" src-width="3272" src-height="672" align="center"/>
+<img src="/assets/FbDHbOdhXoMWUmxRQIIjKzjMpwc.png" src-width="3272" src-height="672" align="center"/>
 
 - 客戶提交的出幣申請已自動對接 WBO 工單（工單標識：atm.va.coin_withdraw_apply），系統將依據預設的審批配置流開展審批。
 
-<img src="G0MAbQ2proSBLwxVcHGjRxh0p1g" src-width="3324" src-height="1776" align="center"/>
+<img src="/assets/G0MAbQ2proSBLwxVcHGjRxh0p1g.png" src-width="3324" src-height="1776" align="center"/>
 

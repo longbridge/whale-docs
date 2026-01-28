@@ -15,7 +15,7 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
 
 <b>基金交易流程</b>
 
-<img src="WFzXb95aeomDe6xgKmQjEVF5pNw" src-width="1210" src-height="1716" align="center"/>
+<img src="/assets/WFzXb95aeomDe6xgKmQjEVF5pNw.png" src-width="1210" src-height="1716" align="center"/>
 
 <b>重要時間點參考：</b> （以下會根據不同基金代理商有所不同）
 
@@ -29,7 +29,7 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
 
   <b>APP 端參考畫面：</b>
 
-<img src="DmPVbjEL1osNPdxuyBGj6k3HpBc" src-width="558" src-height="997" align="center"/>
+<img src="/assets/DmPVbjEL1osNPdxuyBGj6k3HpBc.png" src-width="558" src-height="997" align="center"/>
 
 ### 1.1.1 客戶訂單
 
@@ -37,7 +37,7 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
 
 - 在本作業可以查詢到前台 APP 端的公募基金訂單紀錄，  可以看到基金訂單的申購/贖的狀態
 
-<img src="Nfe2bGTaIoMJBRxkNN2jMHhzpsh" src-width="3228" src-height="1414" align="center"/>
+<img src="/assets/Nfe2bGTaIoMJBRxkNN2jMHhzpsh.png" src-width="3228" src-height="1414" align="center"/>
 
 注意：同時若租戶劵商本身也接入下游劵商（OB 模式） ，下游劵商可以先透過【同步訂單】操作下游劵商（OB）的基金訂單同步至上游劵商
 
@@ -47,7 +47,7 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
 
 - 本作業可以統計在基金公司的外部份額數據
 
-<img src="MFnqbYZrzooE50xVBnsjr5Ffp8b" src-width="3276" src-height="882" align="center"/>
+<img src="/assets/MFnqbYZrzooE50xVBnsjr5Ffp8b.png" src-width="3276" src-height="882" align="center"/>
 
 ### 1.1.3 淨值表
 
@@ -55,13 +55,13 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
 
 - 本作業可以查詢、添加、编辑基金的淨值數據
 
-<img src="UbbhbboAzoxUEFxIFYejQ8DXpGb" src-width="3322" src-height="1662" align="center"/>
+<img src="/assets/UbbhbboAzoxUEFxIFYejQ8DXpGb.png" src-width="3322" src-height="1662" align="center"/>
 
 - 添加基金净值
     - 点击「新增」按钮
-        <img src="HphybDvGrortGKxYRQBjgOUupNf" src-width="3284" src-height="1656" align="center"/>
+        <img src="/assets/HphybDvGrortGKxYRQBjgOUupNf.png" src-width="3284" src-height="1656" align="center"/>
     - 输入需要添加净值的基金，输入净值后，选择净值对应的日期
-        <img src="IwwUbhFu8o4WcMxfo7Bj3EtOpHe" src-width="3320" src-height="1652" align="center"/>
+        <img src="/assets/IwwUbhFu8o4WcMxfo7Bj3EtOpHe.png" src-width="3320" src-height="1652" align="center"/>
         <div class="callout callout-bg-5 callout-border-5 callout-color-1">
         <div class='callout-emoji'>🎁</div>
         <p>💡 注意：系統已改成透過行情數據源自動獲取公募基金的淨值表，如果行情数据源获取到的数据延迟，则支持手动添加净值的方式来确保基金清算交收。</p>
@@ -79,11 +79,11 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
     </ol>
     </div>
     - 找到需要编辑净值的基金，点击编辑按钮
-        <img src="FaGTbRY1zoIwcbxbCLRjbax7pjd" src-width="3332" src-height="1660" align="center"/>
+        <img src="/assets/FaGTbRY1zoIwcbxbCLRjbax7pjd.png" src-width="3332" src-height="1660" align="center"/>
     - 输入对应的基金净值，并点击「确定」
-        <img src="IiO0bvPPsoeReLxDTKXjSDbPpvd" src-width="3332" src-height="1756" align="center"/>
+        <img src="/assets/IiO0bvPPsoeReLxDTKXjSDbPpvd.png" src-width="3332" src-height="1756" align="center"/>
     - 完成净值修改后，如果开启编辑净值审批，则新的净值将在审批工单通过后生效；未开启编辑审批则编辑后立即生效；
-        <img src="M6f3bP5mhoxoCgxAMcujH2iqpde" src-width="3314" src-height="1658" align="center"/>
+        <img src="/assets/M6f3bP5mhoxoCgxAMcujH2iqpde.png" src-width="3314" src-height="1658" align="center"/>
 
 ### 1.1.4 基金清算
 
@@ -91,15 +91,15 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
 
 - 本作業可以進行基金後台的清算作業（包含數據確認/申購交收/贖回錢貨交收）
 
-<img src="QQ0ebcbJUo3J8jxIhHEjQyvXp9g" src-width="3302" src-height="1658" align="center"/>
+<img src="/assets/QQ0ebcbJUo3J8jxIhHEjQyvXp9g.png" src-width="3302" src-height="1658" align="center"/>
 
 <b>清算操作流程：</b>
 
 1. 選擇產生的基金管道訂單，選擇‘初始化’狀態後，中點擊【數據發送】，彈框資訊確認無誤後，點擊【確認】，此時訂單狀況會變成'發送成功'
-    <img src="BW8hbTkuJoOMhhxnjxPjn4EepUh" src-width="3278" src-height="1656" align="center"/>
+    <img src="/assets/BW8hbTkuJoOMhhxnjxPjn4EepUh.png" src-width="3278" src-height="1656" align="center"/>
 
 2. 數據發送之後，选择“发送成功”的状态，等收到基金公司申購/贖回確認檔，這時在該基金記錄操作區，選擇「申购核对确认」、「赎回核对确认」，分别对「申购确认份额」和「赎回确认金额」进行填写和确认
-    <img src="MysFbzmksoatL4x1cqLjFKRypFh" src-width="3304" src-height="1658" align="center"/>
+    <img src="/assets/MysFbzmksoatL4x1cqLjFKRypFh.png" src-width="3304" src-height="1658" align="center"/>
     - 核对确认的弹窗中，需要分别选择清算交收使用的「基金净值」，并分别填写「申购确认份额」和「赎回确认金额」
         <div class="callout callout-bg-5 callout-border-5 callout-color-1">
         <div class='callout-emoji'>🎁</div>
@@ -109,17 +109,17 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
         </ol>
         </div>
 
-<img src="Idkabuikjodf1SxaEdTj0ztQp7f" src-width="1208" src-height="1678" align="center"/>
+<img src="/assets/Idkabuikjodf1SxaEdTj0ztQp7f.png" src-width="1208" src-height="1678" align="center"/>
 
-<img src="NcJiby36RozvlIxRRSSjvX2qpSc" src-width="1174" src-height="1646" align="center"/>
+<img src="/assets/NcJiby36RozvlIxRRSSjvX2qpSc.png" src-width="1174" src-height="1646" align="center"/>
 
 1. 若當天沒有訂單，自動核對確認， 自動完成交收。
 2. 选择“交收中”的状态，選中對應管道單進行申購交割，點擊確認之後沒有問題申購就完成了
-    <img src="KSswbzWpyokLIIxVnBlj8ZeMpXg" src-width="3280" src-height="1624" align="center"/>
+    <img src="/assets/KSswbzWpyokLIIxVnBlj8ZeMpXg.png" src-width="3280" src-height="1624" align="center"/>
 
 3. 後續如果申購交割完成之後還有贖回，會彈出來贖回貨交割，點擊完贖回或交割後是贖回錢交割，點完整個流程就結束了；如果沒有贖回，申購交割完成之後整個流程就結束了
-    <img src="AMBgbVtkmo4BPNxRQu9jLdAhpRc" src-width="3318" src-height="1648" align="center"/>
-    <img src="WGx5bXc9WoDYlTxKRRgjQ6Orpcd" src-width="3304" src-height="1652" align="center"/>
+    <img src="/assets/AMBgbVtkmo4BPNxRQu9jLdAhpRc.png" src-width="3318" src-height="1648" align="center"/>
+    <img src="/assets/WGx5bXc9WoDYlTxKRRgjQ6Orpcd.png" src-width="3304" src-height="1652" align="center"/>
 
 ### 1.1.5 交易日曆
 
@@ -127,7 +127,7 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
 
 - 本作業可以查詢到公募基金商品的交易日曆，可以操作【作廢】與【回撤】
 
-<img src="MIKUb9YeGoWkzuxJNmEjatiRpYf" src-width="3258" src-height="1544" align="center"/>
+<img src="/assets/MIKUb9YeGoWkzuxJNmEjatiRpYf.png" src-width="3258" src-height="1544" align="center"/>
 
 ## 1.2 公募基金管理
 
@@ -152,19 +152,19 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
 【隱藏】：是指基金在 APP 端不展示、不可搜索
 ```
 
-<img src="Yfzebsr14oimpMxb42KjTSzTpWb" src-width="3270" src-height="1578" align="center"/>
+<img src="/assets/Yfzebsr14oimpMxb42KjTSzTpWb.png" src-width="3270" src-height="1578" align="center"/>
 
 可以點選左上角【新建公募基金】， 只需要輸入 ISIN 後，系統就會根據 ISIN 讀取外部數據源的所有該基金的相關基金數據資料， 簡化基金數據的錄入， 最後僅需要核對後就能 存檔入系統
 
-<img src="EaldbQ4UAoDPYIxI41xjV6dopsg" src-width="3294" src-height="1464" align="center"/>
+<img src="/assets/EaldbQ4UAoDPYIxI41xjV6dopsg.png" src-width="3294" src-height="1464" align="center"/>
 
 <b>APP 端展示效果</b>：  （如果一個 公募基金是 '上架' 且 '顯示' 的 狀況下）
 
-<img src="CVfbb9OzXoJtHCxIETHj0m1Lpnh" src-width="686" src-height="1482" align="center"/>
+<img src="/assets/CVfbb9OzXoJtHCxIETHj0m1Lpnh.png" src-width="686" src-height="1482" align="center"/>
 
 - 本作業也支持批量導入基金資料，點選右上角【批量導入】，可以根據事先提供模板來批量導入基金
 
-<img src="M8zyb2qG6ochfbxVDaXjLEBYpGc" src-width="3286" src-height="1360" align="center"/>
+<img src="/assets/M8zyb2qG6ochfbxVDaXjLEBYpGc.png" src-width="3286" src-height="1360" align="center"/>
 
 ### 1.2.2 基金渠道
 
@@ -172,11 +172,11 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
 
 - 本作業管理基金平台商的相關資料 ， 維護基金渠道，配置與基金渠道交付的時間點配置
 
-<img src="QWR5bv9ZXohQipxXRB7jb22BpNg" src-width="3270" src-height="1528" align="center"/>
+<img src="/assets/QWR5bv9ZXohQipxXRB7jb22BpNg.png" src-width="3270" src-height="1528" align="center"/>
 
 可以左上角【新建配置】來新增基金渠道，根據基金渠道輸入 獲取訂單時間與回填時間
 
-<img src="M7w6biwtiorA4hxdTGPjQ3q9pJh" src-width="3300" src-height="1288" align="center"/>
+<img src="/assets/M7w6biwtiorA4hxdTGPjQ3q9pJh.png" src-width="3300" src-height="1288" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -191,17 +191,17 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
 
 - 本作業可以維護基金公司相關資料
 
-<img src="RdBKbDJfaog0lbxMtGNjutZEpIp" src-width="3276" src-height="794" align="center"/>
+<img src="/assets/RdBKbDJfaog0lbxMtGNjutZEpIp.png" src-width="3276" src-height="794" align="center"/>
 
 可以點擊【新建】來新增基金一筆基金公司
 
-<img src="FDvvbg1XloJKUExXbo9jOotWpJb" src-width="3292" src-height="1634" align="center"/>
+<img src="/assets/FDvvbg1XloJKUExXbo9jOotWpJb.png" src-width="3292" src-height="1634" align="center"/>
 
 <b>APP 端展示效果</b>： （當新建 基金公司後）
 
-<img src="HVM0bNP0Aov2Bjx2ehnjRKehp4c" src-width="830" src-height="1764" align="center"/>
+<img src="/assets/HVM0bNP0Aov2Bjx2ehnjRKehp4c.png" src-width="830" src-height="1764" align="center"/>
 
-<img src="TutrbEyRLopiYgx6tcCjrqiapvg" src-width="1242" src-height="2451" align="center"/>
+<img src="/assets/TutrbEyRLopiYgx6tcCjrqiapvg.png" src-width="1242" src-height="2451" align="center"/>
 
 ### 1.2.4 基金管理費
 
@@ -209,13 +209,13 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
 
 - 本作業可以查詢基金管理費用的設置
 
-<img src="LYnYbxVTvoMlAexNRsejWXmBp6g" src-width="3280" src-height="1416" align="center"/>
+<img src="/assets/LYnYbxVTvoMlAexNRsejWXmBp6g.png" src-width="3280" src-height="1416" align="center"/>
 
 ## 1.3 私募基金
 
 首先私募基金的業務系統操作流程如下 （SOP） :
 
-<img src="N50yb1uRFoPjE9xJFbzjFfVnpIg" src-width="1222" src-height="2080" align="center"/>
+<img src="/assets/N50yb1uRFoPjE9xJFbzjFfVnpIg.png" src-width="1222" src-height="2080" align="center"/>
 
 ### 1.3.1 基金管理
 
@@ -227,25 +227,25 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
     【顯示】：是指基金可在 APP 端展示、搜索和交易
     【隱藏】：是指基金在 APP 端不展示、不可搜索
 
-<img src="L3ImbFEvAo7Q0UxTaCpjW5NOpjK" src-width="3272" src-height="1570" align="center"/>
+<img src="/assets/L3ImbFEvAo7Q0UxTaCpjW5NOpjK.png" src-width="3272" src-height="1570" align="center"/>
 
 首先可以點選【新建】，分別填入私募基金  <b>基本訊息/基本面/申購規則/贖回規則</b>
 
 系統展示改成左側樹狀 Tab 配置页面，提高數據展示優化
 
-<img src="LboybucuRoYjyoxI43djaI8Pppf" src-width="3190" src-height="1632" align="center"/>
+<img src="/assets/LboybucuRoYjyoxI43djaI8Pppf.png" src-width="3190" src-height="1632" align="center"/>
 
 <b>基本面：</b>
 
-<img src="TZKXbWMn5oOzbqxO6xBj7yxWpLh" src-width="2754" src-height="1532" align="center"/>
+<img src="/assets/TZKXbWMn5oOzbqxO6xBj7yxWpLh.png" src-width="2754" src-height="1532" align="center"/>
 
 <b>申購規則</b>：
 
-<img src="WQt9bclRRowDPixXEKqjoeWWpGb" src-width="2296" src-height="1518" align="center"/>
+<img src="/assets/WQt9bclRRowDPixXEKqjoeWWpGb.png" src-width="2296" src-height="1518" align="center"/>
 
 <b>贖回規則：</b>
 
-<img src="FykUbwkTvoCvOXxEhwkj0n8mpsb" src-width="2252" src-height="1532" align="center"/>
+<img src="/assets/FykUbwkTvoCvOXxEhwkj0n8mpsb.png" src-width="2252" src-height="1532" align="center"/>
 
 ### 1.3.2 淨值表
 
@@ -253,11 +253,11 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
 
 - 在本作業可以維護所有的私募基金淨值資料
 
-<img src="WbmZbZUyTowflmx5VVija5xepKf" src-width="3272" src-height="1418" align="center"/>
+<img src="/assets/WbmZbZUyTowflmx5VVija5xepKf.png" src-width="3272" src-height="1418" align="center"/>
 
 首先在右方左側【新增】操作，可以新增一筆 私募基金淨值紀錄
 
-<img src="UEpGbeHsLoJZ8Mx561DjJu67pPf" src-width="3278" src-height="1406" align="center"/>
+<img src="/assets/UEpGbeHsLoJZ8Mx561DjJu67pPf.png" src-width="3278" src-height="1406" align="center"/>
 
 支持【编辑】基金净值
 
@@ -286,11 +286,11 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
 - 在本作業可以查詢到所有的私募基金訂單紀錄（包含前後台輸入），  可以看到基金訂單的申購/贖的狀態
     首先在上方右側【獲取訂單】操作，可以讀取到前台的私募基金訂單
 
-<img src="NXF5bemmGoxjFlxyNc0jDfylp0f" src-width="3278" src-height="376" align="center"/>
+<img src="/assets/NXF5bemmGoxjFlxyNc0jDfylp0f.png" src-width="3278" src-height="376" align="center"/>
 
-<img src="B162bf0rdoQbO4xL6LTjadKepbb" src-width="3248" src-height="1624" align="center"/>
+<img src="/assets/B162bf0rdoQbO4xL6LTjadKepbb.png" src-width="3248" src-height="1624" align="center"/>
 
-<img src="UwaPbXi0Ooarx8xI26Ej69xupO9" src-width="3294" src-height="1726" align="center"/>
+<img src="/assets/UwaPbXi0Ooarx8xI26Ej69xupO9.png" src-width="3294" src-height="1726" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -307,21 +307,21 @@ A. <b>數據發送</b>
 
 選中對應基金記錄勾選 ，發送給基金公司，系統會判斷基金訂單狀態'初始化'才會進行數據發送
 
-<img src="N7A9bnPdBoAj14x7YZIjflSSpZN" src-width="3334" src-height="1707" align="center"/>
+<img src="/assets/N7A9bnPdBoAj14x7YZIjflSSpZN.png" src-width="3334" src-height="1707" align="center"/>
 
 B. <b>回填</b>
 
 根據基金公司提供資料，更新基金對應淨值以及每個帳戶及總體申購份額、贖回金額及外部收費，進行回填
 
-<img src="JpHWbf0upoplDLxb0HdjCGrepng" src-width="3262" src-height="1494" align="center"/>
+<img src="/assets/JpHWbf0upoplDLxb0HdjCGrepng.png" src-width="3262" src-height="1494" align="center"/>
 
-<img src="RhAPbeElooBlhuxTxFwj35T3pkN" src-width="3272" src-height="1258" align="center"/>
+<img src="/assets/RhAPbeElooBlhuxTxFwj35T3pkN.png" src-width="3272" src-height="1258" align="center"/>
 
 C.<b>私募交割</b>
 
 選中對應基金管道單 ID 進行私募交割，完成貨和錢交割的操作
 
-<img src="GMMgbt5mao6RV2x57lijhKpep0d" src-width="1280" src-height="194" align="center"/>
+<img src="/assets/GMMgbt5mao6RV2x57lijhKpep0d.png" src-width="1280" src-height="194" align="center"/>
 
 ### 1.3.5 APP 端列表
 
@@ -329,19 +329,19 @@ C.<b>私募交割</b>
 
 - 本作業可以維護在 APP 端有關於私募基金主體的排序展示順序
 
-<img src="IvsxbliLBoxtm8xEqybjwYgwpBc" src-width="3284" src-height="780" align="center"/>
+<img src="/assets/IvsxbliLBoxtm8xEqybjwYgwpBc.png" src-width="3284" src-height="780" align="center"/>
 
 可以在右側點選【 新建】，新建一個私募基金的排序
 
-<img src="GoPQb5vCloBCwCx8K5jj4XfqpJe" src-width="3302" src-height="1100" align="center"/>
+<img src="/assets/GoPQb5vCloBCwCx8K5jj4XfqpJe.png" src-width="3302" src-height="1100" align="center"/>
 
 設置後，就會影響私募基金在手機端展示排序效果
 
 <b>APP 端展示畫面如下：</b>
 
-<img src="OKOQb70VYoNA4kxOjakjW18tpvg" src-width="1125" src-height="2436" align="center"/>
+<img src="/assets/OKOQb70VYoNA4kxOjakjW18tpvg.png" src-width="1125" src-height="2436" align="center"/>
 
-<img src="Nen8bT9W1oUflvxZeZvjPEOUpre" src-width="1242" src-height="2451" align="center"/>
+<img src="/assets/Nen8bT9W1oUflvxZeZvjPEOUpre.png" src-width="1242" src-height="2451" align="center"/>
 
 ## 1.6 APP 展示管理
 
@@ -351,17 +351,17 @@ C.<b>私募交割</b>
 
 - 本作業維護在 APP 端熱銷基金主體的排序展示順序
 
-<img src="XK7ebVxnRouAexxEYrUjF5HtpFh" src-width="3270" src-height="878" align="center"/>
+<img src="/assets/XK7ebVxnRouAexxEYrUjF5HtpFh.png" src-width="3270" src-height="878" align="center"/>
 
 可以在右側點選【 新建】一個基金熱銷的排序
 
-<img src="Xfxhb6saXooZGrx34m8j2kP9pPf" src-width="3290" src-height="954" align="center"/>
+<img src="/assets/Xfxhb6saXooZGrx34m8j2kP9pPf.png" src-width="3290" src-height="954" align="center"/>
 
 熱銷基金模塊是基金後台可配的運營型基金展示功能，熱銷基金頁面進行配置後可以在 App 端展示，默認展示的收益週期是近 3 年收益率。
 
 <b>APP 端 參考畫面</b>：
 
-<img src="ULHtbkykooyEa7xGvCfj2OvJp0d" src-width="958" src-height="1722" align="center"/>
+<img src="/assets/ULHtbkykooyEa7xGvCfj2OvJp0d.png" src-width="958" src-height="1722" align="center"/>
 
 ### 1.6.2 基金主題
 
@@ -369,17 +369,17 @@ C.<b>私募交割</b>
 
 - 本作業可以維護基金主體的數據與文字顯示 ，基金主體是基金運營方根據日常運營需求配置不同類的基金主體和介紹，並配置對應的基金標的
 
-<img src="Wqmvb3TD2or2FFx5bIfj0XVTpEg" src-width="3280" src-height="890" align="center"/>
+<img src="/assets/Wqmvb3TD2or2FFx5bIfj0XVTpEg.png" src-width="3280" src-height="890" align="center"/>
 
 可以在右側點選【創建主題】，根據基金公司提供資料輸入相關基金訊息，確認資料後 存檔提交
 
-<img src="XxsPbEqEuoJlOVxI3qcj6c1opev" src-width="2824" src-height="1332" align="center"/>
+<img src="/assets/XxsPbEqEuoJlOVxI3qcj6c1opev.png" src-width="2824" src-height="1332" align="center"/>
 
 基金主题的排序权重越大，主题的在前端的顺序越靠前；基金主题内的基金列表中的排序越小，基金在前端的顺序越靠前。
 
 <b>APP 端展示畫面如下：</b>
 
-<img src="MlhdbiZCDon13GxpizQjwKuipGc" src-width="686" src-height="1482" align="center"/>
+<img src="/assets/MlhdbiZCDon13GxpizQjwKuipGc.png" src-width="686" src-height="1482" align="center"/>
 
 ### 1.6.3 基金推薦（風險）
 
@@ -387,11 +387,11 @@ C.<b>私募交割</b>
 
 - 本作業可以管理配置基金推薦的風險等級
 
-<img src="JyrRbxOmIoTqLFxFXoMjZGpPp9e" src-width="3234" src-height="1342" align="center"/>
+<img src="/assets/JyrRbxOmIoTqLFxFXoMjZGpPp9e.png" src-width="3234" src-height="1342" align="center"/>
 
 可以在右側點選【新增】一個基金推薦的風險配置，有默認與 A1 到 A5 等級的風險
 
-<img src="ADmlbSdJ5opJQAxwBKyjbl9vpvb" src-width="3224" src-height="1594" align="center"/>
+<img src="/assets/ADmlbSdJ5opJQAxwBKyjbl9vpvb.png" src-width="3224" src-height="1594" align="center"/>
 
 # 2. OB 基金管理
 
@@ -399,17 +399,17 @@ C.<b>私募交割</b>
 
 整體流程參考示意如下：
 
-<img src="D0lwb3pLqouCsqxnXYFjVMrZpKh" src-width="1354" src-height="636" align="center"/>
+<img src="/assets/D0lwb3pLqouCsqxnXYFjVMrZpKh.png" src-width="1354" src-height="636" align="center"/>
 
 ## 2.1 基金帳號管理
 
 執行菜單：OB 基金管理&gt; 基金帳號管理
 
-<img src="TMVRbdH7FouRWpxO2oSjXQ98p0c" src-width="3142" src-height="642" align="center"/>
+<img src="/assets/TMVRbdH7FouRWpxO2oSjXQ98p0c.png" src-width="3142" src-height="642" align="center"/>
 
 - 本作業維護下游劵商所開立的 OB 帳戶信息，可以透過右上方【新增】來新增一筆 OB 帳戶資料
 
-<img src="Bf9ubGNVPoS63jxsYwDj0TirpsV" src-width="3152" src-height="970" align="center"/>
+<img src="/assets/Bf9ubGNVPoS63jxsYwDj0TirpsV.png" src-width="3152" src-height="970" align="center"/>
 
 ## 2.2 OB 上報訂單管理
 
@@ -419,7 +419,7 @@ C.<b>私募交割</b>
 
 注意： 是下手 OB 劵商先在其 Whale 基金系統操作 【訂單同步】後，上手劵商才能看到基金訂單紀錄
 
-<img src="NSHubYfIqoSz7nxCllOjPEgxpmh" src-width="3144" src-height="1444" align="center"/>
+<img src="/assets/NSHubYfIqoSz7nxCllOjPEgxpmh.png" src-width="3144" src-height="1444" align="center"/>
 
 對上游劵商而言：
 
@@ -432,7 +432,7 @@ C.<b>私募交割</b>
 2. 生成上手劵商基金訂單前，需要對下手 OB 帳戶餘額進行檢測，檢測之後，才顯示租戶 OB 帳戶對應的【帳戶餘額】和【持倉份額】數據，提供上游劵商審批操作下手 OB 劵商申購贖回進行參考
     在紀錄右側操作區點選【餘額檢測】，系統會計算目前該 OB 帳戶的基金帳戶餘額與持倉份額
 
-<img src="Ckoxbtl0Zo0EqIx3jkXjNETWpxf" src-width="3230" src-height="1422" align="center"/>
+<img src="/assets/Ckoxbtl0Zo0EqIx3jkXjNETWpxf.png" src-width="3230" src-height="1422" align="center"/>
 
 # 3. 基金下單（後台）
 
@@ -440,22 +440,22 @@ Whale 系統 提供 三種終端方式來交易基金，分別是 LongPort APP �
 
 執行菜單：交易面板&gt;基金下單
 
-<img src="KfCebmJqyoL9HbxvhF6jVaQNpBe" src-width="3221" src-height="1458" align="center"/>
+<img src="/assets/KfCebmJqyoL9HbxvhF6jVaQNpBe.png" src-width="3221" src-height="1458" align="center"/>
 
 （申購/贖回）:錄入一筆後台基金訂單步驟如下：
 
 - 輸入基本客戶帳號後，會展示客戶帳戶的購買力
 
-<img src="CatDb8ewYoBinJxDVQ9jZpy1pSc" src-width="1578" src-height="651" align="center"/>
+<img src="/assets/CatDb8ewYoBinJxDVQ9jZpy1pSc.png" src-width="1578" src-height="651" align="center"/>
 
 - 接著輸入 相對應的基金渠道的訂單（申購），對應的基金渠道與基金產品，與申購金額，其中下單頁面填入申購手續費用后，當核準後會從用户的對應幣種现金里直接扣除
     注：  系統會判斷 <b>申購手續费+申購金额 &gt;= 现金</b>
-    <img src="HYhKbpnMaoKie4xlMOojFsE1pSf" src-width="3202" src-height="1716" align="center"/>
+    <img src="/assets/HYhKbpnMaoKie4xlMOojFsE1pSf.png" src-width="3202" src-height="1716" align="center"/>
 
 或 相對應的基金渠道的訂單（贖回），對應的基金渠道與基金產品，與贖回份數
 
 - 在基本資料檢查無誤後提交後，就會展示在下方到基金訂單區，同時可以在紀錄右側區操作撤單
     注：若基金后台開始獲取前台基金訂單的时候。此時後台基金錄入訂單就不可撤销。
 
-<img src="AJ2lbS8DaopRKExa2ObjVRyxpmg" src-width="3174" src-height="1692" align="center"/>
+<img src="/assets/AJ2lbS8DaopRKExa2ObjVRyxpmg.png" src-width="3174" src-height="1692" align="center"/>
 

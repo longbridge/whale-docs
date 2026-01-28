@@ -27,7 +27,7 @@ sidebar_position: 0
 
 卡券信息分為基本信息和規則配置兩部分，對於每種卡券類型，基本信息所需要配置的字段相同，規則配置所需要的字段有所差別
 
-<img src="QfvUbibieoRSzyxIIY9jh27gp0e" src-width="1668" src-height="1960" align="center"/>
+<img src="/assets/QfvUbibieoRSzyxIIY9jh27gp0e.png" src-width="1668" src-height="1960" align="center"/>
 
 <b>基本信息</b>
 
@@ -45,13 +45,13 @@ sidebar_position: 0
 
 菜單入口：運營系統&gt;權益系統&gt;卡劵福利&gt;卡劵管理
 
-<img src="Nm9ybTlnloSl5YxT1hZjabyNpve" src-width="1280" src-height="380" align="center"/>
+<img src="/assets/Nm9ybTlnloSl5YxT1hZjabyNpve.png" src-width="1280" src-height="380" align="center"/>
 
 ## 如何配置一個實物獎品？
 
 執行菜單：運營系統&gt;權益系統&gt;卡劵福利&gt;實物獎品
 
-<img src="ZCNIbdhUtovITLxL2OwjKx5jpug" src-width="1680" src-height="2645" align="center"/>
+<img src="/assets/ZCNIbdhUtovITLxL2OwjKx5jpug.png" src-width="1680" src-height="2645" align="center"/>
 
 配置面板進行如下字段配置
 
@@ -63,7 +63,7 @@ sidebar_position: 0
 
 <b>step1. 篩選已填寫地址的用戶</b>
 
-<img src="GlkzbOOIcoTWcSxuMKujqeJdpkf" src-width="1280" src-height="404" align="center"/>
+<img src="/assets/GlkzbOOIcoTWcSxuMKujqeJdpkf.png" src-width="1280" src-height="404" align="center"/>
 
 當用戶收到獎勵未填寫地址時，發貨狀態為「未填寫地址」，用戶填寫地址後，該狀態則變更為「已填寫地址」
 
@@ -71,21 +71,21 @@ sidebar_position: 0
 
 <b>step 2. 導出地址</b>
 
-<img src="TrgvbEuGNoOldYxnwtMjieJWpng" src-width="1280" src-height="439" align="center"/>
+<img src="/assets/TrgvbEuGNoOldYxnwtMjieJWpng.png" src-width="1280" src-height="439" align="center"/>
 
 <b>step 3. 修改訂單狀態</b>
 
 為防止導出地址後用戶又進行地址修改，需鎖定該記錄狀態，導出信息後，可批量將記錄的發貨狀態變更為「發貨中」，變更後用戶不可再修改地址
 
-<img src="OPVfbrNlBongQnxRfljjpX2eptd" src-width="1280" src-height="746" align="center"/>
+<img src="/assets/OPVfbrNlBongQnxRfljjpX2eptd.png" src-width="1280" src-height="746" align="center"/>
 
 <b>step 4. 上傳物流單號</b>
 
 隨後進行線下發貨，發貨後得到物流單號，需要填寫至系統中，以便用戶查看
 
-<img src="QpRcbUnfzowotyxbbT8jwtIjpjd" src-width="1280" src-height="478" align="center"/>
+<img src="/assets/QpRcbUnfzowotyxbbT8jwtIjpjd.png" src-width="1280" src-height="478" align="center"/>
 
-<img src="JvgJbckcho7qjHxijZKj1ogXpMd" src-width="1280" src-height="752" align="center"/>
+<img src="/assets/JvgJbckcho7qjHxijZKj1ogXpMd.png" src-width="1280" src-height="752" align="center"/>
 
 上傳物流單號後，實物獎勵發放流程完畢
 
@@ -97,7 +97,7 @@ sidebar_position: 0
 
 菜單入口：運營系統&gt;權益系統&gt;獎勵中心&gt;獎勵發放
 
-<img src="MwbUbL8ZMoFujnx4tPTjGKKnp1g" src-width="2788" src-height="1042" align="center"/>
+<img src="/assets/MwbUbL8ZMoFujnx4tPTjGKKnp1g.png" src-width="2788" src-height="1042" align="center"/>
 
 此處記錄所有發放的獎勵記錄，包含實物、卡券和現金所有類型，並可篩選和導出
 
@@ -109,17 +109,17 @@ sidebar_position: 0
 
 點擊右上方「新建」按鈕，打開新建發獎彈窗
 
-<img src="AxCSbeFzqopXx3xa9hDjJx4wpGf" src-width="2792" src-height="310" align="center"/>
+<img src="/assets/AxCSbeFzqopXx3xa9hDjJx4wpGf.png" src-width="2792" src-height="310" align="center"/>
 
-<img src="IuFvbMcRDoE9WKxNpW3jXsQwp6c" src-width="2816" src-height="1646" align="center"/>
+<img src="/assets/IuFvbMcRDoE9WKxNpW3jXsQwp6c.png" src-width="2816" src-height="1646" align="center"/>
 
 <b>給批量用戶發獎</b>
 
 若操作量多時，可點擊頁面右上角“批量發放獎勵”，通過上傳文件方式一次性給一批用戶發獎
 
-<img src="ECA9bCIGmocDBdxKll4jqhHMpHf" src-width="2782" src-height="378" align="center"/>
+<img src="/assets/ECA9bCIGmocDBdxKll4jqhHMpHf.png" src-width="2782" src-height="378" align="center"/>
 
-<img src="UWsUbZMTloXroCxYsWsjYKc8p9g" src-width="2780" src-height="1600" align="center"/>
+<img src="/assets/UWsUbZMTloXroCxYsWsjYKc8p9g.png" src-width="2780" src-height="1600" align="center"/>
 
 首先選擇發放的獎勵類型，隨後在下方模版處下載模版文件（不同獎勵類型對應的模版不同，步驟不可顛倒）
 
@@ -135,5 +135,5 @@ sidebar_position: 0
 
 此作業用於查詢，導出行情商店產生的訂單，供運營和財務人員使用
 
-<img src="PgbjbEDaNoSPoQxogcAj2gScpMf" src-width="2420" src-height="730" align="center"/>
+<img src="/assets/PgbjbEDaNoSPoQxogcAj2gScpMf.png" src-width="2420" src-height="730" align="center"/>
 

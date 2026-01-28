@@ -11,7 +11,7 @@ sidebar_position: 1
 
 權益系統是 Whale 來管理各類營銷獎勵與權益的發放，包含各類卡劵的創建與發放管理，整個 Whale 權益系統體系中，權益主要包括卡券福利、獎勵中心、權益中心三大作業功能。
 
-<img src="D6ZfbfiLBorLNQxIYxIjnXYhp6b" src-width="1354" src-height="414" align="center"/>
+<img src="/assets/D6ZfbfiLBorLNQxIYxIjnXYhp6b.jpeg" src-width="1354" src-height="414" align="center"/>
 
 # 功能介紹
 
@@ -35,7 +35,7 @@ APP  端： 客戶與各種權益做交互行為互動
 交易系統：這部份是指一些權益項目與交易服務使用有關(若有）
 ```
 
-<img src="RVr0bJDFUoIwI7x7YwGjEjlxpnh" src-width="1734" src-height="2634" align="center"/>
+<img src="/assets/RVr0bJDFUoIwI7x7YwGjEjlxpnh.jpeg" src-width="1734" src-height="2634" align="center"/>
 
 # 1.卡券福利
 
@@ -45,7 +45,7 @@ APP  端： 客戶與各種權益做交互行為互動
 
 執行菜單：運營系統&gt;權益系統&gt;卡劵福利&gt;卡劵配置
 
-<img src="TGLqbER2poW9yzxjd7mjoMHNpYe" src-width="2784" src-height="1190" align="center"/>
+<img src="/assets/TGLqbER2poW9yzxjd7mjoMHNpYe.png" src-width="2784" src-height="1190" align="center"/>
 
 列表功能操作
 
@@ -69,7 +69,7 @@ APP  端： 客戶與各種權益做交互行為互動
 
 卡券信息分為基本信息和規則配置兩部分，對於每種卡券類型，基本信息所需要配置的字段相同，規則配置所需要的字段有所差別
 
-<img src="WZC9b0nK1ozA7oxjGLejYTgipZe" src-width="1668" src-height="1960" align="center"/>
+<img src="/assets/WZC9b0nK1ozA7oxjGLejYTgipZe.png" src-width="1668" src-height="1960" align="center"/>
 
 <b>基本信息</b>
 
@@ -89,7 +89,7 @@ APP  端： 客戶與各種權益做交互行為互動
 
 可通過卡券編號、獎勵模版編號、卡券類型、到賬時間、客戶編號、卡券狀態等篩選特定記錄篩選查看和導出
 
-<img src="QlQRbqHMxovCzExHebaj16Avpl0" src-width="2758" src-height="820" align="center"/>
+<img src="/assets/QlQRbqHMxovCzExHebaj16Avpl0.png" src-width="2758" src-height="820" align="center"/>
 
 ### 1.2.3 卡券結算
 
@@ -101,13 +101,13 @@ APP  端： 客戶與各種權益做交互行為互動
 
 可通過卡券編號、用戶編號、結算日期、活動代碼、核銷場景、進行篩選查看
 
-<img src="EeyAbzCNLoa51CxoxURjaf7epec" src-width="2750" src-height="784" align="center"/>
+<img src="/assets/EeyAbzCNLoa51CxoxURjaf7epec.png" src-width="2750" src-height="784" align="center"/>
 
 ## 1.3 實物獎品
 
 執行菜單：運營系統&gt;權益系統&gt;卡劵福利&gt;實物獎品
 
-<img src="HUPzbgiSZofoGhxLU05jgaVCp4e" src-width="2432" src-height="1142" align="center"/>
+<img src="/assets/HUPzbgiSZofoGhxLU05jgaVCp4e.png" src-width="2432" src-height="1142" align="center"/>
 
 列表功能操作
 
@@ -120,7 +120,7 @@ APP  端： 客戶與各種權益做交互行為互動
 
 點擊頁面右上角“新建模版”按鈕，將打開以下頁面
 
-<img src="T4zRb7RGxoyPCrxRrkbjVkNNpPf" src-width="1680" src-height="2645" align="center"/>
+<img src="/assets/T4zRb7RGxoyPCrxRrkbjVkNNpPf.png" src-width="1680" src-height="2645" align="center"/>
 
 配置面板進行如下字段配置
 
@@ -130,7 +130,7 @@ APP  端： 客戶與各種權益做交互行為互動
 
 實物發放業務流程
 
-<img src="AWVNbNY1AorHfsxLCirj4fsPptc" src-width="1114" src-height="2174" align="center"/>
+<img src="/assets/AWVNbNY1AorHfsxLCirj4fsPptc.jpeg" src-width="1114" src-height="2174" align="center"/>
 
 執行菜單：運營系統&gt;權益系統&gt;卡劵福利&gt;實物發放管理
 
@@ -142,7 +142,7 @@ APP  端： 客戶與各種權益做交互行為互動
 
 <b>（1）篩選已填寫地址的用戶</b>
 
-<img src="GOnObjdhTothmexjhHaj2gP5p7e" src-width="2782" src-height="880" align="center"/>
+<img src="/assets/GOnObjdhTothmexjhHaj2gP5p7e.png" src-width="2782" src-height="880" align="center"/>
 
 當用戶收到獎勵未填寫地址時，發貨狀態為「未填寫地址」，用戶填寫地址後，該狀態則變更為「已填寫地址」
 
@@ -152,11 +152,11 @@ APP  端： 客戶與各種權益做交互行為互動
 
 篩選出已填寫地址的用戶後，可以導出用戶填寫的地址信息，進行線下發貨操作
 
-<img src="GyHbb8rxKov2FKxcL9MjrLvLp6c" src-width="2758" src-height="946" align="center"/>
+<img src="/assets/GyHbb8rxKov2FKxcL9MjrLvLp6c.png" src-width="2758" src-height="946" align="center"/>
 
 為防止導出地址後用戶又進行地址修改，需鎖定該記錄狀態，導出信息後，可批量將記錄的發貨狀態變更為「發貨中」，變更後用戶不可再修改地址
 
-<img src="HFqebjOtrotO92xdsZrjSthjpUf" src-width="2758" src-height="1608" align="center"/>
+<img src="/assets/HFqebjOtrotO92xdsZrjSthjpUf.png" src-width="2758" src-height="1608" align="center"/>
 
 <b>（3）上傳物流單號</b>
 
@@ -164,11 +164,11 @@ APP  端： 客戶與各種權益做交互行為互動
 
 只有少量物流單時，可選擇逐個輸入，點擊每天記錄的“發貨”按鈕，在彈框中輸入物流單號
 
-<img src="A4V6b5XTuoTCIAxtXlhjjWdLpxc" src-width="2770" src-height="1036" align="center"/>
+<img src="/assets/A4V6b5XTuoTCIAxtXlhjjWdLpxc.png" src-width="2770" src-height="1036" align="center"/>
 
 若操作量多時，可點擊頁面右上角“批量導入物流單號”，通過上傳文件方式批量導入物流單號
 
-<img src="Iv1obGZ3wou3Bpx6Xq8jzqllpsc" src-width="2788" src-height="1640" align="center"/>
+<img src="/assets/Iv1obGZ3wou3Bpx6Xq8jzqllpsc.png" src-width="2788" src-height="1640" align="center"/>
 
 上傳物流單號後，實物獎勵發放流程完畢。
 
@@ -184,7 +184,7 @@ APP  端： 客戶與各種權益做交互行為互動
 
 菜單入口：運營系統&gt;權益系統&gt;獎勵中心&gt;獎勵發放
 
-<img src="E25iblOfzo2BtSxwNh3jrZ06pEd" src-width="2788" src-height="1042" align="center"/>
+<img src="/assets/E25iblOfzo2BtSxwNh3jrZ06pEd.png" src-width="2788" src-height="1042" align="center"/>
 
 ### 2.1.2 手動發放獎勵
 
@@ -194,9 +194,9 @@ APP  端： 客戶與各種權益做交互行為互動
 
 點擊右上方「新建」按鈕，打開新建發獎彈窗
 
-<img src="AUzbbDWnioQ5VSx6UOwjO0J6pkd" src-width="2792" src-height="310" align="center"/>
+<img src="/assets/AUzbbDWnioQ5VSx6UOwjO0J6pkd.png" src-width="2792" src-height="310" align="center"/>
 
-<img src="Qr11bdKGnokIerxJ7KDjpFAEpHb" src-width="2816" src-height="1646" align="center"/>
+<img src="/assets/Qr11bdKGnokIerxJ7KDjpFAEpHb.png" src-width="2816" src-height="1646" align="center"/>
 
 點擊確定後，生成發放記錄，若設有審批環節，則本條發放記錄進入審批流，審批通過後發放，不通過取消發放；若審批流為自動通過，則本條記錄開始執行發放操作。
 
@@ -204,9 +204,9 @@ APP  端： 客戶與各種權益做交互行為互動
 
 若操作量多時，可點擊頁面右上角“批量發放獎勵”，通過上傳文件方式一次性給一批用戶發獎
 
-<img src="DE0gbRTTSovxHjxdYr4jIVjYpfb" src-width="2782" src-height="378" align="center"/>
+<img src="/assets/DE0gbRTTSovxHjxdYr4jIVjYpfb.png" src-width="2782" src-height="378" align="center"/>
 
-<img src="GWGmbWiasoRRP5x0So2jC2Vjpjb" src-width="2780" src-height="1600" align="center"/>
+<img src="/assets/GWGmbWiasoRRP5x0So2jC2Vjpjb.png" src-width="2780" src-height="1600" align="center"/>
 
 首先選擇發放的獎勵類型，隨後在下方模版處下載模版文件（不同獎勵類型對應的模版不同，步驟不可顛倒）
 
@@ -222,7 +222,7 @@ APP  端： 客戶與各種權益做交互行為互動
 
 菜單入口：運營系統&gt;權益系統&gt;獎勵中心&gt;獎勵發放
 
-<img src="TwIHbF9Ezoe9mEx4P9mjh37EpEb" src-width="2750" src-height="1004" align="center"/>
+<img src="/assets/TwIHbF9Ezoe9mEx4P9mjh37EpEb.png" src-width="2750" src-height="1004" align="center"/>
 
 現金及現金卡一般直接發放，兌換股票類型，需在此審批後，對應股數的股票才會轉到對應賬戶中
 
@@ -234,7 +234,7 @@ APP  端： 客戶與各種權益做交互行為互動
 
 菜單入口：運營系統&gt;權益系統&gt;權益中心&gt;權益商店
 
-<img src="GprKbwux8oI32vxrRUljDdA4pRd" src-width="2752" src-height="1002" align="center"/>
+<img src="/assets/GprKbwux8oI32vxrRUljDdA4pRd.png" src-width="2752" src-height="1002" align="center"/>
 
 如果訂閱了whale的內容服務中的行情內容，則可以將行情查看權限售賣給用戶，目前whale的工作人員會幫助每一位租戶創建和管理行情商品，在此不做過多說明
 
@@ -244,7 +244,7 @@ APP  端： 客戶與各種權益做交互行為互動
 
 此作業用於查詢，導出行情商店產生的訂單，供運營和財務人員使用
 
-<img src="HwHrb2zW4o0GObxrgNBjtYobpcf" src-width="2420" src-height="730" align="center"/>
+<img src="/assets/HwHrb2zW4o0GObxrgNBjtYobpcf.png" src-width="2420" src-height="730" align="center"/>
 
 # App端用戶功能
 
@@ -254,59 +254,59 @@ APP  端： 客戶與各種權益做交互行為互動
 
 <b>App入口</b>
 
-<img src="WQppbdQ0zo23a7xfwYfjH6Kfplc" src-width="628" src-height="1352" align="center"/>
+<img src="/assets/WQppbdQ0zo23a7xfwYfjH6Kfplc.png" src-width="628" src-height="1352" align="center"/>
 
 我的-我的卡券
 
 <b>我的卡券</b>
 
-<img src="MqBGbQuY4ozRW2xcZm0jzeOopbf" src-width="624" src-height="1360" align="center"/>
+<img src="/assets/MqBGbQuY4ozRW2xcZm0jzeOopbf.png" src-width="624" src-height="1360" align="center"/>
 
 用戶可自行查看當前已有卡券以及卡券狀態
 
 <b>交易使用卡券</b>
 
-<img src="ZbyJbNNNeohFTRxxaiHjQO6ApGf" src-width="674" src-height="1366" align="center"/>
+<img src="/assets/ZbyJbNNNeohFTRxxaiHjQO6ApGf.png" src-width="674" src-height="1366" align="center"/>
 
-<img src="N7FIbnEWhoPxToxdAQwjJC9Wpwd" src-width="750" src-height="1624" align="center"/>
+<img src="/assets/N7FIbnEWhoPxToxdAQwjJC9Wpwd.png" src-width="750" src-height="1624" align="center"/>
 
 <b>打新使用卡券</b>
 
-<img src="A4dEbH6DnoLHyPxOIRmjw4EXpoc" src-width="724" src-height="1610" align="center"/>
+<img src="/assets/A4dEbH6DnoLHyPxOIRmjw4EXpoc.jpeg" src-width="724" src-height="1610" align="center"/>
 
 ## 獎勵
 
 <b>App入口</b>
 
-<img src="PfOhb6wUhoCuGVxF7kJjNk0Lphc" src-width="620" src-height="1366" align="center"/>
+<img src="/assets/PfOhb6wUhoCuGVxF7kJjNk0Lphc.png" src-width="620" src-height="1366" align="center"/>
 
 我的-獎勵記錄
 
-<img src="Y5j8b84rQom19Xx2ISQjHhNjp54" src-width="626" src-height="1360" align="center"/>
+<img src="/assets/Y5j8b84rQom19Xx2ISQjHhNjp54.png" src-width="626" src-height="1360" align="center"/>
 
 我的-活動中心-獎勵
 
 <b>獎勵記錄</b>
 
-<img src="XcHkbw5s0otERKxTOSqjWGLapsf" src-width="1080" src-height="2374" align="center"/>
+<img src="/assets/XcHkbw5s0otERKxTOSqjWGLapsf.jpeg" src-width="1080" src-height="2374" align="center"/>
 
 展示所有歷史記錄
 
-<img src="VJRobLlJCon4ubxFMPRj2kM7pPe" src-width="1080" src-height="2374" align="center"/>
+<img src="/assets/VJRobLlJCon4ubxFMPRj2kM7pPe.jpeg" src-width="1080" src-height="2374" align="center"/>
 
 可篩選類別進行查看
 
 <b>實物獎勵領取</b>
 
-<img src="ZhG7beHHKoUbwDx0KVSjKCl4pwc" src-width="750" src-height="1624" align="center"/>
+<img src="/assets/ZhG7beHHKoUbwDx0KVSjKCl4pwc.png" src-width="750" src-height="1624" align="center"/>
 
 輸入地址與電話
 
-<img src="LpjzbxULnoq94TxnNJrj8ppZpFg" src-width="750" src-height="1626" align="center"/>
+<img src="/assets/LpjzbxULnoq94TxnNJrj8ppZpFg.png" src-width="750" src-height="1626" align="center"/>
 
 確認郵寄信息
 
-<img src="HcDvb8BF8otJn8xQieOjcKQmpgf" src-width="750" src-height="1296" align="center"/>
+<img src="/assets/HcDvb8BF8otJn8xQieOjcKQmpgf.png" src-width="750" src-height="1296" align="center"/>
 
 查看物流單號
 
@@ -314,27 +314,27 @@ APP  端： 客戶與各種權益做交互行為互動
 
 <b>商店入口</b>
 
-<img src="Sr28bRYRzoWwyDx6gyWjLhUZp3b" src-width="614" src-height="1366" align="center"/>
+<img src="/assets/Sr28bRYRzoWwyDx6gyWjLhUZp3b.png" src-width="614" src-height="1366" align="center"/>
 
-<img src="OeqcbLlqsoql0exukAxjlxvFpdc" src-width="626" src-height="1374" align="center"/>
+<img src="/assets/OeqcbLlqsoql0exukAxjlxvFpdc.png" src-width="626" src-height="1374" align="center"/>
 
 我的-我的行情-行情商店
 
 <b>行情商店</b>
 
-<img src="SXUXbBZ4AovbVRxYbckjx3hMpnf" src-width="1080" src-height="2374" align="center"/>
+<img src="/assets/SXUXbBZ4AovbVRxYbckjx3hMpnf.jpeg" src-width="1080" src-height="2374" align="center"/>
 
 展示所有產品，可分tab切換不同市場行情產品列表
 
 <b>購買產品</b>
 
-<img src="PHFpbEZtzoCEksxJdUzjy0ezpYg" src-width="1080" src-height="2374" align="center"/>
+<img src="/assets/PHFpbEZtzoCEksxJdUzjy0ezpYg.jpeg" src-width="1080" src-height="2374" align="center"/>
 
 選擇對應產品、對應套餐支付購買
 
 <b>購買記錄查看</b>
 
-<img src="We4wb4vfWoHH44xao2wjqnaLp0e" src-width="628" src-height="1330" align="center"/>
+<img src="/assets/We4wb4vfWoHH44xao2wjqnaLp0e.png" src-width="628" src-height="1330" align="center"/>
 
-<img src="Px2yb8rgtoxAgNxTaxRj8XSQpxg" src-width="1080" src-height="2338" align="center"/>
+<img src="/assets/Px2yb8rgtoxAgNxTaxRj8XSQpxg.jpeg" src-width="1080" src-height="2338" align="center"/>
 

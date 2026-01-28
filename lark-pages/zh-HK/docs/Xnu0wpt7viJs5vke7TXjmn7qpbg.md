@@ -20,13 +20,13 @@ sidebar_position: 0
 
 在「清算管理＞清算檢查＞持倉對賬」中按「重新對賬」選擇對應的執行日期及賬務日期以刷新數據，再導出報表 SDR025 核對。
 
-<img src="CRe1b4tkooklODxNKuHjHUBCpbe" src-width="2398" src-height="1188" align="center"/>
+<img src="/assets/CRe1b4tkooklODxNKuHjHUBCpbe.png" src-width="2398" src-height="1188" align="center"/>
 
 # 5.1.1B 問：對賬日期如何選擇？
 
 **答：**常規租戶是下一天上午對上一天的賬，系統是按對賬任務發起的日期去默認展示，見下例說明。
 
-<img src="XIzMb440AouZrKxXWRgjKOD8pSV" src-width="1466" src-height="972" align="center"/>
+<img src="/assets/XIzMb440AouZrKxXWRgjKOD8pSV.png" src-width="1466" src-height="972" align="center"/>
 
 # 5.1.1C 問：為什麼 4 月 30 日港股清算後，系統賬務日是 5 月 1 日，不是 5 月 2 日？
 
@@ -44,11 +44,11 @@ sidebar_position: 0
 <p>持倉對帳對的是 T-1。 如昨天 （20/5） 日終後的內部轉倉要明天 （22/5） 的持倉對帳才能反映出來</p>
 </div>
 
-<img src="IRUWb7y1eoPJPaxKLy7jW8J9pHc" src-width="2500" src-height="1136" align="center"/>
+<img src="/assets/IRUWb7y1eoPJPaxKLy7jW8J9pHc.png" src-width="2500" src-height="1136" align="center"/>
 
 <em>5.1.1D 圖一</em>
 
-<img src="TDmebsSevo6aahxyPcGjilfFpcd" src-width="1188" src-height="805" align="center"/>
+<img src="/assets/TDmebsSevo6aahxyPcGjilfFpcd.png" src-width="1188" src-height="805" align="center"/>
 
 <em>5.1.1D 圖二</em>
 
@@ -62,5 +62,5 @@ sidebar_position: 0
 **答：**上手代理／託管商設置的對賬類型「結算賬户」指以已結算數量（T+2 交收後）來顯示持倉股數，「業務賬户」指以賬面股數（即時反映）來顯示持倉股數。
 系統主要以「結算賬户」已交收的股數作對賬，如設置了「業務賬户」以賬面股數對賬，會引致 SDR025 - Stock Reconciliation Report 不對賬，可以統一以把對賬類型選為結算賬户。
 
-<img src="IoK2b8ihkoVXqPxmM6qjs47SpTd" src-width="2672" src-height="1404" align="center"/>
+<img src="/assets/IoK2b8ihkoVXqPxmM6qjs47SpTd.png" src-width="2672" src-height="1404" align="center"/>
 

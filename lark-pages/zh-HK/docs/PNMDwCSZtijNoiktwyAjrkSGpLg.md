@@ -18,10 +18,10 @@ sidebar_position: 4
 
 - <b>選擇新建佈局時，可一鍵選擇畫布佈局或自適應佈局</b>
     當新開一個標籤頁創建空白佈局時，可依據需求一鍵選擇畫布佈局或自適應佈局，更加方便直觀。
-    <img src="J0Agbj8XoojUtFxfEzXjVh8ppUd" src-width="3372" src-height="1662" align="center"/>
+    <img src="/assets/J0Agbj8XoojUtFxfEzXjVh8ppUd.png" src-width="3372" src-height="1662" align="center"/>
 
 - 持倉組件中新增基金及場外衍生品持倉信息
-    <img src="BVqCbmFdcojctMxWgHmjTQ49pYf" src-width="2874" src-height="876" align="center"/>
+    <img src="/assets/BVqCbmFdcojctMxWgHmjTQ49pYf.png" src-width="2874" src-height="876" align="center"/>
 
 # 📌 改進與修復
 

@@ -15,11 +15,11 @@ sidebar_position: 0
 
 **答：**在「賬户管理＞賬戶列表」點擊「交易權限」以限制客戶交易買賣。
 
-<img src="EhlnbfVOyo5wCFxx7ajjU8wLp6d" src-width="2798" src-height="1096" align="center"/>
+<img src="/assets/EhlnbfVOyo5wCFxx7ajjU8wLp6d.png" src-width="2798" src-height="1096" align="center"/>
 
 # 1.2.1C 問：如何搜尋到發出電郵？（如：常設授權、專業投資者 - PI 的通知）
 
 **答：**在「消息中心＞消息記錄＞郵件」選擇主題輸入對應的關鍵字能搜尋到記錄。
 
-<img src="SpDYbxL12oGJE1xlu2Sj7Ov3pMh" src-width="2490" src-height="704" align="center"/>
+<img src="/assets/SpDYbxL12oGJE1xlu2Sj7Ov3pMh.png" src-width="2490" src-height="704" align="center"/>
 

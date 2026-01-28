@@ -18,7 +18,7 @@ sidebar_position: 0
 
 **答：**使用大陸身份證開戶的客戶默認使用身份證的地址，沒有輸入地址的位置；其他地區證件可以填寫居住地址。 國內客户在後台「KYC&gt;開戶列情」點擊「詳情」可以修改地址（見 1.1.1B 圖一）。
 
-<img src="FMTIb76JRojD2ix2fuCjWacgpRh" src-width="2574" src-height="984" align="center"/>
+<img src="/assets/FMTIb76JRojD2ix2fuCjWacgpRh.png" src-width="2574" src-height="984" align="center"/>
 
 <em>1.1.1B 圖一</em>
 

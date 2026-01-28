@@ -21,7 +21,7 @@ sidebar_position: 2
 
 ### <b>操作及功能說明</b>
 
-<img src="QiBOb7UX1o9spPxrx30jMtocpog" src-width="2858" src-height="1342" align="center"/>
+<img src="/assets/QiBOb7UX1o9spPxrx30jMtocpog.png" src-width="2858" src-height="1342" align="center"/>
 
 ### 1.1 查詢條件
 
@@ -29,14 +29,14 @@ sidebar_position: 2
 
 - 如需進行股票代碼/名稱的搜索，需前置選擇遍標的類型
     - 當“標的類型 = 股票及其他”時，可以通過股票代碼/名稱進行股票搜索
-        <img src="ArSpbPerjoOOWDxBeyYjhHTzpuf" src-width="2602" src-height="198" align="center"/>
+        <img src="/assets/ArSpbPerjoOOWDxBeyYjhHTzpuf.png" src-width="2602" src-height="198" align="center"/>
     - 當“標的類型 = 期權”時，可以通過股票代碼/名稱進行期權相關搜索，同時也可支持期權精準搜索
         股票匹配模式下可以通過股票代碼查詢當前股票下全部的相關期權訂單
         精準搜索模式下可直接通過喚起的期權篩選器搜索某一個精準的期權代碼
-        <img src="Yfx4bf5EYocsuTx6tPpjFe48pYc" src-width="2200" src-height="238" align="center"/>
+        <img src="/assets/Yfx4bf5EYocsuTx6tPpjFe48pYc.png" src-width="2200" src-height="238" align="center"/>
 
 - 只有當”標的類型 = 期權”時，才可以通過期權到期日進行篩選，可通過日期進行期權篩選
-    <img src="FpSEbrXMYoM7oFxtG8cjPW4upqh" src-width="2484" src-height="202" align="center"/>
+    <img src="/assets/FpSEbrXMYoM7oFxtG8cjPW4upqh.png" src-width="2484" src-height="202" align="center"/>
 
 - 其他查詢條件均為下拉選擇及固定格式搜索，無特殊說明
 
@@ -47,7 +47,7 @@ sidebar_position: 2
 列表數據刷新時效均為實時
 
 - 當訂單需要觸發審批時，在“批核狀態”字段中將可查看批核相關節點信息
-    <img src="Uz1yb6N0BoLoYMxPUaqjcFRdpbf" src-width="1280" src-height="349" align="center"/>
+    <img src="/assets/Uz1yb6N0BoLoYMxPUaqjcFRdpbf.png" src-width="1280" src-height="349" align="center"/>
 
 ### 1.3 操作功能
 
@@ -55,35 +55,35 @@ sidebar_position: 2
 
 - <b>列表操作</b>
     - 單擊列表某一條數據時，可以查看訂單的成交明細，如訂單存在改單或分多筆成交時，可通過展開的成交明細進行查看
-        <img src="VZEUbBz5Lo7zjUxHrCUjKzzipTc" src-width="2844" src-height="376" align="center"/>
+        <img src="/assets/VZEUbBz5Lo7zjUxHrCUjKzzipTc.png" src-width="2844" src-height="376" align="center"/>
     - 刷新：手動點擊刷新當前列表數據
     - 導出：支持導出訂單記錄及BCAN報表。訂單記錄即為當前列表中的訂單數據信息，BCAN報表包含HBCNATBN_BPX066、HBCNERBN_2195、HBCNOTBN_2195
     - 排序設置：可手動自定義調整訂單列表順序，以及支持設置是否需要展示查看
 
-<img src="DZ8fbXb3qoV4SCx89HhjHp60pHg" src-width="412" src-height="252" align="center"/>
+<img src="/assets/DZ8fbXb3qoV4SCx89HhjHp60pHg.png" src-width="412" src-height="252" align="center"/>
 
-<img src="Fnaobi3CKo0MDyx0c1qjceetpzf" src-width="668" src-height="856" align="center"/>
+<img src="/assets/Fnaobi3CKo0MDyx0c1qjceetpzf.png" src-width="668" src-height="856" align="center"/>
 
 - <b>訂單操作</b>
     - 覆盤：列表中只有“覆盤狀態”支持操作，可通過操作標記訂單是否與客戶進行過覆盤工作
-        <img src="K24AbQcEoo9lv2xgICujaselpdb" src-width="2852" src-height="726" align="center"/>
+        <img src="/assets/K24AbQcEoo9lv2xgICujaselpdb.png" src-width="2852" src-height="726" align="center"/>
     - 改單：可支持改單的訂單可通過右鍵或列表頭操作列進入改單窗口
-        <img src="AYyWbADTwosZnUxQg5mjDFM2pod" src-width="3252" src-height="1648" align="center"/>
+        <img src="/assets/AYyWbADTwosZnUxQg5mjDFM2pod.png" src-width="3252" src-height="1648" align="center"/>
     - 撤單：可通過右鍵或列表頭操作列表進入撤單窗口，提示是否確認執行撤單操作
-        <img src="DiHubuHmdo9MmsxTKc2jAar5p4e" src-width="3218" src-height="1646" align="center"/>
+        <img src="/assets/DiHubuHmdo9MmsxTKc2jAar5p4e.png" src-width="3218" src-height="1646" align="center"/>
     - 批量撤單：
-        <img src="LVN3bIkMSoNFB9x4l9XjJvbYpnd" src-width="3236" src-height="1126" align="center"/>
-        <img src="HTGrbgJGloBWxHx3BsCjsdbCpgh" src-width="3262" src-height="1478" align="center"/>
+        <img src="/assets/LVN3bIkMSoNFB9x4l9XjJvbYpnd.png" src-width="3236" src-height="1126" align="center"/>
+        <img src="/assets/HTGrbgJGloBWxHx3BsCjsdbCpgh.png" src-width="3262" src-height="1478" align="center"/>
         - 通過訂單列表的checkbox 選中需撤銷的訂單，選中後訂單表右上角操作“一鍵撤單”按鈕提交撤單請求
         - 由於批量撤單屬於高風險行為，所以批量撤單二次確認窗口不支持設置“不再提示”
     - 查看詳情：可通過右鍵或列表頭操作列表進入詳情窗口，可查看訂單信息及費用明細
-        <img src="N6bobjKwjo1mcGxkEOsjaj5fp5b" src-width="3228" src-height="1642" align="center"/>
+        <img src="/assets/N6bobjKwjo1mcGxkEOsjaj5fp5b.png" src-width="3228" src-height="1642" align="center"/>
     - 異常單處理：針對需人工干預的異常訂單，可通過右鍵進入異常單處理窗口，可查看訂單基礎信息及操作處理異常訂單
         - 處理異常訂單：支持的操作包含訂單狀態、輸入成交價格、數量
 
-<img src="VUWQb7gzxo6nssxEYfIj2qVbpje" src-width="3248" src-height="1666" align="center"/>
+<img src="/assets/VUWQb7gzxo6nssxEYfIj2qVbpje.png" src-width="3248" src-height="1666" align="center"/>
 
-<img src="Cw7NbhrGwopXjRxhVsujY9QfpxP" src-width="3252" src-height="1684" align="center"/>
+<img src="/assets/Cw7NbhrGwopXjRxhVsujY9QfpxP.png" src-width="3252" src-height="1684" align="center"/>
 
 ## 2.歷史訂單
 
@@ -105,7 +105,7 @@ sidebar_position: 2
 
 ### <b>操作及功能說明</b>
 
-<img src="Mv45baNTdoUXGJxOuyLjUYlQpWb" src-width="3248" src-height="1674" align="center"/>
+<img src="/assets/Mv45baNTdoUXGJxOuyLjUYlQpWb.png" src-width="3248" src-height="1674" align="center"/>
 
 ### 3.1 查詢條件
 
@@ -144,9 +144,9 @@ sidebar_position: 2
 
 ### <b>操作及功能說明</b>
 
-<img src="LWlfbBVWqoWDkPxQpSGjGgzQpUf" src-width="996" src-height="948" align="center"/>
+<img src="/assets/LWlfbBVWqoWDkPxQpSGjGgzQpUf.png" src-width="996" src-height="948" align="center"/>
 
-<img src="A4AZbxE8ZoKOyCxLdxmjn9QTpff" src-width="984" src-height="952" align="center"/>
+<img src="/assets/A4AZbxE8ZoKOyCxLdxmjn9QTpff.png" src-width="984" src-height="952" align="center"/>
 
 - 交易員下單模式、普通下單模式區別：
     - 交易員下單模式：支持帳戶精準搜索，交易方向默認為空，委託價格需手動輸入，接入行情報價，選擇股票後可快速查看當前行情
@@ -160,14 +160,14 @@ sidebar_position: 2
     - 到價買入 / 到價賣出：交易下單組件中可直接選擇該訂單類型，需交易員自行設定觸發價格，並設定若市價到達觸發價格，依照「限價」或「市價」委託訂單，一般用於監控市價到達特定價格之後的止盈止損或開倉作業
     - 反彈買入/ 回落賣出：交易下單組件中可直接選擇該訂單類型，需交易員自行設定追蹤價格的參數，例如監控下單之後到達最高 / 最低價，即拐點後的漲跌幅 / 漲跌額，並且觸達後按照委託價浮動多少價差委託訂單，一般用於持有倉位的跟踪止盈止損，或尋求更高 / 更低點位的開倉操作
 
-<img src="SanDbGCXdojcgSx1QH7jvYB0pzc" src-width="988" src-height="948" align="center"/>
+<img src="/assets/SanDbGCXdojcgSx1QH7jvYB0pzc.png" src-width="988" src-height="948" align="center"/>
 
-<img src="WO3mbgR8Mo53ifxTq22jI59epSQ" src-width="984" src-height="940" align="center"/>
+<img src="/assets/WO3mbgR8Mo53ifxTq22jI59epSQ.png" src-width="984" src-height="940" align="center"/>
 
 - 下單組件佈局調整：
     - 獨立使用下單組件時，在下單組件中打開盤口、訂單信息，可在一個組件內實現查看多維度數據
     - 通過設置中“佈局”設置展示一檔盤口、當日訂單（一檔盤口跟隨行情數據，當日訂單數據跟隨訂單表）
-        <img src="EmSCbNoEzotGhvxLK9XjPgyap7g" src-width="992" src-height="952" align="center"/>
+        <img src="/assets/EmSCbNoEzotGhvxLK9XjPgyap7g.gif" src-width="992" src-height="952" align="center"/>
         - 如需使用該功能需前置確保交易組件中有選中客戶、代碼信息
 
 ## 5.人手單 & 人手單記錄
@@ -180,7 +180,7 @@ sidebar_position: 2
 
 ### 5.1 人手單下單
 
-<img src="LsGkbAmRVo13mRxxagujrIqgpEc" src-width="988" src-height="988" align="center"/>
+<img src="/assets/LsGkbAmRVo13mRxxagujrIqgpEc.png" src-width="988" src-height="988" align="center"/>
 
 - 下單委託類型：Manual Trade、Pre Opening、Odd Lot、Overseas
     - Manual Trade：委託數量必須為一手的整數倍，價格 &gt;=0.01，價格最多支持 3 位小數
@@ -195,7 +195,7 @@ sidebar_position: 2
 
 ### 5.2 人手單記錄
 
-<img src="GA1FbBGrJoboAhx7Y2ijH7copee" src-width="2106" src-height="432" align="center"/>
+<img src="/assets/GA1FbBGrJoboAhx7Y2ijH7copee.png" src-width="2106" src-height="432" align="center"/>
 
 - 查詢條件：訂單狀態、是否交叉盤、方向、股票代碼
     - 訂單狀態：待確認、已確認、已取消、已拒絕。如需關注待接收人手單信息可選擇“待確認”狀態
@@ -213,7 +213,7 @@ sidebar_position: 2
 
 ### <b>操作及功能說明</b>
 
-<img src="HJm6bTpcpoCNh2x4mV5jmb6apJc" src-width="1816" src-height="1176" align="center"/>
+<img src="/assets/HJm6bTpcpoCNh2x4mV5jmb6apJc.png" src-width="1816" src-height="1176" align="center"/>
 
 - 查詢條件：股票代碼、席位號、狀態
     - 狀態：可委託、不可委託（僅可委託狀態的碎股可操作碎股撮合）
@@ -229,7 +229,7 @@ sidebar_position: 2
 
 ### <b>操作及功能說明</b>
 
-<img src="Ek5xbq2hLoURJwx8VEjjrTampHe" src-width="892" src-height="870" align="center"/>
+<img src="/assets/Ek5xbq2hLoURJwx8VEjjrTampHe.png" src-width="892" src-height="870" align="center"/>
 
 - 批量撤單可通過四個條件範圍進行處理：代碼、方向、席位號、板塊
 - 方向：買入、賣出
@@ -246,13 +246,13 @@ sidebar_position: 2
 籃子交易功能主要包括籃子管理、籃子委託、訂單查詢
 
 - 選擇籃子管理後，可在籃子管理新建籃子，且透過單一股票添加，或直接匯入某一份組的組選股批量添加，添加完成後也可直接直接在籃子的股票列表中，透過編輯按鈕，改變籃子中具體股票的方向、數量、比例及委託訂單類型（限價或市價）
-    <img src="WWXAbGFufoq5Z6xJVLwj1n1ipib" src-width="2864" src-height="1744" align="center"/>
+    <img src="/assets/WWXAbGFufoq5Z6xJVLwj1n1ipib.png" src-width="2864" src-height="1744" align="center"/>
 
 - 籃子股票設定完成後，可切換至「籃子委託」進行下單操作。選擇帳戶、籃子後，左下角設定本次委託的類別，即按“金額”或按“數量”，例如選擇按金額委託，設定金額後系統會自動計算出每隻股票本次委託數量，確認無誤後，點選右下角「立即委託」即可委託籃子訂單
-    <img src="GCSjbuuoEorftAxppK9jhetRpra" src-width="2866" src-height="1740" align="center"/>
+    <img src="/assets/GCSjbuuoEorftAxppK9jhetRpra.png" src-width="2866" src-height="1740" align="center"/>
 
 - 委託完成後，可切換至「籃子訂單」頁面，該頁面即展示了已經委託的籃子訂單信息，包括委託股票訂單數、成交數、委託數量、成交數量、成交比例。點擊籃子訂單，下方展示該筆籃子訂單的實際委託明細以及每筆委託的訂單詳情。
-    <img src="FyoJbEgChoB0gSx7pLVj6fXOpod" src-width="2862" src-height="1744" align="center"/>
+    <img src="/assets/FyoJbEgChoB0gSx7pLVj6fXOpod.png" src-width="2862" src-height="1744" align="center"/>
 
 ## 9.算法交易 & 算法訂單
 
@@ -268,7 +268,7 @@ sidebar_position: 2
 
 交易現有欄位：和下單組件交互一致，包括選擇帳戶、股票代號、買賣方向、價格、訂單類型（市價單、限價單）、價格、數量
 
-<img src="UAYYbWgDioSuzzxptgcjK7nGp2f" src-width="2870" src-height="1740" align="center"/>
+<img src="/assets/UAYYbWgDioSuzzxptgcjK7nGp2f.png" src-width="2870" src-height="1740" align="center"/>
 
 - 選擇算法時間
     - 自定義交易時間
@@ -323,7 +323,7 @@ sidebar_position: 2
 
 提交了算法交易訂單後，演算法訂單中會主動顯示演算法訂單及其對應的子單詳情。若母單處於進行中的話，則可以進行改單、撤單、暫停、暫停並撤銷操作。
 
-<img src="Uxe0bsH3so81LMxyepIj6faGphh" src-width="2868" src-height="1740" align="center"/>
+<img src="/assets/Uxe0bsH3so81LMxyepIj6faGphh.png" src-width="2868" src-height="1740" align="center"/>
 
 - 改單：若使用者點選改單，則彈出改單入口，使用者可以修改演算法訂單，此時金納會發起未成交子單的撤銷操作，並依照 新的母單參數來重新分割子單
     - 可修改的參數有：價格、數量、演算法類型、結束時間、交易風格、最大市場佔比、基準價、單位、變化量
@@ -337,7 +337,7 @@ sidebar_position: 2
 
 展示算法歷史訂單數據，預設依照委託時間從大到小排序
 
-<img src="PBgXbQmgDomxa3xZblOjrAMppzf" src-width="2868" src-height="1744" align="center"/>
+<img src="/assets/PBgXbQmgDomxa3xZblOjrAMppzf.png" src-width="2868" src-height="1744" align="center"/>
 
 - 顯示欄位和當日訂單類似，不同的差異有：
     - 歷史演算法訂單，無操作這一列，即無法改單、撤單、暫停等操作
@@ -355,7 +355,7 @@ sidebar_position: 2
 
 下半部為單一網格訂單的明細，包括觸發歷史（網格觸發後產生的訂單記錄）以及訂單歷史（網格訂單本身的觸發記錄）
 
-<img src="WHFvbsOn0oitkHxkHE6jVi7Lprg" src-width="2078" src-height="1236" align="center"/>
+<img src="/assets/WHFvbsOn0oitkHxkHE6jVi7Lprg.png" src-width="2078" src-height="1236" align="center"/>
 
 - 網格訂單操作：暫停、撤單
 - 處理歷史訂單操作：改單、撤單
@@ -370,7 +370,7 @@ sidebar_position: 2
 
 ### 11.1 機構下單（母單委託）
 
-<img src="LJXDbsf3Io35TaxQ9Qdj9LeLpre" src-width="982" src-height="950" align="center"/>
+<img src="/assets/LJXDbsf3Io35TaxQ9Qdj9LeLpre.png" src-width="982" src-height="950" align="center"/>
 
 - 機構下單組件被使用於交易員在系統內委託 NonDMA 訂單。
 - 訂單類型目前支持“特別處理單-限價”、“特別處理單-市價”
@@ -387,13 +387,13 @@ sidebar_position: 2
 
 下半部分為選中具體NonDMA訂單后，已拆分報送市場的子訂單，及子訂單對應信息包括狀態、成交數量等。
 
-<img src="XlatbPc0VopTqQx2GCJjrRIMp7c" src-width="2110" src-height="1576" align="center"/>
+<img src="/assets/XlatbPc0VopTqQx2GCJjrRIMp7c.png" src-width="2110" src-height="1576" align="center"/>
 
 - 機構母單列表默認為“進行中”狀態的訂單數據，如需查看其他狀態可切換篩選條件
 - <b>機構母單操作</b>
-    <img src="EP3DbrSnbokQWIxFeHNjH6gDp7b" src-width="602" src-height="186" align="center"/>
+    <img src="/assets/EP3DbrSnbokQWIxFeHNjH6gDp7b.png" src-width="602" src-height="186" align="center"/>
     - 母單拆子單委託：雙擊或點擊操作列交易圖標，可進入拆子單窗口
-        <img src="DrFrbmxBKokzdTxwCBMj0yRTpSb" src-width="2086" src-height="1050" align="center"/>
+        <img src="/assets/DrFrbmxBKokzdTxwCBMj0yRTpSb.png" src-width="2086" src-height="1050" align="center"/>
         - 下單組件窗口內，機構訂單號、賬戶、代碼、方向及有效期均跟隨母單，不可編輯，交易員可輸入預期拆分子單數量及價格，委託下單
         - 子單委託價格、委託數量均不支持優於主單，下單將會提示限制
         - 子單提交下單成功後，機構訂單列表下方將出現一條對應的子單下單數據
@@ -427,7 +427,7 @@ sidebar_position: 2
 
 ### <b>操作及功能說明</b>
 
-<img src="L7VUb3BNgo6ldSxsQbbjpPJQpPT" src-width="2770" src-height="890" align="center"/>
+<img src="/assets/L7VUb3BNgo6ldSxsQbbjpPJQpPT.png" src-width="2770" src-height="890" align="center"/>
 
 ### 12.1 查詢條件
 

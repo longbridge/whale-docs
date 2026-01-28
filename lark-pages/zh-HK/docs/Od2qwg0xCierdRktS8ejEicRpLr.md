@@ -27,7 +27,7 @@ sidebar_position: 3
 
 目前 Whale 系統支持手動單條錄入及文件批量導入兩種方式。支持補錄港股、美股、滬深、新加坡市場。
 
-<img src="D5LibRgTPoR9vkxUjESjEgjspyd" src-width="2868" src-height="1744" align="center"/>
+<img src="/assets/D5LibRgTPoR9vkxUjESjEgjspyd.png" src-width="2868" src-height="1744" align="center"/>
 
 <b>功能頁面結構說明</b>
 
@@ -43,7 +43,7 @@ sidebar_position: 3
 
 列表主要展示補單數據信息，部分字段（例如委託數量）支持上下排序，字段信息可根據使用習慣進行位置拖動。
 
-<img src="QSljbnckPoV4mfxgxHvjtvLmpKh" src-width="1848" src-height="1122" align="center"/>
+<img src="/assets/QSljbnckPoV4mfxgxHvjtvLmpKh.gif" src-width="1848" src-height="1122" align="center"/>
 
 - 查詢條件：證券帳戶、股票、委託時間、操作時間
 - 特殊字段說明：
@@ -61,9 +61,9 @@ sidebar_position: 3
 
 點擊右上角“新增”按鈕，進入補單下單操作彈窗界面，默認進入到“手動錄入”畫面，手動填入委託及成交信息。
 
-<img src="Wf7qbYVgBoDbSMxLoQzj99zopbh" src-width="760" src-height="1682" align="center"/>
+<img src="/assets/Wf7qbYVgBoDbSMxLoQzj99zopbh.png" src-width="760" src-height="1682" align="center"/>
 
-<img src="Y7Ynbl0Rco6AOhxDU80jtmXrpQe" src-width="738" src-height="1668" align="center"/>
+<img src="/assets/Y7Ynbl0Rco6AOhxDU80jtmXrpQe.png" src-width="738" src-height="1668" align="center"/>
 
 - 填寫補單的訂單委託數據，需要包含客戶信息、股票、委託渠道及委託價格、數量等基本的下單信息
 - 確認訂單委託信息後，下方模塊輸入訂單的成交信息，包含成交狀態、日期及成交數量、價格
@@ -76,9 +76,9 @@ sidebar_position: 3
 
 點擊右上角“新增”按鈕，進入補單下單操作彈窗界面，頂部手動切換至“文件錄入”，可在該處進行批量文件補單。
 
-<img src="HCubb7RfGoVgwKxffdxjY6hJpBf" src-width="764" src-height="548" align="center"/>
+<img src="/assets/HCubb7RfGoVgwKxffdxjY6hJpBf.png" src-width="764" src-height="548" align="center"/>
 
-<img src="A2ILbp19boPU2NxXCPxj9dr7ptd" src-width="742" src-height="596" align="center"/>
+<img src="/assets/A2ILbp19boPU2NxXCPxj9dr7ptd.png" src-width="742" src-height="596" align="center"/>
 
 - 此處上傳補單文件需要按照模板規則進行上傳，所以在上傳補單文件之前請操作“下載模板”，在模板中進行數據錄入，錄入完成後可將文件進行上傳
 - 點擊“上傳文件”將喚起本地文件選擇，選中需上傳的補單文件後，系統將執行補單操作
@@ -88,9 +88,9 @@ sidebar_position: 3
 
 - 補單導入結果反饋：
 
-<img src="UzJwbNvlKoLqkhxkxg0jZo4ep1d" src-width="806" src-height="318" align="center"/>
+<img src="/assets/UzJwbNvlKoLqkhxkxg0jZo4ep1d.png" src-width="806" src-height="318" align="center"/>
 
-<img src="RuTQbtsRFoo87gxAlrUjXrD6pye" src-width="1600" src-height="734" align="center"/>
+<img src="/assets/RuTQbtsRFoo87gxAlrUjXrD6pye.png" src-width="1600" src-height="734" align="center"/>
 
 ```text
 - 補單文件中異常數據提示，目前會針對客戶證券帳號、股票標的、訂單類型、委託渠道、訂單標記、Remark等多維度字段進行異常檢測，存在異常時將被攔截，可通過「導入反饋」窗口查看詳細數據
@@ -102,7 +102,7 @@ sidebar_position: 3
 
 交易員可通過「新股列表」頁面查看新股詳情，並且可替客戶進行新股申購。同時對線上客戶的申購情況也可在「申購列表」中進行管理。
 
-<img src="EVptbqQrGotOa9x9onMjO07Kp6g" src-width="2858" src-height="1736" align="center"/>
+<img src="/assets/EVptbqQrGotOa9x9onMjO07Kp6g.png" src-width="2858" src-height="1736" align="center"/>
 
 <b>功能頁面結構說明</b>
 
@@ -118,13 +118,13 @@ sidebar_position: 3
 
 查看新股基礎數據，包含新股代碼、開始申購日期、截止申購日期、申購價格區間、每手股數等，可點擊“詳情”進入新股詳情頁面查看新股數據。新股數據均可通過 WBO 後臺進行管理配置，WTT 僅展示後臺配置數據及內容。
 
-<img src="OpDFb7CWTo2p72xz8LnjrFQqpGh" src-width="2734" src-height="1598" align="center"/>
+<img src="/assets/OpDFb7CWTo2p72xz8LnjrFQqpGh.png" src-width="2734" src-height="1598" align="center"/>
 
 ### 2.2 新股詳情
 
 新股詳情窗口中包含三塊內容：基本信息、融資信息、申購詳情。可通過時間軸下的功能Tab進行切換查看。
 
-<img src="LNzsbH4rJoxgAdxYazDjyRH7pif" src-width="2752" src-height="1170" align="center"/>
+<img src="/assets/LNzsbH4rJoxgAdxYazDjyRH7pif.png" src-width="2752" src-height="1170" align="center"/>
 
 - 基本信息：後臺配置的新股基本數據
 - 融資信息：當前新股可用到的融資倍數既要求
@@ -134,7 +134,7 @@ sidebar_position: 3
 
 交易員通過WTT可幫助客戶進行新股申購，點擊新股列表操作列中“申購”按鈕，可進入新股申購窗口，通過此窗口進行申購。申購窗口主要分為資金確認、申購信息填入、申購結果覆核三個模塊進行。
 
-<img src="RxcDbczNBoc1NFxdFfEjpNfepec" src-width="2870" src-height="1730" align="center"/>
+<img src="/assets/RxcDbczNBoc1NFxdFfEjpNfepec.png" src-width="2870" src-height="1730" align="center"/>
 
 - 填寫申購帳戶，可通過帳戶搜索選擇需進行申購的客戶
 - 資金信息：選中客戶後將展示客戶購買力及現金情況，交易員可通過這些數據綜合判斷該帳戶是否適合進行申購
@@ -145,7 +145,7 @@ sidebar_position: 3
 
 可通過該列表查看客戶申購數據（包含客戶App、PC端申購及交易員WTT代客申購），並且可通過該列表對客戶的申購訂單進行改、撤操作。
 
-<img src="SrT0bglbKoCcLwxiKQPj2HZyp9c" src-width="2856" src-height="1722" align="center"/>
+<img src="/assets/SrT0bglbKoCcLwxiKQPj2HZyp9c.png" src-width="2856" src-height="1722" align="center"/>
 
 - 查詢功能：目前僅支持客戶、訂單狀態搜索
     - 如需查看某一個新股標的的申購情況需前往「新股列表」-「詳情」-「申購詳情」中查看
@@ -164,9 +164,9 @@ sidebar_position: 3
 
 風險限制：對 VA-ETF 進行交易限制，可通過“PI 認證、VA-ETF 風險問卷、VA-ETF 風險提示”三個維度進行設置。
 
-<img src="XJcQb0Y0xozOGrxTXOHjgfA0pag" src-width="2852" src-height="1736" align="center"/>
+<img src="/assets/XJcQb0Y0xozOGrxTXOHjgfA0pag.png" src-width="2852" src-height="1736" align="center"/>
 
-<img src="O8clbbrCQoTKt0xGLALjfrC3pvc" src-width="2870" src-height="1736" align="center"/>
+<img src="/assets/O8clbbrCQoTKt0xGLALjfrC3pvc.png" src-width="2870" src-height="1736" align="center"/>
 
 <b>功能頁面結構說明</b>
 
@@ -187,9 +187,9 @@ sidebar_position: 3
 <p>手動限制：手動人工添加股票限制條件，添加並提交成功後，條件生效股票導入：通過批量導入股票的方式對客戶進行交易限制，該方式目前僅支持限制全部客戶</p>
 </div>
 
-<img src="Xi4nbP9BKox9s5xSUPqjsdDWpgh" src-width="746" src-height="1666" align="center"/>
+<img src="/assets/Xi4nbP9BKox9s5xSUPqjsdDWpgh.png" src-width="746" src-height="1666" align="center"/>
 
-<img src="TCGSbb7MkokDNzxMx3Nj2m2JpIe" src-width="752" src-height="1672" align="center"/>
+<img src="/assets/TCGSbb7MkokDNzxMx3Nj2m2JpIe.png" src-width="752" src-height="1672" align="center"/>
 
 - 字段解釋：
     - 限制類型：黑名單、白名單
@@ -205,7 +205,7 @@ sidebar_position: 3
     - 導入股票：上傳股票列表文件，文件中股票代碼填入格式為“代碼.市場”，例如：00700.HK、BABA.US --- 需根據模板進行上傳，首次使用時建議先下載模板
 
 - 字段之間關聯關係及注意事項：
-    <img src="GvmLbWyfeoveFvx1PsIjzDL6pjc" src-width="748" src-height="744" align="center"/>
+    <img src="/assets/GvmLbWyfeoveFvx1PsIjzDL6pjc.png" src-width="748" src-height="744" align="center"/>
     - 市場、交易品種、股票均存在關聯關係，如選擇港股市場的情況下，交易品種則不會出現期權的選項
     - 市場選擇全部市場時，股票輸入框內不支持填入股票。請注意：由於選擇時全市場限制，填入的股票條件將不會生效
         - 限制全部市場、品種的交易：市場選擇全部、交易品種選擇全部品種，股票框不填
@@ -213,18 +213,18 @@ sidebar_position: 3
     - 針對美股-期權限制時，系統將默認限制填入股票代碼下全部的期權。例如設置美股期權黑名單，當股票字段填入 BABA.US 時，則表示BABA.US下的期權均不支持操作買入開倉（參考下圖）
 
 - 黑白名單攔截結果提示：黑名單提交成功至生效，將會有1-2 min 的生效延遲），成功生效後，如客戶交易被限制的股票時，客戶交易終端將收到攔截提示。
-    <img src="LCohb5YdRoXP1Ix8zkVjgNv6pPb" src-width="574" src-height="118" align="center"/>
+    <img src="/assets/LCohb5YdRoXP1Ix8zkVjgNv6pPb.png" src-width="574" src-height="118" align="center"/>
     - 例如設置不支持買入開倉，則客戶/交易員交易時將提示：委託失敗，該標的不支持買入開倉
 
 ### 3.2 黑白名單列表操作功能
 
 黑白名單支持操作編輯、刪除、關聯客戶、批量刪除。編輯、刪除均是股票條件維度下的操作，而關聯客戶則是操作調整限制條件內的客戶範圍。
 
-<img src="PVISbuPz9oUO1dxiBcajQky3pvf" src-width="2870" src-height="1744" align="center"/>
+<img src="/assets/PVISbuPz9oUO1dxiBcajQky3pvf.png" src-width="2870" src-height="1744" align="center"/>
 
-<img src="Y0bibz4uOoOJk8xwmJmjuHlzpNH" src-width="746" src-height="696" align="center"/>
+<img src="/assets/Y0bibz4uOoOJk8xwmJmjuHlzpNH.png" src-width="746" src-height="696" align="center"/>
 
-<img src="X8wjbWwi9oFe39xq2ikjLQV7pze" src-width="758" src-height="992" align="center"/>
+<img src="/assets/X8wjbWwi9oFe39xq2ikjLQV7pze.png" src-width="758" src-height="992" align="center"/>
 
 - Checkbox 批量刪除：適用於僅單獨刪除某幾條限制條件，則可通過 Checkbox 小範圍選中後進行刪除
 - 右上角“批量刪除”按鈕：適用於全局性大範圍的刪除，可通過「批量刪除」窗口手動添加需刪除的限制條件，再導入需刪除的股票代碼，滿足限制條件的股票將大批量的進行刪除
@@ -235,13 +235,13 @@ sidebar_position: 3
         - 如關聯全部客戶，點擊該功能後將直接彈窗提示 - 已關聯全部客戶，則不可進行關聯客戶的相關編輯
         - 如僅關聯部分客戶，可進入「關聯客戶」窗口，在該窗口內新增、刪除關聯客戶（窗口內暫不支持批量操作）
 
-<img src="DcG8bFQSCoqsUZxgBOwj8Sqyplh" src-width="698" src-height="314" align="center"/>
+<img src="/assets/DcG8bFQSCoqsUZxgBOwj8Sqyplh.png" src-width="698" src-height="314" align="center"/>
 
-<img src="NT5Gb2ufCoUqWBxkxBKjgWaNpPh" src-width="2288" src-height="1006" align="center"/>
+<img src="/assets/NT5Gb2ufCoUqWBxkxBKjgWaNpPh.png" src-width="2288" src-height="1006" align="center"/>
 
 ### 3.3 風險限制功能說明
 
-<img src="UeAYb5A0AoSNawxGQBejfuajpGf" src-width="2864" src-height="1740" align="center"/>
+<img src="/assets/UeAYb5A0AoSNawxGQBejfuajpGf.png" src-width="2864" src-height="1740" align="center"/>
 
 - 可通過切換Tab頁面來限制VA-ETF風險提示，可根據三個維度來設置：PI 認證、VA-ETF 風險問卷、VA-ETF 風險提示
     - PI 認證：勾選代表對應的標的需要有 PI 認證才可進行交易
@@ -257,9 +257,9 @@ sidebar_position: 3
 
 成交分配頁面支持操作訂單分配、訂單轉移。可通過這個功能處理客戶錯單相關問題，普通訂單、機構訂單均支持操作分配，但是目前只有機構訂單支持操作訂單轉移。
 
-<img src="ZkLBbt4RDord3dxNMwlj4I4mpzh" src-width="2874" src-height="1736" align="center"/>
+<img src="/assets/ZkLBbt4RDord3dxNMwlj4I4mpzh.png" src-width="2874" src-height="1736" align="center"/>
 
-<img src="AMVRbeGAjozvnLx5JIzj09ZQp6c" src-width="2870" src-height="1732" align="center"/>
+<img src="/assets/AMVRbeGAjozvnLx5JIzj09ZQp6c.png" src-width="2870" src-height="1732" align="center"/>
 
 <b>功能頁面結構說明</b>
 
@@ -297,9 +297,9 @@ sidebar_position: 3
 
 - 設置分配組：可在分配之前預設好分配組，後續分配頁面可直接選擇已設置好的分配組，可提升分配操作效率。
 
-<img src="SpNqb8TwEofawkxlaNcjHKc6pXg" src-width="2876" src-height="1736" align="center"/>
+<img src="/assets/SpNqb8TwEofawkxlaNcjHKc6pXg.png" src-width="2876" src-height="1736" align="center"/>
 
-<img src="DGO4bmYxno1oToxIXqyj3YE2ppc" src-width="1060" src-height="1700" align="center"/>
+<img src="/assets/DGO4bmYxno1oToxIXqyj3YE2ppc.png" src-width="1060" src-height="1700" align="center"/>
 
 ```text
 - 新增分組：需要填入組名、分配方式、待分配客戶、分配比例
@@ -318,9 +318,9 @@ sidebar_position: 3
 
 操作普通訂單分配時，頂部搜索項需將訂單類型切換為“普通訂單”，操作列中僅支持“分配”。
 
-<img src="Mmuhb8TTFoDsapx9nKIj4eBwpSe" src-width="2864" src-height="1734" align="center"/>
+<img src="/assets/Mmuhb8TTFoDsapx9nKIj4eBwpSe.png" src-width="2864" src-height="1734" align="center"/>
 
-<img src="Wma2biWbgoxmwfxBuLyjEZcGpMd" src-width="2866" src-height="1742" align="center"/>
+<img src="/assets/Wma2biWbgoxmwfxBuLyjEZcGpMd.png" src-width="2866" src-height="1742" align="center"/>
 
 - 分配操作窗口
     - 普通訂單操作分配支持訂單分配、明細分配兩種方式
@@ -340,11 +340,11 @@ sidebar_position: 3
 
 機構訂單可支持在該頁面中操作分配、轉移，頂部搜索項需將訂單類型切換為“機構訂單”，操作列中支持“分配”、“轉移”。待處理數量為 0 時，操作功能將置灰不可點擊。
 
-<img src="Uh4Abqo1No3ORUxumpojJqecpOa" src-width="2866" src-height="1740" align="center"/>
+<img src="/assets/Uh4Abqo1No3ORUxumpojJqecpOa.png" src-width="2866" src-height="1740" align="center"/>
 
-<img src="Vro8bB0mcom2Bexlbj6jZsnrp1e" src-width="2864" src-height="1740" align="center"/>
+<img src="/assets/Vro8bB0mcom2Bexlbj6jZsnrp1e.png" src-width="2864" src-height="1740" align="center"/>
 
-<img src="JfeibEieJomHhCxPNdkj09rcpEg" src-width="2874" src-height="1722" align="center"/>
+<img src="/assets/JfeibEieJomHhCxPNdkj09rcpEg.png" src-width="2874" src-height="1722" align="center"/>
 
 - 分配操作窗口
     - 分配模式：機構訂單分配模式僅支持“訂單分配”
@@ -361,9 +361,9 @@ sidebar_position: 3
 
 ### 4.4 分配預覽窗口
 
-<img src="NTzObEADyoJytqxTeUejBrwOp7d" src-width="942" src-height="698" align="center"/>
+<img src="/assets/NTzObEADyoJytqxTeUejBrwOp7d.png" src-width="942" src-height="698" align="center"/>
 
-<img src="KvnQbZYKWoMRjkxgFUajuzxbpgd" src-width="940" src-height="514" align="center"/>
+<img src="/assets/KvnQbZYKWoMRjkxgFUajuzxbpgd.png" src-width="940" src-height="514" align="center"/>
 
 - 分配预览窗口
     - 顯示當前這筆分配的基本情況，包含分配模式、分配訂單（原始機構訂單）、分配詳情
@@ -379,7 +379,7 @@ sidebar_position: 3
 
 該頁面主要僅顯示通過成交分配操作出來的訂單數據，並且支持在該頁面上操作發動成交確認書、修改佣金、確認書預覽、查看訂單詳情、取消分配。
 
-<img src="TH8jbT7avowbs1xJs9yjQf46pRe" src-width="2858" src-height="1740" align="center"/>
+<img src="/assets/TH8jbT7avowbs1xJs9yjQf46pRe.png" src-width="2858" src-height="1740" align="center"/>
 
 <b>列表說明</b>
 
@@ -397,7 +397,7 @@ sidebar_position: 3
 - 當分配訂單存在審批或已取消時，不支持發送成交確認書，此時提交系統會有響應攔截及提示，詳細原因可參考提示文案
 - 可在列表上的“發送狀態”對應查看當前成交確認書的發送節點&狀態
 
-<img src="TgKqbNoV8oQ2K8xukU1j6Vy2pud" src-width="2862" src-height="1734" align="center"/>
+<img src="/assets/TgKqbNoV8oQ2K8xukU1j6Vy2pud.png" src-width="2862" src-height="1734" align="center"/>
 
 - 修改佣金
 - 列表右側“操作”列支持選擇“修改佣金”，直接通過彈出的窗口對當前分配訂單進行佣金、結算日期的修改
@@ -405,7 +405,7 @@ sidebar_position: 3
 - 佣金修改窗口中修改的數據審批通過後生效顯示
 - 如訂單處於佣金審批中、已取消分配、非訂單分配狀態下，則不支持操作修改佣金（按鈕限制置灰）
 
-<img src="HaBMbfhw3ozmCIx1SuUjRuKrpid" src-width="2866" src-height="1738" align="center"/>
+<img src="/assets/HaBMbfhw3ozmCIx1SuUjRuKrpid.png" src-width="2866" src-height="1738" align="center"/>
 
 - 預覽：確認書預覽
     - 預覽帳戶分配訂單的成交確認書，點擊後將跳轉至網頁查看
@@ -414,14 +414,14 @@ sidebar_position: 3
 - 查看分配訂單詳情，具體包含信息：原訂單信息、分配情況。可直接通過詳情窗口頁面查看
 - 當前詳情窗口僅支持查看，無其他操作功能
 
-<img src="VX88bjQDco0ASBx84i4jsiSXpCg" src-width="2864" src-height="1734" align="center"/>
+<img src="/assets/VX88bjQDco0ASBx84i4jsiSXpCg.png" src-width="2864" src-height="1734" align="center"/>
 
 - 取消：取消分配
 - 當操作取消分配時，相對應同一個訂單源的訂單將同時被取消，取消二次確認窗口中將同步展示全部關聯的分配訂單
 - 點擊“確定”後，窗口列表中的訂單將同意被取消，取消分配的數量也將回滾至原帳戶中
 - 僅當天分配的訂單支持操作取消分配，歷史訂單由於已做結算，故不支持取消。歷史訂單點擊取消時，將提示：分配取消失敗。
 
-<img src="UfQ9bDaTBoTurRxzIGEjixVypEe" src-width="1102" src-height="588" align="center"/>
+<img src="/assets/UfQ9bDaTBoTurRxzIGEjixVypEe.png" src-width="1102" src-height="588" align="center"/>
 
 ## 5.订单批核
 
@@ -431,7 +431,7 @@ sidebar_position: 3
 
 提交訂單、改單，均有可能會觸發風控審批，撤單不觸發。
 
-<img src="CJv4bnru1oSuy4xMlx4jC6pyp5l" src-width="2868" src-height="1732" align="center"/>
+<img src="/assets/CJv4bnru1oSuy4xMlx4jC6pyp5l.png" src-width="2868" src-height="1732" align="center"/>
 
 <b>功能頁面結構說明</b>
 
@@ -447,14 +447,14 @@ sidebar_position: 3
 
 下單觸發批核的訂單將進入該列表統一進行審批工作，如需要執行審批操作需確保您擁有訂單批核頁面管理權限（權限參考《快速上手》文檔內容）。
 
-<img src="JAa4bCg77oCqh3xmuYCj56FHplh" src-width="1280" src-height="772" align="center"/>
+<img src="/assets/JAa4bCg77oCqh3xmuYCj56FHplh.png" src-width="1280" src-height="772" align="center"/>
 
 - 查詢條件：訂單號、客戶、市場、股票、批核狀態、委託時間、操作時間
     - 訂單號為訂單委託單號，與交易面板中訂單組件中一致，如需查詢某一訂單是否審批通過可使用訂單號進行精準查詢
     - 批核狀態：待審批、已通過、已拒絕、已過期、已撤單
         （待審批、已通過、已拒絕：均為批核的操作狀態。在批核操作之前可操作撤單或訂單已過期則自動變更狀態，無需進行再進行審批）
         當訂單觸發批核時，對應在交易面板中訂單組件“批核狀態”字段將會展示“待審批”，前台交易員可直觀知曉訂單情況（僅下單、改單會觸發批核，撤單不觸發批核）
-        <img src="LoSmbtXjtoL2aPxCW1GjVAIEpyf" src-width="2716" src-height="742" align="center"/>
+        <img src="/assets/LoSmbtXjtoL2aPxCW1GjVAIEpyf.png" src-width="2716" src-height="742" align="center"/>
     - 委託時間：訂單提交委託時間，與交易面板中訂單組件中一致
     - 操作時間：風控員/交易員操作批核的具體時間
 
@@ -466,11 +466,11 @@ sidebar_position: 3
 
 ### 5.2 批核操作窗口
 
-<img src="PUdBb7I98okoqHxW5Zdjvnb6phe" src-width="2864" src-height="1096" align="center"/>
+<img src="/assets/PUdBb7I98okoqHxW5Zdjvnb6phe.png" src-width="2864" src-height="1096" align="center"/>
 
-<img src="NbGCb6CKsoPRTdxVJN5jWwchp4U" src-width="2866" src-height="1740" align="center"/>
+<img src="/assets/NbGCb6CKsoPRTdxVJN5jWwchp4U.png" src-width="2866" src-height="1740" align="center"/>
 
-<img src="F2vZbjqjdo1zwnxYkj0jZ07cpRa" src-width="2868" src-height="1736" align="center"/>
+<img src="/assets/F2vZbjqjdo1zwnxYkj0jZ07cpRa.png" src-width="2868" src-height="1736" align="center"/>
 
 - <b>單條審批：</b>
     - 當批核狀態為“待審批”時，可操作“批核”，其餘狀態下均只支持查看批核訂單詳情
@@ -485,7 +485,7 @@ sidebar_position: 3
 
 ### 5.3 批核詳情
 
-<img src="Wt1RbDwCSooCbHxYSEdjnptxpdd" src-width="2872" src-height="1742" align="center"/>
+<img src="/assets/Wt1RbDwCSooCbHxYSEdjnptxpdd.png" src-width="2872" src-height="1742" align="center"/>
 
 - 當訂單非待審批狀態時，均支持查看詳情，詳情中可查看訂單基礎信息及風控限制類型，同時也包含訂單的批核狀態及操作時間
 

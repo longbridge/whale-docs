@@ -31,11 +31,11 @@ sidebar_position: 2
 <p>註銷後賬户號碼不能重覆使用</p>
 </div>
 
-<img src="MeGWbeYzmo2qJPxpghjjQO1Lpvd" src-width="2658" src-height="1180" align="center"/>
+<img src="/assets/MeGWbeYzmo2qJPxpghjjQO1Lpvd.png" src-width="2658" src-height="1180" align="center"/>
 
 <em>1.3D 圖一</em>
 
-<img src="JKh9bbwZFons4axaU8mjRzy4phe" src-width="2660" src-height="1308" align="center"/>
+<img src="/assets/JKh9bbwZFons4axaU8mjRzy4phe.png" src-width="2660" src-height="1308" align="center"/>
 
 <em>1.3D 圖二</em>
 

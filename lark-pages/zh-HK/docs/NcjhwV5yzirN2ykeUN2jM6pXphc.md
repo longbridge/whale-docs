@@ -35,5 +35,5 @@ sidebar_position: 3
 
 答：可以。透過入金記錄頁面中的【導入銀行流水】功能，下載導入模板，錄入模板的字段上傳至系統即可完成銀行流水的補充。
 
-<img src="AXPLbWj79ojlZRxH5UNjpfSgpxd" src-width="3322" src-height="1750" align="center"/>
+<img src="/assets/AXPLbWj79ojlZRxH5UNjpfSgpxd.png" src-width="3322" src-height="1750" align="center"/>
 

@@ -38,13 +38,13 @@ sidebar_position: 1
 點擊導入文件，上傳文件
 ```
 
-<img src="GtiabIKHhouGWVxxQKIj1Ze4psf" src-width="3578" src-height="1798" align="center"/>
+<img src="/assets/GtiabIKHhouGWVxxQKIj1Ze4psf.png" src-width="3578" src-height="1798" align="center"/>
 
 ```text
 可通過列表區域的狀態字段關注解析狀態， 解析成功才算處理完成
 ```
 
-<img src="RDE5b0FcgofSq0xk3uXj5tyApMe" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/RDE5b0FcgofSq0xk3uXj5tyApMe.png" src-width="3548" src-height="1806" align="center"/>
 
 ## 2. 市場清算(交易清算)
 
@@ -67,7 +67,7 @@ sidebar_position: 1
 注意：如果只有港股市場，在初始化設置時可隱藏歐美市場清算
 ```
 
-<img src="HunobwMJboaiQzx2Fpxj7Ccfpzf" src-width="2908" src-height="1540" align="center"/>
+<img src="/assets/HunobwMJboaiQzx2Fpxj7Ccfpzf.png" src-width="2908" src-height="1540" align="center"/>
 
 ```text
 執行後，5 秒內會返回檢查結果。全部檢查都通過的，可以進行後續操作
@@ -76,45 +76,45 @@ sidebar_position: 1
 檢查報錯的，點擊檢查項目右上角可查看檢查項目的規則和操作指引
 ```
 
-<img src="Dl2ib4x0BoyNxnx50bTjcwaZpTd" src-width="2906" src-height="1548" align="center"/>
+<img src="/assets/Dl2ib4x0BoyNxnx50bTjcwaZpTd.png" src-width="2906" src-height="1548" align="center"/>
 
 ```text
 部分檢查會提供異常詳情
 ```
 
-<img src="TZhDb7PAcofhvVxvxIXjCwRnpOK" src-width="2904" src-height="1540" align="center"/>
+<img src="/assets/TZhDb7PAcofhvVxvxIXjCwRnpOK.png" src-width="2904" src-height="1540" align="center"/>
 
 ```text
 結算人員核對後，確認有問題的，在完成相關業務操作後，可點擊“重新執行”
 ```
 
-<img src="FtE0bkvoooDwLHx38iajV3Taptf" src-width="2906" src-height="1558" align="center"/>
+<img src="/assets/FtE0bkvoooDwLHx38iajV3Taptf.png" src-width="2906" src-height="1558" align="center"/>
 
 ```text
 結算人員核對後，檢查項目可以允許通過的，可點擊手動審核人工通過（需要複核）
 ```
 
-<img src="I128bhtkToiRp2xGxsxjO1DcpQd" src-width="2904" src-height="1558" align="center"/>
+<img src="/assets/I128bhtkToiRp2xGxsxjO1DcpQd.png" src-width="2904" src-height="1558" align="center"/>
 
 ```text
 複核人員可點擊手動審核（也可直接在工單審核），調出工單審核
 ```
 
-<img src="XNwmbGIeKozGAXx7JpjjV3P3pXc" src-width="2920" src-height="1546" align="center"/>
+<img src="/assets/XNwmbGIeKozGAXx7JpjjV3P3pXc.png" src-width="2920" src-height="1546" align="center"/>
 
-<img src="OmszbZwDCouModx2CAgjAAjwpfb" src-width="2920" src-height="1550" align="center"/>
+<img src="/assets/OmszbZwDCouModx2CAgjAAjwpfb.png" src-width="2920" src-height="1550" align="center"/>
 
 ```text
 結算人員核對後，因為業務流程有差別，需要永久關閉檢查項目的，可以聯繫客服處理
 ```
 
-<img src="EPO5bjQ9fo91iYx3dOrj5HOHpeh" src-width="2926" src-height="1556" align="center"/>
+<img src="/assets/EPO5bjQ9fo91iYx3dOrj5HOHpeh.png" src-width="2926" src-height="1556" align="center"/>
 
 ```text
 當審核通過後， 清算前準備就算完成（文字會提示： 已手動通過）
 ```
 
-<img src="IHSIbfzj4oMEs1xLocdjasrspTt" src-width="2926" src-height="1558" align="center"/>
+<img src="/assets/IHSIbfzj4oMEs1xLocdjasrspTt.png" src-width="2926" src-height="1558" align="center"/>
 
 ### 市場清算<b>一鍵清算</b>
 
@@ -125,19 +125,19 @@ sidebar_position: 1
 注意： 若有需要可點選 '暫停一鍵清算'，但系統會等當時作業執行完畢後，才開始暫停下一動作（功能鍵會變灰）
 ```
 
-<img src="BcG4bz4uXok3tCxQcJDju7GWpth" src-width="2916" src-height="1546" align="center"/>
+<img src="/assets/BcG4bz4uXok3tCxQcJDju7GWpth.png" src-width="2916" src-height="1546" align="center"/>
 
 ```text
 如果要進行後台補單，或者修正合約的，可在數據同步直接點擊“暫停一鍵清算”，然後逐步執行，防止錯過暫停時機
 ```
 
-<img src="XuwCb3ANeoZq9qxcj0cjBSPLpog" src-width="2922" src-height="1548" align="center"/>
+<img src="/assets/XuwCb3ANeoZq9qxcj0cjBSPLpog.png" src-width="2922" src-height="1548" align="center"/>
 
 ```text
 中間若有作業執行錯誤，則一鍵清算將會暫停，並停在相關錯誤的作業程序上，用戶可以參考錯誤訊息提示進行後續修正處理
 ```
 
-<img src="JYHeb9fIwocXnLxxJJRjvyaEpQd" src-width="2908" src-height="1554" align="center"/>
+<img src="/assets/JYHeb9fIwocXnLxxJJRjvyaEpQd.png" src-width="2908" src-height="1554" align="center"/>
 
 ```text
 此時可根據業務需要手動點選右側下方相關的作業操作，來檢查或修正紀錄或著 往下一鍵算操作，系統會自動執行下一個作業
@@ -146,7 +146,7 @@ sidebar_position: 1
 注意： 在一鍵清算過程中，可以依賴系統的一鍵清算操作（自動執行所有作業），也可以自行點選作業自行操作
 ```
 
-<img src="U9RFbuRdVo5aZhxfDQCjadgtpdg" src-width="2922" src-height="1556" align="center"/>
+<img src="/assets/U9RFbuRdVo5aZhxfDQCjadgtpdg.png" src-width="2922" src-height="1556" align="center"/>
 
 <b>日終數據同步（Client Trade）</b>
 
@@ -163,7 +163,7 @@ sidebar_position: 1
 交易對帳失敗的，可快速跳轉到交易對賬界面查詢結果
 ```
 
-<img src="SmOabFMn6oPLOMx41N3j4VzLpTc" src-width="2904" src-height="1544" align="center"/>
+<img src="/assets/SmOabFMn6oPLOMx41N3j4VzLpTc.png" src-width="2904" src-height="1544" align="center"/>
 
 ```text
 可在清算檢查（路徑：清算管理-市場清算-清算檢查-交易對賬）頁面分別查詢各市場的交易對帳
@@ -172,7 +172,7 @@ sidebar_position: 1
 每次點擊檢查會生成最新的檢查結果，只需要維護最新的檢查結果
 ```
 
-<img src="UWDFbKv5voBivRxwwzRjIIvApJb" src-width="3566" src-height="1732" align="center"/>
+<img src="/assets/UWDFbKv5voBivRxwwzRjIIvApJb.png" src-width="3566" src-height="1732" align="center"/>
 
 ```text
 對手端檔導入錯誤：在檔導入介面，重新導入對手端檔，然後重新點擊清算前檢查 
@@ -184,7 +184,7 @@ sidebar_position: 1
 按系統數據處理：在“檢查結果”（ 路徑：清算管理-市場清算-日終任務-清算檢查-檢查結果）中，將對應的檢查結果改為“通過”，然後在日終任務頁面重新點擊清算前檢查
 ```
 
-<img src="QCnGbOEkLopglgxlukbjTvg0pJc" src-width="2920" src-height="1552" align="center"/>
+<img src="/assets/QCnGbOEkLopglgxlukbjTvg0pJc.png" src-width="2920" src-height="1552" align="center"/>
 
 <b>清算計費</b>
 
@@ -243,9 +243,9 @@ sidebar_position: 1
 操作方式同市場清算，詳見上文
 ```
 
-<img src="NZZtbBNEBopTVLxSxRHjV3YApsd" src-width="2492" src-height="1412" align="center"/>
+<img src="/assets/NZZtbBNEBopTVLxSxRHjV3YApsd.png" src-width="2492" src-height="1412" align="center"/>
 
-<img src="Cm2ibHsxeoIb2zxkyobjvSj7pSx" src-width="2434" src-height="1418" align="center"/>
+<img src="/assets/Cm2ibHsxeoIb2zxkyobjvSj7pSx.png" src-width="2434" src-height="1418" align="center"/>
 
 ### 日終清算一鍵清算
 
@@ -259,7 +259,7 @@ sidebar_position: 1
 結單後可通過報表或者結單進行檢查
 ```
 
-<img src="FhyzbuySpoStkRxk4f1jKNaFpGG" src-width="2912" src-height="1522" align="center"/>
+<img src="/assets/FhyzbuySpoStkRxk4f1jKNaFpGG.png" src-width="2912" src-height="1522" align="center"/>
 
 <b>數據匯總</b>
 
@@ -327,15 +327,15 @@ sidebar_position: 1
 **系統支持在日切步驟匯總進行結單自動發送,但須事先配置,請聯絡Whale 客服**
 ```
 
-<img src="X44ob7rf7okviZx8k7fjlheCp6g" src-width="3364" src-height="1452" align="center"/>
+<img src="/assets/X44ob7rf7okviZx8k7fjlheCp6g.png" src-width="3364" src-height="1452" align="center"/>
 
-<img src="XhDHbDCIYoOT9uxZlLlj1kF8pq9" src-width="3304" src-height="1452" align="center"/>
+<img src="/assets/XhDHbDCIYoOT9uxZlLlj1kF8pq9.png" src-width="3304" src-height="1452" align="center"/>
 
 ```text
 可以點選右側記錄區對結單【重發】或【下載】
 ```
 
-<img src="RUBfbBPFSogNMExL0P9jKOpzpQc" src-width="3360" src-height="1460" align="center"/>
+<img src="/assets/RUBfbBPFSogNMExL0P9jKOpzpQc.png" src-width="3360" src-height="1460" align="center"/>
 
 ## 5. ATI 指令導出
 
@@ -352,9 +352,9 @@ T+2日的早上可導出ATI交收指令，上傳到CCASS
 支持導出HK、SZ、SH多市場
 ```
 
-<img src="J9OAbwlMJoOkmLxeevOjFD2fpOB" src-width="3574" src-height="1774" align="center"/>
+<img src="/assets/J9OAbwlMJoOkmLxeevOjFD2fpOB.png" src-width="3574" src-height="1774" align="center"/>
 
-<img src="ZonPbrvKjoy10nxXQ5MjekLPpGd" src-width="3574" src-height="1774" align="center"/>
+<img src="/assets/ZonPbrvKjoy10nxXQ5MjekLPpGd.png" src-width="3574" src-height="1774" align="center"/>
 
 ## 6. 持倉對帳
 
@@ -365,7 +365,7 @@ T+1上午，在文件導入界面可導入CCASS持倉文件，進行持倉對賬
 導入後系統將自動觸發對賬
 ```
 
-<img src="Epspbzd0momQUCx7u4PjlnDTp8g" src-width="3350" src-height="1456" align="center"/>
+<img src="/assets/Epspbzd0momQUCx7u4PjlnDTp8g.png" src-width="3350" src-height="1456" align="center"/>
 
 ```text
 導入後並觸發系統對帳處理後，對帳結果為進行中
@@ -374,11 +374,11 @@ T+1上午，在文件導入界面可導入CCASS持倉文件，進行持倉對賬
 對帳任務執行完畢後，對帳結果為不平帳或平帳
 ```
 
-<img src="PGYjbVdS6osBJHxovCbj2x6WpMb" src-width="2930" src-height="1554" align="center"/>
+<img src="/assets/PGYjbVdS6osBJHxovCbj2x6WpMb.png" src-width="2930" src-height="1554" align="center"/>
 
 ```text
 點擊重新對帳也可（重新）觸發系統對帳。系統支持觸發歷史日期對帳
 ```
 
-<img src="C2X1bfqt1o7DrzxCalcjMWrlpjh" src-width="2914" src-height="1526" align="center"/>
+<img src="/assets/C2X1bfqt1o7DrzxCalcjMWrlpjh.png" src-width="2914" src-height="1526" align="center"/>
 

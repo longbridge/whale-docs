@@ -16,5 +16,5 @@ sidebar_position: 31
 - CRM風險測試記錄的問卷選項更新
     - 問卷的第一題、第三題、第四題選項值更新
     - 路徑：「客戶管理系統」-「風險測評管理」-「風險測評詳情」
-        <img src="LqWJbQrJCoCe3kx9WiXj5sCspob" src-width="3342" src-height="1768" align="center"/>
+        <img src="/assets/LqWJbQrJCoCe3kx9WiXj5sCspob.png" src-width="3342" src-height="1768" align="center"/>
 

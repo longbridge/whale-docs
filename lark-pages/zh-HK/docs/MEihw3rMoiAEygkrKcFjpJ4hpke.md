@@ -20,13 +20,13 @@ sidebar_position: 3
 
 在「股票」頁面下調入基金（基金代碼：PE/LB/SMJJ0000001）提交時就會如下圖報錯提示
 
-<img src="KuUibJRRLocAWkx3OsjjDAYspd4" src-width="3394" src-height="1808" align="center"/>
+<img src="/assets/KuUibJRRLocAWkx3OsjjDAYspd4.png" src-width="3394" src-height="1808" align="center"/>
 
 ❤️Tip：
 
 私有標的請根據對應類型選擇調賬類型頁面，其中「其他」對應調賬頁面「OTC其他」
 
-<img src="ZGbtbbsT0oZaB1xZS22jYTiGpxb" src-width="3282" src-height="1368" align="center"/>
+<img src="/assets/ZGbtbbsT0oZaB1xZS22jYTiGpxb.png" src-width="3282" src-height="1368" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -37,7 +37,7 @@ sidebar_position: 3
 
 提示如下：
 
-<img src="Q3MvbYPW8o64hDx0kI9jnmjupjb" src-width="3290" src-height="1712" align="center"/>
+<img src="/assets/Q3MvbYPW8o64hDx0kI9jnmjupjb.png" src-width="3290" src-height="1712" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -48,7 +48,7 @@ sidebar_position: 3
 
 訂閱頁面如下：
 
-<img src="VDvVb8KlXorJcaxdmBujYtMSpQc" src-width="3768" src-height="1248" align="center"/>
+<img src="/assets/VDvVb8KlXorJcaxdmBujYtMSpQc.png" src-width="3768" src-height="1248" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -57,7 +57,7 @@ sidebar_position: 3
 
 答：請下載模板，根據模板字段說明進行填寫調賬文件信息；同時，上傳文件解析後，可在解析完成列表查看對應失敗原因
 
-<img src="O4anb4nDwo42zHxoZ2NjfZAOpSc" src-width="3314" src-height="1638" align="center"/>
+<img src="/assets/O4anb4nDwo42zHxoZ2NjfZAOpSc.png" src-width="3314" src-height="1638" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>

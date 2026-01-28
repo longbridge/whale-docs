@@ -36,7 +36,7 @@ Whale系統包含了處理入金申請、匹配銀行流水、入金審核、單
 
 在客戶入金前，需要在後臺添加對應公司銀行賬戶，並且配置公司銀行賬戶下對應的入金方式。
 
-<img src="TsWbbZ5lTo1esRxVkD6j6E6hptf" src-width="3286" src-height="998" align="center"/>
+<img src="/assets/TsWbbZ5lTo1esRxVkD6j6E6hptf.png" src-width="3286" src-height="998" align="center"/>
 
 <b>操作按鈕說明</b>
 
@@ -47,7 +47,7 @@ Whale系統包含了處理入金申請、匹配銀行流水、入金審核、單
 
 在客戶入金前，需要進行入金幣種設置。
 
-<img src="TnnqbAmnWoum6LxoYinjH6adpCM" src-width="3282" src-height="988" align="center"/>
+<img src="/assets/TnnqbAmnWoum6LxoYinjH6adpCM.png" src-width="3282" src-height="988" align="center"/>
 
 <b>操作按鈕說明</b>
 
@@ -63,7 +63,7 @@ Whale系統包含了處理入金申請、匹配銀行流水、入金審核、單
 
 客戶需要在券商配置好客戶自己的銀行卡信息，添加方式包括：客戶客戶端 App 自行添加、後臺添加。
 
-<img src="Ixj7b4e6pocFuQxGAw7jRYHSpge" src-width="3349" src-height="1396" align="center"/>
+<img src="/assets/Ixj7b4e6pocFuQxGAw7jRYHSpge.png" src-width="3349" src-height="1396" align="center"/>
 
 <b>操作按鈕說明</b>
 
@@ -85,7 +85,7 @@ Whale系統包含了處理入金申請、匹配銀行流水、入金審核、單
 
 如果客戶需要進行eDDA入金，則需要進行eDDA授权，如果客戶进行eDDA授权之后，則後臺可以查到對應記錄。
 
-<img src="XvASbyq1GoLjwWxhiycjKjYNprg" src-width="3282" src-height="838" align="center"/>
+<img src="/assets/XvASbyq1GoLjwWxhiycjKjYNprg.png" src-width="3282" src-height="838" align="center"/>
 
 <b>操作按鈕說明</b>
 
@@ -105,7 +105,7 @@ Whale系統包含了處理入金申請、匹配銀行流水、入金審核、單
 <p>⚓ 款項管理&gt;App 管理&gt;卡所屬銀行</p>
 </div>
 
-<img src="ObljbUPTCoZGtVxvSMJjcD7Jpeg" src-width="3284" src-height="762" align="center"/>
+<img src="/assets/ObljbUPTCoZGtVxvSMJjcD7Jpeg.png" src-width="3284" src-height="762" align="center"/>
 
 <b>操作按鈕說明</b>
 
@@ -119,7 +119,7 @@ Whale系統包含了處理入金申請、匹配銀行流水、入金審核、單
 <p>⚓ 款項管理&gt;App 管理&gt;用戶綁卡-國家/地區</p>
 </div>
 
-<img src="DRqEbczISoOgmkxJoz6jaiN7pch" src-width="3260" src-height="774" align="center"/>
+<img src="/assets/DRqEbczISoOgmkxJoz6jaiN7pch.png" src-width="3260" src-height="774" align="center"/>
 
 ## 3.銀行區域列表
 
@@ -128,7 +128,7 @@ Whale系統包含了處理入金申請、匹配銀行流水、入金審核、單
 <p>⚓ 款項管理&gt;App 管理&gt;銀行區域列表</p>
 </div>
 
-<img src="NEwgb9fauojwWLxFj6gjdnk3pgd" src-width="3290" src-height="978" align="center"/>
+<img src="/assets/NEwgb9fauojwWLxFj6gjdnk3pgd.png" src-width="3290" src-height="978" align="center"/>
 
 <b>操作按鈕說明</b>
 
@@ -142,7 +142,7 @@ Whale系統包含了處理入金申請、匹配銀行流水、入金審核、單
 
 ## 1.入金指引
 
-<img src="ZNbxbVdT8oSKrvx0Intj4gwvpHg" src-width="3286" src-height="980" align="center"/>
+<img src="/assets/ZNbxbVdT8oSKrvx0Intj4gwvpHg.png" src-width="3286" src-height="980" align="center"/>
 
 ## 2.入金參數
 
@@ -151,7 +151,7 @@ Whale系統包含了處理入金申請、匹配銀行流水、入金審核、單
 <p>⚓ 款項管理&gt;App 管理&gt;入金參數</p>
 </div>
 
-<img src="PvZIbuTrBoThQyxEfN9j2PMQpoc" src-width="3260" src-height="1726" align="center"/>
+<img src="/assets/PvZIbuTrBoThQyxEfN9j2PMQpoc.png" src-width="3260" src-height="1726" align="center"/>
 
 <b>操作按鈕說明</b>
 
@@ -167,7 +167,7 @@ Whale系統包含了處理入金申請、匹配銀行流水、入金審核、單
 
 - 如客戶端需要根據客戶選擇的銀行，在同一個入金方式下需要展示多個收款銀行，則可以參考如下截圖的配置。
 
-<img src="L5gpbPY7Jon7N1xNxxAjKN6DpYg" src-width="3278" src-height="706" align="center"/>
+<img src="/assets/L5gpbPY7Jon7N1xNxxAjKN6DpYg.png" src-width="3278" src-height="706" align="center"/>
 
 # 入金操作
 
@@ -184,12 +184,12 @@ Whale系統包含了處理入金申請、匹配銀行流水、入金審核、單
 
 適用於使用者聯絡後台操作員進行手動入金的場景，操作員需要依序選擇客戶並輸入金的幣種、方式、收款銀行、金額、備註、憑證（如有）
 
-<img src="Pnj0bfk5AozsChxMssujEqZlpQd" src-width="2074" src-height="1000" align="center"/>
+<img src="/assets/Pnj0bfk5AozsChxMssujEqZlpQd.gif" src-width="2074" src-height="1000" align="center"/>
 
 - 駁回：若客戶遞交的入金申請資料有誤或使用者反饋本次申請無效時，操作員可以進行【駁回】操作
 - 删除：若客戶遞交的入金申請資料有誤或使用者反饋本次申請無效時，操作員也可以透過【删除】按鈕直接刪除目標記錄
 - 修改：若在提交入金申請前，發現客戶遞交的某筆入金申請有問題，可在與客戶確認無誤後可以透過【編輯】按鈕進行修正，修改後需進行工單審批，審批通過後修改內容生效。
-    <img src="ZCO4bY1SUoXpuOxlGcsjvbrnpKJ" src-width="2076" src-height="998" align="center"/>
+    <img src="/assets/ZCO4bY1SUoXpuOxlGcsjvbrnpKJ.gif" src-width="2076" src-height="998" align="center"/>
     - 修改的范围：幣種、入金方式、收款銀行、金額、入金手續費、備註、憑證（重新上傳）
 
 操作
@@ -200,19 +200,19 @@ Whale系統包含了處理入金申請、匹配銀行流水、入金審核、單
 
 需要審批
 
-<img src="A3ZrbMXsfospuOx5lzyj3WHXp3d" src-width="1678" src-height="1764" align="center"/>
+<img src="/assets/A3ZrbMXsfospuOx5lzyj3WHXp3d.png" src-width="1678" src-height="1764" align="center"/>
 
 無需審批
 
-<img src="WRPgb1J6Xox9O8xdmlpjKABspz7" src-width="1688" src-height="1754" align="center"/>
+<img src="/assets/WRPgb1J6Xox9O8xdmlpjKABspz7.png" src-width="1688" src-height="1754" align="center"/>
 
 - 憑證關聯，如果操作入賬的申請是多筆，則可以進入憑證關聯頁面進行批量操作入賬
 
-<img src="As3xbDECHoy2IgxS8DFjS4nppzf" src-width="3774" src-height="1000" align="center"/>
+<img src="/assets/As3xbDECHoy2IgxS8DFjS4nppzf.png" src-width="3774" src-height="1000" align="center"/>
 
 進入憑證關聯頁面，會篩選出所有等待入賬的申請單，由操作者進行選擇，在覈對無誤後提交入賬
 
-<img src="SGkqbW6xboBC1gxYw2Wj44rZpXc" src-width="3324" src-height="1634" align="center"/>
+<img src="/assets/SGkqbW6xboBC1gxYw2Wj44rZpXc.png" src-width="3324" src-height="1634" align="center"/>
 
 # 入金匹配
 
@@ -221,25 +221,25 @@ Whale系統包含了處理入金申請、匹配銀行流水、入金審核、單
 - 關聯：僅入金的銀行賬單中系統無法自動匹配需要人工操作的記錄，在此頁面下操作員可以根據系統提示進行確認，並進行後續入賬或者其他操作。
     - 關聯頁面將根據姓名配對用戶自動比對欄位（如圖），確認無誤後可點選【關聯】
 
-<img src="FpdTbpm5roY5XHx0XGdjek7Rpue" src-width="3818" src-height="1842" align="center"/>
+<img src="/assets/FpdTbpm5roY5XHx0XGdjek7Rpue.png" src-width="3818" src-height="1842" align="center"/>
 
-<img src="Ns26bUaCMolWVuxt2BZjiABspog" src-width="3904" src-height="1950" align="center"/>
+<img src="/assets/Ns26bUaCMolWVuxt2BZjiABspog.png" src-width="3904" src-height="1950" align="center"/>
 
 ```text
 - 如係統預設匹配的用戶不準，可透過【自定義】手動關聯該筆銀行流水所對應的客戶。關聯的方式有：入金的申請與證券賬號
 ```
 
-<img src="SvS7b8jOsoynvIxCXnUj8uQzp2c" src-width="3308" src-height="1776" align="center"/>
+<img src="/assets/SvS7b8jOsoynvIxCXnUj8uQzp2c.png" src-width="3308" src-height="1776" align="center"/>
 
-<img src="TA62bmYdBoQz2cx6uS2jvjREpJf" src-width="3308" src-height="1750" align="center"/>
+<img src="/assets/TA62bmYdBoQz2cx6uS2jvjREpJf.png" src-width="3308" src-height="1750" align="center"/>
 
 入金退還：若因種種原因，導致入金未能正常進入客戶的證券賬戶，需要對這筆記錄進行退款時，可以使用該功能進行操作。用戶需填寫客戶的銀行卡訊息，確認無誤後點選【確定】流轉至入金審核頁面進行審核操作。
 
-<img src="TMqGb4IBQofOTrxKPTtjxTzgpxf" src-width="2436" src-height="1326" align="center"/>
+<img src="/assets/TMqGb4IBQofOTrxKPTtjxTzgpxf.png" src-width="2436" src-height="1326" align="center"/>
 
 出金退還：由於入金匹配頁面的數據來自銀行流水流入的信息，如果用戶在處理客户出金的時候被銀行拒絕，在銀行流水中會以流入的形式存在，用戶需要關聯出金的業務流水號通過【出金退還】功能處理此類記錄。
 
-<img src="I0Lub8pvGopbP7xjxJ1jUthYpJe" src-width="2366" src-height="1234" align="center"/>
+<img src="/assets/I0Lub8pvGopbP7xjxJ1jUthYpJe.png" src-width="2366" src-height="1234" align="center"/>
 
 # 入金審核
 
@@ -247,37 +247,37 @@ Whale系統包含了處理入金申請、匹配銀行流水、入金審核、單
 
 - 開戶中：選取目標記錄後，點選【審批】後進入詳情頁面再次核對訊息，確認無誤後發起工單審批
 
-<img src="Rf6IbfUk1oixepxB6jnjPZFcpxc" src-width="3334" src-height="1598" align="center"/>
+<img src="/assets/Rf6IbfUk1oixepxB6jnjPZFcpxc.png" src-width="3334" src-height="1598" align="center"/>
 
 - 已開戶：選取目標記錄後，點選【審批】後進入詳情頁面再次核對訊息，確認無誤後審核通過
 
-<img src="HOXZb5qJpoXZLGxIDLvjl1DOpJy" src-width="3318" src-height="1598" align="center"/>
+<img src="/assets/HOXZb5qJpoXZLGxIDLvjl1DOpJy.png" src-width="3318" src-height="1598" align="center"/>
 
 - 入金退還：選取目標記錄後，點選【審批】後喚出審批工單，確認資訊無誤後審核通過
 
-<img src="IMozbJfVVoR9KQxn2wIj4Hq1ppf" src-width="3330" src-height="1596" align="center"/>
+<img src="/assets/IMozbJfVVoR9KQxn2wIj4Hq1ppf.png" src-width="3330" src-height="1596" align="center"/>
 
 - 出金退還：選取目標記錄後，點選【審批】後確認無誤後直接通過，無需走工單審批流程
 
-<img src="JzXNbereWo4Gthxd1OMjLnblplc" src-width="3318" src-height="1598" align="center"/>
+<img src="/assets/JzXNbereWo4Gthxd1OMjLnblplc.png" src-width="3318" src-height="1598" align="center"/>
 
 # 銀證入金
 
 在銀證開戶之後，用戶可以通過銀證入金，系統接收到銀行通知後，會直接匹配用戶後自動入賬，無需人工干預。
 
-<img src="JdlvbQtvqol9GtxH4ZNjAoz3p0c" src-width="2854" src-height="1074" align="center"/>
+<img src="/assets/JdlvbQtvqol9GtxH4ZNjAoz3p0c.png" src-width="2854" src-height="1074" align="center"/>
 
 # eDDA 入金
 
 在 eDDA 授權完成之後，用戶可以通過 eDDA 入金，系統接收到銀行通知後，會直接匹配用戶後自動入賬，無需人工干預。
 
-<img src="RjujbDUo4oHXz3xWMA4jzKnYpYf" src-width="2820" src-height="1048" align="center"/>
+<img src="/assets/RjujbDUo4oHXz3xWMA4jzKnYpYf.png" src-width="2820" src-height="1048" align="center"/>
 
 # FPS轉數快
 
 對於FPS轉數快，在或者銀行賬單後，系統可以通過賬單和入金申請進行自動匹配，匹配一致後可以自動入賬。
 
-<img src="UsL7bW30goNbgSxaAyejVb7ipig" src-width="2324" src-height="1070" align="center"/>
+<img src="/assets/UsL7bW30goNbgSxaAyejVb7ipig.png" src-width="2324" src-height="1070" align="center"/>
 
 # 開戶中入金
 
@@ -288,7 +288,7 @@ Whale系統包含了處理入金申請、匹配銀行流水、入金審核、單
 
 用戶可以在頁面中「開戶狀態」查看即時的狀態，如果客戶的開戶流程未通過，可以將其【駁回】（<b>可批量操作</b>）
 
-<img src="KOOibUwNhoeT1YxU98YjdV1npSb" src-width="3392" src-height="1693" align="center"/>
+<img src="/assets/KOOibUwNhoeT1YxU98YjdV1npSb.png" src-width="3392" src-height="1693" align="center"/>
 
 # 入金對賬
 
@@ -296,9 +296,9 @@ Whale系統包含了處理入金申請、匹配銀行流水、入金審核、單
 
 - 對賬：用戶可以選擇目標期間的銀行流水進行刷新，系統將自動匹配銀行流水與系統的入金記錄，對賬完成後，可以關注清單中的「對賬結果」列，如果不一致，需要進一步追蹤處理。
 
-<img src="Tb4kb2PTxooJfnxkPpIjcJ7vpxd" src-width="3336" src-height="1770" align="center"/>
+<img src="/assets/Tb4kb2PTxooJfnxkPpIjcJ7vpxd.png" src-width="3336" src-height="1770" align="center"/>
 
-<img src="BpVFbif6BoIjtGxD1Osjv6N2prb" src-width="3828" src-height="1870" align="center"/>
+<img src="/assets/BpVFbif6BoIjtGxD1Osjv6N2prb.png" src-width="3828" src-height="1870" align="center"/>
 
 # 入金記錄
 
@@ -306,13 +306,13 @@ Whale系統包含了處理入金申請、匹配銀行流水、入金審核、單
 
 - 若用户在使用【直接入账】入金时，没有录入银行流水信息，可在该页面中通过【导入银行流水】批量导入银行流水信息
 
-<img src="GxIHbyVaRonsZRxiZiLjcxlIpSb" src-width="2804" src-height="1056" align="center"/>
+<img src="/assets/GxIHbyVaRonsZRxiZiLjcxlIpSb.png" src-width="2804" src-height="1056" align="center"/>
 
 - 對於已經凍結的支票入金，在“預計解凍時間”之前可以後臺手工解凍，也可以等系統自動解凍。
 
-<img src="UptLb1S4douinXxm3VbjqtzLpIg" src-width="1640" src-height="367" align="center"/>
+<img src="/assets/UptLb1S4douinXxm3VbjqtzLpIg.png" src-width="1640" src-height="367" align="center"/>
 
 - 人工提交解凍申請後，需等待工單審批。
 
-<img src="DThUbIHuKobFq5xQ3sOjGgeDpJQ" src-width="1622" src-height="470" align="center"/>
+<img src="/assets/DThUbIHuKobFq5xQ3sOjGgeDpJQ.png" src-width="1622" src-height="470" align="center"/>
 

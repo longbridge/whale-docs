@@ -32,7 +32,7 @@ sidebar_position: 1
 <p>如果客户沒錢沒貨就不能創建出臨時結單／ 月結單，沒有流水出入記錄沒有日結單。</p>
 </div>
 
-<img src="B8oNbiWpgoFmemxE95bjkVBKp1g" src-width="2496" src-height="1312" align="center"/>
+<img src="/assets/B8oNbiWpgoFmemxE95bjkVBKp1g.png" src-width="2496" src-height="1312" align="center"/>
 
 # 5.2C 問：結單顯示的參考匯率是那種匯率？
 
@@ -43,16 +43,16 @@ sidebar_position: 1
 <p>參考滙率以<b>中間拆算價</b>換算總資產市值。</p>
 </div>
 
-<img src="OtxebLp9novByexU3mqjzSAZpkh" src-width="1682" src-height="634" align="center"/>
+<img src="/assets/OtxebLp9novByexU3mqjzSAZpkh.png" src-width="1682" src-height="634" align="center"/>
 
 # 5.2D 問：報表或結單會否顯示到平倉交易？
 
 **答：**TDR001-1-Daily Client Order Report By Client 報表的「訂單類型」會顯示為「強平單」；
 結單中的「股票交易明細」會顯示該訂單為「強制平倉 Forced Liquidation」。
 
-<img src="VKCxbztEsovR2pxAOvVjM1y6ppe" src-width="2832" src-height="1486" align="center"/>
+<img src="/assets/VKCxbztEsovR2pxAOvVjM1y6ppe.png" src-width="2832" src-height="1486" align="center"/>
 
-<img src="OjBGbJmTMocNBUxoIIPjiuEFpLf" src-width="1384" src-height="676" align="center"/>
+<img src="/assets/OjBGbJmTMocNBUxoIIPjiuEFpLf.png" src-width="1384" src-height="676" align="center"/>
 
 # 5.2E 問：手工調賬的交易為什麼不能顯示「成本價」及「浮動盈虧」？
 
@@ -67,7 +67,7 @@ sidebar_position: 1
 <p>如：交易總額為 <code>$500,000</code>、數量為 <code>5,000</code>。總成本價輸入 <code>$500,000</code>、結單上的成本價以攤薄成本價顯示 <code>= ＄100</code></p>
 </div>
 
-<img src="X1NDb4a4BoQWDjxcYnvjAqndpZb" src-width="1368" src-height="260" align="center"/>
+<img src="/assets/X1NDb4a4BoQWDjxcYnvjAqndpZb.png" src-width="1368" src-height="260" align="center"/>
 
 # 5.2G 問：結單中的「待交收金額」和「資金餘額」有什麼分別？
 
@@ -78,7 +78,7 @@ sidebar_position: 1
 <p>&quot;資金餘額&quot; 是賬面金額。</p>
 </div>
 
-<img src="FgNjbUbRNomC7fxQmCYjhgndpme" src-width="1706" src-height="696" align="center"/>
+<img src="/assets/FgNjbUbRNomC7fxQmCYjhgndpme.png" src-width="1706" src-height="696" align="center"/>
 
 # 5.2H 交易下單賬號選錯了另一個客户，前台已作成交分配轉移訂單到正確客户，但是結單上能什樣修正？
 
@@ -91,31 +91,31 @@ sidebar_position: 1
 <p>操作成交分配前請通知受影響客户，以免引起投訴。</p>
 </div>
 
-<img src="SjjPbnmtIoAMYexHWWBjYHtSpnq" src-width="2612" src-height="1574" align="center"/>
+<img src="/assets/SjjPbnmtIoAMYexHWWBjYHtSpnq.png" src-width="2612" src-height="1574" align="center"/>
 
 <em>5.2H 圖一</em>
 
-<img src="LcZybHgb8o1GsYx5cW2jdIzjpgd" src-width="2606" src-height="1544" align="center"/>
+<img src="/assets/LcZybHgb8o1GsYx5cW2jdIzjpgd.png" src-width="2606" src-height="1544" align="center"/>
 
 <em>5.2H 圖二</em>
 
-<img src="KaSXbB7aBoJEfkxUum4jBnfjp6f" src-width="2732" src-height="816" align="center"/>
+<img src="/assets/KaSXbB7aBoJEfkxUum4jBnfjp6f.png" src-width="2732" src-height="816" align="center"/>
 
 <em>5.2H 圖三</em>
 
-<img src="TefkbCdjgoD4VyxmvNmjOJpQpkd" src-width="2702" src-height="1192" align="center"/>
+<img src="/assets/TefkbCdjgoD4VyxmvNmjOJpQpkd.png" src-width="2702" src-height="1192" align="center"/>
 
 <em>5.2H 圖四</em>
 
-<img src="CEMUbak57oYvy0xLsXOjf6mdpHg" src-width="2504" src-height="1538" align="center"/>
+<img src="/assets/CEMUbak57oYvy0xLsXOjf6mdpHg.png" src-width="2504" src-height="1538" align="center"/>
 
 <em>5.2L 圖五</em>
 
-<img src="ZuRrbVQBIo7QkwxSGXPjZxNLpsd" src-width="2850" src-height="1306" align="center"/>
+<img src="/assets/ZuRrbVQBIo7QkwxSGXPjZxNLpsd.png" src-width="2850" src-height="1306" align="center"/>
 
 <em>5.2L 圖六</em>
 
-<img src="MVOCbP8zkoIJH4xIaPEjYR2ipgc" src-width="1096" src-height="370" align="center"/>
+<img src="/assets/MVOCbP8zkoIJH4xIaPEjYR2ipgc.png" src-width="1096" src-height="370" align="center"/>
 
 <em>5.2L 圖七</em>
 

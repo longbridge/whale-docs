@@ -35,5 +35,5 @@ sidebar_position: 2
 
 答：可以。若想要制定出金規則，可至「業務參數設定&gt;出金規則&gt;自動出金規則tab」中進行操作。點選【新建】，在喚出的彈跳窗中依照對應的欄位進行設置。也可在現有記錄中依照業務需求進行【編輯】與【刪除】。
 
-<img src="Yc8fb7Pcuow3ibx9VrDjjtsap9f" src-width="3268" src-height="2881" align="center"/>
+<img src="/assets/Yc8fb7Pcuow3ibx9VrDjjtsap9f.png" src-width="3268" src-height="2881" align="center"/>
 

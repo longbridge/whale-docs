@@ -13,5 +13,5 @@ sidebar_position: 0
 
 將CRM 客務節點,透過細分的 業務狀態來進行CRM 的 推進工作,以拆分任務方式來管理推進工作
 
-<img src="RW81b7YyRoAYFSxFRidjlEmip8d" src-width="1456" src-height="1199" align="center"/>
+<img src="/assets/RW81b7YyRoAYFSxFRidjlEmip8d.jpeg" src-width="1456" src-height="1199" align="center"/>
 

@@ -11,9 +11,9 @@ sidebar_position: 20
 
 答：網頁版的語言是跟隨 App 語言設置。需在 App 的「我的」-&gt;「設置」-&gt;「通用」-&gt;「語言設置」修改顯示語言并掃描網頁版登錄，語言便會變更。
 
-<img src="ZtUTbjtP5oQ3AuxvAjijTZ8epzg" src-width="682" src-height="754" align="center"/>
+<img src="/assets/ZtUTbjtP5oQ3AuxvAjijTZ8epzg.png" src-width="682" src-height="754" align="center"/>
 
-<img src="CxAFbFtgHoSi1VxHKyxjyTR6pTM" src-width="2700" src-height="1256" align="center"/>
+<img src="/assets/CxAFbFtgHoSi1VxHKyxjyTR6pTM.png" src-width="2700" src-height="1256" align="center"/>
 
 # 21B 問：Web Trade 和 App 能否同時使用？
 

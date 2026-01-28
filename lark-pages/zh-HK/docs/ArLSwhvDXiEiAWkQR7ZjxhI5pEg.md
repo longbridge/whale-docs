@@ -11,7 +11,7 @@ version: stable
 # 🎉 新功能
 
 - 客戶銀行卡補充入金姓名功能說明
-    <img src="SVrob2ewZozVeLxqO5YjRCEDp8g" src-width="1280" src-height="313" align="center"/>
+    <img src="/assets/SVrob2ewZozVeLxqO5YjRCEDp8g.png" src-width="1280" src-height="313" align="center"/>
     - 功能新增：客戶銀行卡新增「補充入金姓名」入口，用於解決銀行預留姓名與 KYC 資訊不一致的場景。
     - 應用場景：當銀行預留姓名與 KYC 資訊不一致時，可通過此功能補充填寫。經人工審核的姓名將自動套用於後續 eDDA 授權、入金自動匹配及銀行卡綁卡。
     - 工單審批流程：新建 / 編輯 / 刪除操作均需工單審批，需配置以下工單：
@@ -25,7 +25,7 @@ version: stable
         - 補充入金姓名審批`atm.update_deposit_name_approval`
 
 - 資產調撥增加虛擬資產判斷校驗
-    <img src="UKXTbtDm8o0SOLxN4GNj06Ebpyd" src-width="1280" src-height="416" align="center"/>
+    <img src="/assets/UKXTbtDm8o0SOLxN4GNj06Ebpyd.png" src-width="1280" src-height="416" align="center"/>
     - 1.賬戶間轉賬轉給主帳戶時增加虛擬資產賬戶判斷配置，若開啟配置，則當轉入方為虛擬資產賬戶時，需要校驗公司賬戶頭寸，頭寸不足在後台劃轉時會提示。如需打開配置，可聯繫長橋客服協助申請。
     - 2.賬戶間轉倉增加限制虛擬資產賬戶劃轉股票。
     - 路徑：WBO-資產賬戶-資產調撥
@@ -38,13 +38,13 @@ version: stable
     - 關鍵資訊：通知金額、幣種、客戶證券帳號完全一致
     - 路徑：證券後台-款項管理-入金-入金申請
 
-<img src="CKNwb5sObocJ6MxTJEJjvjJqp9A" src-width="1280" src-height="498" align="center"/>
+<img src="/assets/CKNwb5sObocJ6MxTJEJjvjJqp9A.png" src-width="1280" src-height="498" align="center"/>
 
 - 出金記錄優化
     - 因出金記錄字段繁雜，已將同類字段（含公司銀行賬戶、客戶信息、收款銀行、備註、金額、狀態、時間）合併展示，以方便客戶查詢。
     - 路徑：WBO - 款項管理 - 出金 - 出金記錄
 
-<img src="YRlmbJFDEozD0PxyiMrjiY66pXd" src-width="1280" src-height="367" align="center"/>
+<img src="/assets/YRlmbJFDEozD0PxyiMrjiY66pXd.png" src-width="1280" src-height="367" align="center"/>
 
 - 授信FPS規則數據源切換並支持多語言
     - 1.FPS規則數據源切換直接調用KYC信息。規則配置變量範圍同當前一致，含“職業信息&gt;職業性質”以及“資產投資”信息。
@@ -54,5 +54,5 @@ version: stable
     - 2.FPS規則變量支持多語言
     - 路徑：WBO-風控管理-授信額度-融資授信-客戶FPS
 
-<img src="PIT3bXR6OoP9mKxVY3fjpvH7pNg" src-width="1280" src-height="684" align="center"/>
+<img src="/assets/PIT3bXR6OoP9mKxVY3fjpvH7pNg.png" src-width="1280" src-height="684" align="center"/>
 

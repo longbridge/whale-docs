@@ -23,15 +23,15 @@ WHALE的款項管理系統提供了多幣種、多渠道、多策略的匯兌功
 
 點選【手工換匯】，在出現的彈出內選擇客戶&gt;輸入幣種對（系統將根據已選擇的客戶，自動展示每個幣種可提現的餘額）
 
-<img src="ZUpgbmXEQoBC06x6uqRjYSuHpYb" src-width="3830" src-height="1854" align="center"/>
+<img src="/assets/ZUpgbmXEQoBC06x6uqRjYSuHpYb.png" src-width="3830" src-height="1854" align="center"/>
 
 <b>步驟二：確認參考匯率</b>
 
 選擇了客戶與幣種對之後，系統自動提供參考匯率，用戶也可以切換成【自定義匯率】進行手動輸入
 
-<img src="RVQkbjq1QooJBTxslZojhSrKppj" src-width="3328" src-height="1772" align="center"/>
+<img src="/assets/RVQkbjq1QooJBTxslZojhSrKppj.png" src-width="3328" src-height="1772" align="center"/>
 
-<img src="F5Zhb1F0MokzaaxOhICjUe4Fpgd" src-width="3322" src-height="1776" align="center"/>
+<img src="/assets/F5Zhb1F0MokzaaxOhICjUe4Fpgd.png" src-width="3322" src-height="1776" align="center"/>
 
 <b>步驟三：輸入金額</b>
 
@@ -46,29 +46,29 @@ WHALE的款項管理系統提供了多幣種、多渠道、多策略的匯兌功
 
 申請的記錄生成後，後台操作人員需要再次檢查資料的準確性，確認無誤後點選操作列【複核】，進入彈跳窗進行【通過】/【駁回】操作。
 
-<img src="EamibnRUjoo6ewx4ERejjiLIpag" src-width="3828" src-height="1858" align="center"/>
+<img src="/assets/EamibnRUjoo6ewx4ERejjiLIpag.png" src-width="3828" src-height="1858" align="center"/>
 
 【通過】後，在「已結束」分類或「全部」分類下，可以查看已完成的匯兌記錄
 
-<img src="HTpmbewOBosFscxtdxBj1DmRpwd" src-width="3314" src-height="1052" align="center"/>
+<img src="/assets/HTpmbewOBosFscxtdxBj1DmRpwd.png" src-width="3314" src-height="1052" align="center"/>
 
 ## 參考匯率
 
 用戶可在參考匯率頁面查看所有幣種對的匯率，同時支援用戶進行手動新增幣種對的參考匯率（含大量操作）
 
-<img src="PKpubkxuVoJE1zx2tnXji4MHp6b" src-width="3836" src-height="1860" align="center"/>
+<img src="/assets/PKpubkxuVoJE1zx2tnXji4MHp6b.png" src-width="3836" src-height="1860" align="center"/>
 
 ### 新建參考匯率
 
 點選【新建】進入彈跳窗，將頁面中的必填欄位補齊，即可產生一筆參考匯率記錄
 
-<img src="QF3VbicRxoJZj3x5ZBBjDpZIpsf" src-width="3828" src-height="1864" align="center"/>
+<img src="/assets/QF3VbicRxoJZj3x5ZBBjDpZIpsf.png" src-width="3828" src-height="1864" align="center"/>
 
 ### 查看匯率更新記錄
 
 由於不同的匯率管道的匯率會即時更新，系統透過API對接的方式會自動刷新頁面中的匯率，如果需要查看當天的歷史匯率，可以在匯兌記錄行的操作列點擊【歷史記錄】進行查看。
 
-<img src="KuFsbXj7souy0FxlQdHjFvx0pvd" src-width="3322" src-height="1770" align="center"/>
+<img src="/assets/KuFsbXj7souy0FxlQdHjFvx0pvd.png" src-width="3322" src-height="1770" align="center"/>
 
 ## 異常換匯記錄
 
@@ -82,15 +82,15 @@ WHALE的款項管理系統提供了多幣種、多渠道、多策略的匯兌功
 - 再匯兌：根據相應的管道匯兌單確認銀行端資金未變動，且不會再次變動，但是人工確認需要給用戶再次匯兌，則需要再次提交通路匯兌請求
 - 轉失敗：是指相應通路換匯單經過人工確認，銀行資金未變動且後續不會變動，所以人工可以將通路匯兌單狀態更新為失敗
 
-<img src="WW8BbPyecowwLLxpbpgjILu3pd1" src-width="2366" src-height="1220" align="center"/>
+<img src="/assets/WW8BbPyecowwLLxpbpgjILu3pd1.png" src-width="2366" src-height="1220" align="center"/>
 
 <b>步驟二：根據第一步的處理方式進行複核</b>
 
-<img src="I9oIbe6WkoB45Fxkzwuj1ed3pOg" src-width="2370" src-height="1198" align="center"/>
+<img src="/assets/I9oIbe6WkoB45Fxkzwuj1ed3pOg.png" src-width="2370" src-height="1198" align="center"/>
 
 ## 匯兌損益
 
 由於時間差，換匯申請在提交至換匯完成時會存在匯率的波動進而影響到兌換的金額。此頁面用於查看每筆換匯申請所產生的匯兌損益，支援匯出至本地。
 
-<img src="IaBIbiuB9ountoxRLQAjJrYspJb" src-width="2344" src-height="1210" align="center"/>
+<img src="/assets/IaBIbiuB9ountoxRLQAjJrYspJb.png" src-width="2344" src-height="1210" align="center"/>
 

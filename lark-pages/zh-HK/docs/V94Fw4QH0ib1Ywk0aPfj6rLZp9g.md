@@ -13,7 +13,7 @@ sidebar_position: 2
 清算系统主要通过日终任务串联功能。日終任務分成兩個模塊，一個是市場清算，一個是日終管理。市場清算處理交易數據為主，用於各市場的計費、交收流程。日終清算處理涵蓋交易、調帳、公司行動在內的全部數據，進行利息計算，最終輸出報表和結單
 ```
 
-<img src="XB2CbiED9oQQuGxDrnYjuZCkpkc" src-width="4452" src-height="1865" align="center"/>
+<img src="/assets/XB2CbiED9oQQuGxDrnYjuZCkpkc.png" src-width="4452" src-height="1865" align="center"/>
 
 # 二、系統設定
 
@@ -25,7 +25,7 @@ sidebar_position: 2
 
 服務商分類型分爲託管商、代理商。代理商爲交易渠道，託管商持倉的託管方
 
-<img src="QJ3pbur9YoVD2oxKCGxjE5Hhpdg" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/QJ3pbur9YoVD2oxKCGxjE5Hhpdg.png" src-width="3548" src-height="1806" align="center"/>
 
 ### <b>子倉資料</b>
 
@@ -35,13 +35,13 @@ sidebar_position: 2
 
 配置交收、倉位規則時需要用到該配置項
 
-<img src="Q5W5bCk4NoOMxrxfJoljcbIYpdf" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/Q5W5bCk4NoOMxrxfJoljcbIYpdf.png" src-width="3548" src-height="1806" align="center"/>
 
 ### <b>結算渠道資料</b>
 
 主要用於維護結算渠道基礎信息，可新增、編輯、刪除。新增、編輯時可選擇的服務商必須事先在服務商資料中配置，且服務商類型爲代理商。配置交收、倉位規則時需要用到該配置項
 
-<img src="U4zsbtmMaozRyNxsv6cjLS52p0b" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/U4zsbtmMaozRyNxsv6cjLS52p0b.png" src-width="3548" src-height="1806" align="center"/>
 
 ### <b>交收倉位規則管理</b>
 
@@ -54,7 +54,7 @@ sidebar_position: 2
 - 隔夜市場：隔夜市場選擇是的，系統處理時賬務日期=交易日期+1。長橋將美股市場作爲隔夜市場
 - 默認託管商、默認子倉編號：在未匹配到業務規則的情況下，倉位處理時取該配置
 
-<img src="WVbWbq0vmoWa60xp0sKjugznpJD" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/WVbWbq0vmoWa60xp0sKjugznpJD.png" src-width="3548" src-height="1806" align="center"/>
 
 <b>業務層規則</b>
 
@@ -129,13 +129,13 @@ sidebar_position: 2
     子倉的枚舉爲子倉資料已新增的子倉
 ```
 
-<img src="Uq9xbbkAQotFPfxc8rMjlg0NpHg" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/Uq9xbbkAQotFPfxc8rMjlg0NpHg.png" src-width="3548" src-height="1806" align="center"/>
 
 ## 日終任務配置
 
 路径：清算管理&gt;市場清算&gt;日終任務&gt;日終設置
 
-<img src="V0JvbMyfYocxIuxWNnFjMjCgpxf" src-width="2852" src-height="1374" align="center"/>
+<img src="/assets/V0JvbMyfYocxIuxWNnFjMjCgpxf.png" src-width="2852" src-height="1374" align="center"/>
 
 <b>市場交收配置</b>
 
@@ -150,13 +150,13 @@ sidebar_position: 2
 租戶劵商也可根據需要，將一些市場清算獨立出來
 ```
 
-<img src="KJm2b77MEobf2pxMY6HjcRr6pvW" src-width="3574" src-height="1774" align="center"/>
+<img src="/assets/KJm2b77MEobf2pxMY6HjcRr6pvW.png" src-width="3574" src-height="1774" align="center"/>
 
-<img src="Dql6bnw2soSEkZxBJGTjnGOupVf" src-width="2440" src-height="934" align="center"/>
+<img src="/assets/Dql6bnw2soSEkZxBJGTjnGOupVf.png" src-width="2440" src-height="934" align="center"/>
 
 新建多個分組後，可以點選右上方區 ‘執行順序設置'來 調整。所配置的市場群組清算順序（劵商常規順序： 先歐美-亞洲-日終）
 
-<img src="FxutbpXUOodYM4xKVrzj1XFnpVg" src-width="2436" src-height="888" align="center"/>
+<img src="/assets/FxutbpXUOodYM4xKVrzj1XFnpVg.png" src-width="2436" src-height="888" align="center"/>
 
 <b>清算前準備配置</b>
 
@@ -172,7 +172,7 @@ sidebar_position: 2
 
 其它：部分检查项目要求强制检查，不允许编辑
 
-<img src="LNzXbqxS2ogysvxsg7TjCFEepLe" src-width="3574" src-height="1774" align="center"/>
+<img src="/assets/LNzXbqxS2ogysvxsg7TjCFEepLe.png" src-width="3574" src-height="1774" align="center"/>
 
 <b>清算参数配置</b>
 
@@ -182,7 +182,7 @@ sidebar_position: 2
 
 注意：需要聯繫技術人員後修改
 
-<img src="Lt4Nb9kljosl1vxvS0DjSCgep8e" src-width="3574" src-height="1774" align="center"/>
+<img src="/assets/Lt4Nb9kljosl1vxvS0DjSCgep8e.png" src-width="3574" src-height="1774" align="center"/>
 
 ## 計費配置
 
@@ -192,7 +192,7 @@ sidebar_position: 2
 
 套餐收費和個性化收費是根據業務需求靈活配置的功能，用戶可根據實際情況選擇是否啟用。套餐收費通常依據用戶群體進行添加，例如經紀人A套餐、現金賬戶套餐。系統具備在客戶開戶時自動分配相應套餐的功能；個性化收費一般根據客戶個性化需求單獨進行設置
 
-<img src="G2BObI1yTod9OrxW92bjEGUwpKd" src-width="4113" src-height="2018" align="center"/>
+<img src="/assets/G2BObI1yTod9OrxW92bjEGUwpKd.png" src-width="4113" src-height="2018" align="center"/>
 
 ### 收費場景
 
@@ -210,7 +210,7 @@ sidebar_position: 2
 
 ---
 
-<img src="TfnDbwNpgoq46TxJvuCjWJWZpLo" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/TfnDbwNpgoq46TxJvuCjWJWZpLo.png" src-width="3548" src-height="1806" align="center"/>
 
 ### 客戶收費配置
 
@@ -236,19 +236,19 @@ sidebar_position: 2
 
 <b>新建個性化收費示例</b>
 
-<img src="Tl5AbChpxowII5xjNT4jl3J5puf" src-width="2852" src-height="1374" align="center"/>
+<img src="/assets/Tl5AbChpxowII5xjNT4jl3J5puf.png" src-width="2852" src-height="1374" align="center"/>
 
-<img src="F0cSbkBMzoec2RxGb04jSuxSpGc" src-width="2852" src-height="1374" align="center"/>
+<img src="/assets/F0cSbkBMzoec2RxGb04jSuxSpGc.png" src-width="2852" src-height="1374" align="center"/>
 
-<img src="RnpXbM4X6oyoAexFwCnjKqj1p8b" src-width="2874" src-height="1312" align="center"/>
+<img src="/assets/RnpXbM4X6oyoAexFwCnjKqj1p8b.png" src-width="2874" src-height="1312" align="center"/>
 
 <b>添加客戶示例</b>
 
-<img src="IB8GbLSULo5IJJxI2SJjRyd9pgg" src-width="2874" src-height="1312" align="center"/>
+<img src="/assets/IB8GbLSULo5IJJxI2SJjRyd9pgg.png" src-width="2874" src-height="1312" align="center"/>
 
-<img src="Dyt1bs3faoPmbGxlIunjqKEUpxc" src-width="2874" src-height="1312" align="center"/>
+<img src="/assets/Dyt1bs3faoPmbGxlIunjqKEUpxc.png" src-width="2874" src-height="1312" align="center"/>
 
-<img src="BhTlb0sAfoquoixjEAdjJNV7pTc" src-width="2522" src-height="1102" align="center"/>
+<img src="/assets/BhTlb0sAfoquoixjEAdjJNV7pTc.png" src-width="2522" src-height="1102" align="center"/>
 
 <b>套餐收费</b>
 
@@ -260,11 +260,11 @@ sidebar_position: 2
 
 <b>新建套餐示例</b>
 
-<img src="Z7vsbRhTao1ePex8HF8jmtuepoh" src-width="2852" src-height="1374" align="center"/>
+<img src="/assets/Z7vsbRhTao1ePex8HF8jmtuepoh.png" src-width="2852" src-height="1374" align="center"/>
 
-<img src="Ik9ybIrlaoarAfxzOhujuYLypNo" src-width="2502" src-height="1096" align="center"/>
+<img src="/assets/Ik9ybIrlaoarAfxzOhujuYLypNo.png" src-width="2502" src-height="1096" align="center"/>
 
-<img src="DW85bcKKPorkDTxbL2mjDv4Rpxe" src-width="2502" src-height="1096" align="center"/>
+<img src="/assets/DW85bcKKPorkDTxbL2mjDv4Rpxe.png" src-width="2502" src-height="1096" align="center"/>
 
 <b>客戶計費查詢</b>
 
@@ -274,15 +274,15 @@ sidebar_position: 2
 
 <b>特殊收費</b>(個性化收費&gt;普通套餐&gt;全局套餐)&gt;<b>普通收費</b>(個性化收費&gt;普通套餐&gt;全局套餐)
 
-<img src="Vk73bqgjuo20oyxynasjdKxipQb" src-width="2502" src-height="1096" align="center"/>
+<img src="/assets/Vk73bqgjuo20oyxynasjdKxipQb.png" src-width="2502" src-height="1096" align="center"/>
 
-<img src="KlGFbGTxSo8qGexbJZTjsyERpUg" src-width="2502" src-height="1096" align="center"/>
+<img src="/assets/KlGFbGTxSo8qGexbJZTjsyERpUg.png" src-width="2502" src-height="1096" align="center"/>
 
-<img src="X8iObXRxPouBaWxa5xyjlt04p3c" src-width="2502" src-height="1096" align="center"/>
+<img src="/assets/X8iObXRxPouBaWxa5xyjlt04p3c.png" src-width="2502" src-height="1096" align="center"/>
 
-<img src="PRagb9AX8oWaOvxXbzPjwNRcpxe" src-width="2502" src-height="1096" align="center"/>
+<img src="/assets/PRagb9AX8oWaOvxXbzPjwNRcpxe.png" src-width="2502" src-height="1096" align="center"/>
 
-<img src="PVnZbmimzoTXbPxEb2jjiw5ypLh" src-width="2502" src-height="1096" align="center"/>
+<img src="/assets/PVnZbmimzoTXbPxEb2jjiw5ypLh.png" src-width="2502" src-height="1096" align="center"/>
 
 ## 其它計費項目
 
@@ -310,9 +310,9 @@ sidebar_position: 2
 
 <b>配置案例</b>
 
-<img src="RP2Rbe1MFoTr8dxiI0JjL4vBpKb" src-width="2878" src-height="1172" align="center"/>
+<img src="/assets/RP2Rbe1MFoTr8dxiI0JjL4vBpKb.png" src-width="2878" src-height="1172" align="center"/>
 
-<img src="XCmTbg3syoDoWvxRQN3jS0LTpBc" src-width="2878" src-height="1172" align="center"/>
+<img src="/assets/XCmTbg3syoDoWvxRQN3jS0LTpBc.png" src-width="2878" src-height="1172" align="center"/>
 
 <b>可交易債券利率配置</b>
 
@@ -326,7 +326,7 @@ sidebar_position: 2
 開啟總開關後才會正式啟用可交易債券的計息功能
 ```
 
-<img src="Es4kbzijCo1aYwxlkZjjtlGbpSf" src-width="2502" src-height="1110" align="center"/>
+<img src="/assets/Es4kbzijCo1aYwxlkZjjtlGbpSf.png" src-width="2502" src-height="1110" align="center"/>
 
 <b>利率配置</b>
 
@@ -365,9 +365,9 @@ sidebar_position: 2
 
 新建利率信息案例
 
-<img src="P6HybTCS9owK0OxP3wZjpAN2pqg" src-width="2502" src-height="1110" align="center"/>
+<img src="/assets/P6HybTCS9owK0OxP3wZjpAN2pqg.png" src-width="2502" src-height="1110" align="center"/>
 
-<img src="XN20bXQLzo81DLxcZgxjX1kmpwh" src-width="2502" src-height="1110" align="center"/>
+<img src="/assets/XN20bXQLzo81DLxcZgxjX1kmpwh.png" src-width="2502" src-height="1110" align="center"/>
 
 ## 结单配置
 
@@ -380,15 +380,15 @@ sidebar_position: 2
 本作業可以管理結單標準格式的配置，包含 公司訊息/聯絡方式/責任說明 （以下為參考）
 ```
 
-<img src="W7AVbfKlqokMVMxBADkjuVxvpkb" src-width="2484" src-height="1468" align="center"/>
+<img src="/assets/W7AVbfKlqokMVMxBADkjuVxvpkb.png" src-width="2484" src-height="1468" align="center"/>
 
-<img src="FNcabcR9zovyGXxabUyjtqrrphP" src-width="2272" src-height="1438" align="center"/>
+<img src="/assets/FNcabcR9zovyGXxabUyjtqrrphP.png" src-width="2272" src-height="1438" align="center"/>
 
 ```text
 在結單模版可進行社交媒體信息配置功能，配置後會在結單展示，若不配置，則不展示該欄位
 ```
 
-<img src="RkuHbKY1EomgLoxEkT0j161fpTg" src-width="2908" src-height="1546" align="center"/>
+<img src="/assets/RkuHbKY1EomgLoxEkT0j161fpTg.png" src-width="2908" src-height="1546" align="center"/>
 
 ```text
 結單模板新增結單語言配置功能（支持 5 種語言設置方式）
@@ -400,7 +400,7 @@ sidebar_position: 2
 - 全局設定（繁體中文&英語）：所有客戶結單均為雙語（繁體中文+英文）
 ```
 
-<img src="F0lnbMO2Ko8rghxPoxcj5LPapPf" src-width="2476" src-height="1420" align="center"/>
+<img src="/assets/F0lnbMO2Ko8rghxPoxcj5LPapPf.png" src-width="2476" src-height="1420" align="center"/>
 
 ### 結單配置
 
@@ -408,9 +408,9 @@ sidebar_position: 2
 本作業用來配置管理：客戶結單是否線下發送/是否接受郵件和 APP 通知/未配置的按線下發送為否/提醒全部開啟處理 等配置項
 ```
 
-<img src="WzM1bcxQDoCEBwxpr3HjDkKlpwb" src-width="3336" src-height="1400" align="center"/>
+<img src="/assets/WzM1bcxQDoCEBwxpr3HjDkKlpwb.png" src-width="3336" src-height="1400" align="center"/>
 
-<img src="Tbg2bpmqNoDaNExnySAjEhhBpsb" src-width="3346" src-height="1414" align="center"/>
+<img src="/assets/Tbg2bpmqNoDaNExnySAjEhhBpsb.png" src-width="3346" src-height="1414" align="center"/>
 
 ```text
 在結單配置上增加來源欄位，方便定位結單配置修改來源
@@ -419,13 +419,13 @@ sidebar_position: 2
 也支持批量新增功能，透過事先模版下載後上傳來應用
 ```
 
-<img src="Kio7bIrmLowDJ1xuc4mjWoNBpIf" src-width="3324" src-height="1412" align="center"/>
+<img src="/assets/Kio7bIrmLowDJ1xuc4mjWoNBpIf.png" src-width="3324" src-height="1412" align="center"/>
 
 ```text
 新客戶查詢不到的，可新增發送方式
 ```
 
-<img src="JFwPbyFJyow0fWxUnWvjrdwppJb" src-width="3364" src-height="1410" align="center"/>
+<img src="/assets/JFwPbyFJyow0fWxUnWvjrdwppJb.png" src-width="3364" src-height="1410" align="center"/>
 
 ### 客戶備註
 
@@ -439,23 +439,23 @@ sidebar_position: 2
 注意：若有需要增加客戶結單備註，要在日終作業完成前，補錄好客戶結單備註後才能發生效用
 ```
 
-<img src="FGEibBEBvoepN2xJlIDjF6ympsg" src-width="3116" src-height="1132" align="center"/>
+<img src="/assets/FGEibBEBvoepN2xJlIDjF6ympsg.png" src-width="3116" src-height="1132" align="center"/>
 
 可以點選右上角【新增備註】，根據需要新增 日結單/月結單 結單上對應客戶備註
 
-<img src="IU7Mbjx1Fosm4uxPb4rjFyUxpGg" src-width="3368" src-height="1462" align="center"/>
+<img src="/assets/IU7Mbjx1Fosm4uxPb4rjFyUxpGg.png" src-width="3368" src-height="1462" align="center"/>
 
 也提供批量結單模板導入的備註說明
 
-<img src="UZy2brkshoua4fxF76EjhWmkpGh" src-width="3366" src-height="1460" align="center"/>
+<img src="/assets/UZy2brkshoua4fxF76EjhWmkpGh.png" src-width="3366" src-height="1460" align="center"/>
 
 以下是備註參考模板：
 
-<img src="EkqAbM3L3oN25txOiizjATLbp1e" src-width="1304" src-height="496" align="center"/>
+<img src="/assets/EkqAbM3L3oN25txOiizjATLbp1e.png" src-width="1304" src-height="496" align="center"/>
 
 可在列表頁查詢備註內容，進行二次編輯
 
-<img src="U4DNbyOqKoDGRFxmFvvjuq9kp2g" src-width="3358" src-height="1240" align="center"/>
+<img src="/assets/U4DNbyOqKoDGRFxmFvvjuq9kp2g.png" src-width="3358" src-height="1240" align="center"/>
 
 ### DA 結單配置
 
@@ -466,9 +466,9 @@ sidebar_position: 2
 DA 帳戶開戶後會默認配置為按 3 月/6 月/9 月/12 月這四個月生成月結單，結單模版為 DA 結單特殊模版。同時支持修改默認配置，修改後取最新配置
 ```
 
-<img src="SCUqbJtrjomxM2xyFXQj2lB6pyg" src-width="3328" src-height="1454" align="center"/>
+<img src="/assets/SCUqbJtrjomxM2xyFXQj2lB6pyg.png" src-width="3328" src-height="1454" align="center"/>
 
-<img src="SLbnbaDrho3JGhxJ4fhjofzzpve" src-width="3346" src-height="1456" align="center"/>
+<img src="/assets/SLbnbaDrho3JGhxJ4fhjofzzpve.png" src-width="3346" src-height="1456" align="center"/>
 
 # 三、市場清算（交易清算）操作說明
 
@@ -481,7 +481,7 @@ DA 帳戶開戶後會默認配置為按 3 月/6 月/9 月/12 月這四個月生�
 點擊導入文件，上傳文件
 ```
 
-<img src="X6rSbtXf1oILLFx1gqTjy5LSpuh" src-width="3578" src-height="1798" align="center"/>
+<img src="/assets/X6rSbtXf1oILLFx1gqTjy5LSpuh.png" src-width="3578" src-height="1798" align="center"/>
 
 ```text
 選擇文件並上傳
@@ -490,13 +490,13 @@ DA 帳戶開戶後會默認配置為按 3 月/6 月/9 月/12 月這四個月生�
 例子：港股 CCASS 交易文件導入（CTF）。市場：選擇港股，文件類型選擇 CTF Trade File 後，上傳文檔
 ```
 
-<img src="JcqwbgIEboVED8xQ7jpjhJwxpgg" src-width="3578" src-height="1798" align="center"/>
+<img src="/assets/JcqwbgIEboVED8xQ7jpjhJwxpgg.png" src-width="3578" src-height="1798" align="center"/>
 
 ```text
 可通過列表區域的狀態字段關注文檔導入和解析狀態。解析成功才算處理完成
 ```
 
-<img src="Aidfb5KFGoEX4PxfI9gjbbMgpRc" src-width="2910" src-height="1548" align="center"/>
+<img src="/assets/Aidfb5KFGoEX4PxfI9gjbbMgpRc.png" src-width="2910" src-height="1548" align="center"/>
 
 ## 清算前準備
 
@@ -507,7 +507,7 @@ DA 帳戶開戶後會默認配置為按 3 月/6 月/9 月/12 月這四個月生�
 市場清算完成交易文件導入，確認當前賬務日期準確後，可點擊執行清算前準備
 ```
 
-<img src="HtaObih5eoDDyHxjP7Ajaevip2e" src-width="2852" src-height="1374" align="center"/>
+<img src="/assets/HtaObih5eoDDyHxjP7Ajaevip2e.png" src-width="2852" src-height="1374" align="center"/>
 
 ```text
 執行後，5 秒內會返回檢查結果。全部檢查都通過的，可以進行後續操作
@@ -522,27 +522,27 @@ DA 帳戶開戶後會默認配置為按 3 月/6 月/9 月/12 月這四個月生�
 部分檢查會提供異常詳情
 ```
 
-<img src="YUyUbZnnxosWGQx3nHwjPLrTpZb" src-width="2852" src-height="1374" align="center"/>
+<img src="/assets/YUyUbZnnxosWGQx3nHwjPLrTpZb.png" src-width="2852" src-height="1374" align="center"/>
 
 ```text
 結算人員核對後，確認有問題的，在完成相關業務操作後，可點擊“重新執行”
 ```
 
-<img src="ZeLDb7Nc5oGwjMx2ZZYjHk5pp4d" src-width="2906" src-height="1558" align="center"/>
+<img src="/assets/ZeLDb7Nc5oGwjMx2ZZYjHk5pp4d.png" src-width="2906" src-height="1558" align="center"/>
 
 ```text
 結算人員核對後，檢查項目可以允許通過的，可點擊手動審核人工通過（需要複核）
 ```
 
-<img src="ZNHfbdw7OovNIsxI2DxjH9PEpme" src-width="2904" src-height="1558" align="center"/>
+<img src="/assets/ZNHfbdw7OovNIsxI2DxjH9PEpme.png" src-width="2904" src-height="1558" align="center"/>
 
 ```text
 複核人員可點擊手動審核（也可直接在工單審核），調出工單審核
 ```
 
-<img src="YvPAbsHdgo3iR8xdafBj3IJrp4e" src-width="2920" src-height="1546" align="center"/>
+<img src="/assets/YvPAbsHdgo3iR8xdafBj3IJrp4e.png" src-width="2920" src-height="1546" align="center"/>
 
-<img src="Z1bHbi4BzopcEkxN5wPj7npJplf" src-width="2920" src-height="1550" align="center"/>
+<img src="/assets/Z1bHbi4BzopcEkxN5wPj7npJplf.png" src-width="2920" src-height="1550" align="center"/>
 
 ```text
 結算人員核對後，因為業務流程有差別，需要永久關閉檢查項目的，可以聯繫客服處理
@@ -551,7 +551,7 @@ DA 帳戶開戶後會默認配置為按 3 月/6 月/9 月/12 月這四個月生�
   當審核通過後， 清算前準備就算完成（文字會提示： 已手動通過）
 ```
 
-<img src="F2l7bOBRuo6qtLx8RKwjHSJopFb" src-width="2852" src-height="1374" align="center"/>
+<img src="/assets/F2l7bOBRuo6qtLx8RKwjHSJopFb.png" src-width="2852" src-height="1374" align="center"/>
 
 ```text
 清算前準備檢查項目
@@ -563,19 +563,19 @@ DA 帳戶開戶後會默認配置為按 3 月/6 月/9 月/12 月這四個月生�
 
 注意： 若有需要可點選 '暫停一鍵清算'，但系統會等當時作業執行完畢後，才開始暫停下一動作（功能鍵會變灰）
 
-<img src="RrkPbbONdoXBvExa78LjLdwtpvf" src-width="2852" src-height="1374" align="center"/>
+<img src="/assets/RrkPbbONdoXBvExa78LjLdwtpvf.png" src-width="2852" src-height="1374" align="center"/>
 
 如果要進行後台補單，或者修正合約的，在清算計費步驟後進行。可在數據同步直接點擊“暫停一鍵清算”
 
-<img src="LLcLbXF3JorES0x4t8PjM9s6pNc" src-width="2852" src-height="1374" align="center"/>
+<img src="/assets/LLcLbXF3JorES0x4t8PjM9s6pNc.png" src-width="2852" src-height="1374" align="center"/>
 
-<img src="N8HabIDYxoYF4LxVmwtju1ShpPc" src-width="2852" src-height="1374" align="center"/>
+<img src="/assets/N8HabIDYxoYF4LxVmwtju1ShpPc.png" src-width="2852" src-height="1374" align="center"/>
 
 ```text
 中間若有作業執行錯誤，則一鍵清算將會暫停，並停在相關錯誤的作業程序上，用戶可以參考錯誤訊息提示進行後續修正處理
 ```
 
-<img src="ApSdbZFH5oLNBGxHaL8jIugIpih" src-width="2908" src-height="1554" align="center"/>
+<img src="/assets/ApSdbZFH5oLNBGxHaL8jIugIpih.png" src-width="2908" src-height="1554" align="center"/>
 
 ```text
 此時可根據業務需要手動點選右側下方相關的作業操作，來檢查或修正紀錄或著 往下一鍵算操作，系統會自動執行下一個作業
@@ -584,7 +584,7 @@ DA 帳戶開戶後會默認配置為按 3 月/6 月/9 月/12 月這四個月生�
 注意： 在一鍵清算過程中，可以依賴系統的一鍵清算操作（自動執行所有作業），也可以自行 點選作業自行操作
 ```
 
-<img src="TZtRbusJao9JVTxlvBdjQ9rHpTf" src-width="2922" src-height="1556" align="center"/>
+<img src="/assets/TZtRbusJao9JVTxlvBdjQ9rHpTf.png" src-width="2922" src-height="1556" align="center"/>
 
 ### 數據同步
 
@@ -601,7 +601,7 @@ DA 帳戶開戶後會默認配置為按 3 月/6 月/9 月/12 月這四個月生�
 交易對帳失敗的，可快速跳轉到交易對賬界面（清算管理-市場清算-清算檢查-交易對賬）查詢結果
 ```
 
-<img src="Z8fabB0Yuo1N1ExO5DBjvaHFpRU" src-width="2852" src-height="1374" align="center"/>
+<img src="/assets/Z8fabB0Yuo1N1ExO5DBjvaHFpRU.png" src-width="2852" src-height="1374" align="center"/>
 
 <b>對帳結果查詢</b>
 
@@ -620,7 +620,7 @@ DA 帳戶開戶後會默認配置為按 3 月/6 月/9 月/12 月這四個月生�
 
 參考圖示如下：
 
-<img src="O6edbvnvOoVxX8xEsGQjUvgZpoh" src-width="3566" src-height="1732" align="center"/>
+<img src="/assets/O6edbvnvOoVxX8xEsGQjUvgZpoh.png" src-width="3566" src-height="1732" align="center"/>
 
 <b>特殊場景手動通過</b>
 
@@ -634,7 +634,7 @@ DA 帳戶開戶後會默認配置為按 3 月/6 月/9 月/12 月這四個月生�
 按系統數據處理：在“檢查結果”（清算管理-市場清算-清算檢查-檢查結果）中，將對應的檢查結果改為“通過”，然後重新點擊清算前檢查
 ```
 
-<img src="UITobHkrgoWHxUxz7uYjrrxlpFb" src-width="2920" src-height="1552" align="center"/>
+<img src="/assets/UITobHkrgoWHxUxz7uYjrrxlpFb.png" src-width="2920" src-height="1552" align="center"/>
 
 ### 清算計費
 
@@ -716,7 +716,7 @@ DA 帳戶開戶後會默認配置為按 3 月/6 月/9 月/12 月這四個月生�
 結單後可通過報表或者結單進行檢查
 ```
 
-<img src="ZOtJbrihAoaR4HxCyRkjVfAqpJg" src-width="2852" src-height="1374" align="center"/>
+<img src="/assets/ZOtJbrihAoaR4HxCyRkjVfAqpJg.png" src-width="2852" src-height="1374" align="center"/>
 
 ### 數據匯總
 
@@ -742,7 +742,7 @@ DA 帳戶開戶後會默認配置為按 3 月/6 月/9 月/12 月這四個月生�
 清算中檢查手動通過的操作方式類似交易對帳
 ```
 
-<img src="IIl4bybeiohDWdxgh81jG8zCpbh" src-width="2846" src-height="1418" align="center"/>
+<img src="/assets/IIl4bybeiohDWdxgh81jG8zCpbh.png" src-width="2846" src-height="1418" align="center"/>
 
 ### 資金清算
 
@@ -764,23 +764,23 @@ DA 帳戶開戶後會默認配置為按 3 月/6 月/9 月/12 月這四個月生�
 
 ### 結單生成
 
-<img src="Mr6Hbqu6kotFidxH1majM1vwpcb" src-width="3364" src-height="1452" align="center"/>
+<img src="/assets/Mr6Hbqu6kotFidxH1majM1vwpcb.png" src-width="3364" src-height="1452" align="center"/>
 
-<img src="AWBybDQiMoPG3uxBnnYj7BrVpOf" src-width="3304" src-height="1452" align="center"/>
+<img src="/assets/AWBybDQiMoPG3uxBnnYj7BrVpOf.png" src-width="3304" src-height="1452" align="center"/>
 
 ```text
 可以點選右側記錄區對結單【重發】或【下載】
 ```
 
-<img src="DpO5b8NN2onG3Vxiv8QjKEpopvc" src-width="3360" src-height="1460" align="center"/>
+<img src="/assets/DpO5b8NN2onG3Vxiv8QjKEpopvc.png" src-width="3360" src-height="1460" align="center"/>
 
 ```text
 也可產生一份臨時結單，在臨時結單視窗輸入對應客戶與結單日期。·臨時結單支持跨月，支持最早時間 1 年、最大時間跨度 3 個月的臨時結單
 ```
 
-<img src="YRywbJaAko6YjIxrYbBjHoYCpjD" src-width="3340" src-height="1368" align="center"/>
+<img src="/assets/YRywbJaAko6YjIxrYbBjHoYCpjD.png" src-width="3340" src-height="1368" align="center"/>
 
-<img src="UIbUbwMLdo9sgjxViURjuZA5p8c" src-width="3362" src-height="1368" align="center"/>
+<img src="/assets/UIbUbwMLdo9sgjxViURjuZA5p8c.png" src-width="3362" src-height="1368" align="center"/>
 
 ### 日切
 
@@ -803,9 +803,9 @@ T+2日的早上可導出ATI交收指令，上傳到CCASS
 支持導出HK、SZ、SH多市場
 ```
 
-<img src="Nj0BbBOcRoBKNfxnS5jjXNwGpGd" src-width="3574" src-height="1774" align="center"/>
+<img src="/assets/Nj0BbBOcRoBKNfxnS5jjXNwGpGd.png" src-width="3574" src-height="1774" align="center"/>
 
-<img src="RDzgbBXUBouFPGxQbJvjCOm9pUd" src-width="3574" src-height="1774" align="center"/>
+<img src="/assets/RDzgbBXUBouFPGxQbJvjCOm9pUd.png" src-width="3574" src-height="1774" align="center"/>
 
 # 六、持倉對帳
 
@@ -813,7 +813,7 @@ T+2日的早上可導出ATI交收指令，上傳到CCASS
 在文件導入界面可導入持倉文件，部分文件可直接系統觸發對帳處理
 ```
 
-<img src="XkeXb5IOUoxYihxJFMVjqmsdpMe" src-width="3350" src-height="1456" align="center"/>
+<img src="/assets/XkeXb5IOUoxYihxJFMVjqmsdpMe.png" src-width="3350" src-height="1456" align="center"/>
 
 ```text
 導入後並觸發系統對帳處理後，對帳結果為進行中
@@ -822,13 +822,13 @@ T+2日的早上可導出ATI交收指令，上傳到CCASS
 對帳任務執行完畢後，對帳結果為不平帳或平帳
 ```
 
-<img src="OqVSb41LyojBLDxiAwrjk8RTpUz" src-width="2930" src-height="1554" align="center"/>
+<img src="/assets/OqVSb41LyojBLDxiAwrjk8RTpUz.png" src-width="2930" src-height="1554" align="center"/>
 
 ```text
 點擊重新對帳也可（重新）觸發系統對帳。支持觸發歷史日期對帳
 ```
 
-<img src="LkgWbAr8lonHvYxWN8AjRl4tpuh" src-width="2914" src-height="1526" align="center"/>
+<img src="/assets/LkgWbAr8lonHvYxWN8AjRl4tpuh.png" src-width="2914" src-height="1526" align="center"/>
 
 # 七、非交易流水編輯日期
 
@@ -845,19 +845,19 @@ T+2日的早上可導出ATI交收指令，上傳到CCASS
 資金和持倉流水需要在不同頁面 Tab 上操作，找到流水紀錄點擊編輯
 ```
 
-<img src="UJZsbxsDXo8snixzngDjLMwRp3c" src-width="3578" src-height="1798" align="center"/>
+<img src="/assets/UJZsbxsDXo8snixzngDjLMwRp3c.png" src-width="3578" src-height="1798" align="center"/>
 
 ```text
 輸入需要處理的日期
 ```
 
-<img src="R1iybyxYQo6aEDxxsC0jV0Otpxg" src-width="3368" src-height="1308" align="center"/>
+<img src="/assets/R1iybyxYQo6aEDxxsC0jV0Otpxg.png" src-width="3368" src-height="1308" align="center"/>
 
 ```text
 觀察編輯號的帳務日期，看是否生效
 ```
 
-<img src="E4aSbH12sos7QWxmYtgjT9hnp8c" src-width="3368" src-height="1308" align="center"/>
+<img src="/assets/E4aSbH12sos7QWxmYtgjT9hnp8c.png" src-width="3368" src-height="1308" align="center"/>
 
 ```text
 在日終任務中重新點擊數據匯總
@@ -869,7 +869,7 @@ T+2日的早上可導出ATI交收指令，上傳到CCASS
 先選中流水紀錄，然後點擊批量編輯帳務日期
 ```
 
-<img src="BG2UbWLWTo6CPHx1AISjB4Gqpyh" src-width="3344" src-height="1456" align="center"/>
+<img src="/assets/BG2UbWLWTo6CPHx1AISjB4Gqpyh.png" src-width="3344" src-height="1456" align="center"/>
 
 ```text
 在日終任務中重新點擊數據匯總
@@ -881,7 +881,7 @@ T+2日的早上可導出ATI交收指令，上傳到CCASS
 注意：批量調整日期的，需要事先確認該業務碼是否支持編輯，邊界後需要在頁面觀察最終結果
 ```
 
-<img src="VXQsbHMQKoWXCwxWFCYjePIcpbh" src-width="3356" src-height="1344" align="center"/>
+<img src="/assets/VXQsbHMQKoWXCwxWFCYjePIcpbh.png" src-width="3356" src-height="1344" align="center"/>
 
 ## 更新數據
 
@@ -889,7 +889,7 @@ T+2日的早上可導出ATI交收指令，上傳到CCASS
 流水同步為準實時。提交後，可刷新當前賬務日期的全部數據。
 ```
 
-<img src="Wechbd70Aoeu9wx4svcjg1VIpHd" src-width="3578" src-height="1798" align="center"/>
+<img src="/assets/Wechbd70Aoeu9wx4svcjg1VIpHd.png" src-width="3578" src-height="1798" align="center"/>
 
 # 八、後台客戶<b>合約補單和券商快捷補單</b>
 
@@ -912,27 +912,27 @@ T+2日的早上可導出ATI交收指令，上傳到CCASS
 點擊新建客戶補單
 ```
 
-<img src="L2qsbE037oQI3Jxhx34j8T3DpRb" src-width="3008" src-height="1494" align="center"/>
+<img src="/assets/L2qsbE037oQI3Jxhx34j8T3DpRb.png" src-width="3008" src-height="1494" align="center"/>
 
 ```text
 先補充基礎信息，系統會自動進行部分字段的試算（可人工進一步修改）
 ```
 
-<img src="IIgnb7WVjo1I7txjmTJjjvyhpc7" src-width="3008" src-height="1494" align="center"/>
+<img src="/assets/IIgnb7WVjo1I7txjmTJjjvyhpc7.png" src-width="3008" src-height="1494" align="center"/>
 
 ```text
 系統已支持歷史交易日補單（最多前 5 個交易日），補單後交易日期為歷史日期，帳務日期為當日
 ```
 
-<img src="Ik1IbtQVSoeSVOx4KRtj2PpEpOd" src-width="3008" src-height="1594" align="center"/>
+<img src="/assets/Ik1IbtQVSoeSVOx4KRtj2PpEpOd.png" src-width="3008" src-height="1594" align="center"/>
 
 ```text
 提交後數據有錯誤，可進一步編輯後台合約的基礎信息
 ```
 
-<img src="VOesbzBaeolHLPxeJGwjPCqbpJH" src-width="3008" src-height="1494" align="center"/>
+<img src="/assets/VOesbzBaeolHLPxeJGwjPCqbpJH.png" src-width="3008" src-height="1494" align="center"/>
 
-<img src="C6ZKb19QnouW3xxJnX2jcPyXprh" src-width="3008" src-height="1494" align="center"/>
+<img src="/assets/C6ZKb19QnouW3xxJnX2jcPyXprh.png" src-width="3008" src-height="1494" align="center"/>
 
 點擊計費可以自動計算費用
 
@@ -940,13 +940,13 @@ T+2日的早上可導出ATI交收指令，上傳到CCASS
 
 注意：只要操作過計費、添加、編輯的，即使刪除了全部費用，在清算計費步驟中不會再計算費用；如果在費用信息頁面未進行過任何操作的，在清算計費步驟會自動基於配置的規則計算費用
 
-<img src="Z5tSbfc6XoeVT8xL1WdjTOSWp1d" src-width="3008" src-height="1494" align="center"/>
+<img src="/assets/Z5tSbfc6XoeVT8xL1WdjTOSWp1d.png" src-width="3008" src-height="1494" align="center"/>
 
 ```text
 若商品是 OTC 產品或者交易通道未進行系統對接的，則結算渠道要對應選擇 OTC 結算渠道
 ```
 
-<img src="VukrbjAnSo56XAxSKjkjV5RxpYe" src-width="3008" src-height="1594" align="center"/>
+<img src="/assets/VukrbjAnSo56XAxSKjkjV5RxpYe.png" src-width="3008" src-height="1594" align="center"/>
 
 ```text
 OTC 補單系統會按大賬號自動計算託管商、子倉
@@ -955,7 +955,7 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 託管商、子倉可進一步編輯，詳見倉位信息查詢和編輯
 ```
 
-<img src="Tj0NbNVPfooxGLxsqOVj5nQYpNb" src-width="3008" src-height="1494" align="center"/>
+<img src="/assets/Tj0NbNVPfooxGLxsqOVj5nQYpNb.png" src-width="3008" src-height="1494" align="center"/>
 
 ## <b>券商快捷補單</b>
 
@@ -966,7 +966,7 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 注意：券商快捷補单僅能查詢结算渠道为 OTC 的數據，生成的數據用于清算前檢查步骤的交易對帳
 ```
 
-<img src="UaHvb5ejJoh7fUxBvPOjrTsOpPc" src-width="2898" src-height="1520" align="center"/>
+<img src="/assets/UaHvb5ejJoh7fUxBvPOjrTsOpPc.png" src-width="2898" src-height="1520" align="center"/>
 
 <b>機構合约（代理商合约）提前試算</b>
 
@@ -974,7 +974,7 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 選擇所有篩選條件，點擊試算機構費用並刷新，系統會自動計算代理商費用（詳見後文機構合約操作說明）
 ```
 
-<img src="FiFIbUVRQo9sC0xUxOJj47BzpEc" src-width="2914" src-height="1098" align="center"/>
+<img src="/assets/FiFIbUVRQo9sC0xUxOJj47BzpEc.png" src-width="2914" src-height="1098" align="center"/>
 
 <b>更新對手方文件</b>
 
@@ -985,21 +985,21 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 操作人員也可以先點擊編輯，臨時調整數據。注意：此編輯不能保存在數據庫中，僅配合“更新對手文件”按鈕使用
 ```
 
-<img src="CmmHbiwn3o1r2ExtyGMj5QODpRh" src-width="2926" src-height="1554" align="center"/>
+<img src="/assets/CmmHbiwn3o1r2ExtyGMj5QODpRh.png" src-width="2926" src-height="1554" align="center"/>
 
 ```text
 核對無誤后，200 條以內數據，可點擊更新對手文件，該文件可用於清算前檢查的交易對賬
 ```
 
-<img src="IdHRbtDOiozpfxxU5X4jnWU1pTf" src-width="2922" src-height="848" align="center"/>
+<img src="/assets/IdHRbtDOiozpfxxU5X4jnWU1pTf.png" src-width="2922" src-height="848" align="center"/>
 
 ```text
 200 條以上的數據，可下載模板文件，編輯後在清算前檢查步驟前導入文件
 ```
 
-<img src="B9s4bXXWpoEMdQxq1opjL109pqJ" src-width="2920" src-height="838" align="center"/>
+<img src="/assets/B9s4bXXWpoEMdQxq1opjL109pqJ.png" src-width="2920" src-height="838" align="center"/>
 
-<img src="FrILbtKEgolzqaxbL4tj5cUJpIh" src-width="2904" src-height="1542" align="center"/>
+<img src="/assets/FrILbtKEgolzqaxbL4tj5cUJpIh.png" src-width="2904" src-height="1542" align="center"/>
 
 # 九、<b>查詢和編輯前台交易合約</b>
 
@@ -1016,9 +1016,9 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 前台合約的其它字段如果有問題，需要先修改前台合約數據，再依次執行清算前檢查和清算計費步驟
 ```
 
-<img src="NZKzbAmf0oKaFJxRlmTj0u8fpbg" src-width="2456" src-height="1242" align="center"/>
+<img src="/assets/NZKzbAmf0oKaFJxRlmTj0u8fpbg.png" src-width="2456" src-height="1242" align="center"/>
 
-<img src="IhVmbEayrofpTAxVsFrjA71jplb" src-width="2484" src-height="1530" align="center"/>
+<img src="/assets/IhVmbEayrofpTAxVsFrjA71jplb.png" src-width="2484" src-height="1530" align="center"/>
 
 ```text
 進入詳情頁直接展示含交易日期、交收日期、特殊收費條件在內的基本信息
@@ -1027,7 +1027,7 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
     數據來源是“交易”的爲前台合約
 ```
 
-<img src="IXXzbJk09owT47xhO6njZWucple" src-width="2486" src-height="1544" align="center"/>
+<img src="/assets/IXXzbJk09owT47xhO6njZWucple.png" src-width="2486" src-height="1544" align="center"/>
 
 ## 結算幣種編輯
 
@@ -1035,7 +1035,7 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 在基礎信息點擊編輯
 ```
 
-<img src="YlAXbgAv0ofvmTxsK8OjibK2pnf" src-width="2486" src-height="1502" align="center"/>
+<img src="/assets/YlAXbgAv0ofvmTxsK8OjibK2pnf.png" src-width="2486" src-height="1502" align="center"/>
 
 ```text
 同時修改結算幣種和匯率並提交
@@ -1047,7 +1047,7 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 系統會按結算幣種進行扣費和交收
 ```
 
-<img src="G0rzbmU37o8EWSxBaOzjIFMbpfb" src-width="2512" src-height="1558" align="center"/>
+<img src="/assets/G0rzbmU37o8EWSxBaOzjIFMbpfb.png" src-width="2512" src-height="1558" align="center"/>
 
 ## 成交紀錄查詢
 
@@ -1055,7 +1055,7 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 點擊成交記錄可展示成交記錄
 ```
 
-<img src="Upltb7IMJon3N1xgHymjkIJQpvT" src-width="2480" src-height="1542" align="center"/>
+<img src="/assets/Upltb7IMJon3N1xgHymjkIJQpvT.png" src-width="2480" src-height="1542" align="center"/>
 
 ## IBOND 累計利息編輯
 
@@ -1063,7 +1063,7 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 在成交記錄中，可以點擊編輯，修改累計利息
 ```
 
-<img src="Ugfkb5ib8o9adKxSxe2jM85xp6d" src-width="2500" src-height="1556" align="center"/>
+<img src="/assets/Ugfkb5ib8o9adKxSxe2jM85xp6d.png" src-width="2500" src-height="1556" align="center"/>
 
 ## 费用查詢和編輯
 
@@ -1071,23 +1071,23 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 點擊費用信息可展示收費明細
 ```
 
-<img src="B4mybwFc5olSd6xAro5jCbhNpOe" src-width="2488" src-height="1526" align="center"/>
+<img src="/assets/B4mybwFc5olSd6xAro5jCbhNpOe.png" src-width="2488" src-height="1526" align="center"/>
 
 點擊試算會重算全部費用
 
-<img src="Edd1bOtipoqcoRxB1kYjs8imphg" src-width="2480" src-height="1536" align="center"/>
+<img src="/assets/Edd1bOtipoqcoRxB1kYjs8imphg.png" src-width="2480" src-height="1536" align="center"/>
 
 點擊添加可以增加費用，增加收費類型不能和已有的重複
 
-<img src="KTDZbUnkSooZ2cxP82Cj549cpHv" src-width="2894" src-height="1548" align="center"/>
+<img src="/assets/KTDZbUnkSooZ2cxP82Cj549cpHv.png" src-width="2894" src-height="1548" align="center"/>
 
 點擊刪除可以刪除費用
 
-<img src="BH0xbSykEobJ5pxTJ7nj8LKhpEf" src-width="2892" src-height="1538" align="center"/>
+<img src="/assets/BH0xbSykEobJ5pxTJ7nj8LKhpEf.png" src-width="2892" src-height="1538" align="center"/>
 
 點擊編輯可以修改費用
 
-<img src="Zgfoblt1ioAnnjxysa5jiYe3pSf" src-width="2916" src-height="1538" align="center"/>
+<img src="/assets/Zgfoblt1ioAnnjxysa5jiYe3pSf.png" src-width="2916" src-height="1538" align="center"/>
 
 ## 倉位信息查詢和編輯
 
@@ -1095,13 +1095,13 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 點擊倉位信息可查詢倉位數據
 ```
 
-<img src="I6T3bJRpbofmP1xBmUPjUAQGp3g" src-width="2900" src-height="1552" align="center"/>
+<img src="/assets/I6T3bJRpbofmP1xBmUPjUAQGp3g.png" src-width="2900" src-height="1552" align="center"/>
 
 ```text
 點擊編輯可修改託管商和子倉
 ```
 
-<img src="XuOEbFzP3oOqoixmqjUjTJospNg" src-width="2914" src-height="1544" align="center"/>
+<img src="/assets/XuOEbFzP3oOqoixmqjUjTJospNg.png" src-width="2914" src-height="1544" align="center"/>
 
 # 十、提前交收
 
@@ -1115,13 +1115,13 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 點選【提前交收】，輸入欲提早交收的市場（可多選）
 ```
 
-<img src="N7epb8y9ioHpHdxtcIWjxYw5p4c" src-width="3364" src-height="1450" align="center"/>
+<img src="/assets/N7epb8y9ioHpHdxtcIWjxYw5p4c.png" src-width="3364" src-height="1450" align="center"/>
 
 ```text
 操作後可觀察交收批次是否處理完畢
 ```
 
-<img src="JGyabAg9soU17Sxma5HjgmnUpvc" src-width="2516" src-height="740" align="center"/>
+<img src="/assets/JGyabAg9soU17Sxma5HjgmnUpvc.png" src-width="2516" src-height="740" align="center"/>
 
 # 十一、倉位調整
 
@@ -1135,19 +1135,19 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 查詢出對應的客戶記錄後，在右側記錄區點擊【**編輯倉位**】
 ```
 
-<img src="R7uxb1KLVoqwwtxuMgLj4KQbpTd" src-width="2924" src-height="1546" align="center"/>
+<img src="/assets/R7uxb1KLVoqwwtxuMgLj4KQbpTd.png" src-width="2924" src-height="1546" align="center"/>
 
 ```text
 此處根據實際數據來調整子倉位置（子倉位置之後必須和持倉保持一致）
 ```
 
-<img src="RRADbOlM0o0GYSx19hEjr28VpXc" src-width="2914" src-height="1538" align="center"/>
+<img src="/assets/RRADbOlM0o0GYSx19hEjr28VpXc.png" src-width="2914" src-height="1538" align="center"/>
 
 ```text
 調整後會在倉位流水頁面（Tab 頁籤）生成一條調整記錄
 ```
 
-<img src="Wt7AbTjsnoHsD3xR1lLj3uWlpIc" src-width="2892" src-height="1022" align="center"/>
+<img src="/assets/Wt7AbTjsnoHsD3xR1lLj3uWlpIc.png" src-width="2892" src-height="1022" align="center"/>
 
 ## 内部轉倉
 
@@ -1155,13 +1155,13 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 查詢出對應的客戶記錄後，在右側記錄區點擊【**內部轉倉**】
 ```
 
-<img src="HOOpbSuZ3oErUxxT3vMjzynWpCh" src-width="2920" src-height="1548" align="center"/>
+<img src="/assets/HOOpbSuZ3oErUxxT3vMjzynWpCh.png" src-width="2920" src-height="1548" align="center"/>
 
 ```text
 調整後會在倉位流水頁面生成兩條調整記錄
 ```
 
-<img src="QfY6bJ391oFYHwxSOBBjQO7OpPe" src-width="2922" src-height="1236" align="center"/>
+<img src="/assets/QfY6bJ391oFYHwxSOBBjQO7OpPe.png" src-width="2922" src-height="1236" align="center"/>
 
 ## 批量調整
 
@@ -1169,9 +1169,9 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 可以根據事先下載模板，進行批量調倉
 ```
 
-<img src="LyPpbopJwojZGnxlFj2jnJlVpQi" src-width="2052" src-height="640" align="center"/>
+<img src="/assets/LyPpbopJwojZGnxlFj2jnJlVpQi.png" src-width="2052" src-height="640" align="center"/>
 
-<img src="C6JqbEmCLoYhVkxIOJHjHHkHpfb" src-width="2926" src-height="1556" align="center"/>
+<img src="/assets/C6JqbEmCLoYhVkxIOJHjHHkHpfb.png" src-width="2926" src-height="1556" align="center"/>
 
 # 十二、融資利息調整
 
@@ -1187,15 +1187,15 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
     抵扣後金額=抵扣前金額 + 抵扣金額
 ```
 
-<img src="YS9cbDQZIoB3tKxe2cHj2gZGpf0" src-width="2910" src-height="1544" align="center"/>
+<img src="/assets/YS9cbDQZIoB3tKxe2cHj2gZGpf0.png" src-width="2910" src-height="1544" align="center"/>
 
 ```text
 點擊抵扣後金額可查詢每日的融資利息明細
 ```
 
-<img src="K3qrblWKwod0anxJv1UjPnqQpuh" src-width="2910" src-height="1554" align="center"/>
+<img src="/assets/K3qrblWKwod0anxJv1UjPnqQpuh.png" src-width="2910" src-height="1554" align="center"/>
 
-<img src="DQaQbx5xToT3sgxLDuhjCroCpKh" src-width="2898" src-height="1522" align="center"/>
+<img src="/assets/DQaQbx5xToT3sgxLDuhjCroCpKh.png" src-width="2898" src-height="1522" align="center"/>
 
 ## 融資利息調整
 
@@ -1203,37 +1203,37 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 
 點擊調整可調整融資利息
 
-<img src="Un3sbp1c7o5LVcxifFAjRc4hp6e" src-width="2910" src-height="1528" align="center"/>
+<img src="/assets/Un3sbp1c7o5LVcxifFAjRc4hp6e.png" src-width="2910" src-height="1528" align="center"/>
 
 ```text
 按本金調整：系統將根據輸入的本金自動計算需要調整的利息
 ```
 
-<img src="MqvMbWimaoIYAdx6NaKjK78rpTf" src-width="2914" src-height="1548" align="center"/>
+<img src="/assets/MqvMbWimaoIYAdx6NaKjK78rpTf.png" src-width="2914" src-height="1548" align="center"/>
 
 ```text
 按結果調整：系統將根據輸入的該日利息總額，自動計算需要調整的利息
 ```
 
-<img src="CxVCbOPQGoynQtxwlGHjV5lwp4c" src-width="2928" src-height="1558" align="center"/>
+<img src="/assets/CxVCbOPQGoynQtxwlGHjV5lwp4c.png" src-width="2928" src-height="1558" align="center"/>
 
 ```text
 按發生額調整：系統將根據輸入額，調整利息。按發生額調整支持同時修改多天
 ```
 
-<img src="TGpBbxMEGowLJmxohSojt2ZGpBh" src-width="3008" src-height="1494" align="center"/>
+<img src="/assets/TGpBbxMEGowLJmxohSojt2ZGpBh.png" src-width="3008" src-height="1494" align="center"/>
 
 ```text
 調整的流水可在**差錯流水**頁面查詢
 ```
 
-<img src="IiJtbeKYToaAmlxzs1Ajv7vgplC" src-width="2482" src-height="1406" align="center"/>
+<img src="/assets/IiJtbeKYToaAmlxzs1Ajv7vgplC.png" src-width="2482" src-height="1406" align="center"/>
 
 ```text
 特殊情況，未生成融資利息帳單的，可先新增帳單，再調整
 ```
 
-<img src="A1GKbX6iSoBzyaxhBUQj62mGpDb" src-width="2912" src-height="1550" align="center"/>
+<img src="/assets/A1GKbX6iSoBzyaxhBUQj62mGpDb.png" src-width="2912" src-height="1550" align="center"/>
 
 ## 批量調整
 
@@ -1241,7 +1241,7 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 可按照發生額調整進行批量處理
 ```
 
-<img src="XcSnb7pU6o9kOXxMAoBj5L9Yphe" src-width="3578" src-height="1798" align="center"/>
+<img src="/assets/XcSnb7pU6o9kOXxMAoBj5L9Yphe.png" src-width="3578" src-height="1798" align="center"/>
 
 ## 提前結算
 
@@ -1252,7 +1252,7 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 篩選客戶，點擊提前結算
 ```
 
-<img src="JliqbdCKyoxzLzx5h4NjNUnxpS2" src-width="2900" src-height="1546" align="center"/>
+<img src="/assets/JliqbdCKyoxzLzx5h4NjNUnxpS2.png" src-width="2900" src-height="1546" align="center"/>
 
 # 十三、收盤價临时编辑
 
@@ -1266,13 +1266,13 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 前置条件：已經完成日終任務-清算交收/數據匯總 這個流程節點
 ```
 
-<img src="Jk3wboeTFokkc5xf2F4jkrcjpsh" src-width="3362" src-height="1342" align="center"/>
+<img src="/assets/Jk3wboeTFokkc5xf2F4jkrcjpsh.png" src-width="3362" src-height="1342" align="center"/>
 
 ```text
 需要臨時修改清算收盤價的可點擊編輯
 ```
 
-<img src="O4cYbp9odovczfxpktNjNYiOpSg" src-width="3460" src-height="1555" align="center"/>
+<img src="/assets/O4cYbp9odovczfxpktNjNYiOpSg.png" src-width="3460" src-height="1555" align="center"/>
 
 ```text
 修改收盤價並提交
@@ -1302,42 +1302,42 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 點擊新建清算撤銷
 ```
 
-<img src="KfkMbOXDJoJOhPx3ANrjqagipgd" src-width="3578" src-height="1798" align="center"/>
+<img src="/assets/KfkMbOXDJoJOhPx3ANrjqagipgd.png" src-width="3578" src-height="1798" align="center"/>
 
 ```text
 根據撤銷場景選擇實際項目
 ```
 
-<img src="IDp1bs1Dio5cLFxponcjUdeXpPg" src-width="3578" src-height="1798" align="center"/>
+<img src="/assets/IDp1bs1Dio5cLFxponcjUdeXpPg.png" src-width="3578" src-height="1798" align="center"/>
 
 ```text
 提交後，可在列表頁關注撤銷
 ```
 
-<img src="JPDIbECVNo59KNxI2fSjZoWlpQc" src-width="3578" src-height="1798" align="center"/>
+<img src="/assets/JPDIbECVNo59KNxI2fSjZoWlpQc.png" src-width="3578" src-height="1798" align="center"/>
 
 - 场景：日切點後調賬，下一日的流水改到當日
 日切點後調賬，當日的流水調整到下日
 資金清算後，調整收盤價
-    <img src="M83MbqSCQohXA8xuvOqjaXlKpLe" src-width="3020" src-height="1452" align="center"/>
+    <img src="/assets/M83MbqSCQohXA8xuvOqjaXlKpLe.png" src-width="3020" src-height="1452" align="center"/>
     - 清算撤銷表單
 
 - 场景：日切前發現計費（合約收費、補單）有問題需要調整
-    <img src="Eo02bFIC7oKpL3xKuBzjhsPHpXd" src-width="3020" src-height="1452" align="center"/>
+    <img src="/assets/Eo02bFIC7oKpL3xKuBzjhsPHpXd.png" src-width="3020" src-height="1452" align="center"/>
     - 清算撤銷表單
 
 - 场景：月底融資利息結算異常
 例子：某客戶的融資利息需要調整後再結算
-    <img src="Iv18baA1UoqaNAxmrcJjcMiZpwA" src-width="3020" src-height="1452" align="center"/>
+    <img src="/assets/Iv18baA1UoqaNAxmrcJjcMiZpwA.png" src-width="3020" src-height="1452" align="center"/>
     - 清算撤銷表單
 
 - 场景：颱風天已經進行提前交收，需要撤銷
-    <img src="HqHpbvfR9o7rF2xUTq7jDaU0p5e" src-width="3020" src-height="1452" align="center"/>
+    <img src="/assets/HqHpbvfR9o7rF2xUTq7jDaU0p5e.png" src-width="3020" src-height="1452" align="center"/>
     - 清算撤銷表單
 
 - 场景：日切后發現計費有問題需要調整
 量大的券商建議聯繫客服技術介入
-    <img src="HZnybtOcloC87Txdp5ij0M8pp4f" src-width="3020" src-height="1452" align="center"/>
+    <img src="/assets/HZnybtOcloC87Txdp5ij0M8pp4f.png" src-width="3020" src-height="1452" align="center"/>
     - 清算撤銷表單
 
 # 十五、颱風天處理
@@ -1364,7 +1364,7 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
     提交後：所有待交收的貨（錢）都會延後一個帳務日期進行處理，點擊完「確定」後更新版面
 ```
 
-<img src="AMGtbK4fFoFivSxWKkjjXUC8pQd" src-width="3578" src-height="1798" align="center"/>
+<img src="/assets/AMGtbK4fFoFivSxWKkjjXUC8pQd.png" src-width="3578" src-height="1798" align="center"/>
 
 ```text
 在日切點前需要操作日終的，日終任務點擊提前日切。最終支持在下午2點半後操作。推薦在下一日進行操作
@@ -1373,13 +1373,13 @@ OTC 補單系統會按大賬號自動計算託管商、子倉
 注意：提前日切按鈕需要配置工單審核來操作
 ```
 
-<img src="UsRzbbbHKopxnJxkr6xjjQA7psf" src-width="3332" src-height="1192" align="center"/>
+<img src="/assets/UsRzbbbHKopxnJxkr6xjjQA7psf.png" src-width="3332" src-height="1192" align="center"/>
 
-<img src="UaBAbVOi2ovr2dxJOj5jbZnepjb" src-width="3368" src-height="1172" align="center"/>
+<img src="/assets/UaBAbVOi2ovr2dxJOj5jbZnepjb.png" src-width="3368" src-height="1172" align="center"/>
 
 ## 颱風天半日市
 
 上午有交易，下午沒交易的，選擇錢延後
 
-<img src="Ik0AboF3oougw2xFy3Djj6ifpyc" src-width="1280" src-height="643" align="center"/>
+<img src="/assets/Ik0AboF3oougw2xFy3Djj6ifpyc.jpeg" src-width="1280" src-height="643" align="center"/>
 

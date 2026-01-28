@@ -39,11 +39,11 @@ TM包含牛熊證回收（含剩餘價值）、私有化、債券回收前置條
 系統將基於導入的05文件，在登記日生成有持倉的公司行動
 ```
 
-<img src="ZIzubmfteoTylrxn1C3jizMupW4" src-width="3570" src-height="1780" align="center"/>
+<img src="/assets/ZIzubmfteoTylrxn1C3jizMupW4.png" src-width="3570" src-height="1780" align="center"/>
 
-<img src="QH14byQ4XoxYxcxGzgNj1VudpLb" src-width="3570" src-height="1780" align="center"/>
+<img src="/assets/QH14byQ4XoxYxcxGzgNj1VudpLb.png" src-width="3570" src-height="1780" align="center"/>
 
-<img src="I0oqbWAROoB4wGx6UPXjF5Q7pCg" src-width="3570" src-height="1780" align="center"/>
+<img src="/assets/I0oqbWAROoB4wGx6UPXjF5Q7pCg.png" src-width="3570" src-height="1780" align="center"/>
 
 ## <b>2. 登記</b>
 
@@ -57,15 +57,15 @@ TM包含牛熊證回收（含剩餘價值）、私有化、債券回收前置條
 點擊【登記】。路径：公司行动-公司行动-详情
 ```
 
-<img src="TmiKbaSGHoJKbixbCrHj1uqIpud" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/TmiKbaSGHoJKbixbCrHj1uqIpud.png" src-width="3548" src-height="1806" align="center"/>
 
-<img src="JNXCbMLu4oqIcHxCcGpj82hMpHh" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/JNXCbMLu4oqIcHxCcGpj82hMpHh.png" src-width="3548" src-height="1806" align="center"/>
 
-<img src="DuGlbeXjqooctbxtFq3jSbTvpcf" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/DuGlbeXjqooctbxtFq3jSbTvpcf.png" src-width="3548" src-height="1806" align="center"/>
 
-<img src="JYBrbmTMQoUbY4x77lyjsTXhpKg" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/JYBrbmTMQoUbY4x77lyjsTXhpKg.png" src-width="3548" src-height="1806" align="center"/>
 
-<img src="BxuzbHsD3oZ5UexckmYjVB5qp1c" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/BxuzbHsD3oZ5UexckmYjVB5qp1c.png" src-width="3548" src-height="1806" align="center"/>
 
 ## <b>3. 尾差處理</b>
 
@@ -75,11 +75,11 @@ TM包含牛熊證回收（含剩餘價值）、私有化、債券回收前置條
 
 <b>點擊尾差調整</b>
 
-<img src="J1DbbQtL2oRgmOx1iHVjYrHfp0d" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/J1DbbQtL2oRgmOx1iHVjYrHfp0d.png" src-width="3548" src-height="1806" align="center"/>
 
-<img src="TsTjbkpRToLbg1xm4phjQ4vopfg" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/TsTjbkpRToLbg1xm4phjQ4vopfg.png" src-width="3548" src-height="1806" align="center"/>
 
-<img src="MEdTbQDNQoOcchxY8dmjXWfppnh" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/MEdTbQDNQoOcchxY8dmjXWfppnh.png" src-width="3548" src-height="1806" align="center"/>
 
 ## 4.<b>執行</b>
 
@@ -92,19 +92,19 @@ TM包含牛熊證回收（含剩餘價值）、私有化、債券回收前置條
 
 <b>點擊提交執行</b>
 
-<img src="TBpAbxuKco8BVxxoLW8juAXppHf" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/TBpAbxuKco8BVxxoLW8juAXppHf.png" src-width="3548" src-height="1806" align="center"/>
 
-<img src="H2itbNDjmo2sTkxinwCjcXm2pTe" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/H2itbNDjmo2sTkxinwCjcXm2pTe.png" src-width="3548" src-height="1806" align="center"/>
 
 提交後可通過系統數據進一步覈對持倉、股份轉出、收費
 
-<img src="OqHIbth91ogDIzxfdOXj2rpcpwh" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/OqHIbth91ogDIzxfdOXj2rpcpwh.png" src-width="3548" src-height="1806" align="center"/>
 
 覈對無誤後正式提交執行
 
 <b>點擊執行復核</b>
 
-<img src="BBX7byG6doJa88xKNpSjIbs3pFg" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/BBX7byG6doJa88xKNpSjIbs3pFg.png" src-width="3548" src-height="1806" align="center"/>
 
-<img src="VSpGbsBKdo14r9xSzsHjTpt3pWh" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/VSpGbsBKdo14r9xSzsHjTpt3pWh.png" src-width="3548" src-height="1806" align="center"/>
 

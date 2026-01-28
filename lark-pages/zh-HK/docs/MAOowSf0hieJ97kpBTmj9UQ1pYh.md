@@ -11,7 +11,7 @@ sidebar_position: 34
 
 - 公司額度增加日內交易設置
     如無相關業務，則無需關注該模塊改動，融資額度設置請在「保證金融資授信」tab頁面操作
-    <img src="Qxyib6GlyobYElxY2KEjXg8Apnb" src-width="3250" src-height="1588" align="center"/>
+    <img src="/assets/Qxyib6GlyobYElxY2KEjXg8Apnb.png" src-width="3250" src-height="1588" align="center"/>
     - 針對開通日內交易業務的租戶，增加日內交易公司維度的融資額度設置，設置內容及邏輯同「保證金融資授信」（即原「融資額度」欄）
     - 報表RDR034- Company Loan Limit Overview優化，同步增加日內交易字段
     - 路徑：「業務參數設置」-「風控」-「公司額度設置」

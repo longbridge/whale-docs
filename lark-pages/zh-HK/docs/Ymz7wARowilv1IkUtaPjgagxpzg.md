@@ -23,11 +23,11 @@ sidebar_position: 0
 
 支持根據經紀人查詢該經紀人名下客戶，或者直接查詢某個客戶；
 
-<img src="ZBKbbhSHWoysEsxhpaWjyUc5pcf" src-width="3346" src-height="1104" align="center"/>
+<img src="/assets/ZBKbbhSHWoysEsxhpaWjyUc5pcf.png" src-width="3346" src-height="1104" align="center"/>
 
 查詢到客戶，即可以進行操作【解除經紀人關係】及【轉移至其他經紀人】
 
 在客戶變更或分配經紀人操作時，支持郵件推送通知客戶（可選項）
 
-<img src="DzbqbfY6po1LmwxP0ZKjPISbp8d" src-width="3352" src-height="1362" align="center"/>
+<img src="/assets/DzbqbfY6po1LmwxP0ZKjPISbp8d.png" src-width="3352" src-height="1362" align="center"/>
 

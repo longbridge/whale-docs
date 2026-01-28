@@ -32,17 +32,17 @@ Whale CRM 系統，支持券商在線查看、管理旗下所有註冊客戶的�
 
 **操作：**作為券商名下的全量客戶池，支持按一定的規則條件篩選目標客戶，並查看該客戶的詳情信息。同時根據登錄用戶擁有的權限，支持查看該客戶的開戶信息、備註、分配客經、更新客戶認證等能力。
 
-<img src="SIWjbWdoeodQNlxvRdejznqBp4c" src-width="2316" src-height="1432" align="center"/>
+<img src="/assets/SIWjbWdoeodQNlxvRdejznqBp4c.png" src-width="2316" src-height="1432" align="center"/>
 
 選中某客戶，點擊「詳情」，可查看該客戶的基本信息、邀請關係、賬戶資產、持倉交易等信息（需開通相應的權限）
 
-<img src="RiTtbHqFXorrvbxLt7vjOpZkpEb" src-width="458" src-height="956" align="center"/>
+<img src="/assets/RiTtbHqFXorrvbxLt7vjOpZkpEb.png" src-width="458" src-height="956" align="center"/>
 
-<img src="IXGgbppvJoyrBIxWZPrjyKqLpQf" src-width="2322" src-height="1420" align="center"/>
+<img src="/assets/IXGgbppvJoyrBIxWZPrjyKqLpQf.png" src-width="2322" src-height="1420" align="center"/>
 
 同時，對小體量的券商團隊，可直接在該菜單進行客戶的管理和跟進事宜。支持單客戶的跟進、備註等操作，也支持批量分配客經、備註等功能。
 
-<img src="AaqabEXZpozEBlxJNVjjptAApRb" src-width="2318" src-height="1408" align="center"/>
+<img src="/assets/AaqabEXZpozEBlxJNVjjptAApRb.png" src-width="2318" src-height="1408" align="center"/>
 
 ## 管理『客戶經理』
 
@@ -52,9 +52,9 @@ Whale CRM 系統，支持券商在線查看、管理旗下所有註冊客戶的�
 
 **操作：**點擊【添加客戶經理】，新增一個客戶經理的基本信息，包括姓名、崗位、團隊、地區等信息
 
-<img src="LRr5bQXAEocN6BxGMacjEksCpQb" src-width="3232" src-height="1526" align="center"/>
+<img src="/assets/LRr5bQXAEocN6BxGMacjEksCpQb.png" src-width="3232" src-height="1526" align="center"/>
 
-<img src="PQQvb6yrBo28eexjCpnjHkQYpEv" src-width="1280" src-height="669" align="center"/>
+<img src="/assets/PQQvb6yrBo28eexjCpnjHkQYpEv.png" src-width="1280" src-height="669" align="center"/>
 
 ## 分配客戶經理
 
@@ -66,7 +66,7 @@ Whale CRM 系統，支持券商在線查看、管理旗下所有註冊客戶的�
 
 **操作：**支持為單個客戶分配客戶經理，也支持勾選多個客戶後進行批量分配客經。
 
-<img src="VWREb76hoo9PeExpLgYjFNiYpve" src-width="1180" src-height="713" align="center"/>
+<img src="/assets/VWREb76hoo9PeExpLgYjFNiYpve.png" src-width="1180" src-height="713" align="center"/>
 
 ## 我的看板：客經負責的客戶看板
 
@@ -84,21 +84,21 @@ Whale CRM 系統，支持券商在線查看、管理旗下所有註冊客戶的�
     - 活动地区：指证件签发国所在地。部分客户居住地区和证件签发国不一致，则优先取证件签发国作为活动地区。取值规则如下：
         - 若有证件签发国，取证件签发国作为活动地区；若无，则取用户区域的值作为活动地区
 
-<img src="HAbTbEU5CoI5ugxTRcIj2XU0ptf" src-width="3306" src-height="1222" align="center"/>
+<img src="/assets/HAbTbEU5CoI5ugxTRcIj2XU0ptf.png" src-width="3306" src-height="1222" align="center"/>
 
 點擊特定客戶編號時，右側呼出抽屜彈層，同步展示該客戶的詳細資料，包括個人基礎信息、資產/交易數據、邀請關係、跟進記錄等，方便客戶經理快速構建該用戶畫像，更好的服務客戶。
 
-<img src="WBFxbUY5AoqcbsxiP2ajN1Cepud" src-width="3304" src-height="1782" align="center"/>
+<img src="/assets/WBFxbUY5AoqcbsxiP2ajN1Cepud.png" src-width="3304" src-height="1782" align="center"/>
 
 同時，跟進記錄 Tab頁，可點擊【添加跟進記錄】，記錄該客戶詳細情況，包括客戶意願、客戶級別、與聯繫的聯繫方式、下次跟進時間、客戶標簽、備註等
 
-<img src="FCyDbxguJokEjsxrIR4jnCDgp5e" src-width="1180" src-height="1766" align="center"/>
+<img src="/assets/FCyDbxguJokEjsxrIR4jnCDgp5e.png" src-width="1180" src-height="1766" align="center"/>
 
-<img src="QbMKbOYipo9G8DxAiJdjVqbbpSd" src-width="1174" src-height="1808" align="center"/>
+<img src="/assets/QbMKbOYipo9G8DxAiJdjVqbbpSd.png" src-width="1174" src-height="1808" align="center"/>
 
 此外，對於同類客戶，也可在勾選後點選【批量備註】添加相關備註說明
 
-<img src="Jaqwbnuq7ojJkgx8rh8jUjNZpjS" src-width="3252" src-height="1016" align="center"/>
+<img src="/assets/Jaqwbnuq7ojJkgx8rh8jUjNZpjS.png" src-width="3252" src-height="1016" align="center"/>
 
 ## 『任務』跟進
 
@@ -110,21 +110,21 @@ Whale CRM 系統，支持券商在線查看、管理旗下所有註冊客戶的�
 
 選擇某個客戶，點擊【跟進】，可打開右側彈層，將該客戶的資料以卡片形式展示
 
-<img src="DADYbcvIhohqe5xsnqEjla9Apgh" src-width="3256" src-height="1482" align="center"/>
+<img src="/assets/DADYbcvIhohqe5xsnqEjla9Apgh.png" src-width="3256" src-height="1482" align="center"/>
 
 點擊【跟進記錄】Tab 頁，點擊【添加跟進記錄】，可錄入一些互動標籤說明
 
-<img src="MihlbN6x3ouX2VxVXwijnclppZc" src-width="2242" src-height="1252" align="center"/>
+<img src="/assets/MihlbN6x3ouX2VxVXwijnclppZc.png" src-width="2242" src-height="1252" align="center"/>
 
-<img src="LVvobm7LtoEvyoxMEBdjcNYEpDe" src-width="2228" src-height="1612" align="center"/>
+<img src="/assets/LVvobm7LtoEvyoxMEBdjcNYEpDe.png" src-width="2228" src-height="1612" align="center"/>
 
 點擊【資產/交易】Tab 頁籤，查看客戶資產總覽與近期出入金記錄
 
-<img src="Kkwmbnkt2o2aEQxbXmJjIWVapic" src-width="2216" src-height="1624" align="center"/>
+<img src="/assets/Kkwmbnkt2o2aEQxbXmJjIWVapic.png" src-width="2216" src-height="1624" align="center"/>
 
 點擊【邀請關係】Tab 頁籤，查看邀請關係
 
-<img src="B4EObHwGFo5iN9xPWx1jl1GHppg" src-width="2230" src-height="1608" align="center"/>
+<img src="/assets/B4EObHwGFo5iN9xPWx1jl1GHppg.png" src-width="2230" src-height="1608" align="center"/>
 
 ## 查看『今日完成』
 
@@ -134,13 +134,13 @@ Whale CRM 系統，支持券商在線查看、管理旗下所有註冊客戶的�
 
 **操作：**客戶進展，提供多種維度對比（開戶數/入金數/待開戶跟進數/待入金跟進數/TMT 注冊跟進數/已入金跟進數）
 
-<img src="EximbSChmoE2Z5xpQkwjOqcipuf" src-width="2322" src-height="1438" align="center"/>
+<img src="/assets/EximbSChmoE2Z5xpQkwjOqcipuf.png" src-width="2322" src-height="1438" align="center"/>
 
 每日跟進，支持在作業中間區域根據篩選條件查詢出需要跟進的用戶（客戶）記錄
 
-<img src="BCTtbsZvNoJG5Nxb8tpjHKS9pqb" src-width="2322" src-height="1442" align="center"/>
+<img src="/assets/BCTtbsZvNoJG5Nxb8tpjHKS9pqb.png" src-width="2322" src-height="1442" align="center"/>
 
 我的日報，提供日報記錄的功能，方便客務人員記錄日報摘要
 
-<img src="NC31bcm1xo2a1ixbPwYjEvrlpme" src-width="2322" src-height="1412" align="center"/>
+<img src="/assets/NC31bcm1xo2a1ixbPwYjEvrlpme.png" src-width="2322" src-height="1412" align="center"/>
 

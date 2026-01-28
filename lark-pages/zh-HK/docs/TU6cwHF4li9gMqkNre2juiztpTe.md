@@ -69,10 +69,10 @@ sidebar_position: 1
 # 🎉 新功能
 
 - Order Book 中添加拒絕來源信息，可以更準確清楚的定位知曉訂單是被系統拒絕還是上手券商拒絕。
-    <img src="GIDHbcBxwoB17tx01WFjh4QXpyf" src-width="2880" src-height="530" align="center"/>
+    <img src="/assets/GIDHbcBxwoB17tx01WFjh4QXpyf.png" src-width="2880" src-height="530" align="center"/>
 
 - WTT 相關的操作日誌均可在 WBO 中查看管理，WTT 上用戶的操作行為（例如：導出、新增、編輯修改等）均可追蹤到。
-    <img src="JNWoboVxXodasjxUlTrjEXUgpCf" src-width="3820" src-height="1822" align="center"/>
+    <img src="/assets/JNWoboVxXodasjxUlTrjEXUgpCf.png" src-width="3820" src-height="1822" align="center"/>
 
 - 交易組件內的資產數據優化，最大購買力修改為“最大可開倉金額”，該數據會通過最大購買力及當前標的的初始保證金比例來結合計算。
 

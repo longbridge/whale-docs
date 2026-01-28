@@ -28,23 +28,23 @@ Whale CRM 系統能夠解決以下問題：
 
 Whale CRM 的整体業務流如下图所示：
 
-<img src="ZF8VbgfLsoSqb6xfIMkjBVRypmg" src-width="1819" src-height="965" align="center"/>
+<img src="/assets/ZF8VbgfLsoSqb6xfIMkjBVRypmg.jpeg" src-width="1819" src-height="965" align="center"/>
 
 # 首頁Dashboard
 
 在 CRM 首頁上 ，增加工作流節點數量統計與提供摘要性的 Dashboard ，可以點選進入該作業區，方便快速操作
 
-<img src="F6HRbYgdmoap6JxtUBzjpcTKpbW" src-width="2494" src-height="1508" align="center"/>
+<img src="/assets/F6HRbYgdmoap6JxtUBzjpcTKpbW.png" src-width="2494" src-height="1508" align="center"/>
 
 系統提供 一段區間的開戶平均耗時與近期開戶成功統計率作為參考 （系統會自動計算）
 
-<img src="CqpybW1G2o4rkxxMU0Pj3F0Zphh" src-width="1660" src-height="400" align="center"/>
+<img src="/assets/CqpybW1G2o4rkxxMU0Pj3F0Zphh.png" src-width="1660" src-height="400" align="center"/>
 
 同時在首頁中右區域提供 CRM 相關常見操作頻率較高的作業快捷入口，方便點選操作
 
-<img src="OsdBbFnGVodFT8xajYtjsUYfplh" src-width="2462" src-height="394" align="center"/>
+<img src="/assets/OsdBbFnGVodFT8xajYtjsUYfplh.png" src-width="2462" src-height="394" align="center"/>
 
 在系統首頁的右下區域也提供更新日誌，可以點選查閱系統更新功能說明
 
-<img src="EdflbmztaoZo5pxGrCBjjjeCpob" src-width="2492" src-height="716" align="center"/>
+<img src="/assets/EdflbmztaoZo5pxGrCBjjjeCpob.png" src-width="2492" src-height="716" align="center"/>
 

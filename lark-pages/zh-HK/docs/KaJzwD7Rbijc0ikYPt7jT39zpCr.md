@@ -9,5 +9,5 @@ sidebar_position: 8
 
 在風控管理模組，主要的作業流程如下：
 
-<img src="FSGrbefg4oRmvoxbMeRjRfFIpSb" src-width="1588" src-height="1174" align="center"/>
+<img src="/assets/FSGrbefg4oRmvoxbMeRjRfFIpSb.jpeg" src-width="1588" src-height="1174" align="center"/>
 

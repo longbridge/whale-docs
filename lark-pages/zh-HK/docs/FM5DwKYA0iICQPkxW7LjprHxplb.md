@@ -32,23 +32,23 @@ sidebar_position: 4
 
 入口處在 用戶頭像旁 的設定圖像下
 
-<img src="HVCXbFE5Fo9gQ4xE41PjySCJpVc" src-width="1220" src-height="288" align="center"/>
+<img src="/assets/HVCXbFE5Fo9gQ4xE41PjySCJpVc.png" src-width="1220" src-height="288" align="center"/>
 
 執行菜單：全局設置&gt;消息設置&gt;訂閱管理
 
 - 本作業主要用於維護面向用戶的消息訂閱管理
 
-<img src="XxdYbX53So1bqjx0KJejCow8pAf" src-width="3404" src-height="1616" align="center"/>
+<img src="/assets/XxdYbX53So1bqjx0KJejCow8pAf.png" src-width="3404" src-height="1616" align="center"/>
 
 當需要新增一個消息訂閱時，可以點選【新建】
 
-<img src="TXSbblbSroAA26xZ1E0j06NtpJh" src-width="3384" src-height="1606" align="center"/>
+<img src="/assets/TXSbblbSroAA26xZ1E0j06NtpJh.png" src-width="3384" src-height="1606" align="center"/>
 
 可以根據系統提供的消息類型，配置接收渠道，目前系統支持郵件通知與 Webhook 方式，可以在消息接人 選擇系統用戶或系統角色
 
-<img src="QmFrbwZOOo3qmLxxriojBcYxpie" src-width="620" src-height="212" align="center"/>
+<img src="/assets/QmFrbwZOOo3qmLxxriojBcYxpie.png" src-width="620" src-height="212" align="center"/>
 
-<img src="J7wtbcS6Yo2hOpxcTncj0gWcpgb" src-width="1058" src-height="238" align="center"/>
+<img src="/assets/J7wtbcS6Yo2hOpxcTncj0gWcpgb.png" src-width="1058" src-height="238" align="center"/>
 
 當完成消息訂閱後，以後就可以透過配置接收渠道接收到通知訊息
 
@@ -60,17 +60,17 @@ sidebar_position: 4
 
 - （系統 04/10 :新增功能） “新增客戶銀行卡告警”和“新增客戶銀行卡審批告警”   可以根據需要設置 相關審批告警
 
-<img src="GyfbbbBWiofOnlxNH7dj0fMNpFg" src-width="1980" src-height="992" align="center"/>
+<img src="/assets/GyfbbbBWiofOnlxNH7dj0fMNpFg.png" src-width="1980" src-height="992" align="center"/>
 
 當告警生效時，相關人員會收到信箱通知
 
-<img src="Qai2bCheIoXV3qx1nDujHu4BpeN" src-width="2359" src-height="1068" align="center"/>
+<img src="/assets/Qai2bCheIoXV3qx1nDujHu4BpeN.png" src-width="2359" src-height="1068" align="center"/>
 
 - （系統 05/08 :新增功能）   新增'證券轉入'、'證券取出' 提交時業務告警 ，可以根據需要設置 相關審批告警
 
-<img src="OjXJbuGQlor3ljxGkTtjk890peb" src-width="3111" src-height="1312" align="center"/>
+<img src="/assets/OjXJbuGQlor3ljxGkTtjk890peb.png" src-width="3111" src-height="1312" align="center"/>
 
 - （系統 09/11 :新增功能）  在訂閱管理模塊，新增‘開戶待審核’業務，可配置接收信息通知的方式。
 
-<img src="ART8bRnlXol8c8xH72Ij7bfcpUc" src-width="2410" src-height="1238" align="center"/>
+<img src="/assets/ART8bRnlXol8c8xH72Ij7bfcpUc.png" src-width="2410" src-height="1238" align="center"/>
 

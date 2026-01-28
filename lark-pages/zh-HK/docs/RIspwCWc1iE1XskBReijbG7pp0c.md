@@ -18,5 +18,5 @@ sidebar_position: 1
 答：餘額通標的，贖回時只判斷持股份額，不判斷最小賣出份額/金額限制。
 自動贖回是用於償還欠款或交收的資金，如果無法自動贖回會導致客戶欠款。所以餘額通贖回時不受最小賣出份額/金額的限制。
 
-<img src="TIlubmPiuoU6pnxWqZZjSaSDpxc" src-width="1640" src-height="308" align="center"/>
+<img src="/assets/TIlubmPiuoU6pnxWqZZjSaSDpxc.png" src-width="1640" src-height="308" align="center"/>
 

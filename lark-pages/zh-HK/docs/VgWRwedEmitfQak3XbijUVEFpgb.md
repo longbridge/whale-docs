@@ -20,7 +20,7 @@ sidebar_position: 1
 
 - 前置準備：加密貨幣資料維護（所有操作首要步驟）
 
-<img src="DC08bV7vOo0p0yxJRCUj2GO0p4X" src-width="3294" src-height="1136" align="center"/>
+<img src="/assets/DC08bV7vOo0p0yxJRCUj2GO0p4X.png" src-width="3294" src-height="1136" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -29,7 +29,7 @@ sidebar_position: 1
 
 - 客戶發起錢包地址認證前，系統會自動依據人工導入的「渠道存管賬戶」，為客戶分配對應的賬戶。分配結果將做為後續認證、出入幣操作的基礎關聯資訊，確保資金流向可追溯。
 
-<img src="OI92bsI0YoAKMKx4eBFj51rYp3g" src-width="3778" src-height="1358" align="center"/>
+<img src="/assets/OI92bsI0YoAKMKx4eBFj51rYp3g.png" src-width="3778" src-height="1358" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -38,5 +38,5 @@ sidebar_position: 1
 
 - 客戶提交認證通過的錢包地址後，系統會將其納入「加白名單」。所有已加白的地址將在後台統一維護，包含地址資訊、分配的存管賬戶、認證時間、狀態等，支援即時查詢與管理，保障操作合規與資金安全。
 
-<img src="Bz5pbHkM8oqgmexdBImjshw0pMb" src-width="3892" src-height="1395" align="center"/>
+<img src="/assets/Bz5pbHkM8oqgmexdBImjshw0pMb.png" src-width="3892" src-height="1395" align="center"/>
 

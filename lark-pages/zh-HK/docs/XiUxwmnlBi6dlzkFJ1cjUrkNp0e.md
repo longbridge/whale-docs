@@ -21,13 +21,13 @@ sidebar_position: 1
 
 1. 「臨時調賬」主頁面點【臨時調賬】即可進入創建頁面
 
-<img src="U5zOb4Wa9o9Ra6xFcIujG9wbpWc" src-width="3746" src-height="1874" align="center"/>
+<img src="/assets/U5zOb4Wa9o9Ra6xFcIujG9wbpWc.png" src-width="3746" src-height="1874" align="center"/>
 
 1. 選擇對應調整類型，填寫調賬信息即可創建臨時調賬記錄，完成調賬
 
-<img src="KmiubP2gJoQRI2x0eD2j8mzApEy" src-width="3314" src-height="1928" align="center"/>
+<img src="/assets/KmiubP2gJoQRI2x0eD2j8mzApEy.png" src-width="3314" src-height="1928" align="center"/>
 
 1. 在創建臨時調賬設定的有效期到期時，系統會自動失效該筆臨時調賬。在自動失效之前，亦可人工在「調賬清算」頁面操作【失效】
 
-<img src="L1BZb2CtloPeExxKl5ujyVVFpoc" src-width="3818" src-height="1960" align="center"/>
+<img src="/assets/L1BZb2CtloPeExxKl5ujyVVFpoc.png" src-width="3818" src-height="1960" align="center"/>
 

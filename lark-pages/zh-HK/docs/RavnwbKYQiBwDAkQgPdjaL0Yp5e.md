@@ -30,9 +30,9 @@ sidebar_position: 17
 
 答：「風控管理＞客户融資」的 “已佔用融資額度” 包括已凍結不可用的現金。
 
-<img src="JLPGbTjUxontxYx1bzAjd8M4pBb" src-width="2828" src-height="1346" align="center"/>
+<img src="/assets/JLPGbTjUxontxYx1bzAjd8M4pBb.png" src-width="2828" src-height="1346" align="center"/>
 
-<img src="VJHHbbbUOo9vLlxH2gBj1jtfphg" src-width="2856" src-height="1602" align="center"/>
+<img src="/assets/VJHHbbbUOo9vLlxH2gBj1jtfphg.png" src-width="2856" src-height="1602" align="center"/>
 
 # 18D. 問：子賬戶總資產沒有負數，為什麼「風控狀態」是「危險」？
 
@@ -42,11 +42,11 @@ sidebar_position: 17
 
 答：「指數Haircut管理」會自動更新股票成份股比重、股份等資訊。
 
-<img src="FJF4brbQ8oRjxkxCs6Jj0cempHc" src-width="2858" src-height="1298" align="center"/>
+<img src="/assets/FJF4brbQ8oRjxkxCs6Jj0cempHc.png" src-width="2858" src-height="1298" align="center"/>
 
 # 18F. 問：「Haircut 管理」中，現金或融資戶口可否獨立使用不同的haircut%去計算？
 
 答：現金戶口和融資戶口不可以獨立用不同的haircut%去計算。
 
-<img src="Mi2xbSLJUoXihzx1X0bjVlhApeb" src-width="2808" src-height="1330" align="center"/>
+<img src="/assets/Mi2xbSLJUoXihzx1X0bjVlhApeb.png" src-width="2808" src-height="1330" align="center"/>
 

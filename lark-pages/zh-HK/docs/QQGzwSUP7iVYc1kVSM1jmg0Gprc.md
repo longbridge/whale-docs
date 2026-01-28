@@ -24,13 +24,13 @@ Whale KYC 系統支持處理客戶的開戶資料相關的流程，包括 開戶
 1. 當客戶在線上 或 後台人員在線下 提交開戶申請時，系統會同步記錄在「開戶列表」中，且狀態爲‘待審核’；
 2. 點擊「詳情」按鈕，將跳轉到開戶資料的完整詳細頁面。
 
-<img src="FnWEb8oJmoWI42x6JfhjmAydpde" src-width="2834" src-height="1136" align="center"/>
+<img src="/assets/FnWEb8oJmoWI42x6JfhjmAydpde.png" src-width="2834" src-height="1136" align="center"/>
 
 <b>步驟二：查看開戶資料</b>
 
 在「開戶詳情」頁，展示客戶提交的所有開戶資料。
 
-<img src="GwZNb60P8orAN5xOmhljJduzpnc" src-width="2854" src-height="1312" align="center"/>
+<img src="/assets/GwZNb60P8orAN5xOmhljJduzpnc.png" src-width="2854" src-height="1312" align="center"/>
 
 <b>步驟三：審核開戶資料</b>
 
@@ -38,19 +38,19 @@ Whale KYC 系統支持處理客戶的開戶資料相關的流程，包括 開戶
 
 1. 當前步驟審核通過：
 
-<img src="H8KQbcCH8oXhRsxuf20jAEGLpWd" src-width="2916" src-height="1405" align="center"/>
+<img src="/assets/H8KQbcCH8oXhRsxuf20jAEGLpWd.png" src-width="2916" src-height="1405" align="center"/>
 
 1. 當前步驟審核駁回
 
 選擇駁回原因和駁回頁面，駁回至客戶，客戶可重新更新後再提交申請
 
-<img src="HNVxbZK6IoaNrAxCkCpjn8xVpMh" src-width="2850" src-height="1394" align="center"/>
+<img src="/assets/HNVxbZK6IoaNrAxCkCpjn8xVpMh.png" src-width="2850" src-height="1394" align="center"/>
 
 <b>步驟四：賬戶開通</b>
 
 審核步驟全部通過，則生成證券賬號，賬戶成功開通，客戶可繼續完成入金和交易流程。
 
-<img src="FzGRbEGCZonJtwxXtmBjzq9rpqc" src-width="2854" src-height="1306" align="center"/>
+<img src="/assets/FzGRbEGCZonJtwxXtmBjzq9rpqc.png" src-width="2854" src-height="1306" align="center"/>
 
 ## 開戶資料修改
 
@@ -58,13 +58,13 @@ Whale KYC 系統支持處理客戶的開戶資料相關的流程，包括 開戶
 
 鼠標放置在字段位置，點擊「編輯」按鈕。
 
-<img src="E5rWbckTNoZaSsx2jCbjKEsMpcd" src-width="2380" src-height="926" align="center"/>
+<img src="/assets/E5rWbckTNoZaSsx2jCbjKEsMpcd.png" src-width="2380" src-height="926" align="center"/>
 
 <b>步驟二：提交更新操作</b>
 
 在更新彈窗內，輸入或選擇新的信息後提交。
 
-<img src="JlfxbBsIKol8cMxIkRnj5QiApCx" src-width="2426" src-height="1286" align="center"/>
+<img src="/assets/JlfxbBsIKol8cMxIkRnj5QiApCx.png" src-width="2426" src-height="1286" align="center"/>
 
 <b>步驟三：審核修改工單</b>
 
@@ -74,15 +74,15 @@ Whale KYC 系統支持處理客戶的開戶資料相關的流程，包括 開戶
 
 「駁回」操作，則資料修改申請未通過。
 
-<img src="OlDRb5XffoNmLuxPJS5jzZkmpRd" src-width="2542" src-height="1488" align="center"/>
+<img src="/assets/OlDRb5XffoNmLuxPJS5jzZkmpRd.png" src-width="2542" src-height="1488" align="center"/>
 
 ## 開戶資料錄入
 
-<img src="BIgPbvPk8ow0MrxWFvpj0SRapQc" src-width="3798" src-height="812" align="center"/>
+<img src="/assets/BIgPbvPk8ow0MrxWFvpj0SRapQc.png" src-width="3798" src-height="812" align="center"/>
 
 本作業直接錄入客戶申請資料，點擊右上角【添加開戶申請】，直接進入開戶頁面如下圖：
 
-<img src="EnoUbBWe6o6wZ7xqiqKjcLhtpwe" src-width="3288" src-height="1298" align="center"/>
+<img src="/assets/EnoUbBWe6o6wZ7xqiqKjcLhtpwe.png" src-width="3288" src-height="1298" align="center"/>
 
 ### 第一步：選擇開戶類型
 
@@ -92,7 +92,7 @@ Whale KYC 系統支持處理客戶的開戶資料相關的流程，包括 開戶
 
 選擇客戶：選擇已註冊客戶（APP 用戶），可通過客戶編號、電話、email、真實姓名、身份證進行搜索
 
-<img src="ATJAbMFlnoai3JxSQk3jQ07zpic" src-width="3274" src-height="1178" align="center"/>
+<img src="/assets/ATJAbMFlnoai3JxSQk3jQ07zpic.png" src-width="3274" src-height="1178" align="center"/>
 
 新建客戶：未在系統註冊的客戶，可通過本作業創建。當前系統提供了多元的登錄方式供選擇
 
@@ -102,19 +102,19 @@ Whale KYC 系統支持處理客戶的開戶資料相關的流程，包括 開戶
 
 <b>郵箱驗證登入</b>
 
-<img src="K7hNbZxGTozY8UxT0dEj2omTpBh" src-width="3278" src-height="1196" align="center"/>
+<img src="/assets/K7hNbZxGTozY8UxT0dEj2omTpBh.png" src-width="3278" src-height="1196" align="center"/>
 
 選擇客戶類型，可選擇： 個人客戶 /聯名客戶 /企業客戶
 
-<img src="FXK9bHLh7oY5A9xMN3Wjy4r2pob" src-width="3262" src-height="990" align="center"/>
+<img src="/assets/FXK9bHLh7oY5A9xMN3Wjy4r2pob.png" src-width="3262" src-height="990" align="center"/>
 
 注意: 若是企業帳戶,可以修改預設的公司戶的CRS 企業實體類型
 
-<img src="PyiubnPWNoldLXxlsvzj3Tlspbe" src-width="3250" src-height="1550" align="center"/>
+<img src="/assets/PyiubnPWNoldLXxlsvzj3Tlspbe.png" src-width="3250" src-height="1550" align="center"/>
 
 選擇客戶國籍，系統支持 200 + 國籍
 
-<img src="LysXbeQenoteRox3Ub0jXhHvpze" src-width="3278" src-height="1184" align="center"/>
+<img src="/assets/LysXbeQenoteRox3Ub0jXhHvpze.png" src-width="3278" src-height="1184" align="center"/>
 
 ### <b>第二步</b>：上傳身份證件
 
@@ -128,7 +128,7 @@ Whale KYC 系統支持處理客戶的開戶資料相關的流程，包括 開戶
     1. 中國香港用戶，需上傳：中國香港身份證及填寫對應資訊
 
 3. 國籍：其他
-    <img src="F44xbUxfQovAWvxJOcrjXm4epPh" src-width="3252" src-height="1822" align="center"/>
+    <img src="/assets/F44xbUxfQovAWvxJOcrjXm4epPh.png" src-width="3252" src-height="1822" align="center"/>
     1. 其他國籍用戶，需上傳：身份證件 + 護照
     2. 是否持有香港身份證件：默認選擇否；如用戶選擇是，需引導用戶補充填寫香港證件資料；
     3. 如用戶選擇否，需上傳其他身份證
@@ -143,7 +143,7 @@ Whale KYC 系統支持處理客戶的開戶資料相關的流程，包括 開戶
     3. 地址證明檔類型選擇：
 
 2. 其他
-    <img src="PpyBbz2ZqoGMu5xSNP1jY6Q1pEf" src-width="3252" src-height="1604" align="center"/>
+    <img src="/assets/PpyBbz2ZqoGMu5xSNP1jY6Q1pEf.png" src-width="3252" src-height="1604" align="center"/>
     1. 需上傳居住地址證明
 
 ### <b>第四步</b>：填寫各類基礎信息
@@ -152,31 +152,31 @@ Whale KYC 系統支持處理客戶的開戶資料相關的流程，包括 開戶
 
 納稅資訊，需填寫用戶納稅的國家/地區及納稅編號，最多支持填寫 10 個。包含以下字段： 納稅國家/地區  與 納稅人編號
 
-<img src="Tqe2bjpjJosdiIxefebjPsujpeb" src-width="3270" src-height="1438" align="center"/>
+<img src="/assets/Tqe2bjpjJosdiIxefebjPsujpeb.png" src-width="3270" src-height="1438" align="center"/>
 
 電子郵箱：用戶用於接收結單、通知等通知。一個 App 的用戶郵箱唯一
 
 填寫聯繫手機號，多個客戶可使用相同的聯繫手機號
 
-<img src="OF7abjMy8oxM6axJdfwjfPhrpIc" src-width="3266" src-height="1430" align="center"/>
+<img src="/assets/OF7abjMy8oxM6axJdfwjfPhrpIc.png" src-width="3266" src-height="1430" align="center"/>
 
 ### <b>第五步</b>：填寫資產投資信息
 
-<img src="Ovfkbt02koA29yxO30Hja6vyptd" src-width="3258" src-height="1804" align="center"/>
+<img src="/assets/Ovfkbt02koA29yxO30Hja6vyptd.png" src-width="3258" src-height="1804" align="center"/>
 
 ### <b>第六步</b>：合規資訊確認
 
-<img src="Y0kVbKtB7osFADxLeSJj0aeLpRd" src-width="3254" src-height="1806" align="center"/>
+<img src="/assets/Y0kVbKtB7osFADxLeSJj0aeLpRd.png" src-width="3254" src-height="1806" align="center"/>
 
 ### <b>第七步</b>：確認資訊
 
 系統會按: 身份證件/個人基礎信息/職業信息/資產投資信息/合規信息確認/關聯賬戶信息 等區塊排列,將客戶資料展示出來,方便按確認填寫訊息
 
-<img src="OkDnbJ4NSoArNlxnot1j0ooipab" src-width="3250" src-height="1576" align="center"/>
+<img src="/assets/OkDnbJ4NSoArNlxnot1j0ooipab.png" src-width="3250" src-height="1576" align="center"/>
 
 同時若有需要修正資料,可點擊區塊右上角的【編輯】,會跳轉該訊息面區域進行修改資料
 
-<img src="WJT9bMzW3onogexgnHXjQ9gZpEu" src-width="3162" src-height="1142" align="center"/>
+<img src="/assets/WJT9bMzW3onogexgnHXjQ9gZpEu.png" src-width="3162" src-height="1142" align="center"/>
 
 ### <b>第八步</b>：選擇帳戶類型、上傳開戶文件
 
@@ -184,13 +184,13 @@ Whale KYC 系統支持處理客戶的開戶資料相關的流程，包括 開戶
 
 1. 基礎文件為系統生成的開戶相關文件，後台填寫的資訊自動填寫；
 2. 業務人員可列印文件讓客戶簽字
-    <img src="DXAibRSARoK0bDxUhrJjPSIcpLa" src-width="3258" src-height="1818" align="center"/>
+    <img src="/assets/DXAibRSARoK0bDxUhrJjPSIcpLa.png" src-width="3258" src-height="1818" align="center"/>
 
 帳戶類型：可選擇開通融資帳戶、現金帳戶，系統支持同時多開帳戶
 
-<img src="Mr4BbnlttouoTWx57oUj4A9pp77" src-width="3300" src-height="1678" align="center"/>
+<img src="/assets/Mr4BbnlttouoTWx57oUj4A9pp77.png" src-width="3300" src-height="1678" align="center"/>
 
 其他配置資訊，包括：是否接收線下結單 /經紀人 /見證員工姓名 /牌照號碼 /證券號碼（可自定義輸入客戶帳號） /客戶聲明資訊確認
 
-<img src="UI9WbtkS1owSe6x9bYZjp5NSp4b" src-width="3262" src-height="1636" align="center"/>
+<img src="/assets/UI9WbtkS1owSe6x9bYZjp5NSp4b.png" src-width="3262" src-height="1636" align="center"/>
 

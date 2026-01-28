@@ -16,13 +16,13 @@ sidebar_position: 12
 **答：**在後台「消息中心＞消息記錄＞短信/郵件」頁面可查到發出電郵及短訊的記錄。
 能以客户賬號、收件電郵、發出埸景篩選發出記錄。
 
-<img src="Q1KWbJXvto3PssxwVZhjPrV1pEf" src-width="2512" src-height="1350" align="center"/>
+<img src="/assets/Q1KWbJXvto3PssxwVZhjPrV1pEf.png" src-width="2512" src-height="1350" align="center"/>
 
 # 13C 問：怎樣能一次性發出郵件給客戶？
 
 **答：**在「消息中心＞消息發送」點擊「新建」選擇模版類型，上傳「證券賬號模板」，把一次性發送消息給所選客戶。
 
-<img src="ItHhbQwalo5RUXxT2ICjTUuSpve" src-width="2506" src-height="1280" align="center"/>
+<img src="/assets/ItHhbQwalo5RUXxT2ICjTUuSpve.png" src-width="2506" src-height="1280" align="center"/>
 
 <em>郵件主題、內容能自定義編輯</em>
 
@@ -30,5 +30,5 @@ sidebar_position: 12
 
 答：如客戶選擇不訂閱推廣訊息，系統便不會發推廣訊息給他們。
 
-<img src="MXcIbe9vToO7g6xAPZwjfW9Tpoc" src-width="2296" src-height="1134" align="center"/>
+<img src="/assets/MXcIbe9vToO7g6xAPZwjfW9Tpoc.png" src-width="2296" src-height="1134" align="center"/>
 
