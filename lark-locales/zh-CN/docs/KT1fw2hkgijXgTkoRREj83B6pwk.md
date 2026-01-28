@@ -1,0 +1,53 @@
+---
+title: 快速上手
+slug: 2a05bab0c2cc8196b660c7b359f031af
+sidebar_position: 1
+---
+
+
+# 快速上手
+
+# 概述
+
+入币是将加密货币（如比特币、以太坊等）从外部地址（其他交易平台、他人钱包等）转入自身数字钱包或交易平台账户的过程，以下是标准化操作步骤，确保操作准确与资产安全：
+
+# 快速上手
+
+入币前完成钱包地址认证是保障资产安全的关键前置环节。
+
+# 前置条件
+
+您需要获取以下授权后方可正常使用系统功能
+
+# 加密货币<b>配置</b>
+
+在客户入币前，需要进行入币加密货币设置。
+
+<img src="PyTkbeE5xo5e3AxNdmbjWVXLpAT" src-width="2048" src-height="706" align="center"/>
+
+# 客户钱包地址
+
+入币前完成钱包地址认证是保障资产安全的关键前置环节。
+
+<img src="Ux4cbbhbMoZwjUxzSTMjUqmPpse" src-width="3288" src-height="1076" align="center"/>
+
+# <b>认证后入币操作简述</b>
+
+<div class="callout callout-bg-5 callout-border-5 callout-color-1">
+<div class='callout-emoji'>🎁</div>
+<p>📍 菜单入口：WBO - 虚拟资产管理 - 出入币 - 入币申请</p>
+</div>
+
+- 客户端提交入币请求后，后台系统会自动生成对应的入币记录，便于后台操作人员查询跟踪全流程；若遇异常或有问题的入币申请，后台操作人员可直接在系统中执行删除操作
+
+<img src="GfzkbkNGfoTjjCxl2R1j0pSzpmf" src-width="3262" src-height="826" align="center"/>
+
+<div class="callout callout-bg-5 callout-border-5 callout-color-1">
+<div class='callout-emoji'>🎁</div>
+<p>📍 菜单入口：WBO - 虚拟资产管理 - 出入币 - 入币记录</p>
+</div>
+
+- 可通过目标钱包或平台的 “入币记录” 模块，查看交易状态、区块确认次数等详情，跟踪资产到账情况。
+
+<img src="KwK4bMTi1oP44pxqs0qjMmvFpOh" src-width="3268" src-height="806" align="center"/>
+

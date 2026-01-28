@@ -1,0 +1,159 @@
+---
+title: 布局、组件功能说明
+slug: CFsZwSNNtiP42OkjRQkcPbVjnuf
+sidebar_position: 0
+---
+
+
+# 布局、组件功能说明
+
+# 目标
+
+<div class="callout callout-bg-5 callout-border-5 callout-color-1">
+<div class='callout-emoji'>🎁</div>
+<p>桌面端的组件工具操作使用说明及布局（自定义布局、自适应布局）操作介绍</p>
+</div>
+
+# 名词解释
+
+# 1.组件说明
+
+## 1.1 单元组件
+
+单元组件或称“原子组件”，最小化承载一个功能的组件。目前我们的行情报价、逐笔成交等单个功能模块都是单元组件。
+
+好处在于，用户可以以单元组件拼出自己需要的场景，或者在脱离主窗口的情况下，单元组件同样能够发挥出价值或作用，比如在看新闻资讯的时候拖个自选列表或者个股的图表放旁边同时观看。
+
+<img src="/assets/Y8vCbvXhnoaCCvxtTMGjapm1pog.png" src-width="2868" src-height="1740" align="center"/>
+
+## 1.2 业务组件
+
+- 业务组件是基于多个单元组件组合，承载某个业务的组件。
+- 业务组件的好处在于业务组件能够满足大多数场景下，用户需要添加一个组件就能满足目的，而不是一次一次添加多个。
+- 如迷你报价为业务组件，集合了行情报价、逐笔成交、买卖盘口和经纪席位功能。
+
+<img src="/assets/JIzgbAVvmogI8qxCE73j5jYepqc.png" src-width="968" src-height="1192" align="center"/>
+
+# 2.组件操作说明
+
+## 2.1 单个组件操作说明
+
+### 2.1.1 添加组件
+
+右上角增加工具箱入口，集合了所有的功能组件，用户可以单击添加组件，拖拽到当前面板中；
+
+<img src="/assets/PxUhbusdqoqKR1xaaSNj7wBqpAf.png" src-width="2862" src-height="1740" align="center"/>
+
+### 2.1.2 组件大小可随意拖拉
+
+每个组件的大小都可以随意拖拉调整大小宽高，在组件边缘范围内可随意拖拉挤压。
+
+<img src="/assets/M6wrbMGufo7IvbxyrHTjPlvspEb.gif" src-width="1848" src-height="1122" align="center"/>
+
+### 2.1.3 组件右上角操作
+
+<img src="/assets/ZxUnbYBXUoetbnxp512jYsVPpLf.png" src-width="1380" src-height="718" align="center"/>
+
+- **复制：**点击复制，会复制当前组件生成一个新的组件，以组件脱离的窗口显示出来。
+- **最大化：**点击组件会将当前组件最大化撑满，点击右上角恢复按钮，会自动恢复到当前组件默认大小；
+- **脱离：**点击脱离，组件支持脱离当前窗口为独立窗口；方便使用其他软件的时候，保留小视图观看。
+- **移除：**点击移除，会移除当前组件。
+    如果是发现移除错或拖动错，在系统的自选、个股、行情、交易、选股器面板下，可点击组件工具箱底部的“重置布局”。其中自定义面板不允许重置布局。
+
+<img src="/assets/LCjYbpbFOoFfBXxic3SjGJf4p1c.png" src-width="1388" src-height="946" align="center"/>
+
+## 2.2 组件联动说明
+
+### 2.2.1 自定义联动分组
+
+系统面板中的组件默认为联动，目前不支持设置联动分组。而新开的自定义面板以及脱离的组件允许用户自定义设置联动分组，分为以下几个分组：
+
+- 默认联动，所有组件都联动，不用设置分组；
+- 不联动，所选组件、标的无联动；
+- 联动分组1、联动分组2……联动分组9，点击联动后，组件右上角头部会标识当前联动分组，相同分组的组件会自动联动。
+- 新建布局内的组件默认默认不联动，需要用户自行决定是否需要设置联动分组；
+
+<img src="/assets/VgTCbrXftoJwGNxUT0mjLYkqpAb.png" src-width="1280" src-height="664" align="center"/>
+
+### 2.2.2 联动参数
+
+- 股票联动，如图表和交易组件，进行股票联动，目前大部分组件都是股票联动。
+- 币种联动，如资产总览的币种和融资状态、现金明细组件的币种默认联动；
+
+### 2.2.3 单向联动和双向联动
+
+- 目前现有联动方向都是双向联动，点击组件A，组件B也跟随联动，反之点击组件B，组件A也跟随联动；
+- 单向联动，组件之间单方向联动，点击组件A，组件B也跟随联动，反之则不会；目前暂无业务场景，后续会逐步增加。
+
+## 2.3 组件头部搜索
+
+组件头部带有搜索，分为如以下情况：
+
+- 有些组件带有股票标的属性的，如图表、盘口、行情报价、逐笔成交、迷你报价等组件。
+- 这些带有股票标的属性的组件脱离后，组件头部自带股票搜索功能，方便进行股票标的切换。
+- 新开的自定义页面，带有股票标的属性的组件头部自带搜索，方便进行股票标的切换。
+
+<img src="/assets/I16xb8VodogOJSxdLoNjqa63pLB.png" src-width="1086" src-height="550" align="center"/>
+
+## 2.4 组件钉住操作
+
+组件脱离后，点击其他软件或者主窗口，容易把当前组件盖住，若有组件层级置顶需要，可点击组件右上角的钉住功能，可以固定悬浮在顶部。
+
+若想取消钉住功能，可再次点击钉住，取消组件层级置顶。
+
+<img src="/assets/RKZ0bRSibormrgxl6qgjeMF7pcg.png" src-width="982" src-height="948" align="center"/>
+
+# 3.页面布局
+
+## 3.1 系统面板、自定义布局、自适应面板
+
+- 系统面板：系统默认的自选、个股、行情、交易、选股器面板，其中系统面板菜单不可编辑、不可删除，但可以自主修改面板内的组件内容排版。
+- 自适应布局：拖动组件进自适应布局内，组件拉升时会自动挤压周围其他组件，若页面只有一个组件会默认全部占满当前屏幕，会自动适配大小屏，组件之间大小会自适应。
+- 自定义面板（画布布局）：用户可进行自定义面板布局，将组件根据个人喜好摆放在布局内，组件大小相较固定，窗口大小可拖动使用。
+
+- 画面效果（预览）
+    <img src="/assets/EHhbbj8hYoPbamxJ2FbjMg36pho.png" src-width="2864" src-height="1740" align="center"/>
+    <img src="/assets/O3GQbEIc9oag02xlpFajjGtpp5c.png" src-width="2870" src-height="1738" align="center"/>
+    - 自适应布局
+    - 自定义布局（画布布局）
+
+## 3.2 自适应布局
+
+- 自适应布局入口：点击新开标签页，两种布局选择，选择“自适应布局”，点击空布局可打开自适应布局画面。
+    具体操作如下：
+    （1）点击菜单栏右侧的“+”，可以布局选择；（2）选择“自适应布局”；（3）选择“空布局”。
+    <img src="/assets/B5wSbfZEYo37rexPjcajJfuwpUg.png" src-width="2478" src-height="1440" align="center"/>
+
+## 3.3 自定义布局（画布布局）
+
+- 自定义布局（画布布局）入口：点击新开标签页，两种布局选择，选择“自定义布局”，点击空布局可打开自定义布局画面。
+    具体操作如下：
+    （1）点击菜单栏右侧的“+”，可以布局选择；（2）选择“自定义布局”；（3）选择“空布局”。
+    <img src="/assets/PT49ba6AXobkIRxzCk8jZ9zup5V.png" src-width="1768" src-height="870" align="center"/>
+
+## 3.4 添加组件进布局内
+
+- 自定义布局：新开标签页后，页面中将出现组件工具箱，可选择需要的组件，将组件拖动进布局页面内
+
+<img src="/assets/PQjObSTeIorAWQxn3lmj0hB4pee.gif" src-width="1848" src-height="1122" align="center"/>
+
+- 自适应布局：
+
+（1）点击添加相应的组件，唤起功能模块。如点击“图表”组件，唤起图表功能组件弹窗。
+
+<img src="/assets/Uh21bQC1coCWoix4RjtjJCP0pAd.png" src-width="2872" src-height="1542" align="center"/>
+
+（2）可直接鼠标选中“图表”组件，拖拽到当前自定义面板中。若面板只有1个组件的话，目前是铺满当前面板。
+
+<img src="/assets/MdoYbxcxcoOxwDxg1qzjkSC7phf.png" src-width="2878" src-height="1550" align="center"/>
+
+（3）以此类推，可以添加别的组件拖拽到当前面板中，会有高亮显示即将拖动的位置。
+
+如添加行情报价组件，拖拽到图表头部，图表头部会显示高亮边框，松开拖拽，行情报价会显示在图表的上方。点击行情报价组件和图表组件的中间部分，可挤压调整彼此组件的大小。
+
+<img src="/assets/S2R1bGoqBoiEPLx7skzjsr6IpKg.png" src-width="2872" src-height="1516" align="center"/>
+
+<img src="/assets/SkXebOho1oVs8sxUyuzjakv7p6b.png" src-width="2872" src-height="1564" align="center"/>
+
+（4）也可以结合上文讲的组件操作、组件联动、组件头部搜索、组件钉住等各种功能，基于自己需要，进行各种联合操作。
+

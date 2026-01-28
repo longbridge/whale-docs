@@ -9,6 +9,9 @@
  * 上传单个文件
  *   bun run ./scripts/transfer-lark/index.ts ./path/to/file.md "自定义标题" "parent-node-token"
  *
+ * 重新上传修改过的文件（根据 cache.json 中的 isReUpload 标记）
+ *   bun run ./scripts/transfer-lark/index.ts
+ *
  * 环境变量配置 (.env):
  *   LARK_APP_ID=xxx
  *   LARK_APP_SECRET=xxx
@@ -31,6 +34,12 @@
  * 2. 根据 filename 在 entryMdPath 下查找对应的 MD 文件
  * 3. 按照层级结构创建Lark Wiki 节点
  * 4. 上传 Markdown 内容到对应的 Wiki 文档
+ * 
+ * 重新上传模式工作流程:
+ * 1. 读取 translate/en/cache.json，找出所有 isReUpload=true 的条目
+ * 2. 从 lark-pages/zh-HK/docs.json 中获取这些文件的节点信息（包括父节点）
+ * 3. 如果文件之前已上传，先删除旧节点
+ * 4. 在正确的父节点下创建新节点并上传内容
  */
 
 import path from 'path';
@@ -63,8 +72,6 @@ function parseJsonStructure(jsonFilePath: string): JsonDocNode[] {
         if (!rootNode.children || rootNode.children.length === 0) {
             throw new Error('根节点没有 children');
         }
-
-        console.log(`✅ 找到 ${rootNode.children.length} 个第一级文档节点`);
         return rootNode.children;
 
     } catch (e: any) {
@@ -91,9 +98,6 @@ export async function uploadSingleFile(
     if (!existsSync(filePath)) {
         throw new Error(`文件不存在: ${filePath}`);
     }
-
-    // 获取配置
-    // const defaultConfig = getConfig();
     // 获取配置（从环境变量或传入的配置）
     const finalConfig: Config = {
         appId: config?.appId || process.env.LARK_APP_ID || '',
@@ -178,22 +182,49 @@ export async function uploadSingleFile(
     }
 }
 
-async function main() {
-    const config = getConfig();
-    const client = new LarkClient(config.appId, config.appSecret);
+const config = getConfig();
+const client = new LarkClient(config.appId, config.appSecret);
 
+
+/**
+ * 第一次，将本地所有的md文档进行上传
+ * 后边基本用不上了，保留
+ */
+async function firstUploadAll() {
+    // 解析 JSON 文件
+    const jsonFilePath = path.resolve(process.cwd(), config.entryPath);
+    const jsonNodes = parseJsonStructure(jsonFilePath);
+    const parentToken = config.targetParentToken;
+    if (!parentToken) {
+        throw new Error('需要目标父节点 Token（.env 中设置 LARK_PARENT_NODE_TOKEN 环境变量）或 -t 命令行参数');
+    }
+    // 使用 JSON 结构上传
+    const uploader = new Uploader(client, config);
+    await uploader.runFromJson(jsonNodes, parentToken);
+}
+
+async function main() {
     try {
-        // await client.addKnowledgeSpaceMember(config.wikiSpaceId);
-        // 解析 JSON 文件
-        const jsonFilePath = path.resolve(process.cwd(), config.entryPath);
-        const jsonNodes = parseJsonStructure(jsonFilePath);
+        // 重新上传模式
+        console.log('🔄 进入重新上传模式...');
+
+        const cacheFilePath = path.resolve(process.cwd(), './translate/en/cache.json');
+        const enDocsJsonPath = path.resolve(process.cwd(), './lark-pages/en/docs.json');
+
+        if (!existsSync(cacheFilePath)) {
+            throw new Error(`cache.json 文件不存在: ${cacheFilePath}`);
+        }
+        if (!existsSync(enDocsJsonPath)) {
+            throw new Error(`en/docs.json 文件不存在: ${enDocsJsonPath}`);
+        }
+
         const parentToken = config.targetParentToken;
         if (!parentToken) {
-            throw new Error('需要目标父节点 Token（.env 中设置 LARK_PARENT_NODE_TOKEN 环境变量）或 -t 命令行参数');
+            throw new Error('目标父节点 Token（.env 中设置 LARK_PARENT_NODE_TOKEN 环境变量）或 -t 命令行参数');
         }
-        // 使用 JSON 结构上传
+
         const uploader = new Uploader(client, config);
-        await uploader.runFromJson(jsonNodes, parentToken);
+        await uploader.reUploadModifiedFiles(cacheFilePath, enDocsJsonPath, parentToken);
     } catch (e: any) {
         console.error('\n❌ 上传失败:', e.message);
         process.exit(1);
@@ -219,4 +250,44 @@ if (process.argv[2] && !process.argv[2].startsWith('-')) {
 } else {
     main();
 }
+
+// const test = async () => {
+//     try {
+//         const config = getConfig();
+//         const finalConfig = {
+//             appId: config?.appId || process.env.LARK_APP_ID || '',
+//             appSecret: config?.appSecret || process.env.LARK_APP_SECRET || '',
+//         };
+//         const client = new LarkClient(finalConfig.appId, finalConfig.appSecret);
+//         const uploader = new Uploader(client, config);
+//         const mdFilePath = path.resolve(__dirname, '../../lark-pages/zh-HK/docs/O7STwqBFtiFK86ko6oijJZZfpag.md')
+//         const content = readFileSync(mdFilePath, 'utf-8');
+//         const { body } = parseMarkdownFrontmatter(content);
+
+//         const processor = new MarkdownProcessor(
+//             (url: string) => url,
+//             path.dirname(mdFilePath)
+//         );
+//         const blocks = await processor.processToBlocks(body);
+//         const objToken = 'O7STwqBFtiFK86ko6oijJZZfpag'
+//         const nodeToken = 'O7STwqBFtiFK86ko6oijJZZfpag'
+//         const filename = 'O7STwqBFtiFK86ko6oijJZZfpag'
+//         if (blocks.length > 0) {
+//             // 使用批量更新的方式更新文档内容
+//             await uploader.updateDocContentByBatch(objToken, blocks);
+
+//             await uploader.postProcessBlocks(blocks, objToken, nodeToken, {
+//                 relativePath: filename,
+//                 path: mdFilePath
+//             } as any);
+
+//             console.log(`✅ 更新内容成功`);
+//         }
+//     } catch (err) {
+//         console.error(JSON.stringify(err))
+//     }
+
+// }
+
+// test()
 

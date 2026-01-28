@@ -1,0 +1,560 @@
+---
+title: 系統介紹
+slug: NCXHwKy6fiEtoBk752wcmmsfnBb
+sidebar_position: 2
+---
+
+
+# 系統介紹
+
+# 概述
+
+Whale 會計系統提供了一套可以自動獲取數據源，按照預設的科目及分錄規則進行自動記帳，進而完成帳實核對，主要包含了科目設置、分錄規則設置、合併規則設置、會計分錄、科目餘額、科目明細帳、記帳數據源等功能
+
+# 会计中台流程说明
+
+<img src="/assets/E5TMbVSOjoNoJYxZSx9jDkyupZd.png" src-width="874" src-height="553" align="center"/>
+
+# 參數設置
+
+<div class="callout callout-bg-5 callout-border-5 callout-color-1">
+<div class='callout-emoji'>🎁</div>
+<p>⚓ 業務參數設置 &gt; 記賬參數</p>
+</div>
+
+證券機構在使用會計中臺之前需要先進行記賬參數設置，包括科目屬性、會計科目、分錄規則、資金類型、合併規則以及業務類型等設置。
+
+## 科目屬性
+
+<b>概要</b>
+
+在使用會計中臺前，券商需要配置會計屬性。
+
+<img src="/assets/Fi5EbDBt2oxZXXxNbsujK2pSple.png" src-width="3814" src-height="1598" align="center"/>
+
+<b>操作按鈕說明</b>
+
+- 新建：可根據券商公司需求自定義會計科目屬性。
+- 編輯：對已經添加的科目屬性可以進行人工編輯。
+- 刪除：對已經添加的科目屬性可以進行刪除。
+
+<b>專有名詞解釋</b>
+
+- 科目屬性：一般來說，會計科目按其經濟內容來分類，可以劃分爲資產類、負債類、所有者權益類、成本費用類科目及損益類。但由於經濟內容不同，會計科目所包含的內容就不同，因此，不同的科目就需要有不同的屬性，來描述其所代表的經濟內容。
+- 餘額方向：指該科目屬性下相應科目的借方發生額和貸方發生額抵減後餘額對應的方向，可選擇的枚舉值爲：借方、貸方和共同（是指科目屬性下不同的科目餘額可以單獨指定爲借方或者貸方）。比如：定義科目屬性的餘額方向爲借方，則該屬性下所有科目的餘額會留在借方，如果該科目的借方發生額大於貸方發生額，科目餘額爲正數，反之則爲負數。
+
+<b>操作步驟</b>
+
+步驟一：在使用會計中臺之前，要完成記賬參數的配置，對於配置的第一步是新增會計科目屬性
+
+<img src="/assets/U6IAbEkqMoEqrVxHLFijzMaYpod.png" src-width="3407" src-height="1427" align="center"/>
+
+步驟二：對於相應科目屬性下未綁定會計科目，則可以進入後臺進行修改
+
+<img src="/assets/J415bXbEIopuaux4ZvFjgJ5Npcb.png" src-width="3300" src-height="1428" align="center"/>
+
+- 📢：如果當前的科目屬性已經綁定了會計科目，則無法進行修改，如果修改之後系統會報錯提示如下：
+
+<img src="/assets/UtvxblMKUoag3yxERGxjvxSXpMd.png" src-width="360" src-height="106" align="center"/>
+
+步驟三：對於相應科目屬性下未綁定會計科目，則可以進入後臺進行刪除
+
+<img src="/assets/ZT4ybirpuo7KNTxQMJqjI5Gypoc.png" src-width="3288" src-height="1034" align="center"/>
+
+- 📢：如果當前的科目屬性已經綁定了會計科目，則無法進行刪除
+
+<img src="/assets/MVLSbuU9OoDBO6xervzjEoVrpZf.png" src-width="368" src-height="104" align="center"/>
+
+## 會計科目
+
+<b>概要</b>
+
+在配置科目屬性後，需要根據券商公司的要求配置會計科目。
+
+<img src="/assets/K4TNbegrFovFgExKeypjIR5epJg.png" src-width="3820" src-height="1622" align="center"/>
+
+<b>操作按鈕說明</b>
+
+- 批量導入：如果券商公司需要大量添加會計科目，可以選擇批量導入，大批量新增會計科目。
+- 新建：可根據券商公司需求单笔自定義會計科目。
+- 編輯：對已經添加的会计科目可以進行人工編輯。
+- 刪除：對已經添加的会计科目可以進行刪除。
+
+<b>專有名詞解釋</b>
+
+- 科目編碼：系統會根據每個科目分配一個唯一的編碼。
+- 外部科目編碼：由於券商公司接入的財務系統不一樣，在券商公司財務系統中定義的科目名稱和科目編碼和會計中臺也不一樣，爲了會計中臺最終可以按照券商公司財務系統的要求導出財務報表，所以券商公司需要在會計科目中定義對應財務軟件對應的科目編碼，稱之爲外部科目編碼。
+- 會計科目：是指按照經濟業務的內容和經濟管理的要求，對會計要素的具體內容進行分類覈算的會計科目所構成的集合。會計科目按其所提供信息的詳細程度及其統馭關係不同，又分爲總分類科目和明細分類科目，總分類科目可以對應會計中臺的一級科目，明細分類科目對應會計中臺二級或三級科目。
+    ```text
+爲了會計中臺系統搭建統一，在會計中臺進行分錄記賬的明細科目統一爲三級科目。
+```
+
+<b>操作步驟</b>
+
+步驟一：科目屬性配置完畢後，需要在對應科目屬性下新增會計科目，由於我們系統支持三級科目，所以操作人員需要在後臺逐級添加，可以根據自身科目數量選擇批量還是單筆新建。
+
+- 逐一科目新建
+    <img src="/assets/LtnFbTFVKoErRaxOUkljO6SPpIe.png" src-width="3415" src-height="1500" align="center"/>
+    <img src="/assets/Zy1ZbJcLCowZLWxGhfsjT5uZpgg.png" src-width="3421" src-height="1539" align="center"/>
+    <img src="/assets/Ih4ubj347o6XKix3R4mjTKAJpLf.png" src-width="3413" src-height="1549" align="center"/>
+    <img src="/assets/GibxbgK6VolYp8xojocjAENdpWg.png" src-width="3358" src-height="1480" align="center"/>
+    <img src="/assets/GvOGbhq7FoONlxxpGPcjyamnpxe.png" src-width="2225" src-height="666" align="center"/>
+    - 在後臺先新建一級科目
+    - 在一級科目基礎上新建對應的二級科目
+    - 在二級科目基礎上新建對應的三級科目
+    - 批量導入：通過後臺提供的模板整理好需要導入的會計科目，然後通過後臺完成文件導入
+
+步驟二：對於已經添加的會計科目，可以進入後臺進行修改
+
+```text
+- 📢：對於編輯後的會計科目，會應用於後續的會計分錄，對於歷史已經生成的會計分錄如需更新，可以在「證券後臺-會計中臺-會計分錄-明細」進行重跑。
+
+    ![image.png](/assets/3f79305674fc2d8825851dee40e35d85.png)
+```
+
+步驟三：對於未配置分錄規則或者未進行會計分錄記賬的科目，可以進入後臺進行刪除，需要先刪除所有的三級科目，然後刪除對應的二級科目，最後才能刪除相應的一級科目
+
+```text
+![image.png](/assets/a22d9dd54d148715827b784a581513df.png)
+
+- 📢：如果当前的科目已经配置了分录规则或者已记账，则无法进行删除
+```
+
+## 分錄規則
+
+<b>概要</b>
+
+形成分錄之前需要根據券商公司實際業務需要配置對應的分錄規則。
+
+<img src="/assets/Av57bFbSnotCRHxkmeMjqyonpTh.png" src-width="2870" src-height="1226" align="center"/>
+
+<b>操作按鈕說明</b>
+
+- 新建：可根據券商公司需求新增各業務的分錄規則。
+- 編輯：對已經添加的分录规则可以進行人工編輯。
+- 複製：可以將當前分錄規則進行復制，方便新增類似的分錄規則。
+- 刪除：對已經添加的分录规则可以進行刪除。
+
+<b>專有名詞解釋</b>
+
+- 分錄規則：爲了保證系統在獲取數據源後能夠自動形成會計分錄，券商公司需要在後臺進行規則配置，即數據源和最終輸出分錄的關聯關係。
+- 支付流水：是指券商公司記錄客戶交易變動的明細表，包括出金、入金、股票買入、股票賣出、貨幣兌換等。
+- 客戶收費賬單：由於支付流水中客戶發生的各種交易費用，比如股票交易費用是佣金、平臺費和各種第三方收費合計，無法滿足財務入賬需求，需要解析客戶交易的收費明細，作爲會計記賬的數據源。
+- 銀行賬單：是指券商公司銀行賬戶所有實際資金變動記錄，按照各種標籤進行打標後，可以作爲資金流記賬的數據源。
+
+<b>操作步驟</b>
+
+步驟一：增加了券商公司的會計科目之後，可以根據數據源的業務類型新增分錄規則，目前會計中臺可支持的數據源包括：支付流水、銀行賬單、客戶收費賬單、CCASS 賬單、新股賬單、代理商收費、業務賬單統計、渠道匯兌單等。在此會分別介紹支付流水、銀行賬單、客戶收費賬單分錄規則如何配置，其他數據源操作可同步參考。
+
+<img src="/assets/VWOLbYufQoHR0nxTzzjj3IcGpud.png" src-width="3437" src-height="906" align="center"/>
+
+- “支付流水”如何添加分錄規則
+
+<img src="/assets/HQGIbojUmoz2Dbx17gijeRddple.png" src-width="2736" src-height="4936" align="center"/>
+
+- “客戶收費賬單”如何添加分錄規則
+
+<img src="/assets/Ar7IbIUhHoEcbjxaN1SjAMRUpId.png" src-width="2664" src-height="3890" align="center"/>
+
+- “銀行賬單”如何添加分錄規則
+
+<img src="/assets/BNGPboAKto6YJQxWsGQj425Kp1g.png" src-width="2646" src-height="3740" align="center"/>
+
+步驟二：對於已配置的分錄規則可以後臺進行修改。
+
+```text
+- 📢：對於編輯後的分錄規則，會應用於後續的會計分錄，對於歷史已經生成的會計分錄如需更新，可以在「證券後臺-會計中臺-會計分錄-明細」進行重跑。
+```
+
+<img src="/assets/DmtDbEUi4oY9mgxbbgfjAEcFpdf.png" src-width="3278" src-height="1282" align="center"/>
+
+<img src="/assets/X4yjb5a0GojGkPxClrXjchYNpGh.png" src-width="2492" src-height="4530" align="center"/>
+
+步驟三：對於已配置的分錄規則可以後臺進行刪除
+
+```text
+- 📢：當前分錄規則刪除後，只會對後續新的分錄有影響，歷史已生成的分錄只有重跑之後纔會同步更新。
+```
+
+<img src="/assets/P0SAbILKRolJz7xBkvUjw8Xxp3c.png" src-width="3276" src-height="1304" align="center"/>
+
+步驟四：如果需要新增類似業務的分錄規則，可以使用後臺複製功能
+
+<img src="/assets/RT9rbdMKFoU5gKxm5eCjZPlcpNh.png" src-width="3252" src-height="1246" align="center"/>
+
+## 資金類型
+
+<b>概要</b>
+
+對於券商公司獲取的銀行賬單可以自定義資金類型。
+
+<img src="/assets/XiwVbDu8rouEjLxd34cjpl2tpaf.png" src-width="3282" src-height="596" align="center"/>
+
+<img src="/assets/ZMiObE9V7oh1BjxzJfIjKXQVp4d.png" src-width="3314" src-height="1236" align="center"/>
+
+<b>操作按鈕說明</b>
+
+- 新建：可根據券商公司銀行賬單新建不同資金類型標籤。
+- 編輯：對於已添加的資金類型進行多語言編輯
+- 刪除：對已經添加的资金类型可以進行刪除。
+
+<b>專有名詞解釋</b>
+
+- 資金類型：是指銀行賬單業務分類的名稱
+
+<b>操作步驟</b>
+
+步驟一：如需要新增資金類型，可以根據需求在後臺添加
+
+<img src="/assets/NAsXb7uWnoUdlExdCxAjUzKFp3d.png" src-width="3248" src-height="834" align="center"/>
+
+步驟二：如果未被使用的資金類型需要刪除，可以後臺操作
+
+<img src="/assets/KPezbcbUpoVBUqxpIgjjv0y6pNc.png" src-width="3278" src-height="724" align="center"/>
+
+📢：如果當前的資金類型已經被銀行賬單使用，則無法進行刪除
+
+<img src="/assets/NiUhby3b2ofCi6x3XDljOyUKpub.png" src-width="362" src-height="114" align="center"/>
+
+## 合併規則
+
+<b>概要</b>
+
+如果券商公司導出的財務報表需要合併，則可以自定義合併規則。
+
+<img src="/assets/NDmRbIZqHoBaA3xUDaOjbf3NpGc.png" src-width="3276" src-height="780" align="center"/>
+
+<img src="/assets/J6ljbtAxpohHEAx6jXfjFonRpqc.png" src-width="1846" src-height="735" align="center"/>
+
+<b>操作按鈕說明</b>
+
+- 新建：可根據券商公司需求新增報表的合併規則。
+- 編輯：對已經添加的合併規則可以進行人工編輯。
+- 複製：通過複製已有的合併規則進行快速新建。
+- 刪除：對已經添加的合併規則可以進行刪除。
+
+<b>專有名詞解釋</b>
+
+- 合併規則：爲了滿足不同券商公司對於記賬顆粒度的訴求，證券後臺可支持合併規則配置，兩種合併方式爲：借貸各自合併、借貸抵減合併。借貸各自合併是指借方或者貸方按照本身的科目進行分類彙總，借貸抵減合併是指可以按照設定的相同科目或者不同科目將借貸金額抵減之後合併。
+
+<b>操作步驟</b>
+
+步驟一：如需要新增合併規則，可以根據需求在後臺添加。
+
+<img src="/assets/E86UbdY8do3BkxxFCXSj1F5RppG.png" src-width="2396" src-height="4954" align="center"/>
+
+- 📢：如果在新建合併規則選擇的業務類型都未配置分錄規則，則無法新建
+
+<img src="/assets/A7cQbQlbxorysNxi0p7jpq1Zpqd.png" src-width="2680" src-height="3140" align="center"/>
+
+步驟二：對於已配置的合併規則可以後臺進行修改
+
+<img src="/assets/BVpwbaMDNoJqLoxdm3yjopQhp2b.png" src-width="3258" src-height="780" align="center"/>
+
+- 📢：對於編輯後的合併規則，會應用於後續的合併分錄，對於歷史已經生成的合併分錄如需更新，可以在「證券後臺-會計中臺-會計分錄-合併」進行重跑。
+
+步驟三：如果已配置的合併規則可以後臺刪除
+
+<img src="/assets/FWxibWlXmokvNhxdKrgjhHnYpld.png" src-width="3256" src-height="618" align="center"/>
+
+- 📢：當前合併規則刪除後，只會對後續新的分錄有影響，歷史已生成的合併分錄只有重跑之後纔會同步更新。
+
+## 業務類型
+
+<b>概要</b>
+
+業務類型是指區分記賬數據源各種業務的標籤，該功能可提供客戶按照記賬與否的要求進行個性化配置
+
+<img src="/assets/T5TJbHBUmo9tgoxJKXPjAyAdplX.png" src-width="3772" src-height="1622" align="center"/>
+
+<b>操作按鈕說明</b>
+
+- 新建：可根據券商公司需求配置業務類型。
+- 編輯：對已經添加的業務類型可以進行人工編輯。
+
+<b>專有名詞解釋</b>
+
+- 業務類型：是指區分記賬數據源各種業務的標籤
+
+<b>操作步驟</b>
+
+步驟一：如需要新增業務類型，可以根據需求在後臺添加。
+
+<img src="/assets/J9nNb7RPwo3X1wxf73Fjvfi0pFe.png" src-width="3298" src-height="1410" align="center"/>
+
+步驟二：對於已配置的業務類型可以後臺進行修改
+
+<img src="/assets/TtcEbtbq5oq1suxJjZjjzDzbpUg.png" src-width="3266" src-height="1360" align="center"/>
+
+- 📢：對於編輯後的業務類型，會應用於後續的分錄，對於歷史已經生成的分錄如需更新，可以在「證券後臺-會計中臺-會計分錄-明細」進行重跑。
+
+# 會計分錄
+
+## 適用場景
+
+```text
+在證券系統發生出、入金或者交易之後，系統就可以自動獲取支付流水、客戶收費賬單或者其他分錄數據源並根據客戶初始配置的記賬參數自動形成明細和合並的會計分錄
+```
+
+## 前置條件
+
+擁有會計中台的菜單權限，並且已經設定了會計工作中涉及的參數設置
+
+## 會計分錄列表
+
+執行菜單：证券后台&gt;會計中台&gt;會計分錄
+
+此功能可以查詢或者維護會計分錄，其中明細的會計分錄是形成合並的依據，合併的會計分錄是導出外部財務系統對應財務報表的依據
+
+<img src="/assets/MYrmbwu9BoyplNx0Gs2jbOiEpyo.png" src-width="3794" src-height="922" align="center"/>
+
+<img src="/assets/ZCT1bQizooBLbGxqRP6jRHEMpgf.png" src-width="3282" src-height="1646" align="center"/>
+
+首先，系統是支持根據不同數據源配置分錄規則，可以自動地對數據源產生會計分錄，若某些數據源無法自動配置，此功能提供批次導入與手工錄入方式：
+
+如果自動產生分錄後，作業提供新增【編輯】功能，可以修改產生分錄紀錄，同時紀錄新增支付流水新增支票號欄位展示
+
+<img src="/assets/N1aLbtVxEoTa90xJgc9jgC8rpxp.png" src-width="2658" src-height="1412" align="center"/>
+
+<img src="/assets/FNLSbxAX8oHWgHxs0GojRmaIpqE.png" src-width="3270" src-height="2754" align="center"/>
+
+如果需要手工錄入的分錄很少，可以選擇【手動錄入】
+
+<img src="/assets/RBmWbKizxoaxhSxAx6gjFJRLpse.png" src-width="2502" src-height="1330" align="center"/>
+
+<img src="/assets/MCPsbrX0UoSHS2xN3BXja7prpGh.png" src-width="3290" src-height="2782" align="center"/>
+
+也可以選擇【批量導入】，先行下載範本之後，根據批量範本進行編制分錄並導入到系統中
+
+<img src="/assets/DJi8b6DT0ombsgxfDMNjcO4epEc.png" src-width="3246" src-height="1534" align="center"/>
+
+在記錄右側操作區的【刪除】鍵， 也可進行刪除此會計分錄
+
+<img src="/assets/CbeibxTd9o6Y84xlq6BjgQyephh.png" src-width="3364" src-height="1474" align="center"/>
+
+如果某個帳務日期對應的數據源獲取不完整，可以選擇對應日期的數據源進行【重跑】，系統會更新數據源產生最新會計分錄資料
+
+<img src="/assets/NLYjbtKjmodLz4xcCRSj4ZTxpbh.png" src-width="3362" src-height="1396" align="center"/>
+
+如果系統生成的會計分錄已經核對無誤，手工可以點選【匯總】生成科目餘額匯總表
+
+<img src="/assets/GA5qb7dN6oZwesxoy0ijQ2fQplc.png" src-width="3370" src-height="1452" align="center"/>
+
+會計分錄中新增【報表導出】按鈕，方便按照財務軟件格式要求進行報表導出
+
+<img src="/assets/J722bQTowoia1sxxs1jjz6oppcf.png" src-width="3400" src-height="1842" align="center"/>
+
+提供合併會計分錄查詢功能,合併會計分錄時，系統會按賬帳日期獲取匯率
+
+<img src="/assets/ADGTbnA3ao3VFCxbs2ljhzLxpAe.png" src-width="3348" src-height="1418" align="center"/>
+
+如果对应的合并规则有更新，可以选择对应日期的合并分录进行重跑
+
+<img src="/assets/F9yYbddfEoSMeexeqC0jmoS9pOf.png" src-width="3294" src-height="1692" align="center"/>
+
+# 科目餘額
+
+## 適用場景
+
+根據會計分錄記錄的數據，以科目的形式查看餘額
+
+## 前置條件
+
+擁有會計中台的菜單權限，並且會計分錄模組已經存在數據
+
+## 科目餘額列表
+
+執行菜單：會計中台&gt;科目餘額
+
+系統每日會根據科目明細帳按照帳務日期進行匯總，匯總形成科目餘額匯總表
+
+<img src="/assets/AcVSbLdN2ouO2LxXmWmjHbhpprb.png" src-width="3188" src-height="1460" align="center"/>
+
+# 科目明細帳
+
+## 適用場景
+
+根據會計分錄記錄的數據，以科目的形式查看明細帳
+
+## 前置條件
+
+擁有會計中台的菜單權限，並且會計分錄模組已經存在數據
+
+## 科目明細帳列表
+
+菜單：會計中台&gt;會計科目明細帳
+
+對於系統按照科目展示的明細帳，可以在此功能進行查詢
+
+<img src="/assets/F8k5bmrzqoFNDix7f3rjs1gDpLh.png" src-width="3218" src-height="1506" align="center"/>
+
+# 銀行餘額
+
+## 適用場景
+
+使用者需要根據銀行提供的流水與系統存在的自己資料進行多維度比對
+
+## 前置條件
+
+銀行流水與後台資料均已生成
+
+## 维度展示
+
+帳單核對
+
+執行菜單：會計中台&gt;銀行餘額&gt;帳單核對 Tab 頁籤
+
+根據銀行賬單歷史發生額計算的結果與銀行歷史餘額進行核對，進而保證銀行賬單明細的準確性和完整性。
+
+<img src="/assets/SGu0bzEL7o4NTwx7qJNjAkTPpmc.png" src-width="3234" src-height="1542" align="center"/>
+
+# 歷史餘額
+
+執行菜單：會計中台&gt;銀行餘額&gt;歷史餘額 Tab 頁籤
+
+是指券商公司所有銀行帳戶某一帳務日期的銀行實際餘額。
+
+可以選擇批次導入
+
+<img src="/assets/OH20bEjqbouZSLxt0UbjL7m5pmb.png" src-width="3238" src-height="1524" align="center"/>
+
+<img src="/assets/H8w6bVuL8oI3XixQsTdjm22rpee.png" src-width="3242" src-height="1234" align="center"/>
+
+# 實時餘額
+
+執行菜單：會計中台&gt;銀行餘額&gt;實時餘額 Tab 頁籤
+
+是指券商公司已對接 API 的銀行賬戶的銀行實時餘額。
+
+<img src="/assets/FXEkbmKJOoJNgnxGXDjjOJyjpmb.png" src-width="3252" src-height="1242" align="center"/>
+
+# 記帳數據源
+
+## 適用場景
+
+用戶在記帳時需依照各類明細會計資料進行分類整理，並根據整理出的異常資料進行單獨處理
+
+## 前置條件
+
+支付流水、客戶收費帳單、銀行流水、CCASS 資料等均已準備就緒
+
+## 異常數據源
+
+執行菜單：會計中台&gt;記帳數據源&gt;異常數據源 Tab 頁籤
+
+系統對於無法自動形成分錄的數據源會視作為異常數據，可以在此功能進行查詢
+
+<img src="/assets/NpJob7CXLoQdnKxmkYQj8e6epZe.png" src-width="3236" src-height="1110" align="center"/>
+
+對於異常數據源，可以在記錄列表通過點擊「異常數據源單號」，可以跳轉到具體數據源
+
+<img src="/assets/Be2jbpTL8onsstxt6KkjPcZzpee.png" src-width="3414" src-height="1210" align="center"/>
+
+## 客戶收費帳單
+
+執行菜單：會計中台&gt;記帳數據源&gt;客戶收費帳單 Tab 頁籤
+
+由於支付流水中用戶發生的各種交易費用，比如股票交易是匯總數，類似於佣金、平台費和各種第三方收費合計，無法滿足財務入帳需求，需要解析用戶交易收費明細，作為會計記賬的數據源。
+
+客戶收費帳單對於股票交易類型可以更細分配置，可以支持單獨區分出暗盤，並且暗盤交易可以單獨配置分錄規則並形成會計分錄
+
+記帳數據源“客戶收費帳單”增加【帳務日期】，並用於記帳分錄帳務日期取值
+
+<img src="/assets/UyP6bLvT2oX8xGxGJyHjAoJYp9e.png" src-width="3206" src-height="1502" align="center"/>
+
+如果對應客戶收費賬單不需要記賬，可以進入後臺將記錄進行刪除
+
+<img src="/assets/KrYwblRRMoeeWNxQ6wBj6Txlphc.png" src-width="3286" src-height="712" align="center"/>
+
+如果某一個賬務日期的的客戶收費賬單不準確，可以在後臺進行重跑
+
+<img src="/assets/MwzEb4kFioR69cxVuSHjqQolpWe.png" src-width="3302" src-height="1110" align="center"/>
+
+## 支付流水
+
+執行菜單：會計中台&gt;記帳數據源&gt;支付流水 Tab 頁籤
+
+是指券商公司記錄用戶交易變動明細表，會計中台根據轉賬、出賬和入賬進行規範獲取，作為會計分錄中信息流記賬的數據。
+
+<img src="/assets/KivtbPVBcoLGOCxgOhPjfZ24p1g.png" src-width="3230" src-height="1502" align="center"/>
+
+如果對應支付流水不需要記賬，可以進入後臺將記錄進行刪除
+
+<img src="/assets/GvvybK3T1oTkQwxTuUij9yxJpqb.png" src-width="3258" src-height="818" align="center"/>
+
+如果某一個賬務日期的的支付流水不準確，可以在後臺進行重跑
+
+<img src="/assets/AeFWbFTZRoH6VexrOhHjNMwtp4e.png" src-width="3282" src-height="1132" align="center"/>
+
+## CCASS 賬單
+
+執行菜單：會計中台&gt;記帳數據源&gt;CCASS 賬單Tab 頁籤
+
+增加 CCASS 文件解析，此 CCASS 數據源是相關文件導入後，系統自動根據配置完成會計分錄處理，可在此 Tab 查詢記錄或刪除已轉入的數據源分錄
+
+<img src="/assets/BRGbbI7yRo2Uz3xo0yDj1I6tpke.png" src-width="3240" src-height="1478" align="center"/>
+
+## 新股帳單
+
+執行菜單：會計中台&gt;記帳數據源&gt;新股帳單Tab 頁籤
+
+新增新股帳單
+
+<img src="/assets/RyB8bdaAUoG6RWxvNlsjpwZMpGh.png" src-width="3262" src-height="1120" align="center"/>
+
+## 代理商收費
+
+執行菜單：會計中台&gt;記帳數據源&gt;代理商收費Tab 頁籤
+
+爲獲取機構合約的相關費用，滿足券商公司進行上手費用記賬的訴求，新增代理商收費作爲會計記賬的數據源
+
+<img src="/assets/HJYlbB7weokbi4xBUABj3XETpVN.png" src-width="3288" src-height="912" align="center"/>
+
+## 銀行賬單
+
+執行菜單：款項管理&gt;銀行賬單&gt;銀行賬單 Tab 頁籤
+
+券商公司銀行賬戶所有實際資金變動記錄，按照各種標籤進行打標後，可以作爲資金流記賬的數據源。
+
+<img src="/assets/KI1WbTfgqo3hdmx0KJQj5ekPpfe.png" src-width="3794" src-height="1002" align="center"/>
+
+如果銀行賬單資金類型未知，可以人工後臺進行操作修改
+
+<img src="/assets/Fpmjb74NYoaon2xoblajY0Cvpbe.png" src-width="3376" src-height="1822" align="center"/>
+
+<img src="/assets/ZWLqbABeeoKqjAx0tNUj42GUpYb.png" src-width="3376" src-height="1816" align="center"/>
+
+如果銀行賬單有缺失，可以後臺進行文件導入
+
+<img src="/assets/IpYtbB74Fo7ZnLxay2rjuoW0pLc.png" src-width="3260" src-height="826" align="center"/>
+
+如果銀行賬單記錄有問題，可以後臺進行刪除
+
+<img src="/assets/SWzGbnX3po7YFVxgtazjko4spab.png" src-width="3260" src-height="826" align="center"/>
+
+如果入金賬單和出金賬單有更新，可以在後臺進行重跑
+
+<img src="/assets/EWo2b3MYooKU4Qxh8tyjUySBpWe.png" src-width="3260" src-height="826" align="center"/>
+
+# 入金在途
+
+## 適用場景
+
+作為追蹤客戶在入金未完成狀態時的記錄參考
+
+## 前置條件
+
+入金流程未完成
+
+執行菜單：會計中台&gt;入金在途&gt;明細
+
+提供在途資金的匯總記錄查詢
+
+<img src="/assets/JrKtbUuHUoNGTgxERDhjYiwxpJb.png" src-width="3282" src-height="1690" align="center"/>
+
+執行菜單：會計中台 &gt; 入金在途&gt;彙總覈對
+
+提供在途資金與銀行賬單彙總覈對結果查詢
+
+<img src="/assets/BBVybiMPkobir8xAx4ZjlGSppac.png" src-width="3242" src-height="540" align="center"/>
+

@@ -10,7 +10,7 @@
  *   bun run ./scripts/translate-cn-to-en.ts
  *   
  * To translate a single file:
- *   bun run ./scripts/translate-cn-to-en.ts --filePath ../notion-locales/zh-CN/docs/ApzpwrzLpi6iNdkXoO7c5ZtUnjf.md
+ *   bun run ./scripts/translate-cn-to-en.ts --filePath ../lark-locales/zh-CN/docs/ApzpwrzLpi6iNdkXoO7c5ZtUnjf.md
  * 
  * To only translate docs.json:
  *   bun run ./scripts/translate-cn-to-en.ts --json-only
@@ -22,13 +22,20 @@
  *   bun run ./scripts/translate-cn-to-en.ts --fix-slugs
  *   bun run ./scripts/translate-cn-to-en.ts --fix-slugs --dir ../translate/en/docs
  * 
+ * To only copy assets directory:
+ *   bun run ./scripts/translate-cn-to-en.ts --copy-assets
+ * 
  * Features:
- *   - Automatically tracks translated files in translate/en/already.json
- *   - Skips files that have already been translated
+ *   - Intelligently skips files that don't need re-translation
+ *   - Compares obj_edit_time from docs.json with translate_edit_time from cache
+ *   - Only re-translates when obj_edit_time > translate_edit_time
  *   - Saves progress after each successful translation
+ *   - Caches translated titles in translate/en/cache.json
+ *   - Skips re-translating cached titles to save time and cost
+ *   - Copies assets directory from zh-HK to en translation output
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs"
+import { readFileSync, writeFileSync, existsSync, mkdirSync, cpSync } from "fs"
 import { resolve, dirname, basename } from "path"
 import { sync } from "glob"
 import axios from "axios"
@@ -40,8 +47,7 @@ dotenv.config();
 const DIFY_API_URL = "https://dify.longbridge-inc.com/v1/completion-messages"
 const DIFY_API_KEY = process.env.DIFY_API_KEY
 const DIFY_INPUT_VAR = "query"
-const BASE_NOTION_PAGE_URL = "../notion-pages"
-const BASE_NOTION_LOCALES_URL = "../notion-locales"
+const BASE_LARK_PAGE_URL = "../lark-pages/zh-CN"
 const OUTPUT_DIR = "../translate/en/docs" // output directory for translated files
 
 if (!DIFY_API_KEY) {
@@ -54,7 +60,7 @@ const DELAY_BETWEEN_REQUESTS = 300 // 0.3 seconds delay between API calls
 const DIFY_REQUEST_TIMEOUT = 600000 // 10 minutes timeout for long documents
 
 // Already translated files tracking
-const ALREADY_TRANSLATED_FILE = resolve(__dirname, "../translate/en/already.json")
+const CACHE_FILE = resolve(__dirname, "../translate/en/cache.json")
 
 interface DocNode {
   depth: number
@@ -75,50 +81,88 @@ interface DocNode {
   }
 }
 
+interface CacheEntry {
+  translate_edit_time: number
+  meta: {
+    slug: string
+    originalSlug?: string
+  }
+  position?: number
+  title?: string  // false表示未翻译，true表示已翻译但未存储标题文本，字符串表示已翻译的标题
+  isReUpload?: boolean  // true表示文件被重新修改过需要重新翻译，false表示不需要
+}
+
+interface CacheData {
+  [slug: string]: CacheEntry
+}
+
 async function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 /**
- * Load the list of already translated files
+ * Load cache data
  */
-function loadAlreadyTranslated(): Set<string> {
+function loadCache(): CacheData {
   try {
-    if (existsSync(ALREADY_TRANSLATED_FILE)) {
-      const content = readFileSync(ALREADY_TRANSLATED_FILE, "utf-8").trim()
+    if (existsSync(CACHE_FILE)) {
+      const content = readFileSync(CACHE_FILE, "utf-8").trim()
       if (content) {
-        const files = JSON.parse(content)
-        return new Set(Array.isArray(files) ? files : [])
+        return JSON.parse(content)
       }
     }
   } catch (error) {
-    console.warn("Warning: Failed to load already translated files list")
+    console.warn("Warning: Failed to load cache file")
   }
-  return new Set()
+  return {}
 }
 
 /**
- * Save the list of already translated files
+ * Save cache data
  */
-function saveAlreadyTranslated(files: Set<string>): void {
+function saveCache(cache: CacheData): void {
   try {
-    const dir = dirname(ALREADY_TRANSLATED_FILE)
+    const dir = dirname(CACHE_FILE)
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true })
     }
-    const sortedFiles = Array.from(files).sort()
-    writeFileSync(ALREADY_TRANSLATED_FILE, JSON.stringify(sortedFiles, null, 2))
+    writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2))
   } catch (error) {
-    console.error("Error: Failed to save already translated files list:", error)
+    console.error("Error: Failed to save cache file:", error)
   }
 }
 
 /**
- * Add a file to the already translated list
+ * Update cache entry for a slug
  */
-function markAsTranslated(alreadyTranslated: Set<string>, filename: string): void {
-  alreadyTranslated.add(filename)
-  saveAlreadyTranslated(alreadyTranslated)
+function updateCache(cache: CacheData, slug: string, titleTranslated?: string, originalSlug?: string, position?: number, isReUpload?: boolean): void {
+  cache[slug] = {
+    translate_edit_time: Date.now(),
+    meta: {
+      slug,
+      ...(originalSlug && { originalSlug })
+    },
+    ...(position !== undefined && { position }),
+    ...(titleTranslated !== undefined && { title: titleTranslated }),
+    ...(isReUpload !== undefined && { isReUpload })
+  }
+  saveCache(cache)
+}
+
+/**
+ * Check if title is already translated and return the translated title if available
+ */
+function getTranslatedTitle(cache: CacheData, slug: string): string | null {
+  const entry = cache[slug]
+  if (!entry || !entry.title) {
+    return null
+  }
+  // 如果title是字符串，返回翻译后的标题
+  if (typeof entry.title === 'string') {
+    return entry.title
+  }
+  // 如果title是true，表示已翻译但没有存储标题文本
+  return null
 }
 
 /**
@@ -216,15 +260,18 @@ function buildMarkdown(frontmatter: Record<string, string>, body: string): strin
 /**
  * Translate a single markdown file
  */
-async function translateMarkdownFile(inputPath: string, outputPath: string): Promise<void> {
+async function translateMarkdownFile(inputPath: string, outputPath: string, cache: CacheData): Promise<void> {
   const content = readFileSync(inputPath, "utf-8")
   const translatedRes = await translateWithDify(content)
   const jsonSlug = basename(inputPath, ".md")
   let { frontmatter, body } = parseMarkdown(translatedRes)
+  let originalSlug: string | undefined
+
   if (!frontmatter.slug) {
     // dify接口偶尔会将frontmatter省略
     const { frontmatter: originalFrontmatter } = parseMarkdown(content)
     const rawTitle = await translateWithDify(originalFrontmatter.title)
+    originalSlug = originalFrontmatter.slug !== jsonSlug ? originalFrontmatter.slug : undefined
     frontmatter = {
       ...originalFrontmatter,
       title: rawTitle,
@@ -232,8 +279,10 @@ async function translateMarkdownFile(inputPath: string, outputPath: string): Pro
     }
     await delay(100)
   } else if (frontmatter.slug !== jsonSlug) {
+    originalSlug = frontmatter.slug
     frontmatter.slug = jsonSlug
   }
+
   // Build translated markdown
   const translatedContent = buildMarkdown(frontmatter, body)
 
@@ -244,29 +293,51 @@ async function translateMarkdownFile(inputPath: string, outputPath: string): Pro
 
   writeFileSync(outputPath, translatedContent)
 
+  // Update cache - MD文件翻译完成后，更新translate_edit_time为当前时间，isReUpload设为true（需要重新上传到Lark）
+  updateCache(cache, jsonSlug, undefined, originalSlug, undefined, true)
 }
 
 /**
  * Translate node titles recursively and build English docs.json structure
  */
-async function translateDocNode(node: DocNode): Promise<DocNode> {
+/**
+ * 翻译文档节点
+ * 注意：英文版本的 parent_node_token 会指向英文版本自己的父节点 node_token
+ * 这样英文版本和繁体版本就是两个独立的文档树结构
+ */
+async function translateDocNode(node: DocNode, cache: CacheData): Promise<DocNode> {
   const translatedNode = { ...node }
 
-  // Translate title
-  try {
-    const rawTitle = await translateWithDify(node.title)
-    translatedNode.title = rawTitle
-    console.log(`  Translated node title: ${node.title} -> ${translatedNode.title}`)
-    await delay(DELAY_BETWEEN_REQUESTS)
-  } catch (error) {
-    console.error(`  Failed to translate node title: ${node.title}`)
+  // 检查标题是否已翻译
+  const cachedTitle = getTranslatedTitle(cache, node.slug)
+  if (cachedTitle) {
+    console.log(`  Using cached title: ${node.title} -> ${cachedTitle}`)
+    translatedNode.title = cachedTitle
+  } else {
+    // Translate title
+    try {
+      const rawTitle = await translateWithDify(node.title)
+      translatedNode.title = rawTitle
+      console.log(`  Translated node title: ${node.title} -> ${translatedNode.title}`)
+
+      // 更新缓存，存储翻译后的标题，isReUpload设为false（已完成翻译）
+      updateCache(cache, node.slug, rawTitle, undefined, node.position, true)
+
+      await delay(DELAY_BETWEEN_REQUESTS)
+    } catch (error) {
+      console.error(`  Failed to translate node title: ${node.title}`)
+    }
   }
 
   // Recursively translate children
   if (node.children && node.children.length > 0) {
     translatedNode.children = []
     for (const child of node.children) {
-      translatedNode.children.push(await translateDocNode(child))
+      const translatedChild = await translateDocNode(child, cache)
+      // 更新子节点的 parent_node_token 为当前节点的 node_token
+      // 这样保证英文版本的父子关系指向英文版本自己的节点
+      translatedChild.parent_node_token = translatedNode.node_token
+      translatedNode.children.push(translatedChild)
     }
   }
 
@@ -277,25 +348,121 @@ async function translateDocNode(node: DocNode): Promise<DocNode> {
  * Translate docs.json structure to English
  */
 async function translateDocsJson(): Promise<void> {
-  const docsMetaPath = resolve(__dirname, `${BASE_NOTION_PAGE_URL}/docs-zh-cn.json`)
+  const docsMetaPath = resolve(__dirname, `${BASE_LARK_PAGE_URL}/docs.json`)
   const docsMetaString = readFileSync(docsMetaPath, "utf-8")
   const docsMeta: DocNode[] = JSON.parse(docsMetaString)
+
+  // Load cache
+  const cache = loadCache()
+
+  // Build edit time map and update isReUpload flags
+  const editTimeMap = buildSlugToEditTimeMap(docsMeta)
+  updateIsReUploadFlags(cache, editTimeMap)
 
   const translatedMeta: DocNode[] = []
   console.log("translate docs.json start...")
   for (const node of docsMeta) {
-    translatedMeta.push(await translateDocNode(node))
+    translatedMeta.push(await translateDocNode(node, cache))
   }
 
-  const outputPath = resolve(__dirname, `${BASE_NOTION_PAGE_URL}/docs-en.json`)
+  const outputPath = resolve(__dirname, `../lark-pages/en/docs.json`)
   writeFileSync(outputPath, JSON.stringify(translatedMeta, null, 2))
+
   console.log("translate docs.json success")
+}
+
+/**
+ * Build a map of slug to obj_edit_time from docs.json
+ */
+function buildSlugToEditTimeMap(docsNodes: DocNode[]): Map<string, number> {
+  const map = new Map<string, number>()
+
+  function traverse(nodes: DocNode[]) {
+    for (const node of nodes) {
+      if (node.slug && node.obj_edit_time) {
+        // obj_edit_time is in seconds, convert to milliseconds
+        map.set(node.slug, parseInt(node.obj_edit_time) * 1000)
+      }
+      if (node.children && node.children.length > 0) {
+        traverse(node.children)
+      }
+    }
+  }
+
+  traverse(docsNodes)
+  return map
+}
+
+/**
+ * Check if a file needs to be re-translated based on edit time
+ */
+function needsRetranslation(slug: string, cache: CacheData, editTimeMap: Map<string, number>): boolean {
+  const cacheEntry = cache[slug]
+  const editTime = editTimeMap.get(slug)
+
+  // If no cache entry, needs translation (new file)
+  if (!cacheEntry) {
+    return true
+  }
+
+  // If no edit time found, skip translation (file might not exist in docs.json)
+  if (!editTime) {
+    console.warn(`  ⚠ No edit time found for slug: ${slug}`)
+    return false
+  }
+  if (slug === "O7STwqBFtiFK86ko6oijJZZfpag") {
+    console.log('---editTime', editTime)
+    console.log('---translate_edit_time', cacheEntry.translate_edit_time)
+  }
+  // If obj_edit_time > translate_edit_time, needs re-translation
+  return editTime > cacheEntry.translate_edit_time
+}
+
+/**
+ * Update isReUpload flags for all files in cache based on docs.json
+ */
+function updateIsReUploadFlags(cache: CacheData, editTimeMap: Map<string, number>): void {
+  let updated = false
+
+  // Update existing cache entries
+  for (const slug in cache) {
+    const cacheEntry = cache[slug]
+    const editTime = editTimeMap.get(slug)
+
+    if (editTime) {
+      const needsReTranslation = editTime > cacheEntry.translate_edit_time
+      if (cacheEntry.isReUpload !== needsReTranslation) {
+        cacheEntry.isReUpload = needsReTranslation
+        updated = true
+      }
+      if (slug === "O7STwqBFtiFK86ko6oijJZZfpag") {
+        console.log('---needsReTranslation', editTime, needsReTranslation)
+        console.log('---cacheEntry.isReUpload', cacheEntry.isReUpload)
+      }
+    }
+  }
+
+  // Add new entries for files in docs.json that are not in cache
+  for (const [slug, editTime] of editTimeMap.entries()) {
+    if (!cache[slug]) {
+      cache[slug] = {
+        translate_edit_time: 0,
+        meta: { slug },
+        isReUpload: true  // New file needs translation
+      }
+      updated = true
+    }
+  }
+
+  if (updated) {
+    saveCache(cache)
+  }
 }
 
 /**
  * Translate all markdown files from Chinese to English
  */
-async function translateAllDocs({ inputDir = `${BASE_NOTION_LOCALES_URL}/zh-CN/docs`, outputDir = OUTPUT_DIR }: { inputDir?: string, outputDir?: string } = {}): Promise<void> {
+async function translateAllDocs({ inputDir = `../lark-locales/zh-CN/docs`, outputDir = '../translate/en/docs' }: { inputDir?: string, outputDir?: string } = {}): Promise<void> {
   const docsPath = resolve(__dirname, inputDir)
   const docs = sync(`${docsPath}/**/*.md`).filter(
     doc => !doc.endsWith("SUMMARY.md") && !doc.endsWith("index.md")
@@ -306,29 +473,38 @@ async function translateAllDocs({ inputDir = `${BASE_NOTION_LOCALES_URL}/zh-CN/d
     mkdirSync(_outputDir, { recursive: true })
   }
 
-  // Load already translated files
-  const alreadyTranslated = loadAlreadyTranslated()
+  // Load cache
+  const cache = loadCache()
+
+  // Load docs.json to get obj_edit_time for each file
+  const docsJsonPath = resolve(__dirname, `${BASE_LARK_PAGE_URL}/docs.json`)
+  let editTimeMap = new Map<string, number>()
+
+  try {
+    const docsJsonContent = readFileSync(docsJsonPath, "utf-8")
+    const docsNodes: DocNode[] = JSON.parse(docsJsonContent)
+    editTimeMap = buildSlugToEditTimeMap(docsNodes)
+
+    // Update isReUpload flags for all files
+    updateIsReUploadFlags(cache, editTimeMap)
+  } catch (error) {
+    console.error("Warning: Failed to load docs.json, will translate all files:", error)
+  }
 
   for (const docPath of docs) {
     const relativePath = docPath.replace(`${docsPath}/`, "")
     const outputPath = resolve(_outputDir, `${relativePath}`)
+    const slug = basename(docPath, ".md")
 
-    // Skip if already in the translated list
-    if (alreadyTranslated.has(relativePath)) {
-      console.warn(`  Skipping (already translated): ${relativePath}`)
+    // Check if file needs re-translation
+    if (!needsRetranslation(slug, cache, editTimeMap)) {
+      console.log(`  ⏭ Skipping (up to date): ${relativePath}`)
       continue
     }
 
-    // Skip if output file exists
-    // if (existsSync(outputPath)) {
-    //   markAsTranslated(alreadyTranslated, relativePath)
-    //   continue
-    // }
-
     try {
-      console.log("translating file:", relativePath)
-      await translateMarkdownFile(docPath, outputPath)
-      markAsTranslated(alreadyTranslated, relativePath)
+      console.log(`  📝 Translating file: ${relativePath}`)
+      await translateMarkdownFile(docPath, outputPath, cache)
       console.log(`  ✓ Completed: ${relativePath}`)
       await delay(DELAY_BETWEEN_REQUESTS)
     } catch (error) {
@@ -351,9 +527,11 @@ async function translateSingleFile(filePath: string): Promise<void> {
 
   // Output to stable version by default
   const outputPath = resolve(__dirname, `../translate/en/docs/${filename}`)
+  const cache = loadCache()
+
   try {
     console.log("translate single file start...")
-    await translateMarkdownFile(inputPath, outputPath)
+    await translateMarkdownFile(inputPath, outputPath, cache)
     console.log(`  ✓ Translated successfully: ${filename}`)
   } catch (error) {
     console.error(`  ✗ Failed to translate: ${filename}`)
@@ -398,6 +576,34 @@ async function fixSlugMismatches(targetDir: string = OUTPUT_DIR): Promise<void> 
   }
 }
 
+/**
+ * Copy assets directory from zh-HK to en translation output
+ * Copies ./lark-pages/zh-HK/docs/assets to ./translate/en/docs/assets
+ */
+function copyAssetsDirectory(): void {
+  const sourceDir = resolve(__dirname, "../lark-pages/zh-HK/docs/assets")
+  const targetDir = resolve(__dirname, "../translate/en/docs/assets")
+
+  if (!existsSync(sourceDir)) {
+    console.warn(`  ⚠ Source assets directory not found: ${sourceDir}`)
+    return
+  }
+
+  try {
+    // Create parent directory if it doesn't exist
+    const parentDir = dirname(targetDir)
+    if (!existsSync(parentDir)) {
+      mkdirSync(parentDir, { recursive: true })
+    }
+
+    // Copy directory recursively
+    cpSync(sourceDir, targetDir, { recursive: true, force: true })
+    console.log(`  ✓ Assets directory copied successfully from ${sourceDir} to ${targetDir}`)
+  } catch (error) {
+    console.error(`  ✗ Failed to copy assets directory:`, error)
+  }
+}
+
 async function run(): Promise<void> {
   const args = process.argv.slice(2)
 
@@ -419,11 +625,17 @@ async function run(): Promise<void> {
     return
   }
 
-  // 只翻译目录json
-  if (args.includes("--json-only")) {
-    await translateDocsJson()
+  // Copy assets directory only
+  if (args.includes("--copy-assets")) {
+    copyAssetsDirectory()
     return
   }
+
+  // 只翻译目录json
+  // if (args.includes("--json-only")) {
+  //   await translateDocsJson()
+  //   return
+  // }
 
   // 只翻译md文件
   if (args.includes("--docs-only")) {
@@ -432,8 +644,9 @@ async function run(): Promise<void> {
   }
   console.log("translate start everything...")
   // Default: translate everything
-  await translateDocsJson()
+  // await translateDocsJson()
   await translateAllDocs()
+  copyAssetsDirectory()
 }
 
 run().catch(error => {

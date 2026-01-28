@@ -115,7 +115,6 @@ export class LarkClient {
                     space_id: spaceId,
                 },
             });
-            console.log('添加知识库成员成功', JSON.stringify(res));
         } catch (e: any) {
             console.error(`添加知识库空间成员失败: ${e.message}`);
         }
@@ -153,7 +152,6 @@ export class LarkClient {
 
                 throw new Error(`上传图片返回空 token: ${fileName}`);
             } catch (e: any) {
-                console.warn(`[警告] 第 ${i + 1} 次上传图片失败 ${fileName}: ${e.message}`);
                 if (i === MAX_RETRIES - 1) throw JSON.stringify(e);
                 await this.delay(1000 * Math.pow(2, i));
             }
@@ -276,20 +274,54 @@ export class LarkClient {
      */
     async batchUpdate(docToken: string, requests: any[]): Promise<void> {
         if (!requests || requests.length === 0) return;
+        try {
+            const CHUNK_SIZE = 50;
 
-        const CHUNK_SIZE = 50;
+            for (let i = 0; i < requests.length; i += CHUNK_SIZE) {
+                const chunk = requests.slice(i, i + CHUNK_SIZE);
+                const res = await this.client.docx.documentBlock.batchUpdate({
+                    path: { document_id: docToken },
+                    data: { requests: chunk },
+                });
 
-        for (let i = 0; i < requests.length; i += CHUNK_SIZE) {
-            const chunk = requests.slice(i, i + CHUNK_SIZE);
-            const res = await this.client.docx.documentBlock.batchUpdate({
-                path: { document_id: docToken },
-                data: { requests: chunk },
-            });
-
-            if (res.code !== 0) {
-                throw new Error(`批量更新失败: ${res.msg}`);
+                if (res.code !== 0) {
+                    throw new Error(`批量更新失败: ${res.msg}`);
+                }
             }
+        } catch (err) {
         }
+
+    }
+
+    /**
+     * 获取文档块的子块列表
+     */
+    async listBlockChildren(
+        docToken: string,
+        blockId: string,
+        pageSize: number = 500,
+        pageToken?: string
+    ): Promise<{ items: any[]; hasMore: boolean; pageToken?: string }> {
+        const params: any = { page_size: pageSize };
+        if (pageToken) {
+            params.page_token = pageToken;
+        }
+
+        const res = await this.client.request({
+            method: 'GET',
+            url: `/open-apis/docx/v1/documents/${docToken}/blocks/${blockId}/children`,
+            params,
+        });
+
+        if (res.code !== 0) {
+            throw new Error(`获取块列表失败: ${res.msg}`);
+        }
+
+        return {
+            items: res.data?.items || [],
+            hasMore: res.data?.has_more || false,
+            pageToken: res.data?.page_token,
+        };
     }
 
     /**

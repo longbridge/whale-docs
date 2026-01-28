@@ -12,6 +12,7 @@ import { LocalNode, PathMapping, Config, JsonDocNode } from './types';
 export class Uploader {
     private pathMap: PathMapping = {};
     private errors: { path: string; error: any }[] = [];
+    private uploadedNodeTokens: Map<string, string> = new Map(); // slug -> nodeToken 映射
 
     constructor(
         private client: LarkClient,
@@ -56,7 +57,6 @@ export class Uploader {
                     }
                     // 映射此文件到文件夹的节点
                     this.pathMap[node.path] = this.pathMap[siblingFolder.path];
-                    console.log(`  📎 映射文件 ${node.relativePath} 到文件夹节点`);
                     return;
                 }
             }
@@ -103,7 +103,6 @@ export class Uploader {
     private async processFile(node: LocalNode): Promise<void> {
         const mapEntry = this.pathMap[node.path];
         if (!mapEntry || !mapEntry.nodeToken) {
-            console.warn(`  ⚠️ 跳过 ${node.relativePath} (无节点 Token)`);
             return;
         }
 
@@ -186,6 +185,118 @@ export class Uploader {
     }
 
     /**
+     * 使用批量更新的方式更新文档内容
+     * 先删除所有现有块，再创建新块
+     */
+    async updateDocContentByBatch(objToken: string, blocks: any[]): Promise<void> {
+        try {
+            // 第一步：获取文档中所有现有的块 ID
+            const existingBlockIds = await this.getAllBlockIds(objToken);
+
+            if (existingBlockIds.length > 0) {
+                console.log(`  🗑️  删除 ${existingBlockIds.length} 个现有块...，${JSON.stringify(existingBlockIds)}`);
+
+                // 第二步：批量删除所有现有块
+                const deleteRequests = existingBlockIds.map(blockId => ({
+                    delete_blocks: {
+                        block_ids: [blockId]
+                    }
+                }));
+
+                await this.client.batchUpdate(objToken, deleteRequests);
+                await this.client.delay(500); // 删除后等待一下
+            }
+
+            // 第三步：创建新的块
+            console.log(`  📝 创建 ${blocks.length} 个新块...`);
+            await this.client.writeDocContent(objToken, blocks);
+
+        } catch (e: any) {
+            console.error(`  ❌ 批量更新文档内容失败:`, e.message);
+            throw e;
+        }
+    }
+
+    /**
+     * 获取文档中所有块的 ID（递归获取所有子块）
+     */
+    private async getAllBlockIds(docToken: string, blockId?: string): Promise<string[]> {
+        const blockIds: string[] = [];
+        const targetBlockId = blockId || docToken;
+
+        try {
+            const result = await this.client.listBlockChildren(docToken, targetBlockId, 500);
+
+            for (const block of result.items) {
+                if (block.block_id && block.block_id !== docToken) {
+                    blockIds.push(block.block_id);
+
+                    // 递归获取子块
+                    if (block.has_children) {
+                        const childIds = await this.getAllBlockIds(docToken, block.block_id);
+                        blockIds.push(...childIds);
+                    }
+                }
+            }
+
+            // 处理分页
+            if (result.hasMore && result.pageToken) {
+                const moreIds = await this.getBlockIdsWithPageToken(
+                    docToken,
+                    targetBlockId,
+                    result.pageToken
+                );
+                blockIds.push(...moreIds);
+            }
+        } catch (e: any) {
+            console.warn(`  ⚠️ 获取块列表失败:`, e.message);
+        }
+
+        return blockIds;
+    }
+
+    /**
+     * 使用 page_token 获取更多块 ID
+     */
+    private async getBlockIdsWithPageToken(
+        docToken: string,
+        blockId: string,
+        pageToken: string
+    ): Promise<string[]> {
+        const blockIds: string[] = [];
+
+        try {
+            const result = await this.client.listBlockChildren(docToken, blockId, 500, pageToken);
+
+            for (const block of result.items) {
+                if (block.block_id && block.block_id !== docToken) {
+                    blockIds.push(block.block_id);
+
+                    // 递归获取子块
+                    if (block.has_children) {
+                        const childIds = await this.getAllBlockIds(docToken, block.block_id);
+                        blockIds.push(...childIds);
+                    }
+                }
+            }
+
+            // 继续处理分页
+            if (result.hasMore && result.pageToken) {
+                const moreIds = await this.getBlockIdsWithPageToken(
+                    docToken,
+                    blockId,
+                    result.pageToken
+                );
+                blockIds.push(...moreIds);
+            }
+        } catch (e: any) {
+            console.warn(`  ⚠️ 获取分页块列表失败:`, e.message);
+        }
+
+        return blockIds;
+    }
+
+    /**
      * 后处理：上传图片并替换，更新表格
      */
     async postProcessBlocks(
@@ -215,7 +326,6 @@ export class Uploader {
                             // 在图片上传之间加延迟，避免触发API限制，因为QPS=5
                             await this.client.delay(300);
                         } catch (e: any) {
-                            // console.error(`    ❌ 图片上传失败: ${localPath}`, e.message);
                             this.errors.push({ path: node.relativePath, error: `图片上传失败: ${localPath}` });
                         }
                     } else {
@@ -234,7 +344,6 @@ export class Uploader {
                             const range = `${sheetId}!A1:${endCol}${rowCount}`;
 
                             await this.client.updateSheetValues(token, range, block._sheetValues);
-                            console.log(`    📊 更新表格值`);
                         } catch (e: any) {
                             console.error(`    ❌ 表格更新失败`, e.message);
                             this.errors.push({ path: node.relativePath, error: `表格更新失败: ${e}` });
@@ -346,7 +455,6 @@ export class Uploader {
      * 打印摘要
      */
     private printSummary(): void {
-        console.log('\n' + '='.repeat(50));
 
         if (this.errors.length > 0) {
             console.log('⚠️ 上传完成，但有错误:');
@@ -388,7 +496,6 @@ export class Uploader {
 
                 // 检查是否已存在映射
                 if (this.pathMap[node.filename]) {
-                    console.log(`⏭️ 跳过已存在的节点: ${node.title}`);
                     continue;
                 }
 
@@ -436,7 +543,6 @@ export class Uploader {
 
                 const mapping = this.pathMap[node.filename];
                 if (!mapping || !mapping.objToken) {
-                    console.warn(`⚠️ 跳过无映射的节点: ${node.title}`);
                     // 递归处理子节点
                     if (node.children?.length > 0) {
                         await this.uploadJsonContent(node.children);
@@ -496,6 +602,212 @@ export class Uploader {
                     await this.uploadJsonContent(node.children);
                 }
             }
+        }
+    }
+
+    /**
+     * 重新上传需要更新的文件
+     * @param cacheFilePath cache.json 文件路径
+     * @param enDocsJsonPath en/docs.json 文件路径
+     * @param targetParentToken 目标父节点 Token
+     */
+    async reUploadModifiedFiles(
+        cacheFilePath: string,
+        enDocsJsonPath: string,
+        targetParentToken?: string
+    ): Promise<void> {
+        console.log('\n🔄 开始重新上传修改过的文件...');
+
+        // 读取 cache.json
+        const cacheContent = readFileSync(cacheFilePath, 'utf-8');
+        const cache: Record<string, any> = JSON.parse(cacheContent);
+
+        // 读取 en/docs.json
+        const enDocsContent = readFileSync(enDocsJsonPath, 'utf-8');
+        const enDocs: JsonDocNode[] = JSON.parse(enDocsContent);
+
+        // 构建 slug -> node 的映射和 node_token -> node 的映射
+        const slugToNodeMap = new Map<string, JsonDocNode>();
+        const nodeTokenToNodeMap = new Map<string, JsonDocNode>();
+        const buildMaps = (nodes: JsonDocNode[]) => {
+            for (const node of nodes) {
+                if (node.slug) {
+                    slugToNodeMap.set(node.slug, node);
+                }
+                if (node.node_token) {
+                    nodeTokenToNodeMap.set(node.node_token, node);
+                }
+                if (node.children && node.children.length > 0) {
+                    buildMaps(node.children);
+                }
+            }
+        };
+        buildMaps(enDocs);
+
+        // 筛选需要重新上传的文件
+        const filesToReUpload: Array<{ slug: string; node: JsonDocNode }> = [];
+        for (const [slug, cacheEntry] of Object.entries(cache)) {
+            if (cacheEntry.isReUpload === true) {
+                const node = slugToNodeMap.get(slug);
+                if (node) {
+                    filesToReUpload.push({ slug, node });
+                } else {
+                    console.warn(`⚠️ 在 en/docs.json 中未找到 slug: ${slug}`);
+                }
+            }
+        }
+
+        console.log(`📋 找到 ${filesToReUpload.length} 个需要重新上传的文件`);
+
+        // 按照层级排序，确保父节点先于子节点处理
+        filesToReUpload.sort((a, b) => {
+            const aDepth = this.getNodeDepth(a.node, nodeTokenToNodeMap);
+            const bDepth = this.getNodeDepth(b.node, nodeTokenToNodeMap);
+            return aDepth - bDepth;
+        });
+
+        // 处理每个需要重新上传的文件
+        for (const { slug, node } of filesToReUpload) {
+            try {
+                await this.reUploadSingleFile(node, cache[slug], targetParentToken, nodeTokenToNodeMap);
+            } catch (e: any) {
+                console.error(`❌ 重新上传失败: ${node.title} (${slug})`, e.message);
+                this.errors.push({ path: slug, error: e });
+            }
+        }
+
+        this.printSummary();
+    }
+
+    /**
+     * 获取节点的深度（用于排序）
+     * @param node 节点
+     * @param nodeTokenToNodeMap node_token -> node 的映射
+     * @returns 节点深度
+     */
+    private getNodeDepth(
+        node: JsonDocNode,
+        nodeTokenToNodeMap: Map<string, JsonDocNode>
+    ): number {
+        let depth = 0;
+        let currentNode = node;
+
+        while (currentNode.parent_node_token && currentNode.parent_node_token !== 'null') {
+            const parentNode = nodeTokenToNodeMap.get(currentNode.parent_node_token);
+            if (!parentNode) break;
+            depth++;
+            currentNode = parentNode;
+        }
+
+        return depth;
+    }
+
+    /**
+     * 重新上传单个文件
+     * @param node 文档节点信息
+     * @param cacheEntry 缓存条目
+     * @param targetParentToken 目标父节点 Token（如果是新文件需要）
+     * @param nodeTokenToNodeMap node_token -> node 的映射
+     */
+    private async reUploadSingleFile(
+        node: JsonDocNode,
+        cacheEntry: any,
+        targetParentToken: string | undefined,
+        nodeTokenToNodeMap: Map<string, JsonDocNode>
+    ): Promise<void> {
+        const slug = node.slug;
+        const filename = node.filename;
+
+        // 检查是否已经上传过（通过检查 pathMap 或 uploadedNodeTokens）
+        const existingMapping = this.pathMap[filename];
+
+        let nodeToken: string;
+        let objToken: string;
+
+        // 如果之前上传过，使用现有的 token，否则创建新节点
+        if (existingMapping?.objToken && existingMapping?.nodeToken) {
+            nodeToken = existingMapping.nodeToken;
+            objToken = existingMapping.objToken;
+        } else {
+            // 确定父节点 token - 必须找到直接父节点
+            let parentToken: string | undefined = undefined;
+
+            // 如果有父节点 token，必须从已上传的节点中查找对应的新 token
+            if (node.parent_node_token && node.parent_node_token !== 'null') {
+                const parentNode = nodeTokenToNodeMap.get(node.parent_node_token);
+                if (parentNode) {
+                    // 优先从 pathMap 中查找父节点（已上传的节点）
+                    if (this.pathMap[parentNode.filename]) {
+                        parentToken = this.pathMap[parentNode.filename].nodeToken;
+                        console.log(`📍 找到父节点: ${parentNode.title} -> ${parentToken}`);
+                    } else if (this.uploadedNodeTokens.has(parentNode.slug)) {
+                        parentToken = this.uploadedNodeTokens.get(parentNode.slug);
+                        console.log(`📍 从已上传记录中找到父节点: ${parentNode.title} -> ${parentToken}`);
+                    } else {
+                        // 父节点尚未上传，需要先上传父节点
+                        console.warn(`⚠️ 父节点尚未上传: ${parentNode.title}，将跳过此节点`);
+                        throw new Error(`父节点 ${parentNode.title} 尚未上传，无法创建子节点 ${node.title}`);
+                    }
+                } else {
+                    console.warn(`⚠️ 未找到父节点信息: parent_node_token=${node.parent_node_token}`);
+                }
+            }
+
+            // 如果没有找到父节点，使用默认的 targetParentToken
+            if (!parentToken) {
+                parentToken = targetParentToken;
+                if (!parentToken) {
+                    throw new Error(`无法确定节点 ${node.title} 的父节点 token`);
+                }
+            }
+
+            // 创建新节点
+            console.log(`📝 创建新节点: ${node.title} (父节点: ${parentToken})`);
+            const result = await this.client.createWikiNode(
+                node.title,
+                this.config.wikiSpaceId,
+                parentToken
+            );
+            nodeToken = result.nodeToken;
+            objToken = result.objToken;
+
+            // 更新映射
+            this.pathMap[filename] = {
+                nodeToken,
+                objToken,
+                type: node.has_child ? 'folder' : 'file'
+            };
+            this.uploadedNodeTokens.set(slug, nodeToken);
+
+            console.log(`✅ 创建节点成功: ${node.title} -> ${nodeToken}`);
+        }
+
+        // 读取并处理文档内容
+        const mdFilePath = path.join(this.config.entryMdPath!, filename);
+        if (!existsSync(mdFilePath)) {
+            console.warn(`⚠️ MD 文件不存在: ${mdFilePath}`);
+            return;
+        }
+
+        const content = readFileSync(mdFilePath, 'utf-8');
+        const { body } = parseMarkdownFrontmatter(content);
+
+        const processor = new MarkdownProcessor(
+            (url: string) => url,
+            path.dirname(mdFilePath)
+        );
+        const blocks = await processor.processToBlocks(body);
+
+        if (blocks.length > 0) {
+            // 使用批量更新的方式更新文档内容
+            await this.updateDocContentByBatch(objToken, blocks);
+
+            await this.postProcessBlocks(blocks, objToken, nodeToken, {
+                relativePath: filename,
+                path: mdFilePath
+            } as any);
+
+            console.log(`✅ 更新内容成功: ${node.title}`);
         }
     }
 }

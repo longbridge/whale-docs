@@ -1,0 +1,58 @@
+---
+title: 常见问题
+slug: 2a05bab0c2cc81488740c4e9aed2eee1
+sidebar_position: 2
+---
+
+
+# 常见问题
+
+<div class="callout callout-bg-5 callout-border-5 callout-color-1">
+<div class='callout-emoji'>🎁</div>
+<p>❓ 问：入币前必须完成钱包地址认证吗？</p>
+</div>
+
+答：是的。所有加密货币入币前，客户使用的钱包地址需先完成认证，未认证地址无法正常接收币种。
+
+<div class="callout callout-bg-5 callout-border-5 callout-color-1">
+<div class='callout-emoji'>🎁</div>
+<p>❓ 问：目前支援的钱包地址认证方式是什么？</p>
+</div>
+
+答：目前仅支援「小额支付验证」，需向指定地址完成小额加密货币支付，验证地址归属权。
+
+<div class="callout callout-bg-5 callout-border-5 callout-color-1">
+<div class='callout-emoji'>🎁</div>
+<p>❓ 问：完成钱包地址认证后，所有币种入币都通用吗？</p>
+</div>
+
+答：大部分币种可通用已认证地址，但部分特殊币种需单独认证，具体以系统提示为准。
+
+<div class="callout callout-bg-5 callout-border-5 callout-color-1">
+<div class='callout-emoji'>🎁</div>
+<p>❓ 问：钱包地址已认证，为何部分加密货币入币仍需小额认证？</p>
+</div>
+
+答：因该币种具有特殊性，每次入币均需重新进行钱包地址小额认证，保障资金安全。
+
+<div class="callout callout-bg-5 callout-border-5 callout-color-1">
+<div class='callout-emoji'>🎁</div>
+<p>❓ 问：认证过程中提示「支付失败」怎么办？</p>
+</div>
+
+答：请检查支付地址是否正确、帐户余额是否充足，或网络是否稳定。若仍未解决，可联系客服协助排查。
+
+<div class="callout callout-bg-5 callout-border-5 callout-color-1">
+<div class='callout-emoji'>🎁</div>
+<p>❓ 问：如何查询钱包地址的认证状态？</p>
+</div>
+
+答：登录 WBO，进入「客户钱包地址」模组，输入地址即可查看认证状态（未认证 / 已认证 / 认证中）。
+
+<div class="callout callout-bg-5 callout-border-5 callout-color-1">
+<div class='callout-emoji'>🎁</div>
+<p>❓ 问：认证失败后，多久可以重新申请？</p>
+</div>
+
+答：认证失败后无时间限制，修正问题（如更换正确地址）后可立即重新提交认证申请。
+

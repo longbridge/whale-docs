@@ -1,9 +1,9 @@
 import { defineConfig } from "vitepress"
 // @ts-ignore
 import { siteMetadata } from "./site-meta"
-import siderbarConfig from "./../scripts/notion-siderbar"
+import siderbarConfig from "./../scripts/lark-siderber"
 import alias from "@rollup/plugin-alias"
-const editLinkPattern = "https://github.com/longbridgeapp/whale-docs/edit/main/notion-locales/:path"
+const editLinkPattern = "https://github.com/longbridgeapp/whale-docs/edit/main/lark-locales/:path"
 
 // Supported versions
 const VERSIONS = ["stable", "lts"]
@@ -24,7 +24,7 @@ export default defineConfig({
   lang: "zh-HK",
   cleanUrls: true,
   srcExclude: ["SUMMARY.md", "zh-HK.md", "zh-CN.md", "en.md"],
-  srcDir: "notion-locales",
+  srcDir: "lark-locales",
   lastUpdated: true,
   vite: {
     build: {

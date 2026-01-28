@@ -1,0 +1,29 @@
+---
+title: 2025-11 What's New（RC）
+slug: 2af5bab0c2cc809e870bde33b568a1c4
+sidebar_position: 4
+---
+
+
+# 2025-11 What's New（RC）
+
+# v 2.35.0
+
+<div class="callout callout-bg-5 callout-border-5 callout-color-1">
+<div class='callout-emoji'>🎁</div>
+<p>发布时间   2025.11.19</p>
+</div>
+
+# 🎉 新功能
+
+- <b>选择新建布局时，可一键选择画布布局或自适应布局</b>
+    当新开一个标签页创建空白布局时，可依据需求一键选择画布布局或自适应布局，更加方便直观。
+    <img src="J0Agbj8XoojUtFxfEzXjVh8ppUd" src-width="3372" src-height="1662" align="center"/>
+
+- 持仓组件中新增基金及场外衍生品持仓信息
+    <img src="BVqCbmFdcojctMxWgHmjTQ49pYf" src-width="2874" src-height="876" align="center"/>
+
+# 📌 改进与修复
+
+- 一些技术及交互优化
+
