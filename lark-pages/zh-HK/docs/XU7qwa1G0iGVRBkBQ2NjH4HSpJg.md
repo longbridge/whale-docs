@@ -11,31 +11,31 @@ sidebar_position: 8
 
 **答：**下單後可以馬上撤單。如訂單狀況為 “已日切” 過了截止時間就不能作撤單。
 
-<img src="LhkNbZLWwo2QaaxBJotjevpppfb" src-width="2848" src-height="1634" align="center"/>
+<img src="/assets/LhkNbZLWwo2QaaxBJotjevpppfb.png" src-width="2848" src-height="1634" align="center"/>
 
-<img src="PjAIbJCyzoAu6nxdlgCjaeLfpvh" src-width="1352" src-height="1580" align="center"/>
+<img src="/assets/PjAIbJCyzoAu6nxdlgCjaeLfpvh.png" src-width="1352" src-height="1580" align="center"/>
 
 # 9B 問：什麼是 獲取訂單時間 和 自動回填時間 ？
 
 <b>答：</b>“獲取訂單時間” 是日切時間；“自動回填時間” 只對系統接了上手 API 的才有作用。接了的，上手會在自動回填時間返回回填數值；沒有接的，就需要在後台手動輸入數據回填。
 
-<img src="FoDgblpo3o9EKjxAziFj5VkopBb" src-width="2630" src-height="542" align="center"/>
+<img src="/assets/FoDgblpo3o9EKjxAziFj5VkopBb.png" src-width="2630" src-height="542" align="center"/>
 
 # 9C 問：自動回填的時間如何輸入？
 
 <b>答：自動回填是針對有用 API 的場景</b>。不走 API 的，自動回填時間對租戶不生效，可以跟獲取訂單時間一樣。
 
-<img src="V1e1beAAUoCiDvx0kMjjUInnpZe" src-width="2502" src-height="596" align="center"/>
+<img src="/assets/V1e1beAAUoCiDvx0kMjjUInnpZe.png" src-width="2502" src-height="596" align="center"/>
 
 # 9D 問：公募基金 及 私募基金 如何操作回填？
 
 **答：**確認申購份額／贖回金額需根據上手給的結單或交易確認資料填寫，如沒有的數值可輸入 0。
 
-<img src="NV8WbEDlMooDgnxSsXojCEzVpth" src-width="2164" src-height="1198" align="center"/>
+<img src="/assets/NV8WbEDlMooDgnxSsXojCEzVpth.png" src-width="2164" src-height="1198" align="center"/>
 
 # 9E 問：接了 API 上架的基金，系統沒有自動進行日切，能如何處理？
 
-<img src="MTxkbcXMroO5ALxTNYtjAOzJpwe" src-width="2510" src-height="932" align="center"/>
+<img src="/assets/MTxkbcXMroO5ALxTNYtjAOzJpwe.png" src-width="2510" src-height="932" align="center"/>
 
 **答：**系統會在每天的 8:00-22:00，每隔 5 分鐘檢查是否到達基金日切時間。請修改日切時間至 8:00-22:00 之間的時間段。（見 9E 圖一、圖二）
 
@@ -44,11 +44,11 @@ sidebar_position: 8
 <p>自動回填的檢測時間也是相同的時間段 （8:00 - 22:00）。</p>
 </div>
 
-<img src="RawZbLEqHoKWH9xJ1gAjHdOlplQ" src-width="2502" src-height="692" align="center"/>
+<img src="/assets/RawZbLEqHoKWH9xJ1gAjHdOlplQ.png" src-width="2502" src-height="692" align="center"/>
 
 <em>9E 圖一</em>
 
-<img src="ZCfrbQpzjo9ByRxBv6qjO2lVpGg" src-width="2170" src-height="1042" align="center"/>
+<img src="/assets/ZCfrbQpzjo9ByRxBv6qjO2lVpGg.png" src-width="2170" src-height="1042" align="center"/>
 
 <em>9E 圖二</em>
 
@@ -56,7 +56,7 @@ sidebar_position: 8
 
 **答：**在「基金管理＞公募基金／私募基金＞淨值表」頁面內作更新價格。
 
-<img src="VZ3mbUptZoZBAIxCsXCjqrC3p3f" src-width="2636" src-height="640" align="center"/>
+<img src="/assets/VZ3mbUptZoZBAIxCsXCjqrC3p3f.png" src-width="2636" src-height="640" align="center"/>
 
 # 9G 問：補回之前的基金淨值，結單上會更新嗎？
 
@@ -90,9 +90,9 @@ App 的未作 PI 認購不能認購。
 
 # 9J 問：新建私募基金的「最少持倉份額」、「最少持倉金額」和「最少賣出份額」、「內部代碼（來自上手）」是什麼？
 
-<img src="EYzTbP5PaoBNX3xXNZtjt4bcpgg" src-width="2842" src-height="1068" align="center"/>
+<img src="/assets/EYzTbP5PaoBNX3xXNZtjt4bcpgg.png" src-width="2842" src-height="1068" align="center"/>
 
-<img src="MxCYbHe1coQWWPx2kWsjyuI3poc" src-width="2838" src-height="1050" align="center"/>
+<img src="/assets/MxCYbHe1coQWWPx2kWsjyuI3poc.png" src-width="2838" src-height="1050" align="center"/>
 
 答：
 
@@ -104,9 +104,9 @@ App 的未作 PI 認購不能認購。
 
 # 9K問：基金合單交易中，為什麼「基金清算」的總交易份額和所有客戶分配的份額總和不一樣？
 
-<img src="BDtxbU708ooRb6xVFMSjUA7Uppc" src-width="2866" src-height="964" align="center"/>
+<img src="/assets/BDtxbU708ooRb6xVFMSjUA7Uppc.png" src-width="2866" src-height="964" align="center"/>
 
-<img src="FFJ4bRzugodKoNx8CGAjrqd7pDg" src-width="2864" src-height="916" align="center"/>
+<img src="/assets/FFJ4bRzugodKoNx8CGAjrqd7pDg.png" src-width="2864" src-height="916" align="center"/>
 
 答：系統現在計算基金合單交易的份額是以「個體客戶的認購金額/總認購金額*基金淨值」來計算，因此出現小數位差異。租戶可以用手工調賬方式幫助客戶調整份額。
 

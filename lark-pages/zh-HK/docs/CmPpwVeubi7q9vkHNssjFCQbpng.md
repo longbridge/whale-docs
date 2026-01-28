@@ -16,7 +16,7 @@ sidebar_position: 2
 <p>提交手工出倉後，申請狀態未點擊提交審核處於 “<b>初始化狀態”</b> 在「**取出明細」**能作修改，如已提交審核則不能修改。</p>
 </div>
 
-<img src="TXBfbRqzDoYDDTxZPvujzJgopFg" src-width="2496" src-height="574" align="center"/>
+<img src="/assets/TXBfbRqzDoYDDTxZPvujzJgopFg.png" src-width="2496" src-height="574" align="center"/>
 
 # 3B 問：如何處理實股轉出及轉入的申請？
 
@@ -27,19 +27,19 @@ sidebar_position: 2
 <p>處理實服申報／轉出入股票前，請確認客户已同意 HKIDR（見 3B 圖三）</p>
 </div>
 
-<img src="RmLWb0QLioyBbPx7debjosdopec" src-width="2490" src-height="1432" align="center"/>
+<img src="/assets/RmLWb0QLioyBbPx7debjosdopec.png" src-width="2490" src-height="1432" align="center"/>
 
 <em>3B 圖一</em>
 
 <em>在「證券管理 &gt; 證券取出」頁面點擊「手工出倉」</em>
 
-<img src="Rsc1bN4oLodbKxxETq0jhmYlpoh" src-width="2498" src-height="1432" align="center"/>
+<img src="/assets/Rsc1bN4oLodbKxxETq0jhmYlpoh.png" src-width="2498" src-height="1432" align="center"/>
 
 <em>3B 圖二</em>
 
 <em>在「證券管理 &gt; 證券存入」頁面點擊「手工入倉」</em>
 
-<img src="JpUybayRAoi4zlxK7RXjbMdBpLc" src-width="2478" src-height="1428" align="center"/>
+<img src="/assets/JpUybayRAoi4zlxK7RXjbMdBpLc.png" src-width="2478" src-height="1428" align="center"/>
 
 <em>3B 圖三</em>
 
@@ -47,19 +47,19 @@ sidebar_position: 2
 
 **答：**證券存入／取出中「通知券商」的資料（見 3C 圖一、圖二），在「證券管理＞券商信息配置＞我方券商信息／對手方券商信息」（見 3C 圖三、圖四）點擊「編輯」可修改我方或對手方券商資訊。
 
-<img src="HkyPbHMNdocpSBxzi5pjoOsBpJb" src-width="2684" src-height="662" align="center"/>
+<img src="/assets/HkyPbHMNdocpSBxzi5pjoOsBpJb.png" src-width="2684" src-height="662" align="center"/>
 
 <em>3C 圖一</em>
 
-<img src="Yy9LbET0SoogjZx9W3TjuThPpEd" src-width="2346" src-height="1328" align="center"/>
+<img src="/assets/Yy9LbET0SoogjZx9W3TjuThPpEd.png" src-width="2346" src-height="1328" align="center"/>
 
 <em>3C 圖二</em>
 
-<img src="UNcEbeS5JoQlEdxGiY6jcUnLpKb" src-width="2682" src-height="1338" align="center"/>
+<img src="/assets/UNcEbeS5JoQlEdxGiY6jcUnLpKb.png" src-width="2682" src-height="1338" align="center"/>
 
 <em>3C 圖三</em>
 
-<img src="DEO9bkKLAo3bRax8C4ljoTIEpRb" src-width="2156" src-height="1626" align="center"/>
+<img src="/assets/DEO9bkKLAo3bRax8C4ljoTIEpRb.png" src-width="2156" src-height="1626" align="center"/>
 
 <em>3C 圖四</em>
 

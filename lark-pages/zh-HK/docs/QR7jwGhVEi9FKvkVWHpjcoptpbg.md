@@ -23,7 +23,7 @@ sidebar_position: 12
 
 在會計中台的會計科目主要作業流程如下：
 
-<img src="XO17bM1TCozTzKxCbMojBvprpdf" src-width="874" src-height="553" align="center"/>
+<img src="/assets/XO17bM1TCozTzKxCbMojBvprpdf.png" src-width="874" src-height="553" align="center"/>
 
 # 前置條件
 

@@ -26,15 +26,15 @@ sidebar_position: 0
 
 ## 創建SMS/Email消息模板
 
-<img src="YeqHbZ8GMovAJ3x8utjj66pEprg" src-width="2684" src-height="1548" align="center"/>
+<img src="/assets/YeqHbZ8GMovAJ3x8utjj66pEprg.png" src-width="2684" src-height="1548" align="center"/>
 
-<img src="HM2CbeJSSoPJZSx9QWGjSd9ppbd" src-width="2670" src-height="1600" align="center"/>
+<img src="/assets/HM2CbeJSSoPJZSx9QWGjSd9ppbd.png" src-width="2670" src-height="1600" align="center"/>
 
-<img src="OV7obVEEjoz7wUxI1pejLHCYpuh" src-width="2662" src-height="1600" align="center"/>
+<img src="/assets/OV7obVEEjoz7wUxI1pejLHCYpuh.png" src-width="2662" src-height="1600" align="center"/>
 
 ## 創建並發送SMS/Email消息
 
-<img src="GtdLbBNpMojOtGxCEdlj1GYppMf" src-width="2640" src-height="1510" align="center"/>
+<img src="/assets/GtdLbBNpMojOtGxCEdlj1GYppMf.png" src-width="2640" src-height="1510" align="center"/>
 
-<img src="HvELb9QONoegQ1xF0U1jJxlbp8b" src-width="1992" src-height="1618" align="center"/>
+<img src="/assets/HvELb9QONoegQ1xF0U1jJxlbp8b.png" src-width="1992" src-height="1618" align="center"/>
 

@@ -11,9 +11,9 @@ sidebar_position: 0
 
 **答：**在「清算管理＞融券管理＞融資利息賬單」頁面以賬戶號碼查詢客戶的融資利息
 
-<img src="IYRwb3qe6oX31axr5R8jPJgBpqf" src-width="2498" src-height="1384" align="center"/>
+<img src="/assets/IYRwb3qe6oX31axr5R8jPJgBpqf.png" src-width="2498" src-height="1384" align="center"/>
 
-<img src="TFGkbtEOHoH7gYxvCTVjH5BDpuf" src-width="2154" src-height="1360" align="center"/>
+<img src="/assets/TFGkbtEOHoH7gYxvCTVjH5BDpuf.png" src-width="2154" src-height="1360" align="center"/>
 
 # 7.1B 問：如何能調整到當天的利息？
 
@@ -23,5 +23,5 @@ sidebar_position: 0
 
 <b>答：</b>「清算管理＞融資管理」選「存款利息 / 融資利息」，點擊「提前結算」可以提早發放利息 / 收取融資利息結欠。
 
-<img src="QgwubdtAOoDRg2xcO2Jjja3aplh" src-width="2682" src-height="1412" align="center"/>
+<img src="/assets/QgwubdtAOoDRg2xcO2Jjja3aplh.png" src-width="2682" src-height="1412" align="center"/>
 

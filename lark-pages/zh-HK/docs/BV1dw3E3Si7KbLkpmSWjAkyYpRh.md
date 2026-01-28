@@ -16,13 +16,13 @@ sidebar_position: 3
 <p>賬户只可以有一個登記電話收取認證碼，不同授權人登入到設備時需要使用到登記電話的認證碼。</p>
 </div>
 
-<img src="AsaFbHXUoo4ZtSx2ZA2jgl0fp6f" src-width="1093" src-height="1290" align="center"/>
+<img src="/assets/AsaFbHXUoo4ZtSx2ZA2jgl0fp6f.png" src-width="1093" src-height="1290" align="center"/>
 
 # 1.1.4B 問：公司開户沒有銀行卡，在系統什樣輸入？
 
 **答：**公司銀行開戶沒有銀行資料，銀行名稱、賬號可輸入 N/A。當客户補回銀行資料在「款頁管理 &gt; 銀行卡管理」添加回銀行卡資料。
 
-<img src="P1Njbv34ZoaKpuxDhVbjlpQ5prc" src-width="2706" src-height="1228" align="center"/>
+<img src="/assets/P1Njbv34ZoaKpuxDhVbjlpQ5prc.png" src-width="2706" src-height="1228" align="center"/>
 
 # 1.1.4C 問：公司賬戶如何操作主子賬戶？
 

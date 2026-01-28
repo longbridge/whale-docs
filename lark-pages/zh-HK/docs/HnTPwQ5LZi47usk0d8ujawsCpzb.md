@@ -11,7 +11,7 @@ version: lts
 # 🎉 新功能
 
 - 客戶銀行卡補充入金姓名功能說明
-    <img src="IcVJbwS2soovJIxr69BjKFe9pDg" src-width="1280" src-height="313" align="center"/>
+    <img src="/assets/IcVJbwS2soovJIxr69BjKFe9pDg.png" src-width="1280" src-height="313" align="center"/>
     - 功能新增：客戶銀行卡新增「補充入金姓名」入口，用於解決銀行預留姓名與 KYC 資訊不一致的場景。
     - 應用場景：當銀行預留姓名與 KYC 資訊不一致時，可通過此功能補充填寫。經人工審核的姓名將自動套用於後續 eDDA 授權、入金自動匹配及銀行卡綁卡。
     - 工單審批流程：新建 / 編輯 / 刪除操作均需工單審批，需配置以下工單：
@@ -25,7 +25,7 @@ version: lts
         - 補充入金姓名審批`atm.update_deposit_name_approval`
 
 - 資產調撥增加虛擬資產判斷校驗
-    <img src="FARFbLUtqoP66hxSIeUjuaqvpxf" src-width="1280" src-height="416" align="center"/>
+    <img src="/assets/FARFbLUtqoP66hxSIeUjuaqvpxf.png" src-width="1280" src-height="416" align="center"/>
     - 1.賬戶間轉賬轉給主帳戶時增加虛擬資產賬戶判斷配置，若開啟配置，則當轉入方為虛擬資產賬戶時，需要校驗公司賬戶頭寸，頭寸不足在後台劃轉時會提示。如需打開配置，可聯繫長橋客服協助申請。
     - 2.賬戶間轉倉增加限制虛擬資產賬戶劃轉股票。
     - 路徑：WBO-資產賬戶-資產調撥
@@ -38,13 +38,13 @@ version: lts
     - 關鍵資訊：通知金額、幣種、客戶證券帳號完全一致
     - 路徑：證券後台-款項管理-入金-入金申請
 
-<img src="D7s9bTekRodwjkxXBHnjSHTApid" src-width="1280" src-height="498" align="center"/>
+<img src="/assets/D7s9bTekRodwjkxXBHnjSHTApid.png" src-width="1280" src-height="498" align="center"/>
 
 - 出金記錄優化
     - 因出金記錄字段繁雜，已將同類字段（含公司銀行賬戶、客戶信息、收款銀行、備註、金額、狀態、時間）合併展示，以方便客戶查詢。
     - 路徑：WBO - 款項管理 - 出金 - 出金記錄
 
-<img src="HcrFbOgBOowcJExjUnRjYeOupFd" src-width="1280" src-height="367" align="center"/>
+<img src="/assets/HcrFbOgBOowcJExjUnRjYeOupFd.png" src-width="1280" src-height="367" align="center"/>
 
 - 授信FPS規則數據源切換並支持多語言
     - 1.FPS規則數據源切換直接調用KYC信息。規則配置變量範圍同當前一致，含“職業信息&gt;職業性質”以及“資產投資”信息。
@@ -54,15 +54,15 @@ version: lts
     - 2.FPS規則變量支持多語言
     - 路徑：WBO-風控管理-授信額度-融資授信-客戶FPS
 
-<img src="FP00beZ2toFuvpxav4fjw12dpEf" src-width="1280" src-height="684" align="center"/>
+<img src="/assets/FP00beZ2toFuvpxav4fjw12dpEf.png" src-width="1280" src-height="684" align="center"/>
 
 - 支持自訂金額為客戶完成換匯：
-    <img src="PcndbTYw6ovjPoxy7s6jonHHpwc" src-width="1280" src-height="680" align="center"/>
+    <img src="/assets/PcndbTYw6ovjPoxy7s6jonHHpwc.png" src-width="1280" src-height="680" align="center"/>
     - 針對客戶換匯申請，操作人員可在後台指定金額進行處理。
     - 路徑：WBO - 款項管理 - 換匯 - 客戶換匯
 
 - 支持手工調賬業務碼管理：
-    <img src="IRssbIORvoumiLxWjVLjHextpzb" src-width="1280" src-height="350" align="center"/>
+    <img src="/assets/IRssbIORvoumiLxWjVLjHextpzb.png" src-width="1280" src-height="350" align="center"/>
     - 如手工調賬需增減業務碼，可在業務碼分組進行管理。
     - 路徑：WBO - 資產賬戶 - 業務碼 - 業務管理
 
@@ -70,22 +70,22 @@ version: lts
     - 批量新增功能新增二次確認頁面：僅點擊【確定】後，解析成功的紀錄方可導入；同時在導入頁面新增【最小化視窗】操作（支援退出至後台），若需重新操作，點擊右上角傳輸列表中的對應紀錄即可返回原頁面。
     - 路徑 1：WBO - 款項管理 - 客戶銀行卡
     - 路徑 2：WBO - 證券管理 - 證券存入 - 存入限制
-        <img src="K1ctb6JEKoZGfnxQ302jEDhspoc" src-width="3320" src-height="1774" align="center"/>
-        <img src="G08SbM0Uso5KoCxbcGZjb4AZpdf" src-width="3320" src-height="1764" align="center"/>
-        <img src="LrE0bpV1KooKTzxmtwljvgmHp6g" src-width="3360" src-height="828" align="center"/>
+        <img src="/assets/K1ctb6JEKoZGfnxQ302jEDhspoc.png" src-width="3320" src-height="1774" align="center"/>
+        <img src="/assets/G08SbM0Uso5KoCxbcGZjb4AZpdf.png" src-width="3320" src-height="1764" align="center"/>
+        <img src="/assets/LrE0bpV1KooKTzxmtwljvgmHp6g.png" src-width="3360" src-height="828" align="center"/>
 
 - 開戶入金匹配後駁回聯動處理規則
-    <img src="GycibHZlUorseRxVPRRjywzOpdb" src-width="4273" src-height="810" align="center"/>
+    <img src="/assets/GycibHZlUorseRxVPRRjywzOpdb.png" src-width="4273" src-height="810" align="center"/>
     - 開戶入金場景下，若提交的入金申請已完成匹配，一旦開戶請求被駁回，系統將自動駁回該筆已匹配的開戶入金紀錄；駁回後，系統會同步自動撤銷客戶的入金申請。
     - 路徑：WBO - 款項管理 - 入金 - 開戶中入金
 
 - 自動延續上一日匯率優化
-    <img src="D8z1bP9mmo0jwuxdS3ujWxgvpmd" src-width="2930" src-height="812" align="center"/>
+    <img src="/assets/D8z1bP9mmo0jwuxdS3ujWxgvpmd.png" src-width="2930" src-height="812" align="center"/>
     - 針對匯率類型為「賬面匯率」的場景，系統新增自動延續上一日匯率的流程：若當前各幣種匯率尚未導入，系統將自動複製上一日對應幣種的匯率進行填補。
     - 路徑：WBO - 款項管理 - 換匯 - 參考匯率
 
 - DA日結單和月結單默認生成
-    <img src="ADmqbxgKkon3BVxR67Vj1kdRpPb" src-width="3008" src-height="1434" align="center"/>
+    <img src="/assets/ADmqbxgKkon3BVxR67Vj1kdRpPb.png" src-width="3008" src-height="1434" align="center"/>
     - DA账户的日结单和月结单将默认生成，其中月结单支持批量发送，日结单暂不支持批量发送
     - 路徑：結單管理
 

@@ -246,19 +246,21 @@ function setupZhHKDocs() {
       }
 
       const content = readFileSync(docPath, "utf-8")
-      const fileName = basename(docPath)
+      const originalFileName = basename(docPath)
+
+      // Use slug from frontmatter as target filename, fallback to original filename
+      const slug = getSlugFromContent(content)
+      const targetFileName = slug ? `${slug}.md` : originalFileName
 
       // Build target path: always place files directly in docs directory (flatten structure)
       const targetDir = resolve(__dirname, `../lark-locales/zh-HK/${versionPath}docs`)
-      const targetPath = join(targetDir, fileName)
+      const targetPath = join(targetDir, targetFileName)
 
       // Ensure directory exists
       if (!existsSync(targetDir)) {
         mkdirSync(targetDir, { recursive: true })
       }
 
-      // Update slug to match filename
-      // const updatedContent = updateMarkdownSlug(content, fileName)
       writeFileSync(targetPath, content)
       copiedCount++
     })
@@ -302,19 +304,21 @@ function setupEnDocs() {
       }
 
       const content = readFileSync(docPath, "utf-8")
-      const fileName = basename(docPath)
+      const originalFileName = basename(docPath)
+
+      // Use slug from frontmatter as target filename, fallback to original filename
+      const slug = getSlugFromContent(content)
+      const targetFileName = slug ? `${slug}.md` : originalFileName
 
       // Build target path: always place files directly in docs directory (flatten structure)
       const targetDir = resolve(__dirname, `../lark-locales/en/${versionPath}docs`)
-      const targetPath = join(targetDir, fileName)
+      const targetPath = join(targetDir, targetFileName)
 
       // Ensure directory exists
       if (!existsSync(targetDir)) {
         mkdirSync(targetDir, { recursive: true })
       }
 
-      // Update slug to match filename
-      // const updatedContent = updateMarkdownSlug(content, fileName)
       writeFileSync(targetPath, content)
       copiedCount++
     })
@@ -416,19 +420,22 @@ function convertHK2CN() {
         return
       }
 
-      const fileName = basename(path)
+      const originalFileName = basename(path)
+
+      // Use slug from frontmatter as target filename, fallback to original filename
+      // Note: use hkContent to extract slug since cnContent might have converted characters
+      const slug = getSlugFromContent(hkContent)
+      const targetFileName = slug ? `${slug}.md` : originalFileName
 
       // Build target path: always place files directly in docs directory (flatten structure)
       const targetDir = resolve(__dirname, `../lark-locales/zh-CN/${versionPath}docs`)
-      const cnFilePath = join(targetDir, fileName)
+      const cnFilePath = join(targetDir, targetFileName)
 
       // Ensure directory exists
       if (!existsSync(targetDir)) {
         mkdirSync(targetDir, { recursive: true })
       }
 
-      // Update slug to match filename
-      // const updatedCnContent = updateMarkdownSlug(cnContent, fileName)
       writeFileSync(cnFilePath, cnContent)
       convertedCount++
     })
@@ -543,75 +550,26 @@ function setupRootIndex() {
 }
 
 // Rename markdown files based on their slug frontmatter field and update docs.json
-function renameFilesBySlug(docsPath: string, docsJsonPath: string) {
-  console.log(`  🔄 Renaming files based on slug in: ${docsPath}`)
+// Helper function to extract slug from markdown content
+function getSlugFromContent(content: string): string | null {
+  const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n/)
+  if (!frontmatterMatch) {
+    return null
+  }
 
-  const allMdFiles = sync(`${docsPath}/**/*.md`)
-  const skipFiles = ['index.md', 'docs.md', 'SUMMARY.md']
+  try {
+    const frontmatter = yaml.load(frontmatterMatch[1]) as Record<string, any>
+    return frontmatter?.slug || null
+  } catch {
+    return null
+  }
+}
 
-  // Build a map of all files: slug -> filename (from frontmatter)
-  // This will be used to update docs.json
-  const slugToFilenameMap = new Map<string, string>()
+function syncDocsJsonOnly(docsJsonPath: string) {
+  console.log(`  🔄 Syncing docs.json with meta.slug...`)
 
-  allMdFiles.forEach((filePath) => {
-    const fileName = basename(filePath)
-
-    // Skip special files
-    if (skipFiles.includes(fileName)) {
-      return
-    }
-
-    try {
-      const content = readFileSync(filePath, "utf-8")
-
-      // Match frontmatter block
-      const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n/)
-
-      if (!frontmatterMatch) {
-        console.warn(`  ⚠️  No frontmatter found in: ${fileName}`)
-        return
-      }
-
-      const frontmatterStr = frontmatterMatch[1]
-
-      // Parse YAML frontmatter
-      const frontmatter = yaml.load(frontmatterStr) as Record<string, any>
-
-      if (!frontmatter || !frontmatter.slug) {
-        console.warn(`  ⚠️  No slug field found in: ${fileName}`)
-        return
-      }
-
-      const slug = frontmatter.slug
-
-      // Record the slug for docs.json update
-      slugToFilenameMap.set(slug, slug)
-
-      const newFileName = `${slug}.md`
-      const newFilePath = join(dirname(filePath), newFileName)
-
-      // Skip if filename already matches slug
-      if (fileName === newFileName) {
-        return
-      }
-
-      // Check if target file already exists
-      if (existsSync(newFilePath)) {
-        console.warn(`  ⚠️  Target file already exists: ${newFileName}`)
-        return
-      }
-
-      // Rename the file
-      renameSync(filePath, newFilePath)
-
-    } catch (error) {
-      console.warn(`  ⚠️  Failed to process ${fileName}:`, error)
-    }
-  })
-
-  // Always update docs.json to sync slug and filename with meta.slug
+  // Only sync docs.json, don't rename source files
   if (existsSync(docsJsonPath)) {
-    console.log(`  🔄 Syncing docs.json with meta.slug...`)
     syncDocsJsonWithMetaSlug(docsJsonPath)
   }
 }
@@ -713,19 +671,19 @@ function normalizeHiddenDocs() {
 async function run() {
   console.log("🚀 Starting lark-setup process...\n")
 
-  // Step 0: Optimize source files
+  // Step 1: Optimize source files (cleanup H1 titles and sync docs.json)
   console.log("📋 Step 1: Optimizing source files...")
   console.log("  🔧 Processing zh-HK docs...")
   const zhHKDocsPath = resolve(__dirname, "../lark-pages/zh-HK/docs")
   const zhHKDocsJsonPath = resolve(__dirname, "../lark-pages/zh-HK/docs.json")
   cleanupDuplicateH1Titles(zhHKDocsPath)
-  renameFilesBySlug(zhHKDocsPath, zhHKDocsJsonPath)
+  syncDocsJsonOnly(zhHKDocsJsonPath)
 
   console.log("  🔧 Processing en docs...")
   const enDocsPath = resolve(__dirname, "../lark-pages/en/docs")
   const enDocsJsonPath = resolve(__dirname, "../lark-pages/en/docs.json")
   cleanupDuplicateH1Titles(enDocsPath)
-  renameFilesBySlug(enDocsPath, enDocsJsonPath)
+  syncDocsJsonOnly(enDocsJsonPath)
 
   // Step 2: Clean up hidden docs
   console.log("📋 Step 2: Cleaning up hidden docs...")

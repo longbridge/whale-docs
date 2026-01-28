@@ -18,7 +18,7 @@ sidebar_position: 6
 
 - 新增餘額通相關持倉信息，可在客戶信息組件中查看客戶餘額通持倉
 
-<img src="BgLWbKeRzoI4kGx3CTLjYDG2pch" src-width="3212" src-height="424" align="center"/>
+<img src="/assets/BgLWbKeRzoI4kGx3CTLjYDG2pch.png" src-width="3212" src-height="424" align="center"/>
 
 # 📌 改進與修復
 

@@ -11,7 +11,7 @@ version: stable
 # 🎉 新功能
 
 - 支持所有證券類調賬撤銷
-    <img src="H7i5btSZHos6VexrcFKjLy48pPg" src-width="1280" src-height="416" align="center"/>
+    <img src="/assets/H7i5btSZHos6VexrcFKjLy48pPg.png" src-width="1280" src-height="416" align="center"/>
     - 全面支持所有調賬類型的撤銷功能，含普通撤銷和無痕撤銷
     - 列表新增撤銷批次號字段；如需縮減列表展示字段可使用“自定義列表”功能
     - 路徑：證券後台-資產賬戶-調賬-手工調賬
@@ -25,13 +25,13 @@ version: stable
         - credit.change_group_credit_call_back
     - 路徑：證券後臺 - 風控管理 - 授信額度 - 融資授信 - 額度審批
 
-<img src="J5FRbMfc2o19oix2v9NjGrd3prh" src-width="3212" src-height="856" align="center"/>
+<img src="/assets/J5FRbMfc2o19oix2v9NjGrd3prh.png" src-width="3212" src-height="856" align="center"/>
 
 - 交易限額批量新建優化
     - 客戶限額/證券限額/交易員限額批量創建功能優化，更換為批量新建統一組件，可按批次差異化設置限額規則。
     - 路徑：證券後台-風控管理-交易限額-客戶限額/證券限額/交易員限額
 
-<img src="DtQqbD56fo747ixRXDsjzjj5pNf" src-width="1280" src-height="324" align="center"/>
+<img src="/assets/DtQqbD56fo747ixRXDsjzjj5pNf.png" src-width="1280" src-height="324" align="center"/>
 
 - 公司行動對接工單審批
     - 新增公司行動模塊的審批功能，用戶在配寘相關工作流後在下列節點發起審批：
@@ -40,11 +40,11 @@ version: stable
         - 退稅執行
         - 撤銷退稅
 
-<img src="LBzhbQLiQoPEwix9eqLjumL1pIc" src-width="3090" src-height="1756" align="center"/>
+<img src="/assets/LBzhbQLiQoPEwix9eqLjumL1pIc.png" src-width="3090" src-height="1756" align="center"/>
 
 - 美股換股公司行動預告自動創建
 
-<img src="CLh0brSmModOO9x0a5QjIUBppXf" src-width="2522" src-height="1238" align="center"/>
+<img src="/assets/CLh0brSmModOO9x0a5QjIUBppXf.png" src-width="2522" src-height="1238" align="center"/>
 
 # 🪀 改進與修復
 
@@ -52,20 +52,20 @@ version: stable
     - 後台執行【手工入倉】操作並選擇實物股票類別時，系統將自動彈出手續費編輯框，供操作人員根據實際業務需求填寫應收手續費。
     - 路徑：證券後臺 - 證券管理 - 證券存入 - 存入申請
 
-<img src="XOBdbkW2komhYPxjGwNjUUzoprc" src-width="3310" src-height="1758" align="center"/>
+<img src="/assets/XOBdbkW2komhYPxjGwNjUUzoprc.png" src-width="3310" src-height="1758" align="center"/>
 
 - eDDA記錄新增回收站功能
     - eDDA記錄新增回收站功能，可在此模組中單獨查詢已刪除的eDDA記錄。
     - 路徑：證券管理-款項管理-出入金方式-eDDA
 
-<img src="D8hObTFAWoVqYAxkpibjF0xuptc" src-width="3298" src-height="954" align="center"/>
+<img src="/assets/D8hObTFAWoVqYAxkpibjF0xuptc.png" src-width="3298" src-height="954" align="center"/>
 
 - 客戶額度調整頁面優化並增加自定義列表功能
     - 客戶額度頁面增加“自定義列表”功能
     - 調整額度由頁面更改為側邊欄
     - 路徑：證券後台-風控管理-授信額度-融資授信-客戶額度
 
-<img src="BSyJboov7oF7RGxR54Uj9OIPplF" src-width="3212" src-height="614" align="center"/>
+<img src="/assets/BSyJboov7oF7RGxR54Uj9OIPplF.png" src-width="3212" src-height="614" align="center"/>
 
 - 出金申請客戶標記交互優化
     - 標記條件從單一「客戶編號」拓寬至多維度（如證券帳號、銀行名稱等），支援多組標記同時批量添加，提升操作效率。
@@ -76,11 +76,11 @@ version: stable
 - BE公司行動新增專項郵件發送功能
     - 根據派息是否需要墊資的場景發送特定的郵件
 
-<img src="SyAub6X9QolL2WxFwyVjYIR6pvQ" src-width="3234" src-height="1766" align="center"/>
+<img src="/assets/SyAub6X9QolL2WxFwyVjYIR6pvQ.png" src-width="3234" src-height="1766" align="center"/>
 
 - 客戶匯兌單信息展示優化
     - 列表移除「客戶姓名」展示，將客戶編號設為可點擊跳轉項目。
     - 路徑：證券後台 - 款項管理 - 換匯 - 客戶匯兌
 
-<img src="LNGdbXjYUop0taxj8yVjkxVTpeE" src-width="1280" src-height="679" align="center"/>
+<img src="/assets/LNGdbXjYUop0taxj8yVjkxVTpeE.png" src-width="1280" src-height="679" align="center"/>
 

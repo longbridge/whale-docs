@@ -19,15 +19,15 @@ sidebar_position: 9
 
 在訂單的匯總中，通過不同渠道匯總認購金額，融資使用情況，便於系統自動化統計不同渠道的訂單、融資情況。
 
-<img src="IbksbeWx3ozWjLxqJWJjXLnepnf" src-width="3612" src-height="592" align="center"/>
+<img src="/assets/IbksbeWx3ozWjLxqJWJjXLnepnf.png" src-width="3612" src-height="592" align="center"/>
 
 # 10B 問： 新股認購能否分開不同渠道逐一扣款？
 
 答：可以先進行 A 渠道扣款，然後新增 B 渠道並推遲申請時間，最後為 B 渠道扣款。
 
-<img src="Vcbrb8YKhoGnAJxVY1PjSR1ppKd" src-width="2876" src-height="1602" align="center"/>
+<img src="/assets/Vcbrb8YKhoGnAJxVY1PjSR1ppKd.png" src-width="2876" src-height="1602" align="center"/>
 
-<img src="CD0zbEocno48jWx4KNCjmtRPpzf" src-width="2820" src-height="1598" align="center"/>
+<img src="/assets/CD0zbEocno48jWx4KNCjmtRPpzf.png" src-width="2820" src-height="1598" align="center"/>
 
 # 10C 問：是否支持階梯式認購收費？
 
@@ -37,13 +37,13 @@ sidebar_position: 9
 
 **答：**這裡的財務日期指這個扣款發生的行為記錄。例如：5 月 10 日賬户 A 扣了 100，財務日期選了 5 月 11 日，結單會在 5 月 11 日顯示扣款。
 
-<img src="Ww5Fb9KMSoilPbxCty1jcuvop5c" src-width="2680" src-height="902" align="center"/>
+<img src="/assets/Ww5Fb9KMSoilPbxCty1jcuvop5c.png" src-width="2680" src-height="902" align="center"/>
 
 # 10E 問：IPO 扣款訂單的賬務日期會否影響計息？
 
 **答：**IPO 扣款訂單的賬務日期用以記錄扣款發生，跟計息天數沒有關係。選了相關財務日會在結單上顯示扣款記錄。
 
-<img src="P9x6bJnOkokCQVxjLg9jbhVRpAw" src-width="2680" src-height="902" align="center"/>
+<img src="/assets/P9x6bJnOkokCQVxjLg9jbhVRpAw.png" src-width="2680" src-height="902" align="center"/>
 
 # 10F 問：客戶戶口結餘為 0，為什麼申請 0 成本認購新股失敗？
 
@@ -61,11 +61,11 @@ sidebar_position: 9
 
 **答：**在「新股認購＞全部」搜索重新招股的新股代號（見 10I 圖一）點擊「詳情」，重新設置認購開始＆結束時間、費率、渠道等資料，選回「是」可認購。（見 10I 圖二）
 
-<img src="N5FFbygXPoCZrxx45DdjXbsLpDd" src-width="2554" src-height="662" align="center"/>
+<img src="/assets/N5FFbygXPoCZrxx45DdjXbsLpDd.png" src-width="2554" src-height="662" align="center"/>
 
 <em>10I 圖一</em>
 
-<img src="AGZJb8uUtoK13zxT9QIjTy3bpYy" src-width="2528" src-height="1552" align="center"/>
+<img src="/assets/AGZJb8uUtoK13zxT9QIjTy3bpYy.png" src-width="2528" src-height="1552" align="center"/>
 
 <em>10I 圖二</em>
 
@@ -76,21 +76,21 @@ sidebar_position: 9
 在「新股認購＞港股國配」頁面配置流程、扣款、中籤跟新股 IPO 一致（見 10J 圖一、圖二）。
 上手的中籤文件需要用通用模版導入系統（見 10J 圖三）。但是如果過了認購的時間就要用到手工調賬處理。
 
-<img src="VncTbFgzForv2AxUopYjBKCFpBH" src-width="2506" src-height="854" align="center"/>
+<img src="/assets/VncTbFgzForv2AxUopYjBKCFpBH.png" src-width="2506" src-height="854" align="center"/>
 
 <em>10J 圖一</em>
 
-<img src="AKYRb242QoUVYoxfUcLjZASnplg" src-width="2498" src-height="928" align="center"/>
+<img src="/assets/AKYRb242QoUVYoxfUcLjZASnplg.png" src-width="2498" src-height="928" align="center"/>
 
 <em>10J 圖二</em>
 
-<img src="MBGFbk4W7o9NU9xjlzxjl9ZQp8f" src-width="2508" src-height="1428" align="center"/>
+<img src="/assets/MBGFbk4W7o9NU9xjlzxjl9ZQp8f.png" src-width="2508" src-height="1428" align="center"/>
 
 <em>10J 圖三</em>
 
 # 10K問：為什麼新股認購扣款後，「賬戶詳情」的「現金明細」會把該筆扣款計算在「總金額」上？
 
-<img src="YjgBbBHbRogf1fxjkkxjHQZRp5b" src-width="1846" src-height="1392" align="center"/>
+<img src="/assets/YjgBbBHbRogf1fxjkkxjHQZRp5b.png" src-width="1846" src-height="1392" align="center"/>
 
 答：「總金額」是有計算「在途現金」，「在途現金」有計算正在申購新股的資金，能更實際反映客戶資產；而客戶實際能使用的是「總可用現金」，是沒有加上這筆申購新股的資金。
 

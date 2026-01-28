@@ -35,19 +35,19 @@ sidebar_position: 1
 
 若出幣時提示「主賬戶手續費不足」，可通過「主賬戶充值」功能補充對應虛擬幣，或從子賬戶向主賬戶劃轉少量資金作為手續費預留，完成後即可重新提交出幣申請。
 
-<img src="AutibHcCGoFxxzxZpzKj2jt3psc" src-width="2322" src-height="1254" align="center"/>
+<img src="/assets/AutibHcCGoFxxzxZpzKj2jt3psc.png" src-width="2322" src-height="1254" align="center"/>
 
 ## 加密貨幣<b>配置</b>
 
 在客戶出幣前，需要進行出幣加密貨幣設置。
 
-<img src="TWe7b4UQfoKOCFxO5TpjLmCVpRd" src-width="2048" src-height="706" align="center"/>
+<img src="/assets/TWe7b4UQfoKOCFxO5TpjLmCVpRd.png" src-width="2048" src-height="706" align="center"/>
 
 # 客户錢包地址
 
 出幣前完成錢包地址認證是保障資產安全的關鍵前置環節。
 
-<img src="QncnbdiwYogACyxn1jZj607Vpud" src-width="3288" src-height="1076" align="center"/>
+<img src="/assets/QncnbdiwYogACyxn1jZj607Vpud.png" src-width="3288" src-height="1076" align="center"/>
 
 ## 處理出幣申請
 
@@ -55,5 +55,5 @@ sidebar_position: 1
 
 客戶提交的出幣申請已自動對接 WBO 工單（工單標識：atm.va.coin_withdraw_apply），系統將依據預設的審批配置流開展審批。
 
-<img src="UDiobrJ7Qo7Hn8x27cojffORpUg" src-width="3266" src-height="652" align="center"/>
+<img src="/assets/UDiobrJ7Qo7Hn8x27cojffORpUg.png" src-width="3266" src-height="652" align="center"/>
 

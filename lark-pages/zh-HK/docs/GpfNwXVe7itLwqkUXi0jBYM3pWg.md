@@ -31,7 +31,7 @@ Whale 新股认购系统全面支持券商处理客户新股认购流程，包�
 
 當有新股公告時，系統會透過行情自動同步數據，會默認記錄在『未開啟認購』列表中，方便券商查看與配置。對於未開啟認購的新股，點擊『詳情』，進行新股配置。
 
-<img src="XjA2btfGioNENmxSZAYjtnZDpTh" src-width="3804" src-height="1832" align="center"/>
+<img src="/assets/XjA2btfGioNENmxSZAYjtnZDpTh.png" src-width="3804" src-height="1832" align="center"/>
 
 <b>步驟二：開啟認購</b>
 
@@ -39,7 +39,7 @@ Whale 新股认购系统全面支持券商处理客户新股认购流程，包�
 2. 單選，選擇『是』，再進行保存，則開啟認購，開啟後默認只能現金認購。
 3. 此處設置完成，即現金認購開啟完成
 
-<img src="O8Iob7dZBovxOLxucy4jQTSPpzf" src-width="3782" src-height="1764" align="center"/>
+<img src="/assets/O8Iob7dZBovxOLxucy4jQTSPpzf.png" src-width="3782" src-height="1764" align="center"/>
 
 ### 融資認購配置
 
@@ -51,11 +51,11 @@ Whale 新股认购系统全面支持券商处理客户新股认购流程，包�
 
 點選『融資認購』右上角：‘新建’，設定對應融資池信息，點擊後彈出設置信息。
 
-<img src="GZN5buRbPoM86FxfzBljK2yfpie" src-width="3776" src-height="1816" align="center"/>
+<img src="/assets/GZN5buRbPoM86FxfzBljK2yfpie.png" src-width="3776" src-height="1816" align="center"/>
 
 填寫基礎數據後，若無需關注更多配置，那麼點擊『提交審批』即可。
 
-<img src="YpQibRHVHoqBmVxuMuGjS2R0pwg" src-width="3296" src-height="1802" align="center"/>
+<img src="/assets/YpQibRHVHoqBmVxuMuGjS2R0pwg.png" src-width="3296" src-height="1802" align="center"/>
 
 <b>-更多配置</b>
 
@@ -67,7 +67,7 @@ Whale 新股认购系统全面支持券商处理客户新股认购流程，包�
 2. 可見用戶群體：默認為全部客戶，若券商有運營系統的用戶分群功能，那麼可以指定這個融資只給部分客戶開放。
 3. 上下限股數用於控制客戶的可認購股數範圍。
 
-<img src="QiRCb75NdogWiPxzN0gj6XNRp8g" src-width="3288" src-height="1808" align="center"/>
+<img src="/assets/QiRCb75NdogWiPxzN0gj6XNRp8g.png" src-width="3288" src-height="1808" align="center"/>
 
 <b>-客戶分群配置</b>
 
@@ -76,7 +76,7 @@ Whale 新股认购系统全面支持券商处理客户新股认购流程，包�
 1. A 客戶群體只能最多申購 10000 股；
 2. B 客戶群體最多可以申購 100000 股。
 
-<img src="GxcnbUKWaoFn1exup6IjxIcXpms" src-width="3766" src-height="1834" align="center"/>
+<img src="/assets/GxcnbUKWaoFn1exup6IjxIcXpms.png" src-width="3766" src-height="1834" align="center"/>
 
 <b>步驟二：融資池審批</b>
 
@@ -89,18 +89,18 @@ Whale 新股认购系统全面支持券商处理客户新股认购流程，包�
 1. 融資池列表
 2. 融資池審批頁面
 
-<img src="EgAebYy6koGpnxxzRkujJYLQpGc" src-width="2050" src-height="466" align="center"/>
+<img src="/assets/EgAebYy6koGpnxxzRkujJYLQpGc.png" src-width="2050" src-height="466" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
 <p>⚓ 新股認購 &gt; 新股認購 &gt; 融資池審批</p>
 </div>
 
-<img src="M66Nb2EiMoMQrbxlEFnjLwFepve" src-width="3744" src-height="1290" align="center"/>
+<img src="/assets/M66Nb2EiMoMQrbxlEFnjLwFepve.png" src-width="3744" src-height="1290" align="center"/>
 
 點擊『審批』按鈕，查看工單詳情，審批通過後，融資池生效。
 
-<img src="BzVvbJi4dokzrcxnVulj52Qgp3d" src-width="3274" src-height="1824" align="center"/>
+<img src="/assets/BzVvbJi4dokzrcxnVulj52Qgp3d.png" src-width="3274" src-height="1824" align="center"/>
 
 ### 零本金認購配置
 
@@ -114,7 +114,7 @@ Whale 新股认购系统全面支持券商处理客户新股认购流程，包�
 
 點選『0本金認購』右上角：‘新建’，設定對應融資池信息，點擊後彈出設置信息。
 
-<img src="X9xCbKv6Tozp3nxgi5ajVNG0pHg" src-width="3056" src-height="1840" align="center"/>
+<img src="/assets/X9xCbKv6Tozp3nxgi5ajVNG0pHg.png" src-width="3056" src-height="1840" align="center"/>
 
 填寫基礎數據後，若無需關注更多配置，那麼點擊『提交審批』即可。
 
@@ -124,7 +124,7 @@ Whale 新股认购系统全面支持券商处理客户新股认购流程，包�
 
 <b>融資認購設置</b>。
 
-<img src="CLaKbMcoMo8NRtxvJE9jRDDGp2b" src-width="3258" src-height="1814" align="center"/>
+<img src="/assets/CLaKbMcoMo8NRtxvJE9jRDDGp2b.png" src-width="3258" src-height="1814" align="center"/>
 
 ## 认购截止扣款
 
@@ -135,21 +135,21 @@ Whale 新股认购系统全面支持券商处理客户新股认购流程，包�
 1. 認購處理中列表頁面：會根據訂單狀態，動態展示快捷操作入口
 2. IPO詳情，認購記錄頁面：會根據訂單狀態，動態展示快捷操作入口
 
-<img src="Oy8NbdgrdoDHrBxwVtHjvheWpCg" src-width="3280" src-height="860" align="center"/>
+<img src="/assets/Oy8NbdgrdoDHrBxwVtHjvheWpCg.png" src-width="3280" src-height="860" align="center"/>
 
-<img src="F5xsbyxspoWlkgxeaCUjDc85p7R" src-width="3286" src-height="1574" align="center"/>
+<img src="/assets/F5xsbyxspoWlkgxeaCUjDc85p7R.png" src-width="3286" src-height="1574" align="center"/>
 
 <b>步驟一：點擊扣款，確認訂單範圍</b>
 
 點擊扣款後，會展示待扣款的訂單範圍，確認並選擇訂單範圍，再進行下一步操作。
 
-<img src="VXqubAf23oo6bdxRDCEjVGNXpqe" src-width="3304" src-height="1820" align="center"/>
+<img src="/assets/VXqubAf23oo6bdxRDCEjVGNXpqe.png" src-width="3304" src-height="1820" align="center"/>
 
 <b>步驟二：核對扣款訂單明細</b>
 
 系統會自動根據認購訂單、費用、融資比例等計算出預覽數據，如下圖，操作人員需要核對相關的數據，並提交審核。
 
-<img src="W28NbsFJzo7BmexFZRyj6FVWpef" src-width="3298" src-height="1836" align="center"/>
+<img src="/assets/W28NbsFJzo7BmexFZRyj6FVWpef.png" src-width="3298" src-height="1836" align="center"/>
 
 <b>步驟三：扣款審批</b>
 
@@ -160,9 +160,9 @@ Whale 新股认购系统全面支持券商处理客户新股认购流程，包�
 
 點擊『審批』，則可查看工單，審批通過即可
 
-<img src="BIKUbD08xoVhJZxa6L3jw1XKpwg" src-width="3294" src-height="976" align="center"/>
+<img src="/assets/BIKUbD08xoVhJZxa6L3jw1XKpwg.png" src-width="3294" src-height="976" align="center"/>
 
-<img src="DzXRb1hg2otEJIxrMsFjBmfIpye" src-width="3302" src-height="1844" align="center"/>
+<img src="/assets/DzXRb1hg2otEJIxrMsFjBmfIpye.png" src-width="3302" src-height="1844" align="center"/>
 
 ## 訂單提交上手
 
@@ -185,13 +185,13 @@ Whale 新股认购系统全面支持券商处理客户新股认购流程，包�
 1. 融資是通過某一銀行做的，不直接通過港交所，那麼單獨選擇，生成CSV文件。
 2. 現金、0成本打新是通過港交所做的，那麼一起選擇，生成CCASS文件。
 
-<img src="Ipd4btAsLokwpnxHM5zjFm4Lpnf" src-width="3288" src-height="1318" align="center"/>
+<img src="/assets/Ipd4btAsLokwpnxHM5zjFm4Lpnf.png" src-width="3288" src-height="1318" align="center"/>
 
 <b>步驟二：生成指定文件</b>
 
 彈出側拉彈窗後，選擇<b>文件格式</b>，並自定義<b>文件名</b>，點擊『生成並下載』即可。
 
-<img src="HDX5bokx1oYndIx8xstj9yIgp2e" src-width="3302" src-height="1844" align="center"/>
+<img src="/assets/HDX5bokx1oYndIx8xstj9yIgp2e.png" src-width="3302" src-height="1844" align="center"/>
 
 ## 公布中签
 
@@ -206,9 +206,9 @@ Whale 新股认购系统全面支持券商处理客户新股认购流程，包�
 1. 認購處理中列表頁面：會根據訂單狀態，動態展示快捷操作入口
 2. IPO詳情，認購記錄頁面：會根據訂單狀態，動態展示快捷操作入口
 
-<img src="ADI1b7k84o8a7bxqOBAjBB9Upsc" src-width="3282" src-height="720" align="center"/>
+<img src="/assets/ADI1b7k84o8a7bxqOBAjBB9Upsc.png" src-width="3282" src-height="720" align="center"/>
 
-<img src="Iu6AbLq6OoUjeTxOGJ5jEg0QpWf" src-width="3284" src-height="1590" align="center"/>
+<img src="/assets/Iu6AbLq6OoUjeTxOGJ5jEg0QpWf.png" src-width="3284" src-height="1590" align="center"/>
 
 <b>步驟一：點擊公佈中籤，核對數據</b>
 
@@ -217,7 +217,7 @@ Whale 新股认购系统全面支持券商处理客户新股认购流程，包�
 1. IPO價格：一般情況系統會自動獲取，券商二次確認即可，若IPO價格系統自動獲取是異常的，操作人也可以人工填寫
 2. 客戶的計息天數：默認計息天數為中籤日 - 認購截止日的差值（與港交所時間一致），操作者亦可自行修改。
 
-<img src="Mtfzb6tspoDZZ0xGWxcjSUcppoe" src-width="3306" src-height="1820" align="center"/>
+<img src="/assets/Mtfzb6tspoDZZ0xGWxcjSUcppoe.png" src-width="3306" src-height="1820" align="center"/>
 
 <b>步驟二：選擇中籤方式</b>
 
@@ -230,11 +230,11 @@ IPO系統提供多種中籤方式，券商可根據實際情況選擇不同的�
     2. APPLY：代表该订单客户申请了多少股
     3. SUCCESS：代表客户中签了多少股
 
-<img src="KxXZb7L1FoXQtfxlMyTjafiqpAn" src-width="1004" src-height="258" align="center"/>
+<img src="/assets/KxXZb7L1FoXQtfxlMyTjafiqpAn.png" src-width="1004" src-height="258" align="center"/>
 
 1. 填寫中籤數據，並上傳文件
 
-<img src="CC2MbsbDaodnrgxQesmjiYCApUe" src-width="3286" src-height="1822" align="center"/>
+<img src="/assets/CC2MbsbDaodnrgxQesmjiYCApUe.png" src-width="3286" src-height="1822" align="center"/>
 
 <b>步驟三：核對中籤結果</b>
 
@@ -246,7 +246,7 @@ IPO系統提供多種中籤方式，券商可根據實際情況選擇不同的�
 
 若數據無誤，點擊『確定』，則提交審核。
 
-<img src="Vfzfb4oG4odG0LxS4Wqjgv1Mpoh" src-width="3294" src-height="1832" align="center"/>
+<img src="/assets/Vfzfb4oG4odG0LxS4Wqjgv1Mpoh.png" src-width="3294" src-height="1832" align="center"/>
 
 <b>步驟四：中籤結果審核</b>
 
@@ -257,7 +257,7 @@ IPO系統提供多種中籤方式，券商可根據實際情況選擇不同的�
 
 點擊『審批』，則可查看工單，審批通過即可。
 
-<img src="KTsTbvZBCopNi4xJB8wjYjPKpUb" src-width="3272" src-height="954" align="center"/>
+<img src="/assets/KTsTbvZBCopNi4xJB8wjYjPKpUb.png" src-width="3272" src-height="954" align="center"/>
 
-<img src="AZJqbY1GJoQdplxbe09jKyAtpAb" src-width="3286" src-height="1820" align="center"/>
+<img src="/assets/AZJqbY1GJoQdplxbe09jKyAtpAb.png" src-width="3286" src-height="1820" align="center"/>
 

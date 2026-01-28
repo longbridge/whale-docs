@@ -19,7 +19,7 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
 
 首先点击『 新建渠道 』，配置基金渠道，基金渠道指定了基金提交的上手、日切时间、基金申赎信息确认的回填时间以及时区；
 
-<img src="O3uub0T1fonGqQxbRRVjQEXLpGc" src-width="3252" src-height="1708" align="center"/>
+<img src="/assets/O3uub0T1fonGqQxbRRVjQEXLpGc.png" src-width="3252" src-height="1708" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -36,15 +36,15 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
 
 在基金管理中，根据新建基金的数量决定单个添加 / 批量导入。
 
-<img src="WRYcbHHmwoePB6xhO2wjSyO2pob" src-width="3220" src-height="1714" align="center"/>
+<img src="/assets/WRYcbHHmwoePB6xhO2wjSyO2pob.png" src-width="3220" src-height="1714" align="center"/>
 
 通过ISIN代码快速选择需要添加的基金，并选择已经配置的基金渠道。
 
-<img src="SRCWbi1K6ofkfnxBDOijy8RGpSh" src-width="3232" src-height="1714" align="center"/>
+<img src="/assets/SRCWbi1K6ofkfnxBDOijy8RGpSh.png" src-width="3232" src-height="1714" align="center"/>
 
 新建基金后补充基金的基本信息、申购规则、赎回规则和适当性匹配规则。
 
-<img src="GRpib3ydyov4WNxt7E3jHqqjpze" src-width="3248" src-height="1720" align="center"/>
+<img src="/assets/GRpib3ydyov4WNxt7E3jHqqjpze.png" src-width="3248" src-height="1720" align="center"/>
 
 # 配置基金展示
 
@@ -81,7 +81,7 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
 <p>⚓ 基金管理 &gt; App展示管理</p>
 </div>
 
-<img src="VFsablSBGohhmfx86BQjNNxApde" src-width="3238" src-height="1756" align="center"/>
+<img src="/assets/VFsablSBGohhmfx86BQjNNxApde.png" src-width="3238" src-height="1756" align="center"/>
 
 ```text
 App客户端展示位置如下
@@ -89,31 +89,31 @@ App客户端展示位置如下
 
 - 热销基金
 
-<img src="WAygbTR9yoIJCtxKM1bjMyQKpjc" src-width="958" src-height="1722" align="center"/>
+<img src="/assets/WAygbTR9yoIJCtxKM1bjMyQKpjc.png" src-width="958" src-height="1722" align="center"/>
 
 - 基金主题
 
-<img src="F51xbzbHcoRDKFxjdu5jmkVwp4c" src-width="686" src-height="1482" align="center"/>
+<img src="/assets/F51xbzbHcoRDKFxjdu5jmkVwp4c.png" src-width="686" src-height="1482" align="center"/>
 
 - 基金推荐
 
-<img src="HHZSb9VO1o5WfMxlRCBjntjspZE" src-width="830" src-height="1756" align="center"/>
+<img src="/assets/HHZSb9VO1o5WfMxlRCBjntjspZE.png" src-width="830" src-height="1756" align="center"/>
 
 # 管理基金订单
 
 客户在客户端申赎基金后，产生的基金订单将汇总展示在基金后台，支持后台人员查看
 
-<img src="HZcxbDxGjok2prxae6AjtUvjpM2" src-width="1280" src-height="746" align="center"/>
+<img src="/assets/HZcxbDxGjok2prxae6AjtUvjpM2.png" src-width="1280" src-height="746" align="center"/>
 
 当系统时间到达配置的「基金渠道」的「获取订单时间」，则对应渠道的基金订单将会汇总成一个渠道单，进入到基金清算环节。
 
 # 基金清算交收
 
 1. 選擇產生的基金管道訂單，選擇‘初始化’狀態後，中點擊【數據發送】，彈框資訊確認無誤後，點擊【確認】，此時訂單狀況會變成'發送成功'
-    <img src="VjZWbMQ5LogD0Px3EeqjDJyDpxd" src-width="3278" src-height="1656" align="center"/>
+    <img src="/assets/VjZWbMQ5LogD0Px3EeqjDJyDpxd.png" src-width="3278" src-height="1656" align="center"/>
 
 2. 數據發送之後，选择“发送成功”的状态，等收到基金公司申購/贖回確認檔，這時在該基金記錄操作區，選擇「申购核对确认」、「赎回核对确认」，分别对「申购确认份额」和「赎回确认金额」进行填写和确认
-    <img src="YQSibnizpogdczxbfl9jyrA4pLh" src-width="3304" src-height="1658" align="center"/>
+    <img src="/assets/YQSibnizpogdczxbfl9jyrA4pLh.png" src-width="3304" src-height="1658" align="center"/>
     - 核对确认的弹窗中，需要分别选择清算交收使用的「基金净值」，并分别填写「申购确认份额」和「赎回确认金额」
         <div class="callout callout-bg-5 callout-border-5 callout-color-1">
         <div class='callout-emoji'>🎁</div>
@@ -123,15 +123,15 @@ App客户端展示位置如下
         </ol>
         </div>
 
-<img src="PrBHbVojTo3Qcoxgb0RjgTa4pFd" src-width="1208" src-height="1678" align="center"/>
+<img src="/assets/PrBHbVojTo3Qcoxgb0RjgTa4pFd.png" src-width="1208" src-height="1678" align="center"/>
 
-<img src="XNo3bovZhoZ6MdxWIQrjf0e0pth" src-width="1174" src-height="1646" align="center"/>
+<img src="/assets/XNo3bovZhoZ6MdxWIQrjf0e0pth.png" src-width="1174" src-height="1646" align="center"/>
 
 1. 若當天沒有訂單，自動核對確認， 自動完成交收。
 2. 选择“交收中”的状态，選中對應管道單進行申購交割，點擊確認之後沒有問題申購就完成了
-    <img src="JXqMbpsWZoHEgFxzzg0jkGUmp1f" src-width="3280" src-height="1624" align="center"/>
+    <img src="/assets/JXqMbpsWZoHEgFxzzg0jkGUmp1f.png" src-width="3280" src-height="1624" align="center"/>
 
 3. 後續如果申購交割完成之後還有贖回，會彈出來贖回貨交割，點擊完贖回或交割後是贖回錢交割，點完整個流程就結束了；如果沒有贖回，申購交割完成之後整個流程就結束了
-    <img src="HSxRb2q2yoRCmaxY7gFjFZp9pPh" src-width="3318" src-height="1648" align="center"/>
-    <img src="TUBQb1ibWo500Zxc75kjvrcEpHf" src-width="3304" src-height="1652" align="center"/>
+    <img src="/assets/HSxRb2q2yoRCmaxY7gFjFZp9pPh.png" src-width="3318" src-height="1648" align="center"/>
+    <img src="/assets/TUBQb1ibWo500Zxc75kjvrcEpHf.png" src-width="3304" src-height="1652" align="center"/>
 

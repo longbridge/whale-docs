@@ -15,13 +15,13 @@ sidebar_position: 2
 
 - 注意： 租戶需要 增加下列權限 才能操作 相關 CSR 文件
 
-<img src="JSdTb0yFzoXn77xCnnXjnwoVpad" src-width="409" src-height="221" align="center"/>
+<img src="/assets/JSdTb0yFzoXn77xCnnXjnwoVpad.png" src-width="409" src-height="221" align="center"/>
 
-<img src="LNwWb2GhpoxyNax4uksjXUyxpOg" src-width="1093" src-height="189" align="center"/>
+<img src="/assets/LNwWb2GhpoxyNax4uksjXUyxpOg.png" src-width="1093" src-height="189" align="center"/>
 
 整個 CSR 文件操作基本上 下列流程的順序
 
-<img src="G8uJbo0RdoSWRPxRPrqjikwfpwd" src-width="1674" src-height="934" align="center"/>
+<img src="/assets/G8uJbo0RdoSWRPxRPrqjikwfpwd.jpeg" src-width="1674" src-height="934" align="center"/>
 
 ## <b>1. 計算收益</b>：
 
@@ -29,21 +29,21 @@ sidebar_position: 2
 
 注意： 在計算收益視窗上，在外部報税文件上傳的網站了會提供一個編號的，公司名稱就是券商的公司名稱，要跟外部報税系統里面名稱要一致
 
-<img src="HByIbj3FmohOwYxXjGMjfMF1p5b" src-width="2358" src-height="1346" align="center"/>
+<img src="/assets/HByIbj3FmohOwYxXjGMjfMF1p5b.png" src-width="2358" src-height="1346" align="center"/>
 
 此時產生一個的系統任務，當系統任務完成後（這會需要點時間產生全年資料）， 當完成後系統會給予這批 CRS 數據一個 相同的‘<b>消息編號</b>'
 
-<img src="OEOtblRhyou5itx6SHIjx79FpF3" src-width="1046" src-height="249" align="center"/>
+<img src="/assets/OEOtblRhyou5itx6SHIjx79FpF3.png" src-width="1046" src-height="249" align="center"/>
 
 也可以在任務列表 Tab 頁籤上 點選 紀錄右側操作區的【詳情】，會自動切換 <b>CRS 數據</b> Tab 頁籤，可以查詢數據資料或編輯修改
 
-<img src="Jtp7bL3ckoFCA2xUetvjlUTBpUd" src-width="2442" src-height="135" align="center"/>
+<img src="/assets/Jtp7bL3ckoFCA2xUetvjlUTBpUd.png" src-width="2442" src-height="135" align="center"/>
 
-<img src="Y9HjbQUklozyqRxP3PRjQ4Impud" src-width="1280" src-height="616" align="center"/>
+<img src="/assets/Y9HjbQUklozyqRxP3PRjQ4Impud.png" src-width="1280" src-height="616" align="center"/>
 
 可根據需要 刪除紀錄（不報送） 或修改數據資料
 
-<img src="KGqEbxchcoQe4HxGIhljBwFcpKg" src-width="2489" src-height="1621" align="center"/>
+<img src="/assets/KGqEbxchcoQe4HxGIhljBwFcpKg.png" src-width="2489" src-height="1621" align="center"/>
 
 ## <b>2. 生成文件</b>：
 
@@ -61,12 +61,12 @@ sidebar_position: 2
 
 輸入： <b>年度 /消息類型/編號/批次/消息編號</b>  查詢後。 生成文件的功能鍵就可以操作了
 
-<img src="Ythfb5FS3optl0x5KDqjAvr6pbb" src-width="3243" src-height="1086" align="center"/>
+<img src="/assets/Ythfb5FS3optl0x5KDqjAvr6pbb.png" src-width="3243" src-height="1086" align="center"/>
 
 就可以點選右上角【生成文件】就會產生一個的系統任務來產生報稅規格的文檔
 （注意：這會需要點時間產生全年資料）
 
-<img src="BulCb6ODEouLXnxJPGSj87Mmp3e" src-width="1047" src-height="309" align="center"/>
+<img src="/assets/BulCb6ODEouLXnxJPGSj87Mmp3e.png" src-width="1047" src-height="309" align="center"/>
 
 1. <b>文件下載</b>
 
@@ -74,9 +74,9 @@ sidebar_position: 2
 
 （系統會稱生一個 xml 附檔名的文檔）
 
-<img src="Z6hrbJ0V3ol2mRxtAbmjkUfppOS" src-width="2480" src-height="540" align="center"/>
+<img src="/assets/Z6hrbJ0V3ol2mRxtAbmjkUfppOS.png" src-width="2480" src-height="540" align="center"/>
 
-<img src="HGTsbSYLgoKUNOxGB7Fjo7eLpQb" src-width="581" src-height="667" align="center"/>
+<img src="/assets/HGTsbSYLgoKUNOxGB7Fjo7eLpQb.png" src-width="581" src-height="667" align="center"/>
 
 建議： 此文件不要自行編輯，容易誤操作造成文檔規格不對，無法上傳
 
@@ -84,19 +84,19 @@ sidebar_position: 2
 
 將上傳到外部系統的一個 XML 文件。這文件在外部系統上傳以後，在外部系統它會返回一個文件序列號，可以在任務列表 Tab 頁籤，更新狀態把外部系統序列號輸入
 
-<img src="MnAWbxIgro9LFRxJV9qjt3DLpuf" src-width="2472" src-height="552" align="center"/>
+<img src="/assets/MnAWbxIgro9LFRxJV9qjt3DLpuf.png" src-width="2472" src-height="552" align="center"/>
 
-<img src="La1SbMCAto7GtQxRiMzjaB5hp7b" src-width="2462" src-height="843" align="center"/>
+<img src="/assets/La1SbMCAto7GtQxRiMzjaB5hp7b.png" src-width="2462" src-height="843" align="center"/>
 
 這等于將產生的 CRS 數據 打上這批次的 文件序列號，方便以後對數據查詢或更正已報送資料
 
-<img src="EzpEbhFZkoCVFoxwUlxj1quCpGh" src-width="1039" src-height="334" align="center"/>
+<img src="/assets/EzpEbhFZkoCVFoxwUlxj1quCpGh.png" src-width="1039" src-height="334" align="center"/>
 
 ## <b>4. 更正資料再上傳</b>：
 
 正常情況下，已報送資料其狀態是‘文件已報送'
 
-<img src="LV8RbmqkvoJleExFh0NjIm7fp6b" src-width="1032" src-height="529" align="center"/>
+<img src="/assets/LV8RbmqkvoJleExFh0NjIm7fp6b.png" src-width="1032" src-height="529" align="center"/>
 
 當發現數據需要變更時，可以點選右側 【編輯】 來操作修改數據
 

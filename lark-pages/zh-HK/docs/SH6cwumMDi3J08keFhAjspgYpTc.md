@@ -12,17 +12,17 @@ sidebar_position: 0
 **答：**凍結客户 - 客戶被凍結，限制 App 無法登錄，可操作解凍客户；（見1A 圖一）
 凍結賬户 - 賬戶被凍結，限制了單個證券賬號無法交易、出入金、換匯等操作，可操作激活賬户（解凍賬户）。（見1A 圖二）
 
-<img src="SELsbH4rsog2x1xJyn7jl2JxpPd" src-width="2706" src-height="1146" align="center"/>
+<img src="/assets/SELsbH4rsog2x1xJyn7jl2JxpPd.png" src-width="2706" src-height="1146" align="center"/>
 
 <em>1A 圖一</em>
 
-<img src="E85kby6hwo9wBCxDOQAjFsxqpah" src-width="2706" src-height="1066" align="center"/>
+<img src="/assets/E85kby6hwo9wBCxDOQAjFsxqpah.png" src-width="2706" src-height="1066" align="center"/>
 
 <em>1A 圖二</em>
 
 # 1B 問：賬户列表中，如何區分客户狀態、賬户狀態、賬户凍結狀態？
 
-<img src="IikcbMPFDoguQFxZ9kFjTCQ7pjc" src-width="2682" src-height="494" align="center"/>
+<img src="/assets/IikcbMPFDoguQFxZ9kFjTCQ7pjc.png" src-width="2682" src-height="494" align="center"/>
 
 <b>答：</b>“客戶狀態” 對應是這個客戶是註銷／凍結／激活 （對應工單中心 - 註銷客户＆凍結客户）；
 “賬戶狀態” 對應是證券賬戶是否註銷。如果已凍結但還沒有註銷，會顯示為激活（對應工單中心 - 註銷證券賬户） ；
@@ -39,15 +39,15 @@ sidebar_position: 0
 <p>備註和附件不能同時為空</p>
 </div>
 
-<img src="ZygqbUTLio8SO7xJN8kjtV7spRg" src-width="2658" src-height="730" align="center"/>
+<img src="/assets/ZygqbUTLio8SO7xJN8kjtV7spRg.png" src-width="2658" src-height="730" align="center"/>
 
-<img src="ZBnhbClBOoW1ZuxMBMljbw03piv" src-width="2400" src-height="1262" align="center"/>
+<img src="/assets/ZBnhbClBOoW1ZuxMBMljbw03piv.png" src-width="2400" src-height="1262" align="center"/>
 
 # 1D 問：賬户明細中分了Business 及  Settlement 是什麼意思？
 
 **答：**待交收的流水一開始會放在 Business 賬户，等到交收當天將 Business的賬調整到去 Settlement。
 
-<img src="OgMsbVYBJonfNtx8IFXj2hwapog" src-width="2852" src-height="500" align="center"/>
+<img src="/assets/OgMsbVYBJonfNtx8IFXj2hwapog.png" src-width="2852" src-height="500" align="center"/>
 
 # 1E 問：客户如何設置 App 的登錄密碼？
 
@@ -61,17 +61,17 @@ sidebar_position: 0
 <p>「重置密碼」會發到聯繫手機號，如没有會發到登錄手機號。</p>
 </div>
 
-<img src="WHOvbPro0o8URExGP2djPqY8pOg" src-width="651" src-height="1357" align="center"/>
+<img src="/assets/WHOvbPro0o8URExGP2djPqY8pOg.png" src-width="651" src-height="1357" align="center"/>
 
-<img src="PKi5bYHHCoS1bux3TpmjBINPp4e" src-width="478" src-height="950" align="center"/>
+<img src="/assets/PKi5bYHHCoS1bux3TpmjBINPp4e.png" src-width="478" src-height="950" align="center"/>
 
 <em>1E 圖一 ＆ 圖二</em>
 
-<img src="BHB1bUTOLoCEQHxVuGrjXECdpHb" src-width="2504" src-height="1222" align="center"/>
+<img src="/assets/BHB1bUTOLoCEQHxVuGrjXECdpHb.png" src-width="2504" src-height="1222" align="center"/>
 
 <em>1E 圖三</em>
 
-<img src="OuazbKeRSotzs9x5AFAjOytWpLh" src-width="2162" src-height="982" align="center"/>
+<img src="/assets/OuazbKeRSotzs9x5AFAjOytWpLh.png" src-width="2162" src-height="982" align="center"/>
 
 <em>1E 圖四</em>
 

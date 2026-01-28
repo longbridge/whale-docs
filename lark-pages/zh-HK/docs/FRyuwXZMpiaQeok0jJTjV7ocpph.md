@@ -16,15 +16,15 @@ sidebar_position: 0
 <p>碎股成交量比正股低，有機會需要掛單數天才有成交。</p>
 </div>
 
-<img src="S6OVbzeHZoZe9xxcBNbjcxWcp5b" src-width="2872" src-height="1792" align="center"/>
+<img src="/assets/S6OVbzeHZoZe9xxcBNbjcxWcp5b.png" src-width="2872" src-height="1792" align="center"/>
 
 <em>17.1A 圖一</em>
 
-<img src="XA1EbJFkXo2i4pxqQFoj8wRppjc" src-width="2878" src-height="1740" align="center"/>
+<img src="/assets/XA1EbJFkXo2i4pxqQFoj8wRppjc.png" src-width="2878" src-height="1740" align="center"/>
 
 <em>17.1A 圖二</em>
 
-<img src="QPWQbglyvo8Dy8xZM7HjHqkWpOf" src-width="2862" src-height="1790" align="center"/>
+<img src="/assets/QPWQbglyvo8Dy8xZM7HjHqkWpOf.png" src-width="2862" src-height="1790" align="center"/>
 
 <em>17.1A 圖三</em>
 
@@ -52,35 +52,35 @@ sidebar_position: 0
 <p>如個別客户能作交易可以再新建白名單，添加關聯客户。以批量導入模版的股票代碼，需輸入：3099.hk</p>
 </div>
 
-<img src="V1YIbdZlrouSLqxbsKyjS6Xrp2b" src-width="2606" src-height="1526" align="center"/>
+<img src="/assets/V1YIbdZlrouSLqxbsKyjS6Xrp2b.png" src-width="2606" src-height="1526" align="center"/>
 
 # 17.1E 問：WTT 的 “證券限制” 中，「關聯地區」是根據什麼區分客戶？
 
 **答：**會以客戶填寫的居住國家作區分；如沒有，以證件簽發地區分；如果也沒有，會以國籍區分。
 
-<img src="JaSjbfyr2omXhzxdZk5jZ7Ybp9c" src-width="2866" src-height="1332" align="center"/>
+<img src="/assets/JaSjbfyr2omXhzxdZk5jZ7Ybp9c.png" src-width="2866" src-height="1332" align="center"/>
 
 # 17.1F 問：下單後如何查到需要收取客户多少費用？
 
 **答：**實際的費用需要完成清算後查看報表 SDR018 - Bargain Detail Report-HK。
 預估的費用可以在前台下單組件右下方的「金額詳情」功能查詢到。
 
-<img src="WkW2bw4hnoUlKkxJzXsjx4ZdpWg" src-width="2242" src-height="1122" align="center"/>
+<img src="/assets/WkW2bw4hnoUlKkxJzXsjx4ZdpWg.png" src-width="2242" src-height="1122" align="center"/>
 
 # 17.1G 問：強制平倉後，會有什麼方式通知到客户？
 
 **答：<b>App 會有推送通知（見 17.1G 圖一）</b>，**在結單上也有強制平倉標示（見 17.1G 圖二）。
 追收保證金（margin call）也有電郵及 App 推送通知（見 17.1G 圖三）。
 
-<img src="P3nybWyU3oQMYUxQXY7jTdntpab" src-width="686" src-height="654" align="center"/>
+<img src="/assets/P3nybWyU3oQMYUxQXY7jTdntpab.png" src-width="686" src-height="654" align="center"/>
 
 <em>（17.1G 圖一）</em>
 
-<img src="MTmrbNV9AoAUq7xt0z1jPNHypBR" src-width="1724" src-height="306" align="center"/>
+<img src="/assets/MTmrbNV9AoAUq7xt0z1jPNHypBR.png" src-width="1724" src-height="306" align="center"/>
 
 <em>（17.1G 圖二）</em>
 
-<img src="U2dibIrUjoWn9Dx9iCejaH4ypDh" src-width="770" src-height="1290" align="center"/>
+<img src="/assets/U2dibIrUjoWn9Dx9iCejaH4ypDh.png" src-width="770" src-height="1290" align="center"/>
 
 <em>（17.1G 圖三）</em>
 

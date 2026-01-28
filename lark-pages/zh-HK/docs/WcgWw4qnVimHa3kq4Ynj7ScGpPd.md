@@ -34,31 +34,31 @@ sidebar_position: 0
 
 點擊右上角‘創建計劃’，設置計劃名稱（例：12月迴歸獎勵活動）
 
-<img src="EOQJbsrWwoOGGsxC3XYjjMqMpyg" src-width="3174" src-height="1576" align="center"/>
+<img src="/assets/EOQJbsrWwoOGGsxC3XYjjMqMpyg.png" src-width="3174" src-height="1576" align="center"/>
 
 <b>第二步：设置觸發條件</b>
 
 配置條件參考如下：選擇計劃類型爲定時型-單次，2022-12-29 的 14:00 觸發計劃， 對受衆用戶進行觸達
 
-<img src="A95jbpix7oWY5TxMlCvjSWCppuf" src-width="2534" src-height="964" align="center"/>
+<img src="/assets/A95jbpix7oWY5TxMlCvjSWCppuf.png" src-width="2534" src-height="964" align="center"/>
 
 <b>第三步：选择受衆用戶</b>
 
 賬戶總資產小於200美金 且 累計交易次數大於5次
 
-<img src="EcL5bB2gkoe3nWx4GGZjEzqDpth" src-width="2830" src-height="1576" align="center"/>
+<img src="/assets/EcL5bB2gkoe3nWx4GGZjEzqDpth.png" src-width="2830" src-height="1576" align="center"/>
 
 <b>第四步：配置觸達規則</b>
 
 以郵件的方式給用戶發送 App 新版本升級介紹
 
-<img src="FlRbbe029odksix5rlAjScHFpwb" src-width="2218" src-height="1220" align="center"/>
+<img src="/assets/FlRbbe029odksix5rlAjScHFpwb.png" src-width="2218" src-height="1220" align="center"/>
 
 <b>第五步：設置觸達目標</b>
 
 用戶收到郵件後，1 天內完成 App 啓動
 
-<img src="TjmGb5vKnoZkguxVwn2jkDjmpKg" src-width="2158" src-height="1060" align="center"/>
+<img src="/assets/TjmGb5vKnoZkguxVwn2jkDjmpKg.png" src-width="2158" src-height="1060" align="center"/>
 
 ## 如何創建一個 定時型-重複計劃？
 
@@ -83,31 +83,31 @@ sidebar_position: 0
 
 點擊右上角‘創建計劃’，設置計劃名稱（例：定期邀請開戶活動）
 
-<img src="VQYobW0zkoASpHxh07Qj8OSRpjc" src-width="3174" src-height="1576" align="center"/>
+<img src="/assets/VQYobW0zkoASpHxh07Qj8OSRpjc.png" src-width="3174" src-height="1576" align="center"/>
 
 <b>第二步：設置觸發條件</b>
 
 配置條件參考如下：選擇計劃類型爲定時型-重複，設置起止時間爲2023-01-01 至 202-01-31，設置觸達時間爲每週一和每週五的12:30 ，設置觸達次數限制爲同一個用戶5天內最多收到1次邀請活動
 
-<img src="MSNgbELQwoNzuXxMTDVj5sSppnc" src-width="2638" src-height="1170" align="center"/>
+<img src="/assets/MSNgbELQwoNzuXxMTDVj5sSppnc.png" src-width="2638" src-height="1170" align="center"/>
 
 <b>第三步：選擇受衆用戶</b>
 
 配置條件如下：已開戶用戶且最近 App 啓動時間在2022-12-01 至 2023-01-31
 
-<img src="MzVJbHKm6owBPGxVRexjK1PMp76" src-width="2836" src-height="1588" align="center"/>
+<img src="/assets/MzVJbHKm6owBPGxVRexjK1PMp76.png" src-width="2836" src-height="1588" align="center"/>
 
 <b>第四步：配置觸達規則</b>
 
 以短信的方式給用戶發送邀請活動
 
-<img src="Ya35bneqtoUBI4xS85gjltX2pXg" src-width="1814" src-height="1024" align="center"/>
+<img src="/assets/Ya35bneqtoUBI4xS85gjltX2pXg.png" src-width="1814" src-height="1024" align="center"/>
 
 <b>第五步：設置觸達目標</b>
 
 用戶收到郵件後，4小時內完成邀請活動頁面的瀏覽
 
-<img src="MJrjbzK9LoPI7ixUGmvjsEfBp6g" src-width="2546" src-height="1122" align="center"/>
+<img src="/assets/MJrjbzK9LoPI7ixUGmvjsEfBp6g.png" src-width="2546" src-height="1122" align="center"/>
 
 ## 如何創建一個 獲取型-API 計劃？
 
@@ -129,33 +129,33 @@ sidebar_position: 0
 
 點擊右上角‘創建計劃’，設置計劃名稱（例:越南概念ETF認購預熱）
 
-<img src="I53cbtOOdo7JwOxMmRVjNCNFpig" src-width="3174" src-height="1576" align="center"/>
+<img src="/assets/I53cbtOOdo7JwOxMmRVjNCNFpig.png" src-width="3174" src-height="1576" align="center"/>
 
 <b>第二步：设置觸發條件</b>
 
 配置條件參考如下：選擇計劃類型爲獲取型-API
 
-<img src="A1gXb25EjolPs3xlOWljIOhMpqe" src-width="2470" src-height="790" align="center"/>
+<img src="/assets/A1gXb25EjolPs3xlOWljIOhMpqe.png" src-width="2470" src-height="790" align="center"/>
 
 <b>第三步：选择受衆用戶</b>
 
 配置條件如下：全部用戶
 
-<img src="ORZVbG4qVo4LAgxzbuZjOsgJpWb" src-width="2824" src-height="1586" align="center"/>
+<img src="/assets/ORZVbG4qVo4LAgxzbuZjOsgJpWb.png" src-width="2824" src-height="1586" align="center"/>
 
 <b>第四步：配置觸達規則</b>
 
 通過彈窗觸達用戶
 
-<img src="FmXabcP8WoAFjnxCugsjAMhhpDc" src-width="1788" src-height="1022" align="center"/>
+<img src="/assets/FmXabcP8WoAFjnxCugsjAMhhpDc.png" src-width="1788" src-height="1022" align="center"/>
 
-<img src="NzaZbuoipofKAXxnY9fjTfuKpNh" src-width="1080" src-height="2234" align="center"/>
+<img src="/assets/NzaZbuoipofKAXxnY9fjTfuKpNh.jpeg" src-width="1080" src-height="2234" align="center"/>
 
 <b>第五步：設置觸達目標</b>
 
 用戶收到彈窗後，5分鐘內，打開彈窗且彈窗名稱爲南方東英越南30
 
-<img src="LDpub1djMo1xhKxY83TjFqpMpWf" src-width="2208" src-height="1070" align="center"/>
+<img src="/assets/LDpub1djMo1xhKxY83TjFqpMpWf.png" src-width="2208" src-height="1070" align="center"/>
 
 ## 如何創建一個 觸發型-完成A 計劃？
 
@@ -170,7 +170,7 @@ sidebar_position: 0
 
 從新用戶註冊1小時到12天，配置多個觸發型計劃，對用戶進行內容投放
 
-<img src="OPrPbZFsYoKddNxM8Jgj3geepic" src-width="3454" src-height="1574" align="center"/>
+<img src="/assets/OPrPbZFsYoKddNxM8Jgj3geepic.png" src-width="3454" src-height="1574" align="center"/>
 
 以註冊4天關注股票引導爲例進行說明
 
@@ -183,33 +183,33 @@ sidebar_position: 0
 
 點擊右上角‘創建計劃’，設置計劃名稱（例：註冊4天關注股票引導）
 
-<img src="VDzZbhUidoQdt9xajYbjTqgFpmg" src-width="3174" src-height="1576" align="center"/>
+<img src="/assets/VDzZbhUidoQdt9xajYbjTqgFpmg.png" src-width="3174" src-height="1576" align="center"/>
 
 <b>第二步：设置觸發條件</b>
 
 配置條件參考如下：選擇計劃類型爲 觸發型-完成 A ，設置觸發事件爲註冊成功，設置延遲4天后對用戶觸達，設置起止時間爲2023-01-01 至 2023-06-30，設置參與次數爲1次
 
-<img src="Kv9xbqTxzovVuxxxgpfjnargpVe" src-width="2854" src-height="1478" align="center"/>
+<img src="/assets/Kv9xbqTxzovVuxxxgpfjnargpVe.png" src-width="2854" src-height="1478" align="center"/>
 
 <b>第三步：选择受衆用戶</b>
 
 2023-01-01 至 2023-06-30期間新註冊的用戶
 
-<img src="EznjbfrYsouuQux2ywwjaVD0peb" src-width="2858" src-height="1582" align="center"/>
+<img src="/assets/EznjbfrYsouuQux2ywwjaVD0peb.png" src-width="2858" src-height="1582" align="center"/>
 
 <b>第四步：配置觸達規則</b>
 
 通過Push觸達用戶
 
-<img src="Gwtbbs6CPou0Ssx6SmqjZYBOpAe" src-width="2206" src-height="1178" align="center"/>
+<img src="/assets/Gwtbbs6CPou0Ssx6SmqjZYBOpAe.png" src-width="2206" src-height="1178" align="center"/>
 
-<img src="SzVfbduP6osxUIxNWEHjtSxEpSb" src-width="1284" src-height="771" align="center"/>
+<img src="/assets/SzVfbduP6osxUIxNWEHjtSxEpSb.png" src-width="1284" src-height="771" align="center"/>
 
 <b>第五步：設置觸達目標</b>
 
 用戶收到Push後，5分鐘內，完成Push點擊，點擊Push的標題爲：順藤摸瓜，選到更多好股票
 
-<img src="J3LMbV8XCoUg5qxUFS2jgAdtpCd" src-width="2200" src-height="1188" align="center"/>
+<img src="/assets/J3LMbV8XCoUg5qxUFS2jgAdtpCd.png" src-width="2200" src-height="1188" align="center"/>
 
 # 人群畫像
 
@@ -217,7 +217,7 @@ sidebar_position: 0
 
 投放系統支持通過 2 種方式創建用戶分羣，分別是規則創建和導入創建，您可以根據自己的需求選擇
 
-<img src="VM7DbrL8kokFWwx8qjmjUOk5prf" src-width="582" src-height="366" align="center"/>
+<img src="/assets/VM7DbrL8kokFWwx8qjmjUOk5prf.png" src-width="582" src-height="366" align="center"/>
 
 ### 規則創建用戶分羣
 
@@ -229,15 +229,15 @@ sidebar_position: 0
 
 **結果更新說明：**已經創建並保存成功的分羣，在每次被請求時，均會使用分羣規則去重新計算，從而獲取最新的數據結果
 
-<img src="E1Z0b4X0qoJHV2xyyXFjhI0XpSe" src-width="3068" src-height="1704" align="center"/>
+<img src="/assets/E1Z0b4X0qoJHV2xyyXFjhI0XpSe.png" src-width="3068" src-height="1704" align="center"/>
 
 ### 導入創建用戶分羣
 
 通過導入指定 `id` 的名單來創建分羣，系統會將導入的 `id` 進行匹配，匹配成功的 `id` 則保存到分羣的結果中，導入 `id` 需爲用戶的唯一標識：`member_id`
 
-<img src="L8jIbz7GkoDk99xL7G1joougp1g" src-width="1542" src-height="1546" align="center"/>
+<img src="/assets/L8jIbz7GkoDk99xL7G1joougp1g.png" src-width="1542" src-height="1546" align="center"/>
 
-<img src="Xiufbn8JCozDoBx9otyj6Lgspmd" src-width="1536" src-height="1684" align="center"/>
+<img src="/assets/Xiufbn8JCozDoBx9otyj6Lgspmd.png" src-width="1536" src-height="1684" align="center"/>
 
 # 觸達通道
 
@@ -253,7 +253,7 @@ sidebar_position: 0
 - 設置 Banner 運行週期：Banner 生效的週期，在設置週期內，Banner 生效，過期後則不再展示
 - 設置 Banner 可見範圍：全部用戶可見-則 App 所有用戶可以看到 Banner，投放系統可見-則僅計劃配置中的目標受衆可見
 
-<img src="W6rdbx9s3oMqaVxA0WUjF1HDp9b" src-width="1972" src-height="1640" align="center"/>
+<img src="/assets/W6rdbx9s3oMqaVxA0WUjF1HDp9b.png" src-width="1972" src-height="1640" align="center"/>
 
 ## 如何創建一個 App 彈窗？
 
@@ -272,7 +272,7 @@ sidebar_position: 0
 - 彈窗平臺：可以選擇是在 2 個端顯示還是隻在某個單一的端進行顯示
 - 可見狀態：選擇投放系統可見則代表僅計劃配置中的目標受衆可見，全部用戶可見則整個 App 用戶可見彈窗
 
-<img src="TAcobSwVnoRnqcxdJGaj8Y0KpGh" src-width="1924" src-height="1644" align="center"/>
+<img src="/assets/TAcobSwVnoRnqcxdJGaj8Y0KpGh.png" src-width="1924" src-height="1644" align="center"/>
 
 ## 如何創建一個 APP Push 消息？
 
@@ -284,7 +284,7 @@ sidebar_position: 0
 - 設置標題、內容、上傳封面圖片
 - 選擇通知行爲：常用的爲打開某個活動鏈接或跳轉到新股認購的頁面，具體可按需選擇
 
-<img src="JROObELXxoljshx9sfsjIGNjpob" src-width="2132" src-height="1526" align="center"/>
+<img src="/assets/JROObELXxoljshx9sfsjIGNjpob.png" src-width="2132" src-height="1526" align="center"/>
 
 ## 如何創建一個郵件消息？
 
@@ -297,7 +297,7 @@ sidebar_position: 0
 - 通過富文本編輯器編輯郵件正文
 - 添加郵件附件、設置郵件發件郵箱
 
-<img src="J4p9bAxF7ozfLAx7OrQj7cxMpCe" src-width="1694" src-height="1362" align="center"/>
+<img src="/assets/J4p9bAxF7ozfLAx7OrQj7cxMpCe.png" src-width="1694" src-height="1362" align="center"/>
 
 ## 如何創建一個短信消息？
 
@@ -310,5 +310,5 @@ sidebar_position: 0
 - 選擇短信類型：投放系統一般使用營銷活動
 - 設置短信內容
 
-<img src="I5gOb0lJQon9BkxNCG2j2kJNpyg" src-width="2226" src-height="1530" align="center"/>
+<img src="/assets/I5gOb0lJQon9BkxNCG2j2kJNpyg.png" src-width="2226" src-height="1530" align="center"/>
 

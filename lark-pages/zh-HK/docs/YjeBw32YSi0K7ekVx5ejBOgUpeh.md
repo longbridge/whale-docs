@@ -19,31 +19,31 @@ WTT 提供用戶訪問多市場行情數據。新用戶默認享有延遲行情�
 
 - 自選
 
-<img src="VdesbRSnBoaLBjx66gkjRFxrpPb" src-width="2910" src-height="1380" align="center"/>
+<img src="/assets/VdesbRSnBoaLBjx66gkjRFxrpPb.png" src-width="2910" src-height="1380" align="center"/>
 
 - 個股
 
-<img src="Kftjbk5uZoNvKFxWdYyjXIGkpCf" src-width="3824" src-height="1482" align="center"/>
+<img src="/assets/Kftjbk5uZoNvKFxWdYyjXIGkpCf.png" src-width="3824" src-height="1482" align="center"/>
 
 - 行情
 
-<img src="IwpObncRUoTeUUxdKPhjUWTCppf" src-width="3718" src-height="1804" align="center"/>
+<img src="/assets/IwpObncRUoTeUUxdKPhjUWTCppf.png" src-width="3718" src-height="1804" align="center"/>
 
 - 選股器
 
-<img src="QUeKbiVPGoBx7UxNBz8jmhbmpnd" src-width="2948" src-height="1886" align="center"/>
+<img src="/assets/QUeKbiVPGoBx7UxNBz8jmhbmpnd.png" src-width="2948" src-height="1886" align="center"/>
 
 - 行情商城
 
-<img src="HeRXbdcoxoRzSWxNHokjaBgzp1d" src-width="3818" src-height="1866" align="center"/>
+<img src="/assets/HeRXbdcoxoRzSWxNHokjaBgzp1d.png" src-width="3818" src-height="1866" align="center"/>
 
 # 靈活定製頁面
 
 - 個股
 
-<img src="GeLab084xow7TKxVHnkjgNe1pig" src-width="1332" src-height="902" align="center"/>
+<img src="/assets/GeLab084xow7TKxVHnkjgNe1pig.png" src-width="1332" src-height="902" align="center"/>
 
 - 市場
 
-<img src="W6EcbxCyKo3bJvxPgXnjwACOpUc" src-width="1326" src-height="882" align="center"/>
+<img src="/assets/W6EcbxCyKo3bJvxPgXnjwACOpUc.png" src-width="1326" src-height="882" align="center"/>
 

@@ -24,7 +24,7 @@ sidebar_position: 0
 
 好處在於，用戶可以以單元組件拼出自己需要的場景，或者在脫離主窗口的情況下，單元組件同樣能夠發揮出價值或作用，比如在看新聞資訊的時候拖個自選列表或者個股的圖表放旁邊同時觀看。
 
-<img src="Y8vCbvXhnoaCCvxtTMGjapm1pog" src-width="2868" src-height="1740" align="center"/>
+<img src="/assets/Y8vCbvXhnoaCCvxtTMGjapm1pog.png" src-width="2868" src-height="1740" align="center"/>
 
 ## 1.2 業務組件
 
@@ -32,7 +32,7 @@ sidebar_position: 0
 - 業務組件的好處在於業務組件能夠滿足大多數場景下，用戶需要添加一個組件就能滿足目的，而不是一次一次添加多個。
 - 如迷你報價為業務組件，集合了行情報價、逐筆成交、買賣盤口和經紀席位功能。
 
-<img src="JIzgbAVvmogI8qxCE73j5jYepqc" src-width="968" src-height="1192" align="center"/>
+<img src="/assets/JIzgbAVvmogI8qxCE73j5jYepqc.png" src-width="968" src-height="1192" align="center"/>
 
 # 2.組件操作說明
 
@@ -42,17 +42,17 @@ sidebar_position: 0
 
 右上角增加工具箱入口，集合了所有的功能組件，用戶可以單擊添加組件，拖拽到當前面板中；
 
-<img src="PxUhbusdqoqKR1xaaSNj7wBqpAf" src-width="2862" src-height="1740" align="center"/>
+<img src="/assets/PxUhbusdqoqKR1xaaSNj7wBqpAf.png" src-width="2862" src-height="1740" align="center"/>
 
 ### 2.1.2 組件大小可隨意拖拉
 
 每個組件的大小都可以隨意拖拉調整大小寬高，在組件邊緣範圍內可隨意拖拉擠壓。
 
-<img src="M6wrbMGufo7IvbxyrHTjPlvspEb" src-width="1848" src-height="1122" align="center"/>
+<img src="/assets/M6wrbMGufo7IvbxyrHTjPlvspEb.gif" src-width="1848" src-height="1122" align="center"/>
 
 ### 2.1.3 組件右上角操作
 
-<img src="ZxUnbYBXUoetbnxp512jYsVPpLf" src-width="1380" src-height="718" align="center"/>
+<img src="/assets/ZxUnbYBXUoetbnxp512jYsVPpLf.png" src-width="1380" src-height="718" align="center"/>
 
 - **複製：**點擊複製，會復制當前組件生成一個新的組件，以組件脫離的窗口顯示出來。
 - **最大化：**點擊組件會將當前組件最大化撐滿，點擊右上角恢復按鈕，會自動恢復到當前組件默認大小；
@@ -60,7 +60,7 @@ sidebar_position: 0
 - **移除：**點擊移除，會移除當前組件。
     如果是發現移除錯或拖動錯，在系統的自選、個股、行情、交易、選股器面板下，可點擊組件工具箱底部的“重置佈局”。其中自定义面板不允許重置佈局。
 
-<img src="LCjYbpbFOoFfBXxic3SjGJf4p1c" src-width="1388" src-height="946" align="center"/>
+<img src="/assets/LCjYbpbFOoFfBXxic3SjGJf4p1c.png" src-width="1388" src-height="946" align="center"/>
 
 ## 2.2 組件聯動說明
 
@@ -73,7 +73,7 @@ sidebar_position: 0
 - 聯動分組1、聯動分組2……聯動分組9，點擊聯動後，組件右上角頭部會標識當前聯動分組，相同分組的組件會自動聯動。
 - 新建佈局內的組件默認默認不聯動，需要用戶自行決定是否需要設置聯動分組；
 
-<img src="VgTCbrXftoJwGNxUT0mjLYkqpAb" src-width="1280" src-height="664" align="center"/>
+<img src="/assets/VgTCbrXftoJwGNxUT0mjLYkqpAb.png" src-width="1280" src-height="664" align="center"/>
 
 ### 2.2.2 聯動參數
 
@@ -93,7 +93,7 @@ sidebar_position: 0
 - 這些帶有股票標的屬性的組件脫離後，組件頭部自帶股票搜索功能，方便進行股票標的切換。
 - 新開的自定義頁面，帶有股票標的屬性的組件頭部自帶搜索，方便進行股票標的切換。
 
-<img src="I16xb8VodogOJSxdLoNjqa63pLB" src-width="1086" src-height="550" align="center"/>
+<img src="/assets/I16xb8VodogOJSxdLoNjqa63pLB.png" src-width="1086" src-height="550" align="center"/>
 
 ## 2.4 組件釘住操作
 
@@ -101,7 +101,7 @@ sidebar_position: 0
 
 若想取消釘住功能，可再次點擊釘住，取消組件層級置頂。
 
-<img src="RKZ0bRSibormrgxl6qgjeMF7pcg" src-width="982" src-height="948" align="center"/>
+<img src="/assets/RKZ0bRSibormrgxl6qgjeMF7pcg.png" src-width="982" src-height="948" align="center"/>
 
 # 3.頁面佈局
 
@@ -112,8 +112,8 @@ sidebar_position: 0
 - 自定義面板（畫布佈局）：用戶可進行自定義面板佈局，將組件根據個人喜好擺放在佈局內，組件大小相較固定，窗口大小可拖動使用。
 
 - 畫面效果（預覽）
-    <img src="EHhbbj8hYoPbamxJ2FbjMg36pho" src-width="2864" src-height="1740" align="center"/>
-    <img src="O3GQbEIc9oag02xlpFajjGtpp5c" src-width="2870" src-height="1738" align="center"/>
+    <img src="/assets/EHhbbj8hYoPbamxJ2FbjMg36pho.png" src-width="2864" src-height="1740" align="center"/>
+    <img src="/assets/O3GQbEIc9oag02xlpFajjGtpp5c.png" src-width="2870" src-height="1738" align="center"/>
     - 自適應佈局
     - 自定義佈局（畫布佈局）
 
@@ -122,38 +122,38 @@ sidebar_position: 0
 - 自適應佈局入口：點擊新開標籤頁，兩種佈局選擇，選擇“自適應佈局”，點擊空佈局可打開自適應佈局畫面。
     具體操作如下：
     （1）點擊菜單欄右側的“+”，可以佈局選擇；（2）選擇“自適應佈局”；（3）選擇“空佈局”。
-    <img src="B5wSbfZEYo37rexPjcajJfuwpUg" src-width="2478" src-height="1440" align="center"/>
+    <img src="/assets/B5wSbfZEYo37rexPjcajJfuwpUg.png" src-width="2478" src-height="1440" align="center"/>
 
 ## 3.3 自定義佈局（畫布佈局）
 
 - 自定義佈局（畫布佈局）入口：點擊新開標籤頁，兩種佈局選擇，選擇“自定義佈局”，點擊空佈局可打開自定義佈局畫面。
     具體操作如下：
     （1）點擊菜單欄右側的“+”，可以佈局選擇；（2）選擇“自定義佈局”；（3）選擇“空佈局”。
-    <img src="PT49ba6AXobkIRxzCk8jZ9zup5V" src-width="1768" src-height="870" align="center"/>
+    <img src="/assets/PT49ba6AXobkIRxzCk8jZ9zup5V.png" src-width="1768" src-height="870" align="center"/>
 
 ## 3.4 添加組件進佈局內
 
 - 自定義佈局：新開標籤頁後，頁面中將出現組件工具箱，可選擇需要的組件，將組件拖動進佈局頁面內
 
-<img src="PQjObSTeIorAWQxn3lmj0hB4pee" src-width="1848" src-height="1122" align="center"/>
+<img src="/assets/PQjObSTeIorAWQxn3lmj0hB4pee.gif" src-width="1848" src-height="1122" align="center"/>
 
 - 自適應佈局：
 
 （1）點擊添加相應的組件，喚起功能模塊。如點擊“圖表”組件，喚起圖表功能組件彈窗。
 
-<img src="Uh21bQC1coCWoix4RjtjJCP0pAd" src-width="2872" src-height="1542" align="center"/>
+<img src="/assets/Uh21bQC1coCWoix4RjtjJCP0pAd.png" src-width="2872" src-height="1542" align="center"/>
 
 （2）可直接鼠標選中“圖表”組件，拖拽到當前自定義面板中。若面板只有1個組件的話，目前是鋪滿當前面板。
 
-<img src="MdoYbxcxcoOxwDxg1qzjkSC7phf" src-width="2878" src-height="1550" align="center"/>
+<img src="/assets/MdoYbxcxcoOxwDxg1qzjkSC7phf.png" src-width="2878" src-height="1550" align="center"/>
 
 （3）以此類推，可以添加別的組件拖拽到當前面板中，會有高亮顯示即將拖動的位置。
 
 如添加行情報價組件，拖拽到圖表頭部，圖表頭部會顯示高亮邊框，鬆開拖拽，行情報價會顯示在圖表的上方。點擊行情報價組件和圖表組件的中間部分，可擠壓調整彼此組件的大小。
 
-<img src="S2R1bGoqBoiEPLx7skzjsr6IpKg" src-width="2872" src-height="1516" align="center"/>
+<img src="/assets/S2R1bGoqBoiEPLx7skzjsr6IpKg.png" src-width="2872" src-height="1516" align="center"/>
 
-<img src="SkXebOho1oVs8sxUyuzjakv7p6b" src-width="2872" src-height="1564" align="center"/>
+<img src="/assets/SkXebOho1oVs8sxUyuzjakv7p6b.png" src-width="2872" src-height="1564" align="center"/>
 
 （4）也可以結合上文講的組件操作、組件聯動、組件頭部搜索、組件釘住等各種功能，基於自己需要，進行各種聯合操作。
 

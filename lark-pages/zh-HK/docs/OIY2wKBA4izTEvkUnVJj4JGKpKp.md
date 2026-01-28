@@ -9,7 +9,7 @@ sidebar_position: 3
 
 Whale 系統是支持系統工單的新建與審批，每個用戶在登入時，可以方便地在系統右上審批圖像上，看到新通知的工單數量，點擊後，可以看到待處理的工單清單
 
-<img src="MaaFbBTOBoOD8SxJ09ZjR5ndp1c" src-width="896" src-height="80" align="center"/>
+<img src="/assets/MaaFbBTOBoOD8SxJ09ZjR5ndp1c.png" src-width="896" src-height="80" align="center"/>
 
 # <b>待辦 Tab 等</b>
 
@@ -17,11 +17,11 @@ Whale 系統是支持系統工單的新建與審批，每個用戶在登入時�
 
 工單列表展示為側邊欄樣式，方便展示和查看
 
-<img src="BopQbGRxroV0Nrx2WkYjjmNppud" src-width="1900" src-height="1706" align="center"/>
+<img src="/assets/BopQbGRxroV0Nrx2WkYjjmNppud.png" src-width="1900" src-height="1706" align="center"/>
 
 工單新增篩選條件 與 新增列表導出功能，方便對工單作篩選處理
 
-<img src="DQlhbfSJ9oZNnZxE1E7jqcMEpJa" src-width="1250" src-height="328" align="center"/>
+<img src="/assets/DQlhbfSJ9oZNnZxE1E7jqcMEpJa.png" src-width="1250" src-height="328" align="center"/>
 
 <b>已辦 Tab:</b>
 
@@ -35,7 +35,7 @@ Whale 系統是支持系統工單的新建與審批，每個用戶在登入時�
 
 可以查詢到抄送給自己崗位上的發起工單列表
 
-<img src="KqzzbaQaFo8XbqxAa1mj1YZMpEd" src-width="1274" src-height="1632" align="center"/>
+<img src="/assets/KqzzbaQaFo8XbqxAa1mj1YZMpEd.png" src-width="1274" src-height="1632" align="center"/>
 
 # 工單審核詳情頁
 
@@ -43,5 +43,5 @@ Whale 系統是支持系統工單的新建與審批，每個用戶在登入時�
 
 ②支持審批流程中，相關人抄送工單給其他用戶
 
-<img src="F6pnbQGx0oH0bixYuz7jfIn8pyf" src-width="1210" src-height="1520" align="center"/>
+<img src="/assets/F6pnbQGx0oH0bixYuz7jfIn8pyf.png" src-width="1210" src-height="1520" align="center"/>
 

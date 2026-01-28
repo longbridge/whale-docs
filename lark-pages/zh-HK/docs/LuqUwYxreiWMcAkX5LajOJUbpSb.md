@@ -10,8 +10,8 @@ sidebar_position: 40
 # 🎉 新功能
 
 - 支持修改聯繫手機號或聯繫郵箱
-    <img src="BMl2bpwPhoO066xCAoAjYazmpAe" src-width="2434" src-height="1374" align="center"/>
-    <img src="KivYbldsroj3MuxOA0hjwgPdpjg" src-width="2464" src-height="1378" align="center"/>
+    <img src="/assets/BMl2bpwPhoO066xCAoAjYazmpAe.png" src-width="2434" src-height="1374" align="center"/>
+    <img src="/assets/KivYbldsroj3MuxOA0hjwgPdpjg.png" src-width="2464" src-height="1378" align="center"/>
     - 路徑：「賬戶管理」-「工單中心」-「客戶/賬戶信息」-「修改聯繫方式」
     - 權限：account.edit_contact_details
     - 審核工單：

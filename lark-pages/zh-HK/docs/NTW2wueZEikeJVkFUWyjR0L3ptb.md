@@ -27,7 +27,7 @@ sidebar_position: 0
 - 檢查失敗，未手動通過的 - Manually Unrecognized。
 ```
 
-<img src="Uw4GbSJK0oejoJx30P7j3J2vpJL" src-width="2074" src-height="850" align="center"/>
+<img src="/assets/Uw4GbSJK0oejoJx30P7j3J2vpJL.png" src-width="2074" src-height="850" align="center"/>
 
 # 12.0.1D 問：SDR018 - Bargain Detail Report 類別的報表什麼時間能看到當天的交易數據？
 
@@ -38,7 +38,7 @@ sidebar_position: 0
 <p>美股的可以查看 SDR018-1 - Bargain Detail Report-US。</p>
 </div>
 
-<img src="PD5cbGGhVokslnxWEHrjhI8Cpjh" src-width="2246" src-height="1486" align="center"/>
+<img src="/assets/PD5cbGGhVokslnxWEHrjhI8Cpjh.png" src-width="2246" src-height="1486" align="center"/>
 
 # 12.0.1E 問：如何計算到客户每月的託管費？
 
@@ -50,15 +50,15 @@ sidebar_position: 0
 <p>其它客户費率指聯名賬户等其它户口。</p>
 </div>
 
-<img src="Tullb59SroSR17xOjjSjQtdcpzg" src-width="2712" src-height="986" align="center"/>
+<img src="/assets/Tullb59SroSR17xOjjSjQtdcpzg.png" src-width="2712" src-height="986" align="center"/>
 
 <em>12.0.1E 圖一</em>
 
-<img src="ItPmb5Rs1ohvGUxdZlXjTgXwpy6" src-width="2384" src-height="922" align="center"/>
+<img src="/assets/ItPmb5Rs1ohvGUxdZlXjTgXwpy6.png" src-width="2384" src-height="922" align="center"/>
 
 <em>12.0.1E 圖二</em>
 
-<img src="M8VBbzStYoQwM9xAkDmj3habpmc" src-width="2392" src-height="406" align="center"/>
+<img src="/assets/M8VBbzStYoQwM9xAkDmj3habpmc.png" src-width="2392" src-height="406" align="center"/>
 
 <em>12.0.1E 圖三</em>
 
@@ -68,13 +68,13 @@ sidebar_position: 0
 
 1. 先在「計費管理」的「收費場景」，新建「代理商收費-股票交易」計費。
 
-<img src="BCf4bfAsqouBgxxBRERjJKItp1b" src-width="2866" src-height="1610" align="center"/>
+<img src="/assets/BCf4bfAsqouBgxxBRERjJKItp1b.png" src-width="2866" src-height="1610" align="center"/>
 
 1. 在相關「代理商計費-股票交易」設置收費。
 
-<img src="LZJcbV6FNocWWPxqaZhjZSj8pcb" src-width="2836" src-height="1430" align="center"/>
+<img src="/assets/LZJcbV6FNocWWPxqaZhjZSj8pcb.png" src-width="2836" src-height="1430" align="center"/>
 
 1. 在SDR048 - Broker Contract Details報表查閱費用
 
-<img src="QDUHbHvmJoUV3kxS7fSj6zyipbc" src-width="2848" src-height="1214" align="center"/>
+<img src="/assets/QDUHbHvmJoUV3kxS7fSj6zyipbc.png" src-width="2848" src-height="1214" align="center"/>
 

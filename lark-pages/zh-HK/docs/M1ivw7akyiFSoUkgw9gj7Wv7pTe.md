@@ -13,21 +13,21 @@ sidebar_position: 3
 配置HKIDR的參與人信息
 ```
 
-<img src="QTqVbSc39ojS23xL0UQjrweWpif" src-width="2900" src-height="1062" align="center"/>
+<img src="/assets/QTqVbSc39ojS23xL0UQjrweWpif.png" src-width="2900" src-height="1062" align="center"/>
 
 ```text
 路徑：在「客戶管理系統＞賬戶管理＞BCAN碼管理＞參與者管理」
 ```
 
-<img src="VH6hb48mGoQ86vxqb9LjpbA6prd" src-width="2544" src-height="1402" align="center"/>
+<img src="/assets/VH6hb48mGoQ86vxqb9LjpbA6prd.png" src-width="2544" src-height="1402" align="center"/>
 
 # <b>2.設置BCAN區間</b>
 
-<img src="LZz8ba2uromXBExVly6jiwK5phg" src-width="2536" src-height="892" align="center"/>
+<img src="/assets/LZz8ba2uromXBExVly6jiwK5phg.png" src-width="2536" src-height="892" align="center"/>
 
 路徑：客戶管理系統-＞賬戶管理-＞BCAN碼管理-＞BCAN區間
 
-<img src="Hal6biv1SoMweexF2UqjXMqIpYb" src-width="2896" src-height="1000" align="center"/>
+<img src="/assets/Hal6biv1SoMweexF2UqjXMqIpYb.png" src-width="2896" src-height="1000" align="center"/>
 
 # <b>3.分配BCAN</b>
 
@@ -58,11 +58,11 @@ Non-EP模式支持ECP Web 方式；
 
 交易日07:00 am- 03:00 pm時間段內，手動點擊‘主動申報’按鈕，系統自動生成BCAN-CID文件，且通過SFTP的方式提交給交易所；
 
-<img src="WnhCbytKxogno2xFPqYjQoHGpNe" src-width="3050" src-height="1456" align="center"/>
+<img src="/assets/WnhCbytKxogno2xFPqYjQoHGpNe.png" src-width="3050" src-height="1456" align="center"/>
 
 交易所在十分鐘內會返回應答文件，在下午6點後，會返回驗證文件和全景文件，系統自動解析後，客戶的BCAN狀態自動更新；
 
-<img src="CC5Qbrnllo3MXUxs7OtjwPt7pfl" src-width="2540" src-height="1420" align="center"/>
+<img src="/assets/CC5Qbrnllo3MXUxs7OtjwPt7pfl.png" src-width="2540" src-height="1420" align="center"/>
 
 ### <b>②方式2：ECP Web手動申報</b>
 
@@ -76,29 +76,29 @@ Non-EP模式支持ECP Web 方式；
 
 - 點擊右側‘下載申報文件’按鈕，導出並保存申報文件；
 
-<img src="ZgbdblAuAocEFLxtOhGjLkGQpHe" src-width="2520" src-height="1200" align="center"/>
+<img src="/assets/ZgbdblAuAocEFLxtOhGjLkGQpHe.png" src-width="2520" src-height="1200" align="center"/>
 
 - 在登錄交易所網站，登錄ECP平臺上傳申報文件到SFC
 
 網址：[https://ecp2.e2etest.hkex.com.hk/](https://ecp2.e2etest.hkex.com.hk/)
 
-<img src="Y0Sib5EC8oHKvAxe8dKjb82sp76" src-width="2898" src-height="1656" align="center"/>
+<img src="/assets/Y0Sib5EC8oHKvAxe8dKjb82sp76.png" src-width="2898" src-height="1656" align="center"/>
 
-<img src="CYqkbUo55oakolx6IvijujIqpVd" src-width="2896" src-height="1674" align="center"/>
+<img src="/assets/CYqkbUo55oakolx6IvijujIqpVd.png" src-width="2896" src-height="1674" align="center"/>
 
-<img src="By7YbEDiVoZWW7xrqzQjaKpDpec" src-width="2940" src-height="1612" align="center"/>
+<img src="/assets/By7YbEDiVoZWW7xrqzQjaKpDpec.png" src-width="2940" src-height="1612" align="center"/>
 
-<img src="BrQEbyo6Poo1idx45IajvgQjpWe" src-width="2952" src-height="1626" align="center"/>
+<img src="/assets/BrQEbyo6Poo1idx45IajvgQjpWe.png" src-width="2952" src-height="1626" align="center"/>
 
-<img src="Rqssbiz6romZtBx8Uz4jPZu6png" src-width="2670" src-height="1354" align="center"/>
+<img src="/assets/Rqssbiz6romZtBx8Uz4jPZu6png.png" src-width="2670" src-height="1354" align="center"/>
 
 - 將交易所返回的全景文件，導入後臺頁面；
 
-<img src="STpsbkhPHopIrgxKNidjrAhMp5b" src-width="2528" src-height="1114" align="center"/>
+<img src="/assets/STpsbkhPHopIrgxKNidjrAhMp5b.png" src-width="2528" src-height="1114" align="center"/>
 
 - 客戶的BCAN生效狀態將同步更新；
 
-<img src="Dl8sb8orNoVFwRxFwlyjpahrpmc" src-width="2540" src-height="1420" align="center"/>
+<img src="/assets/Dl8sb8orNoVFwRxFwlyjpahrpmc.png" src-width="2540" src-height="1420" align="center"/>
 
 ## <b>Non-EP模式申報</b>
 
@@ -110,29 +110,29 @@ Non-EP模式支持ECP Web 方式；
 
 - 點擊右側‘下載申報文件’按鈕，導出並保存申報文件；
 
-<img src="G87gbSrrsozjqcxBgWOjuIgkppb" src-width="2520" src-height="1200" align="center"/>
+<img src="/assets/G87gbSrrsozjqcxBgWOjuIgkppb.png" src-width="2520" src-height="1200" align="center"/>
 
 - 在登錄交易所網站，登錄ECP平臺上傳申報文件到SFC
 
 網址：[https://ecp2.e2etest.hkex.com.hk/](https://ecp2.e2etest.hkex.com.hk/)
 
-<img src="VostbYwSCoiHbsx4jYPjnPcyp1d" src-width="2948" src-height="1704" align="center"/>
+<img src="/assets/VostbYwSCoiHbsx4jYPjnPcyp1d.png" src-width="2948" src-height="1704" align="center"/>
 
-<img src="JrpWbOkXzobSRHx3oMsjcKvvpIe" src-width="2946" src-height="1642" align="center"/>
+<img src="/assets/JrpWbOkXzobSRHx3oMsjcKvvpIe.png" src-width="2946" src-height="1642" align="center"/>
 
-<img src="YLHxbqqRdoatCRxzUBbjkl0xp4g" src-width="2940" src-height="1612" align="center"/>
+<img src="/assets/YLHxbqqRdoatCRxzUBbjkl0xp4g.png" src-width="2940" src-height="1612" align="center"/>
 
-<img src="ReS7bhKKCo2YY2xMlB3javsOpwb" src-width="2952" src-height="1626" align="center"/>
+<img src="/assets/ReS7bhKKCo2YY2xMlB3javsOpwb.png" src-width="2952" src-height="1626" align="center"/>
 
-<img src="TIuYbqob5oUR7dxs0NfjGqC5pvg" src-width="2670" src-height="1354" align="center"/>
+<img src="/assets/TIuYbqob5oUR7dxs0NfjGqC5pvg.png" src-width="2670" src-height="1354" align="center"/>
 
 - 將交易所返回的全景文件，導入後臺頁面；
 
-<img src="GDITbzHKFoUFINxX30sjzmmup6b" src-width="2528" src-height="1114" align="center"/>
+<img src="/assets/GDITbzHKFoUFINxX30sjzmmup6b.png" src-width="2528" src-height="1114" align="center"/>
 
 - 客戶的BCAN生效狀態將同步更新；
 
-<img src="VLxKb1IhYobIFnxurO9je0GTpLh" src-width="2540" src-height="1420" align="center"/>
+<img src="/assets/VLxKb1IhYobIFnxurO9je0GTpLh.png" src-width="2540" src-height="1420" align="center"/>
 
 # <b>5.其他報告文件</b>
 

@@ -13,13 +13,3 @@ Additional information: Due to a product system upgrade, the WTT update log has 
 
 Thank you for your support!
 
-[2025-08 What's New（RC）](/OnLhwI3qfiKPkkkEn1JjXG7jpkh)
-
-[2025-09 What's New（RC）](/EPJ7w3YuHi8KeIkETBIjM6ALpDf)
-
-[2025-Q3 What's New](/GqA6wkrK5iWi5ZkYWGYj0etUp2g)
-
-[2025-10 What's New（RC）](/GKEewvM6giyCDxkk0iAj1J0OpXg)
-
-[2025-11 What's New（RC）](/Lieqwqa8Ki3ku4kTX0bjUAfRpOf)
-

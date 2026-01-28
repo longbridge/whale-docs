@@ -61,7 +61,7 @@ sidebar_position: 3
 
 答：可以通過在「業務參數設置」-「風控」-「風控參數」設置Margin Call豁免規則，命中規則的場景則不會margin call。支持全局及單客戶豁免規則。
 
-<img src="WVbUb8ZSeoHgvfxQKyIjM7fsp9g" src-width="3250" src-height="672" align="center"/>
+<img src="/assets/WVbUb8ZSeoHgvfxQKyIjM7fsp9g.png" src-width="3250" src-height="672" align="center"/>
 
 # 交易限額問題
 
@@ -74,5 +74,5 @@ sidebar_position: 3
 
 當前支持的全部限額代碼可在全局限額查看。如需对所有交易做整体限制可在全局限额配置规则，如需限定指定客户或证券等，可在指定限额类型下配置规则。其中多维度限额支持同时对指定客户和指定股票做限额。
 
-<img src="N1AkbS1DBoNYgxxueI8jkUG7pxh" src-width="3292" src-height="846" align="center"/>
+<img src="/assets/N1AkbS1DBoNYgxxueI8jkUG7pxh.png" src-width="3292" src-height="846" align="center"/>
 

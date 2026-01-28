@@ -11,21 +11,21 @@ sidebar_position: 0
 
 **答：**在 App 的「資產 - 基金 - 交易紀錄 - 選擇訂單 - 撤單」（見下圖）
 
-<img src="ZXYdbIkrOontSixvkHGjQ0pYpFd" src-width="526" src-height="1114" align="center"/>
+<img src="/assets/ZXYdbIkrOontSixvkHGjQ0pYpFd.png" src-width="526" src-height="1114" align="center"/>
 
-<img src="GnTtbMhpxohmDkxajO6j5PilpVd" src-width="619" src-height="1350" align="center"/>
+<img src="/assets/GnTtbMhpxohmDkxajO6j5PilpVd.png" src-width="619" src-height="1350" align="center"/>
 
-<img src="U1VHbupp1oNq5ixRxQWjJDOapBa" src-width="639" src-height="1405" align="center"/>
+<img src="/assets/U1VHbupp1oNq5ixRxQWjJDOapBa.png" src-width="639" src-height="1405" align="center"/>
 
 # 9.0.1B 問：為什麼已上架的私募基金沒有歷史走勢和單位淨值？
 
 **答：**私募基金没有自動更新機制，需在「基金管理＞私募基金＞淨值表」頁面手動更新單位淨值後（見 9.0.1B 圖一 ），在 App 的歷史記錄可查看（見 9.0.1B 圖二）。
 
-<img src="SNmQbczhYo5sK5xosDmjPrSopRf" src-width="2512" src-height="734" align="center"/>
+<img src="/assets/SNmQbczhYo5sK5xosDmjPrSopRf.png" src-width="2512" src-height="734" align="center"/>
 
 <em>9.0.1B 圖一</em>
 
-<img src="OEwTbSdtJo60T5xxxzkj7lHpp1f" src-width="756" src-height="1469" align="center"/>
+<img src="/assets/OEwTbSdtJo60T5xxxzkj7lHpp1f.png" src-width="756" src-height="1469" align="center"/>
 
 <em>9.0.1B 圖二</em>
 
@@ -33,13 +33,13 @@ sidebar_position: 0
 
 **答：**在「基金管理＞私募基金＞App 端列表」點擊「新建」把需要的私募基金加上。
 
-<img src="J8zDbFGz3oYr9Ex7DBtjSBZOpwc" src-width="2682" src-height="724" align="center"/>
+<img src="/assets/J8zDbFGz3oYr9Ex7DBtjSBZOpwc.png" src-width="2682" src-height="724" align="center"/>
 
 # 9.0.1D 問：「App 展示管理」中基金主題的「排序權重」和「權重排序」是什麼？
 
 答：「排序權重」是管理基金主題的排序，數值越大，排在越前面；「權重排序」同一個基金主題下基金的排序，數值越小，排在越前面。
 
-<img src="Iemvb4R0Oo09UGxfmrujknG3pvh" src-width="2718" src-height="1496" align="center"/>
+<img src="/assets/Iemvb4R0Oo09UGxfmrujknG3pvh.png" src-width="2718" src-height="1496" align="center"/>
 
 # 9.0.1E 問：如何重新提交風險測評問卷？
 
@@ -47,11 +47,11 @@ sidebar_position: 0
 
 1.後台在「KYC＞風險測評管理」點擊「更新評分」和「更新文件」來修改風險測評等級。
 
-<img src="SMNWbm6OBohCaKxlMgDj1ohdpsc" src-width="2692" src-height="1118" align="center"/>
+<img src="/assets/SMNWbm6OBohCaKxlMgDj1ohdpsc.png" src-width="2692" src-height="1118" align="center"/>
 
 2.App 在「市場＞基金」點擊「您的風險水平」，然後點擊「重測」來修改風險測評。
 
-<img src="HL02bObWOouG5JxMTQXj1guFptc" src-width="752" src-height="1530" align="center"/>
+<img src="/assets/HL02bObWOouG5JxMTQXj1guFptc.png" src-width="752" src-height="1530" align="center"/>
 
-<img src="DGXbbqKeMoAoX4xKYNSjcv0mpdb" src-width="784" src-height="1500" align="center"/>
+<img src="/assets/DGXbbqKeMoAoX4xKYNSjcv0mpdb.png" src-width="784" src-height="1500" align="center"/>
 

@@ -15,11 +15,11 @@ sidebar_position: 0
 2. 低學歷：用户最高學歷為「小學或以下」
 3. 相關人員與客戶確認風險後，便可通過 VC
 
-<img src="RRQLb5vxAo96eBxbDZojlxZApSb" src-width="2594" src-height="1048" align="center"/>
+<img src="/assets/RRQLb5vxAo96eBxbDZojlxZApSb.png" src-width="2594" src-height="1048" align="center"/>
 
 <em>開户列表中的 VC 審核規則欄位</em>
 
-<img src="ERKNbKETkoXirVxNZqejrbikp8d" src-width="1298" src-height="291" align="center"/>
+<img src="/assets/ERKNbKETkoXirVxNZqejrbikp8d.png" src-width="1298" src-height="291" align="center"/>
 
 <em>開户審批流程順序</em>
 
@@ -27,7 +27,7 @@ sidebar_position: 0
 
 **答：**訂閱了 TESS （第三方平台） 功能，處理開戶時系統會有 TESS 基本 AML 檢查是否有命中，然後可以登錄到 TESS 平台查詢詳情
 
-<img src="JIonbcj2IoceL9xX60DjRqT5p9d" src-width="2794" src-height="735" align="center"/>
+<img src="/assets/JIonbcj2IoceL9xX60DjRqT5p9d.png" src-width="2794" src-height="735" align="center"/>
 
 # 1.1C 問：線上開户＆線下開户賬號規則是什麼？
 
@@ -37,13 +37,13 @@ sidebar_position: 0
 
 <b>答：</b> 在「消息中心 &gt; 消息記錄 &gt; 短訊／郵件」頁面點擊查看到發出內容。如沒有顯示到相關功能，請申請開通消息中心的權限。
 
-<img src="ZhQZbYuWpoRmn9xBugbjJIDXpmb" src-width="2390" src-height="626" align="center"/>
+<img src="/assets/ZhQZbYuWpoRmn9xBugbjJIDXpmb.png" src-width="2390" src-height="626" align="center"/>
 
 # 1.1E 問：申請開户時，後台會檢查跟現有客戶相似的資料嗎？
 
 **答：**會的，以客户姓名及出生日期作檢查，在 「KYC &gt; 開户列表 &gt; 詳細」 頁面中 "<b>相似客户</b>" 欄位會有提醒，顯示到資料相似的客户。
 
-<img src="Y6qAbCPfroIHvbxLKEOjGZZTphk" src-width="2484" src-height="990" align="center"/>
+<img src="/assets/Y6qAbCPfroIHvbxLKEOjGZZTphk.png" src-width="2484" src-height="990" align="center"/>
 
 # 1.1F 問：賬户開通後有通知嗎？會有什麼附件？
 
@@ -89,25 +89,25 @@ xxx 证券
 <p>註銷後賬户號碼不能重覆使用</p>
 </div>
 
-<img src="V2WYb7dIOoguy0xX0cVjHHHUpFN" src-width="2654" src-height="1114" align="center"/>
+<img src="/assets/V2WYb7dIOoguy0xX0cVjHHHUpFN.png" src-width="2654" src-height="1114" align="center"/>
 
 <em>1.1G 圖一</em>
 
-<img src="BM9rboSylo56WaxJFuxjfeJop4g" src-width="2654" src-height="1368" align="center"/>
+<img src="/assets/BM9rboSylo56WaxJFuxjfeJop4g.png" src-width="2654" src-height="1368" align="center"/>
 
 <em>1.1G 圖二</em>
 
-<img src="HecFbUHIao8MXQx5i3Yj92P2p0f" src-width="2656" src-height="1286" align="center"/>
+<img src="/assets/HecFbUHIao8MXQx5i3Yj92P2p0f.png" src-width="2656" src-height="1286" align="center"/>
 
 <em>1.1G 圖三</em>
 
-<img src="XMjVbfHgcoaHS5x1qYJj0WcbpMf" src-width="2660" src-height="1308" align="center"/>
+<img src="/assets/XMjVbfHgcoaHS5x1qYJj0WcbpMf.png" src-width="2660" src-height="1308" align="center"/>
 
 <em>1.1G 圖四</em>
 
 # 1.1H問：為什麼系統的開戶表格沒有客戶的賬戶號碼？
 
-<img src="KdYmbtnd7oJ1qzxNxH5j0QWzpZe" src-width="2322" src-height="1094" align="center"/>
+<img src="/assets/KdYmbtnd7oJ1qzxNxH5j0QWzpZe.png" src-width="2322" src-height="1094" align="center"/>
 
 答：只有轉賬開戶的開戶表格因提早生成賬戶號碼，才能在開戶表格中顯示客戶賬戶號碼，其他認證方式都沒有。
 

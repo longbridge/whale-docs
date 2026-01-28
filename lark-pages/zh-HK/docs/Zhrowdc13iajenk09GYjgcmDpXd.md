@@ -18,14 +18,14 @@ version: lts
 # 🎉 新功能
 
 - 新增餘額通相關持倉信息，可在客戶信息組件中查看客戶餘額通持倉
-    <img src="Z63BbT4wqorrPMxE6q1jfsQvpQd" src-width="3212" src-height="424" align="center"/>
+    <img src="/assets/Z63BbT4wqorrPMxE6q1jfsQvpQd.png" src-width="3212" src-height="424" align="center"/>
 
 - <b>選擇新建佈局時，可一鍵選擇畫布佈局或自適應佈局</b>
     當新開一個標籤頁創建空白佈局時，可依據需求一鍵選擇畫布佈局或自適應佈局，更加方便直觀。
-    <img src="GwNHbyv1hoeK1sxzKDnjAcxwpUg" src-width="3372" src-height="1662" align="center"/>
+    <img src="/assets/GwNHbyv1hoeK1sxzKDnjAcxwpUg.png" src-width="3372" src-height="1662" align="center"/>
 
 - 持倉組件中新增基金及場外衍生品持倉信息
-    <img src="LOPJbG6Rzo1QWuxNIvZjIQBupee" src-width="2874" src-height="876" align="center"/>
+    <img src="/assets/LOPJbG6Rzo1QWuxNIvZjIQBupee.png" src-width="2874" src-height="876" align="center"/>
 
 - 逐筆明細現已新增時段切換功能，可分別查看夜盤、盤前、盤中、盤後或全部時段的成交數據；同時新增「交易所」欄位，方便用戶快速識別每筆成交所屬的交易市場，助您更精準解讀市場動態。
 

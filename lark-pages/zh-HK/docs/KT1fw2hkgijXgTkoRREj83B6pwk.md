@@ -23,13 +23,13 @@ sidebar_position: 1
 
 在客戶入幣前，需要進行入幣加密貨幣設置。
 
-<img src="PyTkbeE5xo5e3AxNdmbjWVXLpAT" src-width="2048" src-height="706" align="center"/>
+<img src="/assets/PyTkbeE5xo5e3AxNdmbjWVXLpAT.png" src-width="2048" src-height="706" align="center"/>
 
 # 客户錢包地址
 
 入幣前完成錢包地址認證是保障資產安全的關鍵前置環節。
 
-<img src="Ux4cbbhbMoZwjUxzSTMjUqmPpse" src-width="3288" src-height="1076" align="center"/>
+<img src="/assets/Ux4cbbhbMoZwjUxzSTMjUqmPpse.png" src-width="3288" src-height="1076" align="center"/>
 
 # <b>認證後入幣操作簡述</b>
 
@@ -40,7 +40,7 @@ sidebar_position: 1
 
 - 客戶端提交入幣請求後，後台系統會自動生成對應的入幣記錄，便於後台操作人員查詢跟蹤全流程；若遇異常或有問題的入幣申請，後台操作人員可直接在系統中執行刪除操作
 
-<img src="GfzkbkNGfoTjjCxl2R1j0pSzpmf" src-width="3262" src-height="826" align="center"/>
+<img src="/assets/GfzkbkNGfoTjjCxl2R1j0pSzpmf.png" src-width="3262" src-height="826" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -49,5 +49,5 @@ sidebar_position: 1
 
 - 可通過目標錢包或平台的 “入幣記錄” 模塊，查看交易狀態、區塊確認次數等詳情，跟蹤資產到賬情況。
 
-<img src="KwK4bMTi1oP44pxqs0qjMmvFpOh" src-width="3268" src-height="806" align="center"/>
+<img src="/assets/KwK4bMTi1oP44pxqs0qjMmvFpOh.png" src-width="3268" src-height="806" align="center"/>
 

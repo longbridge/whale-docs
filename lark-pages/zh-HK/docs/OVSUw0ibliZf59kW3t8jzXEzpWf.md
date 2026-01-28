@@ -19,7 +19,7 @@ sidebar_position: 2
 
 查看 WBO 後台配置的基金列表，可通過該頁面特客戶執行申購操作，並且支持查看基金基礎詳情數據。
 
-<img src="FgdBbQSe8osMdVxZymvj6Uxipm7" src-width="2868" src-height="1730" align="center"/>
+<img src="/assets/FgdBbQSe8osMdVxZymvj6Uxipm7.png" src-width="2868" src-height="1730" align="center"/>
 
 <b>功能頁面結構說明</b>
 
@@ -31,7 +31,7 @@ sidebar_position: 2
 
 ### 1.1 基金列表
 
-<img src="NOJdbzBY6oVWufxJaSJjNJBcp6g" src-width="2870" src-height="1736" align="center"/>
+<img src="/assets/NOJdbzBY6oVWufxJaSJjNJBcp6g.png" src-width="2870" src-height="1736" align="center"/>
 
 - 查詢條件：ISIN、基金名稱、基金種類、基金類型、幣種、基金狀態
     - 列表的基金種類默認為“公募基金”，可手動切換為“私募基金”
@@ -45,11 +45,11 @@ sidebar_position: 2
 
 可分為三個功能區查看基金詳情：基本信息、歷史淨值、交易規則。
 
-<img src="UHWLb96zso9ee8xb17Yjrvszps0" src-width="2858" src-height="1734" align="center"/>
+<img src="/assets/UHWLb96zso9ee8xb17Yjrvszps0.png" src-width="2858" src-height="1734" align="center"/>
 
-<img src="Au6Gb2ldzoE2iUxZcITjHWsMpkf" src-width="2858" src-height="1736" align="center"/>
+<img src="/assets/Au6Gb2ldzoE2iUxZcITjHWsMpkf.png" src-width="2858" src-height="1736" align="center"/>
 
-<img src="MzHobmqLKoaxqBx0wSnjgWLypCe" src-width="2862" src-height="1732" align="center"/>
+<img src="/assets/MzHobmqLKoaxqBx0wSnjgWLypCe.png" src-width="2862" src-height="1732" align="center"/>
 
 - 頂部展示當前基金的名稱，點擊“&lt;”可操作返回至基金列表
 - 通過 Tab 進行切換查看基金詳情數據
@@ -61,7 +61,7 @@ sidebar_position: 2
 
 列表點擊“申購”進入申購窗口，可在該窗口內選擇需申購的帳戶及輸入申購金額即可發起申購。
 
-<img src="PEnjbqQqHoTvesx7rZ4jRGZlpGe" src-width="2862" src-height="1742" align="center"/>
+<img src="/assets/PEnjbqQqHoTvesx7rZ4jRGZlpGe.png" src-width="2862" src-height="1742" align="center"/>
 
 - 窗口內容分為三部分：客戶選擇、資金信息、申購操作
     - 客戶選擇：支持通過證券帳號、客戶姓名進行搜索，選中帳戶後將查詢客戶的資金信息
@@ -76,7 +76,7 @@ sidebar_position: 2
 
 查看客戶全部的申購數據，可在該列表中進行管理，幫助客戶操作撤單。
 
-<img src="H0D8bTUk2oGoSpxNFeJjmwrVp5g" src-width="2874" src-height="1736" align="center"/>
+<img src="/assets/H0D8bTUk2oGoSpxNFeJjmwrVp5g.png" src-width="2874" src-height="1736" align="center"/>
 
 <b>功能頁面結構說明</b>
 
@@ -88,7 +88,7 @@ sidebar_position: 2
 
 ### 2.1 基金訂單列表
 
-<img src="S3ItbJwluowEcDxPW2Xj8BORpDd" src-width="2874" src-height="1736" align="center"/>
+<img src="/assets/S3ItbJwluowEcDxPW2Xj8BORpDd.png" src-width="2874" src-height="1736" align="center"/>
 
 - 查詢條件：證券帳號、訂單狀態、基金種類、交易方向、委託渠道、訂單提交時間
 - 列表字段：均展示基金訂單申購的基本信息，包括訂單編號、客戶信息、基金信息、申購信息及基金訂單申購狀態
@@ -109,13 +109,13 @@ sidebar_position: 2
 
 ### 2.2 基金訂單 - 詳情
 
-<img src="EzY4bIo2WoymPsx5gnLjOxAepXe" src-width="2858" src-height="1732" align="center"/>
+<img src="/assets/EzY4bIo2WoymPsx5gnLjOxAepXe.png" src-width="2858" src-height="1732" align="center"/>
 
 基金訂單詳情窗口，查看基金訂單基本信息及費率、費用等。
 
 ### 2.3 基金訂單 - 撤單
 
-<img src="RDSKb84tCoOnvJxEGVJjEgsOpgc" src-width="782" src-height="784" align="center"/>
+<img src="/assets/RDSKb84tCoOnvJxEGVJjEgsOpgc.png" src-width="782" src-height="784" align="center"/>
 
 點擊訂單列表“撤單”操作後，喚起基金撤單二次確認，需確認後提交撤單申請。
 

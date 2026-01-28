@@ -15,7 +15,7 @@ sidebar_position: 0
 
 **答：**在「新股認購＞認購記錄」頁面可以操作撤單（見 10.1B 圖一）。如訂單狀態去到 "已扣款" 就不能作撤單或拒單，需要強制撤單要登錄到 FINI 平台處理，但已過截止時間，FINI 也不能作撤單了。
 
-<img src="DirRb4QuLoxEOMxpamJjarWcp3P" src-width="2716" src-height="902" align="center"/>
+<img src="/assets/DirRb4QuLoxEOMxpamJjarWcp3P.png" src-width="2716" src-height="902" align="center"/>
 
 <em>10.1B 圖一</em>
 

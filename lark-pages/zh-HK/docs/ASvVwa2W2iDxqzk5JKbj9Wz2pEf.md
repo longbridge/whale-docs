@@ -11,12 +11,12 @@ version: stable
 # 🎉 新功能
 
 - WBO 加密貨幣出入功能說明（對接 HashKey）
-    <img src="TAombqpu8oOff3xajZUjY1T1pZb" src-width="3294" src-height="822" align="center"/>
-    <img src="AFMTbiDrRolX6Jx1CS9j6PGzpKg" src-width="3276" src-height="822" align="center"/>
-    <img src="UIO2byfGForHexxsh2Sjyw7cpCc" src-width="3270" src-height="1026" align="center"/>
-    <img src="EeAjbQU3uoUu7pxyVCQjs2Jepbg" src-width="3300" src-height="1436" align="center"/>
-    <img src="EfVfbo8ZAodgfTxKetEjV3Nnpgg" src-width="3256" src-height="874" align="center"/>
-    <img src="JobpbYjG1ov6SDxMdAyjZQ3XpEc" src-width="3298" src-height="788" align="center"/>
+    <img src="/assets/TAombqpu8oOff3xajZUjY1T1pZb.png" src-width="3294" src-height="822" align="center"/>
+    <img src="/assets/AFMTbiDrRolX6Jx1CS9j6PGzpKg.png" src-width="3276" src-height="822" align="center"/>
+    <img src="/assets/UIO2byfGForHexxsh2Sjyw7cpCc.png" src-width="3270" src-height="1026" align="center"/>
+    <img src="/assets/EeAjbQU3uoUu7pxyVCQjs2Jepbg.png" src-width="3300" src-height="1436" align="center"/>
+    <img src="/assets/EfVfbo8ZAodgfTxKetEjV3Nnpgg.png" src-width="3256" src-height="874" align="center"/>
+    <img src="/assets/JobpbYjG1ov6SDxMdAyjZQ3XpEc.png" src-width="3298" src-height="788" align="center"/>
     - WBO 新增加密貨幣出入功能，满足客戶加密貨幣出入需求。使用前需完成權限申請，並配置出幣申請工單（標識：atm.va.coin_withdraw_apply）的審批流程。核心模組、功能及操作路徑如下：
         1. 渠道存管賬戶：支援渠道存管賬戶批量新增；未分配的渠道存管賬戶可在後台手動刪除。
             - 路徑：WBO - 虛擬資產管理 - 出入幣 - 渠道存管賬戶
@@ -47,8 +47,8 @@ version: stable
 # 🪀 改進與修復
 
 - 後台手動換匯時，匯兌策略支援手動選擇
-    <img src="Y1GUbSetBoTYI4x2XIYjjJkepGc" src-width="2508" src-height="1352" align="center"/>
-    <img src="KUVNb2ByOo93tixYi4yjgU1apvh" src-width="3268" src-height="876" align="center"/>
+    <img src="/assets/Y1GUbSetBoTYI4x2XIYjjJkepGc.png" src-width="2508" src-height="1352" align="center"/>
+    <img src="/assets/KUVNb2ByOo93tixYi4yjgU1apvh.png" src-width="3268" src-height="876" align="center"/>
     - 後台操作【手動換匯】時，可依需求手動選擇匯兌策略；人工選定後，客戶匯兌將立即執行。頁面預設採用系統判定模式，此模式下將按人工預設的匯兌策略完成匯兌。
 若配置的「換匯策略」僅包含系統默認的全部匯兌類型，客戶提交換匯後，匹配的匯兌池類型將彙總顯示為「--」，換匯策略則按系統默認值展示。
     - 路徑：WBO - 款項管理 - 換匯 - 客戶匯兌

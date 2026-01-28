@@ -18,33 +18,33 @@ sidebar_position: 2
 
 (i). 在「KYC &gt; 開户列表」頁面中搜尋申請開户的客户，在操作欄點擊「詳情」，確認客户填寫資料無誤後點擊「通過初審」。
 
-<img src="FMNgbWnFEouqjexI9sajmff9pWb" src-width="2638" src-height="683" align="center"/>
+<img src="/assets/FMNgbWnFEouqjexI9sajmff9pWb.png" src-width="2638" src-height="683" align="center"/>
 
-<img src="VO5Ubm6upoKMstxy6YLjbee1pab" src-width="2617" src-height="1439" align="center"/>
+<img src="/assets/VO5Ubm6upoKMstxy6YLjbee1pab.png" src-width="2617" src-height="1439" align="center"/>
 
 (ii). 在「款項管理＞入金＞入金申請」頁面搜尋申請開户入金的客户點擊「直接入賬」，確認入金資料無誤後點擊「提交審批」。
 
-<img src="MnqVbUHIhoKBYTx4lbmjaI5Xpo9" src-width="2534" src-height="1113" align="center"/>
+<img src="/assets/MnqVbUHIhoKBYTx4lbmjaI5Xpo9.png" src-width="2534" src-height="1113" align="center"/>
 
-<img src="ArUZbncszoh8RmxKblUj4xWBpfb" src-width="2406" src-height="1383" align="center"/>
+<img src="/assets/ArUZbncszoh8RmxKblUj4xWBpfb.png" src-width="2406" src-height="1383" align="center"/>
 
 (iii). 去到「入金審核 &gt; 開户中」頁面，在操作欄點擊「審批」
 
-<img src="HRsVbm0w0o3LZfxW7xfjzy1CpCb" src-width="2559" src-height="1167" align="center"/>
+<img src="/assets/HRsVbm0w0o3LZfxW7xfjzy1CpCb.png" src-width="2559" src-height="1167" align="center"/>
 
 (iv). 在「入金審核」頁面二次確認客户入金轉賬資訊無誤後，點擊「審批」
 
-<img src="GKk9bjf64o4oulxHK37jGnv7pXc" src-width="1530" src-height="1060" align="center"/>
+<img src="/assets/GKk9bjf64o4oulxHK37jGnv7pXc.png" src-width="1530" src-height="1060" align="center"/>
 
 (v). 審核人員在右上角「審批」有提醒，之後點擊「通過」
 
-<img src="USodb8GPXo4Yb8xMqoGjznrGpic" src-width="2567" src-height="1380" align="center"/>
+<img src="/assets/USodb8GPXo4Yb8xMqoGjznrGpic.png" src-width="2567" src-height="1380" align="center"/>
 
 (vi). 回到「KYC &gt; 開户列表」頁面搜尋客户在操作欄點擊「詳情」進到「開户詳情」頁面，點擊「通過 RO 審批」并「確定」
 
-<img src="AwbAbtWcaoIb7Ox8JTFjlQcqpVd" src-width="2531" src-height="1404" align="center"/>
+<img src="/assets/AwbAbtWcaoIb7Ox8JTFjlQcqpVd.png" src-width="2531" src-height="1404" align="center"/>
 
-<img src="LPjVbKbIPouanMxGFUkjSJxYpBd" src-width="2523" src-height="1395" align="center"/>
+<img src="/assets/LPjVbKbIPouanMxGFUkjSJxYpBd.png" src-width="2523" src-height="1395" align="center"/>
 
 (vii). 開户狀態會更新為「已開通」，客戶 APP 上收到賬户開通信息能正式操作使用。
 
@@ -53,7 +53,7 @@ sidebar_position: 2
 <p>通過轉賬驗證開戶的客戶，只能以香港銀行進行資金轉賬。</p>
 </div>
 
-<img src="G33fbIqucoxqubxoxTLjxLD7p3b" src-width="2586" src-height="810" align="center"/>
+<img src="/assets/G33fbIqucoxqubxoxTLjxLD7p3b.png" src-width="2586" src-height="810" align="center"/>
 
 # 1.1.3B 問：駁回開户申請，客户會收到通知？
 
@@ -64,11 +64,11 @@ sidebar_position: 2
 **答：**在「KYC&gt;開户列表」詳盡頁面中點擊「駁回」，可剔選“證件上傳頁”的選項，把申請退回給客户修改。（見 1.1.3C 圖一）
 或 在「備註」輸入駁回內容，然後在“駁回頁面”中選擇「證件上傳頁」退回開户申請。（見 1.1.3C 圖二）
 
-<img src="BedpboG9Kop0iux5azjjL5BTpVd" src-width="2718" src-height="1364" align="center"/>
+<img src="/assets/BedpboG9Kop0iux5azjjL5BTpVd.png" src-width="2718" src-height="1364" align="center"/>
 
 <em>1.1.3C 圖一</em>
 
-<img src="E62ebD2OsodJvzxHJ4RjMBaFpMc" src-width="2722" src-height="1370" align="center"/>
+<img src="/assets/E62ebD2OsodJvzxHJ4RjMBaFpMc.png" src-width="2722" src-height="1370" align="center"/>
 
 <em>1.1.3C 圖二</em>
 
@@ -81,7 +81,7 @@ sidebar_position: 2
 **答：**App 選了「第三方見證」在 "開戶資料準備" 頁面，提示客户需準備好開戶文件和相關資料，然後點擊「下一步，郵寄資料」。
 在 “郵寄資料至” 頁面提醒需郵寄文件，提供文件後點擊「確認已寄出」。收到文件後在後台上傳處理開户申請。
 
-<img src="BEUcbBtWkohUGYxHMf5jX2gtpHg" src-width="448" src-height="1432" align="center"/>
+<img src="/assets/BEUcbBtWkohUGYxHMf5jX2gtpHg.png" src-width="448" src-height="1432" align="center"/>
 
-<img src="Pjx8bIzKmoE60Qx0RXFj56s8pVc" src-width="532" src-height="1416" align="center"/>
+<img src="/assets/Pjx8bIzKmoE60Qx0RXFj56s8pVc.png" src-width="532" src-height="1416" align="center"/>
 

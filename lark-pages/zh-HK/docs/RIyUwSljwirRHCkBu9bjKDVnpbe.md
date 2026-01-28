@@ -14,7 +14,7 @@ sidebar_position: 48
     - 系統數據檢查，主要做數據校驗，不可以手動通過，<b>有報錯的聯繫客服處理</b>
     - 注意事項：在1月13日前必須完成完整的日終操作
 
-<img src="BGMebLRaFork6mxNbIwjhWBNpqd" src-width="3496" src-height="1734" align="center"/>
+<img src="/assets/BGMebLRaFork6mxNbIwjhWBNpqd.png" src-width="3496" src-height="1734" align="center"/>
 
 - 新增：實時流水同步功能
     - 在發生調賬等操作後，可以實時生成清算流水（原來是操作數據同步後）
@@ -22,7 +22,7 @@ sidebar_position: 48
     - 基於實時同步的清算流水
     - 極端情況下，未更新清算流水的可點擊更新數據按
 
-<img src="VAtrbabTWo70ebxiBsHjypG3pjf" src-width="3496" src-height="1734" align="center"/>
+<img src="/assets/VAtrbabTWo70ebxiBsHjypG3pjf.png" src-width="3496" src-height="1734" align="center"/>
 
-<img src="VpRQbLT8HoFEFSxV823jHTfNpDh" src-width="3496" src-height="1734" align="center"/>
+<img src="/assets/VpRQbLT8HoFEFSxV823jHTfNpDh.png" src-width="3496" src-height="1734" align="center"/>
 

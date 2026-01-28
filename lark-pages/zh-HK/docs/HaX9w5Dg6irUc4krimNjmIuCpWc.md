@@ -26,7 +26,7 @@ sidebar_position: 0
 
 # 16.1C 問：新股上市的盈餘數據是如何計算？
 
-<img src="FiusbnJ4Joe5EcxFCK4jFCFMpRg" src-width="1305" src-height="884" align="center"/>
+<img src="/assets/FiusbnJ4Joe5EcxFCK4jFCFMpRg.png" src-width="1305" src-height="884" align="center"/>
 
 **答：**浮動盈虧：是暗盤買入的成本價對比現價計算；
 
@@ -47,5 +47,5 @@ sidebar_position: 0
 
 **答：**在大約早上 10:30 更新前一天的數據。
 
-<img src="Zcj2bOuY7oBZSYxlZxXjT2lkp3e" src-width="734" src-height="1464" align="center"/>
+<img src="/assets/Zcj2bOuY7oBZSYxlZxXjT2lkp3e.png" src-width="734" src-height="1464" align="center"/>
 

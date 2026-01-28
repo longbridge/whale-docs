@@ -17,7 +17,7 @@ sidebar_position: 0
 
 # 1. 設置站點
 
-<img src="HOpVbAY6HofBWaxU3O0j0YMkpAb" src-width="2740" src-height="950" align="center"/>
+<img src="/assets/HOpVbAY6HofBWaxU3O0j0YMkpAb.png" src-width="2740" src-height="950" align="center"/>
 
 選擇 SFTP 協議
 
@@ -34,13 +34,13 @@ sidebar_position: 0
 
 # 2. 下載文件
 
-<img src="QStubdh4KoXVNzx25zyj2IEUpTe" src-width="2524" src-height="1110" align="center"/>
+<img src="/assets/QStubdh4KoXVNzx25zyj2IEUpTe.png" src-width="2524" src-height="1110" align="center"/>
 
-<img src="AHoibjGV9oKPTBxJe94jumdcpuh" src-width="3004" src-height="1504" align="center"/>
+<img src="/assets/AHoibjGV9oKPTBxJe94jumdcpuh.png" src-width="3004" src-height="1504" align="center"/>
 
 文件按日放在同一個文件夾裏，分服務保存
 
-<img src="WXnDb04X5o5QDCxIIxVjUcgIpsb" src-width="3152" src-height="1606" align="center"/>
+<img src="/assets/WXnDb04X5o5QDCxIIxVjUcgIpsb.png" src-width="3152" src-height="1606" align="center"/>
 
-<img src="AQlwbZAYtoILraxafxWj1Pq0p4w" src-width="2844" src-height="1646" align="center"/>
+<img src="/assets/AQlwbZAYtoILraxafxWj1Pq0p4w.png" src-width="2844" src-height="1646" align="center"/>
 

@@ -42,9 +42,9 @@ EP模式，系統只生成有持倉的公司行動。轉倉未及時處理，或
 EP模式，02文件內有數據的BE類公司行動會強制生成，不再判斷持倉
 ```
 
-<img src="FXm6b87pto27qAxT3csjFnSvpTc" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/FXm6b87pto27qAxT3csjFnSvpTc.png" src-width="3548" src-height="1806" align="center"/>
 
-<img src="T4YObu3wlokkAJxuglyjn39Wp2f" src-width="3639" src-height="1886" align="center"/>
+<img src="/assets/T4YObu3wlokkAJxuglyjn39Wp2f.png" src-width="3639" src-height="1886" align="center"/>
 
 # 登記
 
@@ -83,7 +83,7 @@ EP模式，02文件內有數據的BE類公司行動會強制生成，不再判�
 RS、OO、ER、EO、TU、TC這種客戶可以放棄行權的公司行動，可以按如下方式配置
 ```
 
-<img src="XhG0bT9tvoLEJMxSDE7jBV7tpqc" src-width="3578" src-height="1798" align="center"/>
+<img src="/assets/XhG0bT9tvoLEJMxSDE7jBV7tpqc.png" src-width="3578" src-height="1798" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -94,7 +94,7 @@ RS、OO、ER、EO、TU、TC這種客戶可以放棄行權的公司行動，可�
 在客戶規則處，將費率係數和最低收費係數分別填為0即可
 ```
 
-<img src="RITQbCHD9ocunhxgy4Bj1t56pzh" src-width="3578" src-height="1798" align="center"/>
+<img src="/assets/RITQbCHD9ocunhxgy4Bj1t56pzh.png" src-width="3578" src-height="1798" align="center"/>
 
 # 執行
 
@@ -124,7 +124,7 @@ RS、OO、ER、EO、TU、TC這種客戶可以放棄行權的公司行動，可�
 特殊派息將進行兩次派息和收費
 ```
 
-<img src="NtLlbOEG0oC2mAxvXP3jiLREpwf" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/NtLlbOEG0oC2mAxvXP3jiLREpwf.png" src-width="3548" src-height="1806" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -135,7 +135,7 @@ RS、OO、ER、EO、TU、TC這種客戶可以放棄行權的公司行動，可�
 可設置否收取過戶字段來配置過戶費，僅支持BE類和TM類
 ```
 
-<img src="FBsfbHYLAoJhY1xqD7AjNWippFt" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/FBsfbHYLAoJhY1xqD7AjNWippFt.png" src-width="3548" src-height="1806" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -158,7 +158,7 @@ RS、OO、ER、EO、TU、TC這種客戶可以放棄行權的公司行動，可�
 派發股權、派發股票時分紅金額等同於0
 ```
 
-<img src="P5oBbW8XtoHtPmxARlDjzjDHpuh" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/P5oBbW8XtoHtPmxARlDjzjDHpuh.png" src-width="3548" src-height="1806" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -199,7 +199,7 @@ BE-SCRIP DIVIDEND的計算公式：分紅金額/再投資金額
     系統初始化時，可開啓零股轉分紅，自動將零股轉分紅設置爲時
 ```
 
-<img src="B20RbkOs5oZGZKxiJR7jUpOEpAb" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/B20RbkOs5oZGZKxiJR7jUpOEpAb.png" src-width="3548" src-height="1806" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -213,7 +213,7 @@ BE-SCRIP DIVIDEND的計算公式：分紅金額/再投資金額
 如果修改了時間，或者想提前結束的，可操作提前完成指令收集
 ```
 
-<img src="LS8xbIFu1oELXwx9uORjYJM7pFd" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/LS8xbIFu1oELXwx9uORjYJM7pFd.png" src-width="3548" src-height="1806" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>

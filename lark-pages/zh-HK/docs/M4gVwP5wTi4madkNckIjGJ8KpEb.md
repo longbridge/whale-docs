@@ -13,27 +13,27 @@ Whale WBO 權限申請 ，採用一級業務模組的功能權限策略（不再
 
 <b>全部功能權限（策略）、只讀功能權限（策略）</b> 和 <b>其他指定權限（策略）</b>
 
-<img src="D8V3bOgKOomTrzxvTNijWMa6p3c" src-width="1488" src-height="1448" align="center"/>
+<img src="/assets/D8V3bOgKOomTrzxvTNijWMa6p3c.png" src-width="1488" src-height="1448" align="center"/>
 
 Whale 用戶 可以根據 新的權限策略 來配置新的權限申請 ，同時系統 也支持 針對一些臨時權限策略設置申請期限 （預設不填寫） ，可根據需要填入作為審批參考
 
-<img src="XDw1bCT9WoUHB9xKk0aj9sDqpQf" src-width="1478" src-height="156" align="center"/>
+<img src="/assets/XDw1bCT9WoUHB9xKk0aj9sDqpQf.png" src-width="1478" src-height="156" align="center"/>
 
 同時，新權限策略配置模式 採用“<b>自动更新策略</b>” ：改变任何一个策略的规则（無論添加權限、移除權限等操作），WBO 用户無需重新申请就會即时生效
 
 同時若點選某個菜單後，若無相關權限，系統會先作提示，可點選這提示，直接進入權限申請頁面
 
-<img src="Xuq8be9FjoLtjjxgR0tjMYGUpwd" src-width="1498" src-height="232" align="center"/>
+<img src="/assets/Xuq8be9FjoLtjjxgR0tjMYGUpwd.png" src-width="1498" src-height="232" align="center"/>
 
 ## 角色管理詳情
 
 此次 Whale WBO 權限策略模式優化 ，也同時優化身份管理內的權限添加角色時採用新的權限策略模式
 
-<img src="ACtwb5wCOoP8BHxtTKgj1UOGp2e" src-width="3406" src-height="1452" align="center"/>
+<img src="/assets/ACtwb5wCOoP8BHxtTKgj1UOGp2e.png" src-width="3406" src-height="1452" align="center"/>
 
 當需要新增系統角色時，點選右上角【新增角色】，採點選配置權限策略方式加入可執行作業
 
-<img src="D1mSbVQ43oLMLGx41MGjdOr5pYg" src-width="2208" src-height="1602" align="center"/>
+<img src="/assets/D1mSbVQ43oLMLGx41MGjdOr5pYg.png" src-width="2208" src-height="1602" align="center"/>
 
 ## 人員管理詳情
 
@@ -50,5 +50,5 @@ Whale 提供用戶管理內的權限策略展示
 - 支持移除用户的某個角色。
 - 支持给用户分配新的角色。
 
-<img src="Gsf1bnT7vox26ExY0qRjhHVfpm8" src-width="3424" src-height="1344" align="center"/>
+<img src="/assets/Gsf1bnT7vox26ExY0qRjhHVfpm8.png" src-width="3424" src-height="1344" align="center"/>
 

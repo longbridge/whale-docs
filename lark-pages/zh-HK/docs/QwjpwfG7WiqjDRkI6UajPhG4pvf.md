@@ -26,17 +26,17 @@ sidebar_position: 2
 
 1. 列表頁展示所有類型的臨時調賬，可以通過篩選“調賬類型”查看不同類型的調賬記錄；在調賬查詢主頁面點擊【臨時調賬】，即可打開新增臨時調賬彈窗頁面
 
-<img src="AgAibI46aop23UxCdtPjJEwxpQf" src-width="1280" src-height="640" align="center"/>
+<img src="/assets/AgAibI46aop23UxCdtPjJEwxpQf.png" src-width="1280" src-height="640" align="center"/>
 
 1. 填寫調賬信息頁面（以新增現金臨時調賬為例，如下圖）
     1. 業務類型和調賬類型綁定，只需選擇業務類型即可。現金臨時調賬默認對應入賬，現金臨時調減默認對應出賬
     2. 臨時調賬需要設定有效期，在到期後臨時調賬會自動失效
 
-<img src="C9XgbvQmsosDQnxoO2jjjf9upic" src-width="1280" src-height="744" align="center"/>
+<img src="/assets/C9XgbvQmsosDQnxoO2jjjf9upic.png" src-width="1280" src-height="744" align="center"/>
 
 1. 填寫完調賬信息後點擊【確定】即可完成，並可以在列表頁面查看到已創建的記錄；同時在「調賬清算」頁面也會創建一條狀態為“已調賬”的記錄
 
-<img src="E6vgbjUaNoGdfpx5nqzjJSobpvg" src-width="3324" src-height="1920" align="center"/>
+<img src="/assets/E6vgbjUaNoGdfpx5nqzjJSobpvg.png" src-width="3324" src-height="1920" align="center"/>
 
 ## 2.調賬清算
 
@@ -49,5 +49,5 @@ sidebar_position: 2
 
 1. 在調賬清算主頁面可以查看所有已失效和待失效的臨時調賬記錄，可以篩選“狀態”查看不不同狀態的記錄；點擊【失效】並進行二次確認後即可對當筆調賬完成失效
 
-<img src="EFeLbchQTo1T9PxlhQEjEzvppve" src-width="1280" src-height="657" align="center"/>
+<img src="/assets/EFeLbchQTo1T9PxlhQEjEzvppve.png" src-width="1280" src-height="657" align="center"/>
 

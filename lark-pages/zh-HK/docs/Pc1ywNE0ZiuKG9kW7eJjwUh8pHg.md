@@ -19,7 +19,7 @@ sidebar_position: 2
 
 查看客戶公司行動相關業務處理情況，該列表僅支持查看客戶業務處理相關數據，暫不支持其他拆合股等操作。如需進行公司行動業務處理需前往 WBO 後台。
 
-<img src="TT46b6QiUourR3xY0JvjDI5wpVe" src-width="2866" src-height="1734" align="center"/>
+<img src="/assets/TT46b6QiUourR3xY0JvjDI5wpVe.png" src-width="2866" src-height="1734" align="center"/>
 
 <b>功能頁面結構說明</b>
 
@@ -35,7 +35,7 @@ sidebar_position: 2
 
 列表主要展示客戶公司行動明細數據信息，可支持操作查看詳情。
 
-<img src="YKAvb6uTPo0mZZxiKZVj794gpU7" src-width="2866" src-height="1738" align="center"/>
+<img src="/assets/YKAvb6uTPo0mZZxiKZVj794gpU7.png" src-width="2866" src-height="1738" align="center"/>
 
 詳情窗口可通過係部分進行查看，包含行權信息、收費信息、權益信息、其他信息。
 

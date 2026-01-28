@@ -11,5 +11,5 @@ sidebar_position: 17
 
 - 熱銷基金新增自定義和按收益率排序
     - 路徑：「基金管理」-「App展示管理」
-        <img src="SmaFb2ZDSow70mxGZ7Jjus9Yp6e" src-width="3434" src-height="1992" align="center"/>
+        <img src="/assets/SmaFb2ZDSow70mxGZ7Jjus9Yp6e.png" src-width="3434" src-height="1992" align="center"/>
 

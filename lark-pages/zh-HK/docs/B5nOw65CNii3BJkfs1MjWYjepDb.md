@@ -22,13 +22,13 @@ sidebar_position: 2
 
 在客戶入幣前，需要進行入幣加密貨幣設置。
 
-<img src="GAFAbi0P8oDP6pxfsq8jA3YOpxd" src-width="2048" src-height="706" align="center"/>
+<img src="/assets/GAFAbi0P8oDP6pxfsq8jA3YOpxd.png" src-width="2048" src-height="706" align="center"/>
 
 ## 客户錢包地址
 
 入幣前完成錢包地址認證是保障資產安全的關鍵前置環節。
 
-<img src="Aqv0bjy0Lo397MxLaNujrEmQpPb" src-width="3288" src-height="1076" align="center"/>
+<img src="/assets/Aqv0bjy0Lo397MxLaNujrEmQpPb.png" src-width="3288" src-height="1076" align="center"/>
 
 ## <b>入幣操作</b>
 
@@ -42,7 +42,7 @@ sidebar_position: 2
 - 客戶端提交入幣請求後，系統自動接收請求信息，並生成唯一入幣記錄（含記錄編號、用戶證券賬號、入幣幣種、金額、目標地址、交易哈希 TXID、請求時間、狀態等核心信息）。
 - 若遇異常或有問題的入幣申請，後台操作人員可直接在系統中執行刪除操作。
 
-<img src="LanObTVnboVFS5xfj7fj9DHypwh" src-width="3262" src-height="826" align="center"/>
+<img src="/assets/LanObTVnboVFS5xfj7fj9DHypwh.png" src-width="3262" src-height="826" align="center"/>
 
 <b>入幣記錄查詢與跟蹤</b>
 
@@ -54,7 +54,7 @@ sidebar_position: 2
 - <b>多條件查詢</b>：支持按記錄編號、客戶編號、創建時間 、狀態、等條件篩選查詢，快速定位目標記錄。
 - <b>詳情跟蹤</b>：點擊單條記錄查看詳情，包含地址核對、交易哈希對應的區塊確認進度等信息，實時跟蹤入幣全流程。
 
-<img src="DuHRbCq7Oo0o1bx03o0jKdVEpCf" src-width="3268" src-height="806" align="center"/>
+<img src="/assets/DuHRbCq7Oo0o1bx03o0jKdVEpCf.png" src-width="3268" src-height="806" align="center"/>
 
 <b>未入幣記錄撤銷操作</b>
 
@@ -64,7 +64,7 @@ sidebar_position: 2
     2. 系統彈出確認窗口，輸入操作備註（如「用戶重複申請」「地址填寫錯誤」），再次確認撤銷；
     3. 撤銷成功後，記錄狀態更新為「已撤銷」，系統自動留存撤銷操作日誌（含操作人、操作時間、備註），支持後續溯源。
 
-<img src="XG2Db5drgo1wNGxr9aAjDC68p1c" src-width="3302" src-height="720" align="center"/>
+<img src="/assets/XG2Db5drgo1wNGxr9aAjDC68p1c.png" src-width="3302" src-height="720" align="center"/>
 
 <b>入幣成功後退幣流程</b>
 
@@ -76,5 +76,5 @@ sidebar_position: 2
     4. 跟蹤退幣狀態：實時查看退幣記錄的區塊確認進度，確認完成後，更新入幣記錄狀態為「已退幣」，並留存退幣全流程日誌；
     5. 通知用戶：退幣成功後，需線下通知客戶。
 
-<img src="U7RRbFCE5o6lbXxn3u6jCYxspHh" src-width="3274" src-height="804" align="center"/>
+<img src="/assets/U7RRbFCE5o6lbXxn3u6jCYxspHh.png" src-width="3274" src-height="804" align="center"/>
 

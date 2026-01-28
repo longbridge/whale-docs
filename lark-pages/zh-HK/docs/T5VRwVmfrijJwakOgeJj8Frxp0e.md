@@ -29,25 +29,25 @@ Margin Call系統提供了風險預警查詢、平倉操作、股票追收等功
 
 可在「風險預警」頁面查看所有被Margin Call且未結束的客戶列表，如需對客戶進行平倉可在該頁面找到對應客戶。
 
-<img src="EzfvbhbjUogwGIxZ1zEjTIYXpQe" src-width="2682" src-height="1670" align="center"/>
+<img src="/assets/EzfvbhbjUogwGIxZ1zEjTIYXpQe.png" src-width="2682" src-height="1670" align="center"/>
 
 ## 2.平倉處理
 
 2.1 「風險預警」的主頁面可選擇列表進行批量平倉；或者如需針對某個具體客戶進行平倉操作，也可以查詢客戶從【詳情】進入。
 
-<img src="XXTYbbBWIo9rezxhGGSjJxjdpxd" src-width="2098" src-height="1276" align="center"/>
+<img src="/assets/XXTYbbBWIo9rezxhGGSjJxjdpxd.png" src-width="2098" src-height="1276" align="center"/>
 
 2.2 【詳情】頁面會有客戶現金和持倉明細，可以自主選擇對應的持倉操作【平倉】或者操作下方的批量【平倉】
 
-<img src="EDXxbQvpcogsxQxlUZMjZvUWpYc" src-width="3816" src-height="2008" align="center"/>
+<img src="/assets/EDXxbQvpcogsxQxlUZMjZvUWpYc.png" src-width="3816" src-height="2008" align="center"/>
 
 ## 3.撤單處理
 
 3.1 若平倉操作錯誤，需要取消訂單，可在列表【詳情】的「平倉處理中」操作【撤單】
 
-<img src="P9eMbOjD9oV0Jhx3K0hjUxUlpGf" src-width="3812" src-height="2016" align="center"/>
+<img src="/assets/P9eMbOjD9oV0Jhx3K0hjUxUlpGf.png" src-width="3812" src-height="2016" align="center"/>
 
 3.2 或者也可以在平倉訂單頁面（展示所有平倉訂單）進行【撤單】
 
-<img src="OLTkb5TMaoMu49xHfuojn02ypQb" src-width="2676" src-height="1666" align="center"/>
+<img src="/assets/OLTkb5TMaoMu49xHfuojn02ypQb.png" src-width="2676" src-height="1666" align="center"/>
 

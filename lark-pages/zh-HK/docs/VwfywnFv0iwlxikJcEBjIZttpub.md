@@ -17,21 +17,21 @@ version: stable
     - 出金申請新增 Tab 入口，方便按需切換查看。
     - 路徑：證券後台 - 款項管理 - 出金 - 出金申請
 
-<img src="N6EqbjdruoyQvkx6I3wj88Mfpdd" src-width="2048" src-height="443" align="center"/>
+<img src="/assets/N6EqbjdruoyQvkx6I3wj88Mfpdd.png" src-width="2048" src-height="443" align="center"/>
 
-<img src="AZITbOldNoyKSxxM53wjzxj5pWf" src-width="2048" src-height="692" align="center"/>
+<img src="/assets/AZITbOldNoyKSxxM53wjzxj5pWf.png" src-width="2048" src-height="692" align="center"/>
 
 - 出金駁回頁面優化
     - 出金駁回頁面新增文案提示：若當前櫃台已開啟工單審批，則提示文案為：「確定後需經工單審批，審批通過後將發送消息通知客戶出金已駁回」；若當前櫃台未開啟工單審批，則提示文案為：「確定後即發消息提示客戶出金已駁回」
     - 路徑：證券後台 - 款項管理 - 出金 - 出金申請
 
-<img src="WogqbKKXBoA7qfxdxAWjXBdwplf" src-width="2048" src-height="788" align="center"/>
+<img src="/assets/WogqbKKXBoA7qfxdxAWjXBdwplf.png" src-width="2048" src-height="788" align="center"/>
 
-<img src="IJClbYiY1oqOfVxvtP9jDxvWppf" src-width="2048" src-height="918" align="center"/>
+<img src="/assets/IJClbYiY1oqOfVxvtP9jDxvWppf.png" src-width="2048" src-height="918" align="center"/>
 
 - 簡化市場管理配置流程
     - 簡化市場管理配置流程
     - 路徑：业务参数设置-市场管理
 
-<img src="SYw9bsBt4o1DPQxgE10jxaXdpZg" src-width="3024" src-height="1624" align="center"/>
+<img src="/assets/SYw9bsBt4o1DPQxgE10jxaXdpZg.png" src-width="3024" src-height="1624" align="center"/>
 

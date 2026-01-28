@@ -14,7 +14,7 @@ sidebar_position: 11
 **答：**需要完成當天的日終後報表會生成數據。
 一些實時的報表不用待日終完成，在「報表打印」頁面會提示那些是實時報表。
 
-<img src="BotfbDApHoAtWpxL37bjKmaCptf" src-width="1790" src-height="780" align="center"/>
+<img src="/assets/BotfbDApHoAtWpxL37bjKmaCptf.png" src-width="1790" src-height="780" align="center"/>
 
 # 12B 問：合規報表 IDR020 Re-activation Of Dormant Account 顯示什麼客户數據？
 
@@ -37,17 +37,17 @@ IDR019 - Suspected Order Activities Report（單一客戶更改或取消訂單�
 答：在 CDR001 - Client Master Listing Report 的「自定義列表」選擇「風險承受能力」點擊「保存」。
 導出 Excel 後，在「風險承受能力」欄位作篩選。
 
-<img src="BFXVbmxCIoI0GSxkQwdjnWOdp9b" src-width="2826" src-height="1600" align="center"/>
+<img src="/assets/BFXVbmxCIoI0GSxkQwdjnWOdp9b.png" src-width="2826" src-height="1600" align="center"/>
 
-<img src="FjPGb31uho7vAQxapFfjrRd9pif" src-width="2844" src-height="1618" align="center"/>
+<img src="/assets/FjPGb31uho7vAQxapFfjrRd9pif.png" src-width="2844" src-height="1618" align="center"/>
 
-<img src="BEJjb203voKV38xWpQxjLq0Vpmb" src-width="2846" src-height="1468" align="center"/>
+<img src="/assets/BEJjb203voKV38xWpQxjLq0Vpmb.png" src-width="2846" src-height="1468" align="center"/>
 
 # 12E 問：如何導出客戶股票集中度（Stock Concentration）的歷史數據？
 
 答：報表 RDR010 - Concentration Risk 包含到一周的數據。如需要先前的歷史數據可從 SDR003 Client Stock Holding Report（By Stock） 取得客戶每天的持倉數值，再按港交所的股票發行市值，手工計算股票集中度。
 
-<img src="HfwpbvHUDoWZuhxfmS1jHA2cpCb" src-width="2850" src-height="1346" align="center"/>
+<img src="/assets/HfwpbvHUDoWZuhxfmS1jHA2cpCb.png" src-width="2850" src-height="1346" align="center"/>
 
 # 12F 問：如何解讀 FRR006-1 報表與 FDR002-1 報表？
 
@@ -62,7 +62,7 @@ IDR019 - Suspected Order Activities Report（單一客戶更改或取消訂單�
 
 日期基準：Trade Date 交易日 ＆Settle Date 交收日
 
-<img src="GrvTbSq8IoK4O9xljpOjkiYcpRb" src-width="2380" src-height="592" align="center"/>
+<img src="/assets/GrvTbSq8IoK4O9xljpOjkiYcpRb.png" src-width="2380" src-height="592" align="center"/>
 
 2.FDR002-1 報表統計所有客戶的資金明細（分幣種計算）
 
@@ -74,7 +74,7 @@ DR 是欠款
 
 CR 是非欠款
 
-<img src="UgCJbcHJeo8vfKxT7RDjjpkEpjc" src-width="2820" src-height="1264" align="center"/>
+<img src="/assets/UgCJbcHJeo8vfKxT7RDjjpkEpjc.png" src-width="2820" src-height="1264" align="center"/>
 
 # 12G問：為什麼RDR027和RDR028報表沒有數據。
 

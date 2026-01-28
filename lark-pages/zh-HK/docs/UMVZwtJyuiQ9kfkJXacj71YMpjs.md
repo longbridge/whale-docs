@@ -14,7 +14,7 @@ sidebar_position: 28
 # 🪀 改进与修复
 
 - 支持在聯名戶的kyc詳情頁，修改更多開戶資料
-    <img src="Imneb3H8Eo15sAxWgyJjJkaTp6N" src-width="2242" src-height="1100" align="center"/>
+    <img src="/assets/Imneb3H8Eo15sAxWgyJjJkaTp6N.png" src-width="2242" src-height="1100" align="center"/>
     - 路徑：「客戶管理系統」-「KYC」-「開戶列表」-「kyc詳情頁」
     - 在賬戶審核和開通的狀態下，支持修改更多聯名戶類型的開戶資料
         - 在審核狀態下修改，可立即生效，在賬戶開通狀態下，需要工單審核通過後，才可生效
@@ -32,7 +32,7 @@ sidebar_position: 28
     - 無新增權限和工單標識
 
 - WBO後台批量修改功能支持更多字段
-    <img src="Q5b3bMAHnoHpMGxRGhLj1Htypvd" src-width="2264" src-height="980" align="center"/>
+    <img src="/assets/Q5b3bMAHnoHpMGxRGhLj1Htypvd.png" src-width="2264" src-height="980" align="center"/>
     - 路徑：「客戶管理系統」-「KYC」-「開戶資料」-「批量修改」
     - 在批量修改模塊下，補充了更多字段支持批量發起修改，審核通過後，修改即生效，報表也會同步新增修改記錄
         - 新增補充字段：

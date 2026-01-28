@@ -24,7 +24,7 @@ sidebar_position: 1
 - 側邊欄展開時：直接通過交易查詢選中到具體的功能頁面
 - 側邊欄縮小時：可通過 icon 進入選中對應的功能頁面
 
-<img src="XJGHbpaFRoqeTXxMbEfj1RNOpjV" src-width="2852" src-height="1742" align="center"/>
+<img src="/assets/XJGHbpaFRoqeTXxMbEfj1RNOpjV.png" src-width="2852" src-height="1742" align="center"/>
 
-<img src="Fuc2bMr01oL0CmxTFLOjPQ7Ep8b" src-width="2862" src-height="1734" align="center"/>
+<img src="/assets/Fuc2bMr01oL0CmxTFLOjPQ7Ep8b.png" src-width="2862" src-height="1734" align="center"/>
 

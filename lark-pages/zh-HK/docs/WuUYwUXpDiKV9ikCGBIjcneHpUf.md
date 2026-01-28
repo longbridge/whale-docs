@@ -13,9 +13,9 @@ sidebar_position: 13
     - 份額確認所需天數支持選擇日期類型；
     - 新增申購補充說明；
     - 路徑：「基金管理」-「私募基金」
-        <img src="VHCHbm8Pho6nn4xLU4mjUd8Epnh" src-width="3650" src-height="2166" align="center"/>
+        <img src="/assets/VHCHbm8Pho6nn4xLU4mjUd8Epnh.png" src-width="3650" src-height="2166" align="center"/>
     - 贖回提前天數、資金到賬所需時間支持選擇日期類型；
     - 新增贖回補充說明；
     - 路徑：「基金管理」-「私募基金」
-        <img src="L8VUbGAdTo8p4nx4NQNjQSC4p8g" src-width="3660" src-height="2158" align="center"/>
+        <img src="/assets/L8VUbGAdTo8p4nx4NQNjQSC4p8g.png" src-width="3660" src-height="2158" align="center"/>
 

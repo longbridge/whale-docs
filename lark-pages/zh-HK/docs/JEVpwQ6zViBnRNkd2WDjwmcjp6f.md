@@ -21,25 +21,25 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 
 支持根據經紀人查詢該經紀人名下客戶，或者直接查詢某個客戶；
 
-<img src="Xhq1bVRs9oN1ExxTcRHj4BpppEd" src-width="3346" src-height="1104" align="center"/>
+<img src="/assets/Xhq1bVRs9oN1ExxTcRHj4BpppEd.png" src-width="3346" src-height="1104" align="center"/>
 
 查詢到客戶，即可以進行操作【解除經紀人關係】及【轉移至其他經紀人】
 
 在客戶變更或分配經紀人操作時，支持郵件推送通知客戶（可選項）
 
-<img src="Xf4SbFvLfo9gfBxPdRUjlrm9ppb" src-width="3352" src-height="1362" align="center"/>
+<img src="/assets/Xf4SbFvLfo9gfBxPdRUjlrm9ppb.png" src-width="3352" src-height="1362" align="center"/>
 
 ### 經紀人管理
 
 點擊右上方「新建」可建立經紀人資料，創建經紀人成功後，系統會自動同步創建後台用戶帳號（經紀人帳號可以登錄WTT客戶端）
 
-<img src="HcxEbUFwEozMN1xa9XDjVBSqpNc" src-width="3350" src-height="1690" align="center"/>
+<img src="/assets/HcxEbUFwEozMN1xa9XDjVBSqpNc.png" src-width="3350" src-height="1690" align="center"/>
 
 注意： 系統在創建經紀人時，經紀人的券商郵箱號是唯一校驗的判斷
 
 創建成功後，可以在顯示記錄的右側操作區進行操作： 「詳情」/「編輯」/「凍結」/「下級管理」
 
-<img src="Zvn2bgPwxozpXSx1yNSjk4R2pkd" src-width="3362" src-height="1562" align="center"/>
+<img src="/assets/Zvn2bgPwxozpXSx1yNSjk4R2pkd.png" src-width="3362" src-height="1562" align="center"/>
 
 「編輯」在修改經紀人分傭套餐時，支持同步修改其下客戶的分傭套餐配置（可選項）
 
@@ -51,11 +51,11 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 
 「下級管理」，該功能已遷移至“身份管理&gt;人員管理”，查到對應的經紀人用戶進行“數據權限”的編輯；
 
-<img src="VZUVb6t5NoR5LkxK5X1jFkmCpDb" src-width="3422" src-height="1840" align="center"/>
+<img src="/assets/VZUVb6t5NoR5LkxK5X1jFkmCpDb.png" src-width="3422" src-height="1840" align="center"/>
 
 在經紀人管理上新增經紀人配置：開通帳戶時，若未人工分配經紀人，系統預設分配給指定經紀人；
 
-<img src="Auasbz24RoFVBnx0ZL9jKUVApnb" src-width="3370" src-height="1226" align="center"/>
+<img src="/assets/Auasbz24RoFVBnx0ZL9jKUVApnb.png" src-width="3370" src-height="1226" align="center"/>
 
 在查詢組件上：支持按經紀人編號或經紀人名稱查詢
 
@@ -63,7 +63,7 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 
 可以在右上角， 點擊【新增】，新增一筆分成佣金套餐
 
-<img src="FEtbbLiFToWlvUxwqQpjmEXNpgh" src-width="3584" src-height="1738" align="center"/>
+<img src="/assets/FEtbbLiFToWlvUxwqQpjmEXNpgh.png" src-width="3584" src-height="1738" align="center"/>
 
 先填寫套餐主體信息
 
@@ -74,7 +74,7 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 - 允許虧損字段（：決定在分傭金額>佣金时的處理方案，允许虧损的，計算金額可大于佣金）
 ```
 
-<img src="ZS92bYdPJolyfzxu3ujj8VFXpfe" src-width="3584" src-height="1738" align="center"/>
+<img src="/assets/ZS92bYdPJolyfzxu3ujj8VFXpfe.png" src-width="3584" src-height="1738" align="center"/>
 
 點解添加規則後，可分別針對股票、期權等單獨設置套餐規則
 

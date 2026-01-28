@@ -18,7 +18,7 @@ sidebar_position: 5
 在公司行動處理過程中，還會和清算服務、消息中心、資產服務產生互動
 ```
 
-<img src="HUGHbiRtlodsmLxlApBjJASvptb" src-width="3030" src-height="1698" align="center"/>
+<img src="/assets/HUGHbiRtlodsmLxlApBjJASvptb.png" src-width="3030" src-height="1698" align="center"/>
 
 <b>操作流程</b>
 
@@ -96,7 +96,7 @@ VT（股東大會）
 可以維護管理公司行動的全局相關費用收取配置（方案類型-費用類型）
 ```
 
-<img src="PBvmb1zkuozQ3xxsvFgjsHxipac" src-width="3344" src-height="1558" align="center"/>
+<img src="/assets/PBvmb1zkuozQ3xxsvFgjsHxipac.png" src-width="3344" src-height="1558" align="center"/>
 
 ```text
 也可以在記錄右側區點擊【編輯】，來修改所對應的公司行動費用配置， 可以在左上方點擊【新建】，來增加一筆費用配置
@@ -131,9 +131,9 @@ VT（股東大會）
     - 联合收费：和Handling联合收费，收取Handling时，自动抵扣過戶費部分
 ```
 
-<img src="QLojbYK3MolwgZxYzvLjfWFqpTc" src-width="3348" src-height="992" align="center"/>
+<img src="/assets/QLojbYK3MolwgZxYzvLjfWFqpTc.png" src-width="3348" src-height="992" align="center"/>
 
-<img src="EgHfbAt6lomKwoxgXP7jU4Yxp2e" src-width="3376" src-height="1254" align="center"/>
+<img src="/assets/EgHfbAt6lomKwoxgXP7jU4Yxp2e.png" src-width="3376" src-height="1254" align="center"/>
 
 # 三、版面區域說明
 
@@ -143,39 +143,39 @@ VT（股東大會）
 在進公司行動預告紀錄查詢明細畫面， 版面如下： 中間區域 展示‘推進狀態’與‘指令收集狀態‘，方便快速定位
 ```
 
-<img src="HU1WbAUVpo0IcZxh2iejIAKnpZZ" src-width="3186" src-height="1520" align="center"/>
+<img src="/assets/HU1WbAUVpo0IcZxh2iejIAKnpZZ.png" src-width="3186" src-height="1520" align="center"/>
 
 ```text
 右邊紀錄區展示該公司行動可操作的功能鍵 （減少誤操作，方便單一公司行動處理）
 ```
 
-<img src="GuMCbnhmgowA02xGFsKj86UQpGb" src-width="3184" src-height="1512" align="center"/>
+<img src="/assets/GuMCbnhmgowA02xGFsKj86UQpGb.png" src-width="3184" src-height="1512" align="center"/>
 
 ```text
 由於公司行動類型眾多，業務節點不盡相同， 系統也針對公司行動類型提供操作順序順序的文案（操作引導）
 ```
 
-<img src="VOiwbHSyloaBGwx1ucpjBELZpnh" src-width="2664" src-height="956" align="center"/>
+<img src="/assets/VOiwbHSyloaBGwx1ucpjBELZpnh.png" src-width="2664" src-height="956" align="center"/>
 
 ```text
 在列表列也展示備註文案提示
 ```
 
-<img src="MJD9bfckfohK4JxfSqzjpTTBpCd" src-width="3560" src-height="1528" align="center"/>
+<img src="/assets/MJD9bfckfohK4JxfSqzjpTTBpCd.png" src-width="3560" src-height="1528" align="center"/>
 
 ```text
 批量操作功能，系統會狀態判斷，提供可操作功能鍵
 ```
 
-<img src="M4phbSclxoxDhMxCCqpjvBArpf8" src-width="3324" src-height="1598" align="center"/>
+<img src="/assets/M4phbSclxoxDhMxCCqpjvBArpf8.png" src-width="3324" src-height="1598" align="center"/>
 
 ```text
 提供 02 文件的互動，實時更新公司行動最新狀態
 ```
 
-<img src="DN3sbinxboe5fTxy5CFjul32pb0" src-width="3334" src-height="1478" align="center"/>
+<img src="/assets/DN3sbinxboe5fTxy5CFjul32pb0.png" src-width="3334" src-height="1478" align="center"/>
 
-<img src="Sahnbt7NNoUvANxryBqj4sBvphh" src-width="3358" src-height="1002" align="center"/>
+<img src="/assets/Sahnbt7NNoUvANxryBqj4sBvphh.png" src-width="3358" src-height="1002" align="center"/>
 
 ## 2. 詳情頁面
 
@@ -189,7 +189,7 @@ VT（股東大會）
 公司行動類型圖標 與推進狀況
 ```
 
-<img src="MDA5b5dYwo4Oakx18wZjOVP1p4c" src-width="2388" src-height="292" align="center"/>
+<img src="/assets/MDA5b5dYwo4Oakx18wZjOVP1p4c.png" src-width="2388" src-height="292" align="center"/>
 
 <b>公司行動預告訊息資料</b>
 
@@ -197,7 +197,7 @@ VT（股東大會）
 紀錄該公司行動預告的重要欄位訊息（預告類型/標的/執行方式/登記日/派發日.._)
 ```
 
-<img src="YLT3bICEkotdZuxh0DgjjlhUpEh" src-width="2762" src-height="1033" align="center"/>
+<img src="/assets/YLT3bICEkotdZuxh0DgjjlhUpEh.png" src-width="2762" src-height="1033" align="center"/>
 
 <b>方案信息與費用規則</b>
 
@@ -205,7 +205,7 @@ VT（股東大會）
 這邊記錄對應的預告方案紀錄與費用規則，一個公司行動如果有單獨的規則，可以在費用規則維護
 ```
 
-<img src="LrabbunXCoTnWdxZkzPjlBLXppc" src-width="2682" src-height="1138" align="center"/>
+<img src="/assets/LrabbunXCoTnWdxZkzPjlBLXppc.png" src-width="2682" src-height="1138" align="center"/>
 
 <b>明細匯總與客戶明細</b>：
 
@@ -213,7 +213,7 @@ VT（股東大會）
 這邊記錄 所登記的客戶匯總資料與客戶明細
 ```
 
-<img src="U6bmb70oqo0Zbix7NtHjnE4ppIc" src-width="2674" src-height="1182" align="center"/>
+<img src="/assets/U6bmb70oqo0Zbix7NtHjnE4ppIc.png" src-width="2674" src-height="1182" align="center"/>
 
 <b>同時在詳情頁，基本上提供所有可供操作的功能鍵入口</b>
 
@@ -222,11 +222,11 @@ VT（股東大會）
 - 在詳情頁-客戶詳情可以進一步操作線下行權、更改權益和費用
 ```
 
-<img src="YnIjbu33qonYCqx7Dksj9WhupKh" src-width="2504" src-height="1634" align="center"/>
+<img src="/assets/YnIjbu33qonYCqx7Dksj9WhupKh.png" src-width="2504" src-height="1634" align="center"/>
 
-<img src="NYtxblC9yoYJQYxbepTjLyjXpSb" src-width="2380" src-height="814" align="center"/>
+<img src="/assets/NYtxblC9yoYJQYxbepTjLyjXpSb.png" src-width="2380" src-height="814" align="center"/>
 
-<img src="IbeqbjK9RosDRRxLrT8j0KhtpBc" src-width="2370" src-height="1046" align="center"/>
+<img src="/assets/IbeqbjK9RosDRRxLrT8j0KhtpBc.png" src-width="2370" src-height="1046" align="center"/>
 
 ## 3. 備註欄位說明
 
@@ -243,7 +243,7 @@ HK 市场自動处理，其它市場手填
 TM、BE、IP 类：股票编号+市場+名稱+逗号+CCASS 备注
 ```
 
-<img src="VXGDbjm1Powg3uxZBefjstCip8w" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/VXGDbjm1Powg3uxZBefjstCip8w.png" src-width="3548" src-height="1806" align="center"/>
 
 <b>權益備註</b>
 
@@ -251,7 +251,7 @@ TM、BE、IP 类：股票编号+市場+名稱+逗号+CCASS 备注
 - 方案備註+逗号+持倉
 ```
 
-<img src="LM67biuimoGfUIx4f9yjFSVZp2f" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/LM67biuimoGfUIx4f9yjFSVZp2f.png" src-width="3548" src-height="1806" align="center"/>
 
 <b>費用備註</b>
 
@@ -262,7 +262,7 @@ TM、BE、IP 类：股票编号+市場+名稱+逗号+CCASS 备注
 CROSSTEC03893.HK手續費
 ```
 
-<img src="PxVxbyfeQoo3bmxNaORj3Wvjp2d" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/PxVxbyfeQoo3bmxNaORj3Wvjp2d.png" src-width="3548" src-height="1806" align="center"/>
 
 <b>費用備註格式（TAX_FEE</b>）
 
@@ -288,25 +288,25 @@ CROSSTEC03893.HK手續費
 初始化狀態是公司行動預告的起始點， 也可以操作【終止】
 ```
 
-<img src="PsDTbZBAVot7qvxuPtijOXgCpje" src-width="3172" src-height="1835" align="center"/>
+<img src="/assets/PsDTbZBAVot7qvxuPtijOXgCpje.png" src-width="3172" src-height="1835" align="center"/>
 
 ```text
 可以點擊【詳情】檢查對應的公司行動預告資料與方案信息，同時系統會產生默認方案
 ```
 
-<img src="XEjQbvoqDoFhvMxq2LijrnRmpnf" src-width="3116" src-height="1616" align="center"/>
+<img src="/assets/XEjQbvoqDoFhvMxq2LijrnRmpnf.png" src-width="3116" src-height="1616" align="center"/>
 
 ```text
 首先展示是該公司行動的 系統推進節點狀態訊息：
 ```
 
-<img src="XTTEbYAwboz1RnxRBZBj0yyfpZe" src-width="2606" src-height="282" align="center"/>
+<img src="/assets/XTTEbYAwboz1RnxRBZBj0yyfpZe.png" src-width="2606" src-height="282" align="center"/>
 
 ```text
 注意：  不同的公司行動類型，會有不同狀態展示，方便用戶直覺掌握推進狀態
 ```
 
-<img src="QqFNbGS6EovhWXxEW2vjRpO8pRo" src-width="2196" src-height="292" align="center"/>
+<img src="/assets/QqFNbGS6EovhWXxEW2vjRpO8pRo.png" src-width="2196" src-height="292" align="center"/>
 
 ```text
 接下展示是**預告信息**： 同時系統也針對部分公司行動提供預設配置項來優化，
@@ -315,31 +315,31 @@ CROSSTEC03893.HK手續費
 - 零股轉分紅預設（是或否）。  注意：以上預設配置變更，若有需要請聯絡 長橋運營團隊來配置
 ```
 
-<img src="RRlYbXcfTonNIOxtAGsj63DlpFf" src-width="2888" src-height="1408" align="center"/>
+<img src="/assets/RRlYbXcfTonNIOxtAGsj63DlpFf.png" src-width="2888" src-height="1408" align="center"/>
 
 ```text
 接下來是**方案信息與費用規則**：
 ```
 
-<img src="P3EWbl9Zoo5rOLxSeKpjGhrhpJE" src-width="2904" src-height="1508" align="center"/>
+<img src="/assets/P3EWbl9Zoo5rOLxSeKpjGhrhpJE.png" src-width="2904" src-height="1508" align="center"/>
 
 ```text
 這時候可以 根據需要 檢查個別的公司行動資料紀錄，若必要欄位有缺失， 系統會標紅出來，方便檢核數據
 ```
 
-<img src="N2SjbJUJVogD43xAHBZjV3V2pDb" src-width="2868" src-height="1020" align="center"/>
+<img src="/assets/N2SjbJUJVogD43xAHBZjV3V2pDb.png" src-width="2868" src-height="1020" align="center"/>
 
 ```text
 若沒問題，則可以點選 前方的 紀錄 Checkbox 區域，往下操作【登記】
 ```
 
-<img src="RahGbmmn1oy4Pjx6BQxjD447phd" src-width="3076" src-height="1436" align="center"/>
+<img src="/assets/RahGbmmn1oy4Pjx6BQxjD447phd.png" src-width="3076" src-height="1436" align="center"/>
 
 ```text
 此時系統會檢查登記日與帳務日期，必須登記日小於目前帳務日期
 ```
 
-<img src="TZ0bb63CkoIwIaxUrEPjA3g7pHe" src-width="2964" src-height="246" align="center"/>
+<img src="/assets/TZ0bb63CkoIwIaxUrEPjA3g7pHe.png" src-width="2964" src-height="246" align="center"/>
 
 ## 2. 登記
 
@@ -361,21 +361,21 @@ CROSSTEC03893.HK手續費
 <p>💡 注： 系統會判斷 必須 帳務日期&gt;= 登記日 才可進行登記操作。</p>
 </div>
 
-<img src="J9AMbo9opoDoE4xbgcUjz8bZple" src-width="2542" src-height="150" align="center"/>
+<img src="/assets/J9AMbo9opoDoE4xbgcUjz8bZple.png" src-width="2542" src-height="150" align="center"/>
 
-<img src="EGQBbZDJBoOxlMx0BxojDfpspEh" src-width="3094" src-height="1562" align="center"/>
+<img src="/assets/EGQBbZDJBoOxlMx0BxojDfpspEh.png" src-width="3094" src-height="1562" align="center"/>
 
 ```text
 注意： 因為公司行動 CCASS 文件會有一段時間的內容更新，因此我們優化 02 文件的讀取， 增加 CCASS 文件日期與 CCASS 狀態的展示，  租戶可選擇此欄位查出真正要開始執行的公司行動，否則容易因為 CCASS 狀態不是‘最終執行'，可能因為數據內容造成人工處理的環節
 ```
 
-<img src="A4OYbw8TQo2Orzx5lPSjN1AjpPb" src-width="3192" src-height="1347" align="center"/>
+<img src="/assets/A4OYbw8TQo2Orzx5lPSjN1AjpPb.png" src-width="3192" src-height="1347" align="center"/>
 
 ```text
 這樣可避免 CCASS 狀態是‘初步確認’（並非最終狀態） 或後面被取消，此時若去執行後續公司行動操作容易有機會出錯
 ```
 
-<img src="GwtNb9CD2oofNMxUYytjCOnApCe" src-width="3094" src-height="390" align="center"/>
+<img src="/assets/GwtNb9CD2oofNMxUYytjCOnApCe.png" src-width="3094" src-height="390" align="center"/>
 
 ```text
 此時可以在登記日期當天，點選 【登記】 ，往下一步操作節點進行，當登記成功後，
@@ -387,7 +387,7 @@ CROSSTEC03893.HK手續費
  當登記成功後，  就可在 執行菜單：公司行動>客戶明細作業， 可以查到對應預告方案的客戶登記明細紀錄
 ```
 
-<img src="O0YXbpSsPouOfVxUfa1jYwDjpZc" src-width="2778" src-height="158" align="center"/>
+<img src="/assets/O0YXbpSsPouOfVxUfa1jYwDjpZc.png" src-width="2778" src-height="158" align="center"/>
 
 ## 3. 指令收集
 
@@ -398,7 +398,7 @@ CROSSTEC03893.HK手續費
 操作說明：查詢條件 選擇狀態： 登記成功。 指令收集狀態：初始化  ，就可以查詢到 近期 公司行動預告可進行指令收集操作的預告紀錄 （前提是 已登記成功 狀態）
 ```
 
-<img src="HXODbDFWCoahVjxdC5Sj4kympHf" src-width="3410" src-height="1472" align="center"/>
+<img src="/assets/HXODbDFWCoahVjxdC5Sj4kympHf.png" src-width="3410" src-height="1472" align="center"/>
 
 ```text
 此時可以操作‘指令收集'。 在選擇開始時間 到結算時間，對相關客戶發送選擇通知（透過 APP 或 mail  訊息）
@@ -413,13 +413,13 @@ CROSSTEC03893.HK手續費
 注意：  系統將在指令收集截止日期後，推進狀態將自動變成‘指令收集完成'
 ```
 
-<img src="Vnsnb0lFUoVOLZx8pv9jwMvTp5c" src-width="3412" src-height="1574" align="center"/>
+<img src="/assets/Vnsnb0lFUoVOLZx8pv9jwMvTp5c.png" src-width="3412" src-height="1574" align="center"/>
 
 ```text
 由於 指令收集涉及到 客戶選擇交互通知， 後續也要把客戶選擇記錄上傳 CCASS 處理， 整個指令收集的系統節點如下：  正在收集指令/上報成功/回填完成/處理成功/ 處理失敗
 ```
 
-<img src="Xbqob2oCBoWOtpxAeudj4CeXp1b" src-width="2584" src-height="600" align="center"/>
+<img src="/assets/Xbqob2oCBoWOtpxAeudj4CeXp1b.png" src-width="2584" src-height="600" align="center"/>
 
 ### 上報
 
@@ -433,13 +433,13 @@ CROSSTEC03893.HK手續費
 预告類型为（OO EO RS ER TU TC ADR）因为需要资产预处理，需要在系统内操作上报动作。同時推進狀態：登記成功，指令收集狀態：处理成功 才可以進行，操作后系统将进行资产预处理，并更新指令收集状态为上报完成
 ```
 
-<img src="F8TAbQ5PIo6DJaxzxPIjB6rupne" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/F8TAbQ5PIo6DJaxzxPIjB6rupne.png" src-width="3548" src-height="1806" align="center"/>
 
 ```text
 上報時可根據明細彙總的數據進行操作
 ```
 
-<img src="DvnWbSvMuozysSxmlF8j7mqbpLg" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/DvnWbSvMuozysSxmlF8j7mqbpLg.png" src-width="3548" src-height="1806" align="center"/>
 
 ### 回填（Backfill）
 
@@ -462,13 +462,13 @@ CROSSTEC03893.HK手續費
 同時推進狀態：登記成功，指令收集狀態： 客户操作完成 才可以進行,可以在 紀錄右側功能鍵操作【尾差調整】按鈕
 ```
 
-<img src="NLheb2FFfobqRHxCkf4j5ri9pqb" src-width="3192" src-height="1318" align="center"/>
+<img src="/assets/NLheb2FFfobqRHxCkf4j5ri9pqb.png" src-width="3192" src-height="1318" align="center"/>
 
 ```text
 尾差處理功能，可以按子倉處理，也可以不分子倉處理
 ```
 
-<img src="TmJsbPWj7o5AKXx9PCDjhdvdpjg" src-width="2110" src-height="456" align="center"/>
+<img src="/assets/TmJsbPWj7o5AKXx9PCDjhdvdpjg.png" src-width="2110" src-height="456" align="center"/>
 
 ## 4. 提交執行
 
@@ -479,25 +479,25 @@ CROSSTEC03893.HK手續費
 注意：  這步驟基本是最後一步： 執行經辦， 若檢查該公司行動預告應該處理的業務節點與系統節點後，就可提交執行經辦
 ```
 
-<img src="PiJdbzwzuoxq6yxSRijjIzHWpPe" src-width="3404" src-height="1560" align="center"/>
+<img src="/assets/PiJdbzwzuoxq6yxSRijjIzHWpPe.png" src-width="3404" src-height="1560" align="center"/>
 
 ```text
 此時會出現提交審核的畫面，確認提交後就會進入 後續執行審核的節點
 ```
 
-<img src="VFgxbSPOToC1HvxjlCRjMgMopRf" src-width="3422" src-height="1628" align="center"/>
+<img src="/assets/VFgxbSPOToC1HvxjlCRjMgMopRf.png" src-width="3422" src-height="1628" align="center"/>
 
 ```text
 請根據資料數據，做出審核通過的操作或拒絕，當審核通過後就完成一個 公司行動的預告處理週期
 ```
 
-<img src="WgiPb8GLUoQSddxl6m9j97Hxp6c" src-width="3414" src-height="1628" align="center"/>
+<img src="/assets/WgiPb8GLUoQSddxl6m9j97Hxp6c.png" src-width="3414" src-height="1628" align="center"/>
 
 ```text
 公司行動執行複核報表，增加了分組功能，可以協助操作者更方便地發現和 CCACC 的差異
 ```
 
-<img src="XjdUb5DNroCg45x2WNcjZSX0ptd" src-width="2908" src-height="1558" align="center"/>
+<img src="/assets/XjdUb5DNroCg45x2WNcjZSX0ptd.png" src-width="2908" src-height="1558" align="center"/>
 
 ## 5. 執行復核
 
@@ -514,9 +514,9 @@ CROSSTEC03893.HK手續費
 不是所有的公司行動都要過戶，合股、拆股和換股不需要過戶，過戶時將完成 Street->Nominee 的 操作
 ```
 
-<img src="QK6FbbH8koe9zkxbsmRjKQCkpFd" src-width="3406" src-height="1548" align="center"/>
+<img src="/assets/QK6FbbH8koe9zkxbsmRjKQCkpFd.png" src-width="3406" src-height="1548" align="center"/>
 
-<img src="Kl85b29kCoxd0ExNZcujfuxfppc" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/Kl85b29kCoxd0ExNZcujfuxfppc.png" src-width="3548" src-height="1806" align="center"/>
 
 # 四、擴展功能
 
@@ -531,7 +531,7 @@ CROSSTEC03893.HK手續費
 系統提供兩種方式手工新增手動創建與快捷創建
 ```
 
-<img src="W1i8bsNigoeN6Vxf5GSjYUHBpHh" src-width="3348" src-height="298" align="center"/>
+<img src="/assets/W1i8bsNigoeN6Vxf5GSjYUHBpHh.png" src-width="3348" src-height="298" align="center"/>
 
 <b>手動創建</b>
 
@@ -590,7 +590,7 @@ CROSSTEC03893.HK手續費
     根據02文件，輸入預告編號（A開頭的9位文本）
 ```
 
-<img src="ANZObg4QWo32gQxN1ESjgDKPpWd" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/ANZObg4QWo32gQxN1ESjgDKPpWd.png" src-width="3548" src-height="1806" align="center"/>
 
 ## <b>2. 新增客戶明細</b>
 
@@ -618,9 +618,9 @@ CROSSTEC03893.HK手續費
 持倉 = STREET（未登記過户股票） + NOMINEE（已登記過户股票）+ OWN
 ```
 
-<img src="C2lKbMMCso6t6ox4lHUjAce4peh" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/C2lKbMMCso6t6ox4lHUjAce4peh.png" src-width="3548" src-height="1806" align="center"/>
 
-<img src="NA2XbnF9aoLcBExbYLQjVJrmp3Q" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/NA2XbnF9aoLcBExbYLQjVJrmp3Q.png" src-width="3548" src-height="1806" align="center"/>
 
 注意事項
 
@@ -651,7 +651,7 @@ CROSSTEC03893.HK手續費
 選中明細後點擊【作廢】
 ```
 
-<img src="E90cbRJVgow1jmxr4dsjEyOlpxc" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/E90cbRJVgow1jmxr4dsjEyOlpxc.png" src-width="3548" src-height="1806" align="center"/>
 
 注意事項
 
@@ -685,7 +685,7 @@ CROSSTEC03893.HK手續費
 在行權界面輸入數量並提交
 ```
 
-<img src="MJi1b94mjophNIxHlcojCWDupYf" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/MJi1b94mjophNIxHlcojCWDupYf.png" src-width="3548" src-height="1806" align="center"/>
 
 ```text
 **注意**
@@ -732,9 +732,9 @@ BE類各方案的數量之和必須等於可行權數量（持倉數量）
 权益编辑时，幣種+轉入金額、轉入份額+新標的這兩個組合不能同時提交
 ```
 
-<img src="Rp3Lb5JXBoZ1nSxRXJrjd7Q3pJc" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/Rp3Lb5JXBoZ1nSxRXJrjd7Q3pJc.png" src-width="3548" src-height="1806" align="center"/>
 
-<img src="YpHObWk9DoIG2bxMHtDjuOLVpoe" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/YpHObWk9DoIG2bxMHtDjuOLVpoe.png" src-width="3548" src-height="1806" align="center"/>
 
 ## 6. 公司行動的終止/撤销
 
@@ -744,7 +744,7 @@ BE類各方案的數量之和必須等於可行權數量（持倉數量）
 初始化狀態下的公司行動支持終止操作，終止後會徹底刪除該公司行動
 ```
 
-<img src="S9R6bitZZoXk2SxEdxsjT9iHpTc" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/S9R6bitZZoXk2SxEdxsjT9iHpTc.png" src-width="3548" src-height="1806" align="center"/>
 
 <b>撤銷</b>
 
@@ -764,11 +764,11 @@ BE類各方案的數量之和必須等於可行權數量（持倉數量）
 供股、要約進入指令收集後，暫不支持撤銷，可通過撤銷客戶行權進行操作
 ```
 
-<img src="EPztbiyCZoC2F4xBKWnjrgmrpyf" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/EPztbiyCZoC2F4xBKWnjrgmrpyf.png" src-width="3548" src-height="1806" align="center"/>
 
-<img src="XqFrbHc6Oo0iSBxxdIcj1G0wp0b" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/XqFrbHc6Oo0iSBxxdIcj1G0wp0b.png" src-width="3548" src-height="1806" align="center"/>
 
-<img src="RdYub6bqxoQlyfxyTbEjuEuGppe" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/RdYub6bqxoQlyfxyTbEjuEuGppe.png" src-width="3548" src-height="1806" align="center"/>
 
 ## 7. 公司行動郵件消息模板
 

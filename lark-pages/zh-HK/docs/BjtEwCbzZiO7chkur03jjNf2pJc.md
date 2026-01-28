@@ -35,13 +35,13 @@ OB模式，上手为長橋證券
 路徑：清算管理  > 市場清算  >快捷導入
 ```
 
-<img src="ErAYbJrPDoLcmwx2VTkjmokzp2b" src-width="3584" src-height="1696" align="center"/>
+<img src="/assets/ErAYbJrPDoLcmwx2VTkjmokzp2b.png" src-width="3584" src-height="1696" align="center"/>
 
 ```text
 可通過列表區域的狀態字段關注解析狀態， 解析成功才算處理完成
 ```
 
-<img src="UOSbbi43ZoFLEixEWxLjXsd6pFf" src-width="3584" src-height="1696" align="center"/>
+<img src="/assets/UOSbbi43ZoFLEixEWxLjXsd6pFf.png" src-width="3584" src-height="1696" align="center"/>
 
 ## 2. 市場清算(交易清算)
 
@@ -64,7 +64,7 @@ OB模式，上手为長橋證券
 注意：如果只有港股市場，在初始化設置時可隱藏歐美市場清算
 ```
 
-<img src="VhOUbOTU5oaj5nxzuMmjyQxvpLf" src-width="2908" src-height="1540" align="center"/>
+<img src="/assets/VhOUbOTU5oaj5nxzuMmjyQxvpLf.png" src-width="2908" src-height="1540" align="center"/>
 
 ```text
 執行後，5 秒內會返回檢查結果。全部檢查都通過的，可以進行後續操作
@@ -73,45 +73,45 @@ OB模式，上手为長橋證券
 檢查報錯的，點擊檢查項目右上角可查看檢查項目的規則和操作指引
 ```
 
-<img src="QSJmbTaWDoZAT4xI87BjA47apWh" src-width="2906" src-height="1548" align="center"/>
+<img src="/assets/QSJmbTaWDoZAT4xI87BjA47apWh.png" src-width="2906" src-height="1548" align="center"/>
 
 ```text
 部分檢查會提供異常詳情
 ```
 
-<img src="YBbcbQSbaoKQW3xhs3bjXpzRp0e" src-width="2904" src-height="1540" align="center"/>
+<img src="/assets/YBbcbQSbaoKQW3xhs3bjXpzRp0e.png" src-width="2904" src-height="1540" align="center"/>
 
 ```text
 結算人員核對後，確認有問題的，在完成相關業務操作後，可點擊“重新執行”
 ```
 
-<img src="ABOibF6nro71K0xEGbdj5H68prw" src-width="2906" src-height="1558" align="center"/>
+<img src="/assets/ABOibF6nro71K0xEGbdj5H68prw.png" src-width="2906" src-height="1558" align="center"/>
 
 ```text
 結算人員核對後，檢查項目可以允許通過的，可點擊手動審核人工通過（需要複核）
 ```
 
-<img src="TnMTbjQMHoWQB6xNFBmjkB1oppg" src-width="2904" src-height="1558" align="center"/>
+<img src="/assets/TnMTbjQMHoWQB6xNFBmjkB1oppg.png" src-width="2904" src-height="1558" align="center"/>
 
 ```text
 複核人員可點擊手動審核（也可直接在工單審核），調出工單審核
 ```
 
-<img src="CSxWbHNFiorbgnxAjexjYvg3pXf" src-width="2920" src-height="1546" align="center"/>
+<img src="/assets/CSxWbHNFiorbgnxAjexjYvg3pXf.png" src-width="2920" src-height="1546" align="center"/>
 
-<img src="TGw8b09YOoXlM5xW3jcjjlYTpvc" src-width="2920" src-height="1550" align="center"/>
+<img src="/assets/TGw8b09YOoXlM5xW3jcjjlYTpvc.png" src-width="2920" src-height="1550" align="center"/>
 
 ```text
 結算人員核對後，因為業務流程有差別，需要永久關閉檢查項目的，可以聯繫客服處理
 ```
 
-<img src="GHGjbd27roClJWxdRGhjIcNppag" src-width="2926" src-height="1556" align="center"/>
+<img src="/assets/GHGjbd27roClJWxdRGhjIcNppag.png" src-width="2926" src-height="1556" align="center"/>
 
 ```text
 當審核通過後， 清算前準備就算完成（文字會提示： 已手動通過）
 ```
 
-<img src="SeWNbtWEXoAxIyxqWEgjEseApFf" src-width="2926" src-height="1558" align="center"/>
+<img src="/assets/SeWNbtWEXoAxIyxqWEgjEseApFf.png" src-width="2926" src-height="1558" align="center"/>
 
 ### 市場清算<b>一鍵清算</b>
 
@@ -122,19 +122,19 @@ OB模式，上手为長橋證券
 注意： 若有需要可點選 '暫停一鍵清算'，但系統會等當時作業執行完畢後，才開始暫停下一動作（功能鍵會變灰）
 ```
 
-<img src="T8hUbMQjDoJsdNxul7kjGWOzpPh" src-width="2916" src-height="1546" align="center"/>
+<img src="/assets/T8hUbMQjDoJsdNxul7kjGWOzpPh.png" src-width="2916" src-height="1546" align="center"/>
 
 ```text
 如果要進行後台補單，或者修正合約的，可在數據同步直接點擊“暫停一鍵清算”，然後逐步執行，防止錯過暫停時機
 ```
 
-<img src="FwyKb7PfGocSfgx8LnojsvfHp7g" src-width="2922" src-height="1548" align="center"/>
+<img src="/assets/FwyKb7PfGocSfgx8LnojsvfHp7g.png" src-width="2922" src-height="1548" align="center"/>
 
 ```text
 中間若有作業執行錯誤，則一鍵清算將會暫停，並停在相關錯誤的作業程序上，用戶可以參考錯誤訊息提示進行後續修正處理
 ```
 
-<img src="RnXvbXWjUohsl2xhiVBjoShOphc" src-width="2908" src-height="1554" align="center"/>
+<img src="/assets/RnXvbXWjUohsl2xhiVBjoShOphc.png" src-width="2908" src-height="1554" align="center"/>
 
 ```text
 此時可根據業務需要手動點選右側下方相關的作業操作，來檢查或修正紀錄或著 往下一鍵算操作，系統會自動執行下一個作業
@@ -143,7 +143,7 @@ OB模式，上手为長橋證券
 注意： 在一鍵清算過程中，可以依賴系統的一鍵清算操作（自動執行所有作業），也可以自行點選作業自行操作
 ```
 
-<img src="H9dRbw7WvoPOMfxyDtGjbrWVpJg" src-width="2922" src-height="1556" align="center"/>
+<img src="/assets/H9dRbw7WvoPOMfxyDtGjbrWVpJg.png" src-width="2922" src-height="1556" align="center"/>
 
 <b>日終數據同步（Client Trade）</b>
 
@@ -160,7 +160,7 @@ OB模式，上手为長橋證券
 交易對帳失敗的，可快速跳轉到交易對賬界面查詢結果
 ```
 
-<img src="Qc5UbAvtMoXtJmx1ySbj1pLupTb" src-width="2904" src-height="1544" align="center"/>
+<img src="/assets/Qc5UbAvtMoXtJmx1ySbj1pLupTb.png" src-width="2904" src-height="1544" align="center"/>
 
 ```text
 可在清算檢查（路徑：清算管理-市場清算-清算檢查-交易對賬）頁面分別查詢各市場的交易對帳
@@ -169,7 +169,7 @@ OB模式，上手为長橋證券
 每次點擊檢查會生成最新的檢查結果，只需要維護最新的檢查結果
 ```
 
-<img src="UDNobgXnKoldY6xvPp4jaE5gpgf" src-width="3566" src-height="1732" align="center"/>
+<img src="/assets/UDNobgXnKoldY6xvPp4jaE5gpgf.png" src-width="3566" src-height="1732" align="center"/>
 
 ```text
 對手端檔導入錯誤：在檔導入介面，重新導入對手端檔，然後重新點擊清算前檢查 
@@ -181,7 +181,7 @@ OB模式，上手为長橋證券
 按系統數據處理：在“檢查結果”（ 路徑：清算管理-市場清算-日終任務-清算檢查-檢查結果）中，將對應的檢查結果改為“通過”，然後在日終任務頁面重新點擊清算前檢查
 ```
 
-<img src="RCrhbR1isoxdbPxq7puj10LvpPb" src-width="2920" src-height="1552" align="center"/>
+<img src="/assets/RCrhbR1isoxdbPxq7puj10LvpPb.png" src-width="2920" src-height="1552" align="center"/>
 
 <b>清算計費</b>
 
@@ -240,9 +240,9 @@ OB模式，上手为長橋證券
 操作方式同市場清算，詳見上文
 ```
 
-<img src="OJfVboUVuodtDjxFguCjoPLYp23" src-width="2492" src-height="1412" align="center"/>
+<img src="/assets/OJfVboUVuodtDjxFguCjoPLYp23.png" src-width="2492" src-height="1412" align="center"/>
 
-<img src="INb5bzQNcouNEPxSDTXjlgZMpkd" src-width="2434" src-height="1418" align="center"/>
+<img src="/assets/INb5bzQNcouNEPxSDTXjlgZMpkd.png" src-width="2434" src-height="1418" align="center"/>
 
 ### 日終清算一鍵清算
 
@@ -256,7 +256,7 @@ OB模式，上手为長橋證券
 結單後可通過報表或者結單進行檢查
 ```
 
-<img src="G5wQbkPkiooAemx6tLTjPobEpEb" src-width="2912" src-height="1522" align="center"/>
+<img src="/assets/G5wQbkPkiooAemx6tLTjPobEpEb.png" src-width="2912" src-height="1522" align="center"/>
 
 <b>數據匯總</b>
 
@@ -324,15 +324,15 @@ OB模式，上手为長橋證券
 **系統支持在日切步驟匯總進行結單自動發送,但須事先配置,請聯絡Whale 客服**
 ```
 
-<img src="HcZybWYYCoUfh8x62Dej7upJpCg" src-width="3364" src-height="1452" align="center"/>
+<img src="/assets/HcZybWYYCoUfh8x62Dej7upJpCg.png" src-width="3364" src-height="1452" align="center"/>
 
-<img src="RkrCbGl3HognbTxJ5PUjqdWXpLg" src-width="3304" src-height="1452" align="center"/>
+<img src="/assets/RkrCbGl3HognbTxJ5PUjqdWXpLg.png" src-width="3304" src-height="1452" align="center"/>
 
 ```text
 可以點選右側記錄區對結單【重發】或【下載】
 ```
 
-<img src="F615bBP6Ro5L9xxhEvVjQrCmpdh" src-width="3360" src-height="1460" align="center"/>
+<img src="/assets/F615bBP6Ro5L9xxhEvVjQrCmpdh.png" src-width="3360" src-height="1460" align="center"/>
 
 ## 5. 持倉對帳
 
@@ -343,7 +343,7 @@ T+1上午，在快捷導入界面可導入CCASS持倉文件，進行持倉對賬
 導入後系統將自動觸發對賬
 ```
 
-<img src="HlSDbGyEQoOE2OxItOSjZrYvpcc" src-width="3584" src-height="1696" align="center"/>
+<img src="/assets/HlSDbGyEQoOE2OxItOSjZrYvpcc.png" src-width="3584" src-height="1696" align="center"/>
 
 ```text
 導入後並觸發系統對帳處理後，對帳結果為進行中
@@ -352,11 +352,11 @@ T+1上午，在快捷導入界面可導入CCASS持倉文件，進行持倉對賬
 對帳任務執行完畢後，對帳結果為不平帳或平帳
 ```
 
-<img src="B1nNbgpHgoOEGaxYNkvj3Fnzpgg" src-width="2930" src-height="1554" align="center"/>
+<img src="/assets/B1nNbgpHgoOEGaxYNkvj3Fnzpgg.png" src-width="2930" src-height="1554" align="center"/>
 
 ```text
 點擊重新對帳也可（重新）觸發系統對帳。系統支持觸發歷史日期對帳
 ```
 
-<img src="KzV2btRXgoSqhaxfw4Aj32rVpkc" src-width="2914" src-height="1526" align="center"/>
+<img src="/assets/KzV2btRXgoSqhaxfw4Aj32rVpkc.png" src-width="2914" src-height="1526" align="center"/>
 

@@ -31,15 +31,15 @@ sidebar_position: 13
 
 本作業主要用於維護面向客戶終端的系統公告管理
 
-<img src="R1FZbdK8HoTXGJxwlefj7oj1p8z" src-width="3212" src-height="1612" align="center"/>
+<img src="/assets/R1FZbdK8HoTXGJxwlefj7oj1p8z.png" src-width="3212" src-height="1612" align="center"/>
 
 當需要新增一個對外公告時,可以點選右上角【新增公告】,開始配置一個新公告
 
-<img src="TJjHbaxWxoSSU3x5GumjFtT0prb" src-width="2134" src-height="1518" align="center"/>
+<img src="/assets/TJjHbaxWxoSSU3x5GumjFtT0prb.png" src-width="2134" src-height="1518" align="center"/>
 
 公告類型支持如下：
 
-<img src="WE5Sbf7pYoi7kvxaAKcjibBJpPf" src-width="943" src-height="492" align="center"/>
+<img src="/assets/WE5Sbf7pYoi7kvxaAKcjibBJpPf.png" src-width="943" src-height="492" align="center"/>
 
 支持市場：
 
@@ -47,7 +47,7 @@ sidebar_position: 13
 - 公告類型為：通用公告、常規休市、臨時休市、通道問題，支持設置；
 ```
 
-<img src="MryvbzGZYoI7kFxcIy3j06uupwb" src-width="1118" src-height="676" align="center"/>
+<img src="/assets/MryvbzGZYoI7kFxcIy3j06uupwb.png" src-width="1118" src-height="676" align="center"/>
 
 標的範圍
 
@@ -55,20 +55,20 @@ sidebar_position: 13
 - 公告類型為：單股票，支持設置；
 ```
 
-<img src="X3RYbMiXro61cfxpjifjRmSep5e" src-width="1122" src-height="684" align="center"/>
+<img src="/assets/X3RYbMiXro61cfxpjifjRmSep5e.png" src-width="1122" src-height="684" align="center"/>
 
 頁面範圍：
 
-<img src="HgXfbkU1zoJenYxHWm4jsnjcpfh" src-width="933" src-height="553" align="center"/>
+<img src="/assets/HgXfbkU1zoJenYxHWm4jsnjcpfh.png" src-width="933" src-height="553" align="center"/>
 
 其他根據需要配置公告內容：
 
-<img src="EFkXbDzO0oyiOmxdfu0jx5TIptf" src-width="963" src-height="1380" align="center"/>
+<img src="/assets/EFkXbDzO0oyiOmxdfu0jx5TIptf.png" src-width="963" src-height="1380" align="center"/>
 
 當新增一個系統公告管理後：
 
 1. 新創建公告，提交工單審批，審批通過後才會生效；
 2. 可以在記錄右側操作區進行【編輯】或【禁用】
 
-<img src="V8KXbEkAmoJ3HlxUQtAj2V6ups7" src-width="3224" src-height="1506" align="center"/>
+<img src="/assets/V8KXbEkAmoJ3HlxUQtAj2V6ups7.png" src-width="3224" src-height="1506" align="center"/>
 

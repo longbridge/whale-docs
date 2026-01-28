@@ -13,7 +13,7 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 # 会计中台流程说明
 
-<img src="E5TMbVSOjoNoJYxZSx9jDkyupZd" src-width="874" src-height="553" align="center"/>
+<img src="/assets/E5TMbVSOjoNoJYxZSx9jDkyupZd.png" src-width="874" src-height="553" align="center"/>
 
 # 參數設置
 
@@ -30,7 +30,7 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 在使用會計中臺前，券商需要配置會計屬性。
 
-<img src="Fi5EbDBt2oxZXXxNbsujK2pSple" src-width="3814" src-height="1598" align="center"/>
+<img src="/assets/Fi5EbDBt2oxZXXxNbsujK2pSple.png" src-width="3814" src-height="1598" align="center"/>
 
 <b>操作按鈕說明</b>
 
@@ -47,23 +47,23 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 步驟一：在使用會計中臺之前，要完成記賬參數的配置，對於配置的第一步是新增會計科目屬性
 
-<img src="U6IAbEkqMoEqrVxHLFijzMaYpod" src-width="3407" src-height="1427" align="center"/>
+<img src="/assets/U6IAbEkqMoEqrVxHLFijzMaYpod.png" src-width="3407" src-height="1427" align="center"/>
 
 步驟二：對於相應科目屬性下未綁定會計科目，則可以進入後臺進行修改
 
-<img src="J415bXbEIopuaux4ZvFjgJ5Npcb" src-width="3300" src-height="1428" align="center"/>
+<img src="/assets/J415bXbEIopuaux4ZvFjgJ5Npcb.png" src-width="3300" src-height="1428" align="center"/>
 
 - 📢：如果當前的科目屬性已經綁定了會計科目，則無法進行修改，如果修改之後系統會報錯提示如下：
 
-<img src="UtvxblMKUoag3yxERGxjvxSXpMd" src-width="360" src-height="106" align="center"/>
+<img src="/assets/UtvxblMKUoag3yxERGxjvxSXpMd.png" src-width="360" src-height="106" align="center"/>
 
 步驟三：對於相應科目屬性下未綁定會計科目，則可以進入後臺進行刪除
 
-<img src="ZT4ybirpuo7KNTxQMJqjI5Gypoc" src-width="3288" src-height="1034" align="center"/>
+<img src="/assets/ZT4ybirpuo7KNTxQMJqjI5Gypoc.png" src-width="3288" src-height="1034" align="center"/>
 
 - 📢：如果當前的科目屬性已經綁定了會計科目，則無法進行刪除
 
-<img src="MVLSbuU9OoDBO6xervzjEoVrpZf" src-width="368" src-height="104" align="center"/>
+<img src="/assets/MVLSbuU9OoDBO6xervzjEoVrpZf.png" src-width="368" src-height="104" align="center"/>
 
 ## 會計科目
 
@@ -71,7 +71,7 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 在配置科目屬性後，需要根據券商公司的要求配置會計科目。
 
-<img src="K4TNbegrFovFgExKeypjIR5epJg" src-width="3820" src-height="1622" align="center"/>
+<img src="/assets/K4TNbegrFovFgExKeypjIR5epJg.png" src-width="3820" src-height="1622" align="center"/>
 
 <b>操作按鈕說明</b>
 
@@ -94,11 +94,11 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 步驟一：科目屬性配置完畢後，需要在對應科目屬性下新增會計科目，由於我們系統支持三級科目，所以操作人員需要在後臺逐級添加，可以根據自身科目數量選擇批量還是單筆新建。
 
 - 逐一科目新建
-    <img src="LtnFbTFVKoErRaxOUkljO6SPpIe" src-width="3415" src-height="1500" align="center"/>
-    <img src="Zy1ZbJcLCowZLWxGhfsjT5uZpgg" src-width="3421" src-height="1539" align="center"/>
-    <img src="Ih4ubj347o6XKix3R4mjTKAJpLf" src-width="3413" src-height="1549" align="center"/>
-    <img src="GibxbgK6VolYp8xojocjAENdpWg" src-width="3358" src-height="1480" align="center"/>
-    <img src="GvOGbhq7FoONlxxpGPcjyamnpxe" src-width="2225" src-height="666" align="center"/>
+    <img src="/assets/LtnFbTFVKoErRaxOUkljO6SPpIe.png" src-width="3415" src-height="1500" align="center"/>
+    <img src="/assets/Zy1ZbJcLCowZLWxGhfsjT5uZpgg.png" src-width="3421" src-height="1539" align="center"/>
+    <img src="/assets/Ih4ubj347o6XKix3R4mjTKAJpLf.png" src-width="3413" src-height="1549" align="center"/>
+    <img src="/assets/GibxbgK6VolYp8xojocjAENdpWg.png" src-width="3358" src-height="1480" align="center"/>
+    <img src="/assets/GvOGbhq7FoONlxxpGPcjyamnpxe.png" src-width="2225" src-height="666" align="center"/>
     - 在後臺先新建一級科目
     - 在一級科目基礎上新建對應的二級科目
     - 在二級科目基礎上新建對應的三級科目
@@ -126,7 +126,7 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 形成分錄之前需要根據券商公司實際業務需要配置對應的分錄規則。
 
-<img src="Av57bFbSnotCRHxkmeMjqyonpTh" src-width="2870" src-height="1226" align="center"/>
+<img src="/assets/Av57bFbSnotCRHxkmeMjqyonpTh.png" src-width="2870" src-height="1226" align="center"/>
 
 <b>操作按鈕說明</b>
 
@@ -146,19 +146,19 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 步驟一：增加了券商公司的會計科目之後，可以根據數據源的業務類型新增分錄規則，目前會計中臺可支持的數據源包括：支付流水、銀行賬單、客戶收費賬單、CCASS 賬單、新股賬單、代理商收費、業務賬單統計、渠道匯兌單等。在此會分別介紹支付流水、銀行賬單、客戶收費賬單分錄規則如何配置，其他數據源操作可同步參考。
 
-<img src="VWOLbYufQoHR0nxTzzjj3IcGpud" src-width="3437" src-height="906" align="center"/>
+<img src="/assets/VWOLbYufQoHR0nxTzzjj3IcGpud.png" src-width="3437" src-height="906" align="center"/>
 
 - “支付流水”如何添加分錄規則
 
-<img src="HQGIbojUmoz2Dbx17gijeRddple" src-width="2736" src-height="4936" align="center"/>
+<img src="/assets/HQGIbojUmoz2Dbx17gijeRddple.png" src-width="2736" src-height="4936" align="center"/>
 
 - “客戶收費賬單”如何添加分錄規則
 
-<img src="Ar7IbIUhHoEcbjxaN1SjAMRUpId" src-width="2664" src-height="3890" align="center"/>
+<img src="/assets/Ar7IbIUhHoEcbjxaN1SjAMRUpId.png" src-width="2664" src-height="3890" align="center"/>
 
 - “銀行賬單”如何添加分錄規則
 
-<img src="BNGPboAKto6YJQxWsGQj425Kp1g" src-width="2646" src-height="3740" align="center"/>
+<img src="/assets/BNGPboAKto6YJQxWsGQj425Kp1g.png" src-width="2646" src-height="3740" align="center"/>
 
 步驟二：對於已配置的分錄規則可以後臺進行修改。
 
@@ -166,9 +166,9 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 - 📢：對於編輯後的分錄規則，會應用於後續的會計分錄，對於歷史已經生成的會計分錄如需更新，可以在「證券後臺-會計中臺-會計分錄-明細」進行重跑。
 ```
 
-<img src="DmtDbEUi4oY9mgxbbgfjAEcFpdf" src-width="3278" src-height="1282" align="center"/>
+<img src="/assets/DmtDbEUi4oY9mgxbbgfjAEcFpdf.png" src-width="3278" src-height="1282" align="center"/>
 
-<img src="X4yjb5a0GojGkPxClrXjchYNpGh" src-width="2492" src-height="4530" align="center"/>
+<img src="/assets/X4yjb5a0GojGkPxClrXjchYNpGh.png" src-width="2492" src-height="4530" align="center"/>
 
 步驟三：對於已配置的分錄規則可以後臺進行刪除
 
@@ -176,11 +176,11 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 - 📢：當前分錄規則刪除後，只會對後續新的分錄有影響，歷史已生成的分錄只有重跑之後纔會同步更新。
 ```
 
-<img src="P0SAbILKRolJz7xBkvUjw8Xxp3c" src-width="3276" src-height="1304" align="center"/>
+<img src="/assets/P0SAbILKRolJz7xBkvUjw8Xxp3c.png" src-width="3276" src-height="1304" align="center"/>
 
 步驟四：如果需要新增類似業務的分錄規則，可以使用後臺複製功能
 
-<img src="RT9rbdMKFoU5gKxm5eCjZPlcpNh" src-width="3252" src-height="1246" align="center"/>
+<img src="/assets/RT9rbdMKFoU5gKxm5eCjZPlcpNh.png" src-width="3252" src-height="1246" align="center"/>
 
 ## 資金類型
 
@@ -188,9 +188,9 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 對於券商公司獲取的銀行賬單可以自定義資金類型。
 
-<img src="XiwVbDu8rouEjLxd34cjpl2tpaf" src-width="3282" src-height="596" align="center"/>
+<img src="/assets/XiwVbDu8rouEjLxd34cjpl2tpaf.png" src-width="3282" src-height="596" align="center"/>
 
-<img src="ZMiObE9V7oh1BjxzJfIjKXQVp4d" src-width="3314" src-height="1236" align="center"/>
+<img src="/assets/ZMiObE9V7oh1BjxzJfIjKXQVp4d.png" src-width="3314" src-height="1236" align="center"/>
 
 <b>操作按鈕說明</b>
 
@@ -206,15 +206,15 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 步驟一：如需要新增資金類型，可以根據需求在後臺添加
 
-<img src="NAsXb7uWnoUdlExdCxAjUzKFp3d" src-width="3248" src-height="834" align="center"/>
+<img src="/assets/NAsXb7uWnoUdlExdCxAjUzKFp3d.png" src-width="3248" src-height="834" align="center"/>
 
 步驟二：如果未被使用的資金類型需要刪除，可以後臺操作
 
-<img src="KPezbcbUpoVBUqxpIgjjv0y6pNc" src-width="3278" src-height="724" align="center"/>
+<img src="/assets/KPezbcbUpoVBUqxpIgjjv0y6pNc.png" src-width="3278" src-height="724" align="center"/>
 
 📢：如果當前的資金類型已經被銀行賬單使用，則無法進行刪除
 
-<img src="NiUhby3b2ofCi6x3XDljOyUKpub" src-width="362" src-height="114" align="center"/>
+<img src="/assets/NiUhby3b2ofCi6x3XDljOyUKpub.png" src-width="362" src-height="114" align="center"/>
 
 ## 合併規則
 
@@ -222,9 +222,9 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 如果券商公司導出的財務報表需要合併，則可以自定義合併規則。
 
-<img src="NDmRbIZqHoBaA3xUDaOjbf3NpGc" src-width="3276" src-height="780" align="center"/>
+<img src="/assets/NDmRbIZqHoBaA3xUDaOjbf3NpGc.png" src-width="3276" src-height="780" align="center"/>
 
-<img src="J6ljbtAxpohHEAx6jXfjFonRpqc" src-width="1846" src-height="735" align="center"/>
+<img src="/assets/J6ljbtAxpohHEAx6jXfjFonRpqc.png" src-width="1846" src-height="735" align="center"/>
 
 <b>操作按鈕說明</b>
 
@@ -241,21 +241,21 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 步驟一：如需要新增合併規則，可以根據需求在後臺添加。
 
-<img src="E86UbdY8do3BkxxFCXSj1F5RppG" src-width="2396" src-height="4954" align="center"/>
+<img src="/assets/E86UbdY8do3BkxxFCXSj1F5RppG.png" src-width="2396" src-height="4954" align="center"/>
 
 - 📢：如果在新建合併規則選擇的業務類型都未配置分錄規則，則無法新建
 
-<img src="A7cQbQlbxorysNxi0p7jpq1Zpqd" src-width="2680" src-height="3140" align="center"/>
+<img src="/assets/A7cQbQlbxorysNxi0p7jpq1Zpqd.png" src-width="2680" src-height="3140" align="center"/>
 
 步驟二：對於已配置的合併規則可以後臺進行修改
 
-<img src="BVpwbaMDNoJqLoxdm3yjopQhp2b" src-width="3258" src-height="780" align="center"/>
+<img src="/assets/BVpwbaMDNoJqLoxdm3yjopQhp2b.png" src-width="3258" src-height="780" align="center"/>
 
 - 📢：對於編輯後的合併規則，會應用於後續的合併分錄，對於歷史已經生成的合併分錄如需更新，可以在「證券後臺-會計中臺-會計分錄-合併」進行重跑。
 
 步驟三：如果已配置的合併規則可以後臺刪除
 
-<img src="FWxibWlXmokvNhxdKrgjhHnYpld" src-width="3256" src-height="618" align="center"/>
+<img src="/assets/FWxibWlXmokvNhxdKrgjhHnYpld.png" src-width="3256" src-height="618" align="center"/>
 
 - 📢：當前合併規則刪除後，只會對後續新的分錄有影響，歷史已生成的合併分錄只有重跑之後纔會同步更新。
 
@@ -265,7 +265,7 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 業務類型是指區分記賬數據源各種業務的標籤，該功能可提供客戶按照記賬與否的要求進行個性化配置
 
-<img src="T5TJbHBUmo9tgoxJKXPjAyAdplX" src-width="3772" src-height="1622" align="center"/>
+<img src="/assets/T5TJbHBUmo9tgoxJKXPjAyAdplX.png" src-width="3772" src-height="1622" align="center"/>
 
 <b>操作按鈕說明</b>
 
@@ -280,11 +280,11 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 步驟一：如需要新增業務類型，可以根據需求在後臺添加。
 
-<img src="J9nNb7RPwo3X1wxf73Fjvfi0pFe" src-width="3298" src-height="1410" align="center"/>
+<img src="/assets/J9nNb7RPwo3X1wxf73Fjvfi0pFe.png" src-width="3298" src-height="1410" align="center"/>
 
 步驟二：對於已配置的業務類型可以後臺進行修改
 
-<img src="TtcEbtbq5oq1suxJjZjjzDzbpUg" src-width="3266" src-height="1360" align="center"/>
+<img src="/assets/TtcEbtbq5oq1suxJjZjjzDzbpUg.png" src-width="3266" src-height="1360" align="center"/>
 
 - 📢：對於編輯後的業務類型，會應用於後續的分錄，對於歷史已經生成的分錄如需更新，可以在「證券後臺-會計中臺-會計分錄-明細」進行重跑。
 
@@ -306,51 +306,51 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 此功能可以查詢或者維護會計分錄，其中明細的會計分錄是形成合並的依據，合併的會計分錄是導出外部財務系統對應財務報表的依據
 
-<img src="MYrmbwu9BoyplNx0Gs2jbOiEpyo" src-width="3794" src-height="922" align="center"/>
+<img src="/assets/MYrmbwu9BoyplNx0Gs2jbOiEpyo.png" src-width="3794" src-height="922" align="center"/>
 
-<img src="ZCT1bQizooBLbGxqRP6jRHEMpgf" src-width="3282" src-height="1646" align="center"/>
+<img src="/assets/ZCT1bQizooBLbGxqRP6jRHEMpgf.png" src-width="3282" src-height="1646" align="center"/>
 
 首先，系統是支持根據不同數據源配置分錄規則，可以自動地對數據源產生會計分錄，若某些數據源無法自動配置，此功能提供批次導入與手工錄入方式：
 
 如果自動產生分錄後，作業提供新增【編輯】功能，可以修改產生分錄紀錄，同時紀錄新增支付流水新增支票號欄位展示
 
-<img src="N1aLbtVxEoTa90xJgc9jgC8rpxp" src-width="2658" src-height="1412" align="center"/>
+<img src="/assets/N1aLbtVxEoTa90xJgc9jgC8rpxp.png" src-width="2658" src-height="1412" align="center"/>
 
-<img src="FNLSbxAX8oHWgHxs0GojRmaIpqE" src-width="3270" src-height="2754" align="center"/>
+<img src="/assets/FNLSbxAX8oHWgHxs0GojRmaIpqE.png" src-width="3270" src-height="2754" align="center"/>
 
 如果需要手工錄入的分錄很少，可以選擇【手動錄入】
 
-<img src="RBmWbKizxoaxhSxAx6gjFJRLpse" src-width="2502" src-height="1330" align="center"/>
+<img src="/assets/RBmWbKizxoaxhSxAx6gjFJRLpse.png" src-width="2502" src-height="1330" align="center"/>
 
-<img src="MCPsbrX0UoSHS2xN3BXja7prpGh" src-width="3290" src-height="2782" align="center"/>
+<img src="/assets/MCPsbrX0UoSHS2xN3BXja7prpGh.png" src-width="3290" src-height="2782" align="center"/>
 
 也可以選擇【批量導入】，先行下載範本之後，根據批量範本進行編制分錄並導入到系統中
 
-<img src="DJi8b6DT0ombsgxfDMNjcO4epEc" src-width="3246" src-height="1534" align="center"/>
+<img src="/assets/DJi8b6DT0ombsgxfDMNjcO4epEc.png" src-width="3246" src-height="1534" align="center"/>
 
 在記錄右側操作區的【刪除】鍵， 也可進行刪除此會計分錄
 
-<img src="CbeibxTd9o6Y84xlq6BjgQyephh" src-width="3364" src-height="1474" align="center"/>
+<img src="/assets/CbeibxTd9o6Y84xlq6BjgQyephh.png" src-width="3364" src-height="1474" align="center"/>
 
 如果某個帳務日期對應的數據源獲取不完整，可以選擇對應日期的數據源進行【重跑】，系統會更新數據源產生最新會計分錄資料
 
-<img src="NLYjbtKjmodLz4xcCRSj4ZTxpbh" src-width="3362" src-height="1396" align="center"/>
+<img src="/assets/NLYjbtKjmodLz4xcCRSj4ZTxpbh.png" src-width="3362" src-height="1396" align="center"/>
 
 如果系統生成的會計分錄已經核對無誤，手工可以點選【匯總】生成科目餘額匯總表
 
-<img src="GA5qb7dN6oZwesxoy0ijQ2fQplc" src-width="3370" src-height="1452" align="center"/>
+<img src="/assets/GA5qb7dN6oZwesxoy0ijQ2fQplc.png" src-width="3370" src-height="1452" align="center"/>
 
 會計分錄中新增【報表導出】按鈕，方便按照財務軟件格式要求進行報表導出
 
-<img src="J722bQTowoia1sxxs1jjz6oppcf" src-width="3400" src-height="1842" align="center"/>
+<img src="/assets/J722bQTowoia1sxxs1jjz6oppcf.png" src-width="3400" src-height="1842" align="center"/>
 
 提供合併會計分錄查詢功能,合併會計分錄時，系統會按賬帳日期獲取匯率
 
-<img src="ADGTbnA3ao3VFCxbs2ljhzLxpAe" src-width="3348" src-height="1418" align="center"/>
+<img src="/assets/ADGTbnA3ao3VFCxbs2ljhzLxpAe.png" src-width="3348" src-height="1418" align="center"/>
 
 如果对应的合并规则有更新，可以选择对应日期的合并分录进行重跑
 
-<img src="F9yYbddfEoSMeexeqC0jmoS9pOf" src-width="3294" src-height="1692" align="center"/>
+<img src="/assets/F9yYbddfEoSMeexeqC0jmoS9pOf.png" src-width="3294" src-height="1692" align="center"/>
 
 # 科目餘額
 
@@ -368,7 +368,7 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 系統每日會根據科目明細帳按照帳務日期進行匯總，匯總形成科目餘額匯總表
 
-<img src="AcVSbLdN2ouO2LxXmWmjHbhpprb" src-width="3188" src-height="1460" align="center"/>
+<img src="/assets/AcVSbLdN2ouO2LxXmWmjHbhpprb.png" src-width="3188" src-height="1460" align="center"/>
 
 # 科目明細帳
 
@@ -386,7 +386,7 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 對於系統按照科目展示的明細帳，可以在此功能進行查詢
 
-<img src="F8k5bmrzqoFNDix7f3rjs1gDpLh" src-width="3218" src-height="1506" align="center"/>
+<img src="/assets/F8k5bmrzqoFNDix7f3rjs1gDpLh.png" src-width="3218" src-height="1506" align="center"/>
 
 # 銀行餘額
 
@@ -406,7 +406,7 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 根據銀行賬單歷史發生額計算的結果與銀行歷史餘額進行核對，進而保證銀行賬單明細的準確性和完整性。
 
-<img src="SGu0bzEL7o4NTwx7qJNjAkTPpmc" src-width="3234" src-height="1542" align="center"/>
+<img src="/assets/SGu0bzEL7o4NTwx7qJNjAkTPpmc.png" src-width="3234" src-height="1542" align="center"/>
 
 # 歷史餘額
 
@@ -416,9 +416,9 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 可以選擇批次導入
 
-<img src="OH20bEjqbouZSLxt0UbjL7m5pmb" src-width="3238" src-height="1524" align="center"/>
+<img src="/assets/OH20bEjqbouZSLxt0UbjL7m5pmb.png" src-width="3238" src-height="1524" align="center"/>
 
-<img src="H8w6bVuL8oI3XixQsTdjm22rpee" src-width="3242" src-height="1234" align="center"/>
+<img src="/assets/H8w6bVuL8oI3XixQsTdjm22rpee.png" src-width="3242" src-height="1234" align="center"/>
 
 # 實時餘額
 
@@ -426,7 +426,7 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 是指券商公司已對接 API 的銀行賬戶的銀行實時餘額。
 
-<img src="FXEkbmKJOoJNgnxGXDjjOJyjpmb" src-width="3252" src-height="1242" align="center"/>
+<img src="/assets/FXEkbmKJOoJNgnxGXDjjOJyjpmb.png" src-width="3252" src-height="1242" align="center"/>
 
 # 記帳數據源
 
@@ -444,11 +444,11 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 系統對於無法自動形成分錄的數據源會視作為異常數據，可以在此功能進行查詢
 
-<img src="NpJob7CXLoQdnKxmkYQj8e6epZe" src-width="3236" src-height="1110" align="center"/>
+<img src="/assets/NpJob7CXLoQdnKxmkYQj8e6epZe.png" src-width="3236" src-height="1110" align="center"/>
 
 對於異常數據源，可以在記錄列表通過點擊「異常數據源單號」，可以跳轉到具體數據源
 
-<img src="Be2jbpTL8onsstxt6KkjPcZzpee" src-width="3414" src-height="1210" align="center"/>
+<img src="/assets/Be2jbpTL8onsstxt6KkjPcZzpee.png" src-width="3414" src-height="1210" align="center"/>
 
 ## 客戶收費帳單
 
@@ -460,15 +460,15 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 記帳數據源“客戶收費帳單”增加【帳務日期】，並用於記帳分錄帳務日期取值
 
-<img src="UyP6bLvT2oX8xGxGJyHjAoJYp9e" src-width="3206" src-height="1502" align="center"/>
+<img src="/assets/UyP6bLvT2oX8xGxGJyHjAoJYp9e.png" src-width="3206" src-height="1502" align="center"/>
 
 如果對應客戶收費賬單不需要記賬，可以進入後臺將記錄進行刪除
 
-<img src="KrYwblRRMoeeWNxQ6wBj6Txlphc" src-width="3286" src-height="712" align="center"/>
+<img src="/assets/KrYwblRRMoeeWNxQ6wBj6Txlphc.png" src-width="3286" src-height="712" align="center"/>
 
 如果某一個賬務日期的的客戶收費賬單不準確，可以在後臺進行重跑
 
-<img src="MwzEb4kFioR69cxVuSHjqQolpWe" src-width="3302" src-height="1110" align="center"/>
+<img src="/assets/MwzEb4kFioR69cxVuSHjqQolpWe.png" src-width="3302" src-height="1110" align="center"/>
 
 ## 支付流水
 
@@ -476,15 +476,15 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 是指券商公司記錄用戶交易變動明細表，會計中台根據轉賬、出賬和入賬進行規範獲取，作為會計分錄中信息流記賬的數據。
 
-<img src="KivtbPVBcoLGOCxgOhPjfZ24p1g" src-width="3230" src-height="1502" align="center"/>
+<img src="/assets/KivtbPVBcoLGOCxgOhPjfZ24p1g.png" src-width="3230" src-height="1502" align="center"/>
 
 如果對應支付流水不需要記賬，可以進入後臺將記錄進行刪除
 
-<img src="GvvybK3T1oTkQwxTuUij9yxJpqb" src-width="3258" src-height="818" align="center"/>
+<img src="/assets/GvvybK3T1oTkQwxTuUij9yxJpqb.png" src-width="3258" src-height="818" align="center"/>
 
 如果某一個賬務日期的的支付流水不準確，可以在後臺進行重跑
 
-<img src="AeFWbFTZRoH6VexrOhHjNMwtp4e" src-width="3282" src-height="1132" align="center"/>
+<img src="/assets/AeFWbFTZRoH6VexrOhHjNMwtp4e.png" src-width="3282" src-height="1132" align="center"/>
 
 ## CCASS 賬單
 
@@ -492,7 +492,7 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 增加 CCASS 文件解析，此 CCASS 數據源是相關文件導入後，系統自動根據配置完成會計分錄處理，可在此 Tab 查詢記錄或刪除已轉入的數據源分錄
 
-<img src="BRGbbI7yRo2Uz3xo0yDj1I6tpke" src-width="3240" src-height="1478" align="center"/>
+<img src="/assets/BRGbbI7yRo2Uz3xo0yDj1I6tpke.png" src-width="3240" src-height="1478" align="center"/>
 
 ## 新股帳單
 
@@ -500,7 +500,7 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 新增新股帳單
 
-<img src="RyB8bdaAUoG6RWxvNlsjpwZMpGh" src-width="3262" src-height="1120" align="center"/>
+<img src="/assets/RyB8bdaAUoG6RWxvNlsjpwZMpGh.png" src-width="3262" src-height="1120" align="center"/>
 
 ## 代理商收費
 
@@ -508,7 +508,7 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 爲獲取機構合約的相關費用，滿足券商公司進行上手費用記賬的訴求，新增代理商收費作爲會計記賬的數據源
 
-<img src="HJYlbB7weokbi4xBUABj3XETpVN" src-width="3288" src-height="912" align="center"/>
+<img src="/assets/HJYlbB7weokbi4xBUABj3XETpVN.png" src-width="3288" src-height="912" align="center"/>
 
 ## 銀行賬單
 
@@ -516,25 +516,25 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 券商公司銀行賬戶所有實際資金變動記錄，按照各種標籤進行打標後，可以作爲資金流記賬的數據源。
 
-<img src="KI1WbTfgqo3hdmx0KJQj5ekPpfe" src-width="3794" src-height="1002" align="center"/>
+<img src="/assets/KI1WbTfgqo3hdmx0KJQj5ekPpfe.png" src-width="3794" src-height="1002" align="center"/>
 
 如果銀行賬單資金類型未知，可以人工後臺進行操作修改
 
-<img src="Fpmjb74NYoaon2xoblajY0Cvpbe" src-width="3376" src-height="1822" align="center"/>
+<img src="/assets/Fpmjb74NYoaon2xoblajY0Cvpbe.png" src-width="3376" src-height="1822" align="center"/>
 
-<img src="ZWLqbABeeoKqjAx0tNUj42GUpYb" src-width="3376" src-height="1816" align="center"/>
+<img src="/assets/ZWLqbABeeoKqjAx0tNUj42GUpYb.png" src-width="3376" src-height="1816" align="center"/>
 
 如果銀行賬單有缺失，可以後臺進行文件導入
 
-<img src="IpYtbB74Fo7ZnLxay2rjuoW0pLc" src-width="3260" src-height="826" align="center"/>
+<img src="/assets/IpYtbB74Fo7ZnLxay2rjuoW0pLc.png" src-width="3260" src-height="826" align="center"/>
 
 如果銀行賬單記錄有問題，可以後臺進行刪除
 
-<img src="SWzGbnX3po7YFVxgtazjko4spab" src-width="3260" src-height="826" align="center"/>
+<img src="/assets/SWzGbnX3po7YFVxgtazjko4spab.png" src-width="3260" src-height="826" align="center"/>
 
 如果入金賬單和出金賬單有更新，可以在後臺進行重跑
 
-<img src="EWo2b3MYooKU4Qxh8tyjUySBpWe" src-width="3260" src-height="826" align="center"/>
+<img src="/assets/EWo2b3MYooKU4Qxh8tyjUySBpWe.png" src-width="3260" src-height="826" align="center"/>
 
 # 入金在途
 
@@ -550,11 +550,11 @@ Whale 會計系統提供了一套可以自動獲取數據源，按照預設的�
 
 提供在途資金的匯總記錄查詢
 
-<img src="JrKtbUuHUoNGTgxERDhjYiwxpJb" src-width="3282" src-height="1690" align="center"/>
+<img src="/assets/JrKtbUuHUoNGTgxERDhjYiwxpJb.png" src-width="3282" src-height="1690" align="center"/>
 
 執行菜單：會計中台 &gt; 入金在途&gt;彙總覈對
 
 提供在途資金與銀行賬單彙總覈對結果查詢
 
-<img src="BBVybiMPkobir8xAx4ZjlGSppac" src-width="3242" src-height="540" align="center"/>
+<img src="/assets/BBVybiMPkobir8xAx4ZjlGSppac.png" src-width="3242" src-height="540" align="center"/>
 

@@ -26,14 +26,14 @@ sidebar_position: 42
 # 在哪些地方進行了升級？
 
 1. <b>設定類與配置類別功能均聚合至「業務參數設定&gt;匯兌」選單下，用戶可集中進行換匯業務的前置設置。</b>
-    <img src="MUPOb7FMvokAUGxKWrcjYfV9pec" src-width="1280" src-height="561" align="center"/>
+    <img src="/assets/MUPOb7FMvokAUGxKWrcjYfV9pec.png" src-width="1280" src-height="561" align="center"/>
     透過 3-5 個 tab 可以快速完成換匯功能的初始設置，其中：
-    <img src="D9BobmoTIojCBMxoMYkjnd1BpJb" src-width="1280" src-height="592" align="center"/>
-    <img src="VOBWboAa5ob7rmxGnnnjzpFQp1c" src-width="1280" src-height="579" align="center"/>
-    <img src="DF0ibuioFoW2eIxbvcGj5FGQpme" src-width="2170" src-height="956" align="center"/>
-    <img src="QR3Ybi0s0oCrMyx4oIgj7APopBh" src-width="1280" src-height="588" align="center"/>
-    <img src="C60ubdrVAoK7R8xJXmwjl6tWpLf" src-width="2170" src-height="956" align="center"/>
-    <img src="QE9Tbwt7ToUXhqx4XWqjIQ0Gpec" src-width="2126" src-height="976" align="center"/>
+    <img src="/assets/D9BobmoTIojCBMxoMYkjnd1BpJb.png" src-width="1280" src-height="592" align="center"/>
+    <img src="/assets/VOBWboAa5ob7rmxGnnnjzpFQp1c.png" src-width="1280" src-height="579" align="center"/>
+    <img src="/assets/DF0ibuioFoW2eIxbvcGj5FGQpme.gif" src-width="2170" src-height="956" align="center"/>
+    <img src="/assets/QR3Ybi0s0oCrMyx4oIgj7APopBh.png" src-width="1280" src-height="588" align="center"/>
+    <img src="/assets/C60ubdrVAoK7R8xJXmwjl6tWpLf.gif" src-width="2170" src-height="956" align="center"/>
+    <img src="/assets/QE9Tbwt7ToUXhqx4XWqjIQ0Gpec.gif" src-width="2126" src-height="976" align="center"/>
     - 必須設定的功能有：幣種對、換匯策略、換匯池額度配置
     - 可選擇設定的功能：加點設定、大額限制
     - 直觀展示幣種對訊息
@@ -46,11 +46,11 @@ sidebar_position: 42
     - 用 2 個分類展示匯率加點維度
 
 2. <b>業務類功能聚合至“款項管理&gt;換匯”</b>
-    <img src="K5F4bgNY7oGNd4x9A3PjbigxpFA" src-width="1280" src-height="596" align="center"/>
-    <img src="A9LjbZJQioVSh2x7BQ2jPz64pnc" src-width="1280" src-height="589" align="center"/>
-    <img src="BLvybsfkZo6EJaxxo0rj8ElmpQg" src-width="2132" src-height="974" align="center"/>
-    <img src="CkNFbfa0goQI5YxVjBIj66z4pYb" src-width="1280" src-height="645" align="center"/>
-    <img src="PazVbu9tqomgWKxYOU6jRD8tp9d" src-width="2118" src-height="978" align="center"/>
+    <img src="/assets/K5F4bgNY7oGNd4x9A3PjbigxpFA.png" src-width="1280" src-height="596" align="center"/>
+    <img src="/assets/A9LjbZJQioVSh2x7BQ2jPz64pnc.png" src-width="1280" src-height="589" align="center"/>
+    <img src="/assets/BLvybsfkZo6EJaxxo0rj8ElmpQg.gif" src-width="2132" src-height="974" align="center"/>
+    <img src="/assets/CkNFbfa0goQI5YxVjBIj66z4pYb.png" src-width="1280" src-height="645" align="center"/>
+    <img src="/assets/PazVbu9tqomgWKxYOU6jRD8tp9d.gif" src-width="2118" src-height="978" align="center"/>
     - 增加指標卡分類展示
     - 增加【加點設定】快速跳轉功能
     - 可查看歷史更新過的匯率
@@ -58,14 +58,14 @@ sidebar_position: 42
     - 匯兌池額度增加額度設定的快速跳轉功能
 
 3. 新增換匯對賬功能頁面（0513上线）
-    <img src="QmSpbx65WoIsnsxBGcVjFLmPpaf" src-width="1280" src-height="634" align="center"/>
+    <img src="/assets/QmSpbx65WoIsnsxBGcVjFLmPpaf.png" src-width="1280" src-height="634" align="center"/>
     - 根據客戶在系統中換匯記錄與銀行端的資金記錄進行對賬處理
 
 # 新版本操作引导
 
 # 系統功能架構
 
-<img src="IIBfbK2x7otC3exQIPHjvCAdpqb" src-width="2560" src-height="2560" align="center"/>
+<img src="/assets/IIBfbK2x7otC3exQIPHjvCAdpqb.png" src-width="2560" src-height="2560" align="center"/>
 
 # 客戶匯兌
 
@@ -77,15 +77,15 @@ sidebar_position: 42
 
 點選【手工換匯】，在出現的彈出內選擇客戶&gt;輸入幣種對（系統將根據已選擇的客戶，自動展示每個幣種可提現的餘額）
 
-<img src="ITjJbZ4kGogkjPxWJxdj7cvNpGg" src-width="3830" src-height="1854" align="center"/>
+<img src="/assets/ITjJbZ4kGogkjPxWJxdj7cvNpGg.png" src-width="3830" src-height="1854" align="center"/>
 
 <b>步驟二：確認參考匯率</b>
 
 選擇了客戶與幣種對之後，系統自動提供參考匯率，用戶也可以切換成【自定義匯率】進行手動輸入
 
-<img src="HVFWb6O5Pop5WqxwcWUjxM8HpFc" src-width="3328" src-height="1772" align="center"/>
+<img src="/assets/HVFWb6O5Pop5WqxwcWUjxM8HpFc.png" src-width="3328" src-height="1772" align="center"/>
 
-<img src="GpJ4bsdHJo2nLXxPckfjY82YpWe" src-width="3322" src-height="1776" align="center"/>
+<img src="/assets/GpJ4bsdHJo2nLXxPckfjY82YpWe.png" src-width="3322" src-height="1776" align="center"/>
 
 <b>步驟三：輸入金額</b>
 
@@ -100,29 +100,29 @@ sidebar_position: 42
 
 申請的記錄生成後，後台操作人員需要再次檢查資料的準確性，確認無誤後點選操作列【複核】，進入彈跳窗進行【通過】/【駁回】操作。
 
-<img src="CxOObvCCFoJmS7xOxtVjdF5vpsa" src-width="3828" src-height="1858" align="center"/>
+<img src="/assets/CxOObvCCFoJmS7xOxtVjdF5vpsa.png" src-width="3828" src-height="1858" align="center"/>
 
 【通過】後，在「已結束」分類或「全部」分類下，可以查看已完成的匯兌記錄
 
-<img src="LTPpbYwzCoNsmxxuEKjjKvxyp3c" src-width="3314" src-height="1052" align="center"/>
+<img src="/assets/LTPpbYwzCoNsmxxuEKjjKvxyp3c.png" src-width="3314" src-height="1052" align="center"/>
 
 # 參考匯率
 
 用戶可在參考匯率頁面查看所有幣種對的匯率，同時支援用戶進行手動新增幣種對的參考匯率（含大量操作）
 
-<img src="E2rsbIjpkom5GDxzTAEjJdKApGh" src-width="3836" src-height="1860" align="center"/>
+<img src="/assets/E2rsbIjpkom5GDxzTAEjJdKApGh.png" src-width="3836" src-height="1860" align="center"/>
 
 ## 新建參考匯率
 
 點選【新建】進入彈跳窗，將頁面中的必填欄位補齊，即可產生一筆參考匯率記錄
 
-<img src="RvFdbWqmGolElUx1sz7jaf1Upvb" src-width="3828" src-height="1864" align="center"/>
+<img src="/assets/RvFdbWqmGolElUx1sz7jaf1Upvb.png" src-width="3828" src-height="1864" align="center"/>
 
 ## 查看匯率更新記錄
 
 由於不同的匯率管道的匯率會即時更新，系統透過 API 對接的方式會自動刷新頁面中的匯率，如果需要查看當天的歷史匯率，可以在匯兌記錄行的操作列點擊【歷史記錄】進行查看。
 
-<img src="NAl5bpMIUo22IKxFJJxjPcoepDb" src-width="3322" src-height="1770" align="center"/>
+<img src="/assets/NAl5bpMIUo22IKxFJJxjPcoepDb.png" src-width="3322" src-height="1770" align="center"/>
 
 # 異常換匯記錄
 
@@ -136,15 +136,15 @@ sidebar_position: 42
 - 再匯兌：根據相應的管道匯兌單確認銀行端資金未變動，且不會再次變動，但是人工確認需要給用戶再次匯兌，則需要再次提交通路匯兌請求
 - 轉失敗：是指相應通路換匯單經過人工確認，銀行資金未變動且後續不會變動，所以人工可以將通路匯兌單狀態更新為失敗
 
-<img src="At9UbqGXeopLLTxNA6OjzJAipSe" src-width="2366" src-height="1220" align="center"/>
+<img src="/assets/At9UbqGXeopLLTxNA6OjzJAipSe.png" src-width="2366" src-height="1220" align="center"/>
 
 <b>步驟二：根據第一步的處理方式進行複核</b>
 
-<img src="N2pjbJwkxoA8daxzqOPjNYEUpIh" src-width="2370" src-height="1198" align="center"/>
+<img src="/assets/N2pjbJwkxoA8daxzqOPjNYEUpIh.png" src-width="2370" src-height="1198" align="center"/>
 
 # 匯兌損益
 
 由於時間差，換匯申請在提交至換匯完成時會存在匯率的波動進而影響到兌換的金額。此頁面用於查看每筆換匯申請所產生的匯兌損益，支援匯出至本地。
 
-<img src="J8Elbudpvo75MOxvq0PjQ3n2peh" src-width="2344" src-height="1210" align="center"/>
+<img src="/assets/J8Elbudpvo75MOxvq0PjQ3n2peh.png" src-width="2344" src-height="1210" align="center"/>
 

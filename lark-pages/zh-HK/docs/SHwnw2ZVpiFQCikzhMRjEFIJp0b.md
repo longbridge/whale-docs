@@ -24,7 +24,7 @@ sidebar_position: 0
 **答：**見以下步驟
 （i）在「清算管理＞結單管理＞結單模版」點擊「編輯」
 
-<img src="VKbxbfsDmoibZlxHcFQjgl4ypeC" src-width="1842" src-height="1430" align="center"/>
+<img src="/assets/VKbxbfsDmoibZlxHcFQjgl4ypeC.png" src-width="1842" src-height="1430" align="center"/>
 
 (ii). 將頁面拉到最底，在「結單語言」點擊可選擇語言
 
@@ -33,13 +33,13 @@ sidebar_position: 0
 <p>“跟隨系統” 指跟隨客戶 App 顯示語言的設置</p>
 </div>
 
-<img src="J3Oub2U9Ho2ZKYxJX2Jj5qMYpkf" src-width="1898" src-height="1430" align="center"/>
+<img src="/assets/J3Oub2U9Ho2ZKYxJX2Jj5qMYpkf.png" src-width="1898" src-height="1430" align="center"/>
 
 # 5.2.1C 問：結單的「責任說明條款」如何修改？
 
 答：在「清算管理＞結單管理＞結單模版」點擊「編輯」可以修改到結單上的公司信息、聯繫方式、責任說明。
 
-<img src="TS3Ob666Foi6efxdgQljF5jUpUf" src-width="1980" src-height="1410" align="center"/>
+<img src="/assets/TS3Ob666Foi6efxdgQljF5jUpUf.png" src-width="1980" src-height="1410" align="center"/>
 
 # 5.2.1D 問：結單「發送方式配置」的「線下發送」是什麼？
 
@@ -50,5 +50,5 @@ sidebar_position: 0
 <p>可以點擊「編輯」修改</p>
 </div>
 
-<img src="A7rKbfv1koVfYcxbflgjFIiypmh" src-width="2814" src-height="1300" align="center"/>
+<img src="/assets/A7rKbfv1koVfYcxbflgjFIiypmh.png" src-width="2814" src-height="1300" align="center"/>
 

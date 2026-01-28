@@ -47,25 +47,25 @@ Whale報表管理系統通常具有以下功能和特點：
 
 可以在右側切換業務報表分類。中間區會顯示可執行到報表清單列表
 
-<img src="VCssbDZtJo0RGjxu4aUjNp4tpPe" src-width="3198" src-height="1622" align="center"/>
+<img src="/assets/VCssbDZtJo0RGjxu4aUjNp4tpPe.png" src-width="3198" src-height="1622" align="center"/>
 
 每個報表項目會顯示報表項目名稱與 報表簡要說明 與最近更新版本時間
 
-<img src="T8frb9TV0oleycxvEpRjOwZTpoh" src-width="3234" src-height="1334" align="center"/>
+<img src="/assets/T8frb9TV0oleycxvEpRjOwZTpoh.png" src-width="3234" src-height="1334" align="center"/>
 
 報表項目旁若出現'實時'標籤圖示，表示該報表是實時數據報表資料
 
-<img src="FG87bEffVo436cx26nXjkvzNpFh" src-width="2704" src-height="152" align="center"/>
+<img src="/assets/FG87bEffVo436cx26nXjkvzNpFh.png" src-width="2704" src-height="152" align="center"/>
 
 ### 報表標籤分類
 
 也可以編輯自己的報表標籤說明，可以對單一報表赋予相應的「標籤」，同时系统會根據「標籤」對相關報表做自動分類，便於快速查找
 
-<img src="NCnbbvMWbo9ajqxOI8djCOowp3e" src-width="3240" src-height="1066" align="center"/>
+<img src="/assets/NCnbbvMWbo9ajqxOI8djCOowp3e.png" src-width="3240" src-height="1066" align="center"/>
 
 此時可以選擇現有標籤（支持多個標籤同時存在） 或 重新 新建一個 標籤
 
-<img src="JQTRbCXWToFFyixutWZjHOLNplh" src-width="2340" src-height="968" align="center"/>
+<img src="/assets/JQTRbCXWToFFyixutWZjHOLNplh.png" src-width="2340" src-height="968" align="center"/>
 
 ### 標籤管理
 
@@ -75,29 +75,29 @@ Whale報表管理系統通常具有以下功能和特點：
 
 修改標籤名稱後，標籤名稱會直接變更
 
-<img src="LWtEb2mx1oheGwxiej5jcgKvpyh" src-width="3252" src-height="348" align="center"/>
+<img src="/assets/LWtEb2mx1oheGwxiej5jcgKvpyh.png" src-width="3252" src-height="348" align="center"/>
 
-<img src="Cnu7bbUA2oZhx4xLxYLjkMMjpwD" src-width="3244" src-height="954" align="center"/>
+<img src="/assets/Cnu7bbUA2oZhx4xLxYLjkMMjpwD.png" src-width="3244" src-height="954" align="center"/>
 
 ### 報表收藏
 
 也提供 星狀圖示報表收藏，點選後就會出現在 自己的「我的收藏」入口菜單區內，方便快速點選操作
 
-<img src="GlCObmR1poeonOxKb6dj4U4spAf" src-width="3224" src-height="1318" align="center"/>
+<img src="/assets/GlCObmR1poeonOxKb6dj4U4spAf.png" src-width="3224" src-height="1318" align="center"/>
 
 ### 參數設置
 
 - 可以通過報表參數設置完成部分報表需要的參數設置
 
-<img src="SjHIb8VXgodhHIxFufojQSKGpjf" src-width="2340" src-height="1340" align="center"/>
+<img src="/assets/SjHIb8VXgodhHIxFufojQSKGpjf.png" src-width="2340" src-height="1340" align="center"/>
 
-<img src="TV2tbM0fLohyNhxY8vejLTpopte" src-width="2368" src-height="1336" align="center"/>
+<img src="/assets/TV2tbM0fLohyNhxY8vejLTpopte.png" src-width="2368" src-height="1336" align="center"/>
 
 ### 查看更新日誌
 
 - 通過更新日誌用戶可以及時了解Whale系統報表的最新更新紀錄
 
-<img src="U3CAbuaFvo3odjx7UhqjmASNphh" src-width="2324" src-height="1310" align="center"/>
+<img src="/assets/U3CAbuaFvo3odjx7UhqjmASNphh.png" src-width="2324" src-height="1310" align="center"/>
 
 ## 二、報表打印功能
 
@@ -116,7 +116,7 @@ Whale報表管理系統通常具有以下功能和特點：
 在搜索欄輸入報表編號的關鍵字，可以查詢對應的報表展示選擇，例如：輸入 SDR003 則下拉顯示 SDR003 相關的報表，點擊所需報表便可以進入詳細的報表頁。（注意：輸入報表編號作搜索，英文字母必須為大寫）
 ```
 
-<img src="Tm91bl2g9oSn8Mx76HijDRk2pbb" src-width="3240" src-height="1188" align="center"/>
+<img src="/assets/Tm91bl2g9oSn8Mx76HijDRk2pbb.png" src-width="3240" src-height="1188" align="center"/>
 
 <b>方式二</b>：
 
@@ -124,11 +124,11 @@ Whale報表管理系統通常具有以下功能和特點：
 點擊所需報表名稱，展開後可選擇對應的報表進入詳細的報表頁面
 ```
 
-<img src="TS26bpu13oLgxWxFwPFjuQt9pfh" src-width="3246" src-height="1618" align="center"/>
+<img src="/assets/TS26bpu13oLgxWxFwPFjuQt9pfh.png" src-width="3246" src-height="1618" align="center"/>
 
 單一報表詳情的上方區域為報表條件欄位查詢區，可按照不同條件進行報表詳情篩選
 
-<img src="MKqXbS4udoeZbuxcirAjlQRopWg" src-width="3238" src-height="1332" align="center"/>
+<img src="/assets/MKqXbS4udoeZbuxcirAjlQRopWg.png" src-width="3238" src-height="1332" align="center"/>
 
 ### 報表預覽
 
@@ -141,11 +141,11 @@ Whale報表管理系統通常具有以下功能和特點：
 <p>🚫 因為預覽只顯示部分數據，所以請注意要數據是否完整後再進行下載；後期會優化在預覽檔案裏說明是否是完整數據</p>
 </div>
 
-<img src="Bkrhblq6ioZN8tx0amOjJulyp9e" src-width="3232" src-height="1644" align="center"/>
+<img src="/assets/Bkrhblq6ioZN8tx0amOjJulyp9e.png" src-width="3232" src-height="1644" align="center"/>
 
 ### 報表導出
 
-<img src="QcHWbQlmFoZbUuxZZT1jChnhpib" src-width="3254" src-height="758" align="center"/>
+<img src="/assets/QcHWbQlmFoZbUuxZZT1jChnhpib.png" src-width="3254" src-height="758" align="center"/>
 
 導出功能可以選擇導出的檔案類型，大部分報表支持CSV、PDF、EXCEL格式，部分特定報表只支持特定的格式，詳情見報表列表
 
@@ -155,7 +155,7 @@ Whale報表管理系統通常具有以下功能和特點：
 
 點擊後會會自動產生一個報表導出任務，後續可以在導出列表頁面查看進度並作下載操作
 
-<img src="XS4ebphkvobtwpxDVaGjCrIVpdx" src-width="3470" src-height="764" align="center"/>
+<img src="/assets/XS4ebphkvobtwpxDVaGjCrIVpdx.png" src-width="3470" src-height="764" align="center"/>
 
 ### 導出文件
 
@@ -166,7 +166,7 @@ Whale報表管理系統通常具有以下功能和特點：
 
 可以查詢當前登錄用戶所導出的報表文檔，可以【刪除】或直接【下載】
 
-<img src="Ofu4brdKfoTO7ZxFL6ejdjj5p3b" src-width="2324" src-height="1318" align="center"/>
+<img src="/assets/Ofu4brdKfoTO7ZxFL6ejdjj5p3b.png" src-width="2324" src-height="1318" align="center"/>
 
 ## 三、批量打印功能
 
@@ -179,11 +179,11 @@ Whale報表管理系統通常具有以下功能和特點：
 
 系统也支持批量打印报表功能，可以自行新增一个批量作业，点选右上方【新增】，增加批量打印名称与批量报表组成
 
-<img src="W02XbzirqonYKJxom9ojuGcgphS" src-width="3362" src-height="1526" align="center"/>
+<img src="/assets/W02XbzirqonYKJxom9ojuGcgphS.png" src-width="3362" src-height="1526" align="center"/>
 
 批量打印名称确认后，可以添加批量的报表组成（选报表名称/打印方式），打印条件会根据不同报表，自动显示相关栏位，可以根据需要自行设置
 
-<img src="YM12bXIRMoZPibxNjj2jxKrVp9d" src-width="2364" src-height="1348" align="center"/>
+<img src="/assets/YM12bXIRMoZPibxNjj2jxKrVp9d.png" src-width="2364" src-height="1348" align="center"/>
 
 同时根据不同的报表条件栏位，也可以设制不同条件：在批次详情面，点击【添加】进入报表添加设置页面，选择报表并设置报表条件
 
@@ -202,7 +202,7 @@ Whale報表管理系統通常具有以下功能和特點：
 - Before last system date 上上一自然日
 ```
 
-<img src="GQxCbSoO2o11S5xqUE1j48GYpjd" src-width="2360" src-height="1352" align="center"/>
+<img src="/assets/GQxCbSoO2o11S5xqUE1j48GYpjd.png" src-width="2360" src-height="1352" align="center"/>
 
 ### 編輯打印批次
 
@@ -213,7 +213,7 @@ Whale報表管理系統通常具有以下功能和特點：
 3. 列表内点击【删除】可以移除批次中的报表
 4. 报表批量打印同一批次支持添加相同的报表，方便相同报表但列印参数不同需要
 
-<img src="G2BEb8N28oOZTJxAjEbjgsl8pkd" src-width="2336" src-height="1248" align="center"/>
+<img src="/assets/G2BEb8N28oOZTJxAjEbjgsl8pkd.png" src-width="2336" src-height="1248" align="center"/>
 
 ### 批量打印
 
@@ -223,17 +223,17 @@ Whale報表管理系統通常具有以下功能和特點：
 - 刪除：刪除批次
 - 批量導出：提交批次文件生成任務
 
-<img src="FKUnbnzUroANHsxAis1jBGYypcg" src-width="2352" src-height="940" align="center"/>
+<img src="/assets/FKUnbnzUroANHsxAis1jBGYypcg.png" src-width="2352" src-height="940" align="center"/>
 
 ### 導出批量文件
 
 若批量导出执行后，可以在导出列表作业上查看 ，也可以将文件夹整个下载操作
 
-<img src="F8qybAODKokiksxoZv8jD9h2pTS" src-width="2832" src-height="834" align="center"/>
+<img src="/assets/F8qybAODKokiksxoZv8jD9h2pTS.png" src-width="2832" src-height="834" align="center"/>
 
 可以点选详情，查看每一批量打印的单一报表，或单一报表下载
 
-<img src="FBYlba6wrowhqBxdCOvjckInp6d" src-width="2346" src-height="802" align="center"/>
+<img src="/assets/FBYlba6wrowhqBxdCOvjckInp6d.png" src-width="2346" src-height="802" align="center"/>
 
 ## 四、導出日誌
 
@@ -247,7 +247,7 @@ Whale報表管理系統通常具有以下功能和特點：
 - 「單個列印」查詢單個報表打印的歷史操作記錄
 - 「批量列印」查詢批量報表打印的歷史操作記錄
 
-<img src="BsvgbmYokokwVcxn7ijjkpzapbc" src-width="3346" src-height="1512" align="center"/>
+<img src="/assets/BsvgbmYokokwVcxn7ijjkpzapbc.png" src-width="3346" src-height="1512" align="center"/>
 
 ## 五、CRS文件生成
 
@@ -262,9 +262,9 @@ Whale報表管理系統通常具有以下功能和特點：
 
 注意： 租戶需要 增加下列權限 才能操作 相關 CRS 文件
 
-<img src="N6fYbo8PdoIdBHxi5dhjE7uXpOo" src-width="950" src-height="563" align="center"/>
+<img src="/assets/N6fYbo8PdoIdBHxi5dhjE7uXpOo.png" src-width="950" src-height="563" align="center"/>
 
-<img src="WSxRbC38TodXWhx1ue2jro04pWd" src-width="1878" src-height="1354" align="center"/>
+<img src="/assets/WSxRbC38TodXWhx1ue2jro04pWd.png" src-width="1878" src-height="1354" align="center"/>
 
 CRS文件權限
 
@@ -274,25 +274,25 @@ CRS文件權限
 
 注意： 在计算收益視窗上，在外部报税文件上傳的網站了會提供供一個编号【AEOI ID】的，公司名稱就是券商的公司名稱，要跟外部報税系统里面名稱要一致的
 
-<img src="A1w8beBT0o9sqixOfo0jlA04pq4" src-width="2352" src-height="1344" align="center"/>
+<img src="/assets/A1w8beBT0o9sqixOfo0jlA04pq4.png" src-width="2352" src-height="1344" align="center"/>
 
 就會產生一個的系統任務，當系統任務完成後（這會需要點時間產生全年資料），就會產生報送的參考數據，可以在 CRS 數據 Tab 頁籤上 查看或修改
 
-<img src="V76jbkehvoCO1uxsklbj4VsDpWg" src-width="2368" src-height="874" align="center"/>
+<img src="/assets/V76jbkehvoCO1uxsklbj4VsDpWg.png" src-width="2368" src-height="874" align="center"/>
 
 也可以在任務列表 Tab 頁籤上 點選 紀錄右側操作區的【詳情】，會自動切換 <b>CRS 數據</b> Tab 頁籤，可以查詢數據資料或編輯修改
 
-<img src="BPpdbY3c0ouTq2xMeHkjHyzHpRe" src-width="2346" src-height="1196" align="center"/>
+<img src="/assets/BPpdbY3c0ouTq2xMeHkjHyzHpRe.png" src-width="2346" src-height="1196" align="center"/>
 
 可根據需要 刪除紀錄（不報送） 或修改數據資料
 
-<img src="ATsHblqbho5ySxxMp0qjeo49pib" src-width="1193" src-height="662" align="center"/>
+<img src="/assets/ATsHblqbho5ySxxMp0qjeo49pib.png" src-width="1193" src-height="662" align="center"/>
 
 ### <b>生成文件</b>
 
 當 CRS 數據 Tab 頁籤上 查看或修改正確後，可以點選右上角【生成文件】就會產生一個的系統任務來產生報稅規格的文檔（注意：這會需要點時間產生全年資料）
 
-<img src="A2sTbEwusoPKCBxKGXDjsEYUpWg" src-width="2338" src-height="836" align="center"/>
+<img src="/assets/A2sTbEwusoPKCBxKGXDjsEYUpWg.png" src-width="2338" src-height="836" align="center"/>
 
 ### <b>文件下載</b>
 
@@ -300,9 +300,9 @@ CRS文件權限
 
 （系統會稱生一個 xml 附檔名的文檔）
 
-<img src="ZO9IbRFYho5YKixAbRojMg2Jpwg" src-width="2338" src-height="836" align="center"/>
+<img src="/assets/ZO9IbRFYho5YKixAbRojMg2Jpwg.png" src-width="2338" src-height="836" align="center"/>
 
-<img src="SHL8bw0ISo7dLjxhomtj0zAcpDe" src-width="581" src-height="667" align="center"/>
+<img src="/assets/SHL8bw0ISo7dLjxhomtj0zAcpDe.png" src-width="581" src-height="667" align="center"/>
 
 建議： 此文件不要自行編輯，容易誤操作造成文檔規格不對，無法上傳
 
@@ -310,17 +310,17 @@ CRS文件權限
 
 將上傳到外部系统的一个 XML 文件。这文件在外部系统上傳以后，在外部系统它會返回一个文件序列号，可以在任務列表 Tab 頁籤這，更新状态把外部系统序列号输入
 
-<img src="ONAkbUcSDoh0P7x9po2j8xxbpoh" src-width="2350" src-height="1348" align="center"/>
+<img src="/assets/ONAkbUcSDoh0P7x9po2j8xxbpoh.png" src-width="2350" src-height="1348" align="center"/>
 
 這等于將產生的 CRS 數據 打上這批次的 文件序列號，方便以後對數據查詢或更正已報送資料
 
-<img src="EHsCb2mvxo3BxtxSLOLjshBUpzi" src-width="2352" src-height="846" align="center"/>
+<img src="/assets/EHsCb2mvxo3BxtxSLOLjshBUpzi.png" src-width="2352" src-height="846" align="center"/>
 
 ## <b>更正資料再上傳</b>：
 
 正常情況下，已報送資料其狀態是‘文件已報送'
 
-<img src="VnUtbvMaMo0YHTxzHIWjPniqpHc" src-width="2334" src-height="1214" align="center"/>
+<img src="/assets/VnUtbvMaMo0YHTxzHIWjPniqpHc.png" src-width="2334" src-height="1214" align="center"/>
 
 當發現數據需要變更時，可以點選右側 【編輯】 來操作修改數據或 【刪除】 已報送數據，此時後面一樣操作產生文件並上傳報送網站，同樣 也會取的最新的文件序列號，也一樣更新即可
 

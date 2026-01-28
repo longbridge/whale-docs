@@ -16,13 +16,13 @@ sidebar_position: 26
 - 支持單獨設置客戶賣空狀態
     主要優化功能點：
     - 支持單獨設置客戶空頭保證金可賣空狀態及規則（含批量設置入口）
-        <img src="SuEcb624Lon226xTyb1jOd7Dpwe" src-width="3240" src-height="1618" align="center"/>
+        <img src="/assets/SuEcb624Lon226xTyb1jOd7Dpwe.png" src-width="3240" src-height="1618" align="center"/>
         - 路徑：「風控管理」-「保證金」-「客戶保證金」-「空頭股票」
     - 增加客戶空頭保證金變更記錄查詢頁面
-        <img src="B0QvbYhw4oP3cqxh6yHjfDUspud" src-width="3234" src-height="1202" align="center"/>
+        <img src="/assets/B0QvbYhw4oP3cqxh6yHjfDUspud.png" src-width="3234" src-height="1202" align="center"/>
         - 路徑：「風控管理」-「保證金」-「客戶保證金」-「空頭股票」
         - 新增權限：客戶空頭保證金變更記錄查詢 `margin_ratio.account_short_records_query`
     - 空頭保證金變更記錄頁面改為由空頭保證金頁面【變更記錄】進入
-        <img src="S8LGbtWTjoCpuXxecihjCyLMpMh" src-width="3238" src-height="1342" align="center"/>
+        <img src="/assets/S8LGbtWTjoCpuXxecihjCyLMpMh.png" src-width="3238" src-height="1342" align="center"/>
         - 路徑：「風控管理」-「保證金」-「股票保證金」-「空頭保證金」
 

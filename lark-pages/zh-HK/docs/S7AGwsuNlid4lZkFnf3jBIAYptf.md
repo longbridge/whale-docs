@@ -16,7 +16,7 @@ sidebar_position: 3
 
 路徑：證券存入&gt;存入限制&gt;【新建】
 
-<img src="L5I2bHtXAoEHiQxkEjWjrb8TpEh" src-width="3326" src-height="1468" align="center"/>
+<img src="/assets/L5I2bHtXAoEHiQxkEjWjrb8TpEh.png" src-width="3326" src-height="1468" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -32,5 +32,5 @@ sidebar_position: 3
 
 答：路徑：證券存入&gt;郵件發送記錄
 
-<img src="Og8obaFCXouGAfxMqyEjq0Y9pwb" src-width="3320" src-height="1782" align="center"/>
+<img src="/assets/Og8obaFCXouGAfxMqyEjq0Y9pwb.png" src-width="3320" src-height="1782" align="center"/>
 
