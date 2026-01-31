@@ -46,7 +46,7 @@ System functional architecture
 
 ## Business Parameter Configuration
 
-The Business Parameter Configuration menu initializes the currency exchange functionality. Users must perform one or more configurations according to actual exchange业务 conditions to ensure the accuracy and efficiency of exchanges.
+The Business Parameter Configuration menu initializes the currency exchange functionality. Users must perform one or more configurations according to actual exchange 业务 conditions to ensure the accuracy and efficiency of exchanges.
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
