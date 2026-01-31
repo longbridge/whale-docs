@@ -14,7 +14,7 @@ sidebar_position: 2
 <p>❓ Q: What are the possible causes of an exchange failure?</p>
 </div>
 
-A: Please check the following items in order: Is the currency exchange feature enabled? → Does the configured currency pair include the target currency? → Is the exchange pool quota sufficient? → Has a large-amount review not been completed?。
+A: Please check the following items in order: Is the currency exchange feature enabled? → Does the configured currency pair include the target currency? → Is the exchange pool quota sufficient? → Has a large-amount review not been completed?.
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
