@@ -297,7 +297,7 @@ KYC 流程通常涉及不同的人员和审核步骤，以确保客户的身份�
     <img src="/assets/AKjxbaHcaoXH1xxsLvOjKNO2pYW.png" src-width="3258" src-height="1818" align="center"/>
     帐户类型：可选择开通融资帐户、现金帐户，系统支持同时多开帐户
     ```text
-<!-- Missing image: 4c8a4766fbc938e9f2dc1b6a1f86d2bf.png -->
+![image.png](/assets/4c8a4766fbc938e9f2dc1b6a1f86d2bf.png)
 
 
  其他配置资讯，包括：是否接收线下结单 /经纪人 /见证员工姓名 /牌照号码 /证券号码（可自定义输入客户帐号） /客户声明资讯确认
