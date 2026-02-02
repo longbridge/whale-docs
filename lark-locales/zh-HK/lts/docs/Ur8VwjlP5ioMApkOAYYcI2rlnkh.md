@@ -297,7 +297,7 @@ KYC 流程通常涉及不同的人員和審核步驟，以確保客戶的身份�
     <img src="/assets/AKjxbaHcaoXH1xxsLvOjKNO2pYW.png" src-width="3258" src-height="1818" align="center"/>
     帳戶類型：可選擇開通融資帳戶、現金帳戶，系統支持同時多開帳戶
     ```text
-<!-- Missing image: 4c8a4766fbc938e9f2dc1b6a1f86d2bf.png -->
+![image.png](/assets/4c8a4766fbc938e9f2dc1b6a1f86d2bf.png)
 
 
  其他配置資訊，包括：是否接收線下結單 /經紀人 /見證員工姓名 /牌照號碼 /證券號碼（可自定義輸入客戶帳號） /客戶聲明資訊確認
