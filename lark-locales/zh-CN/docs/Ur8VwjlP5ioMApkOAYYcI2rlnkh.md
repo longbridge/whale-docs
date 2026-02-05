@@ -182,45 +182,27 @@ KYC 流程通常涉及不同的人员和审核步骤，以确保客户的身份�
 
 选择客户/新建客户
 
-```text
 选择客户：选择已注册客户（APP 用户），可通过客户编号、电话、email、真实姓名、身份证进行搜索
 
+<img src="/assets/SMS4b92yPoFM9ex1CoZjnlTWpse.png" src-width="2048" src-height="737" align="center"/>
 
-![image.png](/assets/295931f44224a68f2982866dffeecd07.png)
-
-
-    新建客户：未在系统注册的客户，可通过本作业创建。当前系统提供了多元的登录方式供选择：
-
-
-    **系统预设产生 APP 帐号登录**
-
-
-    **手机号码验证码登录**
-
-
-    **邮箱验证登入**
-
-
-![image.png](/assets/1bab0bb3218db09805426400f2287561.png)
-```
+新建客户：未在系统注册的客户，可通过本作业创建。当前系统提供了多元的登录方式供选择：
+<b>系统预设产生 APP 帐号登录</b>
+<b>手机号码验证码登录</b>
+<b>邮箱验证登入</b>
+<img src="/assets/IXwUbYoIzoMGMxxc6tdjU3M3p6f.png" src-width="2048" src-height="747" align="center"/>
 
 选择客户类型，可选择： 个人客户 /联名客户 /企业客户
 
-```text
-![image.png](/assets/7ca317fa05d6f2a4effbcdd85c92d317.png)
-
+<img src="/assets/HTXMb2ucLo5ztqxWxjuj6eFrpig.png" src-width="2048" src-height="622" align="center"/>
 
 注意: 若是企业帐户,可以修改预设的公司户的CRS 企业实体类型
 
-
-![image.png](/assets/9ba97492a609870942d8120ce5aed620.png)
-```
+<img src="/assets/BNQPbDzwFopAVYxSYRRj2Bb0pDf.png" src-width="2048" src-height="977" align="center"/>
 
 选择客户国籍，系统支持 200 + 国籍
 
-```text
-![image.png](/assets/fe27d219cf5adee88ecbcaa8ef9827f8.png)
-```
+<img src="/assets/JFyYbMcJFoQRakxQaBlj707GpRh.png" src-width="2048" src-height="740" align="center"/>
 
 ### <b>第二步</b>：上传身份证件
 
@@ -258,17 +240,13 @@ KYC 流程通常涉及不同的人员和审核步骤，以确保客户的身份�
 
 纳税资讯，需填写用户纳税的国家/地区及纳税编号，最多支持填写 10 个。包含以下字段： 纳税国家/地区  与 纳税人编号
 
-```text
-![image.png](/assets/9cac949f1ff0e544269b6d01a4918d60.png)
-```
+<img src="/assets/EGAsbS2KDogIgPxwOCxjRJ5tpxw.png" src-width="2048" src-height="901" align="center"/>
 
 电子邮箱：用户用于接收结单、通知等通知。一个 App 的用户邮箱唯一
 
 填写联系手机号，多个客户可使用相同的联系手机号
 
-```text
-![image.png](/assets/00bff715dd8c81be61faa5867965e2f6.png)
-```
+<img src="/assets/GzxdbnGmDoBYuwxT5QTjekq4p2c.png" src-width="2048" src-height="897" align="center"/>
 
 ### <b>第五步</b>：填写资产投资信息
 
@@ -296,13 +274,7 @@ KYC 流程通常涉及不同的人员和审核步骤，以确保客户的身份�
 2. 业务人员可列印文件让客户签字
     <img src="/assets/AKjxbaHcaoXH1xxsLvOjKNO2pYW.png" src-width="3258" src-height="1818" align="center"/>
     帐户类型：可选择开通融资帐户、现金帐户，系统支持同时多开帐户
-    ```text
-![image.png](/assets/4c8a4766fbc938e9f2dc1b6a1f86d2bf.png)
-
-
- 其他配置资讯，包括：是否接收线下结单 /经纪人 /见证员工姓名 /牌照号码 /证券号码（可自定义输入客户帐号） /客户声明资讯确认
-
-
-     ![image.png](/assets/45355a4611e8abcfa535cb7fb42584fa.png)
-```
-
+    <img src="/assets/FS0SbIgyLoRDOtxa7HIjH39ApFd.png" src-width="2048" src-height="1041" align="center"/>
+    其他配置资讯，包括：是否接收线下结单 /经纪人 /见证员工姓名 /牌照号码 /证券号码（可自定义输入客户帐号） /客户声明资讯确认
+    <img src="/assets/HPVlbTb0goeGuzxFViGjMJ6apce.png" src-width="2048" src-height="1027" align="center"/>
+    

@@ -182,45 +182,27 @@ KYC 流程通常涉及不同的人員和審核步驟，以確保客戶的身份�
 
 選擇客戶/新建客戶
 
-```text
 選擇客戶：選擇已註冊客戶（APP 用戶），可通過客戶編號、電話、email、真實姓名、身份證進行搜索
 
+<img src="/assets/SMS4b92yPoFM9ex1CoZjnlTWpse.png" src-width="2048" src-height="737" align="center"/>
 
-![image.png](/assets/295931f44224a68f2982866dffeecd07.png)
-
-
-    新建客戶：未在系統註冊的客戶，可通過本作業創建。當前系統提供了多元的登錄方式供選擇：
-
-
-    **系統預設產生 APP 帳號登錄**
-
-
-    **手機號碼驗證碼登錄**
-
-
-    **郵箱驗證登入**
-
-
-![image.png](/assets/1bab0bb3218db09805426400f2287561.png)
-```
+新建客戶：未在系統註冊的客戶，可通過本作業創建。當前系統提供了多元的登錄方式供選擇：
+<b>系統預設產生 APP 帳號登錄</b>
+<b>手機號碼驗證碼登錄</b>
+<b>郵箱驗證登入</b>
+<img src="/assets/IXwUbYoIzoMGMxxc6tdjU3M3p6f.png" src-width="2048" src-height="747" align="center"/>
 
 選擇客戶類型，可選擇： 個人客戶 /聯名客戶 /企業客戶
 
-```text
-![image.png](/assets/7ca317fa05d6f2a4effbcdd85c92d317.png)
-
+<img src="/assets/HTXMb2ucLo5ztqxWxjuj6eFrpig.png" src-width="2048" src-height="622" align="center"/>
 
 注意: 若是企業帳戶,可以修改預設的公司戶的CRS 企業實體類型
 
-
-![image.png](/assets/9ba97492a609870942d8120ce5aed620.png)
-```
+<img src="/assets/BNQPbDzwFopAVYxSYRRj2Bb0pDf.png" src-width="2048" src-height="977" align="center"/>
 
 選擇客戶國籍，系統支持 200 + 國籍
 
-```text
-![image.png](/assets/fe27d219cf5adee88ecbcaa8ef9827f8.png)
-```
+<img src="/assets/JFyYbMcJFoQRakxQaBlj707GpRh.png" src-width="2048" src-height="740" align="center"/>
 
 ### <b>第二步</b>：上傳身份證件
 
@@ -258,17 +240,13 @@ KYC 流程通常涉及不同的人員和審核步驟，以確保客戶的身份�
 
 納稅資訊，需填寫用戶納稅的國家/地區及納稅編號，最多支持填寫 10 個。包含以下字段： 納稅國家/地區  與 納稅人編號
 
-```text
-![image.png](/assets/9cac949f1ff0e544269b6d01a4918d60.png)
-```
+<img src="/assets/EGAsbS2KDogIgPxwOCxjRJ5tpxw.png" src-width="2048" src-height="901" align="center"/>
 
 電子郵箱：用戶用於接收結單、通知等通知。一個 App 的用戶郵箱唯一
 
 填寫聯繫手機號，多個客戶可使用相同的聯繫手機號
 
-```text
-![image.png](/assets/00bff715dd8c81be61faa5867965e2f6.png)
-```
+<img src="/assets/GzxdbnGmDoBYuwxT5QTjekq4p2c.png" src-width="2048" src-height="897" align="center"/>
 
 ### <b>第五步</b>：填寫資產投資信息
 
@@ -296,13 +274,7 @@ KYC 流程通常涉及不同的人員和審核步驟，以確保客戶的身份�
 2. 業務人員可列印文件讓客戶簽字
     <img src="/assets/AKjxbaHcaoXH1xxsLvOjKNO2pYW.png" src-width="3258" src-height="1818" align="center"/>
     帳戶類型：可選擇開通融資帳戶、現金帳戶，系統支持同時多開帳戶
-    ```text
-![image.png](/assets/4c8a4766fbc938e9f2dc1b6a1f86d2bf.png)
-
-
- 其他配置資訊，包括：是否接收線下結單 /經紀人 /見證員工姓名 /牌照號碼 /證券號碼（可自定義輸入客戶帳號） /客戶聲明資訊確認
-
-
-     ![image.png](/assets/45355a4611e8abcfa535cb7fb42584fa.png)
-```
-
+    <img src="/assets/FS0SbIgyLoRDOtxa7HIjH39ApFd.png" src-width="2048" src-height="1041" align="center"/>
+    其他配置資訊，包括：是否接收線下結單 /經紀人 /見證員工姓名 /牌照號碼 /證券號碼（可自定義輸入客戶帳號） /客戶聲明資訊確認
+    <img src="/assets/HPVlbTb0goeGuzxFViGjMJ6apce.png" src-width="2048" src-height="1027" align="center"/>
+    
