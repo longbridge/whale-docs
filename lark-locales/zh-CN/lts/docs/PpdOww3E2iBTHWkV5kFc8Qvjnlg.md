@@ -40,7 +40,7 @@ Whale KYC 系统支持处理客户的开户资料相关的流程，包括 开户
 
 <img src="/assets/H8KQbcCH8oXhRsxuf20jAEGLpWd.png" src-width="2916" src-height="1405" align="center"/>
 
-1. 当前步骤审核驳回
+2. 当前步骤审核驳回
 
 选择驳回原因和驳回页面，驳回至客户，客户可重新更新后再提交申请
 

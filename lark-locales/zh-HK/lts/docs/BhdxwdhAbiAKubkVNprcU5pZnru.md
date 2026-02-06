@@ -59,19 +59,19 @@ Whale 的賬戶管理模塊提供了對客戶賬戶的綜合管理和操作功�
 
 其中申報邏輯：上報的數據是 已開通帳戶、有 BCAN 碼且同意授權協議的全量客戶，申報給港交易所後，獲取交易所返回的檔內容，將 BCAN 生效的狀態同步更新；
 
-1. <b>若是劵商是 EP 租戶</b>： 本作業是支持自動申報上傳（透過 SFTP 的 SDNet/2 线路）
-    SFTP 申報方式說明如下：
-    - 交易日 08:00 am- 03:00 pm 時間段內，自動生成 BCAN-CID 檔
-    - 產生檔案後自動通過 SFTP 的方式提交給交易所
-    - 交易所返回的應答檔展示在後台，支持下載
-    - 返回的全景檔自動解析，將客戶的 BCAN 狀態自動更新
+<b>1.</b> <b>若是劵商是 EP 租戶</b>： 本作業是支持自動申報上傳（透過 SFTP 的 SDNet/2 线路）
+SFTP 申報方式說明如下：
+- 交易日 08:00 am- 03:00 pm 時間段內，自動生成 BCAN-CID 檔
+- 產生檔案後自動通過 SFTP 的方式提交給交易所
+- 交易所返回的應答檔展示在後台，支持下載
+- 返回的全景檔自動解析，將客戶的 BCAN 狀態自動更新
 
 <img src="/assets/S1tobBzKso858uxufdzjZ1Qrp6d.png" src-width="3250" src-height="1542" align="center"/>
 
-1. <b>若是劵商是 OB 租戶</b>： 是要手動產生 BCAN-CID 檔後，再人工透過 SFC Web ECP 網站上傳資料
-    SFC Wings 申報方式說明如下：
-    <img src="/assets/VBDvb22Kvo3t9Gxig8WjqWbCpee.png" src-width="3222" src-height="1618" align="center"/>
-    - 通过本作業先行下载申报文件
+<b>2.</b> <b>若是劵商是 OB 租戶</b>： 是要手動產生 BCAN-CID 檔後，再人工透過 SFC Web ECP 網站上傳資料
+SFC Wings 申報方式說明如下：
+<img src="/assets/VBDvb22Kvo3t9Gxig8WjqWbCpee.png" src-width="3222" src-height="1618" align="center"/>
+- 通过本作業先行下载申报文件
 
 - 去 ECP 2.0 SFC 入口官网上傳申報文件，将交易所返回的全景文件導入后台
 

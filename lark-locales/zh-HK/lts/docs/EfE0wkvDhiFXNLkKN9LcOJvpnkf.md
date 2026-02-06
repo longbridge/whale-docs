@@ -12,15 +12,15 @@ sidebar_position: 2
 ## 客戶列表查詢
 
 1. 打開「客戶列表」組件，支持三個維度的搜索條件
-    1. 客戶搜索：可通過證券帳號、中文名、英文名、經紀人、證件ID、手機號、郵箱
-    2. 帳戶類型：Cash、Margin 帳戶
-    3. 帳戶狀態：未激活、激活、系統賬號、輝立舊賬號、廢棄、凍結
+1. 客戶搜索：可通過證券帳號、中文名、英文名、經紀人、證件ID、手機號、郵箱
+2. 帳戶類型：Cash、Margin 帳戶
+3. 帳戶狀態：未激活、激活、系統賬號、輝立舊賬號、廢棄、凍結
 
 <img src="/assets/L3mybtuW1oiuBkxl8ysjUtpvpue.png" src-width="2746" src-height="462" align="center"/>
 
 <img src="/assets/QbSnbEl5DoWKO5xF9zHjT30vpAg.png" src-width="634" src-height="598" align="center"/>
 
-1. 列表默認展示當前交易員/經紀人管理的全部帳戶，可通過查詢條件篩選需查看的帳戶情況
+2. 列表默認展示當前交易員/經紀人管理的全部帳戶，可通過查詢條件篩選需查看的帳戶情況
 
 # 客戶信息組件
 

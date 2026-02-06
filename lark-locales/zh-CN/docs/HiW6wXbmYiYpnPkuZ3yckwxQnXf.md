@@ -225,9 +225,7 @@ Whale系统包含了处理入金申请、匹配银行流水、入金审核、单
 
 <img src="/assets/Ns26bUaCMolWVuxt2BZjiABspog.png" src-width="3904" src-height="1950" align="center"/>
 
-```text
-- 如系统预设匹配的用户不准，可透过【自定义】手动关联该笔银行流水所对应的客户。关联的方式有：入金的申请与证券账号
-```
+如系统预设匹配的用户不准，可透过【自定义】手动关联该笔银行流水所对应的客户。关联的方式有：入金的申请与证券账号
 
 <img src="/assets/SvS7b8jOsoynvIxCXnUj8uQzp2c.png" src-width="3308" src-height="1776" align="center"/>
 

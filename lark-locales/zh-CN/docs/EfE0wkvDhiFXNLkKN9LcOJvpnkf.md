@@ -12,15 +12,15 @@ sidebar_position: 2
 ## 客户列表查询
 
 1. 打开「客户列表」组件，支持三个维度的搜索条件
-    1. 客户搜索：可通过证券帐号、中文名、英文名、经纪人、证件ID、手机号、邮箱
-    2. 帐户类型：Cash、Margin 帐户
-    3. 帐户状态：未激活、激活、系统账号、辉立旧账号、废弃、冻结
+1. 客户搜索：可通过证券帐号、中文名、英文名、经纪人、证件ID、手机号、邮箱
+2. 帐户类型：Cash、Margin 帐户
+3. 帐户状态：未激活、激活、系统账号、辉立旧账号、废弃、冻结
 
 <img src="/assets/L3mybtuW1oiuBkxl8ysjUtpvpue.png" src-width="2746" src-height="462" align="center"/>
 
 <img src="/assets/QbSnbEl5DoWKO5xF9zHjT30vpAg.png" src-width="634" src-height="598" align="center"/>
 
-1. 列表默认展示当前交易员/经纪人管理的全部帐户，可通过查询条件筛选需查看的帐户情况
+2. 列表默认展示当前交易员/经纪人管理的全部帐户，可通过查询条件筛选需查看的帐户情况
 
 # 客户信息组件
 

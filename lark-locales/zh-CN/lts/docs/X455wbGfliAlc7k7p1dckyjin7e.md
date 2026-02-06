@@ -70,11 +70,11 @@ sidebar_position: 0
 
 <img src="/assets/BCf4bfAsqouBgxxBRERjJKItp1b.png" src-width="2866" src-height="1610" align="center"/>
 
-1. 在相关「代理商计费-股票交易」设置收费。
+2. 在相关「代理商计费-股票交易」设置收费。
 
 <img src="/assets/LZJcbV6FNocWWPxqaZhjZSj8pcb.png" src-width="2836" src-height="1430" align="center"/>
 
-1. 在SDR048 - Broker Contract Details报表查阅费用
+3. 在SDR048 - Broker Contract Details报表查阅费用
 
 <img src="/assets/QDUHbHvmJoUV3kxS7fSj6zyipbc.png" src-width="2848" src-height="1214" align="center"/>
 

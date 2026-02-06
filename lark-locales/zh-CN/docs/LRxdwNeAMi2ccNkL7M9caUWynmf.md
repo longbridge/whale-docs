@@ -30,9 +30,7 @@ WHALE的客户银行卡指用户自己在 App 端，或后台人工代替用户�
 
 <img src="/assets/ItHjbhQbZoATzTxGPqhjKWQkpDg.png" src-width="3814" src-height="1854" align="center"/>
 
-```text
 点选【批量新增】，可以依照模板批次进行银行卡资讯的增加
-```
 
 <img src="/assets/TQ8Xbpy4MoVAmWxL3OYjf4Zsp0f.png" src-width="3832" src-height="760" align="center"/>
 
