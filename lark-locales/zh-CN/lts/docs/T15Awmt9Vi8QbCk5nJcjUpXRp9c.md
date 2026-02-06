@@ -7,12 +7,6 @@ sidebar_position: 0
 
 # 系统介绍
 
-[Document original - 原始文档](https://longbridge.larkenterprise.com/docx/G3Z4dORm8oqnXixF1rMcXDjBn1f)
-
-Creator - zhenzhi.fan@longbridge-inc.com
-
----
-
 活动系统是 Whale OPA 运营系统所提供营销活动管理核心，方便劵商租户来管理各种市场营销活动，提供各种营销活动的配置管理，系统目前提供下列活动类型组：
 - 标准活动类型：邀请活动/基础活动/组队活动等等
 - 非标准活动管理：提供自主的活动管理要素，方便满足安排个性化活动

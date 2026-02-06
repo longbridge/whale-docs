@@ -7,12 +7,6 @@ sidebar_position: 1
 
 # 快速上手
 
-[Document original - 原始文档](https://longbridge.larkenterprise.com/docx/OTlOdlO2soAQdcxtGdWcbY0Knrf)
-
-Creator - fan.zhang@longbridge-inc.com
-
----
-
 ## 前置條件
 
 您需要獲取以下授權後方可正常使用活動系統
