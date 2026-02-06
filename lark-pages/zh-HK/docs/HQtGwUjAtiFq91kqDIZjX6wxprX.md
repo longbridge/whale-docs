@@ -105,7 +105,7 @@ sidebar_position: 1
 _1.2G 圖一_
 ```
 
-1. 「工單信息」的「風險等級」默認為「低風險」，需要後台操作人員判斷去更新。
+2.「工單信息」的「風險等級」默認為「低風險」，需要後台操作人員判斷去更新。
 
 <img src="/assets/OL71b1lT9oYi7cxzhIUjympapVn.png" src-width="2356" src-height="904" align="center"/>
 
@@ -113,7 +113,7 @@ _1.2G 圖一_
 _1.2G 圖二_
 ```
 
-1. 客戶自行在APP進行的風險評測則在「風險測評」顯示。
+3. 客戶自行在APP進行的風險評測則在「風險測評」顯示。
 
 <img src="/assets/U7Vhb2GAnogDRtxRdnGjvSR8pch.png" src-width="2376" src-height="718" align="center"/>
 

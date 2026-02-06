@@ -14,12 +14,9 @@ sidebar_position: 3
 <p>❓ 港美股多市场如何操作日终？</p>
 </div>
 
-```text
 配置两个市场清算，美股市场设置为隔夜市场
 
-
 每天早上执行上日的美股市场清算，下午执行港股市场清算以及日终清算
-```
 
 <img src="/assets/H3htblxnioaqlFx6rFVjSzNtphg.png" src-width="3574" src-height="1774" align="center"/>
 
@@ -28,21 +25,16 @@ sidebar_position: 3
 <p>❓ 港美股的结单如何分别生成？</p>
 </div>
 
-```text
 港美股的使用同一个账户进行交易。所以结单是统一生成的，不支持分市场生成
-```
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
 <p>❓ 港、美股时区不一致，怎么解决？</p>
 </div>
 
-```text
 在市场管理中将美股市场配置为隔夜市场
 
-
 则在28日清算中会处理28日的港股交易、27日（美国时区）的美股交易
-```
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -111,15 +103,11 @@ sidebar_position: 3
 <p>❓ 平时可否在日切点前进行清算？</p>
 </div>
 
-```text
 可以，但是必须在公有库的行情文件文件到位后进行。
-
 
 例子：券商的日切时间点是下午17:00。非半日市在16:30之前可以进行提前日切。但是，因为港股未收市，港股的股票信息和收盘价数据是没有的，一直需要等到16:30后才能执行日终任务。
 
-
-**所以，非半日市或者非港股假日，不建议在16:30之前操作提前日切**
-```
+所以，非半日市或者非港股假日，不建议在16:30之前操作提前日切
 
 <img src="/assets/KKg8br5FeoV91zxlzhBjLMJgpwb.png" src-width="3584" src-height="1764" align="center"/>
 
@@ -157,27 +145,20 @@ sidebar_position: 3
 <p>❓ 如何新增费用，什么是收费场景？</p>
 </div>
 
-```text
 费用由技术人员直接添加，券商可基于费用添加收费场景
 
-
 场景场景是计费配置的基础元素，代表这个费用在系统中是否被正式启用。系统基于收费场景设置了一些便捷功能
-```
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
 <p>❓ 修改股票交易费用配置后，何时生效；怎么判断是否生效？</p>
 </div>
 
-```text
 请在对应市场的清算计费步骤前，修改收费规则后。修改后10分钟内生效
-
 
 可以在客户计费查询页面（路径：业务参数设置-计费管理-客户计费查询），此页面查询的数据为最新数据
 
-
 如果想提前生效，可点击**刷新配置**按钮
-```
 
 <img src="/assets/Q7VAbOgnxoofX8x7X1SjfpUSpMb.png" src-width="2854" src-height="1358" align="center"/>
 
@@ -219,15 +200,11 @@ sidebar_position: 3
 <p>❓ 某一客户针对WTT下单的渠道想要收取更高的费用，如何处理？</p>
 </div>
 
-```text
 如果是只想针对某一客户设置，在**客户计费**（路径：计费管理-客户计费）页面添加客户计费。普通收费设置为标准费率，同时添加WTT的特殊收费并设置相应费率。
-
 
 如果是只想针对某一客户组设置，在**客户组计费**（路径：计费管理-客户组计费）页面的普通客户组添加计费。普通收费设置为标准费率，同时添加WTT的特殊收费并设置相应费率。
 
-
 如果是只想针对全部客户，在**客户组计费**（路径：计费管理-客户组计费）页面的全**局客户组**添加计费。普通收费设置为标准费率，同时添加WTT的特殊收费并设置相应费率。
-```
 
 <img src="/assets/MhYDbwEvdo1FIHxAMlgjlul0p7c.png" src-width="3578" src-height="1798" align="center"/>
 
@@ -238,18 +215,14 @@ sidebar_position: 3
 <p>❓ 公共标的库和私有标的区别？</p>
 </div>
 
-```text
 公共标库的信息由Whale依据港交所等数据进行加工处理，券商仅拥有临时修改的权限；私有库的信息则由券商自行维护全部内容。
-```
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
 <p>❓ 如何临时修改公有库的信息？</p>
 </div>
 
-```text
 当日券商可对公共标库中的标的进行临时修改，并需及时将修改后的信息反馈给Whale客服，以便进行后续的数据更新与维护。
-```
 
 <img src="/assets/OCAZbnxd2oyVG6xFy1VjIDBgpyb.png" src-width="2864" src-height="1368" align="center"/>
 
@@ -262,15 +235,10 @@ sidebar_position: 3
 
 数据同步后可进行操作：
 
-```text
 若在数据汇总前进行操作，无需额外处理。
 
-
 若在资金清算前进行操作，需重新执行数据汇总及清算检查。
-
-
 资金清算后，则不可进行修改。
-```
 
 <img src="/assets/E7GlbWdU1oc3jbxY6x4jBlv8pcd.png" src-width="2864" src-height="1368" align="center"/>
 
@@ -348,48 +316,33 @@ sidebar_position: 3
 <p>❓ 为什么会有多种对账模式？</p>
 </div>
 
-```text
 不同上手在提供交易文件时，会有不同的格式和字段。不同上手会有不同的对账模式。常用的对账模式有成交对账、订单对账、股票对账。不管是哪类都会对交易数量和交易金额（交易数量*成交价格）进行对账
-
 
 成交对账：基于成交流水号进行配对，会比对交易数量和交易金额
 
-
 订单对账：基于订单号进行配对，多笔成交的会进行汇总
 
-
 股票对账：基于股票进行配对，多笔成交的会进行汇总
-```
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
 <p>❓ 前后台补单后，因为没有流水号，会出现不平账，该如何处理？</p>
 </div>
 
-```text
 处理方案一：借助SDR015-2报表。查看第三模块，人工比对不平账，看看基于股票的对账是否平账。如果平账的人工通过
-```
 
 <img src="/assets/Gfg5bG3hpogAT8xtZTfjJpNcpFd.png" src-width="3584" src-height="1696" align="center"/>
 
-```text
 处理方案二：开启模糊对账功能
 
-
 在清算参数配置打开模糊对账功能。
-```
 
 <img src="/assets/YLaLbO4gvoOdO1xybBzjquoMpNb.png" src-width="3584" src-height="1696" align="center"/>
 
-```text
 如果有不平账，系统会自动按股票重新对账
 
-
 如果“按股票对账”进行重新对账后，结果为平账的，系统会将“按股票对账的结果”处理为平账。反之，“按股票对账的结果”依然为不平账
-
-
 如果“按股票对账的结果”为平账的，清算检查自动通过
-```
 
 <img src="/assets/M7IvbwOxZolNnExJYyFjodp7p6b.png" src-width="3584" src-height="1696" align="center"/>
 
@@ -400,20 +353,14 @@ sidebar_position: 3
 
 <b>开通</b>
 
-```text
 EP模式的券商，可联系客服开通。开通后每个交易日，系统会自动从港交所的SFTP获取交易文件
-```
 
 <img src="/assets/JH1HbolHXo9cBGxb92rjQm9Vpeh.png" src-width="3584" src-height="1764" align="center"/>
 
 <b>到点文件没有</b>
 
-```text
 系统会从下午13:00开始，自动获取港交所文件。如果一直没获取到文件的（手动导入的也算导入），每隔10分钟跑一次，一直跑到下午5点
-
-
 如果租户在16点35后（或半日市的13:05后），发现系统没自动导入的，可人工手动导入
-```
 
 # 持仓对账
 
@@ -422,30 +369,21 @@ EP模式的券商，可联系客服开通。开通后每个交易日，系统会
 <p>❓ 什么时候进行持仓对账？</p>
 </div>
 
-```text
 港股市场在下一日对上一个的持仓。在上一日日切且收到文件后进行
 
-
 美股市场因为是隔夜市场，可在当前账务日期对当日的账。最早可在清算交收步骤后进行
-```
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
 <p>❓ 持仓对账任务是如何触发的？？</p>
 </div>
 
-```text
 文件类型标记为触发持仓对账的文件，在导入后可自动触发持仓对账
-
-
 注意如果是OB模式，当日就要触发持仓对账的，请在清算交收后再导入持仓文件
-```
 
 <img src="/assets/AICWbsjEvovBz7xIGrejoWPQpif.png" src-width="3572" src-height="1662" align="center"/>
 
-```text
 如果持仓文件未支持“自动触发持仓对账”，可在持仓对账页面点击“重新对账”
-```
 
 <img src="/assets/CGd1bmpoHoR2QPxr6cPjitLapmf.png" src-width="3572" src-height="1662" align="center"/>
 
@@ -454,9 +392,7 @@ EP模式的券商，可联系客服开通。开通后每个交易日，系统会
 <p>❓ 非交易日是否需要发起持仓对账？</p>
 </div>
 
-```text
 不需要，系统也不支持发起持仓对账
-```
 
 <img src="/assets/NV7XbqXjEodpJuxOlrIjL4qnpHA.png" src-width="3572" src-height="1662" align="center"/>
 
@@ -465,15 +401,11 @@ EP模式的券商，可联系客服开通。开通后每个交易日，系统会
 <p>❓ 持仓对账不平后，如何进行确认？</p>
 </div>
 
-```text
 根据不平账明细，查找是否有漏做的转仓、公司行动等操作
-```
 
 <img src="/assets/ONWrbX9PAovXsrxK4WAjC14vphd.png" src-width="3572" src-height="1662" align="center"/>
 
-```text
 逐项确认完毕后，在检查结果页面点击通过
-```
 
 <img src="/assets/DN8HbytP6oqBlnxFlQAjXCVUpWc.png" src-width="3572" src-height="1662" align="center"/>
 
@@ -488,30 +420,21 @@ EP模式的券商，可联系客服开通。开通后每个交易日，系统会
 <p>❓ 港股市场如何让用户可以在早上提现？</p>
 </div>
 
-```text
 方式一：可以打开“11点的港股自动交收”、“US日切后自动交收”任务
 
-
 路径：业务参数设置-日终设置-清算参数配置
-```
 
 <img src="/assets/Gw9Cb665polOjGxubF4jFFQBpch.png" src-width="3570" src-height="1774" align="center"/>
 
-```text
 方式二：手工操作提前交收
 
-
-路径：清算管理> 市场清算>交收系统>交收批次 Tab 页签
-
+路径：清算管理&gt; 市场清算&gt;交收系统&gt;交收批次 Tab 页签
 
 点选【提前交收】，输入欲提早交收的市场（可多选）
-```
 
 <img src="/assets/FPWvbSb5voFQqSxqsfXjBKoYpRe.png" src-width="3364" src-height="1450" align="center"/>
 
-```text
 操作后可观察交收批次是否处理完毕
-```
 
 <img src="/assets/OS1Lb9GnpoWFtFxOup8jF6ccplb.png" src-width="2516" src-height="740" align="center"/>
 
@@ -522,27 +445,24 @@ EP模式的券商，可联系客服开通。开通后每个交易日，系统会
 <p>❓ 切换上手后，在系统进行内部转仓？</p>
 </div>
 
-```text
-**方式一：单笔操作**
-
+<b>方式一：单笔操作</b>
 
 操作路径：清算管理-仓位管理-仓位查询
 
+a.<b>筛选数据</b> 
 
-a.**筛选数据**
+日期范围： 设定为「当前账务日」以筛选出当日相关资料。
 
-- 日期范围： 设定为「当前账务日」以筛选出当日相关资料。
-- 其他条件： 如有需要，可进一步筛选客户、股票等条件，以缩小查询范围
+其他条件： 如有需要，可进一步筛选客户、股票等条件，以缩小查询范围
+<b>b.执行内部转仓</b> 
 
-**b.执行内部转仓**
+**逐一处理：** 针对每一个客户、每一个股票，分别执行内部转仓操作
 
-- **逐一处理：** 针对每一个客户、每一个股票，分别执行内部转仓操作
+<b>c.注意事项</b> 
 
-**c.注意事项**
+在清算中检查前操作
 
-- 在清算中检查前操作
-- 即使之后撤销了清算，系统仍会保留此次操作的记录
-```
+即使之后撤销了清算，系统仍会保留此次操作的记录
 
 <img src="/assets/UxHeb0qGeotgzlxaEjZj4Hc1pxb.png" src-width="3570" src-height="1774" align="center"/>
 
@@ -550,34 +470,37 @@ a.**筛选数据**
 
 <b>方式二：批量操作</b>
 
-```text
-- 操作路径：清算管理-仓位管理-仓位查询
-- 在清算中检查前操作
-- 即使之后撤销了清算，系统仍会保留此次操作的记录
-```
+操作路径：清算管理-仓位管理-仓位查询
+
+在清算中检查前操作
+
+即使之后撤销了清算，系统仍会保留此次操作的记录
 
 <img src="/assets/QJitbmoHEoEkqSxkKNwj355fpBq.png" src-width="3570" src-height="1774" align="center"/>
 
-```text
-**修改子仓模板**
+<b>修改子仓模板</b> 
 
-- 字段说明如下图
-- 按图示的文档
-    - 系统将找到香港市场H123456客户托管在U123445的持仓，并全部转到U23333的持仓上
-- 注意事项：上传修改子仓的模板后，系统将同时修改待交收的合约
-```
+字段说明如下图
+
+按图示的文档
+
+系统将找到香港市场H123456客户托管在U123445的持仓，并全部转到U23333的持仓上
+
+注意事项：上传修改子仓的模板后，系统将同时修改待交收的合约
 
 <img src="/assets/XeS3b6igOo23t2xWPYCjTjk5pTd.png" src-width="3570" src-height="1774" align="center"/>
 
-```text
-**基础仓位调整**
+<b>基础仓位调整</b> 
 
-- 字段说明如下图
-- 按图示的文档
-    - 系统会将客户H1000001在托管商ID1子仓3上的ST/HK/700将减少1000股；
-    - 系统会将客户H1000001在托管商ID1子仓4上的ST/HK/700将增加1000股
-- 基础仓位调整的模板，将不会修改待交收的合约。基础仓位调整的模板，可同时调整Sreet、Nominee、Own。用来操作内部转仓时，必须有配套的数据（两条）
-```
+字段说明如下图
+
+按图示的文档
+
+系统会将客户H1000001在托管商ID1子仓3上的ST/HK/700将减少1000股；
+
+系统会将客户H1000001在托管商ID1子仓4上的ST/HK/700将增加1000股
+
+基础仓位调整的模板，将不会修改待交收的合约。基础仓位调整的模板，可同时调整Sreet、Nominee、Own。用来操作内部转仓时，必须有配套的数据（两条）
 
 <img src="/assets/N4a1bldtToJWsvx9OWDjrdDlpwb.png" src-width="3570" src-height="1774" align="center"/>
 

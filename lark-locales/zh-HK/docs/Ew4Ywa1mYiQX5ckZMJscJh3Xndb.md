@@ -39,23 +39,23 @@ sidebar_position: 19
 
 <img src="/assets/QuWhbrwyGosmNRxzSSfjgO7rpUf.png" src-width="2826" src-height="870" align="center"/>
 
-1. 然後到「運營計劃」中創建計劃
+2. 然後到「運營計劃」中創建計劃
 
 <img src="/assets/XhYybhTCJoAhzYxOVVLjUYSJpUL.png" src-width="2840" src-height="880" align="center"/>
 
-1. 選擇「定時型-單次」和「觸發時間」
+3. 選擇「定時型-單次」和「觸發時間」
 
 <img src="/assets/YKVzbne5JoRemzxS2oAjRQebpgh.png" src-width="2868" src-height="1042" align="center"/>
 
-1. 選擇用戶分群
+4. 選擇用戶分群
 
 <img src="/assets/JRbwbrzTpolcjZxzzi3j2VZEpEb.png" src-width="2852" src-height="1436" align="center"/>
 
-1. 選擇「Push」及輸入內容
+5. 選擇「Push」及輸入內容
 
 <img src="/assets/Xhk0bWs7AowpiHxaP10jPO2Wpdc.png" src-width="2842" src-height="1398" align="center"/>
 
-1. 保存及審核後在「計劃列表」按「啟用」
+6. 保存及審核後在「計劃列表」按「啟用」
 
 <img src="/assets/WCHJbM9vKoBlpNxhCflj7VR0pUd.png" src-width="2790" src-height="1454" align="center"/>
 

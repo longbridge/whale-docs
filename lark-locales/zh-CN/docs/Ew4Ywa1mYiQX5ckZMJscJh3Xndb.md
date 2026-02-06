@@ -39,23 +39,23 @@ sidebar_position: 19
 
 <img src="/assets/QuWhbrwyGosmNRxzSSfjgO7rpUf.png" src-width="2826" src-height="870" align="center"/>
 
-1. 然后到「运营计划」中创建计划
+2. 然后到「运营计划」中创建计划
 
 <img src="/assets/XhYybhTCJoAhzYxOVVLjUYSJpUL.png" src-width="2840" src-height="880" align="center"/>
 
-1. 选择「定时型-单次」和「触发时间」
+3. 选择「定时型-单次」和「触发时间」
 
 <img src="/assets/YKVzbne5JoRemzxS2oAjRQebpgh.png" src-width="2868" src-height="1042" align="center"/>
 
-1. 选择用户分群
+4. 选择用户分群
 
 <img src="/assets/JRbwbrzTpolcjZxzzi3j2VZEpEb.png" src-width="2852" src-height="1436" align="center"/>
 
-1. 选择「Push」及输入内容
+5. 选择「Push」及输入内容
 
 <img src="/assets/Xhk0bWs7AowpiHxaP10jPO2Wpdc.png" src-width="2842" src-height="1398" align="center"/>
 
-1. 保存及审核后在「计划列表」按「启用」
+6. 保存及审核后在「计划列表」按「启用」
 
 <img src="/assets/WCHJbM9vKoBlpNxhCflj7VR0pUd.png" src-width="2790" src-height="1454" align="center"/>
 

@@ -40,7 +40,7 @@ Whale KYC 系統支持處理客戶的開戶資料相關的流程，包括 開戶
 
 <img src="/assets/H8KQbcCH8oXhRsxuf20jAEGLpWd.png" src-width="2916" src-height="1405" align="center"/>
 
-1. 當前步驟審核駁回
+2. 當前步驟審核駁回
 
 選擇駁回原因和駁回頁面，駁回至客戶，客戶可重新更新後再提交申請
 

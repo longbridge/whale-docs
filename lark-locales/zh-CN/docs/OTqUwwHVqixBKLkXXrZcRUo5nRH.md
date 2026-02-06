@@ -64,27 +64,19 @@ Whale 经纪人管理模块提供了对经纪人与客户关系的管理，以�
 
 「编辑」在修改经纪人分佣套餐时，支持同步修改其下客户的分佣套餐配置（可选项）
 
-```text
-![image.png](/assets/8955107676a9e210601ac77dc204354f.png)
-
+<img src="/assets/Vv07bzgIrozWw1xO9h1j5eNIplh.png" src-width="936" src-height="1662" align="center"/>
 
 「冻结」，冻结经纪人操作后，该经纪人将无法使用账号登录WTT；
 
+「下级管理」，该功能已迁移至“身份管理&gt;人员管理”，查到对应的经纪人用户进行“数据权限”的编辑；
 
-「下级管理」，该功能已迁移至“身份管理>人员管理”，查到对应的经纪人用户进行“数据权限”的编辑；
-
-
-![image.png](/assets/1de51686cccc9c730a6f9aa3325343cf.png)
-
+<img src="/assets/QHV4bz6xfoz4wFxLbUmj53XXp0b.png" src-width="3422" src-height="1840" align="center"/>
 
 在经纪人管理上新增经纪人配置：开通帐户时，若未人工分配经纪人，系统预设分配给指定经纪人；
 
-
-![image.png](/assets/8d67fb5aec1bdafd5832f89f153a7993.png)
-
+<img src="/assets/StYrbVwdJoYolMxW4JXjlWTepOf.png" src-width="3370" src-height="1226" align="center"/>
 
 在查询组件上：支持按经纪人编号或经纪人名称查询
-```
 
 ## 分成套餐设置
 
@@ -107,10 +99,9 @@ Whale 经纪人管理模块提供了对经纪人与客户关系的管理，以�
 
 特殊字段说明：
 
-```text
-- 分佣对象设置（ 劵商或经纪人）：决定配置的算法对哪个对象生效（先算哪一个）
-- 允许亏损字段（：决定在分佣金额>佣金时的处理方案，允许亏损的，计算金额可大于佣金）
-```
+分佣对象设置（ 劵商或经纪人）：决定配置的算法对哪个对象生效（先算哪一个）
+
+允许亏损字段（：决定在分佣金额&gt;佣金时的处理方案，允许亏损的，计算金额可大于佣金）
 
 <img src="/assets/CwyWbWbO7oZOP0xm62KjCsWnppc.png" src-width="3584" src-height="1738" align="center"/>
 
@@ -118,24 +109,20 @@ Whale 经纪人管理模块提供了对经纪人与客户关系的管理，以�
 
 字段说明
 
-```text
 计费方式：决定用佣金（OR交易金额）*费率算分佣金额
-
-
 阶梯统计基准：决定用佣金（OR交易金额）进行阶梯的划分
 
-
 跨阶梯处理方式：决定将统计基准统一用一个费率计算 OR 拆分成多端计算
-```
 
 注意：
 
-```text
-- 分佣币种和佣金币种不一致时，分佣的金额会根据汇率转换为分佣币种
-- 阶梯的范围为左开（不含）右闭（含）
-- 阶梯收费的最低、最高收费和主页面最低最高收费的关系
-    - 阶梯收费总体算出一个分佣金额后，再和主页面进行比较
-```
+分佣币种和佣金币种不一致时，分佣的金额会根据汇率转换为分佣币种
+
+阶梯的范围为左开（不含）右闭（含）
+
+阶梯收费的最低、最高收费和主页面最低最高收费的关系
+
+阶梯收费总体算出一个分佣金额后，再和主页面进行比较
 
 <img src="/assets/Q7bxboaLPoiOA7xLUT7jUIxipUf.png" src-width="3584" src-height="1738" align="center"/>
 
@@ -145,17 +132,13 @@ Whale 经纪人管理模块提供了对经纪人与客户关系的管理，以�
 
 案例2：按照单笔合约的交易金额进行阶梯分佣，将交易金额拆分到每个阶梯分别算
 
-```text
 交易金额为5000的，1000按第一个阶梯计费，4000（5000-1000）按第二个阶梯计费
-```
 
 <img src="/assets/VLgdbpOCyoPqlGxigNKjdAC7pZf.png" src-width="3584" src-height="1738" align="center"/>
 
 案例3：按照单笔合约的交易金额进行阶梯分佣，交易金额在哪一个阶梯，统一用哪个阶梯计费
 
-```text
 交易金额为5000的，统一按第二个阶梯计费
-```
 
 <img src="/assets/EBExbYpktotLOjxy8AsjsjT2pTg.png" src-width="3584" src-height="1738" align="center"/>
 

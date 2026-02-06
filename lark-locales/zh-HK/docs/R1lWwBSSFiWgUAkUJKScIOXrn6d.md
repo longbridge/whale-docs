@@ -261,23 +261,19 @@ Whale 基金管理系统全面支持券商维护基金库、配置App端基金�
 
 支持【编辑】基金净值
 
-```text
-> 💡 1. 更新完成后盈亏将重新计算，注意，只有修改最新的30条净值数据才会重新计算盈亏；  
->   
-> 2. 更新完成后，基金清算的渠道单在完成核对确认后的不更新；
+1. 更新完成后盈亏将重新计算，注意，只有修改最新的30条净值数据才会重新计算盈亏；
+2. 更新完成后，基金清算的渠道单在完成核对确认后的不更新；
 
 - 找到需要编辑净值的基金，点击编辑按钮
 
-    ![image.png](/assets/663d10f3fe6d166841234ca0a1224210.png)
+<img src="/assets/O2adbonIGoYYhTx4Mx6jRaHppEd.png" src-width="3334" src-height="1656" align="center"/>
 
 - 输入对应的基金净值，并点击「确定」
 
-    ![image.png](/assets/8d2b6f4229a24962ebfa60463059d0d3.png)
+<img src="/assets/Xv1Ibac2LoB3pcxnYdmjwveXpge.png" src-width="3320" src-height="1656" align="center"/>
 
 - 完成净值修改后，如果开启编辑净值审批，则新的净值将在审批工单通过后生效；未开启编辑审批则编辑后立即生效
-
-    ![image.png](/assets/384327621a24e35576d764b92e04a12a.png)
-```
+    <img src="/assets/ZHGcbEi3KoMZfXxJw22jyS3CppZ.png" src-width="3314" src-height="1758" align="center"/>
 
 ### 1.3.3 客戶訂單
 
