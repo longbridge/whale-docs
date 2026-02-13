@@ -34,11 +34,11 @@ sidebar_position: 0
 ## <b>前置準備：加密貨幣資料維護（所有操作首要步驟）</b>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 菜單入口：WBO - 業務參數設置 - 資金參數 - 加密貨幣</p>
+<div class='callout-emoji'>📍</div>
+<p>菜單入口：WBO - 業務參數設置 - 資金參數 - 加密貨幣</p>
 </div>
 
-- 在開展加密貨幣出入、錢包地址認證業務前，後台操作人員需先完成加密貨幣相關資料維護：
+在開展加密貨幣出入、錢包地址認證業務前，後台操作人員需先完成加密貨幣相關資料維護：
 
 1. 登錄 WBO 後台系統，進入「業務參數設置 - 資金參數 - 加密貨幣」頁面；
 2. 點擊「新增」或「編輯」，完善目標加密貨幣的基礎信息（如幣種代碼、名稱、認證規則等）；
@@ -49,8 +49,8 @@ sidebar_position: 0
 ## <b>渠道存管賬戶導入</b>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 菜單入口：WBO - 虛擬資產管理 - 出入幣 - 渠道存管賬戶</p>
+<div class='callout-emoji'>📍</div>
+<p>菜單入口：WBO - 虛擬資產管理 - 出入幣 - 渠道存管賬戶</p>
 </div>
 
 1. 進入「虛擬資產管理 - 出入幣 - 渠道存管賬戶」頁面
@@ -62,8 +62,8 @@ sidebar_position: 0
 ## <b>認證記錄監控</b>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 菜單入口：WBO - 虛擬資產管理 - 出入幣 - 客户錢包地址</p>
+<div class='callout-emoji'>📍</div>
+<p> 菜單入口：WBO - 虛擬資產管理 - 出入幣 - 客户錢包地址</p>
 </div>
 
 1. 進入「客戶錢包地址」後台管理頁面，可查看所有客戶的認證申請記錄
@@ -75,8 +75,8 @@ sidebar_position: 0
 ## <b>加白與後續管理</b>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 菜單入口：WBO - 虛擬資產管理 - 出入幣 - 客户錢包地址</p>
+<div class='callout-emoji'>📍</div>
+<p>菜單入口：WBO - 虛擬資產管理 - 出入幣 - 客户錢包地址</p>
 </div>
 
 1. 客戶地址認證通過後，系統自動納入「加白名單」，後台可查看加白地址清單

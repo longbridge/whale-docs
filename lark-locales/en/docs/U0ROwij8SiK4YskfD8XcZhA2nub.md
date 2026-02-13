@@ -11,7 +11,7 @@ sidebar_position: 3
 
 Bank cards are used in the processes of withdrawals, deposits, and company bank statement reconciliation. This feature provides basic information configuration. The main related module relationship groups are as follows:
 
-<img src="/assets/RIBYbHRVFonYaVxnWtDjKQyUp9H.png" src-width="1742" src-height="1202" align="center"/>
+<img src="/assets/YOzXwpsBGhE9FwbMtI0jujOkpog-board.jpeg"/>
 
 # II. Operating Instructions
 
@@ -20,8 +20,8 @@ Whether creating a bank card in the App or in the Back Office (WBO), you must fi
 1. Maintain the card’s issuing bank (known bank information, including bank name, bank_code, swift_code, bank address, and related icons)
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu path: Funds Management - App Management - Card Issuing Bank</p>
+<div class='callout-emoji'>📍</div>
+<p> Menu path: Funds Management - App Management - Card Issuing Bank</p>
 </div>
 
 - Create: Click [Create] to enter the page and fill in the required information.
@@ -34,8 +34,8 @@ Whether creating a bank card in the App or in the Back Office (WBO), you must fi
 1. Confirm the card’s country/region
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu path: Funds Management - App Management - User Card Binding - Country/Region</p>
+<div class='callout-emoji'>📍</div>
+<p>Menu path: Funds Management - App Management - User Card Binding - Country/Region</p>
 </div>
 
 - Ensure the "Allow Card Binding" field is set to "Allow".
@@ -45,8 +45,8 @@ Whether creating a bank card in the App or in the Back Office (WBO), you must fi
 After completing the card attribute configuration, you may manage bank cards.
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu path: Funds Management - Customer Bank Cards</p>
+<div class='callout-emoji'>📍</div>
+<p>Menu path: Funds Management - Customer Bank Cards</p>
 </div>
 
 1. When a user adds a bank card in the App, it will be displayed automatically on the page.

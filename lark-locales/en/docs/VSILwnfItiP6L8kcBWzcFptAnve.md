@@ -18,28 +18,28 @@ WHALE's funds management system provides multi‑scenario withdrawal capabilitie
 1. Configure company bank account withdrawal methods
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu path: Business Parameter Settings &gt; Funding Parameters &gt; Company Bank Account</p>
+<div class='callout-emoji'>📍</div>
+<p>Menu path: Service Parameter &gt; Fund Parameter &gt; Company Bank Account</p>
 </div>
 
-<img src="/assets/S5WybMhFSojSwzxlLmQjptSIp9g.png" src-width="2844" src-height="1304" align="center"/>
+<img src="/assets/QHnebiNeAolvWNxXfd9jEHXUp9f.png" src-width="1280" src-height="574" align="center"/>
 
-- Click [New] to enter the secondary page and add withdrawal channel information (the combination of the brokerage firm's payment bank account and withdrawal method, for example: ICBC Asia 001 — check transfer)
+- Click [Create] to enter the secondary page and add withdrawal channel information (the combination of the brokerage firm's payment bank account and withdrawal method, for example: ICBC Asia 001 — check transfer)
 
-<img src="/assets/YR5Wbo3XmoEXZ7x4WLpjqtMEpie.png" src-width="2846" src-height="1330" align="center"/>
+<img src="/assets/Zdt7bR3seotqGzx7PUPjeNSRp5c.png" src-width="1280" src-height="567" align="center"/>
 
 1. Enable the withdrawal function for the currency
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu path: Business Parameter Settings &gt; Funding Parameters &gt; Currencies</p>
+<div class='callout-emoji'>📍</div>
+<p>Menu path: Service Parameter &gt; Fund Parameter &gt; Currency Setup</p>
 </div>
 
-<img src="/assets/UHz0bgZF0o3RL1xzebHjwtfcpBe.png" src-width="2858" src-height="1318" align="center"/>
+<img src="/assets/CbHobX9ZhoJ5oWxcJyCjCae7p8g.png" src-width="1280" src-height="574" align="center"/>
 
-- Click [New] to enter the secondary page and set the withdrawal function option to "Yes"
+- Click [Add] to enter the secondary page and set the withdrawal function option to "Yes"
 
-<img src="/assets/YuCFbB8ZZooieKxxivZjw9aRppe.png" src-width="2864" src-height="1330" align="center"/>
+<img src="/assets/HCkeb3YIHoYQQMxJtO1jUCXyprc.png" src-width="1280" src-height="588" align="center"/>
 
 ## Processing Withdrawal Requests
 
@@ -47,9 +47,9 @@ Based on the client's withdrawal requirements, withdrawal requests can be manual
 
 ### Manual Withdrawal
 
-Click [Manual Withdrawal]; in the popup select the client &gt; enter the currency &gt; amount &gt; bank card &gt; remarks and other information, then click [Confirm Withdrawal] to generate the request record (the system will automatically display the withdrawable balance for each currency based on the selected client).
+Click [Manual Withdrawal]; in the popup select the client &gt; select the currency &gt; amount &gt; bank card &gt; remarks and other information, then click [Confirm Withdrawal] to generate the request record (the system will automatically display the withdrawable balance for each currency based on the selected client).
 
-<img src="/assets/Rk4ibVYuToQErdxGVpoj9ao5pTT.png" src-width="3340" src-height="1764" align="center"/>
+<img src="/assets/N8F5bEXD2oMI8QxH4MvjEXwCpeh.png" src-width="1204" src-height="3012" align="center"/>
 
 ### Submit Request
 

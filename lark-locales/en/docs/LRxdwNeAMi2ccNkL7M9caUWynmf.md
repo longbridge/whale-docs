@@ -14,8 +14,8 @@ A WHALE customer bank card refers to a bank account opened by the user at a bank
 # Quick Start
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu entry: Funds Management - Customer Bank Cards</p>
+<div class='callout-emoji'>📍</div>
+<p>Menu entry: Funds Management - Customer Bank Cards</p>
 </div>
 
 1. When a user adds a bank card in the App, it will be displayed automatically on the page.
