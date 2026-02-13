@@ -17,19 +17,19 @@ The Whale system provides foundational parameter configuration and primary workf
 
 The overall business process is as follows:
 
-<img src="/assets/WJx7bqloYozjazxpmBQjM7HupWd.png" src-width="2726" src-height="206" align="center"/>
+<img src="/assets/BEr4wte5Hhi5DHbSFxojUPMupLd-board.jpeg"/>
 
 System functional architecture
 
-<img src="/assets/PuoPbjtzkohKYtxbcHfjJkcApCb.png" src-width="1760" src-height="1060" align="center"/>
+<img src="/assets/AuaBwBcL4h1TFQb274oj4uOXpjb-board.jpeg"/>
 
 ## Prerequisites
 
 1. First, enable the currency exchange switch for the currency.
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu path: Business Parameter Settings &gt; Fund Parameters &gt; Currency</p>
+<div class='callout-emoji'>📍</div>
+<p>Menu path: Business Parameter Settings &gt; Fund Parameters &gt; Currency</p>
 </div>
 
 <img src="/assets/BhbrbRLvLoPy79xK9lKj55A6p4M.png" src-width="3822" src-height="1850" align="center"/>
@@ -49,8 +49,8 @@ System functional architecture
 The Business Parameter Configuration menu initializes the currency exchange functionality. Users must perform one or more configurations according to actual exchange业务 conditions to ensure the accuracy and efficiency of exchanges.
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu path: Business Parameter Configuration - Exchange</p>
+<div class='callout-emoji'>📍</div>
+<p>Menu path: Business Parameter Configuration - Exchange</p>
 </div>
 
 ### Currency Pairs
@@ -127,15 +127,15 @@ If the user selects the “Large-Amount Exchange” type, they must set the thre
 After business parameter configuration is complete, users may proceed to the exchange operational features. Operational features include customer exchange, reference-rate import, exceptional exchange record handling, exchange-pool quota viewing, and viewing exchange gains and losses.
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu path: Funds Management - Exchange</p>
+<div class='callout-emoji'>📍</div>
+<p>Menu path: Funds Management - Exchange</p>
 </div>
 
 ### Customer Exchange
 
 Exchange workflow diagram
 
-<img src="/assets/WrwQbu2FroMIVDxAxE8jUiMpp2c.png" src-width="1744" src-height="2228" align="center"/>
+<img src="/assets/BElWwQxu4hN2xNb1zBRjYksApmd-board.jpeg"/>
 
 For detailed operational steps, refer to Quick Start.
 

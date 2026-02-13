@@ -29,7 +29,7 @@ The basic process for coin withdrawals:
 6. Confirm the credited status
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Note: Virtual asset accounts are recorded as a combined &quot;cryptocurrency + quoted currency&quot; instrument: deposits and withdrawals are recorded on a per-cryptocurrency basis, and when synchronized to the securities account, posting is made using the combined instrument (for example, cryptocurrency ETH priced in USD is posted as &quot;VA/HAS/ETHUSD&quot;). When debiting, the system prioritizes deduction from the cryptocurrency with the largest available balance; if that balance is insufficient, deductions are automatically taken from the next-priority cryptocurrency.</p>
+<div class='callout-emoji'>📍</div>
+<p>Note: Virtual asset accounts are recorded as a combined &quot;cryptocurrency + quoted currency&quot; instrument: deposits and withdrawals are recorded on a per-cryptocurrency basis, and when synchronized to the securities account, posting is made using the combined instrument (for example, cryptocurrency ETH priced in USD is posted as &quot;VA/HAS/ETHUSD&quot;). When debiting, the system prioritizes deduction from the cryptocurrency with the largest available balance; if that balance is insufficient, deductions are automatically taken from the next-priority cryptocurrency.</p>
 </div>
 

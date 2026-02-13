@@ -18,8 +18,8 @@ WHALE证券管理系统中的证券存入功能支援用户新增客户的证券
 ### 需要完成券商资讯初始化
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 菜单入口：证券管理-券商信息配置</p>
+<div class='callout-emoji'>📍</div>
+<p>菜单入口：证券管理-券商信息配置</p>
 </div>
 
 点选【新建】，在唤出的弹窗中依上方tab分别填入资讯
@@ -61,15 +61,13 @@ WHALE证券管理系统中的证券存入功能支援用户新增客户的证券
 ### 处理证券存入申请
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 证券存入&gt;存入申请</p>
+<div class='callout-emoji'>📍</div>
+<p>证券存入&gt;存入申请</p>
 </div>
 
 选择目标记录后，点选【提交】按钮
 
 <img src="/assets/Jw9ibpT8hoRK9tx27nujr38vpMc.png" src-width="3818" src-height="1772" align="center"/>
-
-<img src="/assets/A1pTb3G6KoDrEsxdmfsjEqXwpth.png" src-width="3818" src-height="1772" align="center"/>
 
 若客户已经通知了对方券商可以在弹窗内勾选「通知券商」的状态
 
@@ -81,8 +79,6 @@ WHALE证券管理系统中的证券存入功能支援用户新增客户的证券
 
 <img src="/assets/OWJIb8bpFo3hXtxbK9BjfzNypLc.png" src-width="3774" src-height="1124" align="center"/>
 
-<img src="/assets/Nn1nbK14solRwYxI2xcjLOoppOg.png" src-width="3774" src-height="1124" align="center"/>
-
 如果证券存入为实物股票，在处理成功提交时，需要选择是否冻结，如果选定冻结，还需要指定解冻时间
 
 <img src="/assets/GcGBbtnUaoWcNVxbpD6jGDqwp6b.png" src-width="2330" src-height="1054" align="center"/>
@@ -92,8 +88,6 @@ WHALE证券管理系统中的证券存入功能支援用户新增客户的证券
 <img src="/assets/C0p8bGSagoP8lixYBRojHk6kpTf.png" src-width="3774" src-height="838" align="center"/>
 
 <img src="/assets/Ft7gbj7dvoTdXFxarmGjZp9Ep8b.png" src-width="1560" src-height="1764" align="center"/>
-
-<img src="/assets/JuKEbJLCtoGimQxNOCMj3o2KpCc.png" src-width="1560" src-height="1764" align="center"/>
 
 <img src="/assets/Lz47bnjbLoxJWvxH0AQjLsFiplb.png" src-width="3318" src-height="926" align="center"/>
 
