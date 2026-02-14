@@ -92,6 +92,7 @@ export default defineConfig({
       lang: "zh-CN",
       themeConfig: {
         siteTitle: "帮助中心",
+        logoLink: "/zh-CN/docs",
         outline: "deep",
         nav: [
           { text: "Whale 首页", link: "/", target: "_self" },
@@ -126,6 +127,7 @@ export default defineConfig({
       lang: "zh-HK",
       themeConfig: {
         siteTitle: "幫助中心",
+        logoLink: "/zh-HK/docs",
         nav: [
           { text: "Whale 首頁", link: "/", target: "_self" },
           {
@@ -159,6 +161,7 @@ export default defineConfig({
       lang: "en",
       themeConfig: {
         siteTitle: "Help Center",
+        logoLink: "/en/docs",
         nav: [
           { text: "Whale Home", link: "/", target: "_self" },
           {
