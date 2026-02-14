@@ -18,10 +18,10 @@
  *   LARK_SPACE_ID=xxx          # 知识库空间ID
  *   LARK_PARENT_NODE_TOKEN=xxx  # 父节点token
  *   ENTRY_MD_PATH=./translate/en/docs  # 本地md文档目录路径
- *   ENTRY_JSON_PATH=./notion-pages/docs-en.json  # 入口json文件路径
+ *   ENTRY_JSON_PATH=./lark-pages/en/docs.json  # 入口json文件路径
  *
  * 命令行选项:
- *   -e, --entry <path>     JSON 文件路径 (./notion-pages/docs-en.json)
+ *   -e, --entry <path>     JSON 文件路径 (./lark-pages/en/docs.json)
  *   -d, --dir <path>      本地md文档目录路径
  *   -t, --target <token>   目标父节点 Token
  *   -s, --space <id>       Lark Wiki 空间 ID

@@ -91,10 +91,72 @@ export class MarkdownProcessor {
                 return [await this.createTableBlock(node)];
             case 'thematicBreak':
                 return [{ block_type: BLOCK_TYPES.DIVIDER, divider: {} }];
+            case 'html':
+                // 处理 HTML 节点,特别是 <img> 标签
+                return this.handleHtmlNode(node);
             default:
                 return [];
         }
     }
+
+    /**
+     * 处理 HTML 节点
+     */
+    private async handleHtmlNode(node: any): Promise<LarkBlock[]> {
+        const html = node.value || '';
+        
+        // 检查是否是 <img> 标签
+        const imgMatch = html.match(/<img\s+([^>]+)>/i);
+        if (imgMatch) {
+            // 提取 src 属性
+            const srcMatch = imgMatch[1].match(/src=["']([^"']+)["']/i);
+            if (srcMatch) {
+                const src = srcMatch[1];
+                // 创建图片块
+                return [await this.createImageBlockFromSrc(src)];
+            }
+        }
+        
+        // 其他 HTML 暂时忽略 (包括 callout,因为它是多个 HTML 节点组成的)
+        return [];
+    }
+
+    /**
+     * 从 src 创建图片块
+     */
+    private async createImageBlockFromSrc(src: string): Promise<LarkBlock> {
+        // 解码 URL
+        let decodedUrl = src;
+        try {
+            decodedUrl = decodeURIComponent(src);
+        } catch (e) {
+            // 忽略解码错误
+        }
+
+        // 解析本地路径
+        let absPath: string;
+        if (decodedUrl.startsWith('/')) {
+            // 绝对路径 (相对于文档目录)
+            const projectRoot = path.resolve(this.baseDir);
+            absPath = path.join(projectRoot, decodedUrl.substring(1));
+        } else if (decodedUrl.startsWith('http://') || decodedUrl.startsWith('https://')) {
+            // 外部 URL,不需要本地路径
+            return {
+                block_type: BLOCK_TYPES.IMAGE,
+                image: {}
+            };
+        } else {
+            // 相对路径
+            absPath = path.resolve(this.baseDir, decodedUrl);
+        }
+
+        return {
+            block_type: BLOCK_TYPES.IMAGE,
+            image: {},
+            _localPath: absPath // 内部字段,用于后续上传
+        };
+    }
+
 
     private async createHeadingBlock(node: any): Promise<LarkBlock> {
         const level = Math.min(Math.max(node.depth, 1), 9);
