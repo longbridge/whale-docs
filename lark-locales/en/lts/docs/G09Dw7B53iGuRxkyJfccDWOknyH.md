@@ -19,5 +19,5 @@ Answer: 1. Funds generate subscription and redemption channel orders on each tra
 
 Answer: For Balance Sweep holdings, redemptions only assess the holding share quantity and do not consider minimum sell share or minimum sell amount restrictions. Automatic redemptions are intended to repay debts or provide funds for settlement; if automatic redemption cannot occur, the client may incur a debt. Therefore, Balance Sweep redemptions are not subject to minimum sell share or minimum sell amount restrictions.
 
-<img src="/assets/TkJtbK6F7o5KHexAuRVjz2QEpLV.png" src-width="1640" src-height="308" align="center"/>
+<img src="/assets/EbsabEiSyozDjoxlg0VjbWfTpyc.png" src-width="3782" src-height="2350" align="center"/>
 
