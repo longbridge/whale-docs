@@ -19,11 +19,11 @@ The left pane displays pending work orders; selecting an item shows the work ord
 
 The work order list is presented in a sidebar layout for easy viewing and inspection.
 
-<img src="/assets/FxcsbTLBvoiPz9xqp67j7DDPpNg.png" src-width="1900" src-height="1706" align="center"/>
+<img src="/assets/AIsHbKm7LoVwP6xfDv7jAGs2pGP.png" src-width="1330" src-height="1918" align="center"/>
 
 New filter criteria and a new list export function have been added to facilitate filtering and processing of work orders.
 
-<img src="/assets/UX6RbyH9dozSgbxrqwfjqBjQpEb.png" src-width="1250" src-height="328" align="center"/>
+<img src="/assets/DdLdbfIRGo6IijxsmXmjq1Wap5f.png" src-width="1314" src-height="322" align="center"/>
 
 Completed Tab:
 
@@ -37,12 +37,12 @@ CC to Me Tab:
 
 Users can view the list of work orders that have been copied to their role.
 
-<img src="/assets/UxOjbPBBxozCjvx3ZnGjUY5vpCg.png" src-width="1274" src-height="1632" align="center"/>
+<img src="/assets/LAnZbqO7RoNHajxpW4ojHHCKpWd.png" src-width="1316" src-height="1652" align="center"/>
 
 # Work Order Approval Details
 
 1. Supports transferring a work order to another reviewer during the approval process.
 2. Supports copying the work order to other users during the approval process.
 
-<img src="/assets/CpcXbbWisoCY59x6Y51j9UsRphe.png" src-width="1210" src-height="1520" align="center"/>
+<img src="/assets/Je1ybdFH7ovnZpx9cQ6jxMzLpLb.png" src-width="1320" src-height="1908" align="center"/>
 

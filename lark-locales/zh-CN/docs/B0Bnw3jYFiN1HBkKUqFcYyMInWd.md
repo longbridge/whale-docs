@@ -22,8 +22,8 @@ Whale系统包含了取出申请、取出明细、电子邮件通知券商等功
 # 二、操作说明
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 菜单入口：证券管理-证券取出</p>
+<div class='callout-emoji'>📍</div>
+<p>菜单入口：证券管理-证券取出</p>
 </div>
 
 ## 取出申请
