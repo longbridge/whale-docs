@@ -62,13 +62,3 @@ sidebar_position: 4
 
 当告警生效时，相关人员会收到信箱通知
 
-<img src="/assets/Qai2bCheIoXV3qx1nDujHu4BpeN.png" src-width="2359" src-height="1068" align="center"/>
-
-- （系统 05/08 :新增功能）   新增'证券转入'、'证券取出' 提交时业务告警 ，可以根据需要设置 相关审批告警
-
-<img src="/assets/OjXJbuGQlor3ljxGkTtjk890peb.png" src-width="3111" src-height="1312" align="center"/>
-
-- （系统 09/11 :新增功能）  在订阅管理模块，新增‘开户待审核’业务，可配置接收信息通知的方式。
-
-<img src="/assets/ART8bRnlXol8c8xH72Ij7bfcpUc.png" src-width="2410" src-height="1238" align="center"/>
-

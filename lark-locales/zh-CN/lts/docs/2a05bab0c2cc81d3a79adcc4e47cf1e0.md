@@ -35,8 +35,8 @@ sidebar_position: 2
 <b>请求接收与记录生成</b>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 菜单入口：WBO - 虚拟资产管理 - 出入币 - 入币申请</p>
+<div class='callout-emoji'>📍</div>
+<p>菜单入口：WBO - 虚拟资产管理 - 出入币 - 入币申请</p>
 </div>
 
 - 客户端提交入币请求后，系统自动接收请求信息，并生成唯一入币记录（含记录编号、用户证券账号、入币币种、金额、目标地址、交易哈希 TXID、请求时间、状态等核心信息）。
@@ -47,8 +47,8 @@ sidebar_position: 2
 <b>入币记录查询与跟踪</b>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 菜单入口：WBO - 虚拟资产管理 - 出入币 - 入币记录</p>
+<div class='callout-emoji'>📍</div>
+<p>菜单入口：WBO - 虚拟资产管理 - 出入币 - 入币记录</p>
 </div>
 
 - <b>多条件查询</b>：支持按记录编号、客户编号、创建时间 、状态、等条件筛选查询，快速定位目标记录。
