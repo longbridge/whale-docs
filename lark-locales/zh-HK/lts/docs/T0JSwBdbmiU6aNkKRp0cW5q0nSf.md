@@ -18,8 +18,8 @@ Whale系統包含了存入申請、存入明細、便捷導入參數設置、電
 # 二、操作說明
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 菜單入口：證券管理-證券存入</p>
+<div class='callout-emoji'>📍</div>
+<p>菜單入口：證券管理-證券存入</p>
 </div>
 
 ## 存入申請
