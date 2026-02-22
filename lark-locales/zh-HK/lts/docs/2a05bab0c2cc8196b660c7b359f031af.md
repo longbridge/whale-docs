@@ -34,8 +34,8 @@ sidebar_position: 1
 # <b>認證後入幣操作簡述</b>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 菜單入口：WBO - 虛擬資產管理 - 出入幣 - 入幣申請</p>
+<div class='callout-emoji'>📍</div>
+<p>菜單入口：WBO - 虛擬資產管理 - 出入幣 - 入幣申請</p>
 </div>
 
 - 客戶端提交入幣請求後，後台系統會自動生成對應的入幣記錄，便於後台操作人員查詢跟蹤全流程；若遇異常或有問題的入幣申請，後台操作人員可直接在系統中執行刪除操作
@@ -43,8 +43,8 @@ sidebar_position: 1
 <img src="/assets/GfzkbkNGfoTjjCxl2R1j0pSzpmf.png" src-width="3262" src-height="826" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 菜單入口：WBO - 虛擬資產管理 - 出入幣 - 入幣記錄</p>
+<div class='callout-emoji'>📍</div>
+<p>菜單入口：WBO - 虛擬資產管理 - 出入幣 - 入幣記錄</p>
 </div>
 
 - 可通過目標錢包或平台的 “入幣記錄” 模塊，查看交易狀態、區塊確認次數等詳情，跟蹤資產到賬情況。

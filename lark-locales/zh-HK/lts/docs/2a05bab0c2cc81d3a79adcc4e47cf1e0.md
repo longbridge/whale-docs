@@ -35,8 +35,8 @@ sidebar_position: 2
 <b>請求接收與記錄生成</b>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 菜單入口：WBO - 虛擬資產管理 - 出入幣 - 入幣申請</p>
+<div class='callout-emoji'>📍</div>
+<p>菜單入口：WBO - 虛擬資產管理 - 出入幣 - 入幣申請</p>
 </div>
 
 - 客戶端提交入幣請求後，系統自動接收請求信息，並生成唯一入幣記錄（含記錄編號、用戶證券賬號、入幣幣種、金額、目標地址、交易哈希 TXID、請求時間、狀態等核心信息）。
@@ -47,8 +47,8 @@ sidebar_position: 2
 <b>入幣記錄查詢與跟蹤</b>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 菜單入口：WBO - 虛擬資產管理 - 出入幣 - 入幣記錄</p>
+<div class='callout-emoji'>📍</div>
+<p>菜單入口：WBO - 虛擬資產管理 - 出入幣 - 入幣記錄</p>
 </div>
 
 - <b>多條件查詢</b>：支持按記錄編號、客戶編號、創建時間 、狀態、等條件篩選查詢，快速定位目標記錄。
