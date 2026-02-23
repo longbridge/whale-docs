@@ -128,7 +128,7 @@ Whale系统包含了处理入金申请、匹配银行流水、入金审核、单
 
 - 若用户在使用【直接入账】入金时，没有录入银行流水信息，可在该页面中通过【导入银行流水】批量导入银行流水信息
 
-<img src="/assets/SwjfbI4ofoNeiix94A1j3zXrpIf.png" src-width="3816" src-height="1854" align="center"/>
+<img src="/assets/R4OhbKD7poVmr4xnMFqj2io9pOf.png" src-width="3812" src-height="1332" align="center"/>
 
 # 三、FAQ
 

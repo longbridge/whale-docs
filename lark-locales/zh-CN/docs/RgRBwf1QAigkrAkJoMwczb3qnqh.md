@@ -18,8 +18,8 @@ WHALE证券管理系统中的证券取出功能支援用户新增客户的证券
 ### 需要完成券商资讯初始化
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 菜单入口：证券管理-券商信息配置</p>
+<div class='callout-emoji'>📍</div>
+<p> 菜单入口：证券管理-券商信息配置</p>
 </div>
 
 点选【新建】，在唤出的弹窗中依上方tab分别填入资讯
@@ -59,8 +59,8 @@ WHALE证券管理系统中的证券取出功能支援用户新增客户的证券
 ### 处理证券存入申请
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 证券存入&gt;取出申请</p>
+<div class='callout-emoji'>📍</div>
+<p>证券存入&gt;取出申请</p>
 </div>
 
 选择目标记录后，点选【提交】按钮

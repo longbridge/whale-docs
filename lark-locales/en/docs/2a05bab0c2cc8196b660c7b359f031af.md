@@ -23,31 +23,31 @@ You must obtain the following permissions to use the system functions properly:
 
 Prior to customer deposits, cryptocurrency deposit settings must be configured.
 
-<img src="/assets/VA38bt57SoiOg6x1mnrj0GLNpLs.png" src-width="2048" src-height="706" align="center"/>
+<img src="/assets/HwctbH5YqoMyVbx5ZCgjwouwp9g.png" src-width="2474" src-height="1188" align="center"/>
 
 # Customer Wallet Address
 
 Completing wallet address verification prior to depositing is a critical prerequisite for safeguarding asset security.
 
-<img src="/assets/Vw3CbKoDOogv7mxQhNUjAfYZpyf.png" src-width="3288" src-height="1076" align="center"/>
+<img src="/assets/Y13rbqBQgofYJDxzsVbjkjkopBc.png" src-width="2440" src-height="1164" align="center"/>
 
 # Summary of Deposit Operations After Verification
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu location: WBO - Virtual Asset Management - Deposits &amp; Withdrawals - Deposit Requests</p>
+<div class='callout-emoji'>📍</div>
+<p>Menu location: WBO - VA Clearing Management - Deposits &amp; Withdrawals - Deposit Application</p>
 </div>
 
 - After the client submits a deposit request, the back-end system will automatically generate a corresponding deposit record to facilitate back-office personnel in querying and tracking the entire process; if a deposit request is abnormal or otherwise problematic, back-office personnel may directly delete it within the system.
 
-<img src="/assets/T3WBbddjeoXgfIx9A69jRbVzp9e.png" src-width="3262" src-height="826" align="center"/>
+<img src="/assets/TQVhbVNbBoQZq5xu4CLj1z2VpXc.png" src-width="2458" src-height="646" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu location: WBO - Virtual Asset Management - Deposits &amp; Withdrawals - Deposit Records</p>
+<div class='callout-emoji'>📍</div>
+<p>Menu location: WBO -  VA Clearing Management - Deposits &amp; Withdrawals - Coin Deposit Records</p>
 </div>
 
 - Users may view transaction status, block confirmation counts, and other details in the target wallet’s or platform’s “Deposit Records” module to track asset receipt.
 
-<img src="/assets/NOjYbUanLokOJQxFFbvj89xAp2e.png" src-width="3268" src-height="806" align="center"/>
+<img src="/assets/WWyQb5JQuoOby7xAhPyji0vfpSL.png" src-width="2446" src-height="964" align="center"/>
 

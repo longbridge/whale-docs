@@ -21,6 +21,19 @@ Because different brokerage firms have different requirements for deposits—som
 
 You must obtain the following authorizations to use the system functions properly.
 
+<table header_row="1">
+<colgroup>
+<col width="289"/>
+<col width="490"/>
+</colgroup>
+<thead>
+<tr><th><p>Permission Name</p></th><th><p>Permission Description</p></th></tr>
+</thead>
+<tbody>
+<tr><td><p>Permission to manage funding parameters, bank statements, and deposits</p></td><td><p>Permission to manage bank statements, deposit and withdrawal records/methods, bank cards, foreign-exchange services, and funding guidelines; and permission to manage funding parameters.</p></td></tr>
+</tbody>
+</table>
+
 ## 2. Operation Guide
 
 # Deposit Configuration
@@ -28,15 +41,15 @@ You must obtain the following authorizations to use the system functions properl
 # Funding Parameter Configuration
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>⚓ Business Parameters Settings &gt; Funding Parameters</p>
+<div class='callout-emoji'>📍</div>
+<p> Business Parameters Settings &gt; Funding Parameters</p>
 </div>
 
 1. Company Bank Accounts
 
 Before a customer makes a deposit, the corresponding company bank accounts must be added in the backend and the deposit methods under each company bank account must be configured.
 
-<img src="/assets/GDy5bVDoDo90Ugxub5mj299RpBf.png" src-width="3286" src-height="998" align="center"/>
+<img src="/assets/AaI6bjXdyoq8L2xXQIpj1D34pSb.png" src-width="3294" src-height="996" align="center"/>
 
 Operation button descriptions:
 
@@ -47,7 +60,7 @@ Operation button descriptions:
 
 Before a customer makes a deposit, the deposit currencies must be configured.
 
-<img src="/assets/Q6APbQFD4osFoNx62xCjuROlp9g.png" src-width="3282" src-height="988" align="center"/>
+<img src="/assets/PVutbQfxaoeptexpJIbjxmXHpng.png" src-width="3288" src-height="852" align="center"/>
 
 Operation button descriptions:
 
@@ -57,13 +70,13 @@ Operation button descriptions:
 # Customer Bank Cards
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>⚓ Funds Management &gt; Customer Bank Cards</p>
+<div class='callout-emoji'>📍</div>
+<p> Funds Management &gt; Customer Bank Cards</p>
 </div>
 
 Customers must have their bank card information configured with the broker. Bank cards can be added either by the customer via the client app or by the backend.
 
-<img src="/assets/OCFfbxVOwoHxDpxykg8jXnqspWr.png" src-width="3349" src-height="1396" align="center"/>
+<img src="/assets/LSCpbwDfao104bxsaWPju2tCpjh.png" src-width="3314" src-height="970" align="center"/>
 
 Operation button descriptions:
 
@@ -79,13 +92,13 @@ Operation button descriptions:
 # eDDA Authorization
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>⚓ Funds Management &gt; Customer Bank Cards</p>
+<div class='callout-emoji'>📍</div>
+<p> Funds Management &gt; Customer Bank Cards</p>
 </div>
 
 If a customer intends to deposit via eDDA, eDDA authorization is required. Once the customer has authorized eDDA, the corresponding record is available in the backend.
 
-<img src="/assets/M9xYbMS61oqIJvxdgSFjuQaDple.png" src-width="3282" src-height="838" align="center"/>
+<img src="/assets/V9WjbBK2zolss0xQHeWjdIFypce.png" src-width="3290" src-height="1004" align="center"/>
 
 Operation button descriptions:
 
@@ -101,11 +114,11 @@ When configuring customer or company bank account information, the “common ban
 ## 1. Card Issuing Banks
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>⚓ Funds Management &gt; App Management &gt; Card Issuing Banks</p>
+<div class='callout-emoji'>📍</div>
+<p>Funds Management &gt; App Management &gt; Card Issuing Banks</p>
 </div>
 
-<img src="/assets/PkcWbtMWxo2KISxGnWAjRBj3pYe.png" src-width="3284" src-height="762" align="center"/>
+<img src="/assets/UiExbvngho8Ln3xvnrWj3qLspOh.png" src-width="3292" src-height="712" align="center"/>
 
 Operation button descriptions:
 
@@ -115,20 +128,20 @@ Operation button descriptions:
 ## 2. User Card Binding - Country/Region
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>⚓ Funds Management &gt; App Management &gt; User Card Binding - Country/Region</p>
+<div class='callout-emoji'>📍</div>
+<p>Funds Management &gt; App Management &gt; User Card Binding - Country/Region</p>
 </div>
 
-<img src="/assets/KV6obF62ioP9C8xAg2DjCJdxpqg.png" src-width="3260" src-height="774" align="center"/>
+<img src="/assets/AHt8bdkHBoyb0Ax7voijxhg9pnc.png" src-width="3286" src-height="786" align="center"/>
 
 ## 3. Bank Region List
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>⚓ Funds Management &gt; App Management &gt; Bank Region List</p>
+<div class='callout-emoji'>📍</div>
+<p>Funds Management &gt; App Management &gt; Bank Region List</p>
 </div>
 
-<img src="/assets/KOy6b0FuYoVLa7x6TOZjtrGZpsl.png" src-width="3290" src-height="978" align="center"/>
+<img src="/assets/WojAbPZuBoZTYIxqrD3jAHwApYd.png" src-width="3288" src-height="992" align="center"/>
 
 Operation button descriptions:
 
@@ -142,16 +155,16 @@ On the client deposit page, the backend can configure operation guidance and dep
 
 ## 1. Deposit Guidance
 
-<img src="/assets/HgzfbKN1zote4NxI54fjtNpdp8f.png" src-width="3286" src-height="980" align="center"/>
+<img src="/assets/JhRfbPQhToJzGtxLQMmjhai8p2g.png" src-width="3276" src-height="840" align="center"/>
 
 ## 2. Deposit Parameters
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>⚓ Funds Management &gt; App Management &gt; Deposit Parameters</p>
+<div class='callout-emoji'>📍</div>
+<p>Funds Management &gt; App Management &gt; Deposit Parameters</p>
 </div>
 
-<img src="/assets/S62ObkMt2ogAzXxqHtCjlXGWpNb.png" src-width="3260" src-height="1726" align="center"/>
+<img src="/assets/Kyvub3dc4ofyE3x6CkJjrucBp2d.png" src-width="3274" src-height="984" align="center"/>
 
 Operation button descriptions:
 
@@ -167,13 +180,13 @@ Multiple Receiving Bank Configuration
 
 - If the client needs to display multiple receiving banks under the same deposit method depending on the customer’s chosen bank, refer to the following configuration screenshot.
 
-<img src="/assets/BX5Tbp1QxosqzwxgIYujaABVpye.png" src-width="3278" src-height="706" align="center"/>
+<img src="/assets/TpPNbsmTkoprMZxiqAujYXSMpqd.png" src-width="3274" src-height="984" align="center"/>
 
 # Deposit Operations
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu path: Funds Management - Deposit</p>
+<div class='callout-emoji'>📍</div>
+<p>Menu path: Funds Management - Deposit</p>
 </div>
 
 # Deposit Applications
@@ -184,14 +197,13 @@ A deposit application is submitted by the user and includes four main elements: 
 
 Applicable when an operator contacts backend staff to perform manual deposit posting. The operator must sequentially select the customer and enter the deposit currency, method, receiving bank, amount, remarks, and supporting documents (if any).
 
-<img src="/assets/Q9u0bHncioUqMkx3nfzjDNU3p3g.gif" src-width="2074" src-height="1000" align="center"/>
+<img src="/assets/N5KAbcwL3oT5N5xL6kKjP4Vjpae.gif" src-width="2086" src-height="994" align="center"/>
 
 - Reject: If the customer’s submitted deposit application information is incorrect or the user deems the application invalid, the operator may perform the Reject operation.
 - Delete: If the customer’s submitted deposit application information is incorrect or the user deems the application invalid, the operator may also delete the target record via the Delete button.
 - Edit: If an issue is discovered with an application prior to submission, the operator may correct it via the Edit button after confirming with the customer. Edits require work order approval; changes take effect only after approval.
     - Editable fields: currency, deposit method, receiving bank, amount, deposit fee, remarks, supporting documents (re-upload).
-
-<img src="/assets/W0h3bXvRqoge2lxiAQTjoBKhpjb.gif" src-width="2076" src-height="998" align="center"/>
+    <img src="/assets/VtIVbnYLLoh4N0xmubHjsPEXp0d.gif" src-width="2086" src-height="994" align="center"/>
 
 Operations
 
@@ -201,46 +213,53 @@ Operations
 
 Requires Approval
 
-<img src="/assets/MAQKbegAxoLYLNxhuThj0xnfphe.png" src-width="1678" src-height="1764" align="center"/>
+<img src="/assets/JC8ebJxEToomqixgQbRjYJs3prf.png" src-width="1280" src-height="1081" align="center"/>
 
 No Approval Required
 
-<img src="/assets/IcMkb6ND8ovDcwxXXXkjw1lgp7c.png" src-width="1688" src-height="1754" align="center"/>
+<img src="/assets/ZEedba1tsoHLT0xmXBDjWqGvpFg.png" src-width="1280" src-height="1019" align="center"/>
 
 - Voucher Association: If the posting operation involves multiple applications, you may enter the Voucher Association page to perform batch postings.
 
-<img src="/assets/TgvFbDIdMoMybExpGayjsltQpSd.png" src-width="3774" src-height="1000" align="center"/>
+<img src="/assets/P1NVbUDaMoG6Q5xDI77jeRhepHf.png" src-width="1280" src-height="415" align="center"/>
 
 On the Voucher Association page, all applications awaiting posting are filtered and presented for operator selection; after verification, submit to post.
 
-<img src="/assets/F0pCbLzsUojev5xWsdvjgfMApjd.png" src-width="3324" src-height="1634" align="center"/>
+<img src="/assets/S0nAbI8gqow5qrxIkTxjMQxEpqh.png" src-width="1280" src-height="603" align="center"/>
 
 # Deposit Matching
 
 The data on this page come from deposit entries in bank statements. If a brokerage’s business rules require matching bank transaction records to deposit records before posting, and bank transaction information has been synchronized to the system, operators can manually process such records on the Deposit Matching page. Processing methods are divided into two main categories: Associate (match and post) and Deposit Return.
 
+<table header_row="1">
+<colgroup>
+<col width="160"/>
+<col width="499"/>
+</colgroup>
+<thead>
+<tr><th><p>Processing Method</p></th><th><p>Definition</p></th></tr>
+</thead>
+<tbody>
+<tr><td><p>Associate</p></td><td><p>Automatically associate and post based on whether fields in the bank statement—such as payer bank account, payer name, currency, and amount—match the deposit record.</p></td></tr>
+<tr><td><p>Deposit Return</p></td><td><p>The process of returning funds to the customer’s bank card when the customer has not been properly onboarded or when the customer’s account cannot be credited due to account risk or other reasons.</p></td></tr>
+<tr><td><p>Withdrawal Return</p></td><td><p>Used when a customer’s withdrawal is rejected by the customer’s receiving bank and the returned funds appear as an inflow in the bank transactions; this function pairs the returned funds back to the customer’s account. (Because these appear as inflows in the bank transactions, they are placed on the Deposit Matching page to distinguish them from normal deposits.)</p></td></tr>
+</tbody>
+</table>
+
 - Associate: For bank statement deposit records that the system cannot automatically match, operators can follow the system’s prompts to confirm and then proceed with posting or other actions.
     - The Associate page will auto-compare fields to match users by name; after confirming accuracy, click [Associate].
-
-<img src="/assets/Onh6bHWJboSaTGxvBIPjaptvpVc.png" src-width="3818" src-height="1842" align="center"/>
-
-<img src="/assets/O9Qqb03FLoStSIx87x4jrsuXpGd.png" src-width="3904" src-height="1950" align="center"/>
-
-```text
-- If the system’s preselected match is incorrect, use [Custom] to manually associate the bank transaction to the correct customer. Association can be made via the deposit application or the securities account number.
-```
-
-<img src="/assets/CTKlbqCUjoeyhJx3eUAjMb4DpTd.png" src-width="3308" src-height="1776" align="center"/>
-
-<img src="/assets/YfJzbAgCPoNIQNxjizhjaBt6pOg.png" src-width="3308" src-height="1750" align="center"/>
+    <img src="/assets/ZI2ibnTF3o4sCNx0Nu4jqar0pdh.png" src-width="3276" src-height="1742" align="center"/>
+    <img src="/assets/Oj2FbrxlPoBJlJxkP47jz55upac.png" src-width="3390" src-height="1838" align="center"/>
+    <img src="/assets/HKYKbn2LRoEY22xkKA9jQUhQpOc.png" src-width="3286" src-height="1758" align="center"/>
+    <img src="/assets/W3Lbb1cRLoPwdvxB3T3jvOp0pff.png" src-width="3260" src-height="1748" align="center"/>
 
 Deposit Return: If for various reasons a deposit cannot be credited to the customer’s securities account, use this function to process a refund. The operator must enter the customer’s bank card information, confirm accuracy, and click [Confirm] to flow the record to the Deposit Review page for approval.
 
-<img src="/assets/XipzbdLZOoxFlpxjUN9jdJjoppe.png" src-width="2436" src-height="1326" align="center"/>
+<img src="/assets/BKwybgQvIoVrEqxt0dfjW7LgpFc.png" src-width="3320" src-height="1768" align="center"/>
 
 Withdrawal Return: Because the Deposit Matching page’s data come from inflows in bank transaction records, if a customer’s withdrawal is rejected by the bank and appears as an inflow, the operator should associate the withdrawal’s transaction reference and process the record using the [Withdrawal Return] function.
 
-<img src="/assets/N1PvbiCdGoRS0UxVKdsj1HgLpoc.png" src-width="2366" src-height="1234" align="center"/>
+<img src="/assets/HsS8bdAjuowxnkxQHI3jmvUhp2e.png" src-width="3292" src-height="1754" align="center"/>
 
 # Deposit Review
 
@@ -248,37 +267,37 @@ After operators process records on the Deposit Matching page based on bank trans
 
 - Account Opening in Progress: Select the target record and click [Approve] to enter the details page, verify the information, and initiate a work order approval.
 
-<img src="/assets/V4m6bWrPNoHOluxZVm8jgvwlpvc.png" src-width="3334" src-height="1598" align="center"/>
+<img src="/assets/YnyZbhKLso3kWYxeC2UjtMJkpLe.png" src-width="3310" src-height="1754" align="center"/>
 
 - Account Opened: Select the target record and click [Approve] to enter the details page, verify the information, and approve.
 
-<img src="/assets/SkWpbNlm3oqXmTxibkRjPi0Ipsb.png" src-width="3318" src-height="1598" align="center"/>
+<img src="/assets/L2ulbcuk5olnFKxKtGdjTJatpU2.png" src-width="3310" src-height="1754" align="center"/>
 
 - Deposit Return: Select the target record and click [Approve] to summon the approval work order; after confirming the information is correct, approve to proceed.
 
-<img src="/assets/I59mbPPEkozRw0xM7Uoj8c5opPb.png" src-width="3330" src-height="1596" align="center"/>
+<img src="/assets/XAk7bcqrboxOL4xSLCoj9zsmpIg.png" src-width="3318" src-height="1748" align="center"/>
 
 - Withdrawal Return: Select the target record and click [Approve]; after confirming the information is correct, approve directly—no work order approval process is required.
 
-<img src="/assets/G5vPbBLfwoPt7hxdiYojWNkUpmo.png" src-width="3318" src-height="1598" align="center"/>
+<img src="/assets/NyhubKx0Bo59nWxuQhKjSpQYpDb.png" src-width="3310" src-height="1768" align="center"/>
 
 # Bank‑Securities Deposit
 
 After bank‑securities account opening, users can deposit via the bank‑securities channel. When the system receives a bank notification, it will automatically match the user and post the deposit without manual intervention.
 
-<img src="/assets/KLdubRPd0oLwsrx1dnrjnV5yprc.png" src-width="2854" src-height="1074" align="center"/>
+<img src="/assets/ErWebCKKdoj3NcxECNmj894wpwh.png" src-width="3300" src-height="1226" align="center"/>
 
 # eDDA Deposit
 
 After eDDA authorization is completed, users may deposit via eDDA. When the system receives a bank notification, it will automatically match the user and post the deposit without manual intervention.
 
-<img src="/assets/TXeUbklLUorRJWx0HxpjJxtTp2g.png" src-width="2820" src-height="1048" align="center"/>
+<img src="/assets/AUTcbqMkzouviax9dfOjPh1jp5a.png" src-width="3264" src-height="1230" align="center"/>
 
 # FPS (Faster Payment System)
 
 For FPS transfers, after the bank statement is received, the system can automatically match the bank statement entries with deposit applications and, if matched, automatically post the deposit.
 
-<img src="/assets/LCtdbMh8eoi0tfxYJmEjXfnxptc.png" src-width="2324" src-height="1070" align="center"/>
+<img src="/assets/IOpTb0EAfoG3FDxBXZZjdMqvpNf.png" src-width="3270" src-height="1256" align="center"/>
 
 # Deposits During Account Opening
 
@@ -289,7 +308,7 @@ Because deposit workflows and account-opening workflows can run concurrently, de
 
 Users can view the real-time status under “Account Opening Status.” If the customer’s account-opening process fails, it can be [Rejected] (batch operations are supported).
 
-<img src="/assets/DvxublF2NoCrI1x3FQjjQqCmpxb.png" src-width="3392" src-height="1693" align="center"/>
+<img src="/assets/L78RbLn4HoOJXTxalRpjP6J3phd.png" src-width="3288" src-height="966" align="center"/>
 
 # Deposit Reconciliation
 
@@ -297,9 +316,9 @@ To ensure the accuracy of fund flows, business operations must compare bank tran
 
 - Reconciliation: Users may refresh bank transactions for a target period; the system will automatically match bank transactions with the system’s deposit records. After the reconciliation completes, review the “Reconciliation Result” column in the list; if discrepancies exist, further investigation and handling are required.
 
-<img src="/assets/PWNJbIH2TolVdmxUYX0j5IoVpXf.png" src-width="3336" src-height="1770" align="center"/>
+<img src="/assets/VvKBbD4wcokaqWxOVipj61XFpFd.png" src-width="3318" src-height="1486" align="center"/>
 
-<img src="/assets/FHsZb9Zn4opZKhx75dgjJcUqpXu.png" src-width="3828" src-height="1870" align="center"/>
+<img src="/assets/HMWrbUKoZoIOgQxP963jwV4Npnd.png" src-width="3286" src-height="1528" align="center"/>
 
 # Deposit Records
 
@@ -307,13 +326,13 @@ The Deposit Records page logs the full lifecycle status of deposits. Users may q
 
 - If a user performed a Direct Posting deposit without entering bank transaction information, they can bulk import bank transaction records on this page via [Import Bank Transactions].
 
-<img src="/assets/BOHrblMoQomr0Vx4jeVjbhRbpWg.png" src-width="2804" src-height="1056" align="center"/>
+<img src="/assets/QrnJbnERbolNbVxu2rfjyiPCpxd.png" src-width="3808" src-height="1380" align="center"/>
 
 - For cheque deposits that have been frozen, they may be manually unfrozen in the backend before the “Estimated Unfreeze Time,” or allowed to be automatically unfrozen by the system.
 
-<img src="/assets/KHcTbIYCno7CIbxYq8xjNma2p2f.png" src-width="1640" src-height="367" align="center"/>
+<img src="/assets/UkZmb0Y6wov0r6xBe4kjyRn6pag.png" src-width="3268" src-height="1170" align="center"/>
 
 - After submitting a manual unfreeze request, it must await work order approval.
 
-<img src="/assets/IsLDbFeTgolJDMxvWPYjYMLJpHe.png" src-width="1622" src-height="470" align="center"/>
+<img src="/assets/NRutb1vvToEopxxLRoqjGd5CpdG.png" src-width="3284" src-height="1086" align="center"/>
 

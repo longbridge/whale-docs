@@ -34,56 +34,56 @@ Log in to the WBO backend system and confirm that you have been granted the oper
 ## Prerequisite: Cryptocurrency Data Maintenance (Primary Step for All Operations)
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu path: WBO - Business Parameter Settings - Fund Parameters - Cryptocurrency</p>
+<div class='callout-emoji'>📍</div>
+<p>Menu path: WBO - Service Parameter - Fund Parameters - Cryptocurrency</p>
 </div>
 
-- Before conducting cryptocurrency deposit/withdrawal and wallet address authentication operations, backend operators must first complete the maintenance of cryptocurrency-related data:
+Before conducting cryptocurrency deposit/withdrawal and wallet address authentication operations, backend operators must first complete the maintenance of cryptocurrency-related data:
 
-1. Log in to the WBO backend system and navigate to Business Parameter Settings - Fund Parameters - Cryptocurrency;
+1. Log in to the WBO backend system and navigate to Service Parameter - Fund Parameters - Cryptocurrency;
 2. Click "Add" or "Edit" and complete the basic information for the target cryptocurrency (such as currency code, name, authentication rules, etc.);
 3. After verifying that the information is correct, submit to take effect to ensure subsequent authentication and deposit/withdrawal operations can proceed normally.
 
-<img src="/assets/FOPsbi8yeoQ05fx5s6yjYgCZpih.png" src-width="3260" src-height="1124" align="center"/>
+<img src="/assets/JSOCblFFQoE69ExJrpzjTEbophg.png" src-width="2452" src-height="1180" align="center"/>
 
 ## Channel Custodial Account Import
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu path: WBO - Virtual Asset Management - Deposits &amp; Withdrawals - Channel Custodial Accounts</p>
+<div class='callout-emoji'>📍</div>
+<p> Menu path: WBO - VA Clearing Management - Deposits &amp; Withdrawals - Channel Custodial Accounts</p>
 </div>
 
-1. Go to Virtual Asset Management - Deposits & Withdrawals - Channel Custodial Accounts;
-2. Click "Batch Create" and upload the reviewed channel custodial account list (must conform to the system-specified format);
+1. Go to VA Clearing Management - Deposits & Withdrawals - Channel Custodial Accounts;
+2. Click "Bulk creation" and upload the reviewed channel custodial account list (must conform to the system-specified format);
 3. After import is complete, verify the account information is correct and click "Confirm". These accounts will be used for automatic allocation prior to customer authentication.
 
-<img src="/assets/VyC1bx0Rxon0J4xTGXHj5FA7p8e.png" src-width="2510" src-height="1362" align="center"/>
+<img src="/assets/IVxXb8zUToFpzaxNPC3jLfIcpMh.png" src-width="2480" src-height="1298" align="center"/>
 
 ## Authentication Record Monitoring
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu path: WBO - Virtual Asset Management - Deposits &amp; Withdrawals - Customer Wallet Addresses</p>
+<div class='callout-emoji'>📍</div>
+<p> Menu path: WBO - Virtual Asset Management - Deposits &amp; Withdrawals - Customer Wallet Addresses</p>
 </div>
 
 1. Access the "Customer Wallet Addresses" backend management page to view all customer authentication application records;
 2. Support filtering by "Authentication Status", "Creation Time", "Customer ID", and other criteria. Click a single record to view details (including the allocated custodial account, payment information, verification results, etc.);
 3. For "Unauthenticated" records, assist customers in troubleshooting (for example, verify whether the transfer has been received or whether the addresses match).
 
-<img src="/assets/TSNqbTNipo24kFx4kFKjfcmXpLd.png" src-width="3288" src-height="1076" align="center"/>
+<img src="/assets/X7dNb8Z3VoinIixejMpj2wfapve.png" src-width="2446" src-height="1160" align="center"/>
 
 ## Whitelisting and Subsequent Management
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu path: WBO - Virtual Asset Management - Deposits &amp; Withdrawals - Customer Wallet Addresses</p>
+<div class='callout-emoji'>📍</div>
+<p> Menu path: WBO - VA Clearing Management - Deposits &amp; Withdrawals - Client Wallet Address</p>
 </div>
 
 1. After a customer address successfully completes authentication, the system will automatically include the address in the whitelist; the backend can view the list of whitelisted addresses;
 2. Support status management for whitelisted addresses (such as deletion) to mitigate abnormal risks;
 3. Periodically export authentication and whitelist records to complete compliance filing and data archiving.
 
-<img src="/assets/BurebwE8KoZO9bxXtT4jEpdrpbf.png" src-width="3274" src-height="1082" align="center"/>
+<img src="/assets/XWJ1bmawzoJ9nExJ2lqj96ekpWb.png" src-width="2464" src-height="1172" align="center"/>
 
 ## Notes
 

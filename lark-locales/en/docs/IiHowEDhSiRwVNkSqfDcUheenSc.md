@@ -15,79 +15,77 @@ Whale provides basic user experience optimizations for unit assignments. The fol
 
 No records currently selected.
 
-<img src="/assets/Ai5ybaecFo35gtxho7FjCIqdpob.png" src-width="3328" src-height="1604" align="center"/>
+<img src="/assets/EQmbbshy4obg8dxbGskjKbuqppf.png" src-width="3286" src-height="1714" align="center"/>
 
 After selection, applicable action buttons will automatically appear.
 
-<img src="/assets/K9jabH9MBo9g5YxuGjJjEglcpLh.png" src-width="3318" src-height="1614" align="center"/>
+<img src="/assets/SZfcb2qZOoCUOZxbTxtjMTUMpAe.png" src-width="3246" src-height="1788" align="center"/>
 
 <b>Some unit-assignment table pages support clicking the full-row hot area to enter details (left-side slide-out)</b>
 
-<img src="/assets/BABxbyzDtoOIJFxzN5PjSn7np4c.png" src-width="3352" src-height="1470" align="center"/>
+<img src="/assets/JcHwbI02ZoqPmsxFyeZjQqjYpId.png" src-width="3250" src-height="1696" align="center"/>
 
 Record details slide out from the left.
 
-<img src="/assets/QOD1bVj6So7P5Nx2Rh5jcKgJpnV.png" src-width="3372" src-height="1620" align="center"/>
+<img src="/assets/EgNUbgVZUoRk7IxqNTXjJGpfpxh.png" src-width="3282" src-height="1808" align="center"/>
 
 <b>Some unit-assignment pages support a bottom-anchored horizontal scrollbar</b>
 
 Use the horizontal scrollbar at the bottom to view records to the left and right.
 
-<img src="/assets/ByPobH3rXoYHJjx8Ovaj7ueHpMb.png" src-width="3306" src-height="1519" align="center"/>
+<img src="/assets/NodIbg6eco8Y3lx6EeBjbp69pHb.png" src-width="2612" src-height="1464" align="center"/>
 
 <b>Some unit table pages support a sticky table header (table columns remain fixed and do not scroll)</b>
 
-<img src="/assets/Gd64bmni3oV9vFxFhYpj3cjxpBf.png" src-width="3278" src-height="1245" align="center"/>
+<img src="/assets/Z8TVb8tcLoPndUxMLajjBLhYpvc.png" src-width="3256" src-height="1468" align="center"/>
 
 Table header is fixed at the top.
 
-<img src="/assets/LyE9bJghhoDppJxqQjSjMTp5pcd.png" src-width="3320" src-height="1616" align="center"/>
+<img src="/assets/KLASbwRvAoWvIoxz7mdju6qWpIh.png" src-width="3158" src-height="1700" align="center"/>
 
 # General Component Operation Instructions
 
 - <b>Input Field Hints</b>
-    <img src="/assets/Zw9KbHtD5oqcDfx99zzjjXtfp7g.png" src-width="994" src-height="180" align="center"/>
-    <img src="/assets/XxUKbD0yGoffXdxsNbUjfnNTpXt.png" src-width="922" src-height="164" align="center"/>
+    <img src="/assets/Z71vbZbwBoukOvx4v5GjFIX2pdc.png" src-width="700" src-height="62" align="center"/>
     - Some fields include specific placeholder text to provide guidance for operation.
 
 - <b>Date Fields</b>
-    <img src="/assets/VVl4bM79Eo1yyIxBvbkjdHj6pTe.png" src-width="1176" src-height="734" align="center"/>
+    <img src="/assets/InOjbpNA2oWub1xtZmVjC4k5pdb.png" src-width="1098" src-height="500" align="center"/>
     - Clicking the date box will display a calendar for convenient selection.
 
 - <b>Combobox Fields</b>
-    <img src="/assets/Q74ib31BYox94Px0hI7j2Cu9pkc.png" src-width="264" src-height="113" align="center"/>
-    <img src="/assets/Jypgbx6E0oWzMPxEdYejHduypLF.png" src-width="232" src-height="240" align="center"/>
+    <img src="/assets/ZArJbP8mOoqPqMxFQfxjg91JpGg.png" src-width="1140" src-height="142" align="center"/>
+    <img src="/assets/Tw5IbnwB4oYh7AxyD02jM2jKpff.png" src-width="1134" src-height="654" align="center"/>
     - Clicking the down-arrow in the combobox will display the combobox options.
 
 - <b>Customer Fields</b>
-    <img src="/assets/MfDib4dx0ofqpgxHjrRjLr5dpCf.png" src-width="199" src-height="121" align="center"/>
-    <img src="/assets/D6P3b0cw1ook0txXqShjQZV3pig.png" src-width="561" src-height="408" align="center"/>
+    <img src="/assets/A7RSbn2otoQk5hxS6KjjeBcfpCh.png" src-width="1138" src-height="528" align="center"/>
     - The system provides multiple fields to facilitate locating and querying the corresponding customer.
 
 - <b>Advanced Search</b>
-    <img src="/assets/IQkHbafHvo7OknxC6HfjlGnRpyd.png" src-width="248" src-height="142" align="center"/>
-    <img src="/assets/Kb93bHFcwoOIsFxrZdFjfCh3pOg.png" src-width="252" src-height="132" align="center"/>
+    <img src="/assets/SDoRb3fdhoi7AYxPh54jGz6fpDc.png" src-width="322" src-height="100" align="center"/>
+        <img src="/assets/AkdmbFRihoxfibxNl0kjuM3opoe.png" src-width="306" src-height="88" align="center"/>
     - In the search criteria area, select this to expand or collapse additional search criteria fields.
 
 - <b>Fields Supporting Search</b>
-    <img src="/assets/C2clbtpp0ojD6LxfEaLjitkxptf.png" src-width="482" src-height="214" align="center"/>
-    <img src="/assets/J7SbbsfQYoz2VmxrIvjjeDJkpJc.png" src-width="478" src-height="716" align="center"/>
+    <img src="/assets/CPX5biDmmohVvfxRywQjK1Zsptg.png" src-width="592" src-height="184" align="center"/>
+        <img src="/assets/EBJhb3k3DoODlQxg09MjL4SApWd.png" src-width="556" src-height="656" align="center"/>
     - If the prompt displays the word "Search," the field supports fuzzy search.
 
 - <b>Table/List Pagination</b>
-    <img src="/assets/ZoU6bHlfaoBHhYx2zSKjhIDOpTf.png" src-width="318" src-height="85" align="center"/>
+    <img src="/assets/KcmUbX6CBo3i6lxyWHpjaQAbpNb.png" src-width="1050" src-height="118" align="center"/>
     - You can configure the number of results per page and navigate to a specific page.
 
 - <b>Export Search Results</b>
-    <img src="/assets/OhDcbZs7lo0JJxxOvzujWScmpKc.png" src-width="2724" src-height="434" align="center"/>
+    <img src="/assets/NEkebqyjooV0XGx3S4qjPG6Qpkc.png" src-width="1894" src-height="344" align="center"/>
     - You can export the table data of search results and provide a download function.
 
 - <b>Required Field Indicator</b>
-    <img src="/assets/O1kwbFCkAokIfPxN4WUjmGA2plh.png" src-width="778" src-height="97" align="center"/>
+    <img src="/assets/USfoboPADoqkXxxX5OkjkaDzpbb.png" src-width="794" src-height="230" align="center"/>
     - A red asterisk (*) before a field name indicates that the field is required.
 
 - <b>Add/Remove Controls</b>
-    <img src="/assets/PRN1blxFmoYZI5xwL3QjpY53p8e.png" src-width="765" src-height="85" align="center"/>
+    <img src="/assets/CHytbVBfioX7skxuZkWjotKKp7e.png" src-width="1256" src-height="276" align="center"/>
     - Indicates that data groups can be added or removed.
 
 - <b>Search and Clear Functions</b>
@@ -95,23 +93,21 @@ Table header is fixed at the top.
     - You can perform searches based on query fields and clear the search criteria.
 
 - <b>Export Data</b>
-    <img src="/assets/BXbubWWGMopj4DxhiRejME6epNb.png" src-width="158" src-height="256" align="center"/>
+    <img src="/assets/ToAnbqN1Ho3yQsxPNnKj5rHnpEe.png" src-width="1894" src-height="344" align="center"/>
     - You can export list records to Excel/CSV.
 
 - <b>Field Helper Text</b>
-    <img src="/assets/LaiDbQtLoo9OYdxvbWOjZvu0p5g.png" src-width="849" src-height="165" align="center"/>
+    <img src="/assets/QdBkbEelhoXb75xwkkhjapwapSe.png" src-width="754" src-height="322" align="center"/>
     - The "i" icon next to a field can display helper text.
 
 - <b>Other List Action Buttons</b>
-    <img src="/assets/EoJ7bPQ8CoqAEJxXAIijZyYXpCd.png" src-width="2074" src-height="289" align="center"/>
+    <img src="/assets/RXc7bMu30oif7jxiKqYjSrAKp4f.png" src-width="791" src-height="219" align="center"/>
     - Other list action buttons can be accessed by selecting the "..." icon.
 
 - <b>Customizable List Columns</b>
-    <img src="/assets/IdWPbifw0oKFdpxL0a9juPnCp0c.png" src-width="80" src-height="94" align="center"/>
-    <img src="/assets/SLncbRvzJosRDAxDNnTjb7ldpkb.png" src-width="3086" src-height="1224" align="center"/>
+    <img src="/assets/Fxdob1mb9oT238xoC9XjWTewpSf.png" src-width="3256" src-height="1758" align="center"/>
     - You can select which columns are displayed in the list.
 
 - <b>New Tip Interaction Prompt</b>
-    <img src="/assets/WDnmb9mTxoZnDNxYjpajvLWhpkh.png" src-width="652" src-height="256" align="center"/>
     - When a new tip is available, an interaction prompt will be displayed the first time.
 

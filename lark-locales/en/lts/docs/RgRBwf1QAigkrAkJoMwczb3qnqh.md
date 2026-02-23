@@ -18,17 +18,17 @@ The securities withdrawal function within the WHALE Securities Management System
 ### Broker Information Initialization Must Be Completed
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu path: Securities Management - Broker Information Configuration</p>
+<div class='callout-emoji'>📍</div>
+<p>Menu path: Stock Management- Broker Config</p>
 </div>
 
-Click [New], and in the pop-up modal that appears, fill in the information in the tabs above as appropriate.
+Click [Add], and in the pop-up modal that appears, fill in the information in the tabs above as appropriate.
 
-<img src="/assets/EgiUbqoEOohGiuxGZrHjdTEHpjg.png" src-width="3886" src-height="1840" align="center"/>
+<img src="/assets/GV57bkG91oPbJTxLSJCjKnHlpEg.png" src-width="2952" src-height="1328" align="center"/>
 
 If existing broker information needs to be edited, deactivated, or activated, these actions can be performed in the operations column of the target record.
 
-<img src="/assets/JhH0bda7Cox8ybxIb3pjj7jmp2v.png" src-width="3248" src-height="722" align="center"/>
+<img src="/assets/QoZkbIYSWo6qp4xMRR4jUDzHp1g.png" src-width="2996" src-height="1304" align="center"/>
 
 Terminology
 
@@ -38,11 +38,11 @@ Back-office operators submit securities withdrawal requests in accordance with t
 
 Step 1: Select the client and confirm information such as the market to which the securities deposited this time belong, the transfer-out broker, account holder name, and account number.
 
-<img src="/assets/ZfC6bjy6XoozR9xlBW6jVD2Tp9d.png" src-width="3818" src-height="1838" align="center"/>
+<img src="/assets/GVg9bkJOpohizWxJqurjYtPwpUb.png" src-width="2958" src-height="1302" align="center"/>
 
 Step 2: Based on the selected client from Step 1, the system automatically displays all held securities positions. Locate the target position and fill in the specific security details, quantity, and remarks.
 
-<img src="/assets/U2kwbC9aNo4tF6xbyHcjXWcDpLd.png" src-width="3810" src-height="1920" align="center"/>
+<img src="/assets/WJxUbWbfRoWrHxxCtGyjdqwLpB3.png" src-width="2952" src-height="1304" align="center"/>
 
 ### Notify Broker
 
@@ -50,34 +50,34 @@ If the client has not confirmed this transfer with the counterparty broker, back
 
 Step 1: Select the broker to which the email should be sent.
 
-<img src="/assets/Sdu7b4kcno22Vqxabb7jtUc6pAM.png" src-width="3820" src-height="1928" align="center"/>
+<img src="/assets/XUFwb2EEboc6H6xNQIDjedL4poc.png" src-width="2988" src-height="1406" align="center"/>
 
 Step 2: Select the target application number.
 
-<img src="/assets/WeCJbB27Koc8NQxgLbjjxJVVpuK.png" src-width="3808" src-height="1916" align="center"/>
+<img src="/assets/FzQdbjhw4oqjWmx5w7djZDRKpcf.png" src-width="2980" src-height="1314" align="center"/>
 
 ### Process Securities Deposit Applications
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Securities Deposit &gt; Withdrawal Requests</p>
+<div class='callout-emoji'>📍</div>
+<p>Transfer Out &gt;Transfer-out Request</p>
 </div>
 
 After selecting the target record, click the [Submit] button.
 
-<img src="/assets/XfnYbcjUkorEL7xJGC7jp6Tfpef.png" src-width="3824" src-height="1904" align="center"/>
+<img src="/assets/NIkGbuX27oHsMnxHdBXj0mT4pu1.png" src-width="2982" src-height="1306" align="center"/>
 
 If the client has already notified the counterparty broker, you can check the "Notify Broker" status in the pop-up modal.
 
-<img src="/assets/KsZtbu5tlo4zcux1Vm5jnHcgpvg.png" src-width="3322" src-height="1812" align="center"/>
+<img src="/assets/KKVvbrIbVoQ3cTxIwicj6CP4pkb.png" src-width="2974" src-height="1320" align="center"/>
 
 ### Process Securities Withdrawal Details
 
-After selecting the target record, click [Submit] to confirm as "Success" or "Failure."
+After selecting the target record, click [Submit] to confirm as "Successful" or "Failed."
 
-<img src="/assets/H0Web55Byo9ROWxAGBRjJwwDpYc.png" src-width="3782" src-height="1106" align="center"/>
+<img src="/assets/MDesbGpKToFNt0xtvnkjMMeBpGd.png" src-width="3020" src-height="1342" align="center"/>
 
 After submission, a second approval is required. Click to approve and generate a work order; once confirmed, the securities can be released from the account.
 
-<img src="/assets/TQYIbHT3SolNaDxOO1zjvN2Iprh.png" src-width="3794" src-height="864" align="center"/>
+<img src="/assets/PX71bOdExoYuDgxVQA5j9sY6pJi.png" src-width="2976" src-height="1290" align="center"/>
 

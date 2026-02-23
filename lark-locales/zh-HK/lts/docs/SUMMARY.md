@@ -36,7 +36,7 @@
       - [加密貨幣出入](CEUrw3ePBiOua0kVemnjIWkdp5f.md)
         - [客户錢包地址](H2U2wHzlriyWmikdCn6jGqXjpqc.md)
           - [業務介紹](VeivwNPhgidGxRkmeODjgX30pyd.md)
-            - [系統介紹](TV1FwnyPEi1lF5kZVSNjiLEBpVf.md)
+          - [系統介紹](TV1FwnyPEi1lF5kZVSNjiLEBpVf.md)
           - [快速上手](VgWRwedEmitfQak3XbijUVEFpgb.md)
           - [常見問題](GZtXw6ZssiVGrOk0XS2jDE0wpHX.md)
         - [入幣](IJVgwo98virt6MkHpsSjirdOp5d.md)

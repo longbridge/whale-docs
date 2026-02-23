@@ -24,28 +24,28 @@ This guide covers the full back-end operational workflow for cryptocurrency with
 
 Prior to a customer's withdrawal, configure the cryptocurrency settings for withdrawals.
 
-<img src="/assets/VLNHb5jfkoyeSJxtT7IjqK6KpEg.png" src-width="2048" src-height="706" align="center"/>
+<img src="/assets/WxInbxzuvopUTlxQvZqjCs0wpWd.png" src-width="1280" src-height="614" align="center"/>
 
 ## Customer Wallet Address
 
 Completing wallet address verification prior to withdrawal is a critical prerequisite for ensuring asset security.
 
-<img src="/assets/Ut2wb2JM6oFTzIxbmzyjUVulp6r.png" src-width="3288" src-height="1076" align="center"/>
+<img src="/assets/YC7KbmBeQoBUpexHy40jN3Cxpog.png" src-width="1280" src-height="610" align="center"/>
 
 ## Withdrawal Operations
 
 <b>Request Reception and Record Creation</b>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu path: WBO - Virtual Asset Management - Deposit/Withdrawal - Coin Withdrawal Application</p>
+<div class='callout-emoji'>📍</div>
+<p>Menu path: WBO - Virtual Asset Management - Deposit/Withdrawal - Coin Withdrawal Application</p>
 </div>
 
 - After the client submits a withdrawal request, the system automatically receives the request information and generates a unique withdrawal record containing core information such as the record number, user's securities account, cryptocurrency, amount, destination address, transaction hash (TXID), request time, status, and other key details.
 
-<img src="/assets/LbddbxkcnoVajAxMtDajknmnpzd.png" src-width="3272" src-height="672" align="center"/>
+<img src="/assets/FuAkbZimLopOVcxWTksj21uipsf.png" src-width="2468" src-height="602" align="center"/>
 
 - The client's withdrawal application is automatically linked to a WBO work order (work order identifier: atm.va.coin_withdraw_apply), and the system will carry out approval in accordance with the preconfigured approval flow.
 
-<img src="/assets/Byqvb0JWHodHMvxBgHFjrmOKp7e.png" src-width="3324" src-height="1776" align="center"/>
+<img src="/assets/S7oubUN6Hoj8UsxWWiKjtyPapKf.png" src-width="2498" src-height="1324" align="center"/>
 
