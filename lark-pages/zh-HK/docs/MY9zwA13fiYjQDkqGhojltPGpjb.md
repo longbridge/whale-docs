@@ -18,8 +18,8 @@ WHALE證券管理系統中的證券取出功能支援用戶新增客戶的證券
 ### 需要完成券商資訊初始化
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 菜單入口：證券管理-券商信息配置</p>
+<div class='callout-emoji'>📍</div>
+<p> 菜單入口：證券管理-券商信息配置</p>
 </div>
 
 點選【新建】，在喚出的彈窗中依上方tab分別填入資訊
@@ -59,8 +59,8 @@ WHALE證券管理系統中的證券取出功能支援用戶新增客戶的證券
 ### 處理證券存入申請
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 證券存入&gt;取出申請</p>
+<div class='callout-emoji'>📍</div>
+<p>證券存入&gt;取出申請</p>
 </div>
 
 選擇目標記錄後，點選【提交】按鈕

@@ -32,23 +32,21 @@ Scenario 3: System Operational Notifications (Securities)
 
 Access is located under the settings icon next to the user avatar.
 
-<img src="/assets/PoUSbEROxoDpEOxjxx8jpdn0pNg.png" src-width="1220" src-height="288" align="center"/>
+<img src="/assets/QjIBbPYokom3BrxsJXVjFEC6p6b.png" src-width="3702" src-height="316" align="center"/>
 
 Navigation menu: Global Settings &gt; Message Settings &gt; Subscription Management
 
 - This feature is primarily used to maintain user-facing message subscription management.
 
-<img src="/assets/H82ibjQiAozHJgxxtFdjsgaGpBe.png" src-width="3404" src-height="1616" align="center"/>
+<img src="/assets/Vr4rbQlQmoWogYx4R3LjcBZipMg.png" src-width="3786" src-height="1760" align="center"/>
 
 When you need to add a new message subscription, click [New].
 
-<img src="/assets/HCwQbbqBqoIHOmxbqDij4ez3pig.png" src-width="3384" src-height="1606" align="center"/>
+<img src="/assets/UciVbpnbroayLlxIggojSngNpFe.png" src-width="3294" src-height="1200" align="center"/>
 
 You may configure delivery channels according to the message types provided by the system. The system currently supports email notifications and Webhook. You can select system users or system roles as message recipients.
 
-<img src="/assets/Ernvb83FConwPPxX6xgjGsLnpzc.png" src-width="620" src-height="212" align="center"/>
-
-<img src="/assets/ExVobcGYvoZLO5xkNEojXjROpXc.png" src-width="1058" src-height="238" align="center"/>
+<img src="/assets/DNoMb2qJKoRyFext30lj3Fy9pkg.png" src-width="1032" src-height="896" align="center"/>
 
 After completing a message subscription, notifications will be delivered via the configured channels.
 
@@ -60,17 +58,7 @@ After completing a message subscription, notifications will be delivered via the
 
 - (System 04/10: New feature) The "New Customer Bank Card Alert" and "New Customer Bank Card Approval Alert" can be configured as approval alerts as needed.
 
-<img src="/assets/FvqvbmqT2ogaVyxBsGej94tepsb.png" src-width="1980" src-height="992" align="center"/>
+<img src="/assets/LYA7bmR2QoPxv0xCnp8jKQLopch.png" src-width="1032" src-height="896" align="center"/>
 
 When an alert is activated, the relevant personnel will receive an email notification.
-
-<img src="/assets/YbKVbu2ANoCLRxxAuWAjjIHpppx.png" src-width="2359" src-height="1068" align="center"/>
-
-- (System 05/08: New feature) Added business alerts for "Securities Transfer In" and "Securities Transfer Out" upon submission; related approval alerts can be configured as needed.
-
-<img src="/assets/IXj1bQjYZo3R2LxQH7ujVkBcpfb.png" src-width="3111" src-height="1312" align="center"/>
-
-- (System 09/11: New feature) Added the "Account Opening Pending Review" service in the Subscription Management module; the methods for receiving notifications can be configured.
-
-<img src="/assets/GCM2bVLpqoOvo3xkcHljQl4qpsd.png" src-width="2410" src-height="1238" align="center"/>
 
