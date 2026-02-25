@@ -18,8 +18,8 @@ WHALE證券管理系統中的證券存入功能支援用戶新增客戶的證券
 ### 需要完成券商資訊初始化
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 菜單入口：證券管理-券商信息配置</p>
+<div class='callout-emoji'>📍</div>
+<p>菜單入口：證券管理-券商信息配置</p>
 </div>
 
 點選【新建】，在喚出的彈窗中依上方tab分別填入資訊
@@ -61,15 +61,13 @@ WHALE證券管理系統中的證券存入功能支援用戶新增客戶的證券
 ### 處理證券存入申請
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 證券存入&gt;存入申請</p>
+<div class='callout-emoji'>📍</div>
+<p>證券存入&gt;存入申請</p>
 </div>
 
 選擇目標記錄後，點選【提交】按鈕
 
 <img src="/assets/Jw9ibpT8hoRK9tx27nujr38vpMc.png" src-width="3818" src-height="1772" align="center"/>
-
-<img src="/assets/A1pTb3G6KoDrEsxdmfsjEqXwpth.png" src-width="3818" src-height="1772" align="center"/>
 
 若客戶已經通知了對方券商可以在彈窗內勾選「通知券商」的狀態
 
@@ -81,8 +79,6 @@ WHALE證券管理系統中的證券存入功能支援用戶新增客戶的證券
 
 <img src="/assets/OWJIb8bpFo3hXtxbK9BjfzNypLc.png" src-width="3774" src-height="1124" align="center"/>
 
-<img src="/assets/Nn1nbK14solRwYxI2xcjLOoppOg.png" src-width="3774" src-height="1124" align="center"/>
-
 如果證券存入爲實物股票，在處理成功提交時，需要選擇是否凍結，如果選定凍結，還需要指定解凍時間
 
 <img src="/assets/GcGBbtnUaoWcNVxbpD6jGDqwp6b.png" src-width="2330" src-height="1054" align="center"/>
@@ -92,8 +88,6 @@ WHALE證券管理系統中的證券存入功能支援用戶新增客戶的證券
 <img src="/assets/C0p8bGSagoP8lixYBRojHk6kpTf.png" src-width="3774" src-height="838" align="center"/>
 
 <img src="/assets/Ft7gbj7dvoTdXFxarmGjZp9Ep8b.png" src-width="1560" src-height="1764" align="center"/>
-
-<img src="/assets/JuKEbJLCtoGimQxNOCMj3o2KpCc.png" src-width="1560" src-height="1764" align="center"/>
 
 <img src="/assets/Lz47bnjbLoxJWvxH0AQjLsFiplb.png" src-width="3318" src-height="926" align="center"/>
 

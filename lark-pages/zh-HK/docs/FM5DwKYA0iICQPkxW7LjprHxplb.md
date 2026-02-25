@@ -62,13 +62,3 @@ sidebar_position: 4
 
 當告警生效時，相關人員會收到信箱通知
 
-<img src="/assets/Qai2bCheIoXV3qx1nDujHu4BpeN.png" src-width="2359" src-height="1068" align="center"/>
-
-- （系統 05/08 :新增功能）   新增'證券轉入'、'證券取出' 提交時業務告警 ，可以根據需要設置 相關審批告警
-
-<img src="/assets/OjXJbuGQlor3ljxGkTtjk890peb.png" src-width="3111" src-height="1312" align="center"/>
-
-- （系統 09/11 :新增功能）  在訂閱管理模塊，新增‘開戶待審核’業務，可配置接收信息通知的方式。
-
-<img src="/assets/ART8bRnlXol8c8xH72Ij7bfcpUc.png" src-width="2410" src-height="1238" align="center"/>
-

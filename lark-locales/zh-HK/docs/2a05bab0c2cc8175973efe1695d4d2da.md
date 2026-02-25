@@ -27,7 +27,7 @@ sidebar_position: 0
 6. 確認到账狀態
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 <b>注意：</b> 虛擬幣帳戶以「加密貨幣 + 計價貨幣」組合標的記帳：入幣、出幣時按加密貨幣單獨記錄，最終同步至證券帳戶時，以該組合標的入帳（例：加密貨幣 ETH，預設計價貨幣 USD，入帳標的為「VA/HAS/ETHUSD」）。出帳時優先抵扣可用餘額較大的幣種，若餘額不足則自動從次優先級幣種扣減。</p>
+<div class='callout-emoji'>📍</div>
+<p><b>注意：</b> 虛擬幣帳戶以「加密貨幣 + 計價貨幣」組合標的記帳：入幣、出幣時按加密貨幣單獨記錄，最終同步至證券帳戶時，以該組合標的入帳（例：加密貨幣 ETH，預設計價貨幣 USD，入帳標的為「VA/HAS/ETHUSD」）。出帳時優先抵扣可用餘額較大的幣種，若餘額不足則自動從次優先級幣種扣減。</p>
 </div>
 
