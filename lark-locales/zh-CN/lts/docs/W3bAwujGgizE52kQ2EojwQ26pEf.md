@@ -7,10 +7,6 @@ sidebar_position: 13
 
 # 14. SFTP 问题
 
-[Document original - 原始文档](https://longbridge.larkenterprise.com/docx/DaFIdrrRao7wabxwV2icki62nNe)
-
-Creator - lucas.chau@longbridge.cloud
-
 ---
 
 ## 14A 问：如何设置 SFTP？

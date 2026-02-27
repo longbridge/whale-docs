@@ -41,18 +41,18 @@ Half-day trading sessions in different markets can be designated as settlement d
 
 # 5.1B Question: How do I perform a clearing reversal?
 
-Answer: On the Clearing Management &gt; Clearing Reversal page, click "Create Clearing Reversal." (See Figure 5.1B-1)
+Answer: On the  Day-End Settlement &gt; Clearing Cancellation , click " New Clearing Cancellation " (See Figure 5.1B-1)
 
 Select the financial date, post-send settlement handling, asset-class rollback, and market(s) (multiple markets can be selected), then click "Submit for Approval." (See Figure 5.1B-2)
 
 - "Accounting Reversal" performs a comprehensive reversal of fees, such as charged commissions, interest deductions, and clearing accounting calculations. It does not affect deposits/withdrawals, trade orders, or account-opening data.
 - Clearing financial dates cannot be skipped. For example, if today is 2024-01-26 and you need to reverse to 2024-01-24, first reverse 2024-01-26, complete that, then reverse 2024-01-25, and finally reverse 2024-01-24; otherwise, the clearing process will report an error.
 
-<img src="/assets/CEyDbgZtvo05dGxqKSJjfQIgpKc.png" src-width="2864" src-height="1288" align="center"/>
+<img src="/assets/Fq0DbzBXtohKqAxuptGjWi9kpVd.png" src-width="3014" src-height="1506" align="center"/>
 
 <em>5.1B Figure 1</em>
 
-<img src="/assets/LvbdbPsQcoANTwxGa3HjrjDEp2k.png" src-width="2390" src-height="1420" align="center"/>
+<img src="/assets/R8Y6bWGanoLc9GxNgnzjQ7NVpAe.png" src-width="3014" src-height="1506" align="center"/>
 
 <em>5.1B Figure 2</em>
 
@@ -62,7 +62,7 @@ If it is not necessary to recalculate interest/settlement data, asset-class roll
 
 Answer: ZunJia’s position file does not separate Hong Kong and U.S. markets; positions are consolidated into a single file for provision, so the import system does not need to distinguish markets.
 
-<img src="/assets/Jif8bnmxwo7O5OxBgtVj3HhgpKg.png" src-width="2690" src-height="1410" align="center"/>
+<img src="/assets/OnB8bs2m0owjwlxf4EzjwGS2pyf.png" src-width="3014" src-height="1506" align="center"/>
 
 <img src="/assets/KXc6bEvVto30MMxFLEjjdry8p9c.png" src-width="1398" src-height="202" align="center"/>
 

@@ -13,31 +13,33 @@ sidebar_position: 8
 
 Answer: Orders can be canceled immediately after placement. If an order's status is "Daily Cut" and the cut-off time has passed, it cannot be canceled.
 
-<img src="/assets/JRVvbYNOzoyJVuxoO5mjab6Ip8b.png" src-width="2848" src-height="1634" align="center"/>
+<img src="/assets/ZrjkbCFC8opUugxhigAjIiBbprg.png" src-width="3212" src-height="2188" align="center"/>
 
-<img src="/assets/QWcRbsGwsoQYpnxygy7jF07ipJY.png" src-width="1352" src-height="1580" align="center"/>
+<img src="/assets/B2oSbNS7xob5XPx703Oj6P8gpRg.png" src-width="3232" src-height="2188" align="center"/>
 
 # 9B Q: What are Order Retrieval Time and Automatic Backfill Time?
 
 Answer: "Order Retrieval Time" refers to the daily cutoff time; "Automatic Backfill Time" applies only when the system is integrated with the upstream API. For integrated cases, the upstream provider will return backfill values at the Automatic Backfill Time; if not integrated, backfill values must be entered manually in the backend.
 
-<img src="/assets/PyZKbsmh3oPdBTxVG1mjhMUNp2b.png" src-width="2630" src-height="542" align="center"/>
+<img src="/assets/Ia7Kb7gx4ooikmxo94BjKVJPpxg.png" src-width="3242" src-height="2190" align="center"/>
 
 # 9C Q: How should the Automatic Backfill Time be entered?
 
 Answer: Automatic backfill applies to scenarios using the provider's API. For tenants not using the API, the Automatic Backfill Time is ineffective and can be set to the same value as the Order Retrieval Time.
 
-<img src="/assets/TPwEbRSwTou4QqxTpKrjlWIUpkd.png" src-width="2502" src-height="596" align="center"/>
+<img src="/assets/S83LbcSsuoOtdjxNuxMjg9jdppe.png" src-width="3216" src-height="2182" align="center"/>
 
 # 9D Q: How are Public Funds and Private Funds backfilled?
 
 Answer: Confirm subscription units / redemption amounts must be filled in according to the settlement statement or trade confirmation provided by the upstream provider; if a value is unavailable, enter 0.
 
-<img src="/assets/TIITbW0ZgoPLU1x0hcqjvUwtpgS.png" src-width="2164" src-height="1198" align="center"/>
+<img src="/assets/UV5Wb1NwfoedH4xMQGgjYdySpde.png" src-width="3232" src-height="2196" align="center"/>
+
+<img src="/assets/WFcGb48NhomEO5x8Fc5jeZiupee.png" src-width="3222" src-height="2208" align="center"/>
 
 # 9E Q: If a fund listed via API integration does not perform the automatic daily cutoff, how can this be handled?
 
-<img src="/assets/PSWFbgzcRoPLiOxES3Vj3HBUpnc.png" src-width="2510" src-height="932" align="center"/>
+<img src="/assets/HGJ3bVQUloiWCrxezHsjdzcRp2b.png" src-width="3242" src-height="2196" align="center"/>
 
 Answer: The system checks every 5 minutes between 08:00 and 22:00 daily to determine whether the fund daily cutoff time has been reached. Please modify the daily cutoff time to within the 08:00–22:00 window. (See 9E Figure 1 and Figure 2.)
 
@@ -46,11 +48,11 @@ Answer: The system checks every 5 minutes between 08:00 and 22:00 daily to deter
 <p>The automatic backfill detection also occurs during the same time window (08:00–22:00).</p>
 </div>
 
-<img src="/assets/I8krbvwN5oZu30x7s7ijWwxipvg.png" src-width="2502" src-height="692" align="center"/>
+<img src="/assets/OGYRbzBxDosWtAxpNkejboWApwd.png" src-width="3222" src-height="2192" align="center"/>
 
 <em>9E Figure 1</em>
 
-<img src="/assets/JWPEbu6Q8oOF30xDpmhjfABVpec.png" src-width="2170" src-height="1042" align="center"/>
+<img src="/assets/Gab9b4iVSoPvFCxBLe8juSZdplg.png" src-width="3216" src-height="2212" align="center"/>
 
 <em>9E Figure 2</em>
 
@@ -58,7 +60,7 @@ Answer: The system checks every 5 minutes between 08:00 and 22:00 daily to deter
 
 Answer: Update prices on the "Fund Management &gt; Public Funds / Private Funds &gt; Net Value Table" page.
 
-<img src="/assets/ZrGzbRBEOo45PBxaVWOjyyoJpvf.png" src-width="2636" src-height="640" align="center"/>
+<img src="/assets/PY0ZbbVF2oEao5xaTvbjigN6pxd.png" src-width="3238" src-height="2192" align="center"/>
 
 # 9G Q: If historical fund NAVs are backfilled, will settlement statements be updated?
 
@@ -87,9 +89,9 @@ Answer: After manual fund adjustments, clients may redeem via the App; subscript
 
 # 9J Q: What are the meanings of "Minimum Holding Units", "Minimum Holding Amount", "Minimum Sellable Units", and "Internal Code (from upstream)" when creating a new private fund?
 
-<img src="/assets/Why5bjpo1o3gMcxzfPQjw6mQpCf.png" src-width="2842" src-height="1068" align="center"/>
+<img src="/assets/IsQJbFFk3oaBtCxrVjnjiEFip0d.png" src-width="3232" src-height="2202" align="center"/>
 
-<img src="/assets/HnZTbvvRXoiLBjxkp0njpI3gpsh.png" src-width="2838" src-height="1050" align="center"/>
+<img src="/assets/W5hOb8QnuodeXGxFHpXjYWfdpOb.png" src-width="3232" src-height="2212" align="center"/>
 
 Answer:
 
@@ -99,9 +101,9 @@ Answer:
 
 # 9K Q: In aggregated fund orders, why do the total transaction units shown in "Fund Settlement" differ from the sum of units allocated to all clients?
 
-<img src="/assets/T0a2btcNXo4ehkxH6Kgjvp8Zpjb.png" src-width="2866" src-height="964" align="center"/>
+<img src="/assets/Q4j5bUJfhoIYegxui6GjvC2Wptd.png" src-width="3212" src-height="2214" align="center"/>
 
-<img src="/assets/IG1EbgUrgoyqUax1o1XjvHg2pQh.png" src-width="2864" src-height="916" align="center"/>
+<img src="/assets/GSR7bQg7Uo3agqxIjgIj3hyQpVg.png" src-width="3218" src-height="2202" align="center"/>
 
 Answer: The system currently calculates aggregated fund order units using the formula: (individual client's subscription amount / total subscription amount) * fund NAV, which can result in decimal rounding differences. Tenants can use manual account adjustments to help clients reconcile their unit allocations.
 

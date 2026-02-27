@@ -22,5 +22,5 @@ A: This is due to time zone differences. U.S. equities include overnight trading
 <p>The counterparty broker seat can also be viewed in the executed order details.</p>
 </div>
 
-<img src="/assets/BNTObfRALo5dO8x4ccwj1Xunpgh.png" src-width="2850" src-height="1444" align="center"/>
+<img src="/assets/DfmTbryaKozcM4xzH9RjqKRwpgg.png" src-width="3014" src-height="1510" align="center"/>
 

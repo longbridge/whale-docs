@@ -43,11 +43,7 @@ After a client’s account opening materials have been signed and submitted (whe
 
 The primary KYC process nodes currently used in the system’s account opening workflow are as follows:
 
-<img src="/assets/L928bkmVuorTUlxpuBwj75y7pMh.png" src-width="1838" src-height="536" align="center"/>
-
-Detailed process flow is as follows:
-
-<img src="/assets/KBgHbC9lJofQZPxMMnLjfmsgpJf.png" src-width="2476" src-height="952" align="center"/>
+<img src="/assets/IfjowlCyPhKpEobCyiRjjRs2p1f-board.jpeg"/>
 
 ## Account Opening List
 
@@ -58,53 +54,53 @@ Detailed process flow is as follows:
 
 The Account Opening List page displays all account opening application records submitted by clients, including all account statuses.
 
-<img src="/assets/F9EBbgivVou36oxCIxPjZABUpyd.png" src-width="2362" src-height="884" align="center"/>
+<img src="/assets/BmhubfFGcoeeknxlomdjnYGlpwd.png" src-width="2978" src-height="1188" align="center"/>
 
-Metric Card Description
+<b>Metric Card Description</b>
 
 Metric cards support custom configuration, including the number displayed and their order.
 
-<img src="/assets/ZNLLbHpTroFmq0xy3xrjzsEBpeg.png" src-width="2056" src-height="1081" align="center"/>
+<img src="/assets/DX8jbUmVnoCwh2xWPm4jKM6upOh.png" src-width="3024" src-height="1648" align="center"/>
 
-Account Opening List
+<b>Account Opening List</b>
 
 - Supports filtering account application data by various fields.
 - The list supports sorting by fields such as submission time, most recent update time, and account opening success time in ascending/descending order.
 - Click the "Details" button to navigate to the KYC detail page to view the complete account opening information.
 
-<img src="/assets/P7xfbaH6UorMJCxDOpPjsquLpkh.png" src-width="1956" src-height="964" align="center"/>
+<img src="/assets/OAIHbZMWao1qRfxWA0ijnFVbpCd.png" src-width="2492" src-height="1438" align="center"/>
 
 ## Account Opening Review Records
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
-<p>⚓ Menu Entrance: KYC &gt; Account Opening Review Records</p>
+<p>⚓ Menu Entrance: KYC &gt; Audit Records</p>
 </div>
 
 You can query clients’ account opening review records. Click [Details] to review the KYC review node records (Compliance / RO / VC) and related detailed materials.
 
-<img src="/assets/VD4pbpUvaoczUwxjWA7j11tApeh.png" src-width="3230" src-height="1494" align="center"/>
+<img src="/assets/DYojbhw9zoyFaKxLoBAjH7TWpwf.png" src-width="2922" src-height="1514" align="center"/>
 
 ## AML
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
-<p>⚓ Menu Entrance: KYC &gt; AML Monitoring Backend (TESS)</p>
+<p>⚓ Menu Entrance: KYC &gt; TESS</p>
 </div>
 
 This page displays the monitoring status and pending alerts for all clients with TESS invocation records.
 
 Note: Client records that did not match will not be shown here.
 
-<img src="/assets/AbZnbowcJogvYgxM7MnjOPkip3d.png" src-width="3224" src-height="1618" align="center"/>
+<img src="/assets/GRjfb2X4FoInibxECRPj9nYGpzf.png" src-width="2870" src-height="1356" align="center"/>
 
-The page provides four dimensions: All Clients / Clients with Pending Alerts / Continuous Monitoring Clients (Primary Holder) / Continuous Monitoring Clients (Secondary Holder).
+The page provides four dimensions: All Clients / Pending Alert Clients / Keep Monitoring - Main Holder / Continuous Monitoring Clients (Secondary Holder).
 
-<img src="/assets/D4zKbysnGomfXxx25OFjY24jpPb.png" src-width="3226" src-height="354" align="center"/>
+<img src="/assets/SEoPbKpAFo4TRnxeMghjJGHNpEf.png" src-width="2892" src-height="406" align="center"/>
 
 When switching between dimensions, the lower data area loads the relevant records to facilitate monitoring and review of individual entries. According to AML management needs, you may operate “Cancel Monitoring” or “Add to Watchlist.”
 
-<img src="/assets/JQF8bsuqMolh8ExHrvfj9vuopOd.png" src-width="3208" src-height="1606" align="center"/>
+<img src="/assets/Zlnxb5IZ8oElHLxaGx6jeIKKpTQ.png" src-width="2882" src-height="1212" align="center"/>
 
 ## Third-Party Verification
 
@@ -115,7 +111,7 @@ When switching between dimensions, the lower data area loads the relevant record
 
 During the client identity authentication stage, third-party verification files can be uploaded manually, and you can click [Manual Verification] to view the contents of submitted verification files.
 
-<img src="/assets/EwUjbtLwvo6iJUxlSiJjrdrpplh.png" src-width="3214" src-height="1620" align="center"/>
+<img src="/assets/UJzwbJBzhovtvmxgaSWjW5gkplc.png" src-width="2942" src-height="1212" align="center"/>
 
 # Data Management
 
@@ -123,14 +119,14 @@ During the client identity authentication stage, third-party verification files 
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
-<p>⚓ KYC &gt; Data Management &gt; Account Opening Data</p>
+<p>⚓ KYC &gt; Document Management &gt; Account Information</p>
 </div>
 
 The Account Opening Data list page displays all account opening application records submitted offline.
 
-<img src="/assets/QjDWbEa7QoSHdPx37xfjatONpeh.png" src-width="2318" src-height="834" align="center"/>
+<img src="/assets/CqDXbpU8Towe91x34aPjCddHpXd.png" src-width="2966" src-height="1378" align="center"/>
 
-Account Opening Data List
+<b>Account Opening Data List</b>
 
 - Supports filtering list data by various statuses.
 - Click the "Import Users" button to download the import template and perform bulk import of account opening applications.
@@ -142,30 +138,30 @@ Account Opening Data List
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
-<p>⚓ KYC &gt; Data Management &gt; Account Opening Data &gt; Bulk Edit</p>
+<p>⚓ KYC &gt; Document Management &gt; Account Information &gt; Batch Update</p>
 </div>
 
 The bulk update page displays historical records of submitted bulk modification data.
 
-<img src="/assets/Uuy9bJimQoqsrmxLPHsjzEnGplg.png" src-width="2334" src-height="978" align="center"/>
+<img src="/assets/Nudlbikx2o15yJxuWUbjvahSppe.png" src-width="3004" src-height="1272" align="center"/>
 
-Submit Bulk Modification Operation
+<b>Submit Bulk Modification Operation</b>
 
 Click the "Bulk Import" button to download the import template. Upload the file containing modification information according to the import requirements.
 
-<img src="/assets/QHrSbE15wou4vCxDTrwj3qA1px1.png" src-width="1960" src-height="1018" align="center"/>
+<img src="/assets/OV9obDFjuoqiEpxqw8LjSV9vpQ8.png" src-width="2528" src-height="1432" align="center"/>
 
-Work Order Review
+<b>Work Order Review</b>
 
 - The bulk modification list page displays successfully uploaded data.
 - Click the "Details" button, or select multiple records using the checkboxes on the left of the list, to review single or multiple modification work orders at once.
 - After approval, the client's account opening data will be updated synchronously.
 
-<img src="/assets/UsFsb1CniowymDxZLL5jPKLspLh.png" src-width="1960" src-height="990" align="center"/>
+<img src="/assets/O6tAbq4Nqo1Fx9xCspajkBb7pZe.png" src-width="2512" src-height="1510" align="center"/>
 
-<img src="/assets/Cc2wbm9AMoOfVlxeGsgj8Ylhpde.png" src-width="1972" src-height="1002" align="center"/>
+<img src="/assets/Plk8bgfdho3Nbix1VncjXGfAplb.png" src-width="2932" src-height="1552" align="center"/>
 
-<img src="/assets/CQDObLBTZoTxnqx10DjjX23Rpvb.png" src-width="1962" src-height="1008" align="center"/>
+<img src="/assets/YB0GbVvKGo7dp6xnOYJjm6HVphd.png" src-width="2912" src-height="1558" align="center"/>
 
 ## Account Opening Data Entry
 
@@ -174,7 +170,7 @@ Work Order Review
 <p>⚓ KYC &gt; Account Opening Data &gt; Add Account Application</p>
 </div>
 
-<img src="/assets/VlY8b6iR5oc810x9yvWjbFlTp7e.png" src-width="3798" src-height="812" align="center"/>
+<img src="/assets/ET1Sb0BatoPcLexzNtGjFC88pGe.png" src-width="2464" src-height="992" align="center"/>
 
 On the Account Opening Data page, click "Add Account Application" to complete the offline submission of account opening information.
 
@@ -186,26 +182,26 @@ Select Existing Client / Create New Client
 
 - Select Existing Client: choose a registered client (APP user). Searchable by Member ID, phone number, email, full name, or identification number.
 
-<img src="/assets/IfzqbJLyWoDPPbxC1KgjyI2sp0c.png" src-width="3274" src-height="1178" align="center"/>
+<img src="/assets/O4aJb6knCoyjaAx1vnojWtAVpQf.png" src-width="2488" src-height="1370" align="center"/>
 
 - Create New Client: for clients not registered in the system, create them through this operation. The system currently provides multiple login methods:
     - System-generated APP account login
     - Mobile phone verification code login
     - Email verification login
 
-<img src="/assets/TpiHbv9JEo47IjxDeBXjx8QOpNf.png" src-width="3278" src-height="1196" align="center"/>
+<img src="/assets/ScCnbm0yToANhaxMIkuj0md2pcc.png" src-width="2514" src-height="1426" align="center"/>
 
 Choose Client Type: Individual Client / Joint Client / Corporate Client
 
-<img src="/assets/FPOPbImesoVYqKxRcdvjeTYkpZd.png" src-width="3262" src-height="990" align="center"/>
+<img src="/assets/RtUYb26g2of1AMxBdXtjZ1Ulp3g.png" src-width="3024" src-height="1648" align="center"/>
 
 Note: For corporate accounts, you may modify the default CRS corporate entity type.
 
-<img src="/assets/HjGEbCEKcofpcwxBqBXjNEDlpEc.png" src-width="3250" src-height="1550" align="center"/>
+<img src="/assets/CrE2buhCSorsGLxqIbsjr7bNpKd.png" src-width="3024" src-height="1648" align="center"/>
 
 Select Client Nationality: the system supports 200+ nationalities.
 
-<img src="/assets/ZNbub7Cm6oyXk4xfun7jqOZ9pYd.png" src-width="3278" src-height="1184" align="center"/>
+<img src="/assets/UN6wbzWSpoB7YGxwR2Vjch8TpWZ.png" src-width="2506" src-height="1410" align="center"/>
 
 ### Step Two: Upload Identification Documents
 
@@ -223,7 +219,7 @@ There are three client nationality categories:
     2. Possession of a Hong Kong identity document: default is No; if the user selects Yes, guide the user to provide Hong Kong document details.
     3. If the user selects No, upload other identification documents.
 
-<img src="/assets/PF0lbkKk7ohAbXxbfeKj6lqCp2e.png" src-width="3252" src-height="1822" align="center"/>
+<img src="/assets/D77jb3IABo81ezxSYXGjVdaFpTo.png" src-width="3024" src-height="1648" align="center"/>
 
 ### Step Three: Upload Proof of Address
 
@@ -236,7 +232,7 @@ There are two client types for address proof:
 2. Others
     1. Proof of residential address must be uploaded.
 
-<img src="/assets/TWWxb4PnVoqUxTx3MU8jS7hapMc.png" src-width="3252" src-height="1604" align="center"/>
+<img src="/assets/JYMbbMjRjoltY3xPgSajw1PCpJg.png" src-width="3024" src-height="1648" align="center"/>
 
 ### Step Four: Enter Basic Information
 
@@ -244,31 +240,31 @@ This primarily includes occupation information, tax information, email address, 
 
 Tax Information: clients must provide the country/region of tax residence and the taxpayer identification number; up to 10 entries are supported. Fields include: Tax Country/Region and Taxpayer Identification Number.
 
-<img src="/assets/K3C7bkLbNoiJhbxXmHcj4mt0pPg.png" src-width="3270" src-height="1438" align="center"/>
+<img src="/assets/H6TGb1hSGozjZMxW8DyjZvwJpt0.png" src-width="3024" src-height="1648" align="center"/>
 
 Email Address: the email is used to receive statements, notifications, and other communications. An App user's email address must be unique.
 
 Enter contact mobile number: multiple clients may use the same contact mobile number.
 
-<img src="/assets/Q5kRbylvOoXaL2xMbT8j3PUTp5d.png" src-width="3266" src-height="1430" align="center"/>
+<img src="/assets/F87Zb3U1ioi03HxhwEzjwW1FpXd.png" src-width="2472" src-height="1436" align="center"/>
 
 ### Step Five: Enter Asset and Investment Information
 
-<img src="/assets/U925b2R07ogJhdx64vCj1T6Kpqg.png" src-width="3258" src-height="1804" align="center"/>
+<img src="/assets/RXkYbWhIJohG6Nxrkzbjye6ApMb.png" src-width="3024" src-height="1648" align="center"/>
 
 ### Step Six: Compliance Information Confirmation
 
-<img src="/assets/FW2QbrzaroICsJx9CPXjhs8lpyd.png" src-width="3254" src-height="1806" align="center"/>
+<img src="/assets/Cf2wbcLhAokkPmx1gBXjQFM7p3g.png" src-width="3024" src-height="1648" align="center"/>
 
 ### Step Seven: Confirm Information
 
 The system arranges and displays the client's information in blocks by: identification documents / personal basic information / occupation information / asset and investment information / compliance information confirmation / linked account information, to facilitate review and confirmation of entered data.
 
-<img src="/assets/TtkAbaeraoHf9sxZU9RjiX9GpFh.png" src-width="3250" src-height="1576" align="center"/>
+<img src="/assets/HpLNbdVNhoUBCGxK5lAjB1EbpAg.png" src-width="3024" src-height="1648" align="center"/>
 
 If any information requires correction, click the [Edit] button at the top right of the block to navigate to that section for modification.
 
-<img src="/assets/HPoxbyaRfoRHgAx2eLwjYxVgpOd.png" src-width="3162" src-height="1142" align="center"/>
+<img src="/assets/SRXnb1OBToFd7TxMNHejNBh2pth.png" src-width="3024" src-height="1648" align="center"/>
 
 ### Step Eight: Select Account Type and Upload Account Opening Documents
 
@@ -277,13 +273,13 @@ Upload account opening and custom documents:
 1. Base documents are system-generated account opening documents; information entered in the backend is automatically populated.
 2. Business staff can print documents for the client's signature.
 
-<img src="/assets/MLTnbLfj4oY47OxDlKdji9i4pnh.png" src-width="3258" src-height="1818" align="center"/>
+<img src="/assets/JBuDbEWCTotjixxsHGPjnYLEpOh.png" src-width="3024" src-height="1648" align="center"/>
 
 Account Types: you may choose to open a margin account or a cash account; the system supports opening multiple accounts simultaneously.
 
-<img src="/assets/NmIubkEsUoY4GMxqY0Fjanoophe.png" src-width="3300" src-height="1678" align="center"/>
+<img src="/assets/NYHLbfmABofghRxpDg1jVGY5pwd.png" src-width="2426" src-height="900" align="center"/>
 
 Other configuration information includes: whether to receive offline statements, broker, witness staff name, license number, securities number (client account can be entered manually), and client statement confirmation.
 
-<img src="/assets/BrYbb7s4RoNzvNxbnAxjBqjnpWh.png" src-width="3262" src-height="1636" align="center"/>
+<img src="/assets/I0Lxb6txHoCVNcxqpYGjrnXFpyg.png" src-width="2426" src-height="900" align="center"/>
 

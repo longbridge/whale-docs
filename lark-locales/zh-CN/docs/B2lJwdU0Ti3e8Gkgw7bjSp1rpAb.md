@@ -7,10 +7,6 @@ sidebar_position: 4
 
 # 1.5 BCAN 报送
 
-[Document original - 原始文档](https://longbridge.larkenterprise.com/docx/VP0JdsnV9oHKLixD1yTc57GYn0a)
-
-Creator - lucas.chau@longbridge.cloud
-
 ---
 
 ## 1.5A 问：如何操作 BCAN 资料申报？

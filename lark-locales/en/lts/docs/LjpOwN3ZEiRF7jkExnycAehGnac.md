@@ -17,17 +17,17 @@ A: This is a two-step process: 1. Create a team; 2. Configure the broker.
 
 "Team Management" is used to distinguish different groups of brokers. A team contains brokers, and each broker must be assigned to at least one team. To differentiate users, classify them into different teams. Members who are not part of the same team cannot view the customers belonging to that team.
 
-(i). On the Broker Management &gt; Teams and Brokers &gt; Team Management page, click "Create"
+(i). On the Broker Management &gt; Teams and Brokers &gt; Team Management page, click "Add"
 
-<img src="/assets/KTjwb8TJsoCRPxxVUO4jqetnpeg.png" src-width="2508" src-height="1318" align="center"/>
+<img src="/assets/EySGbe8WGoaFUpxV3NrjzCtypXf.png" src-width="3014" src-height="1500" align="center"/>
 
-(ii). Set the team ID (cannot be changed after confirmation), team name, team type, and remarks (remarks optional). After completing the fields, click "Confirm".
+(ii). Set the team ID (cannot be changed after confirmation), team name, team type, and remarks (remarks optional). After completing the fields, click "OK".
 
-<img src="/assets/LVTnbPpEpouY2dxyJ0zjhhNWpaf.png" src-width="2164" src-height="1080" align="center"/>
+<img src="/assets/ACySb6mLmowwAsxXNtEjZchvp0d.png" src-width="3014" src-height="1500" align="center"/>
 
 (iii). Existing teams can be viewed in detail, edited, or frozen.
 
-<img src="/assets/CC9jbb9MfoEzwjx1d02jVhUTprg.png" src-width="2168" src-height="554" align="center"/>
+<img src="/assets/OJcybUgXHowNkrxnZUajDe8opYd.png" src-width="3014" src-height="1500" align="center"/>
 
 ## Configure the Broker
 
@@ -35,20 +35,20 @@ Each broker must be assigned to a team. On the Broker Management page you can cr
 
 (i). Create a broker: click "Create"
 
-<img src="/assets/G3EpbQFmKobMeKxFMXnjwNt7pXf.png" src-width="2162" src-height="564" align="center"/>
+<img src="/assets/SszAbOnhSovZrSxGRVnj7u6Gpjh.png" src-width="3014" src-height="1500" align="center"/>
 
 (ii). Set the broker account (cannot be changed after confirmation), affiliated team, license number, etc.
 Fields marked with an asterisk (*) are required. Click "+" to add a group package.
 
-<img src="/assets/VszFbMYQQox8GzxgjYijVBinpJd.png" src-width="2174" src-height="1430" align="center"/>
+<img src="/assets/W1d5bjneIoOzPwxVWIKjkI3Jpwd.png" src-width="3020" src-height="1602" align="center"/>
 
 # 11B Q: How do I configure a broker's commission package?
 
 A: Please follow the steps below:
 
-(i). On Broker Management &gt; Commission Management &gt; Commission Package Configuration, click "Add"
+(i). On Broker Management &gt; Commission Management &gt; Commission Package Configuration, click "New"
 
-<img src="/assets/ZXqfbPaWyonYkIxpc6JjNFrTpCe.png" src-width="2504" src-height="984" align="center"/>
+<img src="/assets/REv7bOXLvop0h3xep2Pj9j57pBf.png" src-width="3014" src-height="1500" align="center"/>
 
 (ii). Commission package name: set as desired
 
@@ -57,11 +57,11 @@ A: Please follow the steps below:
 - Select recipient: Broker;
 - Allow losses: indicates that if the commission is insufficient to pay the broker, rebates will continue to be calculated according to this setting (e.g., odd‑lot trades); then select market, buy/sell direction, calculation method, rate, and currency.
 
-<img src="/assets/G5sXbqdVWolJtBxeEQRj02KPpIh.png" src-width="2506" src-height="1434" align="center"/>
+<img src="/assets/DP7kbnpNyopfYDxO2lUjGkW7p2f.png" src-width="3014" src-height="1500" align="center"/>
 
 (iii). Return to the Broker Management page, select the package, then click "Confirm".
 
-<img src="/assets/PQLbbiI1joRN4xxO5rajMS0Bpre.png" src-width="2496" src-height="1430" align="center"/>
+<img src="/assets/GEDCbSQEboRiScxttASjvNjgplh.png" src-width="3014" src-height="1590" align="center"/>
 
 # 11C Q: How do I change a broker?
 
@@ -71,34 +71,36 @@ A: If a broker has left or needs to be replaced:
 
 <img src="/assets/MvggbWGKboQ0p0xVqkejH9V3pSc.png" src-width="2502" src-height="1122" align="center"/>
 
-(ii). Select the broker to assign, then click "Confirm".
+(ii). Select the broker to assign, then click "OK".
 
-<img src="/assets/SQ1AbW0NIoFTy3xxryCjq1s7pPh.png" src-width="2168" src-height="1356" align="center"/>
+<img src="/assets/Eox7bPRbuoZEtZxwHa1j7820psd.png" src-width="3002" src-height="1492" align="center"/>
 
 # 11D Q: Can a broker ID be modified?
 
 A: After creation, the broker ID cannot be modified via "Edit" (see 11D Figure 1). You may choose to "Freeze" the broker (see 11D Figure 2), or modify the email address to free up that email for re-creation.
 
-<img src="/assets/BHmEbu6byoIe1WxkhnjjU01cpIe.png" src-width="2700" src-height="1376" align="center"/>
+<img src="/assets/GM19bEVKNoobOzx8IdhjaHEwpRd.png" src-width="1513" src-height="796" align="center"/>
 
 <em>11D Figure 1</em>
 
-<img src="/assets/Q3zYbm0a9oBFDkxOb2AjCO88pzi.png" src-width="2842" src-height="1314" align="center"/>
+<img src="/assets/CE43bf2wUoHVaAxcGXXj58Yhpub.png" src-width="1513" src-height="796" align="center"/>
 
 <em>11D Figure 2</em>
 
 # 11F Q: In the commission package configuration, when "New Stock" calculation method is set to "Total Commission," which fee does it correspond to?
 
-<img src="/assets/HfzDbLbjbohoKexbHYfj1b2ipJh.png" src-width="2594" src-height="1194" align="center"/>
+<img src="/assets/R557bwah0oP8bdxd8hXjOj9Ypqe.png" src-width="3010" src-height="1500" align="center"/>
 
 A: It corresponds to the brokerage commission charged for new share subscriptions.
 On the Business Parameter Settings &gt; New Stock Configuration &gt; Fee Management page, edit "Brokerage Commission" (see 11F Figure 1), or on the IPO Subscription &gt; Details page create the rate in Basic Information (see 11F Figure 2).
 
-<img src="/assets/NNTqb5M9QoVSnnxtd3MjcUqjpkb.png" src-width="2819" src-height="1437" align="center"/>
+<img src="/assets/EcUsbufUKoLDoCxnUPUj9uCzp2d.png" src-width="3014" src-height="1510" align="center"/>
+
+<img src="/assets/V0SMbxnjOowctvxtanEje9fLpQh.png" src-width="3014" src-height="1510" align="center"/>
 
 <em>11F Figure 1</em>
 
-<img src="/assets/BqcDbrqCloLMrLxdTuSjAe73pJc.png" src-width="2820" src-height="1417" align="center"/>
+<img src="/assets/YG31b7kGuoipO0xImJOjMTxPp5a.png" src-width="3014" src-height="1510" align="center"/>
 
 <em>11F Figure 2</em>
 

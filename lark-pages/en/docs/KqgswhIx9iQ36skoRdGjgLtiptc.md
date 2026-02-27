@@ -24,16 +24,14 @@ A: Limit precedence is: client limits &gt; global limits; security limits &gt; g
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
-<p>For example: the global configuration sets the &quot;Customer buy-rejection limit&quot; to &gt; 500,000 HKD.User A has configured a &quot;Customer buy-rejection limit&quot; of &gt; 400,000 HKD (reject).If User A places a buy order for 410,000, the configured limit is hit and the order will be rejected outright. If User B places a buy order for 410,000, the global configuration is evaluated; since the global limit is not breached, the order will be allowed.</p>
+<p>For example: the global configuration sets the &quot;Customer buy-rejection limit&quot; to &gt; 500,000 HKD. User A has configured a &quot;Customer buy-rejection limit&quot; of &gt; 400,000 HKD (reject).If User A places a buy order for 410,000, the configured limit is hit and the order will be rejected outright. If User B places a buy order for 410,000, the global configuration is evaluated; since the global limit is not breached, the order will be allowed.</p>
 </div>
 
 # 18C. Q: A client's cash account balance is positive and the client has not borrowed from the broker; why is the financing quota being consumed?
 
 A: The "Used financing quota" under Risk Control Management &gt; Customer Financing includes cash that has been frozen and is not available for use.
 
-<img src="/assets/Hs9UbCXT9oTznDx2c4Dj1zkopZc.png" src-width="2828" src-height="1346" align="center"/>
-
-<img src="/assets/DBMGbt9zdoEszdxaDZ9jrgu7p5e.png" src-width="2856" src-height="1602" align="center"/>
+<img src="/assets/MP8obwgIPogPSGxtowSjpzfZpch.png" src-width="3806" src-height="1864" align="center"/>
 
 # 18D. Q: The subaccount’s total assets are not negative; why is the "Risk Control Status" shown as "Danger"?
 
@@ -43,11 +41,11 @@ A: If the master account's "Risk Control Status" is "Danger", the subaccount wil
 
 A: "Index Haircut Management" will automatically update information such as constituent stock weights and share quantities.
 
-<img src="/assets/K87ibYKzeovfURxEivajR61bpEd.png" src-width="2858" src-height="1298" align="center"/>
+<img src="/assets/O7pMbG15Ro4LAwx5LkAjrzUjp7g.png" src-width="3798" src-height="1824" align="center"/>
 
 # 18F. Q: In "Haircut Management", can cash accounts and margin accounts independently use different haircut percentages for calculations?
 
 A: Cash accounts and margin accounts cannot independently use different haircut percentages for calculation.
 
-<img src="/assets/Xkkjb9i3LoKFOuxjOudjO9Vzppf.png" src-width="2808" src-height="1330" align="center"/>
+<img src="/assets/TTDRb9zYEompr2xoEJbjgvAWpdc.png" src-width="3752" src-height="1860" align="center"/>
 

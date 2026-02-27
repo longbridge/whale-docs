@@ -7,10 +7,6 @@ sidebar_position: 3
 
 # 常见问题
 
-[Document original - 原始文档](https://longbridge.larkenterprise.com/docx/OnK9dZ6yno4VGXxUvazcT9Gcn0g)
-
-Creator - xun.zhang@longbridge-inc.com
-
 ---
 
 ## 渠道管理問題

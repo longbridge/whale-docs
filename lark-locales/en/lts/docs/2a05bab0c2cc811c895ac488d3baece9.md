@@ -35,19 +35,19 @@ To ensure the withdrawal process completes successfully, tenants must reserve a 
 
 If the withdrawal process displays "Insufficient main account fees," you may replenish the corresponding cryptocurrency via the "Main Account Top-up" function, or transfer a small amount from the sub-account to the main account as a fee reserve. After replenishing, you can resubmit the withdrawal request.
 
-<img src="/assets/EAJhb98hZob5yCxuBs1jvJkCpmf.png" src-width="2322" src-height="1254" align="center"/>
+<img src="/assets/TyC0wfeVwhvjqMbX1YojKi5Vpoe-board.jpeg"/>
 
 ## Cryptocurrency Configuration
 
 Before a customer initiates a withdrawal, cryptocurrency withdrawal settings must be configured.
 
-<img src="/assets/Lpg3bxgXeo7CpYxVcSYjmgMdpsd.png" src-width="2048" src-height="706" align="center"/>
+<img src="/assets/XCWZbBM2ioDNPTxN9DVjQSXLpQh.png" src-width="2474" src-height="1188" align="center"/>
 
 # Customer Wallet Address
 
 Completing wallet address verification prior to withdrawal is a key prerequisite for safeguarding assets.
 
-<img src="/assets/FZwhbOh4Joo5KHx40LzjBJUtpJd.png" src-width="3288" src-height="1076" align="center"/>
+<img src="/assets/MsepbKsJKo7Dsjx9Fhbjvs0dpLr.png" src-width="2440" src-height="1164" align="center"/>
 
 ## Processing Withdrawal Requests
 
@@ -55,5 +55,5 @@ If a user has already submitted a withdrawal request in the App, the record will
 
 Customer-submitted withdrawal requests are automatically routed to a WBO work order (work order identifier: atm.va.coin_withdraw_apply). The system will carry out approval in accordance with the preset approval configuration flow.
 
-<img src="/assets/DRVjbQpSJoKMzoxOHzyjT6xTpRc.png" src-width="3266" src-height="652" align="center"/>
+<img src="/assets/NmyObhgk1ohCjPx8oH5jCTlUpcb.png" src-width="2468" src-height="602" align="center"/>
 

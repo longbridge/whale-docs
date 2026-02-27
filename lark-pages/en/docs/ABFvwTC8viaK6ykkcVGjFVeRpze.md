@@ -23,7 +23,7 @@ For example: if the mobile number is 12345678 and the identification number is 1
 
 # 5.2B Q: Can a temporary statement be generated?
 
-<b>A:</b> Click "Clearing Management &gt; Statement Management &gt; Statement Inquiry" and then select "Create Temporary Statement."
+<b>A:</b> Click "Day-End Settlement &gt; Statement Management &gt; Statement Inquiry" and then select "Create Temporary Statement."
 
 The "Create Temporary Statement" function can create at most one statement covering up to three months from the account's last active date. For example, if the customer's last cash/deposit activity was in June 2023, the temporary statement can only cover June, July, and August; there will be no statement for later periods if the account has no activity dates.
 
@@ -32,7 +32,7 @@ The "Create Temporary Statement" function can create at most one statement cover
 <p>If the customer has no cash and no holdings, a temporary statement or monthly statement cannot be created; without transaction flows there is no daily statement.</p>
 </div>
 
-<img src="/assets/BplebkVF0ooFOwxMFOJj4BoSpsz.png" src-width="2496" src-height="1312" align="center"/>
+<img src="/assets/GJgSbYBlponIuJxgX5NjVnUrpcb.png" src-width="3014" src-height="1506" align="center"/>
 
 # 5.2C Q: Which exchange rate is used as the reference rate displayed on the statement?
 
@@ -43,15 +43,15 @@ A: The reference exchange rate shown on the statement follows the spot rate unde
 <p>The reference rate uses the mid-market derived rate to convert the total asset market value.</p>
 </div>
 
-<img src="/assets/LP6VbRSGXowLDsxj2z1j7aQHpSg.png" src-width="1682" src-height="634" align="center"/>
+<img src="/assets/YTZKbgaoGoK1vSxZj7WjFZ49p4b.png" src-width="3014" src-height="1506" align="center"/>
 
 # 5.2D Q: Will reports or statements show forced liquidation trades?
 
 <b>A:</b> In the TDR001-1 Daily Client Order Report By Client, the "Order Type" will be shown as "Forced Liquidation"; the "Stock Trade Details" section in the statement will label the order as "Forced Liquidation."
 
-<img src="/assets/MMJIbvJ7coiWyuxPC6Bj0oNEpXd.png" src-width="2832" src-height="1486" align="center"/>
+<img src="/assets/F0oib0ZcGoHKUtxzZ3ejliIIppe.png" src-width="3014" src-height="1506" align="center"/>
 
-<img src="/assets/ERq9b4Kp4o1DUUxeoFJjSX1wpAc.png" src-width="1384" src-height="676" align="center"/>
+<img src="/assets/IhF8bdA9No0epixcIRFjSwoTprb.png" src-width="3014" src-height="1506" align="center"/>
 
 # 5.2E Q: Why do manually adjusted transactions not display "Cost Price" and "Unrealized P/L"?
 
@@ -68,20 +68,20 @@ A: The reference exchange rate shown on the statement follows the spot rate unde
 
 <img src="/assets/S23HbHICnopyWGx7hgwjnKUdpLd.png" src-width="1368" src-height="260" align="center"/>
 
-# 5.2G Q: What is the difference between "Pending Settlement Amount" and "Cash Balance" on the statement?
+# 5.2G Q: What is the difference between "Closing Balance" and "Unsettled Balance" on the statement?
 
-A: Hong Kong equities settle on T+2. Funds for settlements on T+1, T+2, or other settlement dates will be allocated to "Pending Settlement Amount." The net settlement amount for the previous day and the current day (Net Buy Amount - Net Sell Amount) equals the "Pending Settlement Amount."
+A: Hong Kong equities settle on T+2. Funds for settlements on T+1, T+2, or other settlement dates will be allocated to "Unsettled Balance" The net settlement amount for the previous day and the current day (Closing Balance - Settled Balance) equals the "Unsettled Balance"
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
 <p>&quot;Cash Balance&quot; is the book balance.</p>
 </div>
 
-<img src="/assets/A6sXb2yM2oh8F1xTr0jjjflDp3b.png" src-width="1706" src-height="696" align="center"/>
+<img src="/assets/LRKwbbJ1Uofa4txgC5ojL1aNpgd.png" src-width="3014" src-height="1506" align="center"/>
 
 # 5.2H Q: If an order was placed under the wrong client's trading account and the front desk has reallocated the executed trade to the correct client, how can the statement be corrected?
 
-A: Because the front and back offices are separated, the front-end WTT performs trade allocation, which will display immediately in the app under "Trade Inquiry &gt; Trade Allocation" (see Figure 5.2H-1 and Figure 5.2H-2). The back office performs contract corrections to reassign the incorrectly allocated order to the correct account. This is done in "Clearing Management &gt; Contract Management &gt; Contract Correction List" where the contract correction is submitted for approval (see Figures 5.2H-3 through 5.2H-6). After end-of-day processing, the incorrect order will appear on the statement as cancelled (see Figure 5.2H-7), and a new statement will be generated for the other client.
+A: Because the front and back offices are separated, the front-end WTT performs trade allocation, which will display immediately in the app under "Trade Inquiry &gt; Trade Allocation" (see Figure 5.2H-1 and Figure 5.2H-2). The back office performs contract corrections to reassign the incorrectly allocated order to the correct account. This is done in "Day-End Settlement &gt; Contract Management &gt; Contract Correction List" where the contract correction is submitted for approval (see Figures 5.2H-3 through 5.2H-6). After end-of-day processing, the incorrect order will appear on the statement as cancelled (see Figure 5.2H-7), and a new statement will be generated for the other client.
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -96,19 +96,19 @@ A: Because the front and back offices are separated, the front-end WTT performs 
 
 <em>Figure 5.2H-2</em>
 
-<img src="/assets/TC5jbnO3Uo0QiVxHIQdjbziKpxg.png" src-width="2732" src-height="816" align="center"/>
+<img src="/assets/JHY0btVR8oex4Hx4dLijpo6YpWb.png" src-width="3014" src-height="1506" align="center"/>
 
 <em>Figure 5.2H-3</em>
 
-<img src="/assets/EBF6bThGvohLy0xHJmMj7lsTpif.png" src-width="2702" src-height="1192" align="center"/>
+<img src="/assets/I2AobPEatoRctTxbgO7jDJBUpCg.png" src-width="3014" src-height="1506" align="center"/>
 
 <em>Figure 5.2H-4</em>
 
-<img src="/assets/J77KbQzCoopzf0x6cnUjjfTaplg.png" src-width="2504" src-height="1538" align="center"/>
+<img src="/assets/LHiAboag8oyONuxuDl9jRKnkpig.png" src-width="3014" src-height="1506" align="center"/>
 
 <em>Figure 5.2H-5</em>
 
-<img src="/assets/NDYabWlJpo4nMpxWXcpjXjGQpoc.png" src-width="2850" src-height="1306" align="center"/>
+<img src="/assets/LhZQbs4ETolgmNxqtdtjb8Krpmb.png" src-width="3014" src-height="1506" align="center"/>
 
 <em>Figure 5.2H-6</em>
 

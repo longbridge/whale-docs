@@ -35,13 +35,13 @@ Path: Charging Management  > Market Clearing  > File Import
 Click Import File, then upload the file.
 ```
 
-<img src="/assets/CTpwb5JKpojyKexy7rOjAFdUpac.png" src-width="3578" src-height="1798" align="center"/>
+<img src="/assets/FzZQbKVLYov3QixERiej8EpLpQe.png" src-width="3014" src-height="1600" align="center"/>
 
 ```text
 You can monitor the parsing status via the Status field in the list area; a successful parse indicates the process is complete.
 ```
 
-<img src="/assets/DMYMbb1CKo7IUjxp2axj7KiZp6e.png" src-width="3548" src-height="1806" align="center"/>
+<img src="/assets/ZsJNbWqUGosXAuxXVm3jWiUUpPj.png" src-width="3010" src-height="1604" align="center"/>
 
 ## 2. Market Clearing (Trade Clearing)
 
@@ -61,7 +61,7 @@ After confirming that the current accounting date is correct, click Execute Pre-
 Note: If you operate only the Hong Kong equities market, you may hide the European/American market clearing during the initial setup.
 ```
 
-<img src="/assets/JwuIbE3cSo9SOGxqQ8nj2AU3pQe.png" src-width="2908" src-height="1540" align="center"/>
+<img src="/assets/SwQbbUPD4oXNbrxEr2ujDL1GpO5.png" src-width="1280" src-height="640" align="center"/>
 
 ```text
 After execution, the check results will be returned within five seconds. If all checks pass, you may proceed to subsequent operations.
@@ -69,45 +69,43 @@ After execution, the check results will be returned within five seconds. If all 
 For checks that report errors, click the upper-right corner of the check item to view the rules and operation guidance for that check.
 ```
 
-<img src="/assets/VBaQbzouGoj8Bpx3QI5jzvtopUe.png" src-width="2906" src-height="1548" align="center"/>
+<img src="/assets/TkgXbUFqBoTUHnxgNEKjp5YIpcV.png" src-width="2986" src-height="1510" align="center"/>
 
 ```text
 Some checks provide exception details.
 ```
 
-<img src="/assets/WXnNbScyLoZe0YxsL5NjrOJFp2g.png" src-width="2904" src-height="1540" align="center"/>
+<img src="/assets/GYw1bjvtHopx5uxTDyjj90oepJh.png" src-width="3000" src-height="1502" align="center"/>
 
 ```text
 After settlement staff verify and confirm issues, they may click "Re-execute" after completing the related business operations.
 ```
 
-<img src="/assets/R8NvbZLNYoRDILxQ6AKjfwiEpag.png" src-width="2906" src-height="1558" align="center"/>
+<img src="/assets/Es6XbQBivoRHWcxJ0y2jc9XJpId.png" src-width="3008" src-height="1502" align="center"/>
 
 ```text
 After settlement staff verification, if a check item can be allowed to pass, you may click Manual Review to approve it (requires a secondary review).
 ```
 
-<img src="/assets/HNWQb6WvwouR1Vx26KAjt2TAp8e.png" src-width="2904" src-height="1558" align="center"/>
+<img src="/assets/RDJAbeZRPodEH9xI9SIjvCaHptd.png" src-width="3016" src-height="1500" align="center"/>
 
 ```text
 Review personnel may click Manual Review (or perform the approval directly in the work order review) to invoke the work order review.
 ```
 
-<img src="/assets/HZeRbNflYomP1hxy9z0jMcGqpXd.png" src-width="2920" src-height="1546" align="center"/>
-
-<img src="/assets/CbKPb84lAokyFkx8CZ0jDdtqpZd.png" src-width="2920" src-height="1550" align="center"/>
+<img src="/assets/LCUlbFwmBozQFBxBhw9jV7JDpCg.png" src-width="2996" src-height="1504" align="center"/>
 
 ```text
 If settlement staff determine that a check item must be permanently closed due to differences in business processes, please contact customer support for assistance.
 ```
 
-<img src="/assets/Kug6b2Fo4olUiexirvYjdOa7pvd.png" src-width="2926" src-height="1556" align="center"/>
+<img src="/assets/S3eEbGDUKoud1jxt6GWjPiw5pJd.png" src-width="3018" src-height="1490" align="center"/>
 
 ```text
 Once approval is completed, the pre-clearing preparation is considered finished (the interface will indicate: Manually Approved).
 ```
 
-<img src="/assets/GKqnb1HftorO2dx3RCrj4zrypqe.png" src-width="2926" src-height="1558" align="center"/>
+<img src="/assets/JROBbeDJhoXZt0x2FZrjVOGRpDh.png" src-width="1280" src-height="637" align="center"/>
 
 ### Market Clearing — One-Click Clearing
 
@@ -117,19 +115,19 @@ After the pre-clearing preparation has completed, you may click the Start One-Cl
 Note: If needed, you may click "Pause One-Click Clearing," but the system will wait for the current task to finish before pausing the next action (the function button will become disabled).
 ```
 
-<img src="/assets/SB0Tb5cFEohi0axgNVBjdjXUpVb.png" src-width="2916" src-height="1546" align="center"/>
+<img src="/assets/PVxLbix18oXeopxRaCpji3oppUd.png" src-width="3016" src-height="1492" align="center"/>
 
 ```text
 If you need to perform back-office order supplementation or correct contracts, you may click "Pause One-Click Clearing" directly at Data Synchronization, then execute tasks step by step to avoid missing the pause opportunity.
 ```
 
-<img src="/assets/FUd2bwS7QovOmhxCRYLjU8hrpTf.png" src-width="2922" src-height="1548" align="center"/>
+<img src="/assets/BVqMbeFgVoAepxxLsN9jvSlcpTd.png" src-width="3016" src-height="1482" align="center"/>
 
 ```text
 If a task error occurs during execution, One-Click Clearing will pause and stop at the task that reported the error; users may follow the error messages to perform subsequent corrections.
 ```
 
-<img src="/assets/MbTVbfALVozWJvxvuDajOBuDpPe.png" src-width="2908" src-height="1554" align="center"/>
+<img src="/assets/YSYUbAgT2o1XLMxEIU7jWLerpxd.png" src-width="3010" src-height="1606" align="center"/>
 
 ```text
 At that time, you may manually select the relevant task operations in the lower-right area as needed to inspect or correct records or to proceed to the next One-Click Clearing operation; the system will then automatically execute the following task.
@@ -137,7 +135,7 @@ At that time, you may manually select the relevant task operations in the lower-
 Note: During One-Click Clearing, you may rely on the system's automatic One-Click Clearing operation (which executes all tasks automatically), or you may select and execute tasks manually.
 ```
 
-<img src="/assets/BbtEbX8OiofrfvxmC5Wjvu2nplh.png" src-width="2922" src-height="1556" align="center"/>
+<img src="/assets/TjNobMgBso4N9RxW4NijNOczpng.png" src-width="1280" src-height="639" align="center"/>
 
 Day-End Data Synchronization (Client Trade)
 
@@ -145,7 +143,7 @@ Day-End Data Synchronization (Client Trade)
 Executing this will synchronize system data, including trades, deposits and withdrawals before the day roll, transactions, account openings, and other data.
 ```
 
-Pre-Clearing Checks (Trade Match)
+Pre-Clearing Checks (Trade Reconciliation)
 
 ```text
 Executing the pre-clearing check will automatically trigger reconciliation of the day's trades.
@@ -153,7 +151,7 @@ Executing the pre-clearing check will automatically trigger reconciliation of th
 If trade reconciliation fails, you can quickly jump to the Trade Reconciliation interface to review results.
 ```
 
-<img src="/assets/GBXEbVXpBoo1IpxTcvfjrvuPp0g.png" src-width="2904" src-height="1544" align="center"/>
+<img src="/assets/LIq1bsJxroZFqVxZ7ITj246lpsh.png" src-width="1280" src-height="639" align="center"/>
 
 ```text
 You may query trade reconciliations for each market on the Clearing Checks page (Path: Charging Management - Market Clearing - Clearing Checks - Trade Reconciliation).
@@ -161,7 +159,7 @@ You may query trade reconciliations for each market on the Clearing Checks page 
 Each time you click Check, the system generates the latest check results; only the most recent results need to be maintained.
 ```
 
-<img src="/assets/AmU0b98SkocEzTxVP4Zjl5Rgpht.png" src-width="3566" src-height="1732" align="center"/>
+<img src="/assets/SSSib3CDCoE20Ax6rBujREHVpcB.png" src-width="1280" src-height="639" align="center"/>
 
 ```text
 Counterparty file import error: Re-import the counterparty file in the file import interface, then re-run Pre-Clearing Checks.
@@ -171,7 +169,7 @@ Local order error: After adding, deleting, or modifying front-end orders, re-run
 Treating by system data: In "Check Results" (Path: Charging Management - Market Clearing - Day-End Tasks - Clearing Checks - Check Results), change the corresponding check result to "Pass," then re-run Pre-Clearing Checks on the Day-End Tasks page.
 ```
 
-<img src="/assets/RM8dbiMC4oyINfx4c6qjXXbepn5.png" src-width="2920" src-height="1552" align="center"/>
+<img src="/assets/PXUMbvthromjAIxjg6jj2ZBnp8b.png" src-width="1280" src-height="637" align="center"/>
 
 Clearing Billing
 
@@ -221,9 +219,11 @@ This must be done after completing all market clearing processes and primarily c
 Operation is the same as market clearing; see above for details.
 ```
 
-<img src="/assets/ZRWwbxSnEor2lNxYTxqjZMBIp3g.png" src-width="2492" src-height="1412" align="center"/>
+<img src="/assets/SqTVb636io9HdKxnaEsjJeFzp1c.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/WVhhbDXrfoAqorxLe26jxeeXpIh.png" src-width="2434" src-height="1418" align="center"/>
+<img src="/assets/WRpNbXDULoEjd1x34wgjIRg3pvb.png" src-width="3020" src-height="1496" align="center"/>
+
+<img src="/assets/MCmdbIBkPoX1rHxAZbejSS4bpNd.png" src-width="3020" src-height="1496" align="center"/>
 
 ### Day-End One-Click Clearing
 
@@ -235,7 +235,7 @@ The system will automatically execute from the first step through to Statement G
 After statements are generated, you may review via reports or the statement itself.
 ```
 
-<img src="/assets/E9kzbwwxioi7kdxkvTcjQaMXpoc.png" src-width="2912" src-height="1522" align="center"/>
+<img src="/assets/PLaFbJtUkoKScQx7grQjtgYgpEh.png" src-width="1280" src-height="634" align="center"/>
 
 Data Aggregation
 
@@ -295,15 +295,15 @@ Path: Charging Management > Day-End Management > Statement Management > Statemen
 The system supports automatic statement dispatch during the day roll aggregation, but this must be configured in advance; please contact Whale Support.
 ```
 
-<img src="/assets/HT6HbrRDEovmXsxwpIjjiKDap4b.png" src-width="3364" src-height="1452" align="center"/>
+<img src="/assets/UzYPblM9GoLSy7xU5pCjzCpNpLh.png" src-width="3012" src-height="1600" align="center"/>
 
-<img src="/assets/MIdWbBNdyo92Rnx8sBYjmNgapnh.png" src-width="3304" src-height="1452" align="center"/>
+<img src="/assets/Oyzobd22Vo7hxlxF2g2jsBbDpxh.png" src-width="1280" src-height="628" align="center"/>
 
 ```text
 You may select records in the right-hand record area to Resend or Download statements.
 ```
 
-<img src="/assets/MsiUbxjXmou7DXxmuFhjWgqBpph.png" src-width="3360" src-height="1460" align="center"/>
+<img src="/assets/CTjHbO9mSoty1kxXMn2jVesFp1d.png" src-width="1280" src-height="628" align="center"/>
 
 ## 5. ATI Instruction Export
 
@@ -317,9 +317,9 @@ Supports exporting files for future dates.
 Supports exporting across multiple markets: HK, SZ, SH.
 ```
 
-<img src="/assets/FlYHbwuXzoSR4mx5GU3jJeA8pTc.png" src-width="3574" src-height="1774" align="center"/>
+<img src="/assets/VT6Cbs6uNoxTOLx1kDrj9l5zpGg.png" src-width="1280" src-height="641" align="center"/>
 
-<img src="/assets/IY5FbGrA1ousmTxforDjdlK9poe.png" src-width="3574" src-height="1774" align="center"/>
+<img src="/assets/RDB7beU7rox6EvxpqNOjwGl8pzc.png" src-width="1280" src-height="636" align="center"/>
 
 ## 6. Position Reconciliation
 
@@ -329,7 +329,9 @@ On the morning of T+1, you may import CCASS position files on the File Import in
 After import, the system will automatically trigger reconciliation.
 ```
 
-<img src="/assets/ELuZbZE69ogVZMxHI38jug5LpQf.png" src-width="3350" src-height="1456" align="center"/>
+<img src="/assets/Q8YabJueJoj6kwxgGeUj4KK8pUf.png" src-width="1280" src-height="634" align="center"/>
+
+<img src="/assets/RqEKbCZ3to5rf2xCAbEjIgP9pLb.png" src-width="3010" src-height="1494" align="center"/>
 
 ```text
 After import and triggering system reconciliation processing, the reconciliation result will be In Progress.
@@ -337,11 +339,11 @@ After import and triggering system reconciliation processing, the reconciliation
 Once the reconciliation task completes, the reconciliation result will be Unreconciled or Reconciled.
 ```
 
-<img src="/assets/RbZzbaeF3olTAOxlGAyjyQw6pXc.png" src-width="2930" src-height="1554" align="center"/>
+<img src="/assets/IuQ0bIZL3oWlUaxFKHAjpaygpLc.png" src-width="3002" src-height="1492" align="center"/>
 
 ```text
 You may click Reconcile Again to (re)trigger system reconciliation. The system supports triggering reconciliation for historical dates.
 ```
 
-<img src="/assets/T35cbva4nojEyaxhNvHjBB1npxb.png" src-width="2914" src-height="1526" align="center"/>
+<img src="/assets/GJDSbyJwAoMzaixqrKSj4JeSp8e.png" src-width="3010" src-height="1490" align="center"/>
 

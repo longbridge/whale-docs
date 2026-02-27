@@ -7,10 +7,6 @@ sidebar_position: 5
 
 # 6. 公司行动问题
 
-[Document original - 原始文档](https://longbridge.larkenterprise.com/docx/Ea27duuF6orpznxPpeAcpTYWndd)
-
-Creator - lucas.chau@longbridge.cloud
-
 ---
 
 ## 6A 问：不同类型的公司行动类别是什么意思？（如：BE、CA、RS、TM 类别的）

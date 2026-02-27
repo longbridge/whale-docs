@@ -15,31 +15,31 @@ Answer: Purchases or sales of bonds must be processed using manual adjustments. 
 
 (i). On the "Securities Management &gt; Instrument Management &gt; Private Securities Repository" page, click "Add Instrument" to add a bond or foreign equity.
 
-<img src="/assets/IeukbFRjFo1n0AxUhgKjkg29pOg.png" src-width="2594" src-height="1289" align="center"/>
+<img src="/assets/A9HsbMKf7oi71UxLE6ljCod3pPb.png" src-width="3016" src-height="1500" align="center"/>
 
 (ii). Fields marked with a red asterisk (*) are required.
 
-<img src="/assets/UgQRbnlyroS2V5xwIyHjH48fpdg.png" src-width="2114" src-height="1352" align="center"/>
+<img src="/assets/KAVAb6LL7ovvI1x9SRkjaCO9pSf.png" src-width="3016" src-height="1500" align="center"/>
 
 (iii). In the action column, click "Basic Market Data" to modify base information, or click "Price Maintenance" to enter prices that will display as the closing price on the statement.
 
-<img src="/assets/FrqBbm0mio0RUzxJXsJjIQrypeb.png" src-width="2014" src-height="520" align="center"/>
+<img src="/assets/T0eVbt9MooxxqAxw1JRjMsvtpBh.png" src-width="3016" src-height="1500" align="center"/>
 
-<img src="/assets/OI7dbCoYro3NRTx9AU0j5jDipYc.png" src-width="2535" src-height="1552" align="center"/>
+<img src="/assets/WYlPbJh6QoXW2SxKKOHjCEsMpjb.png" src-width="3016" src-height="1500" align="center"/>
 
 Note: Market, Type, and Security Code cannot be modified.
 
 (iv). To modify market value, click "Add Market Data" on the "Price Maintenance" page.
 
-<img src="/assets/UUCybPUdtowy3FxPVjnjzQzIprd.png" src-width="2241" src-height="1231" align="center"/>
+<img src="/assets/SfK6bBldhoffMexylsvj32ORp8f.png" src-width="3016" src-height="1500" align="center"/>
 
 (v). Enter the code, select the trading date, enter the closing price, and click "Confirm." After adding, you may click "Edit" to correct the closing price.
 
-<img src="/assets/Gk84bdrUVoJPVyxnDsrj2jASpw8.png" src-width="2242" src-height="1302" align="center"/>
+<img src="/assets/KirYbq06ToNI3MxXLbzjL1VfpNF.png" src-width="3016" src-height="1500" align="center"/>
 
 (vi). After configuring the bond instrument, go to "Assets Account &gt; Manual Adjustment &gt; Bonds" and click "New" to process bond inflows or outflows.
 
-<img src="/assets/ARPcbQtItoSG3Bxg8P7jLgKepCe.png" src-width="2580" src-height="1206" align="center"/>
+<img src="/assets/AcY0b3LYaoiNJlxPSZgjK5Cgple.png" src-width="3016" src-height="1500" align="center"/>
 
 (vii). Fields marked with an asterisk (*) are required. Click "Submit for Review." (Adjustment types: `In = Purchase`; `Out = Sell`)
 
@@ -48,37 +48,37 @@ Note: Market, Type, and Security Code cannot be modified.
 <p>The initial bond adjustment requires entering the total cost. For example: total transaction amount = <code>$500,000</code>, quantity = <code>5,000</code>.Enter total cost <code>$500,000</code>; the cost per unit displayed on the statement will be shown as the diluted cost <code>= $100</code></p>
 </div>
 
-<img src="/assets/Xtnwbk0MeofiXixoGszjakbIpNd.png" src-width="2104" src-height="1352" align="center"/>
+<img src="/assets/ANrTbJUB0oZMn5xnLXtj1T1mpod.png" src-width="3016" src-height="1500" align="center"/>
 
 (viii). The reviewer receives a reminder under "Approval" at the top right; then click "Approve."
 
-<img src="/assets/PnnibxJ4gozOb9xSra1jlfHvpud.png" src-width="2589" src-height="881" align="center"/>
+<img src="/assets/QMLbblQd1oFYcxxCii0j8dOjpqc.png" src-width="3020" src-height="1602" align="center"/>
 
-<img src="/assets/PPLCbCkvsoEHMSx0gigjzla4px1.png" src-width="2542" src-height="1479" align="center"/>
+<img src="/assets/ViZYbkvm1oN6WCxHj7yjd1sapKg.png" src-width="1862" src-height="1278" align="center"/>
 
 (ix). You can view bond inflows on "Assets Account &gt; Account Details &gt; Bonds." Sales will appear as outflows.
 
-<img src="/assets/Ev06bPmMdoxmdGxGPAqjERp0p4g.png" src-width="2852" src-height="716" align="center"/>
+<img src="/assets/AHSsbtvh8oGlZVxtib4ja6gNpGh.png" src-width="3014" src-height="1500" align="center"/>
 
 # 8B Question: Why did the bond price not update on the statement?
 
-Answer: You must edit the market price on "Securities Management &gt; Instrument Management &gt; Price Maintenance" for it to be reflected on the statement (see 8B Fig. 1 and Fig. 2).
+Answer: You must edit the market price on "Stock Management &gt; Instrument Management &gt; Price Maintenance" for it to be reflected on the statement (see 8B Fig. 1 and Fig. 2).
 
 If no maintenance was done prior to settlement, perform a settlement reversal (no action required on statements, asset classes, or supplementary orders). After adding or editing the market price (see 8B Fig. 3), rerun the end-of-day process to update the closing price.
 
-<img src="/assets/JxJ6bmE1HouKruxWsBQj66iLpJf.png" src-width="2506" src-height="776" align="center"/>
+<img src="/assets/KHoQbIYicohwC1xckE8jGv3FpJg.png" src-width="3014" src-height="1500" align="center"/>
 
 <em>8B Fig. 1</em>
 
 <em>On the "Price Maintenance" page, click "Add Market Data"</em>
 
-<img src="/assets/ClEbbKabPou4zZx3KyqjcFOUpAe.png" src-width="2242" src-height="1302" align="center"/>
+<img src="/assets/B5FHbds4boTwHPxFHwdjZAjPp4O.png" src-width="3014" src-height="1500" align="center"/>
 
 <em>8B Fig. 2</em>
 
 <em>Enter the security code, select the trading date, enter the closing price, and click "Confirm"</em>
 
-<img src="/assets/Ug9mboc6GoRFx5xNrqljpAFIpyb.png" src-width="2249" src-height="600" align="center"/>
+<img src="" src-width="3014" src-height="1500" align="center"/>
 
 <em>8B Fig. 3</em>
 

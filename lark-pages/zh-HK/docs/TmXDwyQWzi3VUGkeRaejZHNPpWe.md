@@ -1,15 +1,11 @@
 ---
 title: 常見問題
-slug: TmXDwyQWzi3VUGkeRaejZHNPpWe
+slug: SHybwQn9aiVZFSkVAwKcAuH7nDc
 sidebar_position: 6
 ---
 
 
 # 常見問題
-
-[Document original - 原始文档](https://longbridge.larkenterprise.com/docx/YJxBdLq44ogKEkxd58wcu7SmnSf)
-
-Creator - chuanyuan.chen@longbridge-inc.com
 
 ---
 

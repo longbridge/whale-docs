@@ -13,19 +13,19 @@ sidebar_position: 3
 
 Configure participant information for HKIDR.
 
-<img src="/assets/Fw9ObMLRsoyAZoxAw1JjhTwDpfb.png" src-width="2900" src-height="1062" align="center"/>
+<img src="/assets/JV3PbrArIoVS8oxD0cIjFqw3pLh.png" src-width="3024" src-height="1648" align="center"/>
 
 Path: in "Customer Management System &gt; Account Management &gt; BCAN Code Management &gt; Participant Management"
 
-<img src="/assets/Xey3bXhm0obp3UxbiXUj32Q0p8b.png" src-width="2544" src-height="1402" align="center"/>
+<img src="/assets/J6OEb7vIsovntgxkI3djrXf8pCh.png" src-width="2528" src-height="1542" align="center"/>
 
-# 2. Configure BCAN Range
+# 2. Configure BCAN Plan
 
-<img src="/assets/GLyCbF30HoatKPxtQDKjnRTrpYS.png" src-width="2536" src-height="892" align="center"/>
+<img src="/assets/NhLfbZNdboXDpLxz5VBjXGXnpzb.png" src-width="3024" src-height="1648" align="center"/>
 
-Path: Customer Management System -&gt; Account Management -&gt; BCAN Code Management -&gt; BCAN Range
+Path: Customer Management System -&gt; Account -&gt; BCAN Code -&gt; BCAN Plan
 
-<img src="/assets/UbEybX98ZovYlXxnbiaj4PHrpud.png" src-width="2896" src-height="1000" align="center"/>
+<img src="/assets/AccqbMDb5oMicLxBA5QjYLCopFg.png" src-width="3024" src-height="1648" align="center"/>
 
 # 3. Assign BCAN
 
@@ -52,11 +52,11 @@ Reporting method:
 
 During trading days between 07:00 AM and 03:00 PM, manually click the "Initiate Report" button; the system will automatically generate a BCAN-CID file and submit it to the exchange via SFTP.
 
-<img src="/assets/SF4Sb8K6yoXEkwxDG4kjChjuple.png" src-width="3050" src-height="1456" align="center"/>
+<img src="/assets/AmisbhyG5oXIUyxp9cYjidDgpyb.png" src-width="3024" src-height="1648" align="center"/>
 
 The exchange will return a response file within ten minutes; after 6:00 PM it will return the validation file and the full image file. The system will automatically parse these files and update the customer's BCAN status.
 
-<img src="/assets/SkedbPs7Voxv91xP07MjQ9Rzpof.png" src-width="2540" src-height="1420" align="center"/>
+<img src="/assets/IHDcbL4kmolgxXxjlfkja23Aphg.png" src-width="3024" src-height="1648" align="center"/>
 
 ### 2) Method 2: ECP Web Manual Reporting
 
@@ -68,24 +68,28 @@ Procedure:
 
 - Click the "Download Reporting File" button on the right to export and save the reporting file;
 
-<img src="/assets/J20UbQvbtosEQOxLJ3kj2lFmpgd.png" src-width="2520" src-height="1200" align="center"/>
+<img src="/assets/C24KbQumEoFdJWxWFG1jGMnRpsc.png" src-width="2518" src-height="1402" align="center"/>
 
 - Log in to the exchange website and upload the reporting file to the ECP platform at:
 [https://ecp2.e2etest.hkex.com.hk/](https://ecp2.e2etest.hkex.com.hk/)
 
-[内联图片不支持]
-[内联图片不支持]
-[内联图片不支持]
-[内联图片不支持]
-[内联图片不支持]
+<img src="/assets/MRribU06mo8JjExb3okjsx51p9f.png" src-width="2898" src-height="1656" align="center"/>
+
+<img src="/assets/LxBIb0TVCoqMKwxT9mLjqRvspie.png" src-width="2896" src-height="1674" align="center"/>
+
+<img src="/assets/TQ8Yb6Ufkon25Lx18dRjZk0Vp5d.png" src-width="2940" src-height="1612" align="center"/>
+
+<img src="/assets/TyvPbPvVoowzXhxUh4mjlN0ipEe.png" src-width="2952" src-height="1626" align="center"/>
+
+<img src="/assets/REx6b3RlnorBBlxznZHjHD1bpZc.png" src-width="2670" src-height="1354" align="center"/>
 
 - Import the full image file returned by the exchange into the backend page;
 
-<img src="/assets/MQPGbpU2FoVFLpxr7t8jdLcNpOc.png" src-width="2528" src-height="1114" align="center"/>
+<img src="/assets/F2z4blQL5o6OZdxFEHkjY2T2pfb.png" src-width="2508" src-height="1414" align="center"/>
 
 - The customer's BCAN activation status will be updated accordingly;
 
-<img src="/assets/BksQbjbghoMi58xnwIzjvnzopQe.png" src-width="2540" src-height="1420" align="center"/>
+<img src="/assets/RHf1bF47ooJdRgxAZwFjsYsDpNg.png" src-width="2498" src-height="1418" align="center"/>
 
 ## Non-EP Mode Reporting
 
@@ -97,24 +101,28 @@ Procedure:
 
 - Click the "Download Reporting File" button on the right to export and save the reporting file;
 
-<img src="/assets/Z4oybzgEmo9CEVxhOwXjWeXApIb.png" src-width="2520" src-height="1200" align="center"/>
+<img src="/assets/OiqZbt0NaonSOaxladsjr4MnpMi.png" src-width="2518" src-height="1402" align="center"/>
 
 - Log in to the exchange website and upload the reporting file to the ECP platform at:
 [https://ecp2.e2etest.hkex.com.hk/](https://ecp2.e2etest.hkex.com.hk/)
 
-[内联图片不支持]
-[内联图片不支持]
-[内联图片不支持]
-[内联图片不支持]
-[内联图片不支持]
+<img src="/assets/M52hbTnilov2lvxYaEsjwx0CpPe.png" src-width="2948" src-height="1704" align="center"/>
+
+<img src="/assets/IoTEbSXOWoygVrxa2I6j2fDVpfb.png" src-width="2946" src-height="1642" align="center"/>
+
+<img src="/assets/CuBFbXhxyoVA26xhDERjNEmmprb.png" src-width="2940" src-height="1612" align="center"/>
+
+<img src="/assets/ABk5b8i6SoYqp5xBnpGjDRErpYS.png" src-width="2952" src-height="1626" align="center"/>
+
+<img src="/assets/Ex03bxKbBowae8xHF65jA0KEprR.png" src-width="2670" src-height="1354" align="center"/>
 
 - Import the full image file returned by the exchange into the backend page;
 
-<img src="/assets/F5oPbQOl6oXuerxrifPjskaUpbg.png" src-width="2528" src-height="1114" align="center"/>
+<img src="/assets/Ip5Pb8co5oxXfxxK1fjjLXyIpQd.png" src-width="2508" src-height="1414" align="center"/>
 
 - The customer's BCAN activation status will be updated accordingly;
 
-<img src="/assets/Sf9qbjdchoRcjOxCqmkjRbBZp9g.png" src-width="2540" src-height="1420" align="center"/>
+<img src="/assets/IqEwb41doojiTvxpQAPjuhmppyh.png" src-width="2498" src-height="1418" align="center"/>
 
 # 5. Other Report Files
 
