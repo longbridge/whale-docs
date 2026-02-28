@@ -20,7 +20,7 @@ Configure clearing for both markets, and designate the U.S. market as an overnig
 Perform clearing for the U.S. market for the previous day every morning, and execute Hong Kong market clearing and end-of-day processing in the afternoon.
 ```
 
-<img src="/assets/RTYXb0I71oqWxJxadfxjYzTxp33.png" src-width="3574" src-height="1774" align="center"/>
+<img src="/assets/Q1eZbLk5roOnuGxg7DVj1mVdpIg.png" src-width="3020" src-height="1496" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -52,9 +52,9 @@ Consequently, the clearing for the 28th will process Hong Kong trades dated the 
 - Editing clearing initialization configuration requires approval
     - Work order identifier: clearing.update_system_config.exec
 
-<img src="/assets/FHWZb0bwHoSKB0xAjcyjWss9pwh.png" src-width="3574" src-height="1774" align="center"/>
+<img src="/assets/IXPXbxgXQoiykxxTrlsjrnRQpRb.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/SAkzbvIzeoU9gDx0ypHjWcRVp0g.png" src-width="3574" src-height="1774" align="center"/>
+<img src="/assets/Bdoyb0dn0onx1gx1j1ijsedHpoh.png" src-width="3020" src-height="1496" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -67,11 +67,11 @@ If necessary, proceed as follows:
 
 - Set the stock information source in Market Rules to not depend on the public repository.
 
-<img src="/assets/H8gDbuvAHoY21jx53iyjhSt0piu.png" src-width="3020" src-height="1452" align="center"/>
+<img src="/assets/KYGGbkx1aoi2E9xISbOjRlqEpSd.png" src-width="3020" src-height="1496" align="center"/>
 
 - If you need to add new instruments, you may choose to sync information from the public repository and then perform secondary maintenance.
 
-<img src="/assets/NwQtbU2Mwoc7T6xakLXjyPA0p2c.png" src-width="3020" src-height="1452" align="center"/>
+<img src="/assets/BsRsbpH8Cocw00xfkKbj7Fv2pgS.png" src-width="3020" src-height="1496" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -82,7 +82,7 @@ If necessary, proceed as follows:
     - After configuration, the market does <b>not</b> require a calendar; any non-weekend day may be considered a trading day.
     - After configuration, the market <b>may</b> accept manual order entry even if it is not included in the end-of-day process. When executing end-of-day, this market will <b>follow the primary market</b> for market clearing.
 
-<img src="/assets/KDrob7O0ooEU6axyB2zjPSSYpug.png" src-width="3020" src-height="1452" align="center"/>
+<img src="/assets/GNJJb6iuAodP9SxeH9zjN8h4pYg.png" src-width="3020" src-height="1496" align="center"/>
 
 # Execution of End-of-Day Tasks
 
@@ -91,18 +91,18 @@ If necessary, proceed as follows:
 <p>❓ How to query future accounting dates?</p>
 </div>
 
-<img src="/assets/E3MDbB9hconvjZx5Hvmj3Xhjp5e.png" src-width="2864" src-height="1368" align="center"/>
+<img src="/assets/UEvSbivwcoHkwcxtEZbjaAY4pxm.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/Hgv9bJjKjoEk1PxIpDujO17WppT.png" src-width="2864" src-height="1368" align="center"/>
+<img src="/assets/RvDZbtriFoMjcHxyvHqjkUAepyf.png" src-width="3020" src-height="1496" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
 <p>❓ How can end-of-day be executed early for a half-day Hong Kong market?</p>
 </div>
 
-<img src="/assets/DipobdOoXocvHwxsWO5jAIttpJb.png" src-width="2864" src-height="1368" align="center"/>
+<img src="/assets/DQd4b8Zoio0rb0xLt16jVcX7ppd.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/E5C2bxQiXovUkYxCldfj8507p0g.png" src-width="2864" src-height="1368" align="center"/>
+<img src="/assets/TBW4bcshXowaoFxyvMhjKEUnpkb.png" src-width="3020" src-height="1496" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -117,8 +117,6 @@ Example: A broker's day-roll time is 17:00. On non-half-day markets, an early da
 **Therefore, on non-half-day markets or when it is not a Hong Kong holiday, it is not recommended to perform an early day-roll before 16:30.**
 ```
 
-<img src="/assets/Pj09b5EjZoPtK0xQHApjQge7p4d.png" src-width="3584" src-height="1764" align="center"/>
-
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
 <p>❓ If you want to modify the charge for a specific client&#39;s trade on the same day, how should it be handled?</p>
@@ -126,25 +124,25 @@ Example: A broker's day-roll time is 17:00. On non-half-day markets, an early da
 
 <b>Method 1: Modify the charging channel</b>
 
-<img src="/assets/GyHHbVmAAomKspx0TxEjc8mdpmh.png" src-width="2878" src-height="1364" align="center"/>
+<img src="/assets/TzKObKmmRodZjoxYsM4jR23Wpop.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/L6bLbU1MyoWxykxVsPbj9MGIp51.png" src-width="2878" src-height="1364" align="center"/>
+<img src="/assets/FajSb6LTpoJWrDxdpsXjIZOXprf.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/DoT3b7bh0ofnh1xjvY3jyscBp4e.png" src-width="2878" src-height="1364" align="center"/>
+<img src="/assets/T1WIbQGK9oThSBxPgiajsCMNpfN.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/KXONbwUS3og15Jx53Ilj1tEOpXc.png" src-width="2602" src-height="490" align="center"/>
+<img src="/assets/KDRBbuzosoDFHKx4sKojZvekpWg.png" src-width="3020" src-height="1496" align="center"/>
 
 <b>Method 2: Modify the contract</b>
 
-<img src="/assets/FNeIbo6A2o0ltsxYejEjEzw8pdd.png" src-width="2854" src-height="1358" align="center"/>
+<img src="/assets/Qcf1bNXyhoiqCMxgVr4j2Oovpuh.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/MAJXbFp1XoXXuixfR8QjhzzGp2e.png" src-width="2854" src-height="1358" align="center"/>
+<img src="/assets/I2oZbJ8O1o4URJx7y5ZjUJHFpBg.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/Odcbbr751oo6XnxKxpCj9d7EpKh.png" src-width="2854" src-height="1358" align="center"/>
+<img src="/assets/D9pEbQjGWomFNVxUAkYjrE8KpHf.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/HlRGbEx5xok8XrxKJR1jjETepQg.png" src-width="2854" src-height="1358" align="center"/>
+<img src="/assets/PmLcbrc4ioEvIuxrsiEjTt2cpOT.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/Lm2PbE07LodO89xI0IojAOQYppf.png" src-width="2602" src-height="490" align="center"/>
+<img src="/assets/WwlMb64D6oRrxlxbiwUjYILNp4d.png" src-width="3020" src-height="1496" align="center"/>
 
 # Client Fee Configuration and Inquiry
 
@@ -172,40 +170,48 @@ You can verify using the Client Billing Inquiry page (Path: Business Parameter S
 If you want changes to take effect immediately, click the Refresh Configuration button.
 ```
 
-<img src="/assets/M4BSbjdlnoZmMDxXEbMjPqlapZf.png" src-width="2854" src-height="1358" align="center"/>
+<img src="/assets/Zzn8bi9wdo5lhGxidwMjItsepeh.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/CM8mb3O3soF5luxt9L8jUzSzpJb.png" src-width="2854" src-height="1358" align="center"/>
+<img src="/assets/DDVDbE8q6oEnMjx25mAj5xyJpVg.png" src-width="3020" src-height="1496" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
 <p>❓ If you intend the updated fee configuration to take effect immediately</p>
 </div>
 
-<img src="/assets/SPy2bXXKFoMUFyxW41zjBrAMpUe.png" src-width="830" src-height="396" align="center"/>
+<img src="/assets/KXp6bzIeDokGPTxmFCzjoqJhpUh.png" src-width="3020" src-height="1496" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
 <p>❓ How to view which configuration was used to calculate the commission for a past trade?</p>
 </div>
 
-<img src="/assets/F1Lpb0g9MohQ2RxsCyoj82U7p0c.png" src-width="2864" src-height="1368" align="center"/>
+<img src="/assets/OAVDb8WkRoWuHZxQsGcjNCK0pEa.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/QGYGbY5zLosNLExH5fOjjXSZpxe.png" src-width="2864" src-height="1368" align="center"/>
-
-<img src="/assets/BBiMbN1BioVGAixcg7yjEaQHpem.png" src-width="2864" src-height="1368" align="center"/>
+<img src="/assets/AGJTbnm65oVJ2cxS9bqjsrcoprg.png" src-width="3020" src-height="1496" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
 <p>❓ After negotiating commission with a client, how to modify it?</p>
 </div>
 
-<img src="/assets/RC5Qbf18zoptwqxM9dojiBGTpl1.png" src-width="2864" src-height="1368" align="center"/>
+<img src="/assets/IYB9b1BSQoB72ix6uJPjTU6Mpid.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/V22jbAQ20ocQhPx2PssjEiTlpuc.png" src-width="2864" src-height="1368" align="center"/>
+<img src="/assets/N1uEb4YTVo4zQwxjqrLjbYb3pfg.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/NsOybeqRSoJSYsxgX1qjrCF6plS.png" src-width="1079" src-height="1329" align="center"/>
+<img src="/assets/ZpY1b3rJXoyjsBxKUnNjhk5apGe.png" src-width="3002" src-height="1502" align="center"/>
 
-<img src="/assets/XeWLbHWRyoT8Ybx93SkjudUdpfc.png" src-width="830" src-height="396" align="center"/>
+<img src="/assets/CJkvbZUpqoNlrYxwfN1jjduCpdg.png" src-width="3012" src-height="1506" align="center"/>
+
+<img src="/assets/DP5XbjB1yoSptUx32X4jw93mp3c.png" src-width="3004" src-height="1482" align="center"/>
+
+Examples of Adding Clients
+
+<img src="/assets/Ki01b4fQzoLKyyxzsuejboSFpBb.png" src-width="3004" src-height="1492" align="center"/>
+
+<img src="/assets/G3M0bHCzAoaS1zxSKI3jTmkWple.png" src-width="2994" src-height="1496" align="center"/>
+
+<img src="/assets/R6GJbWgTSoFscYxmkcwjr23upZg.png" src-width="3020" src-height="1496" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -220,7 +226,7 @@ If you want to set this for a single client group, add billing for the ordinary 
 If you want to set this for all clients, add billing to the Global Client Group on the Client Group Billing page (Path: Billing Management - Client Group Billing). Set the standard fee as the base rate and add a WTT-specific special charge with the applicable rate.
 ```
 
-<img src="/assets/OW2Vb6YtGoh5bsxnp76j9lF0pce.png" src-width="3578" src-height="1798" align="center"/>
+<img src="/assets/NQVzbLVktoGyvJx7XXXjhcBKpAb.png" src-width="3020" src-height="1496" align="center"/>
 
 # Instrument Information Modification
 
@@ -242,9 +248,9 @@ The public instrument repository information is processed by Whale based on sour
 Brokers may temporarily modify instruments in the public repository for the day and should promptly report modifications to Whale Customer Support for subsequent data updates and maintenance.
 ```
 
-<img src="/assets/VQOib8uiYoqflFxom5ZjNmHmp6f.png" src-width="2864" src-height="1368" align="center"/>
+<img src="/assets/HQgdbJRFAoXjbYxNcTTjKtj2pPd.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/N7EdbVRuXomoBDx8zkij7VuXpNc.png" src-width="2864" src-height="1368" align="center"/>
+<img src="/assets/TaEkbaYi9o7kO1xSSOWjZ1r9pWd.png" src-width="3020" src-height="1496" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -261,7 +267,7 @@ If modified before funds clearing, data aggregation and clearing checks must be 
 After funds clearing, modifications are not permitted.
 ```
 
-<img src="/assets/HhQJbXabtoznJkxI6YQjVZc2pid.png" src-width="2864" src-height="1368" align="center"/>
+<img src="/assets/XQbDbjhJhos36qx4iwojPUrHp1c.png" src-width="3020" src-height="1496" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -272,7 +278,7 @@ The system uses third-party data to determine whether suspension has reached thr
 
 Beyond settlement statements, certain reports also use the closing price in their calculations.
 
-<img src="/assets/UtkpbMMIwobdxUxhfd8jCWJvpOh.png" src-width="2876" src-height="1346" align="center"/>
+<img src="/assets/CDL7bqwSaobr4lxoyT5jTOtPpWc.png" src-width="3020" src-height="1496" align="center"/>
 
 # Backend Manual Order Entry
 
@@ -299,9 +305,9 @@ Path: Clearing Parameter Settings - Market Management - Settlement Channel: conf
 <p>❓ What should be noted when entering bonds in backend manual order entry?</p>
 </div>
 
-<img src="/assets/PBg0bHkaHoVMKkxHPezjKRodpdg.png" src-width="3564" src-height="1768" align="center"/>
+<img src="/assets/NJEQbutT9okLrNxjFPMjcVOapId.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/IrVjbajFQoMZAzxK3COj4zDrpsf.png" src-width="3564" src-height="1768" align="center"/>
+<img src="/assets/PmJ2bpyyjopVPAx4KkGjtzRFpRe.png" src-width="3020" src-height="1496" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -310,15 +316,15 @@ Path: Clearing Parameter Settings - Market Management - Settlement Channel: conf
 
 Create a new charging scenario.
 
-<img src="/assets/LUJZbIKZXohaLgxaHHVjyKMHpQf.png" src-width="3020" src-height="1452" align="center"/>
+<img src="/assets/BY9vbXdXaozI4kxB6BnjK0ikpWg.png" src-width="3020" src-height="1496" align="center"/>
 
 - Specify rates and add clients within package billing or personalized billing.
 
-<img src="/assets/PEghbsmnqoCEkIx9621jpdSupTe.png" src-width="3020" src-height="1452" align="center"/>
+<img src="/assets/JM1ib4lc3obpQKxujJQj5fZlpZb.png" src-width="3020" src-height="1496" align="center"/>
 
 - Verify the final configuration on the Client Billing Inquiry page.
 
-<img src="/assets/ZdWfbxftJoPvDZxHg20jrmdIpke.png" src-width="3020" src-height="1452" align="center"/>
+<img src="/assets/EGUAbPzT7o02d3xK7eRjx2QXpIe.png" src-width="3020" src-height="1496" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -328,7 +334,7 @@ Create a new charging scenario.
 - When adding a trade record, click to toggle input mode.
 - Note: The toggle function applies only to bonds in the private library.
 
-<img src="/assets/R5GNbzkSto5gVixbep6jsENqp4e.png" src-width="3008" src-height="1494" align="center"/>
+<img src="/assets/NAEOb3hMbox39Nxl6uLjjGaJpHf.png" src-width="3020" src-height="1496" align="center"/>
 
 # Transaction Reconciliation
 
@@ -364,7 +370,7 @@ Solution 2: Enable fuzzy reconciliation.
 Turn on the fuzzy reconciliation option in Clearing Parameter Configuration.
 ```
 
-<img src="/assets/UaQgbJog6o3V8axZqYxjeKyHpzc.png" src-width="3584" src-height="1696" align="center"/>
+<img src="/assets/IRuNb3nLfoRsZrxoJJbjHUfypdc.png" src-width="3020" src-height="1496" align="center"/>
 
 ```text
 If there are imbalances, the system will automatically re-reconcile by security.
@@ -374,7 +380,7 @@ If re-reconciliation by security results in balance, the system will treat the "
 If the "stock-based reconciliation result" is balanced, the clearing check will automatically pass.
 ```
 
-<img src="/assets/UDFkbGJQKoQcg1xupNKjdY4TpXd.png" src-width="3584" src-height="1696" align="center"/>
+<img src="/assets/PFSUbOo0OowZEfxNTuFjQmGDpPe.png" src-width="3020" src-height="1496" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -387,7 +393,7 @@ If the "stock-based reconciliation result" is balanced, the clearing check will 
 Brokers operating in EP mode may contact Customer Support to enable this feature. Once enabled, the system will automatically retrieve trade files from the Hong Kong Exchange SFTP each trading day.
 ```
 
-<img src="/assets/IMXwbDRhTocWIFxBolyj4TBnpph.png" src-width="3584" src-height="1764" align="center"/>
+<img src="/assets/JllUbg8vloc8t9xjtZBjIJeOpvA.png" src-width="3020" src-height="1496" align="center"/>
 
 <b>If scheduled files are missing</b>
 
@@ -421,13 +427,13 @@ Files whose file types are marked to trigger position reconciliation can automat
 Note: For OB mode, if position reconciliation must be triggered on the same day, import the position file after clearing settlement.
 ```
 
-<img src="/assets/FUcEbXrtRobEvWxkHWZj3oXApvf.png" src-width="3572" src-height="1662" align="center"/>
+<img src="/assets/EftEbkK11oY6HMxTzVmjCbG3pTb.png" src-width="3020" src-height="1496" align="center"/>
 
 ```text
 If the position file does not support “automatic trigger for position reconciliation,” click “Reconcile Again” on the Position Reconciliation page.
 ```
 
-<img src="/assets/CLzSbG8xvoVrG8x8yYojoTn8pDb.png" src-width="3572" src-height="1662" align="center"/>
+<img src="/assets/JQQjb0toro34DSxtXeIjoBXtpxb.png" src-width="3020" src-height="1496" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -437,8 +443,6 @@ If the position file does not support “automatic trigger for position reconcil
 ```text
 No. The system does not support initiating position reconciliation on non-trading days.
 ```
-
-<img src="/assets/Zijnb4MLkoPABBxHIivjVeVZpIh.png" src-width="3572" src-height="1662" align="center"/>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
@@ -474,7 +478,7 @@ Method 1: Enable the “11:00 HK auto settlement” and “Auto settlement after
 Path: Business Parameter Settings - End-of-Day Settings - Clearing Parameter Configuration
 ```
 
-<img src="/assets/OOdwbf0euoaaojxaDAajmzOtpbg.png" src-width="3570" src-height="1774" align="center"/>
+<img src="/assets/YU7Qb0ZWao3T6hx4sb9jgczgpCg.png" src-width="3020" src-height="1496" align="center"/>
 
 ```text
 Method 2: Manually perform early settlement.
@@ -484,13 +488,13 @@ Path: Clearing Management > Market Clearing > Settlement System > Settlement Bat
 Select [Early Settlement], and choose the market(s) you wish to settle early.
 ```
 
-<img src="/assets/X85hb9fVyoWnW8xS9GwjP7JHpcg.png" src-width="3364" src-height="1450" align="center"/>
+<img src="/assets/CSixb8txTolHtMxIjitjVoARpKe.png" src-width="3020" src-height="1496" align="center"/>
 
 ```text
 After operation, monitor whether the settlement batch has completed processing.
 ```
 
-<img src="/assets/XuNfbBrVZobwjUx7Tq1jBWrvped.png" src-width="2516" src-height="740" align="center"/>
+<img src="/assets/HHnaby6dfoRPcIx3fsXjcs7Ipme.png" src-width="3020" src-height="1496" align="center"/>
 
 # Internal Position Transfers When Switching Upstream Providers
 
@@ -519,9 +523,9 @@ c. Notes
 - Even if clearing is later undone, the system retains records of these operations.
 ```
 
-<img src="/assets/F50ObI93KoVmUnxjMWAjdR67pwe.png" src-width="3570" src-height="1774" align="center"/>
+<img src="/assets/Rf7WbS1XKotXm6xWSkZjlyV9p3L.png" src-width="3020" src-height="1496" align="center"/>
 
-<img src="/assets/I33MbH72Zoy1YuxgrpvjqS9Zp7b.png" src-width="3570" src-height="1774" align="center"/>
+<img src="/assets/AnFJbolPuoV2AIxSNBYj3qhVp1d.png" src-width="3020" src-height="1496" align="center"/>
 
 <b>Method 2: Bulk operation</b>
 
@@ -531,7 +535,7 @@ c. Notes
 - Even if clearing is later undone, the system retains records of these operations.
 ```
 
-<img src="/assets/Yc4ibAAEuoTheqxeo7Gj7HsepDR.png" src-width="3570" src-height="1774" align="center"/>
+<img src="/assets/AOszby5BAoJvbBxQgiBjETospLh.png" src-width="3020" src-height="1496" align="center"/>
 
 ```text
 **Modify sub-account template**
@@ -542,7 +546,7 @@ c. Notes
 - Note: Uploading a modified sub-account template will also update pending settlement contracts.
 ```
 
-<img src="/assets/J8TKb7yzWo1UQjxcMkdjosCrpkb.png" src-width="3570" src-height="1774" align="center"/>
+<img src="/assets/BTV6bxj0NouCC6xhGV1jdPnZpmd.png" src-width="1296" src-height="416" align="center"/>
 
 ```text
 **Base position adjustment**
@@ -554,5 +558,5 @@ c. Notes
 - The base position adjustment template will not modify pending settlement contracts. The template can simultaneously adjust Street, Nominee, and Own. When using this template for internal transfers, paired data (two records) is required.
 ```
 
-<img src="/assets/A14pbHrJwoZHtXxkBg4jKUc2pjf.png" src-width="3570" src-height="1774" align="center"/>
+<img src="/assets/CnKHbixTooQTaVxqHbijZKs2pJb.png" src-width="1850" src-height="838" align="center"/>
 

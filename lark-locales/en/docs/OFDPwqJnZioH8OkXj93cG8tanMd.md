@@ -26,22 +26,22 @@ If the client has provided multiple nationality documents, the priority order fo
 <b>Answer:</b> See the following steps:
 (i) In "Clearing Management ＞ Statement Management ＞ Statement Template," click "Edit"
 
-<img src="/assets/QPTVbtH8MolcOoxR9WpjvYV4pgc.png" src-width="1842" src-height="1430" align="center"/>
+<img src="/assets/SY9BbLgihoABbZxc2PyjbSLxpnc.png" src-width="3014" src-height="1506" align="center"/>
 
 (ii) Scroll to the bottom of the page and click "Statement Language" to select a language
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
 <div class='callout-emoji'>🎁</div>
-<p>&quot;Follow System&quot; means to follow the display language setting of the client&#39;s app</p>
+<p>&quot;app language&quot; means to follow the display language setting of the client&#39;s app</p>
 </div>
 
-<img src="/assets/C574bjBlxowVeWxH3a3jn3SrpXg.png" src-width="1898" src-height="1430" align="center"/>
+<img src="/assets/Ne0jbyO3Do6aUrx4r9ljsGg5pc6.png" src-width="3014" src-height="1506" align="center"/>
 
 # 5.2.1C Question: How can the statement "Liability Disclaimer" be modified?
 
 Answer: By clicking "Edit" in "Clearing Management ＞ Statement Management ＞ Statement Template," you can modify the company information, contact details, and liability disclaimer on the statement.
 
-<img src="/assets/CKDkbYRntoqarNxEHunj05LMpAg.png" src-width="1980" src-height="1410" align="center"/>
+<img src="/assets/AnEgbaXe3oLQPkxoGZKjuaZQpLh.png" src-width="3014" src-height="1506" align="center"/>
 
 # 5.2.1D Question: In the statement "Delivery Method Configuration," what does "Offline Sending" mean?
 
@@ -52,5 +52,5 @@ Answer: "Offline Sending" refers to manual delivery via email or postal mail; th
 <p>You can click &quot;Edit&quot; to modify this setting</p>
 </div>
 
-<img src="/assets/JQjIbwAYfoGU1HxHtyKjxEbYpFf.png" src-width="2814" src-height="1300" align="center"/>
+<img src="/assets/XXDvbrGhmof6CixxBawjS7PUpQb.png" src-width="3014" src-height="1506" align="center"/>
 

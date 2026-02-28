@@ -7,10 +7,6 @@ sidebar_position: 2
 
 # 系统介绍
 
-[Document original - 原始文档](https://longbridge.larkenterprise.com/docx/GZvsdSW44ol3i9xrbLic1Iwvnld)
-
-Creator - yutao.mo@longbridge-inc.com
-
 ---
 
 # 概述

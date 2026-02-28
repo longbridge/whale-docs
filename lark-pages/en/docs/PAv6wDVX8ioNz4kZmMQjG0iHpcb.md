@@ -17,7 +17,7 @@ sidebar_position: 0
 
 <b>Answer:</b> Cancellation can be performed on the "New Share Subscription &gt; Subscription Records" page (see Figure 10.1B-1). If the order status becomes "Charged" (已扣款), it cannot be canceled or rejected. To force a cancellation you must log in to the FINI platform to process it; however, if the deadline has passed, FINI cannot perform the cancellation either.
 
-<img src="/assets/T3czb5rJOoKWxkxS7H2jU7DnpBg.png" src-width="2716" src-height="902" align="center"/>
+<img src="/assets/VqhCbCf4boX1C1x5znSjC2RHp6g.png" src-width="3782" src-height="2350" align="center"/>
 
 <em>Figure 10.1B-1</em>
 

@@ -7,10 +7,6 @@ sidebar_position: 1
 
 # 系統介紹
 
-[Document original - 原始文档](https://longbridge.larkenterprise.com/docx/Bdz9dMfORov2OjxJhUHcBtdRngc)
-
-Creator - fan.zhang@longbridge-inc.com
-
 ---
 
 投放系統是以用戶全生命週期運營爲核心策略導向的數字化運營作業設計，可以在用戶生命週期的不同階段，實現客戶人群的精准觸達，提升關鍵節點核心指標和劵商企業行銷效率

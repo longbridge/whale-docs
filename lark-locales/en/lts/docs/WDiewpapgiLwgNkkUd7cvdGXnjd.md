@@ -23,7 +23,7 @@ When performing financial bookkeeping, users must record, reconcile, and analyze
 
 The main workflow for account operations within the Accounting Middle Platform is as follows:
 
-<img src="/assets/TJ2db9oAjoka7Bxspsjj9C3rpUd.png" src-width="874" src-height="553" align="center"/>
+<img src="/assets/CeOEw9x2xhVjiKbLj9sjPChLpdr-board.jpeg"/>
 
 # Prerequisites
 

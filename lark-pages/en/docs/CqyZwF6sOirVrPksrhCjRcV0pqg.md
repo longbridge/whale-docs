@@ -29,13 +29,13 @@ Before using the Accounting Middle Platform, brokers must configure account attr
 
 Each brokerage firm can customize account attributes.
 
-<img src="/assets/Zti5b6OfWo9YK3xPXULjjqD9p6e.png" src-width="2864" src-height="1078" align="center"/>
+<img src="/assets/IkgobpzqtoCW6nxF0T0j6yJapsh.png" src-width="2928" src-height="1172" align="center"/>
 
 <b>Step 2: Configure Account Attributes</b>
 
-Click "Account Attributes" at the top-right: "Create", and set the corresponding account attribute information.
+Click "Account Attributes" at the top-right: "Add", and set the corresponding account attribute information.
 
-<img src="/assets/OxpUbaSfBo1aPLxbaFbjDBjgpec.png" src-width="2954" src-height="1174" align="center"/>
+<img src="/assets/C00Xbby9RoRy2Zxq2v5jO8ofpOe.png" src-width="2954" src-height="1132" align="center"/>
 
 ### Chart of Accounts Configuration
 
@@ -43,19 +43,19 @@ Each brokerage firm can customize its chart of accounts.
 
 <b>Step 1: View Chart of Accounts</b>
 
-<img src="/assets/RKYPbkJoYoCf57xdfbCjzK9TpCd.png" src-width="2848" src-height="1022" align="center"/>
+<img src="/assets/N4BcbEfeko4vjSx4ekujGADmpkf.png" src-width="2918" src-height="1136" align="center"/>
 
 <b>Step 2: Configure Chart of Accounts</b>
 
-Depending on the number of accounts, you may choose "Create Single" or "Batch Import".
+Depending on the number of accounts, you may choose "Add" or "Upload(Bulk)".
 
-- "Create Single"
+- "Add"
 
-<img src="/assets/WYIObMAxyocST8xwOEWjFoTFphf.png" src-width="2854" src-height="1082" align="center"/>
+<img src="/assets/QA7cbqkcDo40Wtx6G6LjqcPZpKf.png" src-width="2944" src-height="1144" align="center"/>
 
-- "Batch Import"
+- "Upload(Bulk)"
 
-<img src="/assets/EyobbS7TxoJ46rxluoKjT30MpDf.png" src-width="2872" src-height="1096" align="center"/>
+<img src="/assets/CqvsbGQpJoxfYwxRytyj7McXp1g.png" src-width="2940" src-height="1182" align="center"/>
 
 ### Journal Entry Rule Configuration
 
@@ -63,13 +63,13 @@ Each brokerage firm can customize journal entry rules.
 
 <b>Step 1: View Entry Rules</b>
 
-<img src="/assets/DMUCbfIOJoj6Pixnl7mjbgHsphh.png" src-width="2854" src-height="1090" align="center"/>
+<img src="/assets/Wa3TbjI9coe4K6x30MKjdbahpag.png" src-width="2926" src-height="1128" align="center"/>
 
 <b>Step 2: Configure Entry Rules</b>
 
 Click "Entry Rules" at the top-right: "Add", and set the journal entry rules for the brokerage firm.
 
-<img src="/assets/XbICb1XE5ocBHfxDXRsjZ1B1p7f.png" src-width="3018" src-height="4624" align="center"/>
+<img src="/assets/HPvEb11cuol7tdxtGG4jebdApzh.png" src-width="2258" src-height="2324" align="center"/>
 
 ### Fund Type Configuration
 
@@ -77,13 +77,13 @@ Each brokerage firm can define fund types.
 
 <b>Step 1: View Fund Types</b>
 
-<img src="/assets/DMyTboDvPorltgxF5asjKzE2pHc.png" src-width="3806" src-height="1504" align="center"/>
+<img src="/assets/EDbObHQGAotAG6xfre4jT8W6pch.png" src-width="2932" src-height="1220" align="center"/>
 
 <b>Step 2: Configure Fund Types</b>
 
-Click "Fund Types" at the top-right: "Create", and set the fund types for the brokerage firm.
+Click "Fund Types" at the top-right: "New", and set the fund types for the brokerage firm.
 
-<img src="/assets/FQjwbhy00oL3IbxzXsfjseFSpZe.png" src-width="3826" src-height="1470" align="center"/>
+<img src="/assets/CE4EbzmVsoRFV0xIbEljF5ZSp3f.png" src-width="2924" src-height="1224" align="center"/>
 
 ### Aggregation Rule Configuration
 
@@ -91,13 +91,13 @@ Each brokerage firm can customize aggregation rules according to export report r
 
 <b>Step 1: View Aggregation Rules</b>
 
-<img src="/assets/LUiGbKTuAo8e4GxKTl8juwF0pne.png" src-width="3276" src-height="780" align="center"/>
+<img src="/assets/Qhd3bMPpioUqFGxWqD4jAQqqpzg.png" src-width="2948" src-height="1150" align="center"/>
 
 <b>Step 2: Configure Aggregation Rules</b>
 
-Click "Aggregation Rules" at the top-right: "Create", and set the aggregation rules for the brokerage firm.
+Click "Aggregation Rules" at the top-right: "Add", and set the aggregation rules for the brokerage firm.
 
-<img src="/assets/VIwBbK9Nnosh5IxReAvjQr5RpOd.png" src-width="2456" src-height="2810" align="center"/>
+<img src="/assets/FjR8bjCiFoiS5xxuLbqjZEoVpqf.png" src-width="2148" src-height="2810" align="center"/>
 
 ### Business Type Configuration
 
@@ -105,13 +105,13 @@ Each brokerage firm can personalize configurations according to whether accounti
 
 <b>Step 1: View Business Types</b>
 
-<img src="/assets/VOD4bc4R1oP8Zqxi2jXj8H6jpMf.png" src-width="3810" src-height="1676" align="center"/>
+<img src="/assets/PBdWbnS4Jo1uIyx8pcNjYbaHpDG.png" src-width="2938" src-height="1184" align="center"/>
 
 <b>Step 2: Configure Business Types</b>
 
-Click "Business Types" at the top-right: "Create", and set the business types indicating whether accounting is required for the brokerage firm.
+Click "Business Types" at the top-right: "Add", and set the business types indicating whether accounting is required for the brokerage firm.
 
-<img src="/assets/LyqWbc41hoCfEKxCcNmjzMG6pc8.png" src-width="3256" src-height="1484" align="center"/>
+<img src="/assets/VxusbtPTDoo6FKxRiB5jvOeopGf.png" src-width="2978" src-height="1228" align="center"/>
 
 ## Accounting Results Query
 
@@ -121,23 +121,23 @@ After brokerage securities transactions occur, the system will generate accounti
 
 The Accounting Middle Platform can be customized to the financial report format used by a brokerage firm's financial software, and the system exports financial reports directly.
 
-<img src="/assets/DUgpbJmdPoQsunxvxhzjdeA7pcd.png" src-width="2830" src-height="860" align="center"/>
+<img src="/assets/Ifi4b7zbGoyy46xTs7HjZFlTpqe.png" src-width="2930" src-height="1206" align="center"/>
 
-<img src="/assets/IHnWbAnYuocjCwxBvoajghiIppg.png" src-width="962" src-height="1782" align="center"/>
+<img src="/assets/FSEAbKktjoFb9OxA1iljmG7sp3c.png" src-width="2532" src-height="1359" align="center"/>
 
 ### Detailed Accounting Entries
 
-<img src="/assets/HZ8qbW2FFoPpIox7B94jCENUpGh.png" src-width="2836" src-height="980" align="center"/>
+<img src="/assets/UWfdbA8gfobDxnxP1DdjsQEzpXb.png" src-width="2954" src-height="1264" align="center"/>
 
 ### Consolidated Accounting Entries
 
-<img src="/assets/LFAKbNY5WomouLxRSJbjw22UpWh.png" src-width="2840" src-height="830" align="center"/>
+<img src="/assets/I0xmbuPRNoEMfwxnGWbjlTTNpCg.png" src-width="2950" src-height="1192" align="center"/>
 
 ### Account Balances
 
-<img src="/assets/Bv8dbAOVfoCIKixFZK3jbdgXpvc.png" src-width="2844" src-height="926" align="center"/>
+<img src="/assets/FFkbb1gXOopx23xzQlMj9HIEpBd.png" src-width="2890" src-height="1132" align="center"/>
 
 ### Account Detail Ledger
 
-<img src="/assets/JVrKbsLVyoff4wxT4TBjqTkop2a.png" src-width="2848" src-height="998" align="center"/>
+<img src="/assets/UBFbbarkzojBxyxsDwojkm85ppb.png" src-width="2974" src-height="1292" align="center"/>
 

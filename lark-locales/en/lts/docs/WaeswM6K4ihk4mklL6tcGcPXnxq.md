@@ -61,7 +61,7 @@ Answer: Not necessarily. The following conditions must be met: 1) the customer's
 
 Answer: Yes. You can configure Margin Call exemption rules under Business Parameter Settings -&gt; Risk Control -&gt; Risk Control Parameters. Scenarios that match the exemption rules will not receive a margin call. Both global and single-customer exemption rules are supported.
 
-<img src="/assets/UqJwb1Ym3o5KhtxXoxOjM6xRpBJ.png" src-width="3250" src-height="672" align="center"/>
+<img src="/assets/Iv5WbvDLXogsJXxPEOCjaFU8pHb.png" src-width="2998" src-height="1220" align="center"/>
 
 # Trading Limit Issues
 
@@ -74,5 +74,5 @@ Answer: Yes. This can be achieved through trading limit configuration rules. The
 
 All supported limit codes can be viewed in Global Limits. To impose an overall restriction on all trades, configure rules in Global Limits; to restrict specific customers or securities, configure rules under the corresponding limit type. Multi-dimensional limits support applying limits simultaneously to specified customers and specified stocks.
 
-<img src="/assets/L8VAbZDYpoSpQSxhMVej9A8Qp8b.png" src-width="3292" src-height="846" align="center"/>
+<img src="/assets/JKhDblXyFo8bzGx4maQjUQIcpXr.png" src-width="2960" src-height="1282" align="center"/>
 
