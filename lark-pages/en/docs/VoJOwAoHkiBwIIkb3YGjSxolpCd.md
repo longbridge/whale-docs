@@ -19,7 +19,7 @@ sidebar_position: 0
 
 On the other hand, if the relevant regulated intermediary (whether acting as principal or agent) effects a share transfer in relation to a cash offer (which is an over-the-counter transaction), that regulated intermediary must report the share transfer under the OTCR. In such cases, the regulated intermediary must report to the Securities and Futures Commission under the OTCR within three Hong Kong trading days following the date of the share transfer (i.e., the settlement date on which the regulated intermediary becomes aware that the accepted offer has been settled, which is also the reportable transaction date under the OTCR).
 
-# 12.0.1C Q: What do the SDR025 - Stock Reconciliation Report task results Successful Check / Manually Confirmed / Manually Unrecognized mean?
+# 12.0.1C Q: What does the SDR025 - Stock Reconciliation Report task results Successful Check / Manually Confirmed / Manually Unrecognized mean?
 
 <b>A:</b> The task results in SDR025 correspond to the Task Result column on the Clearing Management &gt; Clearing Check &gt; Check Results page.
 
@@ -27,7 +27,7 @@ On the other hand, if the relevant regulated intermediary (whether acting as pri
 - Check failed but manually approved: Manually Confirmed;
 - Check failed and not manually approved: Manually Unrecognized.
 
-<img src="/assets/Ehthb36SToLItaxLj5ujQiv3pHb.png" src-width="2074" src-height="850" align="center"/>
+<img src="/assets/LXK7bi5t2onTU8xRFbqjfZLypEh.png" src-width="3014" src-height="1510" align="center"/>
 
 # 12.0.1D Q: When will bargain-detail reports of the SDR018 category show the day’s trading data?
 
@@ -38,7 +38,7 @@ On the other hand, if the relevant regulated intermediary (whether acting as pri
 <p>For U.S. equities, refer to SDR018-1 - Bargain Detail Report-US.</p>
 </div>
 
-<img src="/assets/ZJ0PbzUMbokp19xdCccjqytapGf.png" src-width="2246" src-height="1486" align="center"/>
+<img src="/assets/SfIUbLCn5o495vx7dmCjX5CnpDd.png" src-width="3014" src-height="1510" align="center"/>
 
 # 12.0.1E Q: How are clients’ monthly custodian fees calculated?
 
@@ -49,15 +49,15 @@ A: The SDR058-2 HK Custodian Fee Group by Client V2 report can compute this. The
 <p>“Other client fee rates” refer to joint accounts and other account types.</p>
 </div>
 
-<img src="/assets/Hizxb3ZypomfSTx0m6wjuiU1pId.png" src-width="2712" src-height="986" align="center"/>
+<img src="/assets/KtiEbaACqonWuTxSzilj8kuOpBb.png" src-width="3014" src-height="1510" align="center"/>
 
 <em>Figure 12.0.1E-1</em>
 
-<img src="/assets/Nbfsbnd50oZYbnxu9JKj3iIlp8g.png" src-width="2384" src-height="922" align="center"/>
+<img src="/assets/C1uDbnf04o5MUwxePqUjWPdCpmg.png" src-width="3014" src-height="1510" align="center"/>
 
 <em>Figure 12.0.1E-2</em>
 
-<img src="/assets/FakMb6MvyosaMUxBqExj6Q4JpKg.png" src-width="2392" src-height="406" align="center"/>
+<img src="/assets/HxXLbTzikoJzLuxLwGVjw7C3pf5.png" src-width="3014" src-height="1510" align="center"/>
 
 <em>Figure 12.0.1E-3</em>
 
@@ -65,15 +65,15 @@ A: The SDR058-2 HK Custodian Fee Group by Client V2 report can compute this. The
 
 A:
 
-1. First, under Billing Management &gt; Charging Scenarios, create a new billing scenario named “Agency Charge - Stock Trading.”
+1. First, under Billing Management &gt; Charging Scenarios, create a new billing scenario named “Broker Fee- Stock Trade”
 
-<img src="/assets/F0cwbF2sTokQ0ExljlRjkDLxpAf.png" src-width="2866" src-height="1610" align="center"/>
+<img src="/assets/COibb5CwUoHY6exbMXyjxmUSpeG.png" src-width="3014" src-height="1510" align="center"/>
 
-1. Configure the charges within the relevant “Agency Charge - Stock Trading” billing scenario.
+1. Configure the charges within the relevant “Broker Fee- Stock Trade” billing scenario.
 
-<img src="/assets/KxxrbYimvoIUNJxmxI0job6Apec.png" src-width="2836" src-height="1430" align="center"/>
+<img src="/assets/LKV3bRZQlohxXjxFAROjOzhcped.png" src-width="3014" src-height="1510" align="center"/>
 
 1. View the fees in the SDR048 - Broker Contract Details report.
 
-<img src="/assets/O7FSbA8euoWPMOx3Q7mjGZk6pgb.png" src-width="2848" src-height="1214" align="center"/>
+<img src="/assets/JA68bWvupoe4gNxbYhNjJLA6pTg.png" src-width="3014" src-height="1510" align="center"/>
 

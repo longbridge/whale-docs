@@ -9,5 +9,5 @@ sidebar_position: 8
 
 In the Risk Management module, the primary operational workflow is as follows:
 
-<img src="/assets/OChLb8R0DoigNcxKkdqjNTa6pje.jpeg" src-width="1588" src-height="1174" align="center"/>
+<img src="/assets/AECrbyhboofB6AxmUkKj2Orupdf.png" src-width="1024" src-height="751"/>
 

@@ -7,12 +7,6 @@ sidebar_position: 2
 
 # 系統介紹
 
-[[原始文档 - Original Document]](https://longbridge.larkenterprise.com/docx/SSardPSeuoy0o9xEJjhcBX3BnMc) @千鸟
-
-```text
-slug: VWyawtnPoizaJvkLjGIcgA5hngb
-```
-
 # 概述
 
 風控管理主要用於處理證券業務下的保證金配置、額度管理、Margin Call等相關功能。所涉相關模組主要如下：

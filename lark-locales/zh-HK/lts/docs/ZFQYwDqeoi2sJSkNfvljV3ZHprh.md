@@ -7,10 +7,6 @@ sidebar_position: 3
 
 # 1.4 CRS 報送
 
-[Document original - 原始文档](https://longbridge.larkenterprise.com/docx/Qb7Td2QgDoFJAkxNcOMcJpwjn6c)
-
-Creator - lucas.chau@longbridge.cloud
-
 ---
 
 ## 1.4A 問：如何導出/修改 CRS 文件？

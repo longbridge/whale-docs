@@ -5,7 +5,7 @@ sidebar_position: 12
 ---
 
 
-# Message Center (Email/SMS)
+# 13. Message Center (Email/SMS)
 
 # 13. Message Center (Email / SMS)
 

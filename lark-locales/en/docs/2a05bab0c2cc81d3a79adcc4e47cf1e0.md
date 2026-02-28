@@ -22,39 +22,39 @@ This guide details the full back-office operational workflow for cryptocurrency 
 
 Prior to customer deposits, configure the supported deposit cryptocurrencies.
 
-<img src="/assets/WHtnbORkroyY2wxWWp5jzFyIpdg.png" src-width="2048" src-height="706" align="center"/>
+<img src="/assets/Qs63bldUWoUhdqxC9LpjVuKFpsd.png" src-width="1280" src-height="614" align="center"/>
 
 ## Customer Wallet Address
 
 Completing wallet address verification before deposits is a critical prerequisite to ensure asset security.
 
-<img src="/assets/WhZFbB93Ioel5AxhvTyjqialpYf.png" src-width="3288" src-height="1076" align="center"/>
+<img src="/assets/Hgj7bqIK6oFrMVxqUYJj85BCpgd.png" src-width="1280" src-height="610" align="center"/>
 
 ## Deposit Operations
 
 <b>Request Reception and Record Generation</b>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu path: WBO - Virtual Asset Management - Deposit/Withdrawal - Deposit Application</p>
+<div class='callout-emoji'>📍</div>
+<p>Menu path: WBO - VA Clearing Management - Deposits &amp; Withdrawals - Deposit Application</p>
 </div>
 
 - After the client submits a deposit request, the system automatically receives the request information and generates a unique deposit record (including record number, client securities account, deposit currency, amount, destination address, transaction hash (TXID), request time, status, and other core information).
 - If an abnormal or problematic deposit application is encountered, back-office operators may delete it directly within the system.
 
-<img src="/assets/LUVUb0PZMoctbkxkPAMjroNGpHb.png" src-width="3262" src-height="826" align="center"/>
+<img src="/assets/LUNXbD0T4om70DxLiR9jAo4rplW.png" src-width="1280" src-height="336" align="center"/>
 
 <b>Deposit Record Query and Tracking</b>
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 Menu path: WBO - Virtual Asset Management - Deposit/Withdrawal - Deposit Records</p>
+<div class='callout-emoji'>📍</div>
+<p>Menu path: WBO - Virtual Asset Management - Deposit/Withdrawal - Deposit Records</p>
 </div>
 
 - <b>Multi-condition search</b>: Supports filtering by record number, customer number, creation time, status, and other criteria to quickly locate target records.
 - <b>Detail tracking</b>: Click a single record to view details, including address verification and the block confirmation progress corresponding to the transaction hash, enabling real-time tracking of the entire deposit process.
 
-<img src="/assets/OZVnbPqDyogZCLxVAUJjQtN0pZh.png" src-width="3268" src-height="806" align="center"/>
+<img src="/assets/PAYtbvktAoeU9Tx9QudjsDgSpef.png" src-width="2446" src-height="964" align="center"/>
 
 <b>Cancellation of Non-Deposited Records</b>
 
@@ -64,7 +64,7 @@ Completing wallet address verification before deposits is a critical prerequisit
     2. A confirmation dialog will appear; enter operation remarks (e.g., "Duplicate user request", "Incorrect address"), then confirm the cancellation again;
     3. Upon successful cancellation, the record status will be updated to "Cancelled", and the system will automatically retain a cancellation operation log (including operator, operation time, and remarks) to support subsequent traceability.
 
-<img src="/assets/YDHsbDwlroiv70x0PQnj9KzFpIe.png" src-width="3302" src-height="720" align="center"/>
+<img src="/assets/MMKDbz6nQoboX4xMiwCjWYoJpjb.png" src-width="2480" src-height="696" align="center"/>
 
 <b>Refund Process After Successful Deposit</b>
 
@@ -76,5 +76,5 @@ Completing wallet address verification before deposits is a critical prerequisit
     4. Track the refund status: monitor the block confirmation progress of the refund record in real time; upon confirmation completion, update the deposit record status to "Refunded" and retain a full refund process log;
     5. Notify the user: once the refund succeeds, notify the customer offline.
 
-<img src="/assets/WNGMbh6cQoCEo9xcV2djcnNPpEh.png" src-width="3274" src-height="804" align="center"/>
+<img src="/assets/BJjcbxXoRocUVRxxSqjjdw2upig.png" src-width="2452" src-height="732" align="center"/>
 

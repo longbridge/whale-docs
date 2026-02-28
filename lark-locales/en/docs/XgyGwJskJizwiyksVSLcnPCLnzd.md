@@ -15,7 +15,7 @@ The WTT Client List and Client Information components provide traders with one-s
 
 Locate these two components in the WTT upper-right Components Toolbox under Client Categories; you can drag the components onto a panel or use them independently.
 
-<img src="/assets/DEgwbFBoNoEsDnxAVn8jj6Frpzg.png" src-width="600" src-height="128" align="center"/>
+<img src="/assets/NQP2bZs1kolHvoxK4aljBj0Zp2e.png" src-width="922" src-height="484" align="center"/>
 
-<img src="/assets/Z1qVbrnaPobguJxuOe6j2O3Tp3c.png" src-width="1348" src-height="898" align="center"/>
+<img src="/assets/Om7jbYwdto4mzAxvbXCjs6SvpIg.png" src-width="1348" src-height="932" align="center"/>
 

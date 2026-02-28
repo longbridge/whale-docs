@@ -255,7 +255,7 @@ The data on this page come from deposit entries in bank statements. If a brokera
 
 Deposit Return: If for various reasons a deposit cannot be credited to the customer’s securities account, use this function to process a refund. The operator must enter the customer’s bank card information, confirm accuracy, and click [Confirm] to flow the record to the Deposit Review page for approval.
 
-<img src="BKwybgQvIoVrEqxt0dfjW7LgpFc" src-width="3320" src-height="1768" align="center"/>
+<img src="/assets/BKwybgQvIoVrEqxt0dfjW7LgpFc.png" src-width="3320" src-height="1768" align="center"/>
 
 Withdrawal Return: Because the Deposit Matching page’s data come from inflows in bank transaction records, if a customer’s withdrawal is rejected by the bank and appears as an inflow, the operator should associate the withdrawal’s transaction reference and process the record using the [Withdrawal Return] function.
 
