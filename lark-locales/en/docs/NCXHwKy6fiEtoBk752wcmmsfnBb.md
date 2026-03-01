@@ -15,7 +15,7 @@ The Whale Accounting System provides a solution that can automatically retrieve 
 
 # Accounting Middle Office Process Description
 
-<img src="/assets/TqHMwvV3RhbkQLb6B7pjx1OQpTe-board.jpeg"/>
+<img src="TqHMwvV3RhbkQLb6B7pjx1OQpTe"/>
 
 # Parameter Settings
 

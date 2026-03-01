@@ -21,7 +21,7 @@ sidebar_position: 2
 
 View the processing status of customer company-action related transactions. This list only supports viewing data related to customer business processing and does not currently support other operations such as share splits or consolidations. To perform company action business processing, please proceed to the WBO backend.
 
-<img src="/assets/RhuMb4ZNSoCJ3ExRoh5jhFUfpQf.png" src-width="2866" src-height="1734" align="center"/>
+<img src="/assets/WekFbI2nio95oBxaCEnjxfLLpof.png" src-width="3024" src-height="1888" align="center"/>
 
 <b>Page Structure Description</b>
 
@@ -37,7 +37,7 @@ Supports searching by security, notice number, customer, notice type, market, cu
 
 The list mainly displays detailed data on customer company actions and allows viewing of details.
 
-<img src="/assets/In1mbDNWYo6zGqxk8GPjzzPnp3b.png" src-width="2866" src-height="1738" align="center"/>
+<img src="/assets/BLEmbL9ouo56rsxVblij14kMpSh.png" src-width="3024" src-height="1888" align="center"/>
 
 The detail window can be viewed by sections and includes Exercise Information, Fee Information, Entitlement Information, and Other Information.
 

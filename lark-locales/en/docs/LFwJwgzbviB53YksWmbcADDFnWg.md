@@ -17,17 +17,29 @@ Temporary account adjustments currently support cash, equities, and options.
 
 You must obtain the following authorizations to use the system functions normally:
 
+<table>
+<colgroup>
+<col width="436"/>
+<col width="384"/>
+</colgroup>
+<tbody>
+<tr><td><p>Permission Name</p></td><td><p>Permission Description</p></td></tr>
+<tr><td><p>Permission to manage adjustment inquiries and adjustment settlement<br/>AdjustAccountFull</p></td><td><p>Permission to perform temporary account adjustments</p></td></tr>
+<tr><td><p>Read-only permission for adjustment inquiries and adjustment settlement<br/>AdjustAccountReadOnly</p></td><td><p>Permission to view the pages</p></td></tr>
+</tbody>
+</table>
+
 # Instructions
 
 1. On the "Temporary Account Adjustment" main page, click [Temporary Account Adjustment] to enter the creation page.
 
-<img src="/assets/Zp8GbkeshowKHSxbN0ljTDcapkh.png" src-width="3746" src-height="1874" align="center"/>
+<img src="/assets/QywBbfpCoo0jaBxTzptj4RH8pph.png" src-width="3020" src-height="1888" align="center"/>
 
 1. Select the corresponding adjustment type and fill in the adjustment information to create a temporary adjustment record and complete the adjustment.
 
-<img src="/assets/Kuu7bKxSroLDydxAeskjNmw9piC.png" src-width="3314" src-height="1928" align="center"/>
+<img src="/assets/KrgabOKq8oQx2txNFydjfq6vple.png" src-width="3024" src-height="1888" align="center"/>
 
 1. When the validity period specified for a temporary account adjustment expires, the system will automatically invalidate that temporary adjustment. Prior to automatic invalidation, you may also manually select [Invalidate] on the "Adjustment Settlement" page.
 
-<img src="/assets/XhJlbcRxSocMvexAiNjjne3LpQd.png" src-width="3818" src-height="1960" align="center"/>
+<img src="/assets/J4CcbG5SvoHlIsxs6pujNlNYpxh.png" src-width="3024" src-height="1888" align="center"/>
 
