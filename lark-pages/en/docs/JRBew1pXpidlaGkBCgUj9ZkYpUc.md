@@ -17,19 +17,15 @@ A: When a "VC Review Rule" is triggered, it will be displayed in the triggered-r
 2. Low educational attainment: the user's highest education level is "Primary school or below"
 3. After relevant personnel confirm the risks with the client, the VC may be approved
 
-<img src="/assets/ErsUbkLg4ovWL2xua58jUYoPpYg.png" src-width="2594" src-height="1048" align="center"/>
+<img src="/assets/QtPxb7sfzog6n8xHs5zjEjxhpjg.png" src-width="2800" src-height="1388" align="center"/>
 
 <em>VC Review Rules column in the account opening list</em>
-
-<img src="/assets/J0HkbpUKbobx7FxEiCdj3pDepMh.png" src-width="1298" src-height="291" align="center"/>
-
-<em>Account opening approval process sequence</em>
 
 # 1.1B Q: Is there an AML check during account opening?
 
 A: If TESS (a third-party platform) is subscribed, the system will perform a basic AML check via TESS during account opening to determine hits; details can then be viewed by logging into the TESS platform.
 
-<img src="/assets/EV7obVq9WohaFMx7rrejZZvOptg.png" src-width="2794" src-height="735" align="center"/>
+<img src="/assets/PXfeb9MNio6rhixSD42jmV6epag.png" src-width="2826" src-height="724" align="center"/>
 
 # 1.1C Q: What are the account-number rules for online and offline account openings?
 
@@ -39,13 +35,13 @@ A: Online accounts follow the account-generation rules configured by the broker.
 
 A: You can view sent content on the "Message Center &gt; Message Records &gt; SMS/Email" page. If the relevant function is not visible, please request access to Message Center permissions.
 
-<img src="/assets/RfCbbssxaoAM7QxxlEljoXoUpeK.png" src-width="2390" src-height="626" align="center"/>
+<img src="/assets/H2Eab3rhaoXZNjxhzg8jhEoLpYb.png" src-width="2680" src-height="700" align="center"/>
 
 # 1.1E Q: During account application, does the backend check for records similar to existing clients?
 
 A: Yes. The system checks using the client's name and date of birth. On the "KYC &gt; Account Opening List &gt; Details" page, the "Similar Clients" field will provide a prompt and display clients with similar records.
 
-<img src="/assets/QP7cb0FtJobpZ3x75tAj96E7p5c.png" src-width="2484" src-height="990" align="center"/>
+<img src="/assets/LYonb94DmoQs3Yxtvyej2duApfd.png" src-width="2702" src-height="886" align="center"/>
 
 # 1.1F Q: Is there a notification after an account is opened? Are there attachments?
 
@@ -80,7 +76,7 @@ If you receive a "phone number is already in use" notice, please perform the fol
 <p>Note: Account numbers cannot be reused after cancellation.</p>
 </div>
 
-<img src="/assets/VVMAb5TCNohbNxx2sinjTfktpIh.png" src-width="2654" src-height="1114" align="center"/>
+<img src="/assets/Q83cbX1rfoLacVxy5o5jdNnApLc.png" src-width="2692" src-height="1190" align="center"/>
 
 <em>Figure 1.1G-1</em>
 

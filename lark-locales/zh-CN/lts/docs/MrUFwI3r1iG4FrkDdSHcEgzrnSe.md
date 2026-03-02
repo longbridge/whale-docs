@@ -24,8 +24,8 @@ Whale系统包含了处理入金申请、匹配银行流水、入金审核、单
 # 二、操作说明
 
 <div class="callout callout-bg-5 callout-border-5 callout-color-1">
-<div class='callout-emoji'>🎁</div>
-<p>📍 菜单入口：款项管理-入金</p>
+<div class='callout-emoji'>📍</div>
+<p>菜单入口：款项管理-入金</p>
 </div>
 
 ## 入金申请

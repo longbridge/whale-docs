@@ -7,10 +7,6 @@ sidebar_position: 14
 
 # 2025-01-20 更新日志
 
-[Document original - 原始文档](https://longbridge.larkenterprise.com/docx/XIDZdYCuWoliBMxPtYQcmK5En5e)
-
-Creator - jian.gao@longbridge-inc.com
-
 ---
 
 # 🎉 新功能

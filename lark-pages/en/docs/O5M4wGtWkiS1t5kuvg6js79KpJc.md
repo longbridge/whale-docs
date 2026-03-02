@@ -27,7 +27,7 @@ This feature is essential for ensuring the completeness and accuracy of trading 
 
 The Whale system currently supports two methods: manual single-entry input and batch file import. Markets supported for fill-in recording include Hong Kong stocks, US stocks, Shanghai & Shenzhen A-shares, and Singapore stocks.
 
-<img src="/assets/VFCsb2zo3o6GjBxSSZFjhO3spbb.png" src-width="2868" src-height="1744" align="center"/>
+<img src="/assets/FdMBbgpYConyjzxgRw2jONzHp4f.png" src-width="3022" src-height="1886" align="center"/>
 
 Page Structure
 
@@ -43,7 +43,7 @@ Operations and Features
 
 The list primarily displays fill-in record information. Certain fields (for example, order quantity) support ascending/descending sorting, and column positions can be rearranged according to user preferences.
 
-<img src="/assets/N3LpbyFV8oCBJdxW15SjL6ZApYg.gif" src-width="1848" src-height="1122" align="center"/>
+<img src="/assets/V66PbVVCdoEqaMxV1yDjal01pMf.gif" src-width="1824" src-height="1136" align="center"/>
 
 - Search criteria: securities account, stock, order time, operation time
 - Special field explanations:
@@ -61,9 +61,14 @@ The list primarily displays fill-in record information. Certain fields (for exam
 
 Click the “Add” button in the upper-right corner to open the fill-in order modal. The modal defaults to the “Manual Entry” view, where you can enter order and trade details manually.
 
-<img src="/assets/R2n5bYv3goFcRqxq9lqjHfvxpfy.png" src-width="760" src-height="1682" align="center"/>
-
-<img src="/assets/JLbLbNamsoVXfNxMjfVjiwI4pze.png" src-width="738" src-height="1668" align="center"/>
+<div class="flex gap-3 columns-2" column-size="2">
+<div class="w-[49%]" width-ratio="49">
+<img src="/assets/ObG1by9vJoOzypxzHafjFXQOpcc.png" src-width="754" src-height="1828" align="center"/>
+</div>
+<div class="w-[50%]" width-ratio="50">
+<img src="/assets/XohvbSUoxoAwjtxsWsyjEuo1p5c.png" src-width="760" src-height="1826" align="center"/>
+</div>
+</div>
 
 - Enter the order instruction data for the fill-in, which must include client information, stock, order channel, order price, quantity, and other basic order information.
 - After confirming the order instruction data, enter the trade execution details in the lower module, including execution status, date, executed quantity, and price.
@@ -76,9 +81,14 @@ Click the “Add” button in the upper-right corner to open the fill-in order m
 
 Click the “Add” button in the upper-right corner to open the fill-in order modal, then switch at the top to “File Import” to perform batch file fill-ins.
 
-<img src="/assets/LhCvbSN3boxSQwxN0EmjNxrDpcc.png" src-width="764" src-height="548" align="center"/>
-
-<img src="/assets/WeQkbKwxVo5HMZxHRTOjxW44p3e.png" src-width="742" src-height="596" align="center"/>
+<div class="flex gap-3 columns-2" column-size="2">
+<div class="w-[56%]" width-ratio="56">
+<img src="/assets/BMsyb6DLeoVkLhxtSB0jcZaVpWg.png" src-width="752" src-height="528" align="center"/>
+</div>
+<div class="w-[43%]" width-ratio="43">
+<img src="/assets/CL6EbDtnDo7qboxdhuFj8ld5pDc.png" src-width="758" src-height="698" align="center"/>
+</div>
+</div>
 
 - Uploaded fill-in files must follow the template rules. Before uploading, please download the template, fill in the data there, and then upload the completed file.
 - Click “Upload File” to open the local file selector. After selecting the file to upload, the system will process the fill-in.
@@ -86,15 +96,22 @@ Click the “Add” button in the upper-right corner to open the fill-in order m
 
 - Fill-in template file specification:
 
+|   |   |   |   |   |   |   |   |   |   |   |   |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+|File Header|Acc. Number|Symbol|Order Type|Side|Price|Quantity|Order Channel|Trade Date|Remark|Order Tag|Tag|
+|Field Description|Securities account|Code — format: symbol.market|Order type — conditional orders not supported; refer to the template file “Notification” sheet for details|Order direction — enter B/S (B: Buy; S: Sell)|Order price — up to 20 characters|Order quantity|Order channel — refer to “Notification” sheet in the template for exact values|Order date — YYYY-MM-DD|Order/Detail — indicates whether this fill-in row is an Order or a Done. Order and Done lines are typically used in combination. Optional; if omitted, defaults to Order. (Order = order; Done = order detail)|Order tag — optional; defaults to Normal if omitted; refer to “Notification” sheet in the template for exact values|Easter egg field — Risk-control exemption: indicate whether to skip risk control by entering Y/N; default empty = do not skip|
+|Example|LPT243184|700.HK|ELO|B|366.90|300|WTT|2024-04-20|Order||Y|
+
 - Import result feedback for fill-ins:
-
-<img src="/assets/LV48bX0IuowWnixjCLgjE0rCpib.png" src-width="806" src-height="318" align="center"/>
-
-<img src="/assets/M4bYbFaN2oCsP3x6QgQjZQvFp6t.png" src-width="1600" src-height="734" align="center"/>
-
-```text
-- When file data contains exceptions, the system currently validates multiple dimensions such as client securities account, stock symbol, order type, order channel, order tag, and Remark. Records with exceptions will be blocked and can be inspected in detail via the “Import Feedback” window.
-```
+    <div class="flex gap-3 columns-2" column-size="2">
+    <div class="w-[58%]" width-ratio="58">
+        <img src="/assets/Ki19bVoJWoESiaxWix2jj6UDp7b.png" src-width="902" src-height="298" align="center"/>
+        </div>
+    <div class="w-[41%]" width-ratio="41">
+        <img src="/assets/TVZCbIgZyoZp6ixyfHdjcz4xpEh.png" src-width="1630" src-height="750" align="center"/>
+        </div>
+    </div>
+    - When file data contains exceptions, the system currently validates multiple dimensions such as client securities account, stock symbol, order type, order channel, order tag, and Remark. Records with exceptions will be blocked and can be inspected in detail via the “Import Feedback” window.
 
 ## 2. IPO Management
 
@@ -102,7 +119,7 @@ Function Overview
 
 Traders can view IPO details through the “IPO List” page and submit IPO applications on behalf of clients. Online client subscription statuses can also be managed in the “Subscription List.”
 
-<img src="/assets/B4fUbbnckor0ISxCcFNjHS7Tpob.png" src-width="2858" src-height="1736" align="center"/>
+<img src="/assets/QG1pbjHk2oVg5zxT0qNjAunVpIb.png" src-width="3024" src-height="1888" align="center"/>
 
 Page Structure
 
@@ -118,13 +135,13 @@ Operations and Features
 
 View basic IPO data, including IPO code, subscription start date, subscription end date, subscription price range, lot size, etc. Click “Details” to view IPO-specific data on the IPO details page. IPO data are managed and configured in the WBO backend; WTT only displays the backend-configured data and content.
 
-<img src="/assets/JMjwbFUygoEcaCxMQtbjjh3dp6b.png" src-width="2734" src-height="1598" align="center"/>
+<img src="/assets/Qm3ZbBcFwoPA9KxCvAZjUaWmptf.png" src-width="2906" src-height="750" align="center"/>
 
 2.2 IPO Details
 
 The IPO details modal contains three sections: Basic Information, Financing Information, and Subscription Details. Use the function tabs on the timeline to switch between views.
 
-<img src="/assets/ZYKVbKApmoTHMkxcNNBj38hQpdh.png" src-width="2752" src-height="1170" align="center"/>
+<img src="/assets/QKBIb5JJXoQrJVxE3ZGj2AkFpRb.png" src-width="2902" src-height="1058" align="center"/>
 
 - Basic Information: IPO basic data configured in the backend
 - Financing Information: applicable financing multipliers and requirements for the IPO
@@ -133,8 +150,6 @@ The IPO details modal contains three sections: Basic Information, Financing Info
 2.3 IPO Subscription
 
 Traders can assist clients with IPO subscriptions via WTT. Click the “Subscribe” button in the IPO list’s action column to open the IPO subscription modal. The subscription modal consists of three modules: funds confirmation, subscription information entry, and subscription result review.
-
-<img src="/assets/OYGhbQ5nHoGkdrxkJAjjxHKmpne.png" src-width="2870" src-height="1730" align="center"/>
 
 - Enter the subscription account; you can search accounts to select the client to subscribe on behalf of.
 - Funds information: after selecting a client, the client’s buying power and cash balance will be displayed. Traders can use this data to judge whether the account is suitable for subscription.
@@ -145,7 +160,7 @@ Traders can assist clients with IPO subscriptions via WTT. Click the “Subscrib
 
 View client subscription data (including subscriptions submitted via the client App/PC and trades submitted by traders via WTT), and perform order modification or cancellation from this list.
 
-<img src="/assets/D8bCb7yOfo1KS2xTEwDjsSYVp0f.png" src-width="2856" src-height="1722" align="center"/>
+<img src="/assets/Wt5nbBjnaoD6zKxpuI6j9i5vpNg.png" src-width="2912" src-height="1334" align="center"/>
 
 - Search functions: currently supports search by client and order status only.
     - To view subscriptions for a specific IPO, go to “IPO List” → “Details” → “Subscription Details.”
@@ -164,9 +179,7 @@ Blacklist / Whitelist: set blacklists to restrict trading of specific securities
 
 Risk Restrictions: apply trading restrictions to VA-ETFs using three dimensions: PI certification, VA-ETF risk questionnaire, and VA-ETF risk prompt.
 
-<img src="/assets/WyCTbXrqUohRUOxa5ISjZj8ippf.png" src-width="2852" src-height="1736" align="center"/>
-
-<img src="/assets/HeaUbimthoScu7xpDJwjLrpZpD6.png" src-width="2870" src-height="1736" align="center"/>
+<img src="/assets/AMeHbaIgQoIVAzx1wSUj3rUgpTf.png" src-width="3024" src-height="1888" align="center"/>
 
 Page Structure
 
@@ -185,9 +198,14 @@ Click the “Add” button at the top-right of the list to open the “Add Tradi
 - Manual restriction: manually add a security restriction condition; once added and submitted, the condition becomes effective.
 - Securities import: bulk import securities to set trading restrictions; currently supports restrictions applied to all clients only.
 
-<img src="/assets/FTlJbAI4AocPmrxHBkWjIYiGpLe.png" src-width="746" src-height="1666" align="center"/>
-
-<img src="/assets/Q59ibjXa8o5PGvxExkUjuFD2phc.png" src-width="752" src-height="1672" align="center"/>
+<div class="flex gap-3 columns-2" column-size="2">
+<div class="w-[49%]" width-ratio="49">
+<img src="/assets/UsL3bchdEoi4oZxwZfGjt6gTpZd.png" src-width="740" src-height="1816" align="center"/>
+</div>
+<div class="w-[50%]" width-ratio="50">
+<img src="/assets/QweXb5oSFoXj7wxCqo5j4QP1pTd.png" src-width="754" src-height="1840" align="center"/>
+</div>
+</div>
 
 - Field explanations:
     - Restriction type: Blacklist, Whitelist
@@ -203,7 +221,7 @@ Click the “Add” button at the top-right of the list to open the “Add Tradi
     - Import securities: upload a file with securities codes in the format “symbol.market”, e.g., 00700.HK, BABA.US — follow the template; we recommend downloading the template on first use.
 
 - Relational rules and notes:
-    <img src="/assets/EAGxbvxxXonCTfxqlpmj8KuGpG8.png" src-width="748" src-height="744" align="center"/>
+    <img src="/assets/LfFzbqTW5oOdx1xxNqojzbEGpaf.png" src-width="738" src-height="1482" align="center"/>
     - Market, trading instrument, and stock are interrelated. For example, if Hong Kong market is selected, Options will not be presented as an instrument option.
     - If “All markets” is selected, the stock input box does not permit entering a stock. Note: because the selection imposes an all-market restriction, any stock entries will not take effect.
         - To restrict all markets and instruments: select Market = All, Instrument = All, leave the stock field blank.
@@ -211,18 +229,23 @@ Click the “Add” button at the top-right of the list to open the “Add Tradi
     - For US options restrictions, the system will default to restricting all options under the entered stock code. For example, setting a US options blacklist with BABA.US entered in the stock field means all options under BABA.US are restricted for Buy Open operations (see example).
 
 - Blacklist/Whitelist interception result prompt: after submission, blacklists may take 1–2 minutes to become effective. Once effective, if a client attempts to trade a restricted security, their trading terminal will display an interception prompt.
-    <img src="/assets/F2lLbVfpuoJOCXxBo1ljyTRDpVr.png" src-width="574" src-height="118" align="center"/>
     - For example, if Buy Open is disabled, the client/trader will see: “Order failed: this security does not support Buy Open.”
 
 3.2 Blacklist/Whitelist List Operations
 
 The blacklist/whitelist list supports Edit, Delete, Associate Clients, and Bulk Delete. Edit and Delete operate at the stock-condition level, while Associate Clients adjusts the client scope for a given restriction condition.
 
-<img src="/assets/PCADbGnCZoUSCJxp3BJjAb7apde.png" src-width="2870" src-height="1744" align="center"/>
+<img src="/assets/BZECbr0QdoAIlax8MSJjLEOipkh.png" src-width="3014" src-height="1878" align="center"/>
 
-<img src="/assets/J8CXbSVypodgCNxnqe6jWwfnpng.png" src-width="746" src-height="696" align="center"/>
+<div class="flex gap-3 columns-2" column-size="2">
+<div class="w-[56%]" width-ratio="56">
+<img src="/assets/YGmVb6B6EoFn7hxvISXj1e3Zpdh.png" src-width="738" src-height="686" align="center"/>
 
-<img src="/assets/QDQTbVOrFo9CjFx1r6Dj5d5vpMe.png" src-width="758" src-height="992" align="center"/>
+</div>
+<div class="w-[43%]" width-ratio="43">
+<img src="/assets/XfBCb0LPDoRZRFxE5Vhjt2sRpHb.png" src-width="738" src-height="1180" align="center"/>
+</div>
+</div>
 
 - Checkbox bulk delete: suitable for deleting a small number of selected restriction conditions via checkboxes.
 - “Bulk Delete” button in the upper-right: suitable for large-scale global deletions. Use the “Bulk Delete” modal to manually add restriction conditions to delete, then import the stock codes to be removed — matching restriction conditions will be deleted in bulk.
@@ -233,13 +256,18 @@ The blacklist/whitelist list supports Edit, Delete, Associate Clients, and Bulk 
         - If the condition is associated with all clients, clicking this action will display a prompt stating “Associated with all clients,” and client association editing is not permitted.
         - If associated with a subset of clients, open the “Associate Clients” modal to add or remove associated clients (bulk operations are not supported in this modal).
 
-<img src="/assets/FwDpblItNoRbi2xHS9rjBQmrp4c.png" src-width="698" src-height="314" align="center"/>
-
-<img src="/assets/WmdHbWYo9opmG3xT0yYjbTeKp7b.png" src-width="2288" src-height="1006" align="center"/>
+<div class="flex gap-3 columns-2" column-size="2">
+<div class="w-[46%]" width-ratio="46">
+<img src="/assets/OJTbbjvz3o7iP1x3NAajtk77pVc.png" src-width="716" src-height="348" align="center"/>
+</div>
+<div class="w-[53%]" width-ratio="53">
+<img src="/assets/YwL4bqXd4o0COhx6J3bjbg44pef.png" src-width="2412" src-height="1028" align="center"/>
+</div>
+</div>
 
 3.3 Risk Restriction Features
 
-<img src="/assets/REQPbPqoEoXvmHxZvHijywftprc.png" src-width="2864" src-height="1740" align="center"/>
+<img src="/assets/SfkgbSd2qoDcufx4jcKjwm2yppr.png" src-width="3022" src-height="1888" align="center"/>
 
 - Use the tabs to restrict VA-ETF risk controls by three dimensions: PI Certification, VA-ETF Risk Questionnaire, VA-ETF Risk Prompt.
     - PI Certification: checking this means the security requires PI certification before trading is allowed.
@@ -255,9 +283,14 @@ Function Overview
 
 The Trade Allocation page supports order allocation and order transfer operations. This feature addresses client mis-entries and related issues. Both Ordinary Orders and Institution Orders support allocation, but at present only Institution Orders support order transfers.
 
-<img src="/assets/GOIQbiVujoyN4fxHZUFjgvwqp4e.png" src-width="2874" src-height="1736" align="center"/>
-
-<img src="/assets/TM5cbIeMYoeYa2xCeInjIiPiptb.png" src-width="2870" src-height="1732" align="center"/>
+<div class="flex gap-3 columns-2" column-size="2">
+<div class="w-[50%]" width-ratio="50">
+<img src="/assets/TUmXb1xC7oHY6PxPo4LjglwHp3d.png" src-width="3024" src-height="1888" align="center"/>
+</div>
+<div class="w-[50%]" width-ratio="50">
+<img src="/assets/T3zLbO91toScKQxIGB7jOdzypVe.png" src-width="3024" src-height="1888" align="center"/>
+</div>
+</div>
 
 Page Structure
 
@@ -295,11 +328,15 @@ The Trade Allocation page is divided into two sections. The upper half displays 
 
 - Allocation groups: you can preset allocation groups before allocation. On the allocation page, you may select a preset allocation group to speed up allocation operations.
 
-<img src="/assets/Teyib6mTuoPY7KxRirrjtjlzpfS.png" src-width="2876" src-height="1736" align="center"/>
+<div class="flex gap-3 columns-2" column-size="2">
+<div class="w-[50%]" width-ratio="50">
+<img src="/assets/HNstbYXKPod0ONxRD1BjBGfnpbd.png" src-width="3008" src-height="1864" align="center"/>
+</div>
+<div class="w-[49%]" width-ratio="49">
+<img src="/assets/OJywbNGWPoVZB0xT6nOjBjQEp0b.png" src-width="3022" src-height="1888" align="center"/>
+</div>
+</div>
 
-<img src="/assets/ScL9bvlUIoNIjkxfWuwjFavvpNe.png" src-width="1060" src-height="1700" align="center"/>
-
-```text
 - Add Group: enter group name, allocation method, accounts to receive allocation, and allocation ratios.
     - Group name: appears in the allocation group list and will be used to identify the group during allocation—choose a clear, descriptive name.
     - Allocation method: preset by Proportion or by Quantity.
@@ -308,15 +345,13 @@ The Trade Allocation page is divided into two sections. The upper half displays 
         - Click “Add accounts to receive allocation” to add more accounts.
     - Allocation ratio: required when Proportion is selected; the sum of ratios must not exceed 100%.
     - Allocation quantity: required when Quantity is selected; quantities are typically set according to custom needs.
-```
+    <img src="/assets/Hwt6b8nDho12Lsxw843jCB53p7c.png" src-width="1050" src-height="556" align="center"/>
 
 4.2 Ordinary Orders — Trade Allocation
 
 When operating on Ordinary Orders, set the order type filter at the top to “Ordinary Orders.” The action column supports only “Allocate.”
 
-<img src="/assets/Q39xb3OAko4wblxeUs8j6kKxpab.png" src-width="2864" src-height="1734" align="center"/>
-
-<img src="/assets/XipjbyqHsopN94xwmdkj9C96pRe.png" src-width="2866" src-height="1742" align="center"/>
+<img src="/assets/Xb9ibjIsVoNb7MxUXOQjNOLTpRd.png" src-width="3024" src-height="1888" align="center"/>
 
 - Allocation modal:
     - Ordinary Orders support two allocation modes: Order Allocation and Detail Allocation.
@@ -336,11 +371,17 @@ When operating on Ordinary Orders, set the order type filter at the top to “Or
 
 Institution Orders support allocation and transfer on this page. Set the order type filter at the top to “Institution Orders.” The action column supports “Allocate” and “Transfer.” When the pending quantity is 0, action buttons are disabled.
 
-<img src="/assets/VIeDbPeawoCZz6x5lFtjs7lopBb.png" src-width="2866" src-height="1740" align="center"/>
-
-<img src="/assets/QrmLbhLudo3WbmxAuiRjevZmpub.png" src-width="2864" src-height="1740" align="center"/>
-
-<img src="/assets/XWMzbJEnxonznSxA359jw9YVppg.png" src-width="2874" src-height="1722" align="center"/>
+<div class="flex gap-3 columns-3" column-size="3">
+<div class="w-[33%]" width-ratio="33">
+<img src="/assets/C9M0bnVFooqwObxqotIjmLvuptf.png" src-width="2990" src-height="1888" align="center"/>
+</div>
+<div class="w-[33%]" width-ratio="33">
+<img src="/assets/QFNrbfMjaow6plxmGsMjdQyEpVg.png" src-width="3024" src-height="1888" align="center"/>
+</div>
+<div class="w-[33%]" width-ratio="33">
+<img src="/assets/NCFUb2pWsohtUTx3vrkj5zaopfd.png" src-width="3024" src-height="1888" align="center"/>
+</div>
+</div>
 
 - Allocation modal:
     - Allocation mode: Institution Orders support only “Order Allocation.”
@@ -356,9 +397,14 @@ Institution Orders support allocation and transfer on this page. Set the order t
 
 4.4 Allocation Preview Modal
 
-<img src="/assets/EEShbmjOcoNehTxVWysjE8espEd.png" src-width="942" src-height="698" align="center"/>
-
-<img src="/assets/EEzAblW6Po4UyOxsNryjAlhCpGh.png" src-width="940" src-height="514" align="center"/>
+<div class="flex gap-3 columns-2" column-size="2">
+<div class="w-[41%]" width-ratio="41">
+<img src="/assets/OCKGbBFaYoM3WEx1tF7jhvRHpSe.png" src-width="944" src-height="754" align="center"/>
+</div>
+<div class="w-[58%]" width-ratio="58">
+<img src="/assets/E9SybeGfIov6VgxeKDhjQyQNpHc.png" src-width="936" src-height="528" align="center"/>
+</div>
+</div>
 
 - Allocation preview:
     - Displays the basic information for the allocation, including allocation mode, original Institution Order, and allocation details.
@@ -374,7 +420,7 @@ Institution Orders support allocation and transfer on this page. Set the order t
 
 This page displays orders produced by trade allocation operations and supports actions such as sending trade confirmations, modifying commission, previewing confirmation documents, viewing order details, and canceling allocations.
 
-<img src="/assets/Rf4nbNEnLo0ezdxdb1NjfjbvpAh.png" src-width="2858" src-height="1740" align="center"/>
+<img src="/assets/VLZbbgq41os6PhxcU9xjeQSGpob.png" src-width="3024" src-height="1888" align="center"/>
 
 List Details
 
@@ -385,14 +431,14 @@ List Details
     - Send status: Not Sent, Sent (whether the trade confirmation has been sent)
     - Remarks: if allocation failed, the failure reason is displayed in this column
 
-List Operations
+<b>List Operations</b>
 
 - Send trade confirmation
     - Use the checkboxes on the left to select allocated orders for which to send trade confirmations. After selection, a “Send Trade Confirmation” button appears at the bottom and can be used for batch sending.
     - If an allocated order is under approval or has been canceled, sending a trade confirmation is not permitted; the system will block the submission and provide a prompt with the reason.
     - You can inspect the current send node and status for trade confirmations in the “Send Status” column.
 
-<img src="/assets/TwnYb0PfVoa5HvxOk8OjyNH8pJf.png" src-width="2862" src-height="1734" align="center"/>
+<img src="/assets/F0CUbl5IxoSvHpx4V5rjXcQEpvE.png" src-width="3024" src-height="1888" align="center"/>
 
 - Modify commission
     - The “Actions” column on the right supports “Modify Commission,” which opens a modal to change commission and settlement date for the selected allocated order.
@@ -400,22 +446,18 @@ List Operations
     - Modified values become effective and displayed after approval.
     - If an order is in commission approval, has canceled allocation, or is not an order-based allocation, commission modification is not permitted (the button will be disabled).
 
-<img src="/assets/WvIgbief0oZMJYxDgxwjBG62p6d.png" src-width="2866" src-height="1738" align="center"/>
-
 - Preview: confirmation preview
     - Preview the trade confirmation for the account allocation order; clicking will open a web view.
 
 - Details: view order details
     - View allocation order details, including original order information and allocation breakdown. Details are view-only; no further operations are available on this modal.
 
-<img src="/assets/OVbXbHG7voEQBLxdTN3jXXt1p4e.png" src-width="2864" src-height="1734" align="center"/>
+<img src="/assets/GmQ9bnzsOoDym8xP9DZj3LDZpdb.png" src-width="3014" src-height="1888" align="center"/>
 
 - Cancel: cancel allocation
     - When canceling an allocation, all orders associated with the same source order will be canceled together. The cancellation confirmation modal shows all related allocated orders.
     - After clicking “Confirm,” the listed orders will be canceled and the canceled allocation quantities will be rolled back to the original account.
     - Only allocations performed on the same day can be canceled; historical allocated orders cannot be canceled because they have already been settled. Attempting to cancel historical orders will prompt: “Allocation cancellation failed.”
-
-<img src="/assets/JGZzbtGOPof8v4x7IOjjh1TOpfd.png" src-width="1102" src-height="588" align="center"/>
 
 ## 5. Order Approval
 
@@ -425,7 +467,7 @@ Orders that trigger risk-control approval conditions set in the WBO backend will
 
 Submitting new orders or modifying orders may trigger risk-control approval; canceling orders does not trigger approval.
 
-<img src="/assets/RK9Wb9Xkko51DqxLQEmjheaXpbh.png" src-width="2868" src-height="1732" align="center"/>
+<img src="/assets/WuYdbQZlEoryFSxXWhdjsKoUpkg.png" src-width="3024" src-height="1888" align="center"/>
 
 Page Structure
 
@@ -441,12 +483,10 @@ Operations and Features
 
 Orders that trigger approval are aggregated in this list for review. To perform approval operations you must have Order Approval page management permissions (refer to the “Quick Start” documentation for permissions).
 
-<img src="/assets/ClVrbhaTNoyOGTxxDIjjEEcjp1f.png" src-width="1280" src-height="772" align="center"/>
-
 - Search criteria: order number, client, market, stock, approval status, order time, operation time
     - Order number refers to the order instruction number and matches the order component in the trading panel. Use order number for precise queries to check approval status.
     - Approval status: Pending Approval, Approved, Rejected, Expired, Canceled
-        <img src="/assets/SWKYbHh2soPRXZx24d6j7kZ3p7g.png" src-width="2716" src-height="742" align="center"/>
+        <img src="/assets/L9Fmb8uImoFuZCxtQ2PjKQZ4pUg.png" src-width="2896" src-height="642" align="center"/>
         - (Pending Approval, Approved, Rejected are the approval states. Prior to approval, an order may be canceled or may expire, in which case its state changes automatically; no further approval is required.)
         - When an order triggers approval, the trading panel order component will display “Pending Approval” in the approval status field, allowing front-line traders to identify the status at a glance (only new orders and modifications trigger approval; cancellations do not).
     - Order time: the time the order was submitted, consistent with the trading panel order component.
@@ -460,11 +500,16 @@ Orders that trigger approval are aggregated in this list for review. To perform 
 
 5.2 Approval Modal
 
-<img src="/assets/YW7NbX5zQoRTbcxn9eCjB8GdpSc.png" src-width="2864" src-height="1096" align="center"/>
+<div class="flex gap-3 columns-2" column-size="2">
+<div class="w-[50%]" width-ratio="50">
+<img src="/assets/UIkmbmHM9oBayKxBJvMjH1qnpGf.png" src-width="3008" src-height="1878" align="center"/>
+</div>
+<div class="w-[49%]" width-ratio="49">
+<img src="/assets/HYKbbkrMBoH0QbxEIf1j3KSip9e.png" src-width="3024" src-height="1888" align="center"/>
+</div>
+</div>
 
-<img src="/assets/JHd8bBshhoeVcLxrSl4jqFbPpah.png" src-width="2866" src-height="1740" align="center"/>
-
-<img src="/assets/NeKxbyU7vojVzIxQfvpjGRVrpKe.png" src-width="2868" src-height="1736" align="center"/>
+<img src="/assets/JVP4b9voNog4UVxHpDfjzngIprf.png" src-width="3024" src-height="1888" align="center"/>
 
 - Single Approval:
     - When the approval status is “Pending Approval,” the “Approve” action is available. For other statuses, only order approval details can be viewed.
@@ -479,7 +524,7 @@ Orders that trigger approval are aggregated in this list for review. To perform 
 
 5.3 Approval Details
 
-<img src="/assets/NHJFblEzaoMOHjxb4TXjrAFLp5b.png" src-width="2872" src-height="1742" align="center"/>
+<img src="/assets/BWWAbOx9noyIFYxNOBrjyyfvpOf.png" src-width="3024" src-height="1888" align="center"/>
 
 - For orders not in “Pending Approval” status, details can be viewed. The details display the order’s basic information and the risk-control restriction types, along with the order’s approval status and operation time.
 
