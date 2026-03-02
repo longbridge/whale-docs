@@ -161,7 +161,7 @@ function findParentToken(nodes: DocNode[], targetSlug: string): string | null {
 // ==================== 翻译功能 ====================
 
 /**
- * 使用 Dify API 翻译文本
+ * 使用 Dify API 翻译文本 (流式模式)
  */
 async function translateWithDify(text: string): Promise<string> {
   try {
@@ -171,7 +171,7 @@ async function translateWithDify(text: string): Promise<string> {
         inputs: {
           [DIFY_INPUT_VAR]: text
         },
-        response_mode: "blocking",
+        response_mode: "streaming",
         user: "auto-translate-script"
       },
       {
@@ -179,15 +179,71 @@ async function translateWithDify(text: string): Promise<string> {
           "Authorization": `Bearer ${DIFY_API_KEY}`,
           "Content-Type": "application/json"
         },
+        responseType: 'stream',
         timeout: DIFY_REQUEST_TIMEOUT
       }
     )
 
-    if (response.data && response.data.answer) {
-      return response.data.answer.trim()
-    } else {
-      throw new Error("Dify API 返回格式错误")
-    }
+    // 处理流式响应
+    let fullAnswer = ''
+    
+    return new Promise((resolve, reject) => {
+      response.data.on('data', (chunk: Buffer) => {
+        const lines = chunk.toString().split('\n')
+        
+        for (const line of lines) {
+          // 跳过空行和注释行
+          if (!line.trim() || line.startsWith(':')) {
+            continue
+          }
+          
+          // 解析 SSE 格式: data: {...}
+          if (line.startsWith('data: ')) {
+            const jsonStr = line.slice(6).trim()
+            
+            // 跳过 [DONE] 标记
+            if (jsonStr === '[DONE]') {
+              continue
+            }
+            
+            try {
+              const data = JSON.parse(jsonStr)
+              
+              // 根据 Dify 文档,流式响应中的 answer 字段包含增量内容
+              if (data.answer) {
+                fullAnswer += data.answer
+              }
+              
+              // 如果是最后一个消息(event: message_end 或 event: workflow_finished)
+              if (data.event === 'message_end' || data.event === 'workflow_finished') {
+                resolve(fullAnswer.trim())
+              }
+              
+              // 处理错误事件
+              if (data.event === 'error') {
+                reject(new Error(`Dify API 错误: ${data.message || '未知错误'}`))
+              }
+            } catch (parseError) {
+              // 忽略 JSON 解析错误,继续处理下一行
+              console.warn('解析 SSE 数据失败:', jsonStr)
+            }
+          }
+        }
+      })
+      
+      response.data.on('end', () => {
+        // 流结束时,如果还没有 resolve,则返回已收集的内容
+        if (fullAnswer) {
+          resolve(fullAnswer.trim())
+        } else {
+          reject(new Error('Dify API 未返回任何内容'))
+        }
+      })
+      
+      response.data.on('error', (error: Error) => {
+        reject(error)
+      })
+    })
   } catch (error: any) {
     if (error.response) {
       console.error("Dify API 错误:", error.response.status, error.response.data)
@@ -431,22 +487,33 @@ async function updateEnDocsJson(
 
 /**
  * 使用 transfer-lark 脚本上传单个文件
+ * @returns 返回创建的 Lark node token
  */
 async function uploadToLark(
   filePath: string,
   title: string,
   parentToken: string
-): Promise<void> {
+): Promise<string | null> {
   console.log(`  📤 上传到 Lark: ${title}`)
 
   try {
     // 调用 transfer-lark 的上传功能
     const command = `bun run ./scripts/transfer-lark/index.ts "${filePath}" "${title}" "${parentToken}"`
-    execSync(command, {
+    const output = execSync(command, {
       cwd: resolve(__dirname, ".."),
-      stdio: 'inherit'
+      encoding: 'utf-8'
     })
     console.log(`  ✅ 上传成功: ${title}`)
+
+    // 尝试从输出中提取 node token
+    const nodeTokenMatch = output.match(/创建节点成功:\s*(\S+)/)
+    if (nodeTokenMatch) {
+      const nodeToken = nodeTokenMatch[1]
+      console.log(`     新节点 token: ${nodeToken}`)
+      return nodeToken
+    }
+
+    return null
   } catch (error: any) {
     console.error(`  ❌ 上传失败: ${title}`, error.message)
     throw error
@@ -565,7 +632,6 @@ async function main() {
 
       // 翻译标题
       const translatedTitle = await translateWithDify(info.node.title)
-      translatedTitles.set(info.node.slug, translatedTitle)
       console.log(`  📝 标题翻译: ${info.node.title} -> ${translatedTitle}`)
 
       await delay(DELAY_BETWEEN_REQUESTS)
@@ -577,6 +643,8 @@ async function main() {
         info.node.slug
       )
 
+      // 只有标题和内容都翻译成功后，才记录翻译结果
+      translatedTitles.set(info.node.slug, translatedTitle)
       translatedFiles.push({
         slug: info.node.slug,
         title: translatedTitle, // 使用翻译后的标题
@@ -606,31 +674,56 @@ async function main() {
   let uploadedCount = 0
   const uploadResults: Array<{ slug: string; success: boolean; error?: string }> = []
 
+  // 构建需要上传的节点列表(按 depth 排序,确保父节点先上传)
+  const nodesToUpload: Array<{ node: DocNode; enFilePath: string; title: string }> = []
+
   for (const file of translatedFiles) {
+    const enNode = findNodeBySlug(updatedEnDocs, file.slug)
+    if (enNode) {
+      nodesToUpload.push({
+        node: enNode,
+        enFilePath: file.enFilePath,
+        title: file.title
+      })
+    }
+  }
+
+  // 按 depth 排序,确保父节点先于子节点上传
+  nodesToUpload.sort((a, b) => a.node.depth - b.node.depth)
+
+  // 用于存储新创建的节点 token (slug -> new node_token)
+  const newNodeTokens = new Map<string, string>()
+
+  for (const item of nodesToUpload) {
     try {
-      // 从更新后的 en/docs.json 中查找节点
-      const enNode = findNodeBySlug(updatedEnDocs, file.slug)
-      if (!enNode) {
-        console.warn(`  ⚠️  在 en/docs.json 中未找到节点: ${file.slug}`)
-        uploadResults.push({ slug: file.slug, success: false, error: "节点不存在于 en/docs.json" })
-        continue
+      // 获取父节点 token
+      // 如果父节点刚刚被创建,使用新的 token
+      let parentToken = item.node.parent_node_token || LARK_EN_PARENT_TOKEN!
+
+      // 查找父节点的 slug
+      const parentNode = findParentNodeInTree(updatedEnDocs, item.node.slug)
+      if (parentNode && newNodeTokens.has(parentNode.slug)) {
+        parentToken = newNodeTokens.get(parentNode.slug)!
+        console.log(`  📍 使用新创建的父节点 token: ${parentToken}`)
       }
 
-      // 使用 en/docs.json 中的 parent_node_token
-      const parentToken = enNode.parent_node_token || LARK_EN_PARENT_TOKEN!
-
-      console.log(`  📤 上传: ${file.title}`)
+      console.log(`  📤 上传: ${item.title} (depth: ${item.node.depth})`)
       console.log(`     父节点 token: ${parentToken}`)
 
-      await uploadToLark(file.enFilePath, file.title, parentToken)
+      const newNodeToken = await uploadToLark(item.enFilePath, item.title, parentToken)
 
-      uploadResults.push({ slug: file.slug, success: true })
+      // 记录新创建的节点 token
+      if (newNodeToken) {
+        newNodeTokens.set(item.node.slug, newNodeToken)
+      }
+
+      uploadResults.push({ slug: item.node.slug, success: true })
       uploadedCount++
 
       await delay(1000) // 上传之间延迟 1 秒
     } catch (error: any) {
-      console.error(`  ❌ 上传失败: ${file.title}`, error.message)
-      uploadResults.push({ slug: file.slug, success: false, error: error.message })
+      console.error(`  ❌ 上传失败: ${item.title}`, error.message)
+      uploadResults.push({ slug: item.node.slug, success: false, error: error.message })
     }
   }
 
