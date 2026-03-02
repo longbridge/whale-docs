@@ -21,7 +21,7 @@ sidebar_position: 2
 
 View the fund list configured in the WBO backend. This page allows executing subscription operations for clients and supports viewing basic fund detail data.
 
-<img src="/assets/UPk7bO6E5o9p88xXnH0jH97FpCf.png" src-width="2868" src-height="1730" align="center"/>
+<img src="/assets/PnadbPpXboDJaixs0oNjazEPpRe.png" src-width="3020" src-height="1888" align="center"/>
 
 <b>Page Structure</b>
 
@@ -33,7 +33,7 @@ The middle list displays fund list data, including delisted funds; the page supp
 
 ### 1.1 Fund List
 
-<img src="/assets/WtdabgalroPQYfx37P6jXXZMpcd.png" src-width="2870" src-height="1736" align="center"/>
+<img src="/assets/GIw2bxhQbo9LkwxUQehjpFMWpKg.png" src-width="3014" src-height="1160" align="center"/>
 
 - Search criteria: ISIN, fund name, fund category, fund type, currency, fund status
     - The fund category in the list defaults to "Public Fund" and can be manually switched to "Private Fund."
@@ -47,11 +47,17 @@ The middle list displays fund list data, including delisted funds; the page supp
 
 Fund details can be viewed in three functional areas: Basic Information, Historical Net Asset Value, and Trading Rules.
 
-<img src="/assets/Ss6sb0uTOoNdUnxZepbjHNlypbf.png" src-width="2858" src-height="1734" align="center"/>
-
-<img src="/assets/Un3MbApCroFXV9xxWrFj2KdJpBb.png" src-width="2858" src-height="1736" align="center"/>
-
-<img src="/assets/TQBfbexouomyChx53khjxDH2pgg.png" src-width="2862" src-height="1732" align="center"/>
+<div class="flex gap-3 columns-3" column-size="3">
+<div class="w-[33%]" width-ratio="33">
+<img src="/assets/VgVCb27nsoMAjmx9kNljH1Pep6g.png" src-width="3022" src-height="1888" align="center"/>
+</div>
+<div class="w-[33%]" width-ratio="33">
+<img src="/assets/I7MsbcfXMoEYzXxpTkGjoaRrp9u.png" src-width="3024" src-height="1888" align="center"/>
+</div>
+<div class="w-[33%]" width-ratio="33">
+<img src="/assets/IcwzbeWdSoRzJxxQ4NpjRWt7plg.png" src-width="3022" src-height="1888" align="center"/>
+</div>
+</div>
 
 - The top displays the current fund's name; clicking "&lt;" returns to the fund list.
 - Use tabs to switch between fund detail data:
@@ -63,7 +69,7 @@ Fund details can be viewed in three functional areas: Basic Information, Histori
 
 Click "Subscribe" in the list to enter the subscription window; within this window, select the account to be subscribed and enter the subscription amount to initiate the subscription.
 
-<img src="/assets/EJzvbG8YDoOrNqxQhK9jSDutpwg.png" src-width="2862" src-height="1742" align="center"/>
+<img src="/assets/ESy6bAWvqo1h5pxKXAuj55k0pec.png" src-width="3024" src-height="1888" align="center"/>
 
 - The window is divided into three parts: Client Selection, Fund Information, and Subscription Operation
     - Client Selection: supports searching by securities account number or client name; selecting an account will retrieve the client's fund information
@@ -78,7 +84,7 @@ Click "Subscribe" in the list to enter the subscription window; within this wind
 
 View all of a client's subscription data; you can manage them in this list and assist clients with order cancellations.
 
-<img src="/assets/JaZ6bE0CDo3jlOxY45Oj9QNfpee.png" src-width="2874" src-height="1736" align="center"/>
+<img src="/assets/HeT1b6Wabo2SW2xNBdEjhIh8pdd.png" src-width="2996" src-height="1866" align="center"/>
 
 <b>Page Structure</b>
 
@@ -90,7 +96,7 @@ The middle list displays fund order list data, including all subscription orders
 
 ### 2.1 Fund Order List
 
-<img src="/assets/K89nblRq4oCkZ6xDkbbjKzuUpCf.png" src-width="2874" src-height="1736" align="center"/>
+<img src="/assets/QnZ6b2fFKoPbAnxQAyUjdTrlp3V.png" src-width="2996" src-height="1866" align="center"/>
 
 - Search criteria: securities account number, order status, fund category, transaction direction, order channel, order submission time
 - List fields: display the basic information of fund order subscriptions, including order number, client information, fund information, subscription information, and the fund order subscription status
@@ -111,13 +117,13 @@ The middle list displays fund order list data, including all subscription orders
 
 ### 2.2 Fund Order - Details
 
-<img src="/assets/EFaPbVYdPoftUexNS0hjLxeIpRb.png" src-width="2858" src-height="1732" align="center"/>
+<img src="/assets/D6Mpb6OPQojO63xrBiejaEIYpAh.png" src-width="3024" src-height="1888" align="center"/>
 
 Fund order details window: view the fund order's basic information as well as rates and fees.
 
 ### 2.3 Fund Order - Cancellation
 
-<img src="/assets/ZJ8gbp7sCoeD37xesWsjrI1TpEf.png" src-width="782" src-height="784" align="center"/>
+<img src="/assets/HL1KbnLQ5ogeD0xwFa2j6C3lpcc.png" src-width="722" src-height="734" align="center"/>
 
 After clicking "Cancel Order" in the order list, a second confirmation for fund cancellation is triggered; upon confirmation, the cancellation request is submitted.
 

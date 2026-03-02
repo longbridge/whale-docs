@@ -582,7 +582,7 @@ async function fixSlugMismatches(targetDir: string = OUTPUT_DIR): Promise<void> 
  */
 function copyAssetsDirectory(): void {
   const sourceDir = resolve(__dirname, "../lark-pages/zh-HK/docs/assets")
-  const targetDir = resolve(__dirname, "../translate/en/docs/assets")
+  const targetDir = resolve(__dirname, "../translate/en/docs")
 
   if (!existsSync(sourceDir)) {
     console.warn(`  ⚠ Source assets directory not found: ${sourceDir}`)

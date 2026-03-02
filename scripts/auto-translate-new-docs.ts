@@ -6,7 +6,7 @@
  * 1. 对比 lark-pages/zh-HK/docs.json 和 lark-pages/en/docs.json
  * 2. 找出新增的文档(在 zh-HK 中存在但在 en 中不存在)
  * 3. 在代码中缓存新增文档列表
- * 4. 翻译新增的中文文档为英文
+ * 4. 翻译新增的中文文档为英文(支持 stable 和 lts 版本)
  * 5. 复制图片资源从 lark-pages/zh-HK/docs/assets 到 translate/en/docs/assets
  * 6. 将新增节点添加到 lark-pages/en/docs.json (保持 slug 一致,翻译 title)
  * 7. 从更新后的 en/docs.json 读取节点信息(包括 parent_node_token)
@@ -18,12 +18,13 @@
  * - 检测到的新增文档会在代码中缓存,然后直接上传
  * - 上传时使用英文 docs.json 中的 parent_node_token,不修改节点的 parent_node_token
  * - 确保新节点添加到正确的英文父节点下
+ * - 支持版本控制: 根据文档的 meta.version 字段自动从对应目录读取和输出
+ *   - stable 版本: lark-locales/zh-CN/docs -> translate/en/docs
+ *   - lts 版本: lark-locales/zh-CN/lts/docs -> translate/en/lts/docs
  * 
  * 使用方法:
- *   bun run ./scripts/auto-translate-new-docs.ts
- *   bun run ./scripts/auto-translate-new-docs.ts --dry-run          # 只检测不执行
+ *   bun run ./scripts/auto-translate-new-docs.ts        # 只检测不执行
  *   bun run ./scripts/auto-translate-new-docs.ts --limit 5          # 只处理前5个
- *   bun run ./scripts/auto-translate-new-docs.ts --dry-run --limit 3
  * 
  * 前置条件:
  * 1. 已执行 bun run lark-zh-HK-export 和 bun run lark-en-export
@@ -78,9 +79,11 @@ const DIFY_REQUEST_TIMEOUT = 600000 // 10 minutes
 const ZH_HK_DOCS_JSON = resolve(__dirname, "../lark-pages/zh-HK/docs.json")
 const EN_DOCS_JSON = resolve(__dirname, "../lark-pages/en/docs.json")
 const ZH_CN_DOCS_DIR = resolve(__dirname, "../lark-locales/zh-CN/docs")
+const ZH_CN_LTS_DOCS_DIR = resolve(__dirname, "../lark-locales/zh-CN/lts/docs")
 const EN_OUTPUT_DIR = resolve(__dirname, "../translate/en/docs")
+const EN_LTS_OUTPUT_DIR = resolve(__dirname, "../translate/en/lts/docs")
 const ZH_HK_ASSETS_DIR = resolve(__dirname, "../lark-pages/zh-HK/docs/assets")
-const EN_ASSETS_DIR = resolve(__dirname, "../translate/en/docs/assets")
+const EN_ASSETS_DIR = resolve(__dirname, "../translate/en/assets")
 
 // Lark 配置
 const LARK_APP_ID = process.env.LARK_APP_ID
@@ -418,7 +421,7 @@ async function updateEnDocsJson(
     console.log(`     父节点: ${enParent.title} (${enParent.node_token})`)
     addedCount++
   }
-  
+
   // 保存更新后的 en/docs.json
   writeFileSync(EN_DOCS_JSON, JSON.stringify(enDocs, null, 2))
   console.log(`\n✅ 更新完成: 添加了 ${addedCount} 个节点到 en/docs.json`)
@@ -455,17 +458,10 @@ async function uploadToLark(
 async function main() {
   // 解析命令行参数
   const args = process.argv.slice(2)
-  const isDryRun = args.includes('--dry-run')
   const limitIndex = args.indexOf('--limit')
   const limit = limitIndex !== -1 && args[limitIndex + 1] ? parseInt(args[limitIndex + 1]) : undefined
 
   console.log("🚀 开始自动翻译和上传新增文档...\n")
-  if (isDryRun) {
-    console.log("⚠️  DRY RUN 模式 - 只检测不执行\n")
-  }
-  if (limit) {
-    console.log(`⚠️  限制处理数量: ${limit} 个文档\n`)
-  }
 
   // 1. 检查环境变量
   if (!DIFY_API_KEY) {
@@ -520,23 +516,23 @@ async function main() {
     console.log(`  ... 还有 ${newDocs.length - limit} 个文档未显示`)
   }
 
-  if (isDryRun) {
-    console.log("\n✅ DRY RUN 完成 - 未执行任何翻译或上传操作")
-    return
-  }
   //  复制图片资源
   copyAssets()
 
   // 5. 准备翻译和上传信息
   console.log("\n📦 准备文档信息...")
   const newDocInfos: NewDocInfo[] = []
-  
+
   // 应用 limit 限制
   const docsToProcess = limit ? newDocs.slice(0, limit) : newDocs
 
   for (const doc of docsToProcess) {
-    const zhCNFilePath = resolve(ZH_CN_DOCS_DIR, `${doc.slug}.md`)
-    
+    // 根据文档的 version 字段决定从哪个目录读取
+    const isLtsVersion = doc.meta?.version === 'lts'
+    const zhCNFilePath = isLtsVersion
+      ? resolve(ZH_CN_LTS_DOCS_DIR, `${doc.slug}.md`)
+      : resolve(ZH_CN_DOCS_DIR, `${doc.slug}.md`)
+
     if (!existsSync(zhCNFilePath)) {
       console.warn(`  ⚠️  警告: 中文文件不存在: ${zhCNFilePath}`)
       continue
@@ -561,7 +557,11 @@ async function main() {
 
   for (const info of newDocInfos) {
     try {
-      const enFilePath = resolve(EN_OUTPUT_DIR, `${info.node.slug}.md`)
+      // 根据文档的 version 字段决定输出到哪个目录
+      const isLtsVersion = info.node.meta?.version === 'lts'
+      const enFilePath = isLtsVersion
+        ? resolve(EN_LTS_OUTPUT_DIR, `${info.node.slug}.md`)
+        : resolve(EN_OUTPUT_DIR, `${info.node.slug}.md`)
 
       // 翻译标题
       const translatedTitle = await translateWithDify(info.node.title)
@@ -599,10 +599,10 @@ async function main() {
 
   // 7. 上传到 Lark (从更新后的 en/docs.json 获取节点信息)
   console.log("📤 开始上传到 Lark...\n")
-  
+
   // 重新读取更新后的 en/docs.json
   const updatedEnDocs: DocNode[] = JSON.parse(readFileSync(EN_DOCS_JSON, "utf-8"))
-  
+
   let uploadedCount = 0
   const uploadResults: Array<{ slug: string; success: boolean; error?: string }> = []
 
@@ -615,18 +615,18 @@ async function main() {
         uploadResults.push({ slug: file.slug, success: false, error: "节点不存在于 en/docs.json" })
         continue
       }
-      
+
       // 使用 en/docs.json 中的 parent_node_token
       const parentToken = enNode.parent_node_token || LARK_EN_PARENT_TOKEN!
-      
+
       console.log(`  📤 上传: ${file.title}`)
       console.log(`     父节点 token: ${parentToken}`)
-      
+
       await uploadToLark(file.enFilePath, file.title, parentToken)
-      
+
       uploadResults.push({ slug: file.slug, success: true })
       uploadedCount++
-      
+
       await delay(1000) // 上传之间延迟 1 秒
     } catch (error: any) {
       console.error(`  ❌ 上传失败: ${file.title}`, error.message)
@@ -635,7 +635,7 @@ async function main() {
   }
 
   console.log(`\n✅ 上传完成: ${uploadedCount}/${translatedFiles.length} 个文档\n`)
-  
+
   // 显示上传结果摘要
   if (uploadResults.some(r => !r.success)) {
     console.log("⚠️  部分文档上传失败:")
@@ -664,10 +664,10 @@ async function main() {
   //   console.error("❌ 导出失败:", error.message)
   // }
 
-  console.log("\n🎉 所有操作完成!")
-  console.log(`\n📊 统计:`)
-  console.log(`  - 发现新增文档: ${newDocs.length}`)
-  console.log(`  - 成功翻译: ${translatedFiles.length}`)
+  // console.log("\n🎉 所有操作完成!")
+  // console.log(`\n📊 统计:`)
+  // console.log(`  - 发现新增文档: ${newDocs.length}`)
+  console.log(`  - 新增文档已翻译完成并上传完成: ${translatedFiles.length}`)
   // console.log(`  - 成功上传: ${uploadedCount}`)
 }
 

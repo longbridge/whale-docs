@@ -31,36 +31,36 @@ Menu path: Announcement Management &gt; Announcement Management
 
 Step 1: On the Announcement Management page, click the "Create Announcement" button.
 
-<img src="/assets/PMedbvHpwoToHMxNufejT9oTpGN.png" src-width="2134" src-height="598" align="center"/>
+<img src="/assets/Mpxrbzg2Joljx0xbmUOjeNwep4f.png" src-width="2356" src-height="562" align="center"/>
 
 Step 2: Select the announcement type.
 
-<img src="/assets/WFglbPhqOonTGTxrSZkjnkxCpQd.png" src-width="2132" src-height="1288" align="center"/>
+<img src="/assets/VxHLbusmQom5NPxkZlKjoJ64pEf.png" src-width="2360" src-height="1430" align="center"/>
 
 Step 3: Select the markets in which the announcement will be displayed.
 
-<img src="/assets/GT6pbdN9Do6hR2xjYapj84CGpzd.png" src-width="2132" src-height="1324" align="center"/>
+<img src="/assets/IqrkbOUesoDg5zxN16mjg6hBprh.png" src-width="2350" src-height="1404" align="center"/>
 
 Step 4: Select the page scope for displaying the announcement.
 
-<img src="/assets/RPNtbh9YLoQp8yxCMLmjROPMpFc.png" src-width="2128" src-height="1292" align="center"/>
+<img src="/assets/Q3wFbNh3koQLHGxCOIGjB9kBpqd.png" src-width="2370" src-height="1378" align="center"/>
 
 Step 5: Select the time range for displaying the announcement.
 
-<img src="/assets/NJhubkmsNo0tZ5xhvLcjI0XMphh.png" src-width="2150" src-height="1318" align="center"/>
+<img src="/assets/GHXsb7Ke0o6bmUxDNQVjQqN9pPc.png" src-width="2358" src-height="1408" align="center"/>
 
 Step 6: Enter the announcement title, detailed content (optional), and a redirect link.
 
-<img src="/assets/KQCsbN0a4o79URx66H6jXQAzpvd.png" src-width="2138" src-height="1290" align="center"/>
+<img src="/assets/QjQIbU1stoRmiZxLwbyjz8qOp2d.png" src-width="2368" src-height="1400" align="center"/>
 
 Step 7: Select the display priority and configure whether the announcement is enabled.
 
-<img src="/assets/GnhlboJlhohzi3xGEPejQUWgpNu.png" src-width="2142" src-height="1312" align="center"/>
+<img src="/assets/EcABbxbmhok0c0xLldpjJeAepxg.png" src-width="2350" src-height="1404" align="center"/>
 
 After creating a system announcement:
 
 1. Newly created announcements must be submitted for work-order approval and will only take effect after approval.
 2. You can perform [Edit] or [Disable] in the operations area on the right side of the record.
 
-<img src="/assets/UXQBbwlnWo5QuUx8rx5j1fsEpoe.png" src-width="3224" src-height="1506" align="center"/>
+<img src="/assets/MT0lbH7a9oYhPuxWfatjzReppsd.png" src-width="2338" src-height="1308" align="center"/>
 

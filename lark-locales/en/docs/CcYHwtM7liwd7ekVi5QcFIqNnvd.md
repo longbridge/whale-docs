@@ -21,5 +21,5 @@ WTT provides real-time market data across multiple markets, including U.S. equit
 - <b>Stock Screener:</b> Offers screening criteria such as universe scope, market data and valuation metrics, and financial data; users can filter stocks based on custom indicators to precisely identify investment opportunities.
 - <b>Market Data Store:</b> Supports users applying for advanced data feeds, such as Hong Kong LV2, U.S. consolidated market data, and Nasdaq TotalView.
 
-<img src="/assets/HmVJbjQ4Ho0QDEx6BeKjz8GYpfb.png" src-width="3828" src-height="1878" align="center"/>
+<img src="/assets/XXSdbvbROoDCMxxLoWajvykYpgc.png" src-width="3024" src-height="1888" align="center"/>
 
