@@ -186,39 +186,39 @@ async function translateWithDify(text: string): Promise<string> {
 
     // 处理流式响应
     let fullAnswer = ''
-    
+
     return new Promise((resolve, reject) => {
       response.data.on('data', (chunk: Buffer) => {
         const lines = chunk.toString().split('\n')
-        
+
         for (const line of lines) {
           // 跳过空行和注释行
           if (!line.trim() || line.startsWith(':')) {
             continue
           }
-          
+
           // 解析 SSE 格式: data: {...}
           if (line.startsWith('data: ')) {
             const jsonStr = line.slice(6).trim()
-            
+
             // 跳过 [DONE] 标记
             if (jsonStr === '[DONE]') {
               continue
             }
-            
+
             try {
               const data = JSON.parse(jsonStr)
-              
+
               // 根据 Dify 文档,流式响应中的 answer 字段包含增量内容
               if (data.answer) {
                 fullAnswer += data.answer
               }
-              
+
               // 如果是最后一个消息(event: message_end 或 event: workflow_finished)
               if (data.event === 'message_end' || data.event === 'workflow_finished') {
                 resolve(fullAnswer.trim())
               }
-              
+
               // 处理错误事件
               if (data.event === 'error') {
                 reject(new Error(`Dify API 错误: ${data.message || '未知错误'}`))
@@ -230,7 +230,7 @@ async function translateWithDify(text: string): Promise<string> {
           }
         }
       })
-      
+
       response.data.on('end', () => {
         // 流结束时,如果还没有 resolve,则返回已收集的内容
         if (fullAnswer) {
@@ -239,7 +239,7 @@ async function translateWithDify(text: string): Promise<string> {
           reject(new Error('Dify API 未返回任何内容'))
         }
       })
-      
+
       response.data.on('error', (error: Error) => {
         reject(error)
       })
