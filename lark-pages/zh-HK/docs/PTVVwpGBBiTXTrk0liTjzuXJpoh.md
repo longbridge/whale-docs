@@ -4,6 +4,7 @@ slug: PTVVwpGBBiTXTrk0liTjzuXJpoh
 sidebar_position: 2
 ---
 
+
 # 系統介紹
 
 # 概述
@@ -283,7 +284,9 @@ sidebar_position: 2
 <img src="/assets/FslhbczvHoNv0Px06rVjN208pjb.png" src-width="3346" src-height="694" align="center"/>
 
 1. 配置客戶交易額度，按頁面要求填寫後提交審批，提交信息可在「變更記錄」查看；在工單系統審批通過後，方可在「客戶交易額度」列表展示
-   注：1. 一個客戶僅可存在一個交易額度類型 2. 若客戶已有同類型交易額度，系統則會默認以本次新增額度進行覆蓋
+注：
+    1. 一個客戶僅可存在一個交易額度類型
+    2. 若客戶已有同類型交易額度，系統則會默認以本次新增額度進行覆蓋
 
 <img src="/assets/QCOcbMsIyoaNJpxgfOnje8EzpIh.png" src-width="3346" src-height="1724" align="center"/>
 
@@ -340,9 +343,9 @@ sidebar_position: 2
 <img src="/assets/CULlbU6RuodmaWxbw5CjmC8ypwp.png" src-width="3296" src-height="1076" align="center"/>
 
 1. 規則配置：單幣種規則為非必配項，其他為必配項；規則僅在開啓時運行
-   1. 必配項的欠款金額和其他幣種可提金額默認為主幣種，所有幣種轉化為主幣種計算
-   2. 單幣種規則和必配項規則只要有其一滿足規則，即會提醒
-   3. 單幣種規則可以設置不同幣種規則，支持添加和刪除
+    1. 必配項的欠款金額和其他幣種可提金額默認為主幣種，所有幣種轉化為主幣種計算
+    2. 單幣種規則和必配項規則只要有其一滿足規則，即會提醒
+    3. 單幣種規則可以設置不同幣種規則，支持添加和刪除
 
 <img src="/assets/B0yBb33V1o8zyRxQ8OijynHMpRd.png" src-width="3312" src-height="1716" align="center"/>
 
@@ -351,11 +354,11 @@ sidebar_position: 2
 <img src="/assets/OCjebpNcyowJT9xcnuyjrsG5p0I.png" src-width="3286" src-height="970" align="center"/>
 
 1. 同時，開啓規則後，客戶在App上可以對應查看【自動還款】功能，可以自主選擇開啓該功能。若客戶打開自動還款，當命中規則時，系統將進行自動換匯或後台操作人工兌換
-   <img src="/assets/Lw0ibIl2AomsGhx6g2JjAOQUpmc.png" src-width="1170" src-height="2532" align="center"/>
-   功能入口：「我的」-「設置」-「賬戶設置」
-   b. App若開啓「自動還款」，頁面「自動換匯」則為「開啓」，支持操作【兌換】
-   <img src="/assets/WgGdbN6oSoA4LcxT6tFjxUD1pnc.png" src-width="3216" src-height="682" align="center"/>
-   1. App端「自動還款」
+    <img src="/assets/Lw0ibIl2AomsGhx6g2JjAOQUpmc.png" src-width="1170" src-height="2532" align="center"/>
+    功能入口：「我的」-「設置」-「賬戶設置」
+    b. App若開啓「自動還款」，頁面「自動換匯」則為「開啓」，支持操作【兌換】
+    <img src="/assets/WgGdbN6oSoA4LcxT6tFjxUD1pnc.png" src-width="3216" src-height="682" align="center"/>
+    1. App端「自動還款」
 
 2. 兌換：開啓自動還款的客戶會默認系統自動兌換；在系統自動兌換之前，頁面可支持人工兌換。列表操作【詳情】支持查看客戶實時數據、消息記錄和兌換記錄；人工兌換彈窗頁面也可查看當前客戶現金情況，配置兌入/兌出金額和幣種確認兌換即可
 
@@ -495,7 +498,7 @@ sidebar_position: 2
 
 <b>菜單功能介紹</b>：當客戶觸發 margin call 後，需要保留當時客戶觸發 margin call 時的歷史數據記錄是可追溯，日後可以作為 RO 或相關合規的參考，附為上報給監管的依據，因此 margin call 歷史記錄需要在部分場景下記錄快照數據。
 
-場景如下：觸發 margin call /觸發 force call / 觸發通知/每日定時記錄 /結束 margin call
+場景如下：觸發 margin call  /觸發 force call / 觸發通知/每日定時記錄 /結束 margin call
 
 <img src="/assets/ILlHbT3HOogMqoxJoAQj5giQpXh.png" src-width="3296" src-height="786" align="center"/>
 
@@ -683,10 +686,10 @@ sidebar_position: 2
 <img src="/assets/QvQEbZkUQogvqFxDXJrjlZpMpTu.png" src-width="2298" src-height="816" align="center"/>
 
 1. 也可點擊紀錄區【編輯】修改紀錄
-   <b>可賣空狀態說明</b>：總共有三種狀態
-   - 允許賣空：融券池充足，當前股票支持賣空
-   - 禁止賣空：人工設置不可賣空，代表股票不支持融券
-   - 系統自動禁止：若人工設置融券池數量規則，當融券池數量達到自動關閉規則時，則系統會自動禁止賣空，對客戶感知為該股票支持融券，但融券池數量不足導致無法賣空；同時若滿足自動恢復賣空規則，則系統會恢復“允許賣空”
+    <b>可賣空狀態說明</b>：總共有三種狀態
+    - 允許賣空：融券池充足，當前股票支持賣空
+    - 禁止賣空：人工設置不可賣空，代表股票不支持融券
+    - 系統自動禁止：若人工設置融券池數量規則，當融券池數量達到自動關閉規則時，則系統會自動禁止賣空，對客戶感知為該股票支持融券，但融券池數量不足導致無法賣空；同時若滿足自動恢復賣空規則，則系統會恢復“允許賣空”
 
 <img src="/assets/XbRfbdLaao9IMixClFnjyVyCpQc.png" src-width="2298" src-height="1280" align="center"/>
 
@@ -981,8 +984,8 @@ sidebar_position: 2
 <img src="/assets/VT8bbhdbnoRwIMxnfBRj11kTpFh.png" src-width="3084" src-height="1654" align="center"/>
 
 1. 可以點擊【新建】按钮，新增一個黑名單客戶。
-   1. 名單維度：支持證券賬號和客戶編號，若選擇證券賬號僅對指定賬號生效；若為客戶編號，即針對該客戶下的所有賬戶。
-   2. 業務標籤：支持配置不同業務標籤黑名單，系統支持授信、資產調撥兩種業務黑名單標籤控制。可以同時選擇兩個業務標籤，生成記錄會根據業務標籤分別生成兩條記錄。
+    1. 名單維度：支持證券賬號和客戶編號，若選擇證券賬號僅對指定賬號生效；若為客戶編號，即針對該客戶下的所有賬戶。
+    2. 業務標籤：支持配置不同業務標籤黑名單，系統支持授信、資產調撥兩種業務黑名單標籤控制。可以同時選擇兩個業務標籤，生成記錄會根據業務標籤分別生成兩條記錄。
 
 <img src="/assets/DPnkbtYOCod7oVxnf8tjgOCcpYg.png" src-width="3080" src-height="1668" align="center"/>
 
@@ -1289,3 +1292,4 @@ Top 10股票
 <img src="/assets/Lnhfb4FccoJ3HCx7hAYjPYQspYc.png" src-width="3300" src-height="1226" align="center"/>
 
 持倉明細
+

@@ -1,7 +1,7 @@
 ---
 title: 2025-10-11 Release Notes
 slug: 2885bab0c2cc8037af7deec10162ad2a
-sidebar_position: 34
+sidebar_position: 35
 version: lts
 ---
 

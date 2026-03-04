@@ -1,7 +1,7 @@
 ---
 title: 2024-08-24 Release Notes
 slug: QFh6wCUDAijETMkQ9X5chUsAnod
-sidebar_position: 0
+sidebar_position: 1
 ---
 
 

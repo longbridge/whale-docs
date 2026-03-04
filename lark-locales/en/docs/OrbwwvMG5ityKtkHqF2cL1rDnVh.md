@@ -1,7 +1,7 @@
 ---
 title: 2024-08-12 Release Notes
 slug: OrbwwvMG5ityKtkHqF2cL1rDnVh
-sidebar_position: 7
+sidebar_position: 8
 ---
 
 

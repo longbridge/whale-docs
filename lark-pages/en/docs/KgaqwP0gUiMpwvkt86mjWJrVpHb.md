@@ -1,7 +1,7 @@
 ---
 title: 2024-11-11 Release Notes
 slug: AP8xw9XXRinbawkyiztc6pXvnIh
-sidebar_position: 30
+sidebar_position: 31
 ---
 
 

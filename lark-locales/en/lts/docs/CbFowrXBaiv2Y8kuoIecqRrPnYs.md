@@ -18,7 +18,7 @@ Answer: There are two verification elements for CA-certified account opening:
 
 Answer: Customers who open an account using a Mainland China ID will have the address defaulted to the one on the ID; there is no field to enter an address. Holders of documents from other regions can enter a residential address. For domestic customers, the address can be modified in the backend by navigating to KYC &gt; Account Opening List and clicking Details (see Figure 1.1.1B).
 
-<img src="/assets/HDTKbxiG5oahcvxI19DjimD5pXd.png" src-width="2574" src-height="984" align="center"/>
+<img src="/assets/J4nJbJk1LoHHQFxqoTsj2meSpvc.png" src-width="2600" src-height="1084" align="center"/>
 
 <em>Figure 1.1.1B</em>
 

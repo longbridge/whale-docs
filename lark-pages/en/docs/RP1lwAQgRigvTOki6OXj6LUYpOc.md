@@ -1,7 +1,7 @@
 ---
 title: 2026-01-26 Release Notes
 slug: LSAYwOGCbiTHypk7JIojSmRFp5c
-sidebar_position: 35
+sidebar_position: 36
 version: lts
 ---
 

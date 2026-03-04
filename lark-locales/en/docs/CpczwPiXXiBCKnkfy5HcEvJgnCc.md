@@ -1,7 +1,7 @@
 ---
 title: 2024-07-22 Release Notes
 slug: CpczwPiXXiBCKnkfy5HcEvJgnCc
-sidebar_position: 16
+sidebar_position: 17
 ---
 
 

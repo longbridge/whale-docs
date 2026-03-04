@@ -1,7 +1,7 @@
 ---
 title: 2024-06-15 Release Notes
 slug: EAIFwcKR6i8VdUkSlrVcMxBCnpd
-sidebar_position: 23
+sidebar_position: 24
 ---
 
 

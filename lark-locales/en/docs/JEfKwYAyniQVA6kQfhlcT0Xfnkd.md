@@ -1,7 +1,7 @@
 ---
 title: 2024-12-02 Release Notes
 slug: JEfKwYAyniQVA6kQfhlcT0Xfnkd
-sidebar_position: 25
+sidebar_position: 26
 ---
 
 
