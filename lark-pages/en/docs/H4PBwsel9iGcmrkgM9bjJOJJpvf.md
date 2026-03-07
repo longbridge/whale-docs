@@ -1,7 +1,7 @@
 ---
 title: 2024-10-21 Release Notes
 slug: QbLQweIfTijPM9kI8QechrQgnpd
-sidebar_position: 19
+sidebar_position: 20
 ---
 
 

@@ -1,7 +1,7 @@
 ---
 title: 2025-06-03 Release Notes
 slug: Vjohwb9L4iLTkpkwMbqczOD4nGc
-sidebar_position: 12
+sidebar_position: 13
 version: stable
 ---
 
