@@ -80,15 +80,15 @@ If you receive a "phone number is already in use" notice, please perform the fol
 
 <em>Figure 1.1G-1</em>
 
-<img src="/assets/Pd4LbJjZGo814PxKTlEjo5FPprh.png" src-width="2654" src-height="1368" align="center"/>
+<img src="/assets/F3MhbbLUMoZanMxu1wkjuzwsp0g.png" src-width="2976" src-height="1404" align="center"/>
 
 <em>Figure 1.1G-2</em>
 
-<img src="/assets/Fxr0bpLOqoe0MaxW03gjKiaOpwc.png" src-width="2656" src-height="1286" align="center"/>
+<img src="/assets/HijlbxEfuosGzXxKdMWjr38npFg.png" src-width="2954" src-height="1406" align="center"/>
 
 <em>Figure 1.1G-3</em>
 
-<img src="/assets/PJNVbmc3voHi4vxgatijOBIipoe.png" src-width="2660" src-height="1308" align="center"/>
+<img src="/assets/KnunbVMCQobEZSxc4Jmjo4Wtpwf.png" src-width="2958" src-height="1422" align="center"/>
 
 <em>Figure 1.1G-4</em>
 
@@ -96,5 +96,5 @@ If you receive a "phone number is already in use" notice, please perform the fol
 
 A: Only account opening forms for transfer-based openings display the client's account number because the account number is generated in advance; other verification methods do not provide the account number on the form.
 
-<img src="/assets/H8E5b6SKEo5k8Gx5IDDjUREYpVg.png" src-width="2322" src-height="1094" align="center"/>
+<img src="/assets/E5YpbBQULo3juXxIbdTj1Jb5p5c.png" src-width="2612" src-height="1090" align="center"/>
 

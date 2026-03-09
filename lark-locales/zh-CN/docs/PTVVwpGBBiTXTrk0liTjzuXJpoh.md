@@ -4,6 +4,7 @@ slug: PTVVwpGBBiTXTrk0liTjzuXJpoh
 sidebar_position: 2
 ---
 
+
 # 系统介绍
 
 # 概述
@@ -283,7 +284,9 @@ sidebar_position: 2
 <img src="/assets/FslhbczvHoNv0Px06rVjN208pjb.png" src-width="3346" src-height="694" align="center"/>
 
 1. 配置客户交易额度，按页面要求填写后提交审批，提交信息可在「变更记录」查看；在工单系统审批通过后，方可在「客户交易额度」列表展示
-   注：1. 一个客户仅可存在一个交易额度类型 2. 若客户已有同类型交易额度，系统则会默认以本次新增额度进行覆盖
+注：
+    1. 一个客户仅可存在一个交易额度类型
+    2. 若客户已有同类型交易额度，系统则会默认以本次新增额度进行覆盖
 
 <img src="/assets/QCOcbMsIyoaNJpxgfOnje8EzpIh.png" src-width="3346" src-height="1724" align="center"/>
 
@@ -340,9 +343,9 @@ sidebar_position: 2
 <img src="/assets/CULlbU6RuodmaWxbw5CjmC8ypwp.png" src-width="3296" src-height="1076" align="center"/>
 
 1. 规则配置：单币种规则为非必配项，其他为必配项；规则仅在开启时运行
-   1. 必配项的欠款金额和其他币种可提金额默认为主币种，所有币种转化为主币种计算
-   2. 单币种规则和必配项规则只要有其一满足规则，即会提醒
-   3. 单币种规则可以设置不同币种规则，支持添加和删除
+    1. 必配项的欠款金额和其他币种可提金额默认为主币种，所有币种转化为主币种计算
+    2. 单币种规则和必配项规则只要有其一满足规则，即会提醒
+    3. 单币种规则可以设置不同币种规则，支持添加和删除
 
 <img src="/assets/B0yBb33V1o8zyRxQ8OijynHMpRd.png" src-width="3312" src-height="1716" align="center"/>
 
@@ -351,11 +354,11 @@ sidebar_position: 2
 <img src="/assets/OCjebpNcyowJT9xcnuyjrsG5p0I.png" src-width="3286" src-height="970" align="center"/>
 
 1. 同时，开启规则后，客户在App上可以对应查看【自动还款】功能，可以自主选择开启该功能。若客户打开自动还款，当命中规则时，系统将进行自动换汇或后台操作人工兑换
-   <img src="/assets/Lw0ibIl2AomsGhx6g2JjAOQUpmc.png" src-width="1170" src-height="2532" align="center"/>
-   功能入口：「我的」-「设置」-「账户设置」
-   b. App若开启「自动还款」，页面「自动换汇」则为「开启」，支持操作【兑换】
-   <img src="/assets/WgGdbN6oSoA4LcxT6tFjxUD1pnc.png" src-width="3216" src-height="682" align="center"/>
-   1. App端「自动还款」
+    <img src="/assets/Lw0ibIl2AomsGhx6g2JjAOQUpmc.png" src-width="1170" src-height="2532" align="center"/>
+    功能入口：「我的」-「设置」-「账户设置」
+    b. App若开启「自动还款」，页面「自动换汇」则为「开启」，支持操作【兑换】
+    <img src="/assets/WgGdbN6oSoA4LcxT6tFjxUD1pnc.png" src-width="3216" src-height="682" align="center"/>
+    1. App端「自动还款」
 
 2. 兑换：开启自动还款的客户会默认系统自动兑换；在系统自动兑换之前，页面可支持人工兑换。列表操作【详情】支持查看客户实时数据、消息记录和兑换记录；人工兑换弹窗页面也可查看当前客户现金情况，配置兑入/兑出金额和币种确认兑换即可
 
@@ -495,7 +498,7 @@ sidebar_position: 2
 
 <b>菜单功能介绍</b>：当客户触发 margin call 后，需要保留当时客户触发 margin call 时的历史数据记录是可追溯，日后可以作为 RO 或相关合规的参考，附为上报给监管的依据，因此 margin call 历史记录需要在部分场景下记录快照数据。
 
-场景如下：触发 margin call /触发 force call / 触发通知/每日定时记录 /结束 margin call
+场景如下：触发 margin call  /触发 force call / 触发通知/每日定时记录 /结束 margin call
 
 <img src="/assets/ILlHbT3HOogMqoxJoAQj5giQpXh.png" src-width="3296" src-height="786" align="center"/>
 
@@ -683,10 +686,10 @@ sidebar_position: 2
 <img src="/assets/QvQEbZkUQogvqFxDXJrjlZpMpTu.png" src-width="2298" src-height="816" align="center"/>
 
 1. 也可点击纪录区【编辑】修改纪录
-   <b>可卖空状态说明</b>：总共有三种状态
-   - 允许卖空：融券池充足，当前股票支持卖空
-   - 禁止卖空：人工设置不可卖空，代表股票不支持融券
-   - 系统自动禁止：若人工设置融券池数量规则，当融券池数量达到自动关闭规则时，则系统会自动禁止卖空，对客户感知为该股票支持融券，但融券池数量不足导致无法卖空；同时若满足自动恢复卖空规则，则系统会恢复“允许卖空”
+    <b>可卖空状态说明</b>：总共有三种状态
+    - 允许卖空：融券池充足，当前股票支持卖空
+    - 禁止卖空：人工设置不可卖空，代表股票不支持融券
+    - 系统自动禁止：若人工设置融券池数量规则，当融券池数量达到自动关闭规则时，则系统会自动禁止卖空，对客户感知为该股票支持融券，但融券池数量不足导致无法卖空；同时若满足自动恢复卖空规则，则系统会恢复“允许卖空”
 
 <img src="/assets/XbRfbdLaao9IMixClFnjyVyCpQc.png" src-width="2298" src-height="1280" align="center"/>
 
@@ -981,8 +984,8 @@ sidebar_position: 2
 <img src="/assets/VT8bbhdbnoRwIMxnfBRj11kTpFh.png" src-width="3084" src-height="1654" align="center"/>
 
 1. 可以点击【新建】按钮，新增一个黑名单客户。
-   1. 名单维度：支持证券账号和客户编号，若选择证券账号仅对指定账号生效；若为客户编号，即针对该客户下的所有账户。
-   2. 业务标签：支持配置不同业务标签黑名单，系统支持授信、资产调拨两种业务黑名单标签控制。可以同时选择两个业务标签，生成记录会根据业务标签分别生成两条记录。
+    1. 名单维度：支持证券账号和客户编号，若选择证券账号仅对指定账号生效；若为客户编号，即针对该客户下的所有账户。
+    2. 业务标签：支持配置不同业务标签黑名单，系统支持授信、资产调拨两种业务黑名单标签控制。可以同时选择两个业务标签，生成记录会根据业务标签分别生成两条记录。
 
 <img src="/assets/DPnkbtYOCod7oVxnf8tjgOCcpYg.png" src-width="3080" src-height="1668" align="center"/>
 
@@ -1289,3 +1292,4 @@ Top 10股票
 <img src="/assets/Lnhfb4FccoJ3HCx7hAYjPYQspYc.png" src-width="3300" src-height="1226" align="center"/>
 
 持仓明细
+

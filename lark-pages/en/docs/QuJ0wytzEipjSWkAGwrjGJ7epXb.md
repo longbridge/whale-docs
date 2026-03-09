@@ -13,9 +13,14 @@ sidebar_position: 20
 
 Answer: The Web version follows the language configured in the App. To change the display language, open the App and navigate to "Me" -&gt; "Settings" -&gt; "General" -&gt; "Language Settings" to modify the language, then scan to log in to the Web version; the Web version's language will update.
 
-<img src="/assets/C1oKbpW54o5FSZxtSddj0XUapTc.png" src-width="682" src-height="754" align="center"/>
-
-<img src="/assets/FvLzbpgomocrxYxbZnnjbNoSpAf.png" src-width="2700" src-height="1256" align="center"/>
+<div class="flex gap-3 columns-2" column-size="2">
+<div class="w-[22%]" width-ratio="22">
+<img src="/assets/CDVCbJZolo7MIUxMU4KjZdSTpkb.png" src-width="1206" src-height="2622" align="center"/>
+</div>
+<div class="w-[77%]" width-ratio="77">
+<img src="/assets/ZQFPbC23RoYI87xXQeGjjLQzpUg.png" src-width="2248" src-height="1426" align="center"/>
+</div>
+</div>
 
 # 21B Question: Can Web Trade and the App be used simultaneously?
 

@@ -1,7 +1,7 @@
 ---
 title: 2025-01-20 Release Notes
 slug: O5tLwYgpwiCeG3ktudfjbof4pAb
-sidebar_position: 5
+sidebar_position: 6
 ---
 
 

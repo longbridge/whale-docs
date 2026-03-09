@@ -1,7 +1,7 @@
 ---
 title: 2024-09-07 Release Notes
 slug: O0Miwk5q5iKONzkNe9vcpcK9nih
-sidebar_position: 29
+sidebar_position: 30
 ---
 
 
