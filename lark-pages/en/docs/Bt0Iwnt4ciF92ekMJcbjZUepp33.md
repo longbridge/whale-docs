@@ -1,7 +1,7 @@
 ---
 title: 2025-06-30 Release Notes
 slug: BGLywY6Y2iVtP4kNZ1WcvxyFnJt
-sidebar_position: 26
+sidebar_position: 27
 version: lts
 ---
 

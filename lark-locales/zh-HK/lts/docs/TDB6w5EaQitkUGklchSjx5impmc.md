@@ -1,7 +1,7 @@
 ---
 title: 2026-02-07 更新日誌
 slug: TDB6w5EaQitkUGklchSjx5impmc
-sidebar_position: 0
+sidebar_position: 1
 version: lts
 ---
 

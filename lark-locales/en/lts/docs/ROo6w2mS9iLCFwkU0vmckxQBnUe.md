@@ -1,7 +1,7 @@
 ---
 title: 2025-02-24 Release Notes
 slug: ROo6w2mS9iLCFwkU0vmckxQBnUe
-sidebar_position: 10
+sidebar_position: 11
 ---
 
 

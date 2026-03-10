@@ -18,7 +18,7 @@ sidebar_position: 3
 <p>An account may have only one registered phone number to receive verification codes; when different authorized users sign in on devices, they must use the verification code sent to the registered phone number.</p>
 </div>
 
-<img src="/assets/RHXKbpoBHoBQUfxIOEGjYJp2plg.png" src-width="1093" src-height="1290" align="center"/>
+<img src="/assets/HjSGbMAgko00AzxLiwjjW6wnpbg.png" src-width="1656" src-height="1050" align="center"/>
 
 # 1.1.4B Q: If a company does not have a bank card during account opening, how should it be entered into the system?
 

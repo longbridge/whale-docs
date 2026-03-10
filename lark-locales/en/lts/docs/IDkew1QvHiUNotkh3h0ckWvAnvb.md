@@ -18,33 +18,33 @@ A: Select the "Direct Credit" method for account funding when opening the accoun
 
 (i) On the "KYC &gt; Account Opening List" page, locate the client who applied to open an account. In the action column, click "Details"; after confirming that the client's submitted information is correct, click "Approve Initial Review".
 
-<img src="/assets/D5IlbriEWoPNwbx9hBAjqIR4pv0.png" src-width="2638" src-height="683" align="center"/>
+<img src="/assets/IpYKb4Mt6opgdMx1hldj3niWpTf.png" src-width="2992" src-height="824" align="center"/>
 
-<img src="/assets/X2TwbNjppoRE9Axkkl0jsqMfpne.png" src-width="2617" src-height="1439" align="center"/>
+<img src="/assets/D91wbmOQbohLZ0x19ZVj28GYpVb.png" src-width="2796" src-height="1396" align="center"/>
 
 (ii) On the "Funds Management &gt; Deposits &gt; Deposit Applications" page, locate the client's deposit application and click "Direct Credit"; after confirming that the deposit information is correct, click "Submit for Approval".
 
-<img src="/assets/NzB0biN6VoSnmExAGQIjtblLpXb.png" src-width="2534" src-height="1113" align="center"/>
+<img src="/assets/WBcYbmyAioCC7zxqhz5joF4ypUe.png" src-width="3204" src-height="1094" align="center"/>
 
-<img src="/assets/FDIRbYuH6ogW6qxhYIyjiQqOpOd.png" src-width="2406" src-height="1383" align="center"/>
+<img src="/assets/GlDkb9NbaoXhNHxb5nYjlSxHpCb.png" src-width="2816" src-height="1262" align="center"/>
 
 (iii) Navigate to the "Deposit Review &gt; Opening" page and click "Approve" in the action column.
 
-<img src="/assets/MEIZbUNajopxhHx7znPj1xdvplc.png" src-width="2559" src-height="1167" align="center"/>
+<img src="/assets/TFXNbsE9Ooi7exxezoZjDVd5pDp.png" src-width="3202" src-height="686" align="center"/>
 
 (iv) On the "Deposit Review" page, reconfirm that the client's deposit transfer information is accurate, then click "Approve".
 
-<img src="/assets/LijlbyAINovCSOxK2Sxjit4Apwd.png" src-width="1530" src-height="1060" align="center"/>
+<img src="/assets/HF6XbLDnHolID7xpTqqjzXxBplh.png" src-width="2794" src-height="1258" align="center"/>
 
 (v) The reviewer will see an approval notification in the top right; then click "Approve".
 
-<img src="/assets/BM1QbOTRjoldY4xHfBvjTWSXpob.png" src-width="2567" src-height="1380" align="center"/>
+<img src="/assets/Ulubb7Mn3oK4O3xDoEWjWrv0pjb.png" src-width="2828" src-height="1286" align="center"/>
 
 (vi) Return to the "KYC &gt; Account Opening List" page, locate the client, and click "Details" to enter the "Account Opening Details" page. Click "Approve RO Approval" and then "Confirm".
 
-<img src="/assets/Sra5bZKt5oiu0IxnZikjtSjdpGb.png" src-width="2531" src-height="1404" align="center"/>
+<img src="/assets/IBDubLzqpoJMtHxvVq1j0SrApfd.png" src-width="2768" src-height="1080" align="center"/>
 
-<img src="/assets/LTgpbhNRPoQwtgxowO3jdYyPpVh.png" src-width="2523" src-height="1395" align="center"/>
+<img src="/assets/YKl1bOwW7oLUt1xj72jjEISSpzh.png" src-width="1702" src-height="940" align="center"/>
 
 (vii) The account status will update to "Activated," and the client will receive an account activation notification in the APP and may begin using the account.
 
@@ -53,7 +53,7 @@ A: Select the "Direct Credit" method for account funding when opening the accoun
 <p>Clients who verify account opening via bank transfer may only transfer funds from Hong Kong banks.</p>
 </div>
 
-<img src="/assets/Q33vbTUZJoVyLcxD0vAj2BbopBd.png" src-width="2586" src-height="810" align="center"/>
+<img src="/assets/A1sobeeP2odR5SxNarGj8MCApOf.png" src-width="3004" src-height="758" align="center"/>
 
 # 1.1.3B Q: If an account opening application is rejected, will the client receive a notification?
 
@@ -64,11 +64,11 @@ A: For online applications, a rejected action will generate an email and an App 
 A: On the "KYC &gt; Account Opening List" details page, click "Reject" and you may tick the "Document Upload Page" option to return the application to the client for modification. (See 1.1.3C Figure 1.)
 Or enter the rejection details in "Remarks," then on the "Reject Page" select "Document Upload Page" to return the account opening application. (See 1.1.3C Figure 2.)
 
-<img src="/assets/BptXbw8AYoauhMxTShmj8ngypxf.png" src-width="2718" src-height="1364" align="center"/>
+<img src="/assets/Ih4RbaYzworJhuxmoVbjuY32pTh.png" src-width="3224" src-height="1342" align="center"/>
 
 <em>1.1.3C Figure 1</em>
 
-<img src="/assets/KAZKbzK8foJEhtxF3XFjloRjpKf.png" src-width="2722" src-height="1370" align="center"/>
+<img src="/assets/C9okbpjOioLjmrxOf0wjbq8xp9e.png" src-width="2940" src-height="1358" align="center"/>
 
 <em>1.1.3C Figure 2</em>
 
@@ -80,8 +80,4 @@ A: For offline account opening, you can perform "Reject" and then click "Edit" o
 
 A: If the App selects "Third‑Party Witness" on the "Account Information Preparation" page, prompt the client to prepare the required account opening documents and related materials, then click "Next — Mail Documents."
 On the "Mail Documents To" page, remind the client to mail the documents; after dispatching the documents, click "Confirm Sent." Once the documents are received, upload them in the backend to process the account opening application.
-
-<img src="/assets/WCw0bDZl1oEcQ0xwlpZjMh4Wphf.png" src-width="448" src-height="1432" align="center"/>
-
-<img src="/assets/SXJebCBCioMhk3x0lpFj5KsCpwg.png" src-width="532" src-height="1416" align="center"/>
 

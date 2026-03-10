@@ -1,7 +1,7 @@
 ---
 title: 2024-07-02 Release Notes
 slug: ULOkwnJk6iTm5ykURHRczgkxnYx
-sidebar_position: 1
+sidebar_position: 2
 ---
 
 

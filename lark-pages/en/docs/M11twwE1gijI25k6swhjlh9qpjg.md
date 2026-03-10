@@ -1,7 +1,7 @@
 ---
 title: 2025-07-21 Release Notes
 slug: 2345bab0c2cc80f7a029d7bda98d184a
-sidebar_position: 15
+sidebar_position: 16
 version: stable
 ---
 

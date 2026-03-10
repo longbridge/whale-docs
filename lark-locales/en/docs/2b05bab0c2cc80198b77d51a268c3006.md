@@ -1,7 +1,7 @@
 ---
 title: 2025-11-24 Release Notes
 slug: 2b05bab0c2cc80198b77d51a268c3006
-sidebar_position: 36
+sidebar_position: 37
 version: stable
 ---
 
