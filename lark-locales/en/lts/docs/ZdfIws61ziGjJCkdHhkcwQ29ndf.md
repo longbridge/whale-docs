@@ -11,29 +11,27 @@ sidebar_position: 1
 
 <b>Answer:</b> In "Funds Management &gt; Deposit &gt; Deposit Application", click "Direct Posting" to correct the "Actual Amount Received".
 
-<img src="/assets/BGbBbLFvToPkyjxY1DSjsg6Vp75.png" src-width="2380" src-height="696" align="center"/>
+<img src="/assets/WDrUbTxHeolpgAxp3iIj7Wcap42.png" src-width="3818" src-height="1294" align="center"/>
 
-<img src="/assets/NuCxbSakmoeoVWxWNuFjjtjZpZg.png" src-width="2380" src-height="1426" align="center"/>
+<img src="/assets/WK0JbG0zXos5CHxtpe9j5AFrpUA.png" src-width="3824" src-height="1854" align="center"/>
 
 # 2B Question: Why did a withdrawal request that was not submitted automatically move to "Withdrawal Processing"?
 
 <b>Answer:</b> If the client applied for a withdrawal via the App and the same bank card has a record of a successful withdrawal, the request will appear on the "Pending" page under "Withdrawal Processing", where it can be processed directly for disbursement (see Figure 2B-1). If the App requires withdrawal approval, click "New" on the "Business Parameter Settings &gt; Risk Control &gt; Withdrawal Amount Rules" page to create the rule (see Figures 2B-2 to 2B-4).
 
-<img src="/assets/MTnwbotOioJDeJxgErzjhz8dp5c.png" src-width="2760" src-height="750" align="center"/>
+<img src="/assets/Hsnbbcibzoxlsixme0MjBIsCpM4.png" src-width="3800" src-height="1362" align="center"/>
 
 <em>Figure 2B-1</em>
 
-<img src="/assets/SelPbsWTYo6kzYxoeZQjVBdLpYe.png" src-width="2760" src-height="1368" align="center"/>
+<img src="/assets/Y6x9bu2xhoXW1ExT0E4j4NntpEb.png" src-width="3802" src-height="1424" align="center"/>
 
 <em>Figure 2B-2</em>
 
-<img src="/assets/BqDXbuGF4oI9tSxRuAgjeNF9pAh.png" src-width="2386" src-height="1352" align="center"/>
+<img src="/assets/OrmobJrWcocl40xXsBOjay1ep6J.png" src-width="3292" src-height="1762" align="center"/>
 
 <em>Figure 2B-3</em>
 
-<img src="/assets/Y9ztbppICo01r5xqomFj6eoipvd.png" src-width="2364" src-height="540" align="center"/>
-
-<em>Figure 2B-4</em>
+<img src="/assets/CRUObPGLoo5pElxsVx0j5aGHpDg.png" src-width="3282" src-height="762" align="center"/>
 
 # 2C Question: After completing the end‑of‑day process, how should restored deposit/withdrawal transactions be handled?
 
@@ -59,9 +57,9 @@ sidebar_position: 1
 
 <b>Answer:</b> In "Business Parameter Configuration &gt; Risk Control &gt; Withdrawal Parameters", click "Edit" on the "Coefficient X Configuration". Change the coefficient to 1; when the account has a USD deficit but retains purchasing power, the HKD balance may be withdrawn (see below).
 
-<img src="/assets/QA5VbHEHSoidp9xPLvujad4KpYg.png" src-width="2826" src-height="1438" align="center"/>
+<img src="/assets/UwVsbkXVDoEgYIxPykVjUuRZp8b.png" src-width="3004" src-height="1468" align="center"/>
 
-<img src="/assets/GxDDbXnl9o0Zb1xnJwpjbjODpZc.png" src-width="2206" src-height="1160" align="center"/>
+<img src="/assets/Ao7TbnbHVoJDaDxmIHHj8gwrpVh.png" src-width="2980" src-height="1484" align="center"/>
 
 # 2E Question: How can different withdrawal fees be set for different currencies?
 

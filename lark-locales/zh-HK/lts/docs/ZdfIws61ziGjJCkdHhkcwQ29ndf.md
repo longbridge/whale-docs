@@ -24,17 +24,15 @@ sidebar_position: 1
 
 <em>2B 圖一</em>
 
-<img src="/assets/YpRubK3k8orR2TxyDj7jDekgp0d.png" src-width="2760" src-height="1368" align="center"/>
+<img src="/assets/JL8ibcPrOoeMq6xweyLjuQ9TpBh.png" src-width="3802" src-height="1422" align="center"/>
 
 <em>2B 圖二</em>
 
-<img src="/assets/OAcLbPHkFoqQu7xyFdsj4VF9pBW.png" src-width="2386" src-height="1352" align="center"/>
+<img src="/assets/MHFWbAEsvoC9eKxY9RujSDzPprg.png" src-width="3306" src-height="1766" align="center"/>
 
 <em>2B 圖三</em>
 
-<img src="/assets/S9xMbmX3ioDrNkxtuE8j6S4Dpuc.png" src-width="2364" src-height="540" align="center"/>
-
-<em>2B 圖四</em>
+<img src="/assets/VlX2b5wQJobhMVxCWqSjuuLtpFF.png" src-width="3258" src-height="754" align="center"/>
 
 # 2C 問：完成日終後，需要補回入金／出金流水如何處理？
 
