@@ -312,6 +312,7 @@
       - [2025-11 What's New（RC）](PNMDwCSZtijNoiktwyAjrkSGpLg.md)
       - [2025-12 What's New（RC）](BENNweA6Li4EEyk0M0AjUNr3pag.md)
       - [2026-01 What's New（RC）](FOaRwIFTjiSxwkkytqmjufSTpOf.md)
-      - [2025-Q4 What‘s New](Zhrowdc13iajenk09GYjgcmDpXd.md)
+      - [2025-Q4 What's New](Zhrowdc13iajenk09GYjgcmDpXd.md)
       - [2026-02 What's New（RC）](CKUFwA7Uji21fWkXsAxjJ4uqptf.md)
       - [2026-03 What's New（RC）](Fp3PwXehNijZfCk0sXkjb71ypyc.md)
+      - [2026-Q1 What's New](OHfgwhwIpilLnykNalpjdnBapAb.md)

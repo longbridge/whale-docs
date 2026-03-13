@@ -59,7 +59,5 @@ sidebar_position: 2
 
 <em>3C 图三</em>
 
-<img src="/assets/DEO9bkKLAo3bRax8C4ljoTIEpRb.png" src-width="2156" src-height="1626" align="center"/>
-
-<em>3C 图四</em>
+<img src="/assets/GZ05bVo9FoDi0ixCWTPjPN7fpmd.png" src-width="1222" src-height="3014" align="center"/>
 

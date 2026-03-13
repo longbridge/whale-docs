@@ -2,7 +2,7 @@
 title: 2026-01-26 更新日誌
 slug: LSAYwOGCbiTHypk7JIojSmRFp5c
 sidebar_position: 0
-version: lts
+version: stable
 ---
 
 

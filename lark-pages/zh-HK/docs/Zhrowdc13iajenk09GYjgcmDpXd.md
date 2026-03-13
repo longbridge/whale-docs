@@ -6,7 +6,7 @@ version: lts
 ---
 
 
-# 2025-Q4 What‘s New
+# 2025-Q4 What's New
 
 # v 2.36.1
 
