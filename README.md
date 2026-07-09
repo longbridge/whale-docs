@@ -26,7 +26,7 @@ zh-hant/                  # Traditional Chinese pages
   essentials/
     authentication.mdx    # HMAC-SHA256 signing guide
     passthrough-headers.mdx
-logo/                     # placeholder logo/favicon (replace with brand assets)
+logo/                     # Longbridge brand logo (light/dark) + bars-mark favicon
 ```
 
 ## Internationalization
@@ -45,7 +45,6 @@ Spec conventions:
 
 ## TODO
 
-- [ ] Replace placeholder logo/favicon with official Whale brand assets
 - [ ] Error codes page (not present in the legacy site export)
 - [ ] Changelog page
 - [ ] Future: FAQ / Q&A section (planned expansion)
