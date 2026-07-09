@@ -17,7 +17,7 @@ Open http://localhost:3000.
 
 ```
 docs.json                 # site config + per-language navigation
-openapi.json              # Whale API OpenAPI 3.0 spec (drives API Reference tab, shared by all languages)
+openapi.{en,cn,zh-hant}.json  # per-language OpenAPI 3.0 specs (one per language tree)
 en/                       # English pages (default language)
 cn/                       # Simplified Chinese pages
 zh-hant/                  # Traditional Chinese pages
@@ -31,20 +31,20 @@ logo/                     # Longbridge brand logo (light/dark) + bars-mark favic
 
 ## Internationalization
 
-Three languages via `navigation.languages` in `docs.json`: `en` (default), `cn`, `zh-Hant` — matching the legacy site's `accept-language` values (`en` / `zh-CN` / `zh-HK`). Every guide page exists in all three directories with identical structure; keep them in sync when editing. The API Reference is generated from the shared `openapi.json` (spec descriptions are bilingual by origin).
+Three languages via `navigation.languages` in `docs.json`: `en` (default), `cn`, `zh-Hant` — matching the legacy site's `accept-language` values (`en` / `zh-CN` / `zh-HK`). Every guide page exists in all three directories with identical structure; keep them in sync when editing. The API Reference uses one spec per language (`openapi.en.json` / `openapi.cn.json` / `openapi.zh-hant.json`) so each language shows single-language content; keep the three specs in sync when endpoints change.
 
 ## Updating the API Reference
 
 Two kinds of API pages:
 
-1. **REST endpoints** — defined in `openapi.json`; each operation is referenced in `docs.json` as a `"METHOD /path"` page entry (per language).
+1. **REST endpoints** — defined in the per-language specs `openapi.{en,cn,zh-hant}.json`; each operation is referenced in `docs.json` as a `"METHOD /path"` page entry inside the language's group (`openapi: {source, directory}`).
 2. **data_porter templates** — `data_porter` is a multi-purpose query interface: one physical endpoint, many `template_id`s with different filters/response shapes. Each template gets its own MDX page at `{lang}/api-reference/data-porter/<template-id>.mdx` (frontmatter `api: "GET .../data_porter/<template_id>/info"`), one per language.
 
 Navigation is grouped **by business domain** (Asset / Trade / ...), not by transport: REST operations (`"METHOD /path"` entries) and data_porter template pages (MDX paths) are mixed in the same domain group. When adding a new template, place it in its business domain group (create the group if it doesn't exist) in all three language trees.
 
 Spec conventions:
 
-- All operations must carry exactly one tag (untagged operations were re-tagged on import; keep it that way).
+- All operations must carry exactly one tag.
 - `servers` is set to `https://openapi.longbridge.com`.
 - Security schemes: `X-Api-Key`, `Authorization`, `X-Timestamp`, `X-Api-Signature` headers.
 
