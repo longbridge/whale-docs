@@ -35,7 +35,10 @@ Three languages via `navigation.languages` in `docs.json`: `en` (default), `cn`,
 
 ## Updating the API Reference
 
-The API Reference tab is generated from `openapi.json` (grouped by tags). To update endpoints, replace/edit `openapi.json` and the pages regenerate automatically.
+Two kinds of API pages:
+
+1. **REST endpoints** — defined in `openapi.json`; each operation is referenced in `docs.json` as a `"METHOD /path"` page entry (per language).
+2. **data_porter templates** — `data_porter` is a multi-purpose query interface: one physical endpoint, many `template_id`s with different filters/response shapes. Each template gets its own MDX page at `{lang}/api-reference/data-porter/<template-id>.mdx` (frontmatter `api: "GET .../data_porter/template/data"`), one per language, listed under the "Data Porter" nav group.
 
 Spec conventions:
 
