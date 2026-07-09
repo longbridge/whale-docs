@@ -1,0 +1,74 @@
+---
+title: Quickstart
+description: Make your first Whale API request
+---
+
+## 1. Prepare credentials
+
+You need three values issued for your tenant:
+
+| Credential | Header | Description |
+| --- | --- | --- |
+| `APP_KEY` | `X-Api-Key` | Application key |
+| `ACCESS_TOKEN` | `Authorization` | Access token |
+| `SECRET` | — | Used to compute the request signature (never sent) |
+
+## 2. Sign the request
+
+Every request must carry an HMAC-SHA256 signature in the `X-Api-Signature` header. See [Authentication](/essentials/authentication) for the algorithm details.
+
+## 3. Send your first request
+
+The example below queries an account status (`POST /v1/whaleapi/account/get`):
+
+```python Python
+import json, time, hashlib, hmac
+import requests
+
+APP_KEY = "${app_key}"
+ACCESS_TOKEN = "${access_token}"
+SECRET = "${secret}"
+
+method = "POST"
+host = "https://openapi.longbridge.com"
+uri = "/v1/whaleapi/account/get"
+params = ""
+
+headers = {
+    "X-Api-Key": APP_KEY,
+    "Authorization": ACCESS_TOKEN,
+    "X-Timestamp": str(time.time()),
+    "Content-Type": "application/json; charset=utf-8",
+}
+
+body = json.dumps({"account_no": "L6VQEU00121996"})
+
+def sign(method, uri, headers, params, body, secret):
+    ts = headers["X-Timestamp"]
+    access_token = headers["Authorization"]
+    app_key = headers["X-Api-Key"]
+
+    canonical_request = (
+        method.upper() + "|" + uri + "|" + params
+        + "|authorization:" + access_token
+        + "\nx-api-key:" + app_key
+        + "\nx-timestamp:" + ts
+        + "\n|authorization;x-api-key;x-timestamp|"
+    )
+    if body:
+        canonical_request += hashlib.sha1(body.encode("utf-8")).hexdigest()
+
+    sign_str = "HMAC-SHA256|" + hashlib.sha1(canonical_request.encode("utf-8")).hexdigest()
+    signature = hmac.new(secret.encode("utf-8"), sign_str.encode("utf-8"),
+                         digestmod=hashlib.sha256).hexdigest()
+    return ("HMAC-SHA256 SignedHeaders=authorization;x-api-key;x-timestamp, "
+            "Signature=" + signature)
+
+headers["X-Api-Signature"] = sign(method, uri, headers, params, body, SECRET)
+resp = requests.post(url=host + uri, headers=headers, data=body)
+print(resp.json())
+```
+
+## 4. Explore the API
+
+Head to the [API Reference](/api-reference) to browse all endpoints with an interactive playground.
