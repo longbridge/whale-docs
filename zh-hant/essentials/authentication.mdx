@@ -1,0 +1,90 @@
+---
+title: 鑑權簽名
+description: 基於 HMAC-SHA256 的請求簽名
+---
+
+Whale API 使用 HMAC-SHA256 簽名對每個請求進行鑑權。
+
+<Note>
+SDK 用戶可以跳過本頁 —— 官方 SDK 已完整實現簽名邏輯。本文僅供直接調用 HTTP API 的開發者參考。
+</Note>
+
+## 必需請求標頭
+
+| 請求標頭 | 取值 | 示例 |
+| --- | --- | --- |
+| `X-Api-Key` | `APP_KEY` | `${app_key}` |
+| `Authorization` | `ACCESS_TOKEN` | `${access_token}` |
+| `X-Timestamp` | Unix 時間戳 | `1539095200.123` |
+| `Content-Type` | 內容類型 | `application/json; charset=utf-8` |
+| `X-Api-Signature` | 計算得到的簽名 | 見下文 |
+
+## 簽名演算法
+
+<Steps>
+  <Step title="構造規範化請求（Canonical Request）">
+    ```text
+    canonical_request = METHOD + "|" + URI + "|" + PARAMS
+        + "|authorization:" + access_token
+        + "\nx-api-key:" + app_key
+        + "\nx-timestamp:" + ts
+        + "\n|authorization;x-api-key;x-timestamp|"
+    ```
+
+    - `METHOD` —— HTTP 方法（大寫），如 `POST`
+    - `URI` —— 請求路徑，如 `/v1/whaleapi/account/get`
+    - `PARAMS` —— 查詢字串，如 `member_id=1&account_channel=2`（無參數時為空字串）
+
+    如果請求攜帶 body，追加其 SHA1 摘要：
+
+    ```text
+    canonical_request += SHA1(body)
+    ```
+  </Step>
+  <Step title="構造待簽名字串">
+    ```text
+    sign_str = "HMAC-SHA256|" + SHA1(canonical_request)
+    ```
+  </Step>
+  <Step title="計算簽名">
+    ```text
+    signature = HMAC-SHA256(secret, sign_str)
+    ```
+  </Step>
+  <Step title="設置請求標頭">
+    ```text
+    X-Api-Signature: HMAC-SHA256 SignedHeaders=authorization;x-api-key;x-timestamp, Signature={signature}
+    ```
+  </Step>
+</Steps>
+
+## 參考實現
+
+```python Python
+import json, time, hashlib, hmac
+
+def sign(method, uri, headers, params, body, secret):
+    ts = headers["X-Timestamp"]
+    access_token = headers["Authorization"]
+    app_key = headers["X-Api-Key"]
+
+    canonical_request = (
+        method.upper() + "|" + uri + "|" + params
+        + "|authorization:" + access_token
+        + "\nx-api-key:" + app_key
+        + "\nx-timestamp:" + ts
+        + "\n|authorization;x-api-key;x-timestamp|"
+    )
+    if body:
+        canonical_request += hashlib.sha1(body.encode("utf-8")).hexdigest()
+
+    sign_str = "HMAC-SHA256|" + hashlib.sha1(canonical_request.encode("utf-8")).hexdigest()
+    signature = hmac.new(secret.encode("utf-8"), sign_str.encode("utf-8"),
+                         digestmod=hashlib.sha256).hexdigest()
+    return ("HMAC-SHA256 SignedHeaders=authorization;x-api-key;x-timestamp, "
+            "Signature=" + signature)
+```
+
+## 取得憑證
+
+`APP_KEY`、`ACCESS_TOKEN` 與 `SECRET` 按租戶簽發。Access Key 與存取權杖可透過 **OpenAPI** 分組下的接口進行管理（建立 / 查詢 / 更新 / 停用 / 續期）。

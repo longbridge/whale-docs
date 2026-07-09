@@ -16,15 +16,22 @@ Open http://localhost:3000.
 ## Structure
 
 ```
-docs.json                 # site config + navigation
-openapi.json              # Whale API OpenAPI 3.0 spec (drives API Reference tab)
-introduction.mdx          # landing page
-quickstart.mdx            # first request walkthrough
-essentials/
-  authentication.mdx      # HMAC-SHA256 signing guide
-  passthrough-headers.mdx # gateway passthrough headers
+docs.json                 # site config + per-language navigation
+openapi.json              # Whale API OpenAPI 3.0 spec (drives API Reference tab, shared by all languages)
+en/                       # English pages (default language)
+cn/                       # Simplified Chinese pages
+zh-hant/                  # Traditional Chinese pages
+  introduction.mdx        # landing page
+  quickstart.mdx          # first request walkthrough
+  essentials/
+    authentication.mdx    # HMAC-SHA256 signing guide
+    passthrough-headers.mdx
 logo/                     # placeholder logo/favicon (replace with brand assets)
 ```
+
+## Internationalization
+
+Three languages via `navigation.languages` in `docs.json`: `en` (default), `cn`, `zh-Hant` — matching the legacy site's `accept-language` values (`en` / `zh-CN` / `zh-HK`). Every guide page exists in all three directories with identical structure; keep them in sync when editing. The API Reference is generated from the shared `openapi.json` (spec descriptions are bilingual by origin).
 
 ## Updating the API Reference
 
