@@ -38,7 +38,7 @@ Three languages via `navigation.languages` in `docs.json`: `en` (default), `cn`,
 Two kinds of API pages:
 
 1. **REST endpoints** — defined in `openapi.json`; each operation is referenced in `docs.json` as a `"METHOD /path"` page entry (per language).
-2. **data_porter templates** — `data_porter` is a multi-purpose query interface: one physical endpoint, many `template_id`s with different filters/response shapes. Each template gets its own MDX page at `{lang}/api-reference/data-porter/<template-id>.mdx` (frontmatter `api: "GET .../data_porter/template/data"`), one per language.
+2. **data_porter templates** — `data_porter` is a multi-purpose query interface: one physical endpoint, many `template_id`s with different filters/response shapes. Each template gets its own MDX page at `{lang}/api-reference/data-porter/<template-id>.mdx` (frontmatter `api: "GET .../data_porter/template/<template_id>"` — the template name is shown as the last path segment), one per language.
 
 Navigation is grouped **by business domain** (Asset / Trade / ...), not by transport: REST operations (`"METHOD /path"` entries) and data_porter template pages (MDX paths) are mixed in the same domain group. When adding a new template, place it in its business domain group (create the group if it doesn't exist) in all three language trees.
 
