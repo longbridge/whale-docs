@@ -35,17 +35,29 @@ Three languages via `navigation.languages` in `docs.json`: `en` (default), `cn`,
 
 ## Updating the API Reference
 
+**Source of truth** lives in the sibling repo `../whale-openapi-docs`. This site is generated from it — do not hand-edit the generated files.
+
 Two kinds of API pages:
 
 1. **REST endpoints** — defined in the per-language specs `openapi.{en,cn,zh-hant}.json`; each operation is referenced in `docs.json` as a `"METHOD /path"` page entry inside the language's group (`openapi: {source, directory}`).
-2. **data_porter templates** — `data_porter` is a multi-purpose query interface: one physical endpoint, many `template_id`s with different filters/response shapes. Each template gets its own MDX page at `{lang}/api-reference/data-porter/<template-id>.mdx` (frontmatter `api: "GET .../data_porter/<template_id>/info"`), one per language.
+2. **data_porter templates** — `data_porter` is a multi-purpose query interface: one physical endpoint, many `template_id`s with different filters/response shapes. Each template gets its own MDX page at `{lang}/api-reference/data-porter/<slug>.mdx` (frontmatter `api: "GET .../data_porter/<template_id>/info"`), one per language.
 
-Navigation is grouped **by business domain** (Asset / Trade / ...), not by transport: REST operations (`"METHOD /path"` entries) and data_porter template pages (MDX paths) are mixed in the same domain group. When adding a new template, place it in its business domain group (create the group if it doesn't exist) in all three language trees.
+Navigation is grouped **by business domain** (Cash Management / Risk Control / …), not by transport: REST operations (`"METHOD /path"` entries) and data_porter template pages (MDX paths) are mixed in the same domain group.
+
+### Regenerate from whale-openapi-docs
+
+```bash
+python3 scripts/convert.py --dry-run   # inspect counts
+python3 scripts/convert.py             # rewrite openapi.*.json + MDX + docs.json
+mint dev                               # preview
+```
+
+The script is idempotent. Old generated MDX under `{lang}/api-reference/data-porter/` that no longer maps to a template is deleted. See `.claude/skills/whale-api-import/SKILL.md` for the design notes, mapping rules, and troubleshooting recipes.
 
 Spec conventions:
 
 - All operations must carry exactly one tag.
-- `servers` is set to `https://openapi.longbridge.com`.
+- `servers`: `https://b-api.lbkrs.com` (production) and `https://b-api.longbridge.xyz` (test).
 - Security schemes: `X-Api-Key`, `Authorization`, `X-Timestamp`, `X-Api-Signature` headers.
 
 ## TODO
