@@ -1,6 +1,12 @@
-# whale-apidocs
+# Whale Docs
 
-Whale API documentation for SaaS tenants, built with [Mintlify](https://mintlify.com).
+The unified documentation portal for the Longport Whale solution, built with [Mintlify](https://mintlify.com).
+
+The target information architecture covers general product and implementation docs, the Whale Console operator manual, WhaleSDK for iOS/Android/WebTrade, Broker API, Trading API, and OpenAPI. The current published content is the existing Broker API (`b-api`) corpus; the repository migration will be phased.
+
+## Internal design documents
+
+Whole-solution designs, information architecture, planning documents, and architectural decision records belong under `docs/internal/`. This directory is intentionally listed in `.gitignore`: its contents are local working material and must not be added to the public Mintlify navigation or committed to Git.
 
 Legacy site: https://apidocs.longbridgewhale.com/whaleapi/
 
