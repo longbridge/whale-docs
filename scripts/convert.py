@@ -173,10 +173,10 @@ MODULE_ICONS = {
     "charging": "calculator",
     "corporate_action": "megaphone",
     "risk": "shield",
-    "report": "file-bar-chart",
+    "report": "chart-column",
     "broker_management": "users",
     "bookkeeping": "book-open",
-    "trade_tool": "candlestick-chart",
+    "trade_tool": "chart-candlestick",
     "fd_biz": "briefcase",
     "announcement": "bell",
     "settings": "settings",
@@ -660,7 +660,7 @@ def build_openapi_shell(tags: List[Dict[str, str]]) -> Dict[str, Any]:
         ("openapi", "3.0.1"),
         ("info", {
             "title": "Whale API",
-            "description": "Longbridge Whale OpenAPI for SaaS tenants.",
+            "description": "Longport Whale OpenAPI for SaaS tenants.",
             "version": "2.0.0",
         }),
         # Test is listed first so the playground defaults to it — safer for
@@ -673,13 +673,10 @@ def build_openapi_shell(tags: List[Dict[str, str]]) -> Dict[str, Any]:
         ("paths", OrderedDict()),
         ("components", {
             "securitySchemes": {
-                "apiKey": {"type": "apiKey", "in": "header", "name": "X-Api-Key", "description": "Tenant APP_KEY."},
                 "accessToken": {"type": "apiKey", "in": "header", "name": "Authorization", "description": "ACCESS_TOKEN issued for the tenant."},
-                "timestamp": {"type": "apiKey", "in": "header", "name": "X-Timestamp", "description": "Unix timestamp of the request, e.g. 1539095200.123."},
-                "signature": {"type": "apiKey", "in": "header", "name": "X-Api-Signature", "description": "HMAC-SHA256 request signature. See the Authentication guide."},
             }
         }),
-        ("security", [{"apiKey": [], "accessToken": [], "timestamp": [], "signature": []}]),
+        ("security", [{"accessToken": []}]),
     ])
 
 
@@ -888,7 +885,7 @@ def main() -> int:
     for lang_conf in docs["navigation"]["languages"]:
         lk = lang_conf["language"]
         for tab in lang_conf["tabs"]:
-            if tab.get("tab") in {"API Reference", "API 参考", "API 參考"} or tab.get("icon") == "braces":
+            if tab.get("tab") in {"Broker API", "API Reference", "API 参考", "API 參考"} or tab.get("icon") == "braces":
                 tab["groups"] = build_api_groups(lk, file_suffix_map[lk], lang_bucket_map[lk])
 
     # --- Write outputs ---

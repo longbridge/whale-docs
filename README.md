@@ -8,7 +8,7 @@ The target information architecture covers general product and implementation do
 
 Whole-solution designs, information architecture, planning documents, and architectural decision records belong under `docs/internal/`. This directory is intentionally listed in `.gitignore`: its contents are local working material and must not be added to the public Mintlify navigation or committed to Git.
 
-Legacy site: https://apidocs.longbridgewhale.com/whaleapi/
+Legacy site: https://apidocs.longportwhale.com/whaleapi/
 
 ## Local development
 
