@@ -659,8 +659,8 @@ def build_openapi_shell(tags: List[Dict[str, str]]) -> Dict[str, Any]:
     return OrderedDict([
         ("openapi", "3.0.1"),
         ("info", {
-            "title": "Whale API",
-            "description": "Longport Whale OpenAPI for SaaS tenants.",
+            "title": "Longport Whale Broker API",
+            "description": "Institution-grade server-to-server API for brokers running on Longport Whale.",
             "version": "2.0.0",
         }),
         # Test is listed first so the playground defaults to it — safer for
@@ -673,11 +673,58 @@ def build_openapi_shell(tags: List[Dict[str, str]]) -> Dict[str, Any]:
         ("paths", OrderedDict()),
         ("components", {
             "securitySchemes": {
-                "accessToken": {"type": "apiKey", "in": "header", "name": "Authorization", "description": "ACCESS_TOKEN issued for the tenant."},
+                "accessToken": {"type": "apiKey", "in": "header", "name": "Authorization", "description": "ACCESS_TOKEN issued to the broker."},
             }
         }),
         ("security", [{"accessToken": []}]),
     ])
+
+
+# Manually-maintained groups inside the Broker API tab. The generator only
+# owns the business-domain reference groups; these are prepended/appended
+# around them so a re-run never wipes the hand-written Overview / Get
+# Started / Operations sections.
+BROKER_API_MANUAL_GROUPS = {
+    "en": {
+        "prefix": [
+            {"group": "Overview", "icon": "rocket", "pages": ["en/broker-api/overview"]},
+            {"group": "Get Started", "icon": "play", "pages": [
+                "en/broker-api/get-started/quickstart",
+                "en/broker-api/get-started/authentication",
+                "en/broker-api/get-started/passthrough-headers",
+            ]},
+        ],
+        "suffix": [
+            {"group": "Operations", "icon": "wrench", "pages": ["en/broker-api/operations"]},
+        ],
+    },
+    "cn": {
+        "prefix": [
+            {"group": "概览", "icon": "rocket", "pages": ["cn/broker-api/overview"]},
+            {"group": "开始使用", "icon": "play", "pages": [
+                "cn/broker-api/get-started/quickstart",
+                "cn/broker-api/get-started/authentication",
+                "cn/broker-api/get-started/passthrough-headers",
+            ]},
+        ],
+        "suffix": [
+            {"group": "运维参考", "icon": "wrench", "pages": ["cn/broker-api/operations"]},
+        ],
+    },
+    "zh-Hant": {
+        "prefix": [
+            {"group": "概覽", "icon": "rocket", "pages": ["zh-hant/broker-api/overview"]},
+            {"group": "開始使用", "icon": "play", "pages": [
+                "zh-hant/broker-api/get-started/quickstart",
+                "zh-hant/broker-api/get-started/authentication",
+                "zh-hant/broker-api/get-started/passthrough-headers",
+            ]},
+        ],
+        "suffix": [
+            {"group": "運維參考", "icon": "wrench", "pages": ["zh-hant/broker-api/operations"]},
+        ],
+    },
+}
 
 
 def group_localized_name(module_key: Optional[str], en_name: str, cn_name: str, menu: Dict[str, Any], lang: str) -> str:
@@ -886,7 +933,12 @@ def main() -> int:
         lk = lang_conf["language"]
         for tab in lang_conf["tabs"]:
             if tab.get("tab") in {"Broker API", "API Reference", "API 参考", "API 參考"} or tab.get("icon") == "braces":
-                tab["groups"] = build_api_groups(lk, file_suffix_map[lk], lang_bucket_map[lk])
+                manual = BROKER_API_MANUAL_GROUPS.get(lk, {"prefix": [], "suffix": []})
+                tab["groups"] = (
+                    manual["prefix"]
+                    + build_api_groups(lk, file_suffix_map[lk], lang_bucket_map[lk])
+                    + manual["suffix"]
+                )
 
     # --- Write outputs ---
     if args.dry_run:

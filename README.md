@@ -21,18 +21,25 @@ Open http://localhost:3000.
 
 ## Structure
 
+Six product entries per language, in fixed order: **Docs → Whale Console → WhaleSDK → Broker API → Trading API → OpenAPI** (external link to open.longportapp.com during migration).
+
 ```
-docs.json                 # site config + per-language navigation
-openapi.{en,cn,zh-hant}.json  # per-language OpenAPI 3.0 specs (one per language tree)
-en/                       # English pages (default language)
-cn/                       # Simplified Chinese pages
-zh-hant/                  # Traditional Chinese pages
-  introduction.mdx        # landing page
-  quickstart.mdx          # first request walkthrough
-  essentials/
-    authentication.mdx    # HMAC-SHA256 signing guide
-    passthrough-headers.mdx
-logo/                     # Longbridge brand logo (light/dark) + bars-mark favicon
+docs.json                 # site config + per-language navigation (six product tabs)
+openapi.{en,cn,zh-hant}.json  # per-language Broker API OpenAPI 3.0 specs
+style.css                 # sidebar width, tabs row, try-it button styling
+en/                       # English pages (default language; cn/ + zh-hant/ mirror it)
+  introduction.mdx        # Docs overview / portal landing
+  docs/
+    integration-options.mdx   # choose WhaleSDK vs Broker/Trading/OpenAPI
+  whale-console/overview.mdx  # skeleton (operator manual, under construction)
+  whalesdk/overview.mdx       # skeleton (iOS/Android/WebTrade, under construction)
+  broker-api/
+    overview.mdx          # caller / authorization subject / data scope / envs
+    get-started/          # quickstart, authentication, passthrough-headers
+    operations.mdx        # error model / rate limits / deprecation — TBD markers
+  trading-api/introduction.mdx  # availability page (planned Q4 2026)
+  api-reference/data-porter/    # generated dataset pages (Broker API reference)
+logo/                     # brand logo (light/dark) + favicon
 ```
 
 ## Internationalization
@@ -46,7 +53,7 @@ Three languages via `navigation.languages` in `docs.json`: `en` (default), `cn`,
 Two kinds of API pages:
 
 1. **REST endpoints** — defined in the per-language specs `openapi.{en,cn,zh-hant}.json`; each operation is referenced in `docs.json` as a `"METHOD /path"` page entry inside the language's group (`openapi: {source, directory}`).
-2. **data_porter templates** — `data_porter` is a multi-purpose query interface: one physical endpoint, many `template_id`s with different filters/response shapes. Each template gets its own MDX page at `{lang}/api-reference/data-porter/<slug>.mdx` (frontmatter `api: "GET .../data_porter/<template_id>/info"`), one per language.
+2. **datasets** — each dataset is served at `POST /v1/datasets/<name>` (dataset name from `templates/template_map.json` in the source repo). Every dataset gets an OpenAPI operation plus its own MDX page at `{lang}/api-reference/data-porter/<slug>.mdx` (frontmatter `openapi: post /v1/datasets/<name>`), one per language.
 
 Navigation is grouped **by business domain** (Cash Management / Risk Control / …), not by transport: REST operations (`"METHOD /path"` entries) and data_porter template pages (MDX paths) are mixed in the same domain group.
 
@@ -63,8 +70,9 @@ The script is idempotent. Old generated MDX under `{lang}/api-reference/data-por
 Spec conventions:
 
 - All operations must carry exactly one tag.
-- `servers`: `https://b-api.lbkrs.com` (production) and `https://b-api.longbridge.xyz` (test).
-- Security schemes: `X-Api-Key`, `Authorization`, `X-Timestamp`, `X-Api-Signature` headers.
+- `servers`: `https://b-api.longbridge.xyz` (test, playground default) and `https://b-api.lbkrs.com` (production).
+- Security scheme: `Authorization` header carrying the broker-scoped `ACCESS_TOKEN`.
+- The generator only owns the reference groups inside the Broker API tab; the Overview / Get Started / Operations groups are hand-maintained (see `BROKER_API_MANUAL_GROUPS` in `scripts/convert.py`).
 
 ## TODO
 
