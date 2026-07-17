@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 """
 Convert whale-openapi-docs source data into the Mintlify shape used by
-this repo:
+this repo (pipeline v2 — consumes the generated OpenAPI YAML files).
 
-  - openapi.{en,cn,zh-hant}.json  (one operation per REST endpoint / JSON file)
-  - {lang}/api-reference/data-porter/<slug>.mdx  (one page per data_porter template / TS file)
-  - docs.json navigation groups (per business domain, mixing REST + data-porter)
+Since source commit 0298df9 the sibling repo ships one OpenAPI 3.1 YAML
+per operation, trilingual via `x-summary-{hk,en}` / `x-description-{hk,en}`
+/ `x-name-{cn,hk,en}` / `x-enum-details` extension fields, and carries its
+business grouping in `x-menu-path`. This script merges those YAMLs into:
 
-Idempotent: safe to re-run. Existing hand-written MDX pages that already
-match a generated slug are overwritten — keep hand edits under a
-different filename if you want to preserve them.
+  - openapi.{en,cn,zh-hant}.json   (per-language specs, x-* localized away)
+  - docs.json                      (Broker API tab nav from x-menu-path)
+
+No MDX is generated any more: every operation (datasets included) is a
+native OpenAPI operation referenced from the nav as "METHOD /path".
+
+Idempotent: safe to re-run.
 
 Usage:
     python3 scripts/convert.py [--source /path/to/whale-openapi-docs] [--dry-run]
@@ -18,6 +23,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import os
 import re
@@ -26,18 +32,23 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+import yaml
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_SOURCE = REPO_ROOT.parent / "whale-openapi-docs"
+
+# (docs.json lang key, openapi filename suffix, x-* suffix or None for base)
 LANGS = [
-    # (lang key in docs.json, openapi filename suffix, source name_* key, menu.json name key)
-    ("en", "en", "en", "en"),
-    ("cn", "cn", "cn", "zh-CN"),
-    ("zh-Hant", "zh-hant", "hant", "zh-HK"),
+    ("en", "en", "en"),
+    ("cn", "cn", None),
+    ("zh-Hant", "zh-hant", "hk"),
 ]
 LANG_DIRS = {"en": "en", "cn": "cn", "zh-Hant": "zh-hant"}
 
+SKIP_DIRS = {".git", ".claude", "whale-openapi", "scripts", "data", "templates", "docs"}
+
 # ---------------------------------------------------------------------------
-# Source discovery
+# Naming helpers
 # ---------------------------------------------------------------------------
 
 TOP_DIR_RE = re.compile(r"^(.+?)\s*[\(（](.+?)[\)）]$")
@@ -51,96 +62,15 @@ def parse_top_dir(name: str) -> Tuple[str, str]:
     return m.group(1).strip(), m.group(2).strip()
 
 
-def slugify(text: str) -> str:
-    text = re.sub(r"[^a-zA-Z0-9]+", "-", text)
-    text = text.strip("-").lower()
-    return text or "untitled"
-
-
-def kebab(text: str) -> str:
-    return re.sub(r"_+", "-", text)
-
-
-# ---------------------------------------------------------------------------
-# TS template parser
-# ---------------------------------------------------------------------------
-
-
-def parse_ts_template(path: Path) -> Optional[Dict[str, Any]]:
-    text = path.read_text(encoding="utf-8")
-    lines = text.splitlines()
-    while lines and (lines[0].startswith("//") or not lines[0].strip()):
-        lines.pop(0)
-    body = "\n".join(lines).strip()
-    try:
-        return json.loads(body)
-    except json.JSONDecodeError as e:
-        print(f"[warn] failed to parse TS template {path}: {e}", file=sys.stderr)
-        return None
-
-
-# ---------------------------------------------------------------------------
-# Mapping loaders
-# ---------------------------------------------------------------------------
-
-
-def load_template_id_to_name(source: Path) -> Dict[str, str]:
-    """Return {old_template_id: new_dataset_name}.
-
-    The new `data_porter` API is `POST /v1/datasets/<name>` where `<name>` is
-    the *new* dataset name from `templates/template_map.json`. Old TS files
-    still key on the legacy `templateId`, so we build a reverse index.
-
-    Precedence: templates/template_map.json (authoritative, 358 entries) →
-    tool_name_template_id.json (legacy, 727 entries) → template_map.md.
-    """
-    mapping: Dict[str, str] = {}
-
-    # Legacy mapping (superset — still useful as fallback).
-    legacy = source / "tool_name_template_id.json"
-    if legacy.exists():
-        for e in json.loads(legacy.read_text(encoding="utf-8")):
-            mapping[e["template_id"]] = e["name"]
-
-    # New authoritative map — overrides legacy for the 358 datasets we ship.
-    new_map = source / "templates" / "template_map.json"
-    if new_map.exists():
-        for entry in json.loads(new_map.read_text(encoding="utf-8")):
-            new_name = entry.get("name")
-            versions = entry.get("versions") or []
-            chosen = next((v for v in versions if v.get("default")), versions[0] if versions else None)
-            if not chosen or not new_name:
-                continue
-            mapping[chosen["template_id"]] = new_name
-
-    # Additions from template_map.md (fallback only — doesn't override).
-    md_path = source / "template_map.md"
-    if md_path.exists():
-        for line in md_path.read_text(encoding="utf-8").splitlines():
-            if not line.startswith("|"):
-                continue
-            parts = [p.strip() for p in line.split("|")]
-            if len(parts) < 4:
-                continue
-            name, tid = parts[1], parts[2]
-            if not name or not tid or name == "name" or "---" in name:
-                continue
-            mapping.setdefault(tid, name)
-
-    return mapping
-
-
 def load_menu(source: Path) -> Dict[str, Dict[str, str]]:
-    """Return {module_key: {en, zh-CN, zh-HK}} from menu.json for group titles."""
-    m = json.loads((source / "menu.json").read_text(encoding="utf-8"))
-    result: Dict[str, Dict[str, str]] = {}
-    for menu in m["data"]["menus"]:
-        result[menu["key"]] = menu["name"]
-    return result
+    """{module_key: {en, zh-CN, zh-HK}} from menu.json, for top-level titles."""
+    p = source / "menu.json"
+    if not p.exists():
+        return {}
+    m = json.loads(p.read_text(encoding="utf-8"))
+    return {menu["key"]: menu["name"] for menu in m["data"]["menus"]}
 
 
-# Map top-level dir English → menu key. Menu keys are language-neutral;
-# we match by English name.
 TOP_DIR_TO_MENU_KEY = {
     "Account Assets": "portfolio",
     "Cash Management": "atm",
@@ -159,10 +89,9 @@ TOP_DIR_TO_MENU_KEY = {
     "Announcement": "announcement",
     "Service Parameter": "settings",
     "Suspicious Incident Monitoring": "suspicious_incident_monitoring",
-    "Shared Components": None,  # no menu entry, kept as a synthetic group
+    "Shared Components": None,
 }
 
-# Icons per module (Lucide, matching Mintlify icon library)
 MODULE_ICONS = {
     "portfolio": "wallet",
     "atm": "banknote",
@@ -185,486 +114,154 @@ MODULE_ICONS = {
 }
 
 
+def localized_top_name(raw: str, menu: Dict[str, Any], lang_key: str) -> str:
+    cn, en = parse_top_dir(raw)
+    menu_key = TOP_DIR_TO_MENU_KEY.get(en)
+    if menu_key and menu_key in menu:
+        lookup = {"en": "en", "cn": "zh-CN", "zh-Hant": "zh-HK"}[lang_key]
+        val = menu[menu_key].get(lookup)
+        if val:
+            return val
+    return en if lang_key == "en" else cn
+
+
+def localized_sub_name(raw: str, lang_key: str) -> str:
+    cn, en = parse_top_dir(raw)
+    return en if lang_key == "en" else cn
+
+
 # ---------------------------------------------------------------------------
-# JSON (REST) → OpenAPI operation
+# Localization of x-* extension fields
 # ---------------------------------------------------------------------------
 
-
-def _param_type_to_openapi(t: str) -> Dict[str, Any]:
-    t = (t or "string").lower()
-    if t in {"int", "integer", "int32", "int64", "number", "long"}:
-        return {"type": "integer" if t.startswith("int") else "number"}
-    if t in {"bool", "boolean"}:
-        return {"type": "boolean"}
-    if t in {"float", "double", "decimal"}:
-        return {"type": "number"}
-    if t == "array":
-        return {"type": "array", "items": {"type": "string"}}
-    if t == "object":
-        return {"type": "object"}
-    return {"type": "string"}
+ENUM_PREFIX = {"en": "Options", "cn": "选项", "zh-Hant": "選項"}
 
 
-def _schema_field_to_openapi(field: Dict[str, Any], lang: str) -> Dict[str, Any]:
-    """Convert a whale-openapi-docs response.schema field object into OpenAPI schema."""
-    t = (field.get("type") or "string").lower()
-    out: Dict[str, Any]
-    if t == "array":
-        items = field.get("items") or {}
-        if isinstance(items, dict) and any(isinstance(v, dict) for v in items.values()):
-            # nested object described inline
-            props = {}
-            for k, v in items.items():
-                if isinstance(v, dict):
-                    props[k] = _schema_field_to_openapi(v, lang)
-            out = {"type": "array", "items": {"type": "object", "properties": props}}
+def _pick(node: Dict[str, Any], base_key: str, sfx: Optional[str]) -> Optional[str]:
+    """Pick the localized variant of `base_key` (e.g. description) from a node."""
+    if sfx:
+        v = node.get(f"x-{base_key}-{sfx}")
+        if v:
+            return v
+    return node.get(base_key)
+
+
+def _enum_label(entry: Dict[str, Any], sfx: Optional[str]) -> str:
+    if sfx and entry.get(sfx):
+        return str(entry[sfx])
+    return str(entry.get("cn", entry.get("value", "")))
+
+
+def localize(node: Any, sfx: Optional[str], lang_key: str) -> Any:
+    """Deep-copy `node` with x-* trilingual fields resolved for one language.
+
+    - description   ← x-description-<sfx> (falls back to base description)
+    - summary       ← x-summary-<sfx>
+    - x-name-*      → prepended to description as a display label
+    - x-enum-details→ appended to description as "Options: `v` = label; …"
+    - every other x-* key is dropped from the output
+    """
+    if isinstance(node, list):
+        return [localize(v, sfx, lang_key) for v in node]
+    if not isinstance(node, dict):
+        return node
+
+    out: Dict[str, Any] = {}
+    desc = _pick(node, "description", sfx)
+    name_label = None
+    if "x-name-cn" in node or f"x-name-{sfx}" in node or "x-name-en" in node:
+        if sfx:
+            name_label = node.get(f"x-name-{sfx}") or node.get("x-name-cn")
         else:
-            out = {"type": "array", "items": _param_type_to_openapi(items.get("type") if isinstance(items, dict) else "string")}
-    elif t == "object":
-        props = {}
-        for k, v in (field.get("properties") or {}).items():
-            if isinstance(v, dict):
-                props[k] = _schema_field_to_openapi(v, lang)
-        out = {"type": "object", "properties": props}
-    else:
-        out = _param_type_to_openapi(t)
-    # description
-    desc_parts: List[str] = []
-    lang_name_key = {"en": "name_en", "cn": "name_cn", "hant": "name_cn"}[lang]
-    if field.get(lang_name_key):
-        desc_parts.append(str(field[lang_name_key]))
-    if field.get("description"):
-        desc_parts.append(str(field["description"]))
-    enum = field.get("enum")
-    if isinstance(enum, list):
+            name_label = node.get("x-name-cn")
+
+    enum_note = None
+    if isinstance(node.get("x-enum-details"), list):
         rendered = []
-        for e in enum:
+        for e in node["x-enum-details"]:
             if isinstance(e, dict):
-                k = e.get("key", "")
-                label_key = {"en": "en", "cn": "cn", "hant": "cn"}[lang]
-                label = e.get(label_key, "")
-                rendered.append(f"`{k}` = {label}" if label else f"`{k}`")
+                rendered.append(f"`{e.get('value')}` = {_enum_label(e, sfx)}")
         if rendered:
-            desc_parts.append("Options: " + "; ".join(rendered))
-    if desc_parts:
-        out["description"] = ". ".join(desc_parts)
+            enum_note = f"{ENUM_PREFIX[lang_key]}: " + "; ".join(rendered)
+
+    for k, v in node.items():
+        ks = str(k)
+        if ks.startswith("x-"):
+            continue
+        if ks == "description":
+            continue  # handled below
+        if ks == "summary":
+            out[k] = _pick(node, "summary", sfx) or v
+            continue
+        out[k] = localize(v, sfx, lang_key)
+
+    parts = []
+    if name_label:
+        parts.append(str(name_label).strip().rstrip("。."))
+    if desc:
+        parts.append(str(desc).strip())
+    if enum_note:
+        parts.append(enum_note)
+    if parts:
+        out["description"] = ". ".join(parts) if lang_key == "en" else "。".join(
+            p.rstrip("。") for p in parts
+        )
+
     return out
 
 
-def _build_response_schema(schema: Dict[str, Any], lang: str) -> Dict[str, Any]:
-    if not isinstance(schema, dict) or not schema:
-        return {"type": "object"}
-    props = {}
-    for k, v in schema.items():
-        if isinstance(v, dict):
-            props[k] = _schema_field_to_openapi(v, lang)
-    return {"type": "object", "properties": props}
-
-
-def _param_description(param: Dict[str, Any], lang: str) -> str:
-    parts: List[str] = []
-    lang_name_key = {"en": "name_en", "cn": "name_cn", "hant": "name_cn"}[lang]
-    if param.get(lang_name_key):
-        parts.append(str(param[lang_name_key]))
-    if param.get("description"):
-        parts.append(str(param["description"]))
-    enum = param.get("enum")
-    if isinstance(enum, list):
-        rendered = []
-        for e in enum:
-            if isinstance(e, dict):
-                k = e.get("key", "")
-                label_key = {"en": "en", "cn": "cn", "hant": "cn"}[lang]
-                label = e.get(label_key, "")
-                rendered.append(f"`{k}` = {label}" if label else f"`{k}`")
-        if rendered:
-            parts.append("Options: " + "; ".join(rendered))
-    return ". ".join(parts)
-
-
-PATH_PARAM_RE = re.compile(r"\{([a-zA-Z_][a-zA-Z0-9_]*)\}")
-
-
-def json_to_operation(
-    data: Dict[str, Any],
-    tag: str,
-    lang: str,
-) -> Tuple[str, str, Dict[str, Any]]:
-    method = (data.get("method") or "POST").lower()
-    path = data.get("path") or ""
-    # normalise <id> to {id}
-    path = re.sub(r"<([^>]+)>", r"{\1}", path)
-
-    lang_name_key = {"en": "name_en", "cn": "name_cn", "hant": "name_cn"}[lang]
-    summary = data.get(lang_name_key) or data.get("name_en") or data.get("name_cn") or path
-    description_bits = []
-    if data.get("summary"):
-        description_bits.append(data["summary"])
-    resp = data.get("response", {}) or {}
-    if resp.get("description"):
-        description_bits.append(resp["description"])
-    description = "\n\n".join(description_bits)
-
-    parameters: List[Dict[str, Any]] = []
-    path_params_in_url = set(PATH_PARAM_RE.findall(path))
-    req_params = ((data.get("request") or {}).get("params") or {})
-
-    # Path params → in: path
-    for name in path_params_in_url:
-        p_def = req_params.get(name) or {"type": "string", "required": True}
-        parameters.append({
-            "name": name,
-            "in": "path",
-            "required": True,
-            "description": _param_description(p_def, lang) or name,
-            "schema": _param_type_to_openapi(p_def.get("type", "string")),
-        })
-
-    body_params = {k: v for k, v in req_params.items() if k not in path_params_in_url}
-
-    if method == "get":
-        for name, p_def in body_params.items():
-            parameters.append({
-                "name": name,
-                "in": "query",
-                "required": bool(p_def.get("required")),
-                "description": _param_description(p_def, lang),
-                "schema": _param_type_to_openapi(p_def.get("type", "string")),
-            })
-        request_body = None
-    else:
-        # Build a JSON body schema
-        if body_params:
-            props = {}
-            required = []
-            for name, p_def in body_params.items():
-                schema = _param_type_to_openapi(p_def.get("type", "string"))
-                desc = _param_description(p_def, lang)
-                if desc:
-                    schema["description"] = desc
-                props[name] = schema
-                if p_def.get("required"):
-                    required.append(name)
-            body_schema: Dict[str, Any] = {"type": "object", "properties": props}
-            if required:
-                body_schema["required"] = required
-            example = (data.get("request") or {}).get("example")
-            content: Dict[str, Any] = {"schema": body_schema}
-            if isinstance(example, dict) and example:
-                content["example"] = example
-            request_body = {"required": bool(required), "content": {"application/json": content}}
-        else:
-            request_body = None
-
-    response_schema = _build_response_schema((resp or {}).get("schema") or {}, lang)
-    responses = {
-        "200": {
-            "description": resp.get("description") or "Success",
-            "content": {
-                "application/json": {"schema": response_schema},
-            },
-        }
-    }
-
-    op: Dict[str, Any] = {
-        "tags": [tag],
-        "summary": summary,
-        "description": description,
-        "parameters": parameters,
-        "responses": responses,
-    }
-    if not parameters:
-        op.pop("parameters")
-    if request_body is not None:
-        op["requestBody"] = request_body
-
-    return path, method, op
-
-
 # ---------------------------------------------------------------------------
-# TS template → OpenAPI operation
+# Source walking
 # ---------------------------------------------------------------------------
 
 
-def template_to_openapi_operation(
-    template: Dict[str, Any],
-    tag: str,
-    lang: str,
-    new_name: str,
-) -> Tuple[str, str, Dict[str, Any]]:
-    """Turn a data_porter template into an OpenAPI operation.
-
-    New-style endpoint: `POST /v1/datasets/<new_name>`. The dataset name lives
-    in the URL path, not the body. `new_name` comes from
-    `templates/template_map.json` (fallback: legacy `tool_name_template_id.json`).
-    """
-    tid = template.get("templateId", "")
-    template_name = _multi_get(template, "nameMulti", lang) or template.get("name") or tid
-
-    lang_ref = {"en": "en", "cn": "cn", "hant": "hant"}[lang]
-
-    # Build filter properties from schemas[]
-    filter_props: Dict[str, Any] = OrderedDict()
-    filter_required: List[str] = []
-    for s in template.get("schemas") or []:
-        key = s.get("key")
-        if not key:
-            continue
-        ptype = TYPE_TO_MDX.get(s.get("type", "input"), "string")
-        # coerce to openapi types
-        if ptype == "integer":
-            prop: Dict[str, Any] = {"type": "integer"}
-        elif ptype == "number":
-            prop = {"type": "number"}
-        elif ptype == "boolean":
-            prop = {"type": "boolean"}
-        elif ptype == "array":
-            prop = {"type": "array", "items": {"type": "string"}}
-        else:
-            prop = {"type": "string"}
-        label = _multi_get(s, "nameMulti", lang_ref) or s.get("name") or key
-        parts = [label]
-        placeholder = _multi_get(s, "placeholderMulti", lang_ref) or s.get("placeholder") or ""
-        if placeholder:
-            parts.append(placeholder)
-        ref = s.get("ref")
-        if ref:
-            ref_note = {"en": f"Options ref: `{ref}`.", "cn": f"选项 ref：`{ref}`。", "hant": f"選項 ref：`{ref}`。"}[lang_ref]
-            parts.append(ref_note)
-        prop["description"] = " ".join(p for p in parts if p)
-        filter_props[key] = prop
-        if s.get("force"):
-            filter_required.append(key)
-
-    body_prop: Dict[str, Any] = {
-        "type": "object",
-        "description": {"en": "Filter object.", "cn": "过滤对象。", "hant": "過濾物件。"}[lang_ref],
-        "properties": filter_props,
-    }
-    if filter_required:
-        body_prop["required"] = filter_required
-
-    # Response items from heads[]
-    item_props: Dict[str, Any] = OrderedDict()
-    for h in template.get("heads") or []:
-        if h.get("invisible"):
-            continue
-        di = h.get("dataIndex")
-        if not di:
-            continue
-        title_text = _multi_get(h, "titleMulti", lang_ref) or h.get("title") or di
-        desc = _multi_get(h, "descMulti", lang_ref) or h.get("desc") or ""
-        item_props[di] = {"type": "string", "description": f"{title_text}. {desc}".strip(". ")}
-
-    summary = {
-        "en": f"{template_name}",
-        "cn": f"{template_name}",
-        "hant": f"{template_name}",
-    }[lang_ref]
-
-    description = {
-        "en": (
-            f"Query the `{template_name}` dataset. Dataset name (in the URL path) is `{new_name}`."
-        ),
-        "cn": (
-            f"获取 `{template_name}` 数据集。URL path 中的数据集名为 `{new_name}`。"
-        ),
-        "hant": (
-            f"取得 `{template_name}` 資料集。URL path 中的資料集名為 `{new_name}`。"
-        ),
-    }[lang_ref]
-
-    op: Dict[str, Any] = OrderedDict([
-        ("tags", [tag]),
-        ("summary", summary),
-        ("description", description),
-        # Test-first so the playground defaults to the test environment.
-        ("servers", [
-            {"url": "https://b-api.longbridge.xyz", "description": "Test"},
-            {"url": "https://b-api.lbkrs.com", "description": "Production"},
-        ]),
-        ("requestBody", {
-            "required": True,
-            "content": {
-                "application/json": {
-                    "schema": {
-                        "type": "object",
-                        "properties": OrderedDict([
-                            ("body", body_prop),
-                            ("page", {"type": "integer", "default": 1, "description": {"en": "Page number (1-based).", "cn": "页码（从 1 开始）。", "hant": "頁碼（從 1 開始）。"}[lang_ref]}),
-                            ("page_size", {"type": "integer", "default": 20, "description": {"en": "Rows per page (10/20/50/100/200).", "cn": "每页行数（10/20/50/100/200）。", "hant": "每頁行數（10/20/50/100/200）。"}[lang_ref]}),
-                        ]),
-                    },
-                    "example": {"body": {}, "page": 1, "page_size": 20},
-                }
-            },
-        }),
-        ("responses", {
-            "200": {
-                "description": "Success",
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "items": {
-                                    "type": "array",
-                                    "items": {"type": "object", "properties": item_props},
-                                },
-                                "total": {"type": "integer", "description": {"en": "Total row count.", "cn": "总行数。", "hant": "總行數。"}[lang_ref]},
-                            },
-                        },
-                    }
-                },
-            }
-        }),
-    ])
-    path = f"/v1/datasets/{new_name}"
-    return path, "post", op
-
-
-# ---------------------------------------------------------------------------
-# TS template → data-porter MDX
-# ---------------------------------------------------------------------------
-
-
-TYPE_TO_MDX = {
-    "input": "string",
-    "text": "string",
-    "textarea": "string",
-    "select": "string",
-    "radio": "string",
-    "date": "string",
-    "daterange": "string",
-    "datetime": "string",
-    "datetimerange": "string",
-    "number": "number",
-    "int": "integer",
-    "checkbox": "boolean",
-    "switch": "boolean",
-    "cascader": "string",
-    "treeSelect": "string",
-    "multiSelect": "array",
-}
-
-
-def _multi_get(d: Dict[str, Any], key: str, lang: str) -> str:
-    """Read a nameMulti-style dict for the requested lang, falling back gracefully."""
-    fallback_order = {
-        "en": ["en", "zh-CN", "zh-HK"],
-        "cn": ["zh-CN", "en", "zh-HK"],
-        "hant": ["zh-HK", "zh-CN", "en"],
-    }[lang]
-    v = d.get(key) or {}
-    if isinstance(v, dict):
-        for k in fallback_order:
-            if v.get(k):
-                return str(v[k])
-    return ""
-
-
-def ts_template_to_mdx(
-    template: Dict[str, Any],
-    tag: str,
-    lang: str,
-    slug: str,
-    new_name: str,
-) -> str:
-    tid = template.get("templateId", "")
-    template_name = _multi_get(template, "nameMulti", lang) or template.get("name") or tid
-
-    title = template_name or tid
-    frontmatter = OrderedDict()
-    frontmatter["title"] = title
-    frontmatter["description"] = f"dataset: {new_name}"
-    frontmatter["openapi"] = f"post /v1/datasets/{new_name}"
-
-    fm_lines = ["---"]
-    for k, v in frontmatter.items():
-        fm_lines.append(f'{k}: {json.dumps(v, ensure_ascii=False)}')
-    fm_lines.append("---")
-    body: List[str] = ["\n".join(fm_lines), ""]
-
-    intro = {
-        "en": (
-            f"Query the **{title}** dataset. Endpoint: `POST /v1/datasets/{new_name}`. "
-            f"The base-URL dropdown in the playground lets you switch between Test (default) and Production."
-        ),
-        "cn": (
-            f"获取 **{title}** 数据集。接口：`POST /v1/datasets/{new_name}`。"
-            f"Playground 顶部 Base URL 下拉可切换测试（默认）与生产环境。"
-        ),
-        "hant": (
-            f"取得 **{title}** 資料集。接口：`POST /v1/datasets/{new_name}`。"
-            f"Playground 頂部 Base URL 下拉可切換測試（預設）與生產環境。"
-        ),
-    }[lang]
-    body.append(intro)
-    body.append("")
-
-    # ---- Example request (also useful for copy/paste) ----
-    example_heading = {"en": "### Request Example", "cn": "### 请求示例", "hant": "### 請求範例"}[lang]
-    body.append(example_heading)
-    body.append("")
-    example_body = OrderedDict([
-        ("body", {}),
-        ("page", 1),
-        ("page_size", 20),
-    ])
-    body.append("```json")
-    body.append(json.dumps(example_body, ensure_ascii=False, indent=2))
-    body.append("```")
-    body.append("")
-
-    return "\n".join(body).rstrip() + "\n"
-
-
-# ---------------------------------------------------------------------------
-# Walk source & drive conversion
-# ---------------------------------------------------------------------------
-
-
-IGNORE_TOP = {"scripts", "templates", ".git"}
-
-
-def walk_source(source: Path):
-    """Yield (top_dir_name, sub_parts_tuple, filename, kind, full_path).
-
-    `sub_parts_tuple` is the tuple of intermediate directory names between the
-    top module and the file, preserving the source's on-disk ordering so
-    downstream group building keeps the same order.
-    """
-    tops = [t for t in os.listdir(source) if (source / t).is_dir() and t not in IGNORE_TOP and re.search(r"[\(（]", t)]
-    tops.sort()
+def walk_yaml_ops(source: Path):
+    """Yield (menu_path_tuple, path, method, op_dict) in stable order."""
+    seen: set = set()
+    dupes = 0
+    tops = sorted(
+        d for d in os.listdir(source)
+        if (source / d).is_dir() and d not in SKIP_DIRS and TOP_DIR_RE.match(d)
+    )
     for top in tops:
-        full_top = source / top
-        for root, dirs, files in os.walk(full_top):
+        for root, dirs, files in os.walk(source / top):
             dirs.sort()
-            files_sorted = sorted(files)
-            rel = os.path.relpath(root, full_top)
-            sub_parts = () if rel == "." else tuple(rel.split(os.sep))
-            for f in files_sorted:
-                if f.endswith(".ts"):
-                    yield top, sub_parts, f, "ts", Path(root) / f
-                elif f.endswith(".json"):
-                    yield top, sub_parts, f, "json", Path(root) / f
+            for f in sorted(files):
+                if not f.endswith((".yaml", ".yml")):
+                    continue
+                fp = Path(root) / f
+                try:
+                    doc = yaml.safe_load(fp.read_text(encoding="utf-8"))
+                except Exception as e:
+                    print(f"[warn] yaml parse failed {fp}: {e}", file=sys.stderr)
+                    continue
+                for path, methods in (doc.get("paths") or {}).items():
+                    for method, op in methods.items():
+                        if not isinstance(op, dict):
+                            continue
+                        key = (path, method)
+                        if key in seen:
+                            dupes += 1
+                            continue
+                        seen.add(key)
+                        menu_path = tuple(op.get("x-menu-path") or (top,))
+                        yield menu_path, path, method, op, dupes
 
 
 # ---------------------------------------------------------------------------
-# Main
+# Spec assembly
 # ---------------------------------------------------------------------------
 
 
 def build_openapi_shell(tags: List[Dict[str, str]]) -> Dict[str, Any]:
     return OrderedDict([
-        ("openapi", "3.0.1"),
+        ("openapi", "3.1.1"),
         ("info", {
             "title": "Longport Whale Broker API",
             "description": "Institution-grade server-to-server API for brokers running on Longport Whale.",
             "version": "2.0.0",
         }),
-        # Test is listed first so the playground defaults to it — safer for
-        # users clicking "Try" without changing anything.
+        # Test first so the playground defaults to it.
         ("servers", [
             {"url": "https://b-api.longbridge.xyz", "description": "Test"},
             {"url": "https://b-api.lbkrs.com", "description": "Production"},
@@ -673,17 +270,19 @@ def build_openapi_shell(tags: List[Dict[str, str]]) -> Dict[str, Any]:
         ("paths", OrderedDict()),
         ("components", {
             "securitySchemes": {
-                "accessToken": {"type": "apiKey", "in": "header", "name": "Authorization", "description": "ACCESS_TOKEN issued to the broker."},
+                "bearerAuth": {
+                    "type": "http",
+                    "scheme": "bearer",
+                    "description": "ACCESS_TOKEN issued to the broker, sent as `Authorization: Bearer <token>`.",
+                },
             }
         }),
-        ("security", [{"accessToken": []}]),
+        ("security", [{"bearerAuth": []}]),
     ])
 
 
-# Manually-maintained groups inside the Broker API tab. The generator only
-# owns the business-domain reference groups; these are prepended/appended
-# around them so a re-run never wipes the hand-written Overview / Get
-# Started / Operations sections.
+# Manually-maintained groups around the generated reference groups in the
+# Broker API tab — survive regeneration.
 BROKER_API_MANUAL_GROUPS = {
     "en": {
         "prefix": [
@@ -727,15 +326,6 @@ BROKER_API_MANUAL_GROUPS = {
 }
 
 
-def group_localized_name(module_key: Optional[str], en_name: str, cn_name: str, menu: Dict[str, Any], lang: str) -> str:
-    if module_key and module_key in menu:
-        lookup_key = {"en": "en", "cn": "zh-CN", "hant": "zh-HK"}[lang]
-        val = menu[module_key].get(lookup_key)
-        if val:
-            return val
-    return {"en": en_name, "cn": cn_name, "hant": cn_name}[lang]
-
-
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--source", default=str(DEFAULT_SOURCE))
@@ -747,176 +337,80 @@ def main() -> int:
         print(f"source not found: {source}", file=sys.stderr)
         return 2
 
-    template_names = load_template_id_to_name(source)
     menu = load_menu(source)
 
-    # --- collect all endpoints/templates grouped by top-level module + sub path ---
-    # modules[top] = {
-    #   cn, en, menu_key,
-    #   items_by_subpath: OrderedDict[tuple[str,...], list[entry]]
-    # }
-    # entry = {"kind": "rest"|"porter", ...}
-    modules_order: List[str] = []
-    modules: Dict[str, Dict[str, Any]] = OrderedDict()
+    # ---- collect ops -----------------------------------------------------
+    # nav_tree: OrderedDict keyed by menu_path tuples → list of (path, method)
+    nav_tree: "OrderedDict[Tuple[str, ...], List[Tuple[str, str]]]" = OrderedDict()
+    ops: List[Tuple[Tuple[str, ...], str, str, Dict[str, Any]]] = []
+    dupes = 0
+    for menu_path, path, method, op, dupes in walk_yaml_ops(source):
+        nav_tree.setdefault(menu_path, []).append((path, method))
+        ops.append((menu_path, path, method, op))
 
-    stats = {"rest": 0, "porter": 0, "dupes": 0, "porter_dupes": 0}
-    seen_paths: set = set()
-    seen_slugs: set = set()
+    n_datasets = sum(1 for _, p, _, _ in ops if p.startswith("/v1/datasets/") and not p.endswith("/download"))
+    n_downloads = sum(1 for _, p, _, _ in ops if p.endswith("/download"))
+    stats = {
+        "ops": len(ops),
+        "datasets": n_datasets,
+        "downloads": n_downloads,
+        "rest": len(ops) - n_datasets - n_downloads,
+        "dupes": dupes,
+    }
 
-    for top, sub_parts, fname, kind, full in walk_source(source):
-        cn, en = parse_top_dir(top)
-        if top not in modules:
-            modules[top] = {
-                "cn": cn,
-                "en": en,
-                "menu_key": TOP_DIR_TO_MENU_KEY.get(en),
-                "items_by_subpath": OrderedDict(),
-            }
-            modules_order.append(top)
-        mod = modules[top]
-        tag = en
-        bucket = mod["items_by_subpath"].setdefault(sub_parts, [])
+    # top-level module order (first-seen)
+    top_order: List[str] = []
+    for menu_path in nav_tree:
+        if menu_path[0] not in top_order:
+            top_order.append(menu_path[0])
 
-        if kind == "json":
-            try:
-                data = json.loads(full.read_text(encoding="utf-8"))
-            except Exception as e:
-                print(f"[warn] failed to load {full}: {e}", file=sys.stderr)
-                continue
-            if not isinstance(data, dict) or not data.get("path"):
-                continue
-            method_upper = (data.get("method") or "POST").upper()
-            # Skip placeholder / non-endpoint files
-            if method_upper not in {"GET", "POST", "PUT", "DELETE", "PATCH"}:
-                continue
-            if not data["path"].startswith("/"):
-                continue
-            key = (data["path"], method_upper)
-            if key in seen_paths:
-                stats["dupes"] += 1
-                continue
-            seen_paths.add(key)
-            bucket.append({"kind": "rest", "data": data, "tag": tag})
-            stats["rest"] += 1
-        else:  # ts
-            template = parse_ts_template(full)
-            if not template:
-                continue
-            tid = template.get("templateId")
-            if not tid:
-                continue
-            name = template_names.get(tid) or tid
-            slug = kebab(name)
-            if slug in seen_slugs:
-                stats["porter_dupes"] += 1
-                continue
-            seen_slugs.add(slug)
-            bucket.append({
-                "kind": "porter",
-                "template": template,
-                "slug": slug,
-                "new_name": name,
-                "tag": tag,
-            })
-            stats["porter"] += 1
-
-    # --- Build openapi.{lang}.json (three variants) ---
-    tags_by_key: List[str] = []
-    for top in modules_order:
-        tag = modules[top]["en"]
-        if tag not in tags_by_key:
-            tags_by_key.append(tag)
-
+    # ---- per-language specs ----------------------------------------------
     outputs = {}
-    for lang_key, file_suffix, _src_key, _menu_key in LANGS:
-        lang_bucket = {"en": "en", "cn": "cn", "zh-Hant": "hant"}[lang_key]
-        openapi = build_openapi_shell([{"name": t} for t in tags_by_key])
-        for top in modules_order:
-            mod = modules[top]
-            for bucket in mod["items_by_subpath"].values():
-                for entry in bucket:
-                    if entry["kind"] == "rest":
-                        path, method, op = json_to_operation(entry["data"], entry["tag"], lang_bucket)
-                        openapi["paths"].setdefault(path, OrderedDict())[method] = op
-                    elif entry["kind"] == "porter":
-                        path, method, op = template_to_openapi_operation(entry["template"], entry["tag"], lang_bucket, entry["new_name"])
-                        openapi["paths"].setdefault(path, OrderedDict())[method] = op
-        outputs[lang_key] = openapi
+    for lang_key, file_suffix, sfx in LANGS:
+        tags = [{"name": localized_top_name(t, menu, lang_key)} for t in top_order]
+        spec = build_openapi_shell(tags)
+        for menu_path, path, method, op in ops:
+            lop = localize(op, sfx, lang_key)
+            lop.pop("security", None)      # global security covers it
+            lop.pop("servers", None)
+            lop["tags"] = [localized_top_name(menu_path[0], menu, lang_key)]
+            spec["paths"].setdefault(path, OrderedDict())[method] = lop
+        outputs[lang_key] = spec
 
-    # --- Build MDX pages per language ---
-    mdx_files: Dict[Path, str] = {}
-    for lang_key, file_suffix, _src_key, _menu_key in LANGS:
-        lang_bucket = {"en": "en", "cn": "cn", "zh-Hant": "hant"}[lang_key]
-        for top in modules_order:
-            mod = modules[top]
-            for bucket in mod["items_by_subpath"].values():
-                for entry in bucket:
-                    if entry["kind"] != "porter":
-                        continue
-                    mdx = ts_template_to_mdx(entry["template"], entry["tag"], lang_bucket, entry["slug"], entry["new_name"])
-                    out = REPO_ROOT / LANG_DIRS[lang_key] / "api-reference" / "data-porter" / f"{entry['slug']}.mdx"
-                    mdx_files[out] = mdx
-
-    # --- Build docs.json ---
+    # ---- docs.json nav -----------------------------------------------------
     docs_json_path = REPO_ROOT / "docs.json"
     docs = json.loads(docs_json_path.read_text(encoding="utf-8"))
 
-    def _entry_page(entry: Dict[str, Any], lang_key: str) -> str:
-        if entry["kind"] == "rest":
-            data = entry["data"]
-            path = re.sub(r"<([^>]+)>", r"{\1}", data.get("path", ""))
-            method = (data.get("method") or "POST").upper()
-            return f"{method} {path}"
-        return f"{LANG_DIRS[lang_key]}/api-reference/data-porter/{entry['slug']}"
-
-    def _subdir_localized(name: str, lang_bucket: str) -> str:
-        cn, en = parse_top_dir(name)
-        if cn == en:  # no parenthesised english; fall back to the raw name
-            return name
-        return {"en": en, "cn": cn, "hant": cn}[lang_bucket]
-
-    def _build_nested_pages(items_by_subpath: "OrderedDict[Tuple[str, ...], List[Dict[str, Any]]]", lang_key: str, lang_bucket: str) -> List[Any]:
-        """Convert subpath → entries dict into a Mintlify pages tree.
-
-        Groups keyed by identical sub-path prefixes become nested `{group, pages}` objects.
-        Files sitting at a shallower level are listed alongside deeper groups, in
-        source discovery order.
-        """
-        # Build a tree: node = {"children": OrderedDict[name, node], "entries": list}
-        root: Dict[str, Any] = {"children": OrderedDict(), "entries": []}
-        for sub_parts, entries in items_by_subpath.items():
+    def build_groups(lang_key: str, file_suffix: str) -> List[Dict[str, Any]]:
+        # tree: {top: {"__pages": [...], sub: {...}}}
+        root: Dict[str, Any] = OrderedDict()
+        for menu_path, entries in nav_tree.items():
             node = root
-            for part in sub_parts:
-                node = node["children"].setdefault(part, {"children": OrderedDict(), "entries": []})
-            node["entries"].extend(entries)
+            for part in menu_path:
+                node = node.setdefault(part, OrderedDict())
+            node.setdefault("__pages", []).extend(entries)
 
-        def render(node: Dict[str, Any]) -> List[Any]:
+        def render(node: Dict[str, Any], lang_key: str) -> List[Any]:
             out: List[Any] = []
-            for entry in node["entries"]:
-                out.append(_entry_page(entry, lang_key))
-            for child_name, child_node in node["children"].items():
-                child_pages = render(child_node)
-                if not child_pages:
+            for pm in node.get("__pages", []):
+                out.append(f"{pm[1].upper()} {pm[0]}")
+            for child, child_node in node.items():
+                if child == "__pages":
                     continue
-                out.append({
-                    "group": _subdir_localized(child_name, lang_bucket),
-                    "pages": child_pages,
-                })
+                child_pages = render(child_node, lang_key)
+                if child_pages:
+                    out.append({"group": localized_sub_name(child, lang_key), "pages": child_pages})
             return out
 
-        return render(root)
-
-    def build_api_groups(lang_key: str, file_suffix: str, lang_bucket: str) -> List[Dict[str, Any]]:
-        groups: List[Dict[str, Any]] = []
-        for top in modules_order:
-            mod = modules[top]
-            group_name = group_localized_name(mod["menu_key"], mod["en"], mod["cn"], menu, lang_bucket)
-            icon = MODULE_ICONS.get(mod["menu_key"], "layers") if mod["menu_key"] else MODULE_ICONS.get("shared", "component")
-            pages = _build_nested_pages(mod["items_by_subpath"], lang_key, lang_bucket)
+        groups = []
+        for top in top_order:
+            _, en_name = parse_top_dir(top)
+            icon = MODULE_ICONS.get(TOP_DIR_TO_MENU_KEY.get(en_name) or "shared", "layers")
+            pages = render(root[top], lang_key)
             if not pages:
                 continue
             groups.append({
-                "group": group_name,
+                "group": localized_top_name(top, menu, lang_key),
                 "icon": icon,
                 "openapi": {
                     "source": f"openapi.{file_suffix}.json",
@@ -926,46 +420,35 @@ def main() -> int:
             })
         return groups
 
-    # Rebuild each language's API Reference tab
-    lang_bucket_map = {"en": "en", "cn": "cn", "zh-Hant": "hant"}
-    file_suffix_map = {"en": "en", "cn": "cn", "zh-Hant": "zh-hant"}
-    for lang_conf in docs["navigation"]["languages"]:
-        lk = lang_conf["language"]
-        for tab in lang_conf["tabs"]:
+    file_suffix_map = {lk: fs for lk, fs, _ in LANGS}
+    for lang in docs["navigation"]["languages"]:
+        lk = lang["language"]
+        for tab in lang["tabs"]:
             if tab.get("tab") in {"Broker API", "API Reference", "API 参考", "API 參考"} or tab.get("icon") == "braces":
                 manual = BROKER_API_MANUAL_GROUPS.get(lk, {"prefix": [], "suffix": []})
-                tab["groups"] = (
-                    manual["prefix"]
-                    + build_api_groups(lk, file_suffix_map[lk], lang_bucket_map[lk])
-                    + manual["suffix"]
-                )
+                tab["groups"] = manual["prefix"] + build_groups(lk, file_suffix_map[lk]) + manual["suffix"]
 
-    # --- Write outputs ---
+    # ---- write -------------------------------------------------------------
     if args.dry_run:
         print(json.dumps(stats, indent=2))
-        print("would write:")
-        for lang_key, file_suffix, *_ in LANGS:
-            print(f"  openapi.{file_suffix}.json")
-        print(f"  {len(mdx_files)} MDX files")
-        print("  docs.json")
         return 0
 
-    for lang_key, file_suffix, *_ in LANGS:
+    for lang_key, file_suffix, _ in LANGS:
         p = REPO_ROOT / f"openapi.{file_suffix}.json"
-        p.write_text(json.dumps(outputs[lang_key], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        # default=str: YAML auto-parses bare dates in examples into datetime.date
+        p.write_text(json.dumps(outputs[lang_key], ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
 
-    # Clean out old data-porter mdx that we didn't just write (idempotent regen)
-    written = set(mdx_files.keys())
-    for lang_key in LANG_DIRS.values():
-        dp_dir = REPO_ROOT / lang_key / "api-reference" / "data-porter"
-        if dp_dir.exists():
-            for existing in dp_dir.iterdir():
-                if existing.suffix == ".mdx" and existing not in written:
-                    existing.unlink()
-
-    for path, text in mdx_files.items():
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(text, encoding="utf-8")
+    # v2 generates no MDX — clean up any leftover generated pages.
+    for lang_dir in LANG_DIRS.values():
+        dp = REPO_ROOT / lang_dir / "api-reference" / "data-porter"
+        if dp.exists():
+            for f in dp.iterdir():
+                if f.suffix == ".mdx":
+                    f.unlink()
+            try:
+                dp.rmdir()
+            except OSError:
+                pass
 
     docs_json_path.write_text(json.dumps(docs, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
