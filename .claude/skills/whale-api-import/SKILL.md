@@ -71,7 +71,7 @@ Content-Type: application/json
    ```bash
    python3 scripts/convert.py --dry-run
    ```
-   预期输出类似：`{"rest": 590, "porter": 358, "dupes": 11, "porter_dupes": 3}`。`dupes` = 同 `path+method` 被两个业务文件重复描述；`porter_dupes` = 同 `template_id` 被多个 `.ts` 引用（3 个已知复用 template，是正常的）。
+   预期输出类似：`{"rest": 588, "porter": 355, "dupes": 11, "porter_dupes": 3}`（数字随源仓库演进浮动，量级对即可）。`dupes` = 同 `path+method` 被两个业务文件重复描述；`porter_dupes` = 同 `template_id` 被多个 `.ts` 引用（3 个已知复用 template，是正常的）。
 3. **实跑**
    ```bash
    python3 scripts/convert.py
@@ -186,6 +186,7 @@ MDX 正文只保留 intro + JSON 请求示例。字段 / 响应结构完全由 o
 | `mint dev` 报 `ENOTEMPTY: directory not empty ... /Users/*/.mintlify/mint/...` | Mintlify CLI 内部 cache 冲突，跟当前项目内容无关。`rm -rf ~/.mintlify/mint/apps/client/src/_props/` 后重跑 |
 | MDX 里英文页显示中文标题 | 源 `.ts` 的 `nameMulti` 只有中文；这是源的缺陷，无法在脚本里凭空造英文；若客户要求可以在源仓库补 `nameMulti.en` |
 | 只想更新某几个接口 | 目前脚本是"整体重跑"。要选择性更新，把 `walk_source` 加一个 include glob 或直接手改产物。整体重跑是幂等的，通常不需要选择性更新 |
+| 源里删除 / 改名了某个 dataset，站点手写页还引用它 | 重跑后 `rg "旧slug|旧name" en/ cn/ zh-hant/ --glob '!api-reference/**'` 检查手写页（quickstart / authentication / changelog / trading-api 里有请求示例引用具体 dataset）。示例统一用 `account_cash_balances`（核心稳定数据集），源里删谁都尽量别删它 |
 
 ## 手工维护 vs 脚本重跑
 
