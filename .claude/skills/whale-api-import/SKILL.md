@@ -64,17 +64,21 @@ paths:
    ```bash
    python3 scripts/convert.py
    ```
-4. **本地预览**
+4. **严格校验（必须过，比本地预览更重要）**
+   ```bash
+   mint validate   # exit 0 才能提交
+   ```
+   **`mint dev` 是宽松模式**：有 MDX 解析错误的页面本地照样 200，但 Mintlify 云端构建会把它们剔除 —— 线上表现为侧边栏显示原始 slug + 点击 404。已知易错源（来自 Lark HTML）：裸 `*`/`~` 跨行配对成强调/删除线、多行 `<table>/<div>/<ul>` 被 markdown 分段拆散标签对。`convert_console.py` 的 `collapse_html_blocks()` 已做通用处理（HTML 块合并单行 + 文本段 `*`/`~` 转义），新增内容再报错优先检查这两类。
+5. **本地预览**
    ```bash
    mint dev --port 3999 > /tmp/mint.log 2>&1 &
-   # 等 "preview ready"；grep -iE "invalid|not expected" /tmp/mint.log 应无输出
    ```
-5. **手写页一致性检查**（重要）
+6. **手写页一致性检查**（重要）
    ```bash
    rg "旧数据集名 | 已删路径" en/ cn/ zh-hant/ --glob '!api-reference/**'
    ```
    quickstart / authentication / changelog / trading-api 里有请求示例引用具体数据集（当前统一用 `account_cash_balances`，核心稳定数据集）。源里删除/改名数据集后要同步。
-6. **提交**
+7. **提交**
    ```bash
    git add openapi.*.json docs.json
    git commit -m "chore: regenerate Broker API from whale-openapi-docs"
