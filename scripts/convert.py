@@ -233,6 +233,9 @@ def localize(node: Any, sfx: Optional[str], lang_key: str) -> Any:
 
     for k, v in node.items():
         ks = str(k)
+        if ks == "x-value-source":
+            out[k] = v          # preserve: declares the interface a field's values come from
+            continue
         if ks.startswith("x-"):
             continue
         if ks == "description" and isinstance(v, str):
