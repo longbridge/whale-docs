@@ -42,7 +42,7 @@ paths:
 | 产物 | 说明 |
 |---|---|
 | `openapi.{en,cn,zh-hant}.json` | 三份单语言 spec：`localize()` 把 `x-*` 字段按语言解析进 `summary`/`description` 后**全部剥离**。枚举标签、字段名标签拼进 description |
-| `docs.json` Broker API tab | 分组来自 `x-menu-path`（嵌套 1-4 层，标题按 `中文(English)` 括号格式拆语言；顶层名走 `menu.json`+`TOP_DIR_TO_MENU_KEY`），叶子是 `"METHOD /path"` 原生条目 |
+| `docs.json` Broker API tab | 分组来自 `x-menu-path`（嵌套 1-4 层，标题按 `中文(English)` 括号格式拆语言；顶层名走 `menu.json`+`TOP_DIR_TO_MENU_KEY`）。**分组顺序（顶层模块 + 每层子分组）按 `menu.json` 的完整 `data.menus[].routes` 树排**（`build_menu_tree`+`menu_sort_key`，按段的 en/zh-CN 逐层匹配），不在 menu.json 里的目录回退字母序排在已知项之后。叶子是 `"METHOD /path"` 原生条目，顺序保持文件遍历序。 |
 | ~~MDX~~ | **v2 不再生成任何 MDX**。数据集就是普通 OpenAPI operation。`{lang}/api-reference/data-porter/` 已删除，脚本会清理残留 |
 
 **手工组保护**：`BROKER_API_MANUAL_GROUPS`（convert.py 内）定义 Broker API tab 里手工维护的 Overview / Get Started / Operations 组，重跑时自动前后拼接，不会被覆盖。

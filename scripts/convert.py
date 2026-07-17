@@ -71,6 +71,47 @@ def load_menu(source: Path) -> Dict[str, Dict[str, str]]:
     return {menu["key"]: menu["name"] for menu in m["data"]["menus"]}
 
 
+def build_menu_tree(source: Path) -> List[Dict[str, Any]]:
+    """The full nested menu.json tree (data.menus, each node has name + routes).
+    This is the authoritative ORDER source for both top-level modules and the
+    sub-groups under them; the on-disk directory walk is only alphabetical."""
+    p = source / "menu.json"
+    if not p.exists():
+        return []
+    return json.loads(p.read_text(encoding="utf-8")).get("data", {}).get("menus", [])
+
+
+def _match_menu_node(nodes: List[Dict[str, Any]], zh: str, en: str):
+    """Find the (index, node) among `nodes` whose name matches the en or zh-CN
+    of a menu-path segment (segments look like '公司行动(Corporate Action)')."""
+    for i, n in enumerate(nodes):
+        nm = n.get("name") or {}
+        nen = (nm.get("en") or "").strip().lower()
+        nzh = (nm.get("zh-CN") or "").strip()
+        if (en and nen == en.strip().lower()) or (zh and nzh == zh.strip()):
+            return i, n
+    return None
+
+
+def menu_sort_key(menu_tree: List[Dict[str, Any]], menu_path: Tuple[str, ...]):
+    """Sort key that orders a menu_path by its position in the menu.json tree,
+    level by level. Segments found in menu.json sort before unknown ones (which
+    fall back to alphabetical by name), so extra/renamed dirs still land somewhere
+    stable instead of breaking the run."""
+    key = []
+    nodes = menu_tree
+    for part in menu_path:
+        zh, en = parse_top_dir(part)
+        hit = _match_menu_node(nodes, zh, en)
+        if hit:
+            key.append((0, hit[0], ""))
+            nodes = hit[1].get("routes") or []
+        else:
+            key.append((1, 0, (en or zh).lower()))
+            nodes = []
+    return tuple(key)
+
+
 TOP_DIR_TO_MENU_KEY = {
     "Account Assets": "portfolio",
     "Cash Management": "atm",
@@ -168,6 +209,12 @@ def localize(node: Any, sfx: Optional[str], lang_key: str) -> Any:
 
     out: Dict[str, Any] = {}
     desc = _pick(node, "description", sfx)
+    # A schema property can be literally keyed "description"/"summary" (a real
+    # field whose dataIndex is that word). Only treat description/summary as
+    # localizable TEXT when the value is a string; a dict/list value is an
+    # ordinary child node and must be recursed into, not swallowed/str()-ified.
+    if not isinstance(desc, str):
+        desc = None
     name_label = None
     if "x-name-cn" in node or f"x-name-{sfx}" in node or "x-name-en" in node:
         if sfx:
@@ -188,9 +235,9 @@ def localize(node: Any, sfx: Optional[str], lang_key: str) -> Any:
         ks = str(k)
         if ks.startswith("x-"):
             continue
-        if ks == "description":
-            continue  # handled below
-        if ks == "summary":
+        if ks == "description" and isinstance(v, str):
+            continue  # localizable text, handled below
+        if ks == "summary" and isinstance(v, str):
             out[k] = _pick(node, "summary", sfx) or v
             continue
         out[k] = localize(v, sfx, lang_key)
@@ -338,6 +385,7 @@ def main() -> int:
         return 2
 
     menu = load_menu(source)
+    menu_tree = build_menu_tree(source)
 
     # ---- collect ops -----------------------------------------------------
     # nav_tree: OrderedDict keyed by menu_path tuples → list of (path, method)
@@ -358,11 +406,12 @@ def main() -> int:
         "dupes": dupes,
     }
 
-    # top-level module order (first-seen)
+    # top-level module order: follow menu.json, not the alphabetical dir walk.
     top_order: List[str] = []
     for menu_path in nav_tree:
         if menu_path[0] not in top_order:
             top_order.append(menu_path[0])
+    top_order.sort(key=lambda t: menu_sort_key(menu_tree, (t,)))
 
     # ---- per-language specs ----------------------------------------------
     outputs = {}
@@ -390,14 +439,16 @@ def main() -> int:
                 node = node.setdefault(part, OrderedDict())
             node.setdefault("__pages", []).extend(entries)
 
-        def render(node: Dict[str, Any], lang_key: str) -> List[Any]:
+        def render(node: Dict[str, Any], lang_key: str, prefix: Tuple[str, ...]) -> List[Any]:
             out: List[Any] = []
             for pm in node.get("__pages", []):
                 out.append(f"{pm[1].upper()} {pm[0]}")
-            for child, child_node in node.items():
-                if child == "__pages":
-                    continue
-                child_pages = render(child_node, lang_key)
+            children = [(c, cn) for c, cn in node.items() if c != "__pages"]
+            # order sub-groups by menu.json (falls back to alphabetical for
+            # anything not in the menu tree).
+            children.sort(key=lambda kv: menu_sort_key(menu_tree, prefix + (kv[0],)))
+            for child, child_node in children:
+                child_pages = render(child_node, lang_key, prefix + (child,))
                 if child_pages:
                     out.append({"group": localized_sub_name(child, lang_key), "pages": child_pages})
             return out
@@ -406,7 +457,7 @@ def main() -> int:
         for top in top_order:
             _, en_name = parse_top_dir(top)
             icon = MODULE_ICONS.get(TOP_DIR_TO_MENU_KEY.get(en_name) or "shared", "layers")
-            pages = render(root[top], lang_key)
+            pages = render(root[top], lang_key, (top,))
             if not pages:
                 continue
             groups.append({
