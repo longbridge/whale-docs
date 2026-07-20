@@ -166,7 +166,19 @@ def localized_top_name(raw: str, menu: Dict[str, Any], lang_key: str) -> str:
     return en if lang_key == "en" else cn
 
 
+# Display-name overrides for the nav: the on-disk directory name is kept as
+# repo-internal organization (see .claude/skills/whale-openapi-spec-gen), but
+# the docs.json nav label it feeds into IS consumer-facing, so it must match
+# the "Data Dictionary" terminology used in each ref operation's own text.
+SUB_NAME_OVERRIDES = {
+    "枚举引用(Ref Enums)": {"en": "Data Dictionary", "cn": "数据字典", "zh-Hant": "數據字典"},
+}
+
+
 def localized_sub_name(raw: str, lang_key: str) -> str:
+    override = SUB_NAME_OVERRIDES.get(raw)
+    if override:
+        return override[lang_key]
     cn, en = parse_top_dir(raw)
     return en if lang_key == "en" else cn
 
@@ -266,9 +278,12 @@ def localize(node: Any, sfx: Optional[str], lang_key: str) -> Any:
 
 
 def walk_yaml_ops(source: Path):
-    """Yield (menu_path_tuple, path, method, op_dict) in stable order."""
-    seen: set = set()
-    dupes = 0
+    """Yield (menu_path_tuple, path, method, op_dict) for every operation found,
+    in stable file order. Does NOT dedupe a (path, method) seen in more than one
+    file — that happens legitimately when the same backend endpoint is called
+    from two different frontend scenarios (e.g. an "Adjust" action and a
+    separate "Re-execute" action hitting the same route); the caller decides
+    how to merge those into one spec entry (see `pick_canonical_ops` below)."""
     tops = sorted(
         d for d in os.listdir(source)
         if (source / d).is_dir() and d not in SKIP_DIRS and TOP_DIR_RE.match(d)
@@ -289,13 +304,55 @@ def walk_yaml_ops(source: Path):
                     for method, op in methods.items():
                         if not isinstance(op, dict):
                             continue
-                        key = (path, method)
-                        if key in seen:
-                            dupes += 1
-                            continue
-                        seen.add(key)
                         menu_path = tuple(op.get("x-menu-path") or (top,))
-                        yield menu_path, path, method, op, dupes
+                        yield menu_path, path, method, op
+
+
+def _op_richness(op: Dict[str, Any]) -> Tuple[int, int, int]:
+    """(required-field count, total description length, property count) —
+    used to pick which operation "wins" as the canonical spec entry when the
+    same (path, method) is documented from more than one call site. More
+    required fields / more per-field description text means a more rigorously
+    documented source, so that one wins; the loser's own menu path is still
+    kept as an additional nav location for the same (merged) operation."""
+    try:
+        schema = op["requestBody"]["content"]["application/json"]["schema"]
+        props = schema.get("properties", {})
+        required = len(schema.get("required", []))
+    except Exception:
+        props = {}
+        required = 0
+    params = op.get("parameters") or []
+    desc_len = sum(len(str(p.get("description", ""))) for p in props.values())
+    desc_len += sum(len(str(p.get("description", ""))) for p in params)
+    return (required, desc_len, len(props) + len(params))
+
+
+def pick_canonical_ops(source: Path):
+    """Group every yielded op by (path, method); pick the richest one (see
+    `_op_richness`) as the canonical spec entry, but register every distinct
+    menu path that referenced this (path, method) as a nav location for it —
+    so a shared endpoint documented from two business pages shows up, and
+    links to the same page, from both."""
+    canonical: "OrderedDict[Tuple[str, str], Dict[str, Any]]" = OrderedDict()
+    menu_paths: "OrderedDict[Tuple[str, str], List[Tuple[str, ...]]]" = OrderedDict()
+    dupes = 0
+    for menu_path, path, method, op in walk_yaml_ops(source):
+        key = (path, method)
+        paths_for_key = menu_paths.setdefault(key, [])
+        if menu_path not in paths_for_key:
+            paths_for_key.append(menu_path)
+        if key not in canonical:
+            canonical[key] = op
+        else:
+            dupes += 1
+            if _op_richness(op) > _op_richness(canonical[key]):
+                canonical[key] = op
+
+    for key, op in canonical.items():
+        path, method = key
+        for menu_path in menu_paths[key]:
+            yield menu_path, path, method, op, dupes
 
 
 # ---------------------------------------------------------------------------
@@ -392,12 +449,17 @@ def main() -> int:
 
     # ---- collect ops -----------------------------------------------------
     # nav_tree: OrderedDict keyed by menu_path tuples → list of (path, method)
+    # A (path, method) can have more than one menu_path (see pick_canonical_ops)
+    # when the same endpoint is genuinely called from two business pages — it
+    # gets a nav entry under each, but only ONE operation object in `ops`/the
+    # generated spec (the richest one wins).
     nav_tree: "OrderedDict[Tuple[str, ...], List[Tuple[str, str]]]" = OrderedDict()
-    ops: List[Tuple[Tuple[str, ...], str, str, Dict[str, Any]]] = []
+    ops_by_key: "OrderedDict[Tuple[str, str], Tuple[Tuple[str, ...], str, str, Dict[str, Any]]]" = OrderedDict()
     dupes = 0
-    for menu_path, path, method, op, dupes in walk_yaml_ops(source):
+    for menu_path, path, method, op, dupes in pick_canonical_ops(source):
         nav_tree.setdefault(menu_path, []).append((path, method))
-        ops.append((menu_path, path, method, op))
+        ops_by_key.setdefault((path, method), (menu_path, path, method, op))
+    ops: List[Tuple[Tuple[str, ...], str, str, Dict[str, Any]]] = list(ops_by_key.values())
 
     n_datasets = sum(1 for _, p, _, _ in ops if p.startswith("/v1/datasets/") and not p.endswith("/download"))
     n_downloads = sum(1 for _, p, _, _ in ops if p.endswith("/download"))
