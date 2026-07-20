@@ -426,6 +426,10 @@ def main() -> int:
             lop.pop("security", None)      # global security covers it
             lop.pop("servers", None)
             lop["tags"] = [localized_top_name(menu_path[0], menu, lang_key)]
+            # Route pages by the unique operationId instead of Mintlify's
+            # default localized tag/summary slug (Chinese URLs).
+            if lop.get("operationId"):
+                lop["x-mint"] = {"href": f"/{LANG_DIRS[lang_key]}/api-reference/{lop['operationId']}"}
             spec["paths"].setdefault(path, OrderedDict())[method] = lop
         outputs[lang_key] = spec
 
