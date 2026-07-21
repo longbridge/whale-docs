@@ -489,9 +489,15 @@ def main() -> int:
             lop.pop("servers", None)
             lop["tags"] = [localized_top_name(menu_path[0], menu, lang_key)]
             # Route pages by the unique operationId instead of Mintlify's
-            # default localized tag/summary slug (Chinese URLs).
+            # default localized tag/summary slug (Chinese URLs). When x-mint
+            # sets an explicit href, the sidebar label defaults to a humanized
+            # URL slug ("financing_delta" → "Financing delta") — force it back
+            # to the localized summary via metadata.sidebarTitle.
             if lop.get("operationId"):
-                lop["x-mint"] = {"href": f"/{LANG_DIRS[lang_key]}/api-reference/{lop['operationId']}"}
+                xmint = {"href": f"/{LANG_DIRS[lang_key]}/api-reference/{lop['operationId']}"}
+                if lop.get("summary"):
+                    xmint["metadata"] = {"sidebarTitle": lop["summary"]}
+                lop["x-mint"] = xmint
             spec["paths"].setdefault(path, OrderedDict())[method] = lop
         outputs[lang_key] = spec
 
