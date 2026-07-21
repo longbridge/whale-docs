@@ -342,7 +342,7 @@ pages to `72rem`; keep entries reverse-chronological and concise.
 
 - Three languages via `navigation.languages`: `en` (default), `cn`, `zh-Hant`,
   matching the legacy `accept-language` values (`en` / `zh-CN` / `zh-HK`).
-- Every authored page exists in all three directories (`en/`, `cn/`, `zh-hant/`)
+- Every authored page exists in all three directories (`en/`, `cn/`, `zh-Hant/`)
   with **identical structure**. Editing one means editing all three.
 - The API reference ships one spec per language
   (`openapi.{en,cn,zh-hant}.json`) so each language shows single-language
@@ -437,7 +437,7 @@ When implementing or changing a page:
    if generated.
 4. Write the frontmatter, then compose with the sanctioned component vocabulary.
 5. Use language-absolute links and the `↗` external convention.
-6. Mirror the page across `en/`, `cn/`, `zh-hant/` with identical structure.
+6. Mirror the page across `en/`, `cn/`, `zh-Hant/` with identical structure.
 7. Verify light and dark mode.
 8. Check against the Do / Do not rules and the review checklist.
 

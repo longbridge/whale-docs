@@ -43,7 +43,11 @@ LANGS = [
     ("cn", "cn", None),
     ("zh-Hant", "zh-hant", "hk"),
 ]
-LANG_DIRS = {"en": "en", "cn": "cn", "zh-Hant": "zh-hant"}
+# Directory / URL prefix must match the language code casing exactly —
+# Mintlify uses the raw `language` value as the URL prefix and looks for
+# sibling pages case-sensitively; a lowercase `zh-hant/` prefix under a
+# `zh-Hant` language breaks the language switcher (falls back to /introduction).
+LANG_DIRS = {"en": "en", "cn": "cn", "zh-Hant": "zh-Hant"}
 
 SKIP_DIRS = {".git", ".claude", "whale-openapi", "scripts", "data", "templates", "docs"}
 
@@ -419,15 +423,15 @@ BROKER_API_MANUAL_GROUPS = {
     },
     "zh-Hant": {
         "prefix": [
-            {"group": "概覽", "icon": "rocket", "pages": ["zh-hant/broker-api/overview"]},
+            {"group": "概覽", "icon": "rocket", "pages": ["zh-Hant/broker-api/overview"]},
             {"group": "開始使用", "icon": "play", "pages": [
-                "zh-hant/broker-api/get-started/quickstart",
-                "zh-hant/broker-api/get-started/authentication",
-                "zh-hant/broker-api/get-started/passthrough-headers",
+                "zh-Hant/broker-api/get-started/quickstart",
+                "zh-Hant/broker-api/get-started/authentication",
+                "zh-Hant/broker-api/get-started/passthrough-headers",
             ]},
         ],
         "suffix": [
-            {"group": "運維參考", "icon": "wrench", "pages": ["zh-hant/broker-api/operations"]},
+            {"group": "運維參考", "icon": "wrench", "pages": ["zh-Hant/broker-api/operations"]},
         ],
     },
 }

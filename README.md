@@ -27,7 +27,7 @@ Product entries per language, in fixed order: **Docs → WhaleSDK → Broker API
 docs.json                 # site config + per-language navigation (six product tabs)
 openapi.{en,cn,zh-hant}.json  # per-language Broker API OpenAPI 3.0 specs
 style.css                 # sidebar width, tabs row, try-it button styling
-en/                       # English pages (default language; cn/ + zh-hant/ mirror it)
+en/                       # English pages (default language; cn/ + zh-Hant/ mirror it)
   introduction.mdx        # Docs overview / portal landing
   docs/
     integration-options.mdx   # choose WhaleSDK vs Broker/Trading/OpenAPI
