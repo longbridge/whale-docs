@@ -1,0 +1,425 @@
+---
+title: iOS Integration
+description: Complete WhaleApp SDK integration and public API reference for iOS
+---
+
+## Requirements
+
+- iOS 13.0 or later.
+- Xcode 12.0 or later and Swift 5.0 or later.
+- Objective-C and Swift projects are supported.
+- Device `arm64` and simulator `x86_64` / `arm64` architectures are supported.
+- Broker App is normally portrait-only. When a specific SDK page requests landscape, forward the orientation mask as described below.
+
+## Install the SDK
+
+### CocoaPods (recommended)
+
+Extract `LBWhaleAppSDK-XXX.zip`, place the SDK directory in the project, and add:
+
+```ruby
+source 'https://github.com/volcengine/volcengine-specs.git'
+source 'https://github.com/aliyun/aliyun-specs.git'
+
+pod 'LBWhaleAppSDK', :path => './LBWhaleAppSDK'
+```
+
+Then run `pod install` and open the generated workspace.
+
+### Manual integration
+
+1. Extract `LBWhaleAppSDK-XXX.zip`.
+2. Drag `LBWhaleAppSDK.xcframework` into the Xcode project.
+3. In **General → Frameworks, Libraries, and Embedded Content**, select **Embed & Sign**.
+4. Add all system frameworks listed in the delivered package to **Build Phases → Link Binary With Libraries**.
+
+## Start WhaleApp SDK
+
+Import the umbrella header. Swift projects should import it from the bridging header.
+
+```objective-c
+#import <LBWhaleAppSDK/LBWhaleApp.h>
+```
+
+Create a multilingual App name and the project configuration, then start the SDK:
+
+```objective-c
+LBWhaleAppConfigMultilingual *appName =
+    [[LBWhaleAppConfigMultilingual alloc] initWithEn:@"My Trading App"
+                                                zhCN:@"我的交易应用"
+                                                zhHK:@"我的交易應用"];
+
+LBWhaleAppConfig *config = [[LBWhaleAppConfig alloc]
+    initAppKey:@"<app-key>"
+    appSecret:@"<app-secret>"
+    appId:@"<app-id>"
+    appName:appName
+    defaultAccountChannel:@"<account-channel>"
+    webDomainPrefix:@"<web-domain-prefix>"
+    token:@"<customer-token>"
+    refreshToken:@"<customer-refresh-token>"
+    delegate:self
+    extraCustomConfig:nil];
+
+config.theme = LBWhaleAppConfigThemeAuto;
+config.language = LBWhaleAppConfigLanguageEn;
+config.priceColorType = LBWhaleAppConfigPriceColorFollowUserSetting;
+config.env = LBWhaleAppConfigEnvProd;
+config.sdkUIDelegate = self;
+
+[LBWhaleApp startWithConfig:config];
+```
+
+<Warning>
+Use only the environment and credentials delivered for the project. Do not hard-code real `appSecret`, token, or refresh token values in the repository.
+</Warning>
+
+## Lifecycle and authentication callbacks
+
+All `LBWhaleAppDelegate` methods are optional. The SDK checks and renews tokens internally; Broker App does not call check-token or refresh-token APIs.
+
+```objective-c
+- (void)lbWhaleAppDidFinishLaunching {
+    // SDK-dependent UI may now be opened.
+}
+
+- (void)lbWhaleAppStartFailedWithError:(NSError *)error {
+    // 400: invalid or incomplete integration configuration.
+    // 401 / 403xxx: authentication or API-key failure.
+    // The SDK destroys itself for unrecoverable startup authentication failure.
+    [MyErrorTracker trackSanitizedError:error];
+    if (error.code != 400) {
+        [self redirectToLoginPage];
+    }
+}
+
+- (void)lbWhaleAppTokenDidChange:(NSString *)token {
+    // Notification only. WhaleApp SDK has already renewed the session and
+    // continues to manage validity and subsequent renewal.
+}
+
+- (void)lbWhaleAppDidRunInError:(NSError *)error {
+    if (error.code == 401) {
+        [LBWhaleApp logoutAndDestroy];
+        [self redirectToLoginPage];
+    }
+}
+
+- (void)lbWhaleAppWillDestroy {
+    // Persist necessary non-sensitive state before SDK pages close.
+}
+```
+
+| `NSError.code` | Meaning | Handling |
+| --- | --- | --- |
+| `400` | Missing required configuration or duplicate start | Correct `LBWhaleAppConfig` and start again |
+| `401` | Unrecoverable authentication failure or state-dependent API used before startup | Destroy the SDK when needed and require Customer sign-in |
+| `403xxx` | Invalid API Key or project configuration | Verify the delivered project configuration with Whale |
+
+### Exceptional renewal fallback
+
+`lbWhaleAppRefreshTokenExpiredWithResolver:` is called only after the SDK's normal renewal path fails. Its default project behavior should abandon retry and return Broker App to a logged-out state. Only return new credentials when the project has explicitly agreed on a separate way to obtain a completely new Customer session.
+
+```objective-c
+- (void)lbWhaleAppRefreshTokenExpiredWithResolver:
+    (void(^)(NSString *token, NSString *refreshToken))resolveCompleted {
+    resolveCompleted(nil, nil);
+}
+```
+
+The callback waits 30 seconds by default. Override the timeout with `LBAPPSDKConfigKeyRefreshTokenResolverTimeout` in `extraCustomConfig` only when required.
+
+## UI lifecycle and external URLs
+
+```objective-c
+- (void)lbWhaleAppEnterSdkPage {
+    // First live SDK page opened (0 → 1).
+}
+
+- (void)lbWhaleAppExitSdkPage {
+    // Last live SDK page closed (1 → 0).
+}
+
+- (BOOL)lbWhaleAppSDKCanOpenURL:(NSString *)url {
+    return [MyAppRouter canOpenURL:url];
+}
+
+- (void)lbWhaleAppSDKDidRequestOpenURL:(NSString *)url {
+    [MyAppRouter openURL:url];
+}
+```
+
+The UI callbacks track whether SDK pages exist, not whether the App is foregrounded. Validate schemes, domains, and route allowlists before opening an external URL.
+
+## Open SDK pages
+
+Call routing methods only after `lbWhaleAppDidFinishLaunching`.
+
+```objective-c
+[LBWhaleApp pushURL:@"lb://page/main"];
+[LBWhaleApp presentURL:@"lb://page/discovery/search-stocks"];
+
+NSDictionary *parameters = @{ @"id": @"ST/US/AAPL" };
+[LBWhaleApp pushURL:@"lb://page/stock/detail"
+          parameters:parameters
+            animated:YES
+           completed:^(BOOL succeeded, NSError *error) {
+    if (!succeeded) {
+        [MyErrorTracker trackSanitizedError:error];
+    }
+}];
+```
+
+`pushURL:` and `presentURL:` each provide variants for `animated`, `parameters`, and a completion callback.
+
+### Orientation forwarding
+
+```objective-c
+- (UIInterfaceOrientationMask)application:(UIApplication *)application
+        supportedInterfaceOrientationsForWindow:(UIWindow *)window {
+    NSUInteger mask = [LBWhaleApp requiredAppInterfaceOrientationMask];
+    return mask > 0 ? mask : UIInterfaceOrientationMaskPortrait;
+}
+```
+
+## Logout and Customer switching
+
+Use `[LBWhaleApp logoutAndDestroy]` when the Customer signs out or authentication becomes unrecoverable. The public configuration object also declares `-[LBWhaleAppConfig logout]`, which clears the current credentials without destroying the SDK. The source README does not define a complete account-switch sequence, so use this method only after Whale confirms the applicable SDK version and call sequence for the project.
+
+```objective-c
+[LBWhaleApp logoutAndDestroy];
+```
+
+## Message push
+
+Choose one delivery path for each project. See [Message-push integration](/en/docs/message-push) for server setup and the standard message shape.
+
+### Whale-managed channel
+
+Start the push service, report the APNs device token, and forward notification lifecycle callbacks:
+
+```objective-c
+[[LBWhaleApp pushService]
+    startWithKey:@"<push-key>"
+    andSecret:@"<push-secret>"
+    andCompleted:^(NSError *error) {
+        if (error) [MyErrorTracker trackSanitizedError:error];
+    }];
+
+[[LBWhaleApp pushService]
+    updateDeviceToken:deviceToken
+    disableMultiDevices:NO
+    callback:^(NSError *error) {
+        if (error) [MyErrorTracker trackSanitizedError:error];
+    }];
+```
+
+Forward cold-start, foreground, and notification-click events to the corresponding methods:
+
+```objective-c
+[[LBWhaleApp pushService] handleLaunchOptions:launchOptions];
+
+[[LBWhaleApp pushService]
+    handleSystemDelegateUserNotificationCenter:center
+    willPresentNotification:notification];
+
+[[LBWhaleApp pushService]
+    handleSystemDelegateUserNotificationCenter:center
+    didReceiveNotificationResponse:response];
+```
+
+### Broker-managed channel
+
+Broker App handles APNs registration and delivery. Pass only Whale messages to the SDK:
+
+```objective-c
+NSDictionary *userInfo = notification.request.content.userInfo;
+if ([LBWhaleAppPushService checkIsLBNotificationWithUserInfo:userInfo]) {
+    NSError *error = [[LBWhaleApp pushService]
+        sdkShowTipWithNotificationInfo:userInfo
+        routerHandler:^(NSString *routerURL) {
+            [MyAppRouter openURL:routerURL];
+        }];
+}
+```
+
+For a notification click, call `handleNotificationClickWithInfo:routerHandler:`. `NotificationErrorNotStarted` means the SDK must be started before routing; `NotificationErrorNonSDK` means Broker App should process the message itself.
+
+## Advanced configuration
+
+`extraCustomConfig` supports these public keys:
+
+| Key | Value | Purpose |
+| --- | --- | --- |
+| `LBAPPSDKConfigKeyDisableIDFA` | `NSNumber` boolean | Disable IDFA access and the ATT prompt |
+| `LBAPPSDKConfigDebugEggDisable` | `NSNumber` boolean | Disable the system debug panel |
+| `LBAPPSDKConfigKeyDeviceId` | `NSString` | Supply a project-defined device identifier |
+| `LBAPPSDKConfigKeyFileDirectory` | `NSString` | Override the SDK cache directory |
+| `LBAPPSDKConfigKeyRefreshTokenResolverTimeout` | `NSNumber` seconds | Change the exceptional renewal callback timeout |
+| `LBAPPSDKConfigKeyColor` | nested dictionary | Customize supported push-tip colors |
+| `LBAPPSDKConfigKeyFontCrypto` | `UIFontDescriptor` | Replace the market-data digit font |
+| `LBAPPSDKConfigKeyFontMonospaced` | `UIFontDescriptor` | Replace the regular monospaced font |
+| `LBAPPSDKConfigKeyFontMonospacedBold` | `UIFontDescriptor` | Replace the bold monospaced font |
+
+Color maps use `LBAPPSDKConfigKeyColorLight` and `LBAPPSDKConfigKeyColorDark`. Supported push-tip keys include default background, title, content, and icon colors, plus order-completed, order-failed, order-limit, and other-message overrides.
+
+The exact public keys are `LBAPPSDKConfigKeyPushTipView`, `LBAPPSDKConfigKeyPTVDefaultBackground`, `LBAPPSDKConfigKeyPTVDefaultTitle`, `LBAPPSDKConfigKeyPTVDefaultContent`, `LBAPPSDKConfigKeyPTVDefaultIcon`, `LBAPPSDKConfigKeyPTVOrderCompleted`, `LBAPPSDKConfigKeyPTVOrderFailed`, `LBAPPSDKConfigKeyPTVOrderLimit`, `LBAPPSDKConfigKeyPTVOther`, `LBAPPSDKConfigKeyPTVLimitTitleColor`, `LBAPPSDKConfigKeyPTVLimitContentColor`, and `LBAPPSDKConfigKeyPTVLimitIconColor`.
+
+## Public API reference
+
+### `LBWhaleApp`
+
+| Member | Purpose |
+| --- | --- |
+| `sdkVersion` | SDK version |
+| `pushService` | Shared `LBWhaleAppPushService` instance |
+| `config` | Current startup configuration |
+| `sdkStatus` | `NotStarted`, `Starting`, `Started`, or `IsDestroying` |
+| `startWithConfig:` | Start the SDK asynchronously |
+| `logoutAndDestroy` | Log out and release SDK resources |
+| `pushURL:...` / `presentURL:...` | Open an SDK page, optionally with parameters, animation, and completion |
+| `requiredAppInterfaceOrientationMask` | Orientation required by the current SDK page, or `0` outside SDK pages |
+
+The complete routing declarations are:
+
+```objective-c
++ (void)pushURL:(NSString *)url;
++ (void)presentURL:(NSString *)url;
++ (void)pushURL:(NSString *)url animated:(BOOL)animated;
++ (void)presentURL:(NSString *)url animated:(BOOL)animated;
++ (void)pushURL:(NSString *)url
+     parameters:(NSDictionary * _Nullable)parameters
+      completed:(void (^ _Nullable)(BOOL isSuccessed, NSError * _Nullable error))completed;
++ (void)presentURL:(NSString *)url
+        parameters:(NSDictionary * _Nullable)parameters
+         completed:(void (^ _Nullable)(BOOL isSuccessed, NSError * _Nullable error))completed;
++ (void)pushURL:(NSString *)url
+     parameters:(NSDictionary * _Nullable)parameters
+       animated:(BOOL)animated
+      completed:(void (^ _Nullable)(BOOL isSuccessed, NSError * _Nullable error))completed;
++ (void)presentURL:(NSString *)url
+        parameters:(NSDictionary * _Nullable)parameters
+          animated:(BOOL)animated
+         completed:(void (^ _Nullable)(BOOL isSuccessed, NSError * _Nullable error))completed;
+```
+
+### Configuration objects and delegates
+
+```objective-c
+@interface LBWhaleAppConfigMultilingual : NSObject
+@property (nonatomic, copy, readonly) NSString *en;
+@property (nonatomic, copy, readonly, nullable) NSString *zhCN;
+@property (nonatomic, copy, readonly, nullable) NSString *zhHK;
+@property (nonatomic, readonly) NSString *currentLanguageText;
+- (instancetype)initWithEn:(NSString *)en
+                       zhCN:(nullable NSString *)zhCN
+                       zhHK:(nullable NSString *)zhHK;
+@end
+
+@interface LBWhaleAppConfig : NSObject
+@property (nonatomic, copy, readonly) NSString *appKey;
+@property (nonatomic, copy, readonly) NSString *appSecret;
+@property (nonatomic, copy, readonly) NSString *appId;
+@property (nonatomic, strong, readonly) LBWhaleAppConfigMultilingual *appName;
+@property (nonatomic, copy, readonly) NSString *defaultAccountChannel;
+@property (nonatomic, copy, readonly) NSString *webDomainPrefix;
+@property (nonatomic, copy, readonly) NSString *token;
+@property (nonatomic, copy, readonly) NSString *refreshToken;
+@property (nonatomic, weak, readonly, nullable) id<LBWhaleAppDelegate> delegate;
+@property (nonatomic, weak, nullable) id<LBWhaleAppUIDelegate> sdkUIDelegate;
+@property (nonatomic, assign) LBWhaleAppConfigTheme theme;
+@property (nonatomic, assign) LBWhaleAppConfigLanguage language;
+@property (nonatomic, assign) LBWhaleAppConfigPriceColor priceColorType;
+@property (nonatomic, assign) LBWhaleAppConfigEnv env;
+@property (nonatomic, copy, readonly, nullable) NSDictionary *extraCustomConfig;
+
+- (instancetype)initAppKey:(NSString *)appKey
+                  appSecret:(NSString *)appSecret
+                      appId:(NSString *)appId
+                    appName:(LBWhaleAppConfigMultilingual *)appName
+      defaultAccountChannel:(NSString *)defaultAccountChannel
+            webDomainPrefix:(NSString *)webDomainPrefix
+                      token:(NSString *)token
+               refreshToken:(NSString *)refreshToken
+                   delegate:(nullable id<LBWhaleAppDelegate>)delegate
+          extraCustomConfig:(nullable NSDictionary *)extraCustomConfig;
+- (void)logout;
+@end
+```
+
+`LBWhaleAppDelegate` declares `lbWhaleAppTokenDidChange:`, `lbWhaleAppDidRunInError:`, `lbWhaleAppStartFailedWithError:`, `lbWhaleAppDidFinishLaunching`, `lbWhaleAppWillDestroy`, `lbWhaleAppSDKDidRequestOpenURL:`, `lbWhaleAppSDKCanOpenURL:`, `lbWhaleAppRefreshTokenExpiredWithResolver:`, and `lbWhaleAppAnalyticsEventWithName:properties:`. All are optional. `LBWhaleAppUIDelegate` declares the required `lbWhaleAppEnterSdkPage` and `lbWhaleAppExitSdkPage` methods.
+
+### Push-service declarations
+
+```objective-c
+@property (nonatomic, copy, readonly, nullable) NSString *pushAppKey;
+@property (nonatomic, copy, readonly, nullable) NSString *pushAppSecret;
+@property (nonatomic, strong, readonly, nullable) NSData *deviceToken;
+@property (nonatomic, copy, readonly, nullable) NSString *pushDeviceId;
+@property (nonatomic, assign, readonly) BOOL isStarted;
+@property (nonatomic, assign, readonly) BOOL disableMultiDevices;
+
++ (BOOL)checkIsLBNotificationWithUserInfo:(NSDictionary *)userInfo;
+- (void)startWithKey:(NSString *)appPushKey
+           andSecret:(NSString *)appPushSecret
+        andCompleted:(void (^ _Nullable)(NSError * _Nullable error))completed;
+- (void)updateDeviceToken:(NSData *)deviceToken
+      disableMultiDevices:(BOOL)disableMultiDevices
+                 callback:(void (^ _Nullable)(NSError * _Nullable error))callback;
+- (NSError * _Nullable)handleLaunchOptions:(NSDictionary *)launchOptions;
+- (NSError * _Nullable)handleSystemDelegateUserNotificationCenter:(UNUserNotificationCenter *)center
+                                           willPresentNotification:(UNNotification *)notification;
+- (NSError * _Nullable)handleSystemDelegateUserNotificationCenter:(UNUserNotificationCenter *)center
+                                    didReceiveNotificationResponse:(UNNotificationResponse *)response;
+- (NSError * _Nullable)sdkShowTipWithNotificationInfo:(NSDictionary *)notification
+                                        routerHandler:(void (^ _Nullable)(NSString *routerURL))routerHandler;
+- (NSError * _Nullable)handleNotificationClickWithInfo:(NSDictionary *)response
+                                         routerHandler:(void (^ _Nullable)(NSString *routerURL))routerHandler;
+```
+
+`LBWhaleNotificationHandlingErrorCode` contains `NotificationErrorNotStarted`, `NotificationErrorNonSDK`, and `NotificationErrorPushStartFailed`.
+
+### Configuration enums
+
+```objective-c
+typedef NS_ENUM(NSInteger, LBWhaleAppConfigPriceColor) {
+    LBWhaleAppConfigPriceColorFollowUserSetting,
+    LBWhaleAppConfigPriceColorRedUpGreenDown,
+    LBWhaleAppConfigPriceColorGreenUpRedDown
+};
+
+typedef NS_ENUM(NSInteger, LBWhaleAppConfigTheme) {
+    LBWhaleAppConfigThemeAuto,
+    LBWhaleAppConfigThemeLight,
+    LBWhaleAppConfigThemeDark
+};
+
+typedef NS_ENUM(NSInteger, LBWhaleAppConfigLanguage) {
+    LBWhaleAppConfigLanguageEn,
+    LBWhaleAppConfigLanguageZhCN,
+    LBWhaleAppConfigLanguageZhHK
+};
+
+typedef NS_ENUM(NSInteger, LBWhaleAppConfigEnv) {
+    LBWhaleAppConfigEnvProd,
+    LBWhaleAppConfigEnvSit,
+    LBWhaleAppConfigEnvTest
+};
+```
+
+Do not select a non-production environment unless the Whale project team supplies matching configuration.
+
+### Analytics callback
+
+```objective-c
+- (void)lbWhaleAppAnalyticsEventWithName:(NSString *)name
+                              properties:(NSDictionary *)properties {
+    [MyAnalytics track:name properties:properties];
+}
+```
+
+Forward only event names and properties agreed for the project. Never add credentials or Customer-sensitive information.
+
+## Dependency notes
+
+The delivered podspec declares external dependencies such as RangersAPM, AlicloudPush, and IQKeyboardManager; they are not embedded in the SDK binary. If Broker App already uses a conflicting version, coordinate the resolved version with the Whale project team instead of packaging two incompatible implementations.
