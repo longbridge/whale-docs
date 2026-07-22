@@ -62,6 +62,21 @@ def parse_top_dir(name: str) -> Tuple[str, str]:
     return m.group(1).strip(), m.group(2).strip()
 
 
+def norm_menu_seg(name: str) -> str:
+    """Canonicalize a menu-path segment's whitespace before its parenthesis.
+
+    Source YAMLs disagree on '资产账户(Account Assets)' vs
+    '资产账户 (Account Assets)' (an in-progress house-style migration in the
+    sibling repo) -- left as raw strings this splits one logical group into
+    two duplicate nav entries. Re-render as `{cn}({en})` so both variants of
+    the SAME Chinese label collapse to one key; segments with genuinely
+    different Chinese labels that happen to share an English word (e.g.
+    '结单管理(Statement)' vs '收费账单(Statement)') are correctly left distinct
+    since `cn` differs."""
+    cn, en = parse_top_dir(name)
+    return f"{cn}({en})" if cn != name else name
+
+
 def load_menu(source: Path) -> Dict[str, Dict[str, str]]:
     """{module_key: {en, zh-CN, zh-HK}} from menu.json, for top-level titles."""
     p = source / "menu.json"
@@ -318,7 +333,7 @@ def walk_yaml_ops(source: Path, schemas_out: Optional[Dict[str, Any]] = None):
                             dupes += 1
                             continue
                         seen.add(key)
-                        menu_path = tuple(op.get("x-menu-path") or (top,))
+                        menu_path = tuple(norm_menu_seg(s) for s in (op.get("x-menu-path") or (top,)))
                         yield menu_path, path, method, op, dupes
 
 
