@@ -47,8 +47,6 @@ description: 用户绑定、开户申请、状态查询、字段、错误码与�
 
     - 主动调用获取开户申请状态（/v1/whaleapi/account/get_application）/ 账户开通通知（定制化开发）
 
-
-
 ## 绑定关系与状态模型
 
 | 标识 | 所属系统 | 用途 | 建议保存位置 |
@@ -67,8 +65,6 @@ description: 用户绑定、开户申请、状态查询、字段、错误码与�
 
 ### 总体流程
 
-
-
 ```mermaid
 sequenceDiagram
     autonumber
@@ -82,16 +78,13 @@ sequenceDiagram
     Broker->>API: POST /v2/whaleapi/account/submit_application
     API-->>Broker: application_id
     API->>Ops: 创建异步开户任务
-    Ops->>Ops: KYC、风控及账户开通
+    Ops->>Ops: 证券账户创建与账户能力配置
     loop 直到成功或失败
         Broker->>API: POST /v1/whaleapi/account/get_application
         API-->>Broker: 当前状态、reason 或 account_no
     end
     Broker-->>Customer: 展示开户结果
 ```
-
-
-
 
 ### 流程说明
 
@@ -106,16 +99,12 @@ Broker 服务端调用登录注册接口。
 |用户已注册|直接登录|
 |第三方首次接入|建立用户关系绑定 `open_id → member_id`|
 
-
-
   </Step>
   <Step title="提交开户资料">
 
 系统在校验开户资料通过后，将生成一条开户申请记录，并返回开户申请 ID
 
 此时仅表示**开户申请已提交成功**，并不代表账户已开通。Broker 必须保存返回的 `application_id`。
-
-
 
   </Step>
   <Step title="等待账户异步开通">
@@ -126,24 +115,21 @@ Broker 服务端调用登录注册接口。
   </Step>
 </Steps>
 
-### 状态流转
+### 状态判定
 
 ```mermaid
-stateDiagram-v2
-    [*] --> 已提交: state = 5
-    已提交 --> 审核通过: state = 6
-    审核通过 --> 开通中: state = 7
-    开通中 --> 开通成功: state = 9
-    已提交 --> 开通失败: state = 8
-    审核通过 --> 开通失败: state = 8
-    开通中 --> 开通失败: state = 8
+flowchart TD
+    A[查询开户申请] --> B{state}
+    B -->|5| C[已提交：继续等待]
+    B -->|6| D[审核通过：继续等待]
+    B -->|7| E[开通中：继续等待]
+    B -->|8| F[开通失败：读取 reason]
+    B -->|9| G[开通成功：保存 account_no]
 ```
 
 <Note>
 状态查询应以 `state` 为准：`5` 已提交、`6` 审核通过、`7` 开通中、`8` 开通失败、`9` 开通成功。失败时同时读取 `reason`；成功时读取 `account_no`。
 </Note>
-
-
 
 ## API 详情
 
@@ -183,19 +169,20 @@ stateDiagram-v2
         "nickname": "default_value",
         "can_nick_modified": false,
         "user_region": "default_value"
-      }
+      },
       "lang":"zh-CN",
       "setting": {
         "currency": "USD",
         "lang":"auto"
-      },
+      }
     },
     "credentials" : {
         "token": "xxxxx",
         "refresh_token":"xxxxx"
     },
     "first_login": true
- }
+  }
+}
 ```
 
 |**字段名**|**类型**|**是否必填**|**说明**|
@@ -216,8 +203,6 @@ stateDiagram-v2
 |+ lang|string|Y|当前语言（默认中文繁体 `zh-HK`）|
 |setting|object|Y|用户设置（包含用户语言、行情偏好红涨绿跌等）|
 |+ lang<br />|string|Y|语言设置<br />- `auto` - 跟随系统语言<br />- `en` - 英文<br />- `zh-CN` - 简体中文<br />- `zh-HK` - 繁体中文（默认）|
-
-
 
 ### 提交开户申请
 
@@ -253,8 +238,6 @@ stateDiagram-v2
 |+++ audit|bool|Y|风险测评是否通过|
 |+++ end_at|integer|Y|风险测评过期时间|
 
-
-
 #### 请求与响应示例
 
 ```json
@@ -264,13 +247,13 @@ stateDiagram-v2
   "open_info": {
     "upload": {
       "card_type": 0,
-      "card_id": "110101199001010000",
+      "card_id": "<document-number>",
       "first_name": "SAN",
       "last_name": "ZHANG"
     },
     "base": {
       "residence_country": "CN",
-      "residence_desc": "杭州市西湖区"
+      "residence_desc": "<residential-address>"
     },
     "finance": {
       "account_type": "C"
@@ -292,8 +275,6 @@ stateDiagram-v2
 }
 ```
 
-
-
 ### 获取开户申请信息
 
 `POST /v1/whaleapi/account/get_application`
@@ -303,6 +284,7 @@ stateDiagram-v2
 |**字段名**|**类型**|**是否必填**|**说明**|
 |---|---|---|---|
 |application_id|string|Y|开户申请ID|
+|member_id|string|待确认|原始请求示例包含该字段，但原始字段表未声明；请以当前 Broker API 契约为准|
 
 |**字段名**|**类型**|**是否必填**|**说明**|
 |---|---|---|---|
@@ -348,8 +330,8 @@ stateDiagram-v2
     "code": 0,
     "message":"",
     "data": {
-      "state" : "1",
-      "account_no" : "A1111111",
+      "state" : 9,
+      "account_no" : "<account-no>",
       "open_info": {
         "upload": {
             "region": "MO",
@@ -357,7 +339,7 @@ stateDiagram-v2
             "card_country": "MO",
             "first_name": "SAN",
             "last_name": "ZHANG",
-            "card_id": "X12345",
+            "card_id": "<document-number>",
             "valid_date_end": "1991-01-01"
         },
         "base": {
@@ -372,19 +354,19 @@ stateDiagram-v2
         },
         "employ": {
             "type": "employed",
-            "email": "123@133.com",
+            "email": "customer@example.com",
             "contact": {
                 "phones": [
                   {
                       "country_code":86,
-                      "mobile": "12345678901"
-                  }
-                ]
-                "emails": [
-                  {
-                      "email": "a@b.com"
+                      "mobile": "13800000000"
                   }
                 ],
+                "emails": [
+                  {
+                      "email": "customer@example.com"
+                  }
+                ]
             },
             "taxes": [{
                 "country": "国籍",
@@ -403,7 +385,7 @@ stateDiagram-v2
         "verify": {
           "cash": {
               "bank_id":1111,
-              "bank_no":"213123123",
+              "bank_no":"<bank-account-no>",
               "currency":"HKD"
           }
         }
@@ -411,8 +393,6 @@ stateDiagram-v2
     }
 }
 ```
-
-
 
 ### 登出用户
 
@@ -443,8 +423,6 @@ Request
 | `404062` | 账户不可用 | 阻止进入证券账户功能 |
 | `404102` | 当前开户申请状态不支持资料修改 | 先查询当前状态，再决定下一步 |
 | `404103` | 开户申请不存在 | 校验 `application_id` 及其归属关系 |
-
-
 
 ## 常见问题与待确认项
 
