@@ -38,7 +38,7 @@ WhaleApp SDK 面向 Web、iframe 或 WebView 容器的图形界面交付形态�
 _Avoid_: Web Trading API、独立文档产品
 
 **Broker API**:
-供券商后端以 Server-to-Server 方式调用的机构级 API，授权范围可覆盖该券商下的数据与 SaaS 柜台能力。当前仓库中的 `b-api` 内容属于此产品。
+面向 Broker 的机构级 API，可用于 Server-to-Server 集成，也可为 Broker 自研管理后台提供数据与 SaaS 柜台能力。实际请求由 Broker 控制的服务端发起；当前仓库中的 `b-api` 内容属于此产品。
 _Avoid_: b-api、Whale API、OpenAPI
 
 **Trading API**:
