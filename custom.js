@@ -680,3 +680,49 @@
   var s = document.getElementById("sidebar");
   if (s) clamp(s);
 })();
+
+/*
+ * Language switcher: preserve api-reference path.
+ *
+ * Openapi-generated pages don't get proper sibling mapping across languages
+ * on Mintlify cloud — clicking the language switcher on /cn/api-reference/xxx
+ * falls back to /{targetLang}/introduction. Every language uses the same
+ * operationId slug (from x-mint.href in the specs), so a plain URL rewrite
+ * always works.
+ *
+ * The switcher items are `<div role="menuitem">` (not anchors) and clicks are
+ * routed through Mintlify's own JS handler. We intercept the click in the
+ * capture phase, and when the current URL is an api-reference page we
+ * navigate to the same operationId under the picked language, stopping the
+ * event so Mintlify's default (jump to /introduction) doesn't run.
+ */
+(function () {
+  var LANG_BY_LABEL = {
+    "English": "en",
+    "简体中文": "cn",
+    "繁體中文": "zh-Hant",
+  };
+
+  function currentApiRefSlug() {
+    var m = location.pathname.match(/^\/(?:en|cn|zh-Hant|zh-hant)\/api-reference\/([^\/?#]+)$/i);
+    return m ? m[1] : null;
+  }
+
+  document.addEventListener(
+    "click",
+    function (e) {
+      var t = e.target;
+      if (!t || !t.closest) return;
+      var item = t.closest('[role="menuitem"][data-component-part="localization-select-item"]');
+      if (!item) return;
+      var lang = LANG_BY_LABEL[item.textContent.trim()];
+      if (!lang) return;
+      var slug = currentApiRefSlug();
+      if (!slug) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      location.href = "/" + lang + "/api-reference/" + slug;
+    },
+    true
+  );
+})();
