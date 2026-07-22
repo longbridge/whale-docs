@@ -1,132 +1,70 @@
 ---
-title: 实施与上线
-description: 用户体系、账户绑定、开户联调与生产准备
+title: 联调、UAT 与上线
+description: 从最小技术闭环到生产发布和上线保障
 ---
 
-本页说明 Broker 在技术实施阶段如何选择用户体系，并完成 Customer 绑定、开户和状态同步。示例路径沿用历史 Whale 接口命名；实际可用接口和字段以项目获批范围及当前 API Reference 为准。
+本页承接前期方案、用户系统和开户接入，说明如何组织联调、业务验收和生产切换。
 
-## 选择用户体系
+## 开始前
 
-### Broker 自建用户体系
+应先完成：
 
-Customer 的注册、登录和鉴权均由 Broker 管理。Broker 在提交开户时建立自身用户与 Whale 证券账户的关联，并在自己的系统中保存开户状态。
+1. [Broker 接入总览](/cn/docs/broker-onboarding)中的角色、范围和环境准备。
+2. [接入方式选择](/cn/docs/integration-options)，明确 WhaleSDK、 WhaleCore + Trading API 或 Broker API 的边界。
+3. [用户系统接入](/cn/docs/user-system-integration)，确认身份、会话和授权模型。
+4. 如包含开户，完成[账户绑定与开户](/cn/docs/account-opening)的数据映射。
+5. 如包含 App 通知，确认[消息推送接入](/cn/docs/message-push)方案。
 
-```mermaid
-flowchart TD
-    A[Customer 登录 Broker 系统] --> B[Broker 校验用户身份]
-    B --> C{本地开户状态}
-    C -- 未开户 --> D[收集并校验开户资料]
-    D --> E[向 Whale 提交开户申请]
-    E --> F[保存 application_id 与待开户状态]
-    F --> G[查询开户申请状态]
-    G --> H{处理结果}
-    H -- 处理中 --> G
-    H -- 成功 --> I[保存 account_no 与开户成功状态]
-    H -- 失败 --> J[保存失败状态与原因]
-    C -- 开户成功 --> K[使用本地账户映射继续业务]
-```
+## 联调顺序
 
-建议在 Broker 系统中至少保存 `未开户`、`待开户`、`开户成功` 和 `开户失败` 四种状态。注销等异步流程也应保存中间状态，并在状态确定前持续同步 Whale 的最终结果。
-
-### 使用 Whale 用户体系
-
-在此模式下，Broker 服务端需要组合 Whale 提供的原子接口，不能仅将客户端请求原样透传。
+建议按照最小闭环逐步扩大范围：
 
 ```mermaid
-flowchart TD
-    A[Customer 发起登录] --> B[Broker 服务端调用 Whale 登录接口]
-    B --> C[Whale 返回 token 与 refresh_token]
-    C --> D[客户端安全保存凭证]
-    D --> E[调用需要登录的业务]
-    E --> F{token 是否有效?}
-    F -- 否 --> G[客户端使用 refresh_token 换取新凭证]
-    G --> E
-    F -- 是 --> H[Broker 服务端校验用户与资源归属]
-    H --> I{是否越权?}
-    I -- 是 --> J[拒绝请求]
-    I -- 否 --> K[调用目标接口]
-    K --> L[返回业务结果]
+flowchart LR
+    A[网络与环境] --> B[凭证与鉴权]
+    B --> C[用户登录与绑定]
+    C --> D[账户开户]
+    D --> E[资产与资金]
+    E --> F[行情与交易]
+    F --> G[消息通知]
+    G --> H[异常与恢复]
 ```
 
-退出登录后，应使当前 `token` 和 `refresh_token` 一并失效。服务端仍须校验 Customer 与所访问账户的归属关系，不能只依赖客户端传入的标识。
+每个阶段都应记录输入数据、预期结果、实际结果、请求关联 ID 和负责人。写请求发生超时时，应先查询业务状态再决定是否重试。
 
-## 用户绑定与开户
+## UAT 场景
 
-以下时序图由原交付材料中的图片重绘为可维护的 Mermaid 文本。
+### 正常流程
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Customer as Customer（终端客户）
-    participant Broker as Broker 系统
-    participant API as Whale API
-    participant Ops as Whale 后台开户处理
+- 新 Customer 与已有 Customer 登录。
+- 首次开户、开户成功及已有证券账户进入产品。
+- 资产查询、资金变动和目标市场交易。
+- 订单状态变化及消息通知。
+- Customer 主动退出及重新登录。
 
-    rect rgb(245, 247, 250)
-        Note over Customer,API: 用户登录与绑定
-        Customer->>Broker: 注册、登录或绑定账户
-        Broker->>API: POST /v1/whaleapi/auth/open_id/login
-        API-->>Broker: member_id、token、refresh_token
-    end
+### 异常流程
 
-    rect rgb(245, 247, 250)
-        Note over Broker,Ops: 提交并异步处理开户申请
-        Broker->>API: POST /v2/whaleapi/account/submit_application
-        Note right of Broker: 携带 member_id 与开户资料
-        API-->>Broker: application_id
-        API->>Ops: 创建开户任务
-        Ops->>Ops: 执行 KYC、风控与账户开通
-        Ops->>Ops: 更新申请状态
-    end
+- token 和 refresh token 失效。
+- Customer、账户或资源归属不匹配。
+- 开户审核失败、重复提交和长期处理中。
+- 网络超时、服务端错误及限流。
+- 重复消息、通知关闭和无效跳转链接。
+- App 或页面在处理中被关闭后重新进入。
 
-    rect rgb(245, 247, 250)
-        Note over Broker,API: Broker 轮询申请状态
-        loop 直到成功或失败
-            Broker->>API: POST /v1/whaleapi/account/get_application
-            Note right of Broker: 携带 application_id
-            API-->>Broker: 当前状态、失败原因或 account_no
-        end
-        Broker-->>Customer: 展示开户结果
-    end
-```
+## 生产就绪检查
 
-### 标识与持久化
+- 生产域名、DNS、TLS、出口 IP 和白名单均已验证。
+- 生产凭证通过安全渠道交付，且与 UAT 完全隔离。
+- Customer、用户、申请和账户映射可以查询和追踪。
+- 错误率、延迟、异步任务、消息积压和关键业务终态均有监控。
+- 日志已脱敏，并记录环境、接口、请求关联 ID 和业务标识。
+- 发布步骤、观察指标、停止条件和回退方案已评审。
+- 上线窗口内双方技术、业务和事件负责人可以响应。
 
-| 标识 | 含义 | Broker 应如何处理 |
-| --- | --- | --- |
-| `open_id` | Broker 系统内的 Customer 唯一标识 | 保持稳定，不应被其他 Customer 复用 |
-| `member_id` | Whale 用户唯一标识 | 登录/绑定后保存，并与 `open_id` 建立一对一映射 |
-| `application_id` | 单次开户申请标识 | 提交成功后立即保存，用于查询异步状态 |
-| `account_no` | 证券账户号码 | 开户成功后保存，后续资金、交易和对账以此识别账户 |
+## 上线与保障期
 
-<Note>
-Broker 无需按港股或美股上手方拆分账户逻辑。资金划拨和对账以 `account_no` 为准；账户内资金可按已开通能力用于换汇及不同市场交易。
-</Note>
-
-### 开户状态
-
-历史接口的开户申请状态如下。接入时应使用状态值而不是文案做程序判断。
-
-| 状态值 | 含义 | 建议处理 |
-| --- | --- | --- |
-| `5` | 已提交 | 记录申请并进入查询队列 |
-| `6` | 审核通过 | 继续等待账户开通 |
-| `7` | 开通中 | 按约定间隔再次查询 |
-| `8` | 开通失败 | 保存并展示 `reason`，按规则决定是否允许修正 |
-| `9` | 开通成功 | 保存 `account_no`，停止轮询 |
+上线时从小范围真实业务开始，确认登录、账户、交易和通知闭环后再扩大范围。保障期内集中跟踪生产请求、Customer 反馈、失败任务和配置差异；所有临时修复都应在保障期结束前形成正式配置、代码或运维记录。
 
 <Warning>
-收到 `application_id` 只表示申请提交成功，不表示证券账户已经开通。只有终态为开通成功且返回 `account_no` 后，才能进入依赖证券账户的后续流程。
+不要用 UAT 的“接口返回成功”代替业务验收。开户、资金、订单和消息均包含异步阶段，验收必须检查最终业务状态。
 </Warning>
-
-## 联调检查
-
-- 首次登录能建立 `open_id` 与 `member_id` 的稳定映射。
-- 重复登录不会创建错误的重复用户。
-- 开户提交后即使服务重启，也能继续通过 `application_id` 查询。
-- 处理中、成功和失败分支都有明确的界面与补偿行为。
-- 重复提交、超时和网络重试不会生成非预期的重复业务。
-- 日志会记录请求关联 ID 和业务标识，但不会记录凭证或完整敏感资料。
-- 退出登录会使对应会话凭证失效。
-
-完成联调后，再按[客户接入与交付流程](/cn/docs/broker-onboarding)执行 UAT、生产检查和上线切换。
