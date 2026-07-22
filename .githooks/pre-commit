@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Regenerate the site from ../whale-openapi-docs and restage the diff before
+# every commit. Ensures docs.json / openapi.*.json / {lang}/api-reference/*.mdx
+# never drift from the source specs.
+#
+# Enable once per clone:
+#   git config core.hooksPath .githooks
+#
+# Skip (e.g. for a doc-only change or when the sibling repo isn't checked out):
+#   git commit --no-verify
+
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+SOURCE_REPO="${REPO_ROOT}/../whale-openapi-docs"
+SCRIPT="${REPO_ROOT}/scripts/convert.py"
+
+# Skip on cherry-pick / revert / merge / rebase mid-flight — those already
+# regenerate through the individual commits they replay.
+GITDIR="$(git rev-parse --git-dir)"
+for state in CHERRY_PICK_HEAD REVERT_HEAD MERGE_HEAD REBASE_HEAD rebase-merge rebase-apply; do
+  if [[ -e "${GITDIR}/${state}" ]]; then
+    echo "pre-commit: skipping (in-progress ${state})" >&2
+    exit 0
+  fi
+done
+
+if [[ ! -d "${SOURCE_REPO}" ]]; then
+  echo "pre-commit: ../whale-openapi-docs not found — cannot regenerate" >&2
+  echo "  Clone it next to this repo, or bypass with:  git commit --no-verify" >&2
+  exit 1
+fi
+
+if [[ ! -f "${SCRIPT}" ]]; then
+  echo "pre-commit: scripts/convert.py missing" >&2
+  exit 1
+fi
+
+echo "pre-commit: python3 scripts/convert.py --source ${SOURCE_REPO}"
+python3 "${SCRIPT}" --source "${SOURCE_REPO}"
+
+# Re-stage only what the script writes (docs.json, openapi.*.json, api-reference
+# proxy MDX). Deleted proxy MDX (stale operations) is auto-added by `git add -u`.
+git add \
+  "${REPO_ROOT}/docs.json" \
+  "${REPO_ROOT}/openapi.cn.json" \
+  "${REPO_ROOT}/openapi.en.json" \
+  "${REPO_ROOT}/openapi.zh-hant.json" \
+  "${REPO_ROOT}/en/api-reference" \
+  "${REPO_ROOT}/cn/api-reference" \
+  "${REPO_ROOT}/zh-Hant/api-reference" 2>/dev/null || true
+git add -u \
+  "${REPO_ROOT}/en/api-reference" \
+  "${REPO_ROOT}/cn/api-reference" \
+  "${REPO_ROOT}/zh-Hant/api-reference" 2>/dev/null || true

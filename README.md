@@ -19,6 +19,16 @@ mint dev
 
 Open http://localhost:3000.
 
+Enable the pre-commit hook once per clone so every commit regenerates the
+site from `../whale-openapi-docs` and stages the diff:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Bypass ad-hoc with `git commit --no-verify` (e.g. doc-only edits or when the
+sibling repo isn't checked out).
+
 ## Structure
 
 Product entries per language, in fixed order: **Docs → WhaleSDK → Broker API → Trading API → OpenAPI** (external link to open.longportapp.com during migration).
