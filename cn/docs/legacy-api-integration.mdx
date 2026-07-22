@@ -7,94 +7,35 @@ description: 认证、WebSocket、连接流程和 Go 调用示例
 Broker API 是机构级 Server-to-Server 接口，由 Broker 服务端调用，不应在 Broker App 中保存 Access Key 或直接请求。
 </Note>
 
-原始对接问题覆盖以下范围：
->
-> - Specific details on authentication, how to authenticate, tokens, headers, session length, refreshing sessions, identifying clients, etc.
->
-> - Websocket connection, socket protocol, session details, types of websocket events and their details etc.
->
-> - Use cases and examples of which API endpoints to use in such scenarios
->
-> - Explanations of each endpoint/API collection and when or how to use each one
->
->
+Broker API 用于实现证券柜台业务，主要覆盖用户账户、资产、交易和新股等模块。完整接口参考见 [Broker API](/cn/broker-api/overview)。
 
-[Broker API](https://apidocs.longbridgewhale.com/whaleapi) 用于实现证券柜台业务，包含以下主要模块：
+<Accordion title="原始对接问题（英文）">
+  - Authentication details: credentials, request authentication, token and header handling, session duration, refresh and client identification.
+  - WebSocket connection, protocol, session details and event types.
+  - Use cases showing which endpoints are combined for a business scenario.
+  - Explanations of each endpoint or API collection and when to use it.
+</Accordion>
 
-- 用户账户
+## 认证
 
-- 资产
+Broker API 使用一组 Access Key 凭证完成机构级认证。
 
-- 交易
+| 凭证 | 用途 |
+| --- | --- |
+| `AccessKeyId` | 每次请求通过 `x-api-key` Header 发送 |
+| `AccessKeySecret` | 在 Broker Server 内生成请求签名，不随请求直接发送 |
+| `AccessKeyToken` | 作为 Access Token 通过 `authorization` Header 发送 |
 
-- 新股
-
-The Broker API is used to implement securities counter business, which includes the following main modules:
-
-- User Account
-
-- Assets
-
-- Transactions
-
-- IPO
-
-Broker API 提供机构级能力用于管理 Broker 的证券业务，需要由 Broker 服务端对接，不适合由 Broker App 直接调用。
-
-The Broker API provides institution-level capabilities for managing Broker securities business. It requires Broker Server integration and is not suitable for direct calls from a Broker App.
-
-## Authentication - 认证
-
-Broker API 通过 Access Key 进行认证，一组 Access Key 包含：
-
-- AccessKeyId - access key id，每次请求在 header\["x-api-key"\] 中带上
-
-- AccessKeySecret - access key secret，用于请求的签名
-
-- AccessKeyToken - access token
-
-The Broker API uses Access Key for authentication, which includes the following components:
-
-- AccessKeyId - access key id, which is included in the header\["x-api-key"\] of each request
-
-- AccessKeySecret - access key secret, which is used for request signature
-
-- AccessKeyToken - access token
-
-每个请求我们都要做认证校验：
-
-- Access key 是否存在
-
-- 请求签名是否正确
-
-- 请求 IP 是否为 Access Key 的白名单 IP
-
-- Access Token 是否有效
-
-- 请求接口是否限流
-
-For each request, we need to perform authentication checks:
-
-- Check if the Access Key exists
-
-- Check if the request signature is correct
-
-- Check if the request IP is in the Access Key's whitelist IP
-
-- Check if the Access Token is valid
-
-- Check if the request interface is rate limited
+Broker API 会校验：Access Key 是否存在、请求签名是否正确、请求 IP 是否在白名单中、Access Token 是否有效，以及接口是否触发限流。
 
 ### 请求头
 
-The headers involved in the authentication process are as follows:
-
-|Header|说明|例子|
-|---|---|---|
-|x-api-key|Access key id|`<access-key-id>`|
-|authorization<br />|Access Token<br />|`<access-token>`|
-|x-timestamp|Request timestamp|1685518362.111|
-|x-api-signature|Request signature|`HMAC-SHA256 SignedHeaders=x-api-key;authorization;x-timestamp,Signature=<signature>`|
+| Header | 说明 | 示例 |
+| --- | --- | --- |
+| `x-api-key` | Access Key ID | `<access-key-id>` |
+| `authorization` | Access Token | `<access-token>` |
+| `x-timestamp` | 请求时间戳 | `1685518362.111` |
+| `x-api-signature` | 请求签名 | `HMAC-SHA256 SignedHeaders=x-api-key;authorization;x-timestamp,Signature=<signature>` |
 
 由于是服务端调用服务端，这里不会有 session 和 refresh session 的场景。基本调用流程如下：
 
@@ -116,61 +57,54 @@ sequenceDiagram
 AccessKeySecret、AccessKeyToken 和完整签名不得写入日志、提交到仓库或下发给 Broker App。
 </Warning>
 
-Since it is server-to-server communication, there is no scenario involving session and refresh session. The basic call flow is as follows:
-
 ## WebSocket 交易推送
 
 我们会提供 WebSocket 交易网关用于订单状态变更信息的推送。Broker API 的 WebSocket 交易网关与 [OpenAPI WebSocket 交易网关](https://open.longportapp.com/en/docs/socket/subscribe_trade)一致，数据交互使用的私有协议也与 [OpenAPI 协议](https://open.longportapp.com/en/docs/socket/protocol/overview)一致。Broker 通过 Broker API 提交订单，订单状态更新时会通过 WebSocket 网关推送。
 
-> [推送内容](https://open.longportapp.com/docs/trade/trade-definition#websocket-%E6%8E%A8%E9%80%81%E9%80%9A%E7%9F%A5)
->
->
+相关参考：
 
-We provide a WebSocket trading gateway for order-status changes. The Broker API gateway is consistent with the [OpenAPI WebSocket trading gateway](https://open.longportapp.com/en/docs/socket/subscribe_trade), and uses the same [private protocol](https://open.longportapp.com/en/docs/socket/protocol/overview). Brokers submit orders through Broker API and receive status changes through the WebSocket gateway.
+- [订单状态推送内容](https://open.longportapp.com/docs/trade/trade-definition#websocket-%E6%8E%A8%E9%80%81%E9%80%9A%E7%9F%A5)
+- [WebSocket 订阅交易主题](https://open.longportapp.com/en/docs/socket/subscribe_trade)
+- [私有协议说明](https://open.longportapp.com/en/docs/socket/protocol/overview)
 
-> [Push Content](https://open.longportapp.com/en/docs/trade/trade-definition#websocket-notification)
->
->
+### 首次连接
 
-### How to establish a connection - 如何建立连接
+<Steps>
+  <Step title="获取 OTP">
+    调用[获取 OTP 接口](https://open.longportapp.com/en/docs/socket-token-api)。
+  </Step>
+  <Step title="建立 WebSocket">
+    使用项目确认的交易网关地址建立连接。
+  </Step>
+  <Step title="完成认证">
+    使用 OTP 执行 [auth 操作](https://open.longportapp.com/en/docs/socket/control-command#auth)。成功响应会返回可用于重连的 Session ID。
+  </Step>
+  <Step title="订阅交易消息">
+    订阅 `private` Topic，接收订单状态变化。
+  </Step>
+</Steps>
 
-#### Establishing a Connection - 首次建连
+### 断线重连
 
-- 首次建立 websocket 需要调用[获取 OTP 的接口](https://open.longportapp.com/en/docs/socket-token-api)
+<Steps>
+  <Step title="重新建立 WebSocket">
+    创建新的 WebSocket 连接。
+  </Step>
+  <Step title="使用 Session ID 重连">
+    使用上一次保存的 Session ID 执行 [reconnect 操作](https://open.longportapp.com/en/docs/socket/control-command#reconnect)。成功响应会返回下一次重连使用的新 Session ID。
+  </Step>
+  <Step title="恢复订阅">
+    重新订阅 `private` Topic，并按 `order_id` 处理可能重复到达的订单消息。
+  </Step>
+</Steps>
 
-- 建立 websocket 连接
+## Go 调用示例
 
-- 使用 otp 进行 [auth 操作](https://open.longportapp.com/en/docs/socket/control-command#auth)，auth 操作后，响应会返回一个 session id，可以用于重连
+以下代码保留原始对接材料中的完整示例。运行前需要安装 Go，并把地址和凭证替换为项目实际配置。
 
-- 订阅 private topic
-
-- To establish a WebSocket connection for the first time, the [OTP acquisition API](https://open.longportapp.com/en/docs/socket-token-api) needs to be called.
-
-- Establish the WebSocket connection.
-
-- Use OTP for [authentication](https://open.longportapp.com/en/docs/socket/control-command#auth). After the authentication operation, the response will return a session ID, which can be used for reconnection.
-
-- Subscribe to the private topic.
-
-#### Reconnection - 重连
-
-- 建立 websocket 连接
-
-- 使用 session id 进行 [reconnect 操作](https://open.longportapp.com/en/docs/socket/control-command#reconnect)，reconnect 操作成功后，响应会包含新的 session id 用于下次重连
-
-- 订阅 private topic
-
-- Establish the WebSocket connection.
-
-- Use the session ID to perform the reconnect operation. After the reconnect operation is successful, the response will contain a new session ID for the next reconnection.
-
-- Subscribe to the private topic.
-
-## Example In golang
-
-> Require install golang
->
->
+<Warning>
+示例中的 `openapi.longbridge.xyz` 地址来自历史材料，不代表当前 Broker API 环境。必须使用 Whale 项目团队为当前项目确认的 HTTP 与 WebSocket 地址。
+</Warning>
 
 ```go
 package main
@@ -178,7 +112,6 @@ package main
 import (
         "context"
         "encoding/json"
-        "fmt"
         "log"
         "net/url"
         std_http "net/http"
@@ -250,7 +183,7 @@ func main() {
         createOrder(client)
 
         ch := make(chan os.Signal, 1)
-        signal.Notify(sch, os.Interrupt, syscall.SIGKILL)
+        signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
         s := <-ch
         log.Println("exit for " + s.String())
 }
@@ -262,7 +195,7 @@ func createOrder(c *http.Client) {
                 Path:   "/v1/whaleapi/trade/order",
                 Parameters: Parameters{
                         Body: map[string]interface{}{
-                                "account_no":         "L6VQEU00128518",
+                                "account_no":         "<account-no>",
                                 "symbol":             "AAPL.US",
                                 "order_type":         "MO",
                                 "submitted_quantity": "100",
@@ -315,7 +248,7 @@ func doRequest(c *http.Client, req Request) {
 }
 ```
 
-Copy the code to your local file. Open terminal, type the following command:
+将代码保存为本地 Go 文件，然后在同一目录执行：
 
 ```shell
 go mod init main
@@ -323,11 +256,11 @@ go mod tidy
 go run ./
 ```
 
-You will see the result
+示例运行结果：
 
 ![Go 示例运行结果](/files/whalesdk/go-example-output.png)
 
-### Init config
+### 初始化配置
 
 ```go
 conf := &config.Config{
@@ -340,7 +273,7 @@ conf := &config.Config{
         }
 ```
 
-### Init trade context
+### 初始化交易上下文
 
 ```go
 // init go std http client
@@ -361,7 +294,7 @@ conf := &config.Config{
         }
 ```
 
-### Establish connect and subscribe order change event
+### 建立连接并订阅订单事件
 
 ```go
 // subscribe private topic to receive order change events
@@ -375,7 +308,7 @@ conf := &config.Config{
         })
 ```
 
-### Call http api
+### 调用 HTTP API
 
 ```go
 // new http client for rest api calling
@@ -389,12 +322,13 @@ conf := &config.Config{
         createOrder(client)
 ```
 
-## QA
+## 历史对接问答
 
-- Broker API 访问是否有 Rate Limit，限制是多少？
-
-    - 200 次/秒，根据 API Key 来做总线制，这个数量是够的，一般达不到这么大。
-
-- 當日成交是以收市作cut off 還是以日清流程做cut off?
-
-    - 美股的当日时间范围是「北京时间 9:00 -- 次日 12:00」，过了12:00 会归到历史的（冬令时夏令时会有所不同的，夏令时会都早一小时哈）
+<AccordionGroup>
+  <Accordion title="Broker API 的访问限频是多少？">
+    历史材料记录为按 API Key 总计每秒 `200` 次。限频可能按环境和项目调整，上线前应以当前 Broker API 契约和 Whale 项目团队确认结果为准。
+  </Accordion>
+  <Accordion title="当日成交以收市还是日清流程作为截止时间？">
+    历史材料记录：美股当日成交的时间范围为北京时间 `09:00` 至次日 `12:00`，之后归入历史成交；夏令时通常整体提前一小时。实际时间边界应以当前交易日历和项目配置为准。
+  </Accordion>
+</AccordionGroup>

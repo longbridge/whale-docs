@@ -3,56 +3,108 @@ title: Broker 自有推送渠道
 description: Server-to-Server 消息转发、完整请求示例和 SDK 消息格式
 ---
 
+Whale 通过 Server-to-Server 接口把标准业务消息转发给 Broker Server。Broker 负责鉴权、幂等、可靠落库、用户映射和下游分发。
+
 ## 接入流程
 
-## 服务端对接方式
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Whale as Whale 消息服务
+    participant API as Broker 接收接口
+    participant Center as Broker 消息中心
+    participant App as Broker App
+    Whale->>API: POST 消息，携带 X-Api-Key 与 X-Trace-Id
+    API->>API: 鉴权、校验 post_id、幂等落库
+    API-->>Whale: code = 0 或失败响应
+    API->>Center: 异步处理和分发
+    Center-->>App: 标准消息体
+    App->>App: 交给 WhaleSDK 处理
+```
 
-```jsonc
-method: POST
+<Steps>
+  <Step title="Broker 提供接口约定">
+    Broker 提供 UAT 与生产 HTTPS 地址、认证方式、网络要求、超时限制和联系人。
+  </Step>
+  <Step title="Whale 配置转发">
+    Whale 将接收地址和认证信息配置到对应环境，并使用测试消息验证连通性。
+  </Step>
+  <Step title="双方完成消息联调">
+    验证正常消息、重复 `post_id`、鉴权失败、接口超时、返回失败和多 Customer 消息。
+  </Step>
+  <Step title="Broker App 验收">
+    验证前台、后台、冷启动、Customer 登出、通知权限关闭和安全跳转。
+  </Step>
+</Steps>
 
-headers:
-  - X-Api-Key 参数，值为 Broker 接口方提供的加密 Key
-  - X-Trace-Id 参数，链路追踪和链条
+## HTTP 接口约定
 
-request Body：
+**Method：** `POST`
+
+| Header | 必填 | 说明 |
+| --- | --- | --- |
+| `X-Api-Key` | 是 | Broker 提供给 Whale 的接口认证 Key |
+| `X-Trace-Id` | 是 | 端到端链路追踪标识，双方日志均需记录 |
+
+### 请求字段
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `member_ids` | `string[]` | Whale Customer 标识列表，Broker 需映射到自己的用户与设备 |
+| `template_key` | `string` | 消息模板 Key |
+| `post_id` | `string` | 消息唯一标识，应作为幂等键 |
+| `channel` | `string` | 消息渠道，当前示例为 `push` |
+| `language` | `string` | 消息语言，例如 `zh-CN` |
+| `title` | `string` | 消息标题 |
+| `body` | `string` | 消息摘要或正文 |
+| `template_params` | `object` | 由具体模板定义的业务参数 |
+| `pre_params` | `object` | Whale 内置预设变量，可能包含 Customer 资料 |
+| `user_info` | `object` | 透传给 Broker App 与 WhaleSDK 的消息数据 |
+
+### 通用请求示例
+
+```json
 {
-  "member_ids": ["客户编号"],
-  "template_key": "模板Key",
-  "post_id": "消息ID", // 唯一
+  "member_ids": ["<member-id>"],
+  "template_key": "<template-key>",
+  "post_id": "<unique-message-id>",
   "channel": "push",
   "language": "zh-CN",
   "title": "消息标题",
   "body": "消息摘要",
   "template_params": {
-    // 业务根据模板定义传入的参数
     "key": "value",
     "date": "2026-01-21",
-    "url": "https://xxx",
+    "url": "https://example.com"
   },
   "pre_params": {
-    // 内置的预设变量参数
     "key": "value",
-    "member_real_name": "张三"
+    "member_real_name": "示例 Customer"
   },
   "user_info": {
-    "t": "xx", // 客户端埋点用
-    "tn": "xx", // 客户端埋点用
-    "id": "xx", // 客户端埋点用
-    "lb_push_from": "xx", // 判断是 Whale 发的消息
-    "link": "跳转链接",
-    "json": "{ \"key\": \"value\" }" // 这里透传各业务自定义的数据
+    "t": "<message-type>",
+    "tn": "<trace-id>",
+    "id": "<unique-message-id>",
+    "lb_push_from": "whale",
+    "link": "broker-app://example",
+    "json": "{\"key\":\"value\"}"
   }
-}
-
-response body：
-{
-  "success": true,
-  "message": "success", // 接口错误信息
-  "code": 0, // 0 表示成功，非 0 表示失败，失败目前不会重试
 }
 ```
 
-## Request Body 请求示例
+### 响应示例
+
+```json
+{
+  "success": true,
+  "message": "success",
+  "code": 0
+}
+```
+
+`code` 为 `0` 表示成功，非 `0` 表示失败。原始方案注明失败消息目前不会重试，因此 Broker 接口应在完成鉴权、校验和可靠落库后尽快返回成功；实际重试策略应在项目上线前再次确认。
+
+## 完整订单消息示例
 
 ```json
 {
@@ -136,41 +188,45 @@ response body：
 
 ## SDK 消息对接格式
 
-```json
+Broker App 从自有推送渠道取得消息后，需要保留 `title`、`body` 和完整 `user_info`，并交给 WhaleSDK 的消息处理入口。
+
+```jsonc
 {
-    "title": " 消息标题", // 以下字段都是 SDK 需要的。
+    "title": "消息标题", // WhaleSDK 需要
     "body": "消息摘要",
     "user_info": {
-        // 透传 user_info 的内容
-        "t": "xx", // 埋点用
-        "tn": "xx", // 埋点用
-        "id": "xx", // 埋点用
-        "lb_push_from": "xx", // 判断是 LB 发的消息
+        "t": "xx", // 消息类型或埋点字段
+        "tn": "xx", // 追踪或埋点字段
+        "id": "xx", // 消息标识
+        "lb_push_from": "whale", // 标识 Whale 消息
         "link": "跳转链接",
         "json": "业务内容 JSON 字串"
     }
 }
 ```
 
-## 线上已有模板
+<Warning>
+Broker App 必须校验 `link` 的 scheme、目标和参数后再跳转，不能直接执行未识别的外部 URL。未知消息类型应安全降级，不应导致 App 崩溃。
+</Warning>
 
-- pre_function：内置函数说明，该函数是内部定义并实现的，截止目前使用到的函数都有在文档中
+## 已有模板文件
 
-- templates：模板定义
+- `pre_function`：内置函数说明；当前已使用的函数包含在模板文件中
 
-- template_locales：模板多语言及配置
+- `templates`：模板定义
+
+- `template_locales`：模板多语言内容及配置
 
 [下载完整模板文件](/files/whalesdk/gbltpl.zip)
 
-```sql
-tpl.xxx 是从请求 Body 的 template_params 中取出的参数
+```text
+tpl.xxx 从请求体的 template_params 读取参数。
+pre.xxx 从请求体的 pre_params 读取参数。
 
-pre.xxx 是从请求 Body 的 pre_params 取出的参数
-
-比如 {{stock_name(tpl.stock_counter_id)}} 中的 tpl.stock_counter_id 那么template_params 中的参数会是这样
+例如模板表达式 {{stock_name(tpl.stock_counter_id)}}
+对应的请求参数为：
 
 template_params: {
   stock_counter_id: "ST/US/BABA"
 }
-
 ```
