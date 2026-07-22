@@ -25,6 +25,18 @@ for state in CHERRY_PICK_HEAD REVERT_HEAD MERGE_HEAD REBASE_HEAD rebase-merge re
   fi
 done
 
+# Manual-patch escape hatch. If the user is intentionally staging edits to
+# any of the generated files, trust them and skip regen so convert.py doesn't
+# clobber the manual patch. To re-sync with source instead, unstage the
+# generated file before committing.
+STAGED="$(git diff --cached --name-only)"
+for f in openapi.cn.json openapi.en.json openapi.zh-hant.json docs.json; do
+  if grep -qxF "$f" <<<"$STAGED"; then
+    echo "pre-commit: ${f} staged manually — skipping regen" >&2
+    exit 0
+  fi
+done
+
 if [[ ! -d "${SOURCE_REPO}" ]]; then
   echo "pre-commit: ../whale-openapi-docs not found — cannot regenerate" >&2
   echo "  Clone it next to this repo, or bypass with:  git commit --no-verify" >&2
