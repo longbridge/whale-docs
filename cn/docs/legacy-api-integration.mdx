@@ -1,9 +1,13 @@
 ---
-title: Whale API 技术对接
+title: Broker API 技术对接
 description: 认证、WebSocket、连接流程和 Go 调用示例
 ---
 
-> Wonder if you have the detailed Whale API document that covers:
+<Note>
+Broker API 是机构级 Server-to-Server 接口，由 Broker 服务端调用，不应在 Broker App 中保存 Access Key 或直接请求。
+</Note>
+
+原始对接问题覆盖以下范围：
 >
 > - Specific details on authentication, how to authenticate, tokens, headers, session length, refreshing sessions, identifying clients, etc.
 >
@@ -15,9 +19,7 @@ description: 认证、WebSocket、连接流程和 Go 调用示例
 >
 >
 
-
-
-[Whale API ](https://apidocs.longbridgewhale.com/whaleapi)用于实现证券柜台业务，包含一下几个主要模块：
+[Broker API](https://apidocs.longbridgewhale.com/whaleapi) 用于实现证券柜台业务，包含以下主要模块：
 
 - 用户账户
 
@@ -27,10 +29,7 @@ description: 认证、WebSocket、连接流程和 Go 调用示例
 
 - 新股
 
-https://apidocs.longbridgewhale.com/whaleapi
-
-
-The Whale API is used to implement securities counter business, which includes the following main modules:
+The Broker API is used to implement securities counter business, which includes the following main modules:
 
 - User Account
 
@@ -42,17 +41,17 @@ The Whale API is used to implement securities counter business, which includes t
 
 
 
-Whale API 提供机构级能力用于管理 Broker 的证券业务，需要由 Broker 服务端对接，不适合由 Broker App 直接调用。
+Broker API 提供机构级能力用于管理 Broker 的证券业务，需要由 Broker 服务端对接，不适合由 Broker App 直接调用。
 
 
 
-The Whale API provides an interface for managing tenant securities business that is equivalent to a super administrator. It requires server-side development to integrate and is not suitable for direct integration with an app.
+The Broker API provides institution-level capabilities for managing Broker securities business. It requires Broker Server integration and is not suitable for direct calls from a Broker App.
 
 
 
 ## Authentication - 认证
 
-Whale API 通过 Access Key 进行认证，一组 AccessKey 包含：
+Broker API 通过 Access Key 进行认证，一组 Access Key 包含：
 
 - AccessKeyId - access key id，每次请求在 header\["x-api-key"\] 中带上
 
@@ -62,7 +61,7 @@ Whale API 通过 Access Key 进行认证，一组 AccessKey 包含：
 
 
 
-The Whale API uses Access Key for authentication, which includes the following components:
+The Broker API uses Access Key for authentication, which includes the following components:
 
 - AccessKeyId - access key id, which is included in the header\["x-api-key"\] of each request
 
@@ -100,7 +99,7 @@ For each request, we need to perform authentication checks:
 
 
 
-认证过程中涉及的 header 如下
+### 请求头
 
 
 
@@ -115,6 +114,24 @@ The headers involved in the authentication process are as follows:
 
 由于是服务端调用服务端，这里不会有 session 和 refresh session 的场景。基本调用流程如下：
 
+```mermaid
+sequenceDiagram
+    participant Broker as Broker Server
+    participant API as Broker API
+    Broker->>Broker: 生成 timestamp 与 HMAC-SHA256 签名
+    Broker->>API: 携带 Access Key、Token、timestamp、signature
+    API->>API: 校验 Key、签名、IP 白名单、Token 与限流
+    alt 校验通过
+        API-->>Broker: 业务响应
+    else 校验失败
+        API-->>Broker: HTTP 状态与业务错误码
+    end
+```
+
+<Warning>
+AccessKeySecret、AccessKeyToken 和完整签名不得写入日志、提交到仓库或下发给 Broker App。
+</Warning>
+
 
 
 Since it is server-to-server communication, there is no scenario involving session and refresh session. The basic call flow is as follows:
@@ -125,11 +142,11 @@ Since it is server-to-server communication, there is no scenario involving sessi
 
 
 
-## Websocket
+## WebSocket 交易推送
 
 
 
-我们会提供 Websocket 交易网关用于订单状态变更信息的推送，WhaleAPI 的 Websocket 交易网关和我们 [OpenAPI 的 Websocket 交易网关](https://open.longportapp.com/en/docs/socket/subscribe_trade)一致。数据交互使用的私有协议和 [OpenAPI ](https://open.longportapp.com/en/docs/socket/protocol/overview)的也一致。 Broker 通过 WhaleAPI 提交订单，当订单状态更新时就会通过 Websocket 网关推送。
+我们会提供 WebSocket 交易网关用于订单状态变更信息的推送。Broker API 的 WebSocket 交易网关与 [OpenAPI WebSocket 交易网关](https://open.longportapp.com/en/docs/socket/subscribe_trade)一致，数据交互使用的私有协议也与 [OpenAPI 协议](https://open.longportapp.com/en/docs/socket/protocol/overview)一致。Broker 通过 Broker API 提交订单，订单状态更新时会通过 WebSocket 网关推送。
 
 > [推送内容](https://open.longportapp.com/docs/trade/trade-definition#websocket-%E6%8E%A8%E9%80%81%E9%80%9A%E7%9F%A5)
 >
@@ -137,7 +154,7 @@ Since it is server-to-server communication, there is no scenario involving sessi
 
 
 
-We provide a WebSocket trading gateway to push order status change information. The Whale API's WebSocket trading gateway is consistent with our[ OpenAPI's WebSocket trading gateway](https://open.longportapp.com/en/docs/socket/subscribe_trade). The private protocol used for data exchange is also the same as [OpenAPI's](https://open.longportapp.com/en/docs/socket/protocol/overview). Tenants submit orders through the Whale API, and when the order status is updated, it will be pushed through the WebSocket gateway。
+We provide a WebSocket trading gateway for order-status changes. The Broker API gateway is consistent with the [OpenAPI WebSocket trading gateway](https://open.longportapp.com/en/docs/socket/subscribe_trade), and uses the same [private protocol](https://open.longportapp.com/en/docs/socket/protocol/overview). Brokers submit orders through Broker API and receive status changes through the WebSocket gateway.
 
 > [Push Content](https://open.longportapp.com/en/docs/trade/trade-definition#websocket-notification)
 >
@@ -432,7 +449,7 @@ conf := &config.Config{
 
 ## QA
 
-- Whale API 访问是否有 Rate Limit，限制是多少？
+- Broker API 访问是否有 Rate Limit，限制是多少？
 
     - 200 次/秒，根据 API Key 来做总线制，这个数量是够的，一般达不到这么大。
 
