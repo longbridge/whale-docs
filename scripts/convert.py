@@ -596,28 +596,10 @@ def main() -> int:
                 node = node.setdefault(part, OrderedDict())
             node.setdefault("__pages", []).extend(entries)
 
-        # Map (path, method) -> operationId for this language's spec so we can
-        # emit language-prefixed proxy-page slugs instead of "METHOD /path".
-        # Rationale: Mintlify's language switcher matches sibling pages by
-        # docs.json string equality. Two languages listing the same
-        # "POST /v1/x" produce identical strings, and the switcher falls back
-        # to /introduction. Language-prefixed file-path entries (each pointing
-        # at a per-language proxy MDX with `openapi: METHOD /path` frontmatter)
-        # give each tab a unique string, restoring cross-language mapping.
-        op_id_by_pm: Dict[Tuple[str, str], str] = {}
-        for path, methods in outputs[lang_key]["paths"].items():
-            for method, op in methods.items():
-                if isinstance(op, dict) and op.get("operationId"):
-                    op_id_by_pm[(path, method.lower())] = op["operationId"]
-
         def render(node: Dict[str, Any], lang_key: str, prefix: Tuple[str, ...]) -> List[Any]:
             out: List[Any] = []
             for pm in node.get("__pages", []):
-                op_id = op_id_by_pm.get((pm[0], pm[1].lower()))
-                if op_id:
-                    out.append(f"{LANG_DIRS[lang_key]}/api-reference/{op_id}")
-                else:
-                    out.append(f"{pm[1].upper()} {pm[0]}")
+                out.append(f"{pm[1].upper()} {pm[0]}")
             children = [(c, cn) for c, cn in node.items() if c != "__pages"]
             # order sub-groups by menu.json (falls back to alphabetical for
             # anything not in the menu tree).
@@ -638,13 +620,10 @@ def main() -> int:
             groups.append({
                 "group": localized_top_name(top, menu, lang_key),
                 "icon": icon,
-                # No `directory` here on purpose: `directory` makes Mintlify
-                # auto-write generated pages at {directory}/{operationId},
-                # which would collide with the per-language proxy MDX we
-                # already emit (Mintlify cloud fails at "Updating navigation").
-                # The proxy MDX has `openapi: METHOD /path` frontmatter and
-                # inherits this `source` for rendering.
-                "openapi": {"source": f"openapi.{file_suffix}.json"},
+                "openapi": {
+                    "source": f"openapi.{file_suffix}.json",
+                    "directory": f"{LANG_DIRS[lang_key]}/api-reference",
+                },
                 "pages": pages,
             })
         return groups
@@ -666,29 +645,6 @@ def main() -> int:
         p = REPO_ROOT / f"openapi.{file_suffix}.json"
         # default=str: YAML auto-parses bare dates in examples into datetime.date
         p.write_text(json.dumps(outputs[lang_key], ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
-
-    # Emit per-language proxy MDX pages, one per operation. See the render()
-    # comment above for why: gives the language switcher unique-per-language
-    # docs.json page strings so cross-language sibling mapping works on
-    # openapi-generated pages.
-    for lang_key, _, _ in LANGS:
-        api_dir = REPO_ROOT / LANG_DIRS[lang_key] / "api-reference"
-        api_dir.mkdir(parents=True, exist_ok=True)
-        expected = set()
-        for path, methods in outputs[lang_key]["paths"].items():
-            for method, op in methods.items():
-                if not (isinstance(op, dict) and op.get("operationId")):
-                    continue
-                opid = op["operationId"]
-                expected.add(opid)
-                (api_dir / f"{opid}.mdx").write_text(
-                    f"---\nopenapi: {method.lower()} {path}\n---\n",
-                    encoding="utf-8",
-                )
-        # Prune stale proxy MDX (operations removed upstream).
-        for f in api_dir.glob("*.mdx"):
-            if f.stem not in expected:
-                f.unlink()
 
     # v2 generates no MDX under data-porter — clean up any leftover.
     for lang_dir in LANG_DIRS.values():
