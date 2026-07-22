@@ -10,7 +10,7 @@ Broker App 涉及 Customer 的注册、登录、鉴权和证券账户状态管�
     用户资料保存在 Broker 系统；开户时才通过 Broker API 建立 Customer 与 Whale 用户及证券账户的关联。
   </Card>
   <Card title="使用 Whale 用户体系" icon="key">
-    Broker 服务端组合调用 Broker API 完成登录、token 校验、刷新和登出，不能只做请求透传。
+    Broker 完成初始登录衔接，并将 Whale 返回的凭证交给 WhaleSDK 或 WhaleCore；后续校验与续期由 SDK 层管理。
   </Card>
 </CardGroup>
 
@@ -53,25 +53,25 @@ flowchart LR
 
 ## 使用 Whale 用户体系
 
-Broker 服务端需要根据业务场景组合原子接口，而不是将 Broker App 请求直接透传给 Broker API。
+Broker 服务端负责完成初始用户登录或绑定，并把 Whale 返回的初始凭证安全交给 Broker App。Broker App 随后将 `token` 与 `refresh_token` 设置到 WhaleSDK；完全自行实现证券功能 UI 时，则设置到 WhaleCore。两者后续都由 Whale SDK 层管理凭证。
 
 <Steps>
-  <Step title="登录并保存凭证">
-    登录成功后，Broker API 返回 `token` 和 `refresh_token`。Broker App 需要安全保存凭证。
+  <Step title="取得初始凭证">
+    登录成功后，Broker API 返回 `token` 和 `refresh_token`。Broker 只需按项目约定安全地把初始凭证交给 Broker App。
   </Step>
-  <Step title="执行鉴权调用">
-    对需要登录的操作，先调用 check token 接口确认 token 是否有效，再校验当前 Customer 是否有权访问目标资源，最后发起业务调用。
+  <Step title="设置到 Whale SDK 层">
+    Broker App 在初始化时将初始凭证设置到 WhaleSDK；使用 WhaleCore 的 Broker App 则设置到 WhaleCore。Broker App 不需要自行调用 check token。
   </Step>
-  <Step title="刷新过期凭证">
-    token 过期时，Broker App 使用 refresh token 获取新凭证，并替换本地保存的旧值。
+  <Step title="由 SDK 自动校验和续期">
+    WhaleSDK 或 WhaleCore 根据 token 有效期自行校验并使用 refresh token 自动续期。正常情况下，只要续期持续成功，Broker 可以把 Customer 会话视为长期有效。
   </Step>
-  <Step title="退出登录">
-    登出会使 `token` 与 `refresh_token` 同时失效，Broker App 也应清除本地凭证。
+  <Step title="处理极低概率的续期失败">
+    如果凭证被统一 revoke、refresh token 无法使用或出现其他不可恢复的鉴权异常，SDK 会通知 Broker App。Broker App 此时销毁 SDK 会话，并将整个 App 退回登出状态，重新执行登录衔接。
   </Step>
 </Steps>
 
 <Warning>
-Broker 服务端必须执行资源归属和越权检查。token 有效不代表当前 Customer 可以访问任意 `member_id`、`application_id` 或 `account_no`。
+Broker App 不应自行实现 token 有效期判断、check token 或 refresh token 续期，也不应与 WhaleSDK / WhaleCore 同时维护两套刷新状态。Broker 服务端仍必须对自己直接处理的资源执行归属和越权检查。
 </Warning>
 
 下一步请参阅[用户绑定与证券账户开户](/cn/docs/account-opening)，了解关联字段、开户状态和接口调用顺序。
