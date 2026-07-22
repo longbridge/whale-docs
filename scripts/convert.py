@@ -240,11 +240,9 @@ def _localized_text(
     if lang_key == "en":
         return _english_only(value)
 
-    # Product names, identifiers, and acronyms are valid on Chinese pages,
-    # but an English prose fallback is not.
-    if CJK_RE.search(value) or not re.search(r"\s", value.strip()):
-        return value
-    return None
+    # Chinese pages may fall back to complete English prose when a Simplified
+    # or Traditional Chinese translation is unavailable.
+    return value
 
 
 def _enum_label(entry: Dict[str, Any], sfx: Optional[str]) -> str:
