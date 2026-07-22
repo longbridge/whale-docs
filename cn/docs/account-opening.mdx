@@ -1,0 +1,434 @@
+---
+title: 用户绑定与证券账户开户
+description: 用户绑定、开户申请、状态查询、字段、错误码与问答
+---
+
+## **接口说明**
+
+- 用户注册 / 登录（POST /v1/whaleapi/auth/open_id/login）
+
+    - 首次登录即注册
+
+    - 第三方用户与平台用户关系绑定（open_id -\> member_id）
+
+        - open_id 三方系统用户唯一标识
+
+        - member_id Whale 系统用户唯一标识
+
+    - SDK 登录 token 颁发
+
+- 用户登出 (POST /v1/whaleapi/auth/session/logout)
+
+    - 用 token 将用户登出，设置 token 无效
+
+    - 需要两个参数：
+
+        - `member_id` - 来自于登录接口返回的
+
+        - `sid` - 用 JWT decode 登录接口返回的 `token` 即可获得 `sid`
+
+- 证券账户开户
+
+    - 提交开户资料 (POST /v2/whaleapi/account/submit_application)
+
+    - 主动调用获取开户申请状态（/v1/whaleapi/account/get_application）/ 账户开通通知（定制化开发）
+
+
+
+## **详细设计**
+
+### **总体流程**
+
+
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Customer as Customer（终端客户）
+    participant Broker as Broker 系统
+    participant API as Whale API
+    participant Ops as Whale 后台开户处理
+    Customer->>Broker: 注册、登录或绑定账户
+    Broker->>API: POST /v1/whaleapi/auth/open_id/login
+    API-->>Broker: member_id、token、refresh_token
+    Broker->>API: POST /v2/whaleapi/account/submit_application
+    API-->>Broker: application_id
+    API->>Ops: 创建异步开户任务
+    Ops->>Ops: KYC、风控及账户开通
+    loop 直到成功或失败
+        Broker->>API: POST /v1/whaleapi/account/get_application
+        API-->>Broker: 当前状态、reason 或 account_no
+    end
+    Broker-->>Customer: 展示开户结果
+```
+
+
+
+
+### **流程说明**
+
+#### **步骤 1：用户注册 / 登录与关系绑定**
+
+第三方系统调用登录注册接口
+
+|**场景**|**系统行为**|
+|---|---|
+|用户未注册|创建平台用户（Member）|
+|用户已注册|直接登录|
+|第三方首次接入|建立用户关系绑定 open_id -\> member_id|
+
+
+
+#### **步骤 2：提交开户资料**
+
+系统在校验开户资料通过后，将生成一条开户申请记录，并返回开户申请 ID
+
+此时仅表示 **开户申请已提交成功**，并不代表账户已开通。
+
+
+
+#### **步骤 3：账户开通（异步）**
+
+- 账户开通由系统后台异步处理
+
+- 包含证券账户创建、账户能力配置等流程
+
+- 开通完成后，将通过约定方式通知第三方系统 （**需定制化开发**）；或者主动获取开户申请状态
+
+
+
+### **接口说明**
+
+#### 用户注册登录
+
+POST /v1/whaleapi/auth/open_id/login
+
+##### 请求字段说明
+
+|**字段名**|**类型**|**是否必填**|**说明**|
+|---|---|---|---|
+|open_id|string|Y|三方用户唯一标识 userid|
+
+##### **Example**
+
+```json
+Request
+{
+    "open_id": "roleid"
+}
+
+Response
+{
+  "code": 0,
+  "message":"",
+  "data": {
+    "member_info": {
+      "member": {
+        "member_id":"123",
+        "uuid": "default_value",
+        "phone_number": "default_value",
+        "email": "default_value",
+        "lang": "default_value",
+        "country_code": 0,
+        "email_check": false,
+        "avatar": "default_value",
+        "nickname": "default_value",
+        "can_nick_modified": false,
+        "user_region": "default_value"
+      },
+      "lang":"zh-CN",
+      "setting": {
+        "currency": "USD",
+        "lang":"auto"
+      },
+    },
+    "credentials" : {
+        "token": "xxxxx",
+        "refresh_token":"xxxxx"
+    },
+    "first_login": true
+ }
+```
+
+|**字段名**|**类型**|**是否必填**|**说明**|
+|---|---|---|---|
+|code<br />|number|Y<br />|0 成功<br />\>0 失败|
+|message|string|Y|错误提示|
+|data|object|Y||
+|+ member_info|object \[MemberInfo\]|Y|用户信息|
+
+##### MemberInfo
+
+|**字段名**|**类型**|**是否必填**|**说明**|
+|---|---|---|---|
+|member_info|object|Y|社区基础信息|
+|+ member_id|string|Y|Whale 用户 ID|
+|+ nickname|string|Y|昵称（默认生成）|
+|+ avatar|string |Y |头像（默认生成）|
+|+ lang|string|Y|当前语言（默认中文繁体 `zh-HK`）|
+|setting|object|Y|用户设置（包含用户语言、行情偏好红涨绿跌等）|
+|+ lang<br />|string|Y|语言设置<br />- `auto` - 跟随系统语言<br />- `en` - 英文<br />- `zh-CN` - 简体中文<br />- `zh-HK` - 繁体中文（默认）|
+
+
+
+#### **提交开户申请  **
+
+**POST /v2/whaleapi/account/submit_application**
+
+##### **请求字段说明**
+
+|**字段名**|**类型**|**是否必填**|**说明**|
+|---|---|---|---|
+|member_id|integer|Y|用户 ID|
+|client_type|integer|Y|客户类型 1:个人户 2:企业户|
+|open_info|object|Y|开户表单信息|
+|+ account_no|string|N|证券账号|
+|+ mark|string|N|账户标记|
+|+ upload|object|Y|证件信息|
+|++ card_country|string|Y|证件签发地<br />[国家/地区（ISO_3166-1_alpha-2）](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)|
+|++ card_type|integer|Y|证件类型 0:身份证 1:护照|
+|++ card_id|string|Y|证件号码|
+|++ first_name|string|N|名文姓（名的拼音）|
+|++ last_name|string|Y|英文姓（姓的拼音）|
+|+ base|object|Y|个人基本信息|
+|++ residence_country|string|Y|居住国家/地区<br />[国家/地区（ISO_3166-1_alpha-2）](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)|
+|++ residence_part|string|N|居住所在区域|
+|++ residence_desc|string|Y|居住详细地址|
+|+ employ|object|N|职业信息|
+|++ contact|object|Y|联系方式|
+|+++ emails|array \[Email\]|Y|邮箱（接单发送邮箱）|
+|++ taxes|array \[Tax\]|Y|国家税收信息|
+|+ finance|object|Y|金融信息|
+|++ account_type|string|Y|账户类型（C现金/M融资）|
+|+ risk|Object |N|风险信息|
+|++ risk_tolerance|Object|N|风险测评信息|
+|+++ audit|bool|Y|风险测评是否通过|
+|+++ end_at|integer|Y|风险测评过期时间|
+
+
+
+##### **Example**
+
+```Plain Text
+Reuqest
+{
+  "member_id": 123456,
+  "client_type": 1,
+  "open_info": {
+    "upload": {
+      "card_type": 0,
+      "card_id": "110101199001010000",
+      "first_name": "SAN",
+      "last_name": "ZHANG"
+    },
+    "base": {
+      "residence_country": "CN",
+      "residence_desc": "杭州市西湖区"
+    },
+    "finance": {
+      "account_type": "C"
+    },
+    "risk": {
+      "risk_tolerance": {
+        "audit": true,
+        "end_at": 1716358996
+      }
+    }
+  }
+}
+
+Response
+{
+  "application_id": 123456
+}
+```
+
+
+
+#### 开户申请信息获取
+
+POST /v1/whaleapi/account/get_application
+
+##### **请求字段说明**
+
+Request
+
+|**字段名**|**类型**|**是否必填**|**说明**|
+|---|---|---|---|
+|application_id|string|Y|开户申请ID|
+
+Response
+
+|**字段名**|**类型**|**是否必填**|**说明**|
+|---|---|---|---|
+|code|integer|Y||
+|message|string|Y||
+|data|object|||
+|open_info|object|Y|开户表单信息|
+|+ upload|object|Y|证件信息|
+|++ region|string|Y|nationality|
+|++ card_type|integer|Y|证件类型 <br />- `0` - 身份证 <br />- `1` - 护照|
+|++ card_country|string|Y|证件签发地<br />[国家/地区（ISO_3166-1_alpha-2）](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements)|
+|++ card_id|string|Y|证件号码|
+|++ first_name|stirng|Y|英文名（名的拼音）|
+|++ last_name|string|Y|英文姓（姓的拼音）|
+|++ name|string|N|中文姓名|
+|++ valid_date_end|string|N|证件到期日|
+|+ base|object||基础信息|
+|++ country_code|string|Y|出生国家/地区|
+|++ birth_date|string|Y|出生日期|
+|++ gender|string|N|性别<br />- `male` 男<br />- `female` 女|
+|++ marital_status|string|N|婚姻状态:  <br />- `single` 单身  <br />- `married` 已婚    <br />- `other`离异<br />- `divorced`  丧偶<br />- `widowed`|
+|++ residence_country|string|Y|居住国家/地区|
+|++ residence_part|string|Y|居住所在区域|
+|++ residence_desc|string|Y|居住详细地址|
+|+ employ|object||职业信息|
+|++ type|string|N|职业类型|
+|state|integer|Y|开户申请状态: <br />- `5` - 已提交<br />- `6` - 审核通过 <br />- `7` - 开通中<br />- `8` - 开通失败<br />- `9` - 开通成功 |
+|reason|string||失败原因|
+|account_no|string||证券账户号码|
+
+##### Example
+
+```json
+Request
+{
+   "member_id":"1",
+   "application_id":"2"
+}
+
+Response
+{
+    "code": 0,
+    "message":"",
+    "data": {
+      "state" : "1",
+      "account_no" : "A1111111",
+      "open_info": {
+        "upload": {
+            "region": "MO",
+            "card_type": 0,
+            "card_country": "MO",
+            "first_name": "SAN",
+            "last_name": "ZHANG",
+            "card_id": "X12345",
+            "valid_date_end": "1991-01-01"
+        },
+        "base": {
+            "country_code": "CN",
+            "gender": "male",
+            "education": "Record of formal schooling",
+            "birth_date": "1991-01-02",
+            "marital_status": "single",
+            "residence_country": "CN",
+            "residence_part": "part",
+            "residence_desc": "desc"
+        },
+        "employ": {
+            "type": "employed",
+            "email": "123@133.com",
+            "contact": {
+                "phones": [
+                  {
+                      "country_code":86,
+                      "mobile": "12345678901"
+                  }
+                ],
+                "emails": [
+                  {
+                      "email": "a@b.com"
+                  }
+                ],
+            },
+            "taxes": [{
+                "country": "国籍",
+                "id": "编号",
+                "assets_ids": "证明文件"
+            }]
+        },
+        "finance": {
+            "income_level": "annual income(年收入)",
+        },
+        "risk": {
+            "risk_tolerance": {
+                "level": "A1"
+            }
+        },
+        "verify": {
+          "cash": {
+              "bank_id":1111,
+              "bank_no":"213123123",
+              "currency":"HKD"
+          }
+        }
+      }
+    }
+}
+```
+
+
+
+#### **登出用户**
+
+**POST /v1/whaleapi/auth/session/logout**
+
+##### **请求字段说明**
+
+Request
+
+|**字段名**|**类型**|**是否必填**|**说明**|
+|---|---|---|---|
+|member_id|string|Y|用户编号，来自于登录接口返回。|
+|sid|string|Y|Session ID <br />这个信息可以用 JWT decode (标准实现) 登录的 token 获得 sid|
+
+### 错误码
+
+## 错误码
+
+|500|服务异常|
+|---|---|
+|400|参数错误|
+|401047|系统基础配置缺失需要联系开发者|
+
+|401033|用户冻结|
+|---|---|
+|401040|用户已注销|
+|404103|开户申请不存在|
+|404062|账户不可用|
+
+|404002|身份信息已存在，请使用原账号进行证券交易|
+|---|---|
+|404056|开户失败|
+|404013|请勿重复提交|
+|404050|注销账户后，3 个月内不支持重新开户|
+|404102|当前开户申请状态不支持资料修改|
+
+
+
+## QA
+
+1. account_no: 证券账户号码
+
+2. member_id: Whale 系统用户唯一标识
+
+3. open_id：三方系统用户唯一标识
+
+4. 如何实现两边用户打通的，客户端需要的 token, refresh_token 是如何获得的？
+
+    调用本文档中的[用户注册登录](#用户注册登录)接口。
+
+5. 开户资料字段如何填写？
+
+见 [API 文档](https://apidocs.longbridgewhale.com/whaleapi/submit-application-v2%E6%8F%90%E4%BA%A4%E5%BC%80%E6%88%B7%E7%94%B3%E8%AF%B7%E8%B5%84%E6%96%99-3469908e0)
+
+6. 证券号码规则
+
+7. 账户标记
+
+8. 错误码
+
+9. 接口签名规则示例
+
+10. Token 是否区分客户端？
+
+    1. 没有，token 不区分，token 获取以后应该直接返回给客户端，不用存放到服务端
