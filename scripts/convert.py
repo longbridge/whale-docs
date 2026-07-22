@@ -270,11 +270,19 @@ def localize(node: Any, sfx: Optional[str], lang_key: str) -> Any:
 # ---------------------------------------------------------------------------
 
 
-def walk_yaml_ops(source: Path):
+def walk_yaml_ops(source: Path, schemas_out: Optional[Dict[str, Any]] = None):
     """Yield (menu_path_tuple, path, method, op_dict) in stable order.
 
     Operations with `x-lbonly: true` (Longbridge-internal-only) are skipped
-    entirely -- they must not appear in this externally-published site."""
+    entirely -- they must not appear in this externally-published site.
+
+    Each source YAML is a self-contained OpenAPI doc and may declare its own
+    `components.schemas` (e.g. a shared error envelope referenced via `$ref`
+    from that same file). Since this function merges paths from many such
+    files into one spec, those component schemas need collecting too -- pass
+    `schemas_out` to accumulate them (first-seen wins; a content mismatch
+    across files is only a warning, since it can't be represented as a single
+    merged component)."""
     seen: set = set()
     dupes = 0
     tops = sorted(
@@ -293,6 +301,12 @@ def walk_yaml_ops(source: Path):
                 except Exception as e:
                     print(f"[warn] yaml parse failed {fp}: {e}", file=sys.stderr)
                     continue
+                if schemas_out is not None:
+                    for name, schema in ((doc.get("components") or {}).get("schemas") or {}).items():
+                        if name not in schemas_out:
+                            schemas_out[name] = schema
+                        elif schemas_out[name] != schema:
+                            print(f"[warn] components.schemas.{name} differs in {fp}, keeping first-seen version", file=sys.stderr)
                 for path, methods in (doc.get("paths") or {}).items():
                     for method, op in methods.items():
                         if not isinstance(op, dict):
@@ -404,8 +418,9 @@ def main() -> int:
     # nav_tree: OrderedDict keyed by menu_path tuples → list of (path, method)
     nav_tree: "OrderedDict[Tuple[str, ...], List[Tuple[str, str]]]" = OrderedDict()
     ops: List[Tuple[Tuple[str, ...], str, str, Dict[str, Any]]] = []
+    shared_schemas: Dict[str, Any] = {}
     dupes = 0
-    for menu_path, path, method, op, dupes in walk_yaml_ops(source):
+    for menu_path, path, method, op, dupes in walk_yaml_ops(source, shared_schemas):
         nav_tree.setdefault(menu_path, []).append((path, method))
         ops.append((menu_path, path, method, op))
 
@@ -431,6 +446,8 @@ def main() -> int:
     for lang_key, file_suffix, sfx in LANGS:
         tags = [{"name": localized_top_name(t, menu, lang_key)} for t in top_order]
         spec = build_openapi_shell(tags)
+        for name, schema in shared_schemas.items():
+            spec["components"].setdefault("schemas", {})[name] = localize(schema, sfx, lang_key)
         for menu_path, path, method, op in ops:
             lop = localize(op, sfx, lang_key)
             lop.pop("security", None)      # global security covers it
