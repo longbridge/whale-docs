@@ -1,19 +1,132 @@
 ---
 title: 实施与上线
-description: 从实施计划到生产保障
+description: 用户体系、账户绑定、开户联调与生产准备
 ---
 
-从实施启动到生产上线的端到端路径。
+本页说明 Broker 在技术实施阶段如何选择用户体系，并完成 Customer 绑定、开户和状态同步。示例路径沿用历史 Whale 接口命名；实际可用接口和字段以项目获批范围及当前 API Reference 为准。
+
+## 选择用户体系
+
+### Broker 自建用户体系
+
+Customer 的注册、登录和鉴权均由 Broker 管理。Broker 在提交开户时建立自身用户与 Whale 证券账户的关联，并在自己的系统中保存开户状态。
+
+```mermaid
+flowchart TD
+    A[Customer 登录 Broker 系统] --> B[Broker 校验用户身份]
+    B --> C{本地开户状态}
+    C -- 未开户 --> D[收集并校验开户资料]
+    D --> E[向 Whale 提交开户申请]
+    E --> F[保存 application_id 与待开户状态]
+    F --> G[查询开户申请状态]
+    G --> H{处理结果}
+    H -- 处理中 --> G
+    H -- 成功 --> I[保存 account_no 与开户成功状态]
+    H -- 失败 --> J[保存失败状态与原因]
+    C -- 开户成功 --> K[使用本地账户映射继续业务]
+```
+
+建议在 Broker 系统中至少保存 `未开户`、`待开户`、`开户成功` 和 `开户失败` 四种状态。注销等异步流程也应保存中间状态，并在状态确定前持续同步 Whale 的最终结果。
+
+### 使用 Whale 用户体系
+
+在此模式下，Broker 服务端需要组合 Whale 提供的原子接口，不能仅将客户端请求原样透传。
+
+```mermaid
+flowchart TD
+    A[Customer 发起登录] --> B[Broker 服务端调用 Whale 登录接口]
+    B --> C[Whale 返回 token 与 refresh_token]
+    C --> D[客户端安全保存凭证]
+    D --> E[调用需要登录的业务]
+    E --> F{token 是否有效?}
+    F -- 否 --> G[客户端使用 refresh_token 换取新凭证]
+    G --> E
+    F -- 是 --> H[Broker 服务端校验用户与资源归属]
+    H --> I{是否越权?}
+    I -- 是 --> J[拒绝请求]
+    I -- 否 --> K[调用目标接口]
+    K --> L[返回业务结果]
+```
+
+退出登录后，应使当前 `token` 和 `refresh_token` 一并失效。服务端仍须校验 Customer 与所访问账户的归属关系，不能只依赖客户端传入的标识。
+
+## 用户绑定与开户
+
+以下时序图由原交付材料中的图片重绘为可维护的 Mermaid 文本。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Customer as Customer（终端客户）
+    participant Broker as Broker 系统
+    participant API as Whale API
+    participant Ops as Whale 后台开户处理
+
+    rect rgb(245, 247, 250)
+        Note over Customer,API: 用户登录与绑定
+        Customer->>Broker: 注册、登录或绑定账户
+        Broker->>API: POST /v1/whaleapi/auth/open_id/login
+        API-->>Broker: member_id、token、refresh_token
+    end
+
+    rect rgb(245, 247, 250)
+        Note over Broker,Ops: 提交并异步处理开户申请
+        Broker->>API: POST /v2/whaleapi/account/submit_application
+        Note right of Broker: 携带 member_id 与开户资料
+        API-->>Broker: application_id
+        API->>Ops: 创建开户任务
+        Ops->>Ops: 执行 KYC、风控与账户开通
+        Ops->>Ops: 更新申请状态
+    end
+
+    rect rgb(245, 247, 250)
+        Note over Broker,API: Broker 轮询申请状态
+        loop 直到成功或失败
+            Broker->>API: POST /v1/whaleapi/account/get_application
+            Note right of Broker: 携带 application_id
+            API-->>Broker: 当前状态、失败原因或 account_no
+        end
+        Broker-->>Customer: 展示开户结果
+    end
+```
+
+### 标识与持久化
+
+| 标识 | 含义 | Broker 应如何处理 |
+| --- | --- | --- |
+| `open_id` | Broker 系统内的 Customer 唯一标识 | 保持稳定，不应被其他 Customer 复用 |
+| `member_id` | Whale 用户唯一标识 | 登录/绑定后保存，并与 `open_id` 建立一对一映射 |
+| `application_id` | 单次开户申请标识 | 提交成功后立即保存，用于查询异步状态 |
+| `account_no` | 证券账户号码 | 开户成功后保存，后续资金、交易和对账以此识别账户 |
 
 <Note>
-本栏目建设中。内容与实施团队共同产出。
+Broker 无需按港股或美股上手方拆分账户逻辑。资金划拨和对账以 `account_no` 为准；账户内资金可按已开通能力用于换汇及不同市场交易。
 </Note>
 
-## 规划中的主题
+### 开户状态
 
-- 端到端实施计划
-- 联调测试
-- UAT
-- 迁移 / 切换
-- 生产就绪检查
-- 上线与保障期（hypercare）
+历史接口的开户申请状态如下。接入时应使用状态值而不是文案做程序判断。
+
+| 状态值 | 含义 | 建议处理 |
+| --- | --- | --- |
+| `5` | 已提交 | 记录申请并进入查询队列 |
+| `6` | 审核通过 | 继续等待账户开通 |
+| `7` | 开通中 | 按约定间隔再次查询 |
+| `8` | 开通失败 | 保存并展示 `reason`，按规则决定是否允许修正 |
+| `9` | 开通成功 | 保存 `account_no`，停止轮询 |
+
+<Warning>
+收到 `application_id` 只表示申请提交成功，不表示证券账户已经开通。只有终态为开通成功且返回 `account_no` 后，才能进入依赖证券账户的后续流程。
+</Warning>
+
+## 联调检查
+
+- 首次登录能建立 `open_id` 与 `member_id` 的稳定映射。
+- 重复登录不会创建错误的重复用户。
+- 开户提交后即使服务重启，也能继续通过 `application_id` 查询。
+- 处理中、成功和失败分支都有明确的界面与补偿行为。
+- 重复提交、超时和网络重试不会生成非预期的重复业务。
+- 日志会记录请求关联 ID 和业务标识，但不会记录凭证或完整敏感资料。
+- 退出登录会使对应会话凭证失效。
+
+完成联调后，再按[客户接入与交付流程](/cn/docs/broker-onboarding)执行 UAT、生产检查和上线切换。
