@@ -3,7 +3,7 @@ title: Broker 自有推送渠道
 description: Server-to-Server 消息转发、完整请求示例和 SDK 消息格式
 ---
 
-Whale 通过 Server-to-Server 接口把标准业务消息转发给 Broker Server。Broker 负责鉴权、幂等、可靠落库、用户映射和下游分发。
+Whale 通过 Server-to-Server 接口把标准业务消息转发给 Broker Server。Broker 负责接收和下游分发；鉴权、幂等、可靠落库和用户映射方式需要在项目中确认。
 
 ## 接入流程
 
@@ -15,7 +15,7 @@ sequenceDiagram
     participant Center as Broker 消息中心
     participant App as Broker App
     Whale->>API: POST 消息，携带 X-Api-Key 与 X-Trace-Id
-    API->>API: 鉴权、校验 post_id、幂等落库
+    API->>API: 按项目约定鉴权、校验和处理
     API-->>Whale: code = 0 或失败响应
     API->>Center: 异步处理和分发
     Center-->>App: 标准消息体
@@ -30,7 +30,7 @@ sequenceDiagram
     Whale 将接收地址和认证信息配置到对应环境，并使用测试消息验证连通性。
   </Step>
   <Step title="双方完成消息联调">
-    验证正常消息、重复 `post_id`、鉴权失败、接口超时、返回失败和多 Customer 消息。
+    建议验证正常消息、重复 `post_id`、鉴权失败、接口超时、返回失败和多 Customer 消息；实际范围由双方确认。
   </Step>
   <Step title="Broker App 验收">
     验证前台、后台、冷启动、Customer 登出、通知权限关闭和安全跳转。
@@ -41,12 +41,14 @@ sequenceDiagram
 
 **Method：** `POST`
 
-| Header | 必填 | 说明 |
+| Header | 原始方案 | 说明 |
 | --- | --- | --- |
-| `X-Api-Key` | 是 | Broker 提供给 Whale 的接口认证 Key |
-| `X-Trace-Id` | 是 | 端到端链路追踪标识，双方日志均需记录 |
+| `X-Api-Key` | 提供 | Broker 提供给 Whale 的接口认证 Key；是否必填及轮换方式需确认 |
+| `X-Trace-Id` | 提供 | 链路追踪标识；格式、必填性和记录方式需确认 |
 
 ### 请求字段
+
+下表根据原始请求示例整理，用于帮助阅读，不替代双方确认的正式接口契约；字段类型、必填性及允许值需在项目中确认。
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
@@ -85,7 +87,7 @@ sequenceDiagram
     "t": "<message-type>",
     "tn": "<trace-id>",
     "id": "<unique-message-id>",
-    "lb_push_from": "whale",
+    "lb_push_from": "xx",
     "link": "broker-app://example",
     "json": "{\"key\":\"value\"}"
   }
@@ -102,7 +104,7 @@ sequenceDiagram
 }
 ```
 
-`code` 为 `0` 表示成功，非 `0` 表示失败。原始方案注明失败消息目前不会重试，因此 Broker 接口应在完成鉴权、校验和可靠落库后尽快返回成功；实际重试策略应在项目上线前再次确认。
+`code` 为 `0` 表示成功，非 `0` 表示失败。原始方案注明失败消息目前不会重试；Broker 应据此设计接收处理，但实际成功判定和重试策略必须在项目上线前再次确认。
 
 ## 完整订单消息示例
 
@@ -198,7 +200,7 @@ Broker App 从自有推送渠道取得消息后，需要保留 `title`、`body` 
         "t": "xx", // 消息类型或埋点字段
         "tn": "xx", // 追踪或埋点字段
         "id": "xx", // 消息标识
-        "lb_push_from": "whale", // 标识 Whale 消息
+        "lb_push_from": "xx", // 原始字段用于判断消息来源，具体取值需确认
         "link": "跳转链接",
         "json": "业务内容 JSON 字串"
     }
