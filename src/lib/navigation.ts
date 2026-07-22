@@ -1,16 +1,16 @@
 import docsConfig from '../../docs.json';
 import { createOpenAPISidebarGroup } from 'starlight-openapi';
 
-type MintGroup = {
+type NavGroup = {
   group: string;
-  pages?: Array<string | MintGroup>;
+  pages?: Array<string | NavGroup>;
   openapi?: unknown;
 };
 
-type MintTab = {
+type NavTab = {
   tab: string;
   href?: string;
-  groups?: MintGroup[];
+  groups?: NavGroup[];
 };
 
 type SidebarItem =
@@ -25,17 +25,17 @@ const languageTags: Record<string, string> = { cn: 'zh-CN', 'zh-Hant': 'zh-HK' }
 function translationsAt(tabIndex: number, groupPath: number[]) {
   const translations: Record<string, string> = {};
   for (const [locale, lang] of Object.entries(languageTags)) {
-    let current: MintTab | MintGroup | undefined = byLanguage[locale]?.tabs?.[tabIndex] as MintTab | undefined;
+    let current: NavTab | NavGroup | undefined = byLanguage[locale]?.tabs?.[tabIndex] as NavTab | undefined;
     for (const index of groupPath) {
-      const children = current && 'groups' in current ? current.groups : (current as MintGroup | undefined)?.pages;
-      current = children?.[index] as MintGroup | undefined;
+      const children = current && 'groups' in current ? current.groups : (current as NavGroup | undefined)?.pages;
+      current = children?.[index] as NavGroup | undefined;
     }
     if (current && 'group' in current) translations[lang] = current.group;
   }
   return translations;
 }
 
-function convertGroup(group: MintGroup, tabIndex: number, path: number[]): SidebarItem | undefined {
+function convertGroup(group: NavGroup, tabIndex: number, path: number[]): SidebarItem | undefined {
   if (group.openapi) return undefined;
   const items = (group.pages ?? []).flatMap((item, index) => {
     if (typeof item === 'string') {
@@ -57,7 +57,7 @@ function convertGroup(group: MintGroup, tabIndex: number, path: number[]): Sideb
 export const apiSidebarPlaceholder = createOpenAPISidebarGroup();
 
 export function buildSidebar(): SidebarItem[] {
-  const englishTabs = byLanguage.en.tabs as MintTab[];
+  const englishTabs = byLanguage.en.tabs as NavTab[];
   return englishTabs.map((tab, tabIndex) => {
     if (tab.href) {
       return {

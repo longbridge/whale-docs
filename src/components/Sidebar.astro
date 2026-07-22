@@ -1,11 +1,12 @@
 ---
-import MobileMenuFooter from '@astrojs/starlight/components/MobileMenuFooter.astro';
-import SidebarPersister from '@astrojs/starlight/components/SidebarPersister.astro';
-import SidebarSublist from '@astrojs/starlight/components/SidebarSublist.astro';
+import { DocsSidebar } from './DocsSidebar';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const { sidebar } = Astro.locals.starlightRoute;
 const pathname = Astro.url.pathname;
 const locale = pathname.split('/')[1] || 'en';
+const contentRoot = fileURLToPath(new URL('../../.astro-content/', import.meta.url));
 
 const productIndex = pathname.includes(`/${locale}/whalesdk/`)
   ? 1
@@ -23,7 +24,13 @@ const selected = activeProduct?.type === 'group'
     : sidebar;
 
 const belongsToLocale = (entry: (typeof selected)[number]): boolean => {
-  if (entry.type === 'link') return !entry.href.startsWith('/') || entry.href.startsWith(`/${locale}/`);
+  if (entry.type === 'link') {
+    if (!entry.href.startsWith('/')) return true;
+    if (!entry.href.startsWith(`/${locale}/`)) return false;
+    if (entry.href.includes('/broker-api/reference/')) return true;
+    const relativePath = entry.href.slice(locale.length + 2).replace(/\/$/, '');
+    return existsSync(`${contentRoot}${locale}/${relativePath}.mdx`) || existsSync(`${contentRoot}${locale}/${relativePath}.md`);
+  }
   return entry.entries.some(belongsToLocale);
 };
 
@@ -41,7 +48,4 @@ const localizedSidebar = selected.flatMap((entry) => {
   return filtered ? [filtered] : [];
 });
 ---
-<SidebarPersister>
-  <SidebarSublist sublist={localizedSidebar} />
-</SidebarPersister>
-<div class="md:sl-hidden"><MobileMenuFooter /></div>
+<DocsSidebar client:load entries={localizedSidebar} pathname={pathname} />

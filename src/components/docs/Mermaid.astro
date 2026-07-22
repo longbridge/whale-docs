@@ -1,0 +1,58 @@
+---
+import { Expand, X } from 'lucide-astro';
+
+interface Props { chart: string }
+const { chart } = Astro.props;
+const locale = Astro.url.pathname.split('/')[1] || 'en';
+const labels = locale === 'en'
+  ? { expand: 'Expand diagram', close: 'Close diagram' }
+  : locale === 'zh-cn'
+    ? { expand: '展开流程图', close: '关闭流程图' }
+    : { expand: '展開流程圖', close: '關閉流程圖' };
+---
+<figure class="whale-mermaid-frame">
+  <div class="whale-mermaid" data-chart={encodeURIComponent(chart)}></div>
+  <button class="whale-mermaid-expand" type="button" aria-label={labels.expand}><Expand size={15} strokeWidth={1.8} aria-hidden="true" /></button>
+  <dialog class="whale-mermaid-dialog">
+    <button type="button" aria-label={labels.close}><X size={18} strokeWidth={1.8} aria-hidden="true" /></button>
+    <div></div>
+  </dialog>
+</figure>
+<script>
+  import mermaid from 'mermaid';
+
+  const renderCharts = async () => {
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: 'strict',
+      theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'neutral',
+    });
+    for (const [index, element] of [...document.querySelectorAll<HTMLElement>('.whale-mermaid:not([data-rendered])')].entries()) {
+      try {
+        const chart = decodeURIComponent(element.dataset.chart ?? '');
+        const { svg } = await mermaid.render(`whale-mermaid-${Date.now()}-${index}`, chart);
+        element.innerHTML = svg;
+        element.dataset.rendered = 'true';
+      } catch (error) {
+        element.dataset.error = error instanceof Error ? error.message : document.documentElement.lang === 'en' ? 'Unable to render diagram' : '无法渲染流程图';
+        console.error('Unable to render Mermaid diagram', error);
+        continue;
+      }
+      const frame = element.closest('.whale-mermaid-frame');
+      const dialog = frame?.querySelector<HTMLDialogElement>('.whale-mermaid-dialog');
+      dialog?.querySelector('button')?.addEventListener('click', () => dialog.close());
+      dialog?.addEventListener('click', (event) => {
+        if (event.target === dialog) dialog.close();
+      });
+      frame?.querySelector('.whale-mermaid-expand')?.addEventListener('click', () => {
+        if (!dialog) return;
+        const body = dialog.querySelector('div');
+        if (body) body.innerHTML = element.innerHTML;
+        dialog.showModal();
+      });
+    }
+  };
+
+  document.addEventListener('astro:page-load', renderCharts);
+  renderCharts();
+</script>

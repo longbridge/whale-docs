@@ -6,7 +6,7 @@ const outputRoot = join(root, '.astro-content');
 const locales = ['en', 'zh-CN', 'zh-HK'];
 const outputLocales: Record<string, string> = { 'zh-CN': 'zh-cn', 'zh-HK': 'zh-hk' };
 const componentImport =
-  "import { Accordion, AccordionGroup, Card, CardGroup, Mermaid, Note, Step, Steps, Tip, Update, Warning } from '@components/mintlify/index.ts';";
+  "import { Accordion, AccordionGroup, Card, CardGroup, Mermaid, Note, Step, Steps, Tip, Update, Warning } from '@components/docs/index.ts';";
 
 async function walk(directory: string): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -24,7 +24,14 @@ function convertMdx(source: string) {
     .replaceAll('/cn/', '/zh-cn/')
     .replaceAll('/zh-Hant/', '/zh-hk/')
     .replaceAll('/zh-hant/', '/zh-hk/');
-  const withComponents = nativeLinks.replace(/^(---\n[\s\S]*?\n---\n)/, `$1\n${componentImport}\n`);
+  // Astro's static directory routes require the canonical trailing slash.
+  // Normalize authored Markdown and component hrefs without touching fragments,
+  // files, external URLs, or the source documents.
+  const canonicalLinks = nativeLinks.replace(
+    /(\/(?:en|zh-cn|zh-hk)\/[A-Za-z0-9][A-Za-z0-9/_-]*[A-Za-z0-9_-])(?=(?:#[^)'"\s]*)?(?:\)|['"]))/g,
+    '$1/',
+  );
+  const withComponents = canonicalLinks.replace(/^(---\n[\s\S]*?\n---\n)/, `$1\n${componentImport}\n`);
   return withComponents.replace(/```mermaid\n([\s\S]*?)\n```/g, (_match, chart: string) => {
     return `<Mermaid chart={${JSON.stringify(chart)}} />`;
   });
