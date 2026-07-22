@@ -1,7 +1,7 @@
 import { mount } from "nimbus-docs/client";
 import tippy, { type Instance } from "tippy.js";
 
-const COPY_LABEL = "Copy as Markdown";
+const COPY_LABEL = "Copy page";
 
 /**
  * Wires the page-actions row. Matches production behavior (src/components/
@@ -17,9 +17,10 @@ const COPY_LABEL = "Copy as Markdown";
 function initPageActions(root: HTMLElement): () => void {
 	const cleanups: Array<() => void> = [];
 
-	// Relative to the current page: /foo/bar/ -> /foo/bar/index.md. This mirrors
-	// the `href="index.md"` on the View link and prod's edge markdown shape.
-	const mdUrl = new URL("index.md", window.location.href).href;
+	// Mintlify-style Markdown twin: /foo/bar/ -> /foo/bar.md.
+	const current = new URL(window.location.href);
+	current.pathname = `${current.pathname.replace(/\/$/, "")}.md`;
+	const mdUrl = current.href;
 
 	// --- Copy as Markdown ---
 	const copyBtn = root.querySelector<HTMLButtonElement>(
@@ -34,6 +35,7 @@ function initPageActions(root: HTMLElement): () => void {
 	const label = root.querySelector<HTMLSpanElement>(
 		"[data-nb-page-actions-label]",
 	);
+	const defaultLabel = label?.textContent ?? COPY_LABEL;
 
 	if (copyBtn) {
 		let resetTimer: number | undefined;
@@ -50,7 +52,7 @@ function initPageActions(root: HTMLElement): () => void {
 			resetTimer = window.setTimeout(() => {
 				copyIcon?.classList.remove("hidden");
 				checkIcon?.classList.add("hidden");
-				if (label) label.textContent = COPY_LABEL;
+				if (label) label.textContent = defaultLabel;
 			}, 1500);
 		};
 

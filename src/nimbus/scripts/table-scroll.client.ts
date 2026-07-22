@@ -18,6 +18,7 @@ function wrapDocsTables() {
 
 		const wrapper = document.createElement("div");
 		wrapper.className = "table-scroll";
+		wrapper.dataset.slot = "table-container";
 		wrapper.tabIndex = 0;
 		wrapper.setAttribute("role", "region");
 		wrapper.setAttribute("aria-label", "Table");
@@ -28,4 +29,3 @@ function wrapDocsTables() {
 }
 
 wrapDocsTables();
-

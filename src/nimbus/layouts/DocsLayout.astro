@@ -4,17 +4,28 @@ import type { DocsPageProps } from "nimbus-docs/types";
 import BaseLayout from "./BaseLayout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import { Sidebar, SidebarFilter, SidebarStateRestore } from "@/components/ui/sidebar";
+import { Sidebar, SidebarStateRestore } from "@/components/ui/sidebar";
 import { TOC, MobileTOC } from "@/components/ui/toc";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Pagination } from "@/components/ui/pagination";
 import { PageActions, PageActionLinks } from "@/components/ui/page-actions";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 
-type Props = DocsPageProps & { wide?: boolean; feedback?: boolean };
-const { title, description, sidebar, headings, breadcrumbs, prevNext, markdownUrl, lastUpdated, editUrl, wide = false } = Astro.props;
+type Props = DocsPageProps & { wide?: boolean; feedback?: boolean; descriptionHtml?: string };
+const { title, description, descriptionHtml, sidebar, headings, prevNext, markdownUrl, lastUpdated, editUrl, wide = false } = Astro.props;
 const showSidebar = sidebar !== false;
 const showToc = headings !== false && headings.length > 0;
+const isApiSidebar = Astro.url.pathname.split("/").filter(Boolean)[1] === "broker-api";
+function currentGroup(items: typeof sidebar): string | undefined {
+  if (!Array.isArray(items)) return undefined;
+  for (const item of items) {
+    if (item.type === "group") {
+      if (item.children.some((child) => child.type === "link" && child.isCurrent)) return item.label;
+      const nested = currentGroup(item.children);
+      if (nested) return nested;
+    }
+  }
+}
+const groupLabel = currentGroup(sidebar);
 ---
 
 <BaseLayout title={title} description={description} markdownUrl={markdownUrl} lastUpdated={lastUpdated}>
@@ -22,9 +33,8 @@ const showToc = headings !== false && headings.length > 0;
     <Header showSidebar={showSidebar} />
     <div class="flex flex-1">
       {showSidebar && (
-        <aside id="desktop-sidebar" data-nb-desktop-sidebar class="bg-background sticky top-[7.5rem] hidden h-[calc(100vh-7.5rem)] w-(--nb-sidebar-width) shrink-0 overflow-y-auto lg:block">
-          <nav data-shared-sidebar-nav class="px-5 pt-7 pb-14">
-            <SidebarFilter class="mb-4" />
+        <aside id="desktop-sidebar" data-nb-desktop-sidebar data-nb-api-sidebar={isApiSidebar ? "" : undefined} class="bg-background sticky top-[7.5rem] hidden h-[calc(100vh-7.5rem)] w-(--nb-sidebar-width) shrink-0 overflow-y-scroll lg:block">
+          <nav data-shared-sidebar-nav class="px-4 pt-7 pb-14">
             <Sidebar items={sidebar} persist />
           </nav>
           <div class="from-background pointer-events-none sticky bottom-0 h-10 bg-gradient-to-t to-transparent"></div>
@@ -35,14 +45,12 @@ const showToc = headings !== false && headings.length > 0;
       <div class="flex min-w-0 flex-1 flex-col">
         <div class="flex min-w-0 flex-1">
           <main id="main-content" class="min-w-0 flex-1">
-            <div class:list={["mx-auto px-6 pt-10 pb-16 lg:px-10", wide ? "max-w-[1400px]" : "max-w-(--nb-content-max)"]}>
-              <Breadcrumbs items={breadcrumbs ?? []} class="mb-5" />
+            <div class:list={["mx-auto w-full px-6 pb-16", wide ? "max-w-[1400px] pt-6 lg:px-8" : "max-w-(--nb-content-max) pt-10 lg:px-10"]}>
+              {groupLabel && <div class:list={["text-primary text-sm font-semibold", wide ? "mb-2" : "mb-5"]}>{groupLabel}</div>}
               <div id="_top">
-                <h1 class="text-foreground mb-0 leading-tight" style="font-size:var(--nb-h1-size);font-weight:var(--nb-h1-weight);letter-spacing:var(--nb-h1-tracking)">{title}</h1>
-                {description && <p class="text-muted-foreground mt-3 text-lg leading-relaxed">{description}</p>}
-                <PageActions lastUpdated={lastUpdated} class="mt-4" />
+                <div class="flex items-start justify-between gap-6"><div class="min-w-0"><h1 class="text-foreground mb-0 leading-tight" style={`font-size:${isApiSidebar ? "1.875rem" : "var(--nb-h1-size)"};font-weight:var(--nb-h1-weight);letter-spacing:var(--nb-h1-tracking)`}>{title}</h1>{descriptionHtml ? <div class:list={["api-page-description text-muted-foreground", isApiSidebar ? "mt-1.5 text-base leading-6" : wide ? "mt-2 text-lg leading-7" : "mt-3 text-lg leading-relaxed"]} set:html={descriptionHtml} /> : description && <p class:list={["text-muted-foreground", isApiSidebar ? "mt-1.5 text-base leading-6" : wide ? "mt-2 text-lg leading-7" : "mt-3 text-lg leading-relaxed"]}>{description}</p>}</div><PageActions lastUpdated={lastUpdated} class="mt-1 shrink-0" /></div>
                 {showToc && <div class="border-border bg-background/95 sticky top-[7.5rem] z-20 -mx-6 mt-5 border-y px-6 py-2 backdrop-blur xl:hidden"><MobileTOC headings={headings} /></div>}
-                <article class="docs-content mt-8 max-w-none"><slot /></article>
+                <article class:list={["docs-content max-w-none", wide ? "mt-5" : "mt-8"]}><slot /></article>
               </div>
               <Pagination prevNext={prevNext} />
               <div class="mt-10 xl:hidden"><PageActionLinks editUrl={editUrl} /></div>
@@ -51,13 +59,13 @@ const showToc = headings !== false && headings.length > 0;
 
           {showToc && (
             <aside data-nb-toc-scroll-host class="sticky top-[7.5rem] hidden h-[calc(100vh-7.5rem)] w-(--nb-toc-width) shrink-0 overflow-y-auto xl:block">
-              <div class="px-7 pt-10 pb-10"><TOC headings={headings} /><div class="border-border mt-8 border-t pt-6"><PageActionLinks editUrl={editUrl} /></div></div>
+              <div class="px-7 pt-10 pb-10"><TOC headings={headings} /><div class="mt-8 pt-6"><PageActionLinks editUrl={editUrl} /></div></div>
             </aside>
           )}
         </div>
-        <Footer />
       </div>
     </div>
+    <Footer />
   </div>
 
   {showSidebar && (

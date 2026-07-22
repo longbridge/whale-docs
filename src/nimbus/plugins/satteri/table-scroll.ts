@@ -19,6 +19,7 @@ export default function tableScroll(): HastPluginDefinition {
 					tagName: "div",
 					properties: {
 						className: ["table-scroll"],
+						"data-slot": "table-container",
 						tabIndex: 0,
 						role: "region",
 						"aria-label": "Table",
@@ -29,4 +30,3 @@ export default function tableScroll(): HastPluginDefinition {
 		},
 	};
 }
-
