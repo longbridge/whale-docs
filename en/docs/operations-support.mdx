@@ -1,17 +1,46 @@
 ---
-title: Operations & Support
-description: Environments, errors, changes, and service status
+title: Operations and Support
+description: Environments, errors, changes, and service incidents
 ---
 
-Where to look when something needs investigating in day-to-day running: environments, error handling, change notices, and support escalation.
+Use this page when diagnosing day-to-day issues involving environments, errors, change notifications, or support escalation.
 
-<Note>
-This section is under construction. Product-specific operational references live with each API product (e.g. [Broker API Operations](/en/broker-api/operations)).
-</Note>
+Each API product documents its own error model and limits. For example, see [Broker API operations](/en/broker-api/operations).
 
-## Planned topics
+## Environments and connectivity
 
-- Environment overview and connectivity
-- Incident and status communication
-- Change and release notices
-- Support channels and escalation paths
+- Maintain test and production endpoints, outbound IPs, DNS, TLS, and proxy settings separately.
+- Before business implementation, use a read-only endpoint to verify DNS, TLS, allowlists, and credentials.
+- Do not hardcode addresses from historical material. Confirm the current endpoint with the Whale project team before go-live.
+- Use bounded retries with backoff for connection failures, timeouts, and eligible server errors. Never retry a business failure blindly.
+
+## Error handling
+
+Record HTTP status, response-body business code, request correlation ID, endpoint, and timestamp. Redact tokens, secrets, identity-document numbers, and contact details from logs.
+
+```mermaid
+flowchart TD
+    A[Receive API response] --> B{HTTP request successful?}
+    B -- No --> C[Record status and correlation ID]
+    C --> D{Network or retryable service error?}
+    D -- Yes --> E[Retry a bounded number of times with backoff]
+    D -- No --> F[Escalate by incident severity]
+    B -- Yes --> G{Business result successful?}
+    G -- Yes --> H[Continue business flow]
+    G -- No --> I[Record business error code]
+    I --> J{Correctable or retryable?}
+    J -- Correctable --> K[Ask for corrected input or state]
+    J -- Retryable --> E
+    J -- No --> F
+```
+
+## Submit a support request
+
+Include environment, timestamp and timezone, endpoint and method, redacted request summary, HTTP status, business code, request correlation ID, impact, and whether the issue reproduces consistently. Never send secrets or complete Customer-sensitive data through chat or tickets.
+
+## Changes and production incidents
+
+- Version API, configuration, and field-mapping changes and record their effective time.
+- During a production incident, contain impact before collecting evidence and restoring service.
+- After closure, record root cause, recovery actions, residual risk, and prevention work.
+- Update go-live and rollback steps for any change affecting a production release window.
