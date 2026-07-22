@@ -708,6 +708,17 @@
     return m ? m[1] : null;
   }
 
+  function navigate(url) {
+    // Prefer Next.js soft navigation (~50ms, keeps app shell mounted) over
+    // `location.href` (full page reload, ~500ms — feels laggy in the menu).
+    var r = window.next && window.next.router;
+    if (r && typeof r.push === "function") {
+      r.push(url);
+    } else {
+      location.href = url;
+    }
+  }
+
   document.addEventListener(
     "click",
     function (e) {
@@ -721,7 +732,7 @@
       if (!slug) return;
       e.preventDefault();
       e.stopImmediatePropagation();
-      location.href = "/" + lang + "/api-reference/" + slug;
+      navigate("/" + lang + "/api-reference/" + slug);
     },
     true
   );
