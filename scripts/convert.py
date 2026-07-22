@@ -43,7 +43,11 @@ LANGS = [
     ("cn", "cn", None),
     ("zh-Hant", "zh-hant", "hk"),
 ]
-LANG_DIRS = {"en": "en", "cn": "cn", "zh-Hant": "zh-hant"}
+# Directory / URL prefix must match the language code casing exactly —
+# Mintlify uses the raw `language` value as the URL prefix and looks for
+# sibling pages case-sensitively; a lowercase `zh-hant/` prefix under a
+# `zh-Hant` language breaks the language switcher (falls back to /introduction).
+LANG_DIRS = {"en": "en", "cn": "cn", "zh-Hant": "zh-Hant"}
 
 SKIP_DIRS = {".git", ".claude", "whale-openapi", "scripts", "data", "templates", "docs"}
 
@@ -498,15 +502,15 @@ BROKER_API_MANUAL_GROUPS = {
     },
     "zh-Hant": {
         "prefix": [
-            {"group": "概覽", "icon": "rocket", "pages": ["zh-hant/broker-api/overview"]},
+            {"group": "概覽", "icon": "rocket", "pages": ["zh-Hant/broker-api/overview"]},
             {"group": "開始使用", "icon": "play", "pages": [
-                "zh-hant/broker-api/get-started/quickstart",
-                "zh-hant/broker-api/get-started/authentication",
-                "zh-hant/broker-api/get-started/passthrough-headers",
+                "zh-Hant/broker-api/get-started/quickstart",
+                "zh-Hant/broker-api/get-started/authentication",
+                "zh-Hant/broker-api/get-started/passthrough-headers",
             ]},
         ],
         "suffix": [
-            {"group": "運維參考", "icon": "wrench", "pages": ["zh-hant/broker-api/operations"]},
+            {"group": "運維參考", "icon": "wrench", "pages": ["zh-Hant/broker-api/operations"]},
         ],
     },
 }
@@ -565,6 +569,16 @@ def main() -> int:
             lop.pop("security", None)      # global security covers it
             lop.pop("servers", None)
             lop["tags"] = [localized_top_name(menu_path[0], menu, lang_key)]
+            # Route pages by the unique operationId instead of Mintlify's
+            # default localized tag/summary slug (Chinese URLs). When x-mint
+            # sets an explicit href, the sidebar label defaults to a humanized
+            # URL slug ("financing_delta" → "Financing delta") — force it back
+            # to the localized summary via metadata.sidebarTitle.
+            if lop.get("operationId"):
+                xmint = {"href": f"/{LANG_DIRS[lang_key]}/api-reference/{lop['operationId']}"}
+                if lop.get("summary"):
+                    xmint["metadata"] = {"sidebarTitle": lop["summary"]}
+                lop["x-mint"] = xmint
             spec["paths"].setdefault(path, OrderedDict())[method] = lop
         ensure_response_descriptions(spec, lang_key)
         outputs[lang_key] = spec
@@ -582,10 +596,28 @@ def main() -> int:
                 node = node.setdefault(part, OrderedDict())
             node.setdefault("__pages", []).extend(entries)
 
+        # Map (path, method) -> operationId for this language's spec so we can
+        # emit language-prefixed proxy-page slugs instead of "METHOD /path".
+        # Rationale: Mintlify's language switcher matches sibling pages by
+        # docs.json string equality. Two languages listing the same
+        # "POST /v1/x" produce identical strings, and the switcher falls back
+        # to /introduction. Language-prefixed file-path entries (each pointing
+        # at a per-language proxy MDX with `openapi: METHOD /path` frontmatter)
+        # give each tab a unique string, restoring cross-language mapping.
+        op_id_by_pm: Dict[Tuple[str, str], str] = {}
+        for path, methods in outputs[lang_key]["paths"].items():
+            for method, op in methods.items():
+                if isinstance(op, dict) and op.get("operationId"):
+                    op_id_by_pm[(path, method.lower())] = op["operationId"]
+
         def render(node: Dict[str, Any], lang_key: str, prefix: Tuple[str, ...]) -> List[Any]:
             out: List[Any] = []
             for pm in node.get("__pages", []):
-                out.append(f"{pm[1].upper()} {pm[0]}")
+                op_id = op_id_by_pm.get((pm[0], pm[1].lower()))
+                if op_id:
+                    out.append(f"{LANG_DIRS[lang_key]}/api-reference/{op_id}")
+                else:
+                    out.append(f"{pm[1].upper()} {pm[0]}")
             children = [(c, cn) for c, cn in node.items() if c != "__pages"]
             # order sub-groups by menu.json (falls back to alphabetical for
             # anything not in the menu tree).
@@ -632,7 +664,30 @@ def main() -> int:
         # default=str: YAML auto-parses bare dates in examples into datetime.date
         p.write_text(json.dumps(outputs[lang_key], ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
 
-    # v2 generates no MDX — clean up any leftover generated pages.
+    # Emit per-language proxy MDX pages, one per operation. See the render()
+    # comment above for why: gives the language switcher unique-per-language
+    # docs.json page strings so cross-language sibling mapping works on
+    # openapi-generated pages.
+    for lang_key, _, _ in LANGS:
+        api_dir = REPO_ROOT / LANG_DIRS[lang_key] / "api-reference"
+        api_dir.mkdir(parents=True, exist_ok=True)
+        expected = set()
+        for path, methods in outputs[lang_key]["paths"].items():
+            for method, op in methods.items():
+                if not (isinstance(op, dict) and op.get("operationId")):
+                    continue
+                opid = op["operationId"]
+                expected.add(opid)
+                (api_dir / f"{opid}.mdx").write_text(
+                    f"---\nopenapi: {method.lower()} {path}\n---\n",
+                    encoding="utf-8",
+                )
+        # Prune stale proxy MDX (operations removed upstream).
+        for f in api_dir.glob("*.mdx"):
+            if f.stem not in expected:
+                f.unlink()
+
+    # v2 generates no MDX under data-porter — clean up any leftover.
     for lang_dir in LANG_DIRS.values():
         dp = REPO_ROOT / lang_dir / "api-reference" / "data-porter"
         if dp.exists():
