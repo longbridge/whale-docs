@@ -55,6 +55,11 @@ OPENAPI_DIRS = {"en": "En", "cn": "Cn", "zh-Hant": "zh-Hant"}
 
 SKIP_DIRS = {".git", ".claude", "whale-openapi", "scripts", "data", "templates", "docs"}
 
+# Header parameters that live in every operation's request but are covered
+# once by the passthrough-headers doc — filter them out at generation time so
+# each API page doesn't repeat them.
+PASSTHROUGH_HEADERS = {"account-channel", "x-module"}
+
 # ---------------------------------------------------------------------------
 # Naming helpers
 # ---------------------------------------------------------------------------
@@ -572,6 +577,19 @@ def main() -> int:
             lop = localize(op, sfx, lang_key)
             lop.pop("security", None)      # global security covers it
             lop.pop("servers", None)
+            # Strip passthrough headers (account-channel / x-module) from
+            # per-operation parameters — they're documented once at
+            # {lang}/broker-api/get-started/passthrough-headers and would
+            # otherwise repeat noisily on every endpoint.
+            if isinstance(lop.get("parameters"), list):
+                lop["parameters"] = [
+                    p for p in lop["parameters"]
+                    if not (isinstance(p, dict)
+                            and (p.get("in") or "").lower() == "header"
+                            and (p.get("name") or "").lower() in PASSTHROUGH_HEADERS)
+                ]
+                if not lop["parameters"]:
+                    lop.pop("parameters", None)
             lop["tags"] = [localized_top_name(menu_path[0], menu, lang_key)]
             # Route pages by the unique operationId instead of Mintlify's
             # default localized tag/summary slug (Chinese URLs). When x-mint
