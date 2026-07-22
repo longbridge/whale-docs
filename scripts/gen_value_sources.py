@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Generate the VALUE_SOURCES map in custom.js from `x-value-source`
-annotations in openapi.cn.json.
+annotations in openapi.zh-CN.json.
 
 An annotated request property declares that its value comes from another
 endpoint's query result:
@@ -37,7 +37,7 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SPEC_FILE = REPO_ROOT / "openapi.cn.json"
+SPEC_FILE = REPO_ROOT / "openapi.zh-CN.json"
 CUSTOM_JS = REPO_ROOT / "custom.js"
 START = "// __VALUE_SOURCES_GENERATED_START__"
 END = "// __VALUE_SOURCES_GENERATED_END__"

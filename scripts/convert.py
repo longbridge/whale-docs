@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Convert whale-openapi-docs source data into the Mintlify shape used by
-this repo (pipeline v2 — consumes the generated OpenAPI YAML files).
+Convert whale-openapi-docs source data into the OpenAPI and navigation inputs
+used by this Astro/Starlight repo (pipeline v2).
 
 Since source commit 0298df9 the sibling repo ships one OpenAPI 3.1 YAML
 per operation, trilingual via `x-summary-{hk,en}` / `x-description-{hk,en}`
 / `x-name-{cn,hk,en}` / `x-enum-details` extension fields, and carries its
 business grouping in `x-menu-path`. This script merges those YAMLs into:
 
-  - openapi.{en,cn,zh-hant}.json   (per-language specs, x-* localized away)
+  - openapi.{en,zh-CN,zh-HK}.json  (per-language specs, x-* localized away)
   - docs.json                      (Broker API tab nav from x-menu-path)
 
 No MDX is generated any more: every operation (datasets included) is a
@@ -40,18 +40,16 @@ DEFAULT_SOURCE = REPO_ROOT.parent / "whale-openapi-docs"
 # (docs.json lang key, openapi filename suffix, x-* suffix or None for base)
 LANGS = [
     ("en", "en", "en"),
-    ("cn", "cn", None),
-    ("zh-Hant", "zh-hant", "hk"),
+    ("cn", "zh-CN", None),
+    ("zh-Hant", "zh-HK", "hk"),
 ]
-# Directory / URL prefix must match the language code casing exactly —
-# Mintlify uses the raw `language` value as the URL prefix and looks for
-# sibling pages case-sensitively; a lowercase `zh-hant/` prefix under a
-# `zh-Hant` language breaks the language switcher (falls back to /introduction).
-LANG_DIRS = {"en": "en", "cn": "cn", "zh-Hant": "zh-Hant"}
+# Authored source directories use BCP 47 casing under docs/. Astro/Starlight
+# normalizes public route segments to lowercase during content preparation.
+LANG_DIRS = {"en": "en", "cn": "zh-CN", "zh-Hant": "zh-HK"}
 
-# Directory value used inside docs.json openapi entries. Cased differently
-# from LANG_DIRS on purpose — see the note where this is consumed for why.
-OPENAPI_DIRS = {"en": "En", "cn": "Cn", "zh-Hant": "zh-Hant"}
+# Legacy docs.json keys remain compatible with the generator while generated
+# file and source-directory names use the new locale vocabulary.
+OPENAPI_DIRS = {"en": "en", "cn": "zh-CN", "zh-Hant": "zh-HK"}
 
 SKIP_DIRS = {".git", ".claude", "whale-openapi", "scripts", "data", "templates", "docs"}
 
@@ -591,11 +589,8 @@ def main() -> int:
                 if not lop["parameters"]:
                     lop.pop("parameters", None)
             lop["tags"] = [localized_top_name(menu_path[0], menu, lang_key)]
-            # Route pages by the unique operationId instead of Mintlify's
-            # default localized tag/summary slug (Chinese URLs). When x-mint
-            # sets an explicit href, the sidebar label defaults to a humanized
-            # URL slug ("financing_delta" → "Financing delta") — force it back
-            # to the localized summary via metadata.sidebarTitle.
+            # Preserve the legacy operationId route hint for old consumers.
+            # Starlight OpenAPI generates /operations/<operationId> itself.
             if lop.get("operationId"):
                 xmint = {"href": f"/{LANG_DIRS[lang_key]}/api-reference/{lop['operationId']}"}
                 if lop.get("summary"):
@@ -644,16 +639,8 @@ def main() -> int:
                 "icon": icon,
                 "openapi": {
                     "source": f"openapi.{file_suffix}.json",
-                    # NB: `directory` cased differently from the URL prefix on
-                    # purpose. On Mintlify cloud (case-sensitive Linux), a
-                    # `directory` value equal to the lowercased URL prefix
-                    # (e.g. `cn/api-reference` under language `cn`) makes the
-                    # renderer treat the location as static content and skip
-                    # auto-generating openapi pages there — result: 404 on
-                    # every /cn/api-reference/* URL. Using a distinct casing
-                    # (`Cn/api-reference`, `En/…`, `zh-Hant/…`) sidesteps that
-                    # detection; the actual URLs served come from x-mint.href
-                    # in the specs, not from this directory value.
+                    # Retained for legacy docs.json consumers. Astro navigation
+                    # ignores this directory and reads each schema directly.
                     "directory": f"{OPENAPI_DIRS[lang_key]}/api-reference",
                 },
                 "pages": pages,
@@ -680,7 +667,7 @@ def main() -> int:
 
     # v2 generates no MDX under data-porter — clean up any leftover.
     for lang_dir in LANG_DIRS.values():
-        dp = REPO_ROOT / lang_dir / "api-reference" / "data-porter"
+        dp = REPO_ROOT / "docs" / lang_dir / "api-reference" / "data-porter"
         if dp.exists():
             for f in dp.iterdir():
                 if f.suffix == ".mdx":

@@ -1,90 +1,66 @@
 # Whale Docs
 
-The unified documentation portal for the Longport Whale solution, built with [Mintlify](https://mintlify.com).
+Longport Whale 的统一文档门户，基于 [Astro](https://astro.build/) 与 [Starlight](https://starlight.astro.build/) 构建，并使用 Bun 管理依赖和运行脚本。
 
-The target information architecture covers general product and implementation docs, WhaleSDK for iOS/Android/WebTrade, Broker API, Trading API, and OpenAPI. The current published content is the existing Broker API (`b-api`) corpus; the repository migration will be phased.
+站点包含 Docs、Whale SDK、Broker API、Trading API 与 OpenAPI。界面延续 Whale Docs 原有的品牌色、产品导航和信息架构；布局及交互实现参考了 Cloudflare Docs 的开源 Nimbus 主题模式，包括产品级导航、宽屏文档布局、可横向滚动表格、图片缩放和返回顶部等能力。
 
-## Internal design documents
-
-Whole-solution designs, information architecture, planning documents, and architectural decision records belong under `docs/internal/`. This directory is intentionally listed in `.gitignore`: its contents are local working material and must not be added to the public Mintlify navigation or committed to Git.
-
-Legacy site: https://apidocs.longportwhale.com/whaleapi/
-
-## Local development
+## 本地开发
 
 ```bash
-npm i -g mint
-mint dev
+bun install
+bun run dev
 ```
 
-Open http://localhost:3000.
+默认访问 <http://localhost:4321>。生产构建与本地预览：
 
-Enable the pre-commit hook once per clone so every commit regenerates the
-site from `../whale-openapi-docs` and stages the diff:
+```bash
+bun run build
+bun run preview
+```
+
+## 内容与站点结构
+
+```text
+astro.config.mjs              # Astro、Starlight、OpenAPI 与多语言配置
+docs.json                     # 原有信息架构；继续作为导航生成数据源
+openapi.{en,zh-CN,zh-HK}.json # 三种语言的 Broker API OpenAPI 规范
+docs/en/                      # 英文原始文档
+docs/zh-CN/                   # 简体中文原始文档
+docs/zh-HK/                   # 繁体中文原始文档
+src/components/               # Whale 主题 Header、Sidebar 与兼容组件
+src/styles/whale.css          # Whale 品牌和布局样式
+scripts/prepare-astro-content.ts # 构建前生成 Astro 兼容内容
+.astro-content/               # 自动生成，不提交
+```
+
+原始 Markdown/MDX 文件保持在 `docs/` 下的三个语言目录中。`prepare:docs` 会把它们复制到 `.astro-content/`，仅在生成副本中注入旧组件兼容层并转换 Mermaid 代码块，因此迁移不会重写或删减原文。
+
+`docs.json` 不再是运行时框架配置，但仍是产品分组与多语言导航的来源，也由 API 导入脚本维护。源目录使用 `en`、`zh-CN`、`zh-HK`；Starlight 将公开 locale 路径规范化为 `/en/`、`/zh-cn/`、`/zh-hk/`，大小写形式和旧地址均通过重定向保持兼容。
+
+## 更新 Broker API
+
+API 的源数据位于相邻仓库 `../whale-openapi-docs`，不要直接编辑生成的 OpenAPI JSON。
+
+```bash
+python3 scripts/convert.py --dry-run
+python3 scripts/convert.py
+bun run build
+```
+
+导入脚本会更新三个 OpenAPI 文件和 `docs.json` 中的业务域分组。Astro 构建期间，`starlight-openapi` 根据规范生成接口参考页。
+
+如需让每次提交自动同步 API，可在每个 clone 中启用仓库 hook：
 
 ```bash
 git config core.hooksPath .githooks
 ```
 
-Bypass ad-hoc with `git commit --no-verify` (e.g. doc-only edits or when the
-sibling repo isn't checked out).
+## 主题来源
 
-## Structure
+本站没有直接采用 Cloudflare 品牌视觉。可复用的 Astro/Starlight 架构与交互模式参考 [cloudflare/cloudflare-docs](https://github.com/cloudflare/cloudflare-docs) 中的 Nimbus 主题；其代码采用 MIT License。Whale 的颜色、Logo、排版密度、导航名称及内容呈现均由本仓库独立维护，详见 [NOTICE.md](./NOTICE.md)。
 
-Product entries per language, in fixed order: **Docs → WhaleSDK → Broker API → Trading API → OpenAPI** (external link to open.longportapp.com during migration).
+根目录的 `style.css` 与 `custom.js` 是旧 Mintlify 运行时遗留文件，不会被 Astro 加载。其中 `custom.js` 依赖 Mintlify 私有请求代理，无法在静态 Astro 站点安全复用；API 交互改由 `starlight-openapi` 提供。生成脚本仍维护该遗留文件，便于旧站回溯，但新功能不得依赖它。
 
-```
-docs.json                 # site config + per-language navigation (six product tabs)
-openapi.{en,cn,zh-hant}.json  # per-language Broker API OpenAPI 3.0 specs
-style.css                 # sidebar width, tabs row, try-it button styling
-en/                       # English pages (default language; cn/ + zh-Hant/ mirror it)
-  introduction.mdx        # Docs overview / portal landing
-  docs/
-    integration-options.mdx   # choose WhaleSDK vs Broker/Trading/OpenAPI
-  whalesdk/overview.mdx       # skeleton (iOS/Android/WebTrade, under construction)
-  broker-api/
-    overview.mdx          # caller / authorization subject / data scope / envs
-    get-started/          # quickstart, authentication, passthrough-headers
-    operations.mdx        # error model / rate limits / deprecation — TBD markers
-  trading-api/introduction.mdx  # availability page (planned Q4 2026)
-  api-reference/data-porter/    # generated dataset pages (Broker API reference)
-logo/                     # brand logo (light/dark) + favicon
-```
+内部设计稿、信息架构草案与决策记录放在被忽略的 `docs/internal/`，不得加入公开导航或提交到 Git。
 
-## Internationalization
-
-Three languages via `navigation.languages` in `docs.json`: `en` (default), `cn`, `zh-Hant` — matching the legacy site's `accept-language` values (`en` / `zh-CN` / `zh-HK`). Every guide page exists in all three directories with identical structure; keep them in sync when editing. The API Reference uses one spec per language (`openapi.en.json` / `openapi.cn.json` / `openapi.zh-hant.json`) so each language shows single-language content; keep the three specs in sync when endpoints change.
-
-## Updating the API Reference
-
-**Source of truth** lives in the sibling repo `../whale-openapi-docs`. This site is generated from it — do not hand-edit the generated files.
-
-Two kinds of API pages:
-
-1. **REST endpoints** — defined in the per-language specs `openapi.{en,cn,zh-hant}.json`; each operation is referenced in `docs.json` as a `"METHOD /path"` page entry inside the language's group (`openapi: {source, directory}`).
-2. **datasets** — each dataset is served at `POST /v1/datasets/<name>` (dataset name from `templates/template_map.json` in the source repo). Every dataset gets an OpenAPI operation plus its own MDX page at `{lang}/api-reference/data-porter/<slug>.mdx` (frontmatter `openapi: post /v1/datasets/<name>`), one per language.
-
-Navigation is grouped **by business domain** (Cash Management / Risk Control / …), not by transport: REST operations (`"METHOD /path"` entries) and data_porter template pages (MDX paths) are mixed in the same domain group.
-
-### Regenerate from whale-openapi-docs
-
-```bash
-python3 scripts/convert.py --dry-run   # inspect counts
-python3 scripts/convert.py             # rewrite openapi.*.json + MDX + docs.json
-mint dev                               # preview
-```
-
-The script is idempotent. Old generated MDX under `{lang}/api-reference/data-porter/` that no longer maps to a template is deleted. See `.claude/skills/whale-api-import/SKILL.md` for the design notes, mapping rules, and troubleshooting recipes.
-
-Spec conventions:
-
-- All operations must carry exactly one tag.
-- `servers`: `https://b-api.longbridge.xyz` (test, playground default) and `https://b-api.lbkrs.com` (production).
-- Security scheme: `Authorization` header carrying the broker-scoped `ACCESS_TOKEN`.
-- The generator only owns the reference groups inside the Broker API tab; the Overview / Get Started / Operations groups are hand-maintained (see `BROKER_API_MANUAL_GROUPS` in `scripts/convert.py`).
-
-## TODO
-
-- [ ] Error codes page (not present in the legacy site export)
-- [ ] Changelog page
-- [ ] Future: FAQ / Q&A section (planned expansion)
+旧站：<https://apidocs.longportwhale.com/whaleapi/>

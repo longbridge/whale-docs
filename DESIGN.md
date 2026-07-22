@@ -1,10 +1,19 @@
 # Whale Docs Design & Authoring System
 
+> **Astro migration note (2026-07):** Whale Docs now runs on Astro, Starlight,
+> and Bun. `README.md`, `astro.config.mjs`, and `src/styles/whale.css` are the
+> implementation sources of truth. Content lives in `docs/en`, `docs/zh-CN`,
+> and `docs/zh-HK`; generated specifications are
+> `openapi.{en,zh-CN,zh-HK}.json`. References below to the former Mintlify
+> runtime, `docs.json` styling values, root language folders, or `style.css`
+> describe the preserved visual intent only and do not override this
+> architecture. `docs.json` remains solely as navigation-generation input.
+
 ## 1. Purpose and design direction
 
 This is the implementation guide for **Whale Docs**, the unified documentation
-portal for the Longport Whale solution, built on a hosted documentation platform
-(theme `mint`). Documentation authors, product designers, and coding agents must
+portal for the Longport Whale solution, built with Astro and Starlight.
+Documentation authors, product designers, and coding agents must
 use it when creating or reviewing a page, changing site configuration, or
 styling the portal.
 
@@ -47,12 +56,12 @@ It does **not** duplicate what other files already own:
 | --- | --- |
 | Product & role terminology (Whale, Broker, Customer, …) | `CONTEXT.md` glossary |
 | Repository structure, build, regeneration workflow | `README.md` |
-| Site config values (colors, logo, nav, footer, playground) | `docs.json` |
-| Layout/appearance overrides | `style.css` |
+| Site config values (colors, logo, nav, footer, playground) | `astro.config.mjs` |
+| Layout/appearance overrides | `src/styles/whale.css` |
 | Broker API reference content | generated from `../whale-openapi-docs` |
 | Sync pipeline (YAML → specs + nav) | `.claude/skills/whale-api-import` |
 
-When a rule here and a value in `docs.json` or `style.css` disagree, the config
+When a rule here and a value in `astro.config.mjs` or `src/styles/whale.css` disagree, the config
 file is authoritative for the value; this document is authoritative for the
 *intent* and the constraints on changing it.
 
@@ -72,13 +81,13 @@ The site has two content classes, and design rules apply differently to each.
 
 ## 2. UI style foundation
 
-Whale Docs uses the `mint` theme as its visual foundation. The
-implementation source of truth is `docs.json` (site config) and `style.css`
-(scoped overrides).
+Whale Docs uses Starlight with a Whale theme that preserves the former
+Mintlify site's visual foundation. The implementation source of truth is
+`astro.config.mjs` and `src/styles/whale.css`.
 
 | Property | Current standard |
 | --- | --- |
-| Platform | Hosted documentation platform, theme `mint` |
+| Platform | Astro + Starlight, run with Bun |
 | Site name | `Whale Docs` |
 | Brand color | Whale Violet `#7245F2` — see [Design System → Color](/en/design-system/color) |
 | Color mode | Light **and** dark, at full parity |
@@ -87,7 +96,7 @@ implementation source of truth is `docs.json` (site config) and `style.css`
 | Logo | `logo/whale-light.png`, `logo/whale-dark.png`; favicon `whale-mark.png` |
 | API playground | Interactive (`api.playground.display: "interactive"`) |
 | AI-assistant actions | `copy`, `chatgpt`, `claude`, `cursor`, `vscode` |
-| Languages | `en` (default), `cn`, `zh-Hant` |
+| Languages | `en` (default), `zh-CN`, `zh-HK` |
 
 Compose the theme's built-in appearance before introducing any new rule. The
 theme owns component geometry, typography, spacing, and states; authors own
@@ -113,7 +122,7 @@ language, not a parallel UI kit.
 ### `style.css` discipline
 
 `style.css` is a small, deliberate override layer. Every rule in it exists to
-fix a specific mismatch between the marketing-scaled `mint` theme and a
+fix a specific mismatch between the Starlight base theme and a
 dense, multi-language API-docs site. The current, sanctioned overrides are:
 
 - **Wider sidebar** (`20rem` at `lg+`) — deeply nested, localized navigation
@@ -251,7 +260,7 @@ usage:
 ### Cross-linking
 
 - Internal links are language-absolute: `/en/broker-api/overview` (and the `cn`
-  / `zh-Hant` mirrors). Never link across languages.
+  / `zh-HK` mirrors). Never link across languages.
 - Mark external links with a trailing `↗`, e.g. `[OpenAPI ↗](https://open.longportapp.com)`.
 - Link to the concept's own page rather than restating it; this portal has one
   home for each concept.
@@ -340,9 +349,9 @@ pages to `72rem`; keep entries reverse-chronological and concise.
 
 ## 7. Trilingual contract
 
-- Three languages via `navigation.languages`: `en` (default), `cn`, `zh-Hant`,
+- Three languages: `en` (default), `zh-CN`, `zh-HK`,
   matching the legacy `accept-language` values (`en` / `zh-CN` / `zh-HK`).
-- Every authored page exists in all three directories (`en/`, `cn/`, `zh-Hant/`)
+- Every authored page exists in all three directories (`docs/en/`, `docs/zh-CN/`, `docs/zh-HK/`)
   with **identical structure**. Editing one means editing all three.
 - The API reference ships one spec per language
   (`openapi.{en,cn,zh-hant}.json`) so each language shows single-language
@@ -437,7 +446,7 @@ When implementing or changing a page:
    if generated.
 4. Write the frontmatter, then compose with the sanctioned component vocabulary.
 5. Use language-absolute links and the `↗` external convention.
-6. Mirror the page across `en/`, `cn/`, `zh-Hant/` with identical structure.
+6. Mirror the page across `docs/en/`, `docs/zh-CN/`, `docs/zh-HK/` with identical structure.
 7. Verify light and dark mode.
 8. Check against the Do / Do not rules and the review checklist.
 
@@ -446,7 +455,7 @@ For a configuration or style change:
 1. Prefer `docs.json` over `style.css`.
 2. If `style.css` is required, scope the selector, comment the intent, and
    provide both color modes.
-3. Preview with `mint dev` and confirm no layout regression on wide and narrow
+3. Preview with `bun run dev` and confirm no layout regression on wide and narrow
    viewports, both themes.
 
 ### Review checklist
