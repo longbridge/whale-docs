@@ -49,6 +49,10 @@ LANGS = [
 # `zh-Hant` language breaks the language switcher (falls back to /introduction).
 LANG_DIRS = {"en": "en", "cn": "cn", "zh-Hant": "zh-Hant"}
 
+# Directory value used inside docs.json openapi entries. Cased differently
+# from LANG_DIRS on purpose — see the note where this is consumed for why.
+OPENAPI_DIRS = {"en": "En", "cn": "Cn", "zh-Hant": "zh-Hant"}
+
 SKIP_DIRS = {".git", ".claude", "whale-openapi", "scripts", "data", "templates", "docs"}
 
 # ---------------------------------------------------------------------------
@@ -622,7 +626,17 @@ def main() -> int:
                 "icon": icon,
                 "openapi": {
                     "source": f"openapi.{file_suffix}.json",
-                    "directory": f"{LANG_DIRS[lang_key]}/api-reference",
+                    # NB: `directory` cased differently from the URL prefix on
+                    # purpose. On Mintlify cloud (case-sensitive Linux), a
+                    # `directory` value equal to the lowercased URL prefix
+                    # (e.g. `cn/api-reference` under language `cn`) makes the
+                    # renderer treat the location as static content and skip
+                    # auto-generating openapi pages there — result: 404 on
+                    # every /cn/api-reference/* URL. Using a distinct casing
+                    # (`Cn/api-reference`, `En/…`, `zh-Hant/…`) sidesteps that
+                    # detection; the actual URLs served come from x-mint.href
+                    # in the specs, not from this directory value.
+                    "directory": f"{OPENAPI_DIRS[lang_key]}/api-reference",
                 },
                 "pages": pages,
             })
