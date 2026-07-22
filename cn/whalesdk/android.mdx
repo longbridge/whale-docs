@@ -1,0 +1,543 @@
+---
+title: Android 接入
+description: Android WhaleApp SDK 完整接入与 API 文档
+---
+
+## 系统要求
+
+- **Min Android SDK**：24
+
+- **Target Android SDK**：35
+
+- **JDK**：17+
+
+- **Kotlin**：1.8.22+
+
+- **AGP**：8.5.2+
+
+- **Gradle**：8.7+
+
+- **架构支持**：arm64-v8a、armeabi-v7a
+
+- **Android Studio**：建议使用 2025.1.3+；低版本如出现构建不兼容请升级
+
+- **开发语言**：Java、Kotlin
+
+- **其他**：不支持横屏展示。
+
+## 集成方式
+
+下载 `LBWhaleAppSDK-XXX.zip(内含 aar 和 Demo)` 解压后将 SDK 目录拷贝到您 `App` 级别的目录下， 在 App 级别的 `build.gradle` 的 `plugins` 下方添加下列代码导入 SDK 配置文件
+
+```groovy
+plugins {
+}
+apply from: "${project.file('LBWhaleAppSDK/whale-sdk-config.gradle')}"
+```
+
+## ARouter 预编译优化（推荐开启）
+
+SDK 内部使用 ARouter 进行路由，如需进行预编译优化，请在项目级别的 `build.gradle` 中添加如下插件：
+
+```groovy
+classpath files('./app/LBWhaleAppSDK/libs/lb-arouter-register-1.1.1.jar')
+```
+
+在 App 级别的 `build.gradle` 的 `plugins` 中添加插件：
+
+```groovy
+plugins {
+    id("com.longbridge.arouter")
+}
+```
+
+开启后将在编译期将路由表进行预加载，如未开启该功能，将会在 SDK Init 时读取 dex 获取路由表从而影响启动耗时。
+
+## Kapt 和 Databinding
+
+SDK 需要开启 Kapt 和 DataBinding 支持，如原有项目已开启可跳过该步骤，否则请按如下方式开启。
+
+项目级别的 `build.gradle` 中添加下列代码
+
+```groovy
+apply plugin: 'kotlin-kapt'
+```
+
+App 级别的 `build.gradle` 中添加下列代码
+
+```groovy
+plugins {
+    id("org.jetbrains.kotlin.kapt")
+}
+android {
+    buildFeatures {
+        viewBinding = true
+        dataBinding = true
+    }
+}
+```
+
+## 初始化 SDK
+
+在 `Application onCreate` 中调用 SDK 的 Init 方法进行必要资源的初始化准备，请在主线程调用该方法。
+
+```kotlin
+LBWhaleApp.init(application)
+```
+
+## 配置推送
+
+### 方式一：走 SDK 内置渠道
+
+SDK 内置阿里云推送，相关的业务推送可通过该渠道推送至客户端进行处理。
+
+当收到推送时应用处于前台会显示**应用内通知**，当应用处于后台时则会显示**系统通知栏通知**。
+
+如需使用内置阿里云推送功能请在 SDK 初始化之后调用下面方法， `LBWhaleApp.pushService.init()` 需要在主线程调用。
+
+```kotlin
+val notificationConfig = NotificationConfig.Builder()
+    .notificationIcon(R.mipmap.logo_notification)
+    .notificationSmallIcon(R.mipmap.lb_push_small_notification)
+    .notificationChannelId(channelId)
+    .build()
+
+//创建推送配置
+val pushConfig = LBWhalePushConfig.Builder()
+    .appKey(BuildConfig.ALIYUN_PUSH_APP_KEY)
+    .appSecret(BuildConfig.ALIYUN_PUSH_APP_SECRET)
+    .notificationConfig(notificationConfig)
+    .pushCallback(object : LBWhalePushCallback {
+        override fun onNotificationOpened(title: String, summary: String, extMap: Map<String, String>) {
+          //当通知栏通知被点击后触发该回调，需要在此判断 SDK 是否正在运行
+          //然后调用 handleNotificationOpened 方法处理点击事件, 实现页面跳转
+          if (LBWhaleApp.isStarted()) {
+            LBWhaleApp.pushService.handleNotificationOpened(title, summary, extMap)
+            return
+          }
+          //如 SDK 未启动，需启动 SDK 后再调用 handleNotificationOpened 进行处理
+        }
+    })
+    .build()
+
+//初始化推送服务
+LBWhaleApp.pushService.initializePush(this, pushConfig)
+```
+
+#### 厂商通道推送
+
+SDK 内置的阿里云推送支持兼容第三方厂商通道，以达到提高推送到达率的效果。下方以 FCM 为例说明如何将 SDK 的业务消息发送至 FCM 消息。
+
+初始化 Firebase 后上报 FCM Token 到 SDK
+
+```kotlin
+FirebaseApp.initializeApp(this, options)
+FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+  if (task.isSuccessful) {
+    val token = task.result
+    //将 token 上报到 SDK
+    LBWhaleApp.pushService.repotThirdToken(this, LBWhalePushService.ThirdPush.FCM, token)
+  }
+}
+```
+
+在 FirebaseMessagingService 中更新 Token 以及处理消息
+
+```kotlin
+class DemoFirebaseMessagingService : FirebaseMessagingService() {
+  private val logger = SDKLogger.get(this::class)
+
+  override fun onNewToken(token: String) {
+    logger.i("onNewToken: $token")
+    //将 token 上报到 SDK
+    LBWhaleApp.pushService.repotThirdToken(this, LBWhalePushService.ThirdPush.FCM, token)
+  }
+
+  override fun onMessageReceived(message: RemoteMessage) {
+    logger.i("onMessageReceived:${message.messageId}")
+    //SDK 阿里云推送投递到 FCM  的消息会携带 payload 字段，可以根据这个特征判断 FCM 此处收到的消息来源
+    //如存在 payload 内容，需将其传递给 SDK 进行处理
+    val msg = message.getData()["payload"]
+    if(msg.isNotEmpty()){
+      LBWhaleApp.pushService.onThirdPushMsg(this,LBWhalePushService.ThirdPush.FCM, msg)
+    }
+  }
+}
+```
+
+### 方式二：走 Broker 自己的渠道
+
+Broker App 可以选择自行接入第三方推送服务，业务消息由 SDK 后端转发至 Broker 后端，再由 Broker 后端推送到 Broker App 中。
+
+在收到消息时可调用 SDK 方法对消息进行解析处理，SDK 提供 `LBWhaleApp.pushService.handleNotificationReceived` 方法用于解析消息并展示应用内通知。
+
+### 通知事件处理
+
+#### 通知展示
+
+应用内通知展示
+
+- SDK 内置渠道：SDK 内部处理通知展示
+
+- Broker 自有渠道：可在收到消息后调用 `LBWhaleApp.pushService.handleNotificationReceived` 进行消息处理，该方法会解析消息内容并展示，注意该方法需要在 SDK 启动后才能生效
+
+应用外通知展示
+
+- SDK 内置渠道：SDK 内部处理通知展示
+
+- Broker 自有渠道：由 App 自行处理
+
+#### 通知点击事件
+
+应用内通知被点击
+
+- SDK 内置渠道：SDK 内部处理通知点击事件
+
+- Broker 自有渠道：如使用了 `LBWhaleApp.pushService.handleNotificationReceived` 方法处理消息展示，则由 SDK 内部处理通知点击事件，否则需由 App 处理
+
+应用外通知被点击
+
+- SDK 内置渠道：通过 `LBWhalePushCallback` 回调给 App 进行处理，收到此回调时可选择自行处理，也可以使用 `LBWhaleApp.pushService.handleNotificationOpened` 方法处理该点击事件，该方法将会解析通知内容并进行相关页面的跳转。注意该方法需要在 SDK 启动后才能生效
+
+- Broker 自有渠道：可使用 `LBWhaleApp.pushService.handleNotificationOpened` 方法处理点击事件，该方法将会解析通知内容并进行相关页面的跳转。注意该方法需要在 SDK 启动后才能生效
+
+## 启动 SDK
+
+在打开 SDK 页面前请先启动 SDK
+
+```kotlin
+//extraCustomConfig 为 SDK 额外配置，请参考本文档结构进行配置
+val cryptoFont = Typeface.createFromAsset(FApp.getResources().assets, "Crypto.ttf")
+val extraConfigMap = mapOf(
+    //设置彩蛋面板是否开启(true/开启，false/关闭)
+    ExtraCustomConfigKey.LB_APPSDK_CONFIG_DEBUG_EGG to true,
+    //设置字体
+    ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_FONT_CRYPTO to cryptoFont,
+    ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_FONT_MONOSPACED to cryptoFont,
+    ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_FONT_MONOSPACED_BOLD to cryptoFont,
+    //设置 Tips 背景色
+    ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR to mapOf(
+        ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_PUSH_TIP_VIEW to mapOf(
+            ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_PTV_DEFAULT_BACKGROUND to mapOf(
+                ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR_LIGHT to "#FFFFFF",
+                ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR_DARK to "#000000",
+            ),
+            ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_PTV_DEFAULT_TITLE to mapOf(
+                ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR_LIGHT to "#000000",
+                ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR_DARK to "#FFFFFF",
+            ),
+            ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_PTV_DEFAULT_CONTENT to mapOf(
+                ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR_LIGHT to "#000000",
+                ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR_DARK to "#FFFFFF",
+            ),
+            ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_PTV_DEFAULT_ICON to mapOf(
+                ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR_LIGHT to "#000000",
+                ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR_DARK to "#FFFFFF",
+            ),
+        )
+    )
+)
+val config = LBWhaleAppConfig(
+    appName = LBWhaleAppConfigName(en = "Your_AppName"), //app名称，支持中英繁
+    appKey = "LB_appKey",
+    appSecret = "LB_appSecret",
+    appId = "LB_appId",
+    token = "LB_token",
+    refreshToken = "LB_refreshToken",
+    theme = LBWhaleAppConfigTheme.AUTO, //主题【AUTO、LIGHT、DARK】
+    language = LBWhaleAppConfigLanguage.EN, //显示语言【EN、ZH_CN、ZH_HK】
+    priceColor = LBWhaleAppConfigPriceColor.FOLLOW_USER_SETTING, //配置红涨绿跌颜色
+    extraCustomConfig = extraConfigMap //extraCustomConfig 为 SDK 额外配置
+)
+LBWhaleApp.startWithConfig(application, config)
+```
+
+SDK 启动为异步，启动结果将通过 Callback 进行回调通知
+
+## 实现 Callback 方法
+
+```kotlin
+LBWhaleApp.callback = object : LBWhaleAppCallback {
+    //SDK 启动成功时触发，启动成功后才可调用 LBWhaleApp 的相关方法
+    override fun onLBWhaleAppStarted() {}
+
+    //SDK 启动失败时触发，请参考下方错误处理章节处理不同的错误类型
+    override fun onLBWhaleAppStartFailed(error: Exception) {}
+
+    //SDK 运行期间发生错误时触发，请参考下方错误处理章节处理不同的错误类型
+    override fun onLBWhaleAppRunInError(error: Exception) {}
+
+    //SDK 自动续期后触发；有效性与后续续期仍由 SDK 管理，Broker App 通常无需保存或自行刷新
+    override fun onLBWhaleAppTokenChanged(token: String, refreshToken: String)
+
+    //SDK 请求跳转其他路由时触发，可在此解析 url 跳转至指定页面，该 url 由 Broker 在后台进行配置
+    override fun onWhaleAppSdkOpenUrlRequested(url: String)
+}
+```
+
+## 基本使用
+
+**注意！！！以下方法请在 SDK 初始化成功后调用**
+
+### 页面路由使用
+
+使用路由接口打开对应的页面
+
+```kotlin
+//无参页面
+LBWhaleApp.pushUrl("page_router")
+
+//需要参数的页面
+LBWhaleApp.pushUrl("page_router", hashMapOf<String, Any>("key" to "value"))
+```
+
+### 更换主题
+
+```kotlin
+LBWhaleApp.changeTheme(LBWhaleAppConfigTheme.AUTO)
+```
+
+### 更换语言
+
+```kotlin
+LBWhaleApp.changeLanguage(LBWhaleAppConfigLanguage.EN)
+```
+
+### 登出并销毁 SDK
+
+登出并销毁 SDK，释放内存与网络请求。
+
+```kotlin
+LBWhaleApp.logoutAndDestroy()
+```
+
+## 错误处理
+
+```kotlin
+sealed class LBWhaleAppError(message: String, cause: Throwable? = null) : Exception(message, cause) {
+    //调用 startWithConfig 时如果必要参数为空将通过 onLBWhaleAppStartFailed 返回该异常，请检查启动参数内容
+    class ConfigInvalid(field: String) : LBWhaleAppError("Invalid SDK config field: $field")
+
+    //调用 SDK 方法时如果还未启动 SDK 将会通过 onLBWhaleAppRunInError 返回该异常，请先启动 SDK 再进行相关方法调用
+    class NotInitialized() : LBWhaleAppError("SDK not initialized")
+
+    //调用 startWithConfig 时如果传入的参数经过后端校验无效将通过 onLBWhaleAppStartFailed 返回该异常，请重新获取相关 token 后再次启动 SDK
+    class InvalidAppKey : LBWhaleAppError("Invalid App Key provided")
+    class InvalidAppSecret : LBWhaleAppError("Invalid App Secret provided")
+    class InvalidToken() : LBWhaleAppError("Access token is invalid")
+    class TokenExpired() : LBWhaleAppError("Access token has expired")
+
+    //调用 startWithConfig 时如果传入的 Refresh Token 无效将会在 onLBWhaleAppStartFailed 回调中返回该异常，请重新获取相关 token 后再次启动 SDK
+    //如在 onLBWhaleAppRunInError 回调中收到该异常说明账号在其他设备进行了登录，请调用 logoutAndDestroy 登出 SDK，在重新获取相关 token 后可再次启动 SDK
+    class RefreshTokenExpired() : LBWhaleAppError("Refresh token has expired")
+
+    //SDK 启动过程中获取账户信息失败时通过 onLBWhaleAppStartFailed 返回该异常，可尝试更换网络或直接重新启动 SDK
+    class SyncAccountStatusError : LBWhaleAppError("Sync account status error")
+
+    //调用 startWithConfig 时如果发生其他网络请求错误将通过 onLBWhaleAppStartFailed 返回该异常，可尝试更换网络或直接重新启动 SDK
+    class RequestFailed(message: String, val code: Int) : LBWhaleAppError("Request failed (code $code): $message")
+
+    //调用 LBWhaleApp.pushService.handleNotificationOpened 处理消息时如果检测到非 LB 消息则会返回该错误
+    class UnrecognizedPushMessage(message: String = "Unrecognized push message format") : LBWhaleAppError(message)
+}
+```
+
+## API 文档
+
+## 主要类
+
+### LBWhaleApp
+
+SDK 的主入口类，提供启动、登出和页面路由等核心功能。
+
+```kotlin
+//初始化 SDK
+fun init(application: Application)
+
+//启动 SDK
+fun startWithConfig(application: Application, config: LBWhaleAppConfig)
+
+//销毁 SDK
+fun logoutAndDestroy()
+
+//跳转到路由页面
+fun pushUrl(path: String, params: Map<String, Any> = hashMapOf())
+
+//更换主题
+fun changeTheme(theme: LBWhaleAppConfigTheme)
+
+//更换语言
+fun changeLanguage(language: LBWhaleAppConfigLanguage)
+
+//更换红涨绿跌配置
+fun changePriceColor(priceColor: LBWhaleAppConfigPriceColor)
+
+//判断 SDK 是否已启动
+fun isStarted(): Boolean
+
+//获取 SDK 版本号
+fun getVersion(): String
+```
+
+### LBWhalePushService
+
+通过 LBWhaleApp.pushService 获取，用于管理推送服务相关能力
+
+```kotlin
+//初始化推送服务
+fun initializePush(application: Application, pushConfig: LBWhalePushConfig)
+
+//获取推送服务设备 ID
+fun getPushDeviceId(): String
+
+//处理通知栏通知点击事件
+fun handleNotificationOpened(title: String, summary: String, extMap: Map<String, String>): Result<Unit>
+```
+
+## 配置相关
+
+### LBWhaleAppConfig - 启动配置
+
+SDK 配置类，用于设置 SDK 启动所需的各种参数。
+
+```kotlin
+class LBWhaleAppConfig(
+    val appName: LBWhaleAppConfigName,
+    val appKey: String,
+    val appSecret: String,
+    val appId: String,
+    val token: String,
+    val refreshToken: String,
+    val theme: LBWhaleAppConfigTheme = LBWhaleAppConfigTheme.AUTO,
+    val language: LBWhaleAppConfigLanguage = LBWhaleAppConfigLanguage.EN,
+    val defaultAccountChannel: String = "",
+    val webDomainPrefix: String = "",
+    val extraCustomConfig: Map<String, Any>? = null
+)
+```
+
+### LBWhaleAppConfigName - 应用名称
+
+```kotlin
+data class LBWhaleAppConfigName(
+    val en: String, //英文名称
+    val zhCN: String? = null, //简中名称
+    val zhHK: String? = null //繁中名称
+)
+```
+
+### LBWhaleAppConfigTheme - 主题模式
+
+```kotlin
+enum class LBWhaleAppConfigTheme {
+    AUTO, //跟随系统
+    LIGHT, //浅色主题
+    DARK //深色主题
+}
+```
+
+### LBWhaleAppConfigLanguage - 显示语言
+
+```kotlin
+enum class LBWhaleAppConfigLanguage {
+    EN, //英文
+    ZH_CN, //简中
+    ZH_HK //繁中
+}
+```
+
+### LBWhaleAppConfigPriceColor - 涨跌色设置
+
+```kotlin
+enum class LBWhaleAppConfigPriceColor(val value: Int) {
+    FOLLOW_USER_SETTING(0),//随 SDK 内用户配置
+    RED_UP_GREEN_DOWN(1),//指定红涨绿跌，该配置将会隐藏 SDK 内涨跌色设置入口
+    GREEN_UP_RED_DOWN(2)//指定绿涨红跌，该配置将会隐藏 SDK 内涨跌色设置入口
+}
+```
+
+### LBWhalePushConfig - 推送配置
+
+```kotlin
+class LBWhalePushConfig private constructor(
+    val appKey: String, //阿里云 appKey
+    val appSecret: String, //阿里云 appSecret
+    val notificationConfig: NotificationConfig, //通知配置
+    val pushCallback: LBWhalePushCallback?, //推送事件回调
+    val fcmPushConfig: FCMPushConfig? //FCM 配置
+)
+```
+
+### NotificationConfig - 通知配置
+
+```kotlin
+class NotificationConfig private constructor(
+    val notificationIcon: Int, //通知 Icon
+    val notificationSmallIcon: Int, //状态栏通知小 Icon
+    val notificationChannelId: String,//通知通道 id
+)
+```
+
+### FCMPushConfig - FCM 推送配置
+
+```kotlin
+class FCMPushConfig private constructor(
+    val sendId: String,
+    val applicationId: String,
+    val projectId: String,
+    val apiKey: String
+)
+```
+
+## 事件回调
+
+### LBWhaleAppCallback - SDK 事件回调
+
+```kotlin
+interface LBWhaleAppCallback {
+    //SDK 启动成功
+    fun onLBWhaleAppStarted()
+
+    //SDK 启动失败
+    fun onLBWhaleAppStartFailed(error: Exception)
+
+    //运行期间发生错误
+    fun onLBWhaleAppRunInError(error: Exception)
+
+    //SDK 自动续期通知；Broker App 不自行维护刷新逻辑
+    fun onLBWhaleAppTokenChanged(token: String, refreshToken: String)
+
+    //跳转特定 Url 回调
+    fun onWhaleAppSdkOpenUrlRequested(url: String)
+}
+```
+
+### LBWhalePushCallback - 推送事件回调
+
+```kotlin
+interface LBWhalePushCallback {
+    /**
+     * 用户点击通知栏通知时会触发此回调，可使用 LBWhaleApp.pushService.handleNotificationOpened 对该消息进行处理
+     * 如 SDK 尚未启动，需先启动 SDK 后再进行处理
+     */
+    fun onNotificationOpened(title: String, summary: String, extMap: Map<String, String>)
+}
+```
+
+## 依赖冲突解决
+
+### SDK 内部定制三方库
+
+SDK 内部对部分开源三方库进行了定制、修复或升级，当接入方使用对应的原版三方库时可能会遇到代码冲突问题。
+
+下方为可能发生冲突的三方库列表：
+
+如果是项目直接依赖了上述三方库，**可将原版三方库进行注释**，使用 SDK 的定制版本即可。
+
+如果是项目中的三方库依赖了上述三方库可通过下列代码进行排除
+
+```groovy
+implementation("xxxxxxxxxx") {
+    exclude group: "xxxxx", module: "xxxxxx"
+}
+```
