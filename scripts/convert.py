@@ -638,10 +638,13 @@ def main() -> int:
             groups.append({
                 "group": localized_top_name(top, menu, lang_key),
                 "icon": icon,
-                "openapi": {
-                    "source": f"openapi.{file_suffix}.json",
-                    "directory": f"{LANG_DIRS[lang_key]}/api-reference",
-                },
+                # No `directory` here on purpose: `directory` makes Mintlify
+                # auto-write generated pages at {directory}/{operationId},
+                # which would collide with the per-language proxy MDX we
+                # already emit (Mintlify cloud fails at "Updating navigation").
+                # The proxy MDX has `openapi: METHOD /path` frontmatter and
+                # inherits this `source` for rendering.
+                "openapi": {"source": f"openapi.{file_suffix}.json"},
                 "pages": pages,
             })
         return groups
