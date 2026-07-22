@@ -205,6 +205,48 @@ def _pick(node: Dict[str, Any], base_key: str, sfx: Optional[str]) -> Optional[s
     return node.get(base_key)
 
 
+CJK_RE = re.compile(r"[\u3400-\u9fff]")
+EN_SENTENCE_RE = re.compile(r"(?<=[.!?])\s+|[。！？]\s*")
+
+
+def _english_only(value: str) -> Optional[str]:
+    """Return the usable English portions of localized prose.
+
+    Some legacy x-*-en values contain a Chinese source paragraph followed by
+    its English translation. Keep complete English sentences and reject
+    Chinese-only fallbacks so generated English pages cannot mix languages.
+    """
+    if not CJK_RE.search(value):
+        return value
+
+    paragraphs = []
+    for paragraph in value.split("\n\n"):
+        sentences = []
+        for sentence in EN_SENTENCE_RE.split(paragraph):
+            sentence = sentence.strip()
+            if sentence and not CJK_RE.search(sentence):
+                sentences.append(sentence)
+        if sentences:
+            paragraphs.append(" ".join(sentences))
+    return "\n\n".join(paragraphs) or None
+
+
+def _localized_text(
+    node: Dict[str, Any], base_key: str, sfx: Optional[str], lang_key: str
+) -> Optional[str]:
+    value = _pick(node, base_key, sfx)
+    if not isinstance(value, str):
+        return None
+    if lang_key == "en":
+        return _english_only(value)
+
+    # Product names, identifiers, and acronyms are valid on Chinese pages,
+    # but an English prose fallback is not.
+    if CJK_RE.search(value) or not re.search(r"\s", value.strip()):
+        return value
+    return None
+
+
 def _enum_label(entry: Dict[str, Any], sfx: Optional[str]) -> str:
     if sfx and entry.get(sfx):
         return str(entry[sfx])
@@ -228,7 +270,7 @@ def localize(node: Any, sfx: Optional[str], lang_key: str) -> Any:
         return node
 
     out: Dict[str, Any] = {}
-    desc = _pick(node, "description", sfx)
+    desc = _localized_text(node, "description", sfx, lang_key)
     # A schema property can be literally keyed "description"/"summary" (a real
     # field whose dataIndex is that word). Only treat description/summary as
     # localizable TEXT when the value is a string; a dict/list value is an
@@ -261,7 +303,9 @@ def localize(node: Any, sfx: Optional[str], lang_key: str) -> Any:
         if ks == "description" and isinstance(v, str):
             continue  # localizable text, handled below
         if ks == "summary" and isinstance(v, str):
-            out[k] = _pick(node, "summary", sfx) or v
+            summary = _localized_text(node, "summary", sfx, lang_key)
+            if summary:
+                out[k] = summary
             continue
         out[k] = localize(v, sfx, lang_key)
 
@@ -342,18 +386,44 @@ def walk_yaml_ops(source: Path, schemas_out: Optional[Dict[str, Any]] = None):
 # ---------------------------------------------------------------------------
 
 
-def build_openapi_shell(tags: List[Dict[str, str]]) -> Dict[str, Any]:
+SPEC_COPY = {
+    "en": {
+        "title": "Longport Whale Broker API",
+        "description": "Institution-grade server-to-server API for brokers running on Longport Whale.",
+        "test": "Test",
+        "production": "Production",
+        "auth": "ACCESS_TOKEN issued to the broker, sent as `Authorization: Bearer <token>`.",
+    },
+    "cn": {
+        "title": "Longport Whale 券商 API",
+        "description": "面向使用 Longport Whale 的券商提供机构级服务端 API。",
+        "test": "测试环境",
+        "production": "生产环境",
+        "auth": "券商获发的 ACCESS_TOKEN，通过 `Authorization: Bearer <token>` 发送。",
+    },
+    "zh-Hant": {
+        "title": "Longport Whale 券商 API",
+        "description": "面向使用 Longport Whale 的券商提供機構級服務端 API。",
+        "test": "測試環境",
+        "production": "生產環境",
+        "auth": "券商獲發的 ACCESS_TOKEN，通過 `Authorization: Bearer <token>` 發送。",
+    },
+}
+
+
+def build_openapi_shell(tags: List[Dict[str, str]], lang_key: str) -> Dict[str, Any]:
+    copy = SPEC_COPY[lang_key]
     return OrderedDict([
         ("openapi", "3.1.1"),
         ("info", {
-            "title": "Longport Whale Broker API",
-            "description": "Institution-grade server-to-server API for brokers running on Longport Whale.",
+            "title": copy["title"],
+            "description": copy["description"],
             "version": "2.0.0",
         }),
         # Test first so the playground defaults to it.
         ("servers", [
-            {"url": "https://b-api.longbridge.xyz", "description": "Test"},
-            {"url": "https://b-api.lbkrs.com", "description": "Production"},
+            {"url": "https://b-api.longbridge.xyz", "description": copy["test"]},
+            {"url": "https://b-api.lbkrs.com", "description": copy["production"]},
         ]),
         ("tags", tags),
         ("paths", OrderedDict()),
@@ -362,7 +432,7 @@ def build_openapi_shell(tags: List[Dict[str, str]]) -> Dict[str, Any]:
                 "bearerAuth": {
                     "type": "http",
                     "scheme": "bearer",
-                    "description": "ACCESS_TOKEN issued to the broker, sent as `Authorization: Bearer <token>`.",
+                    "description": copy["auth"],
                 },
             }
         }),
@@ -460,7 +530,7 @@ def main() -> int:
     outputs = {}
     for lang_key, file_suffix, sfx in LANGS:
         tags = [{"name": localized_top_name(t, menu, lang_key)} for t in top_order]
-        spec = build_openapi_shell(tags)
+        spec = build_openapi_shell(tags, lang_key)
         for name, schema in shared_schemas.items():
             spec["components"].setdefault("schemas", {})[name] = localize(schema, sfx, lang_key)
         for menu_path, path, method, op in ops:
