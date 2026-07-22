@@ -43,7 +43,11 @@ LANGS = [
     ("cn", "cn", None),
     ("zh-Hant", "zh-hant", "hk"),
 ]
-LANG_DIRS = {"en": "en", "cn": "cn", "zh-Hant": "zh-hant"}
+# Directory / URL prefix must match the language code casing exactly —
+# Mintlify uses the raw `language` value as the URL prefix and looks for
+# sibling pages case-sensitively; a lowercase `zh-hant/` prefix under a
+# `zh-Hant` language breaks the language switcher (falls back to /introduction).
+LANG_DIRS = {"en": "en", "cn": "cn", "zh-Hant": "zh-Hant"}
 
 SKIP_DIRS = {".git", ".claude", "whale-openapi", "scripts", "data", "templates", "docs"}
 
@@ -468,6 +472,16 @@ def main() -> int:
             lop.pop("security", None)      # global security covers it
             lop.pop("servers", None)
             lop["tags"] = [localized_top_name(menu_path[0], menu, lang_key)]
+            # Route pages by the unique operationId instead of Mintlify's
+            # default localized tag/summary slug (Chinese URLs). When x-mint
+            # sets an explicit href, the sidebar label defaults to a humanized
+            # URL slug ("financing_delta" → "Financing delta") — force it back
+            # to the localized summary via metadata.sidebarTitle.
+            if lop.get("operationId"):
+                xmint = {"href": f"/{LANG_DIRS[lang_key]}/api-reference/{lop['operationId']}"}
+                if lop.get("summary"):
+                    xmint["metadata"] = {"sidebarTitle": lop["summary"]}
+                lop["x-mint"] = xmint
             spec["paths"].setdefault(path, OrderedDict())[method] = lop
         outputs[lang_key] = spec
 
