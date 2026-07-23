@@ -525,9 +525,9 @@ def ensure_response_descriptions(spec: Dict[str, Any], lang_key: str) -> None:
 # x-verified:unverified, so the menu skeleton (business modules and
 # sub-groups) doesn't disappear while content is pending re-verification.
 PENDING_VERIFICATION_PAGE = {
-    "en": "en/api-reference/pending-verification",
-    "cn": "zh-CN/api-reference/pending-verification",
-    "zh-Hant": "zh-HK/api-reference/pending-verification",
+    "en": "en/broker-api/pending-verification",
+    "cn": "zh-CN/broker-api/pending-verification",
+    "zh-Hant": "zh-HK/broker-api/pending-verification",
 }
 
 BROKER_API_MANUAL_GROUPS = {
