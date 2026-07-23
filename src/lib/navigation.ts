@@ -71,7 +71,7 @@ export function buildSidebar(): SidebarItem[] {
       return converted ? [converted] : [];
     });
 
-    if (tab.tab === 'Broker API') {
+    if (tab.tab === 'BrokerAPI') {
       const insertAt = Math.min(2, items.length);
       items.splice(insertAt, 0, apiSidebarPlaceholder as SidebarItem);
     }

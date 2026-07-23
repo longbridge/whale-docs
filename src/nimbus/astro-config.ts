@@ -1,8 +1,11 @@
 import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
+import { defineConfig as defineAstroConfig } from "astro/config";
 import icon from "astro-icon";
 import nimbus, { defineConfig as defineNimbusConfig } from "nimbus-docs";
 import { hastPlugins } from "./plugins/satteri";
+
+type MarkdownConfig = NonNullable<Parameters<typeof defineAstroConfig>[0]["markdown"]>;
 
 const nimbusConfig = defineNimbusConfig({
   site: "https://docs.longportwhale.com",
@@ -26,7 +29,7 @@ const nimbusConfig = defineNimbusConfig({
 
 export const markdown = {
   syntaxHighlight: {
-    type: "shiki" as const,
+    type: "shiki",
     excludeLangs: ["math", "mermaid"],
   },
   shikiConfig: {
@@ -34,7 +37,7 @@ export const markdown = {
       light: "github-light-high-contrast",
       dark: "github-light-high-contrast",
     },
-    defaultColor: false as const,
+    defaultColor: false,
     langAlias: {
       objc: "objective-c",
       "obj-c": "objective-c",
@@ -43,7 +46,7 @@ export const markdown = {
       agsl: "glsl",
     },
   },
-};
+} satisfies MarkdownConfig;
 
 export const integrations = [icon(), react(), nimbus(nimbusConfig, {
   markdown: { hastPlugins },

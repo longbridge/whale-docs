@@ -1,0 +1,142 @@
+---
+title: Android
+description: WhaleCoreSDK Android installation, initialization, lifecycle, and public services
+---
+
+## Integrate
+
+The delivery contains WhaleCore and Engine AARs plus a script that injects local and remote dependencies:
+
+```kotlin
+apply(from = "<path-to>/whalecore/whalecore.gradle")
+```
+
+The host configures Android `minSdk`, JVM target 11 or later, and the Kotlin plugin. For `minSdk < 26`, the script configures core-library desugaring. Confirm the final support matrix for the delivered version.
+
+## Initialize
+
+`initialize` performs network warm-up and blocks; call it on an IO thread. Repeated and concurrent calls are safe, and only the first takes effect.
+
+```kotlin
+val config = WhaleCoreConfig(
+    appId = "<assigned>",
+    appKey = "<assigned>",
+    appSecret = "<assigned>",
+    token = accessToken,
+    refreshToken = refreshToken,
+    defaultAccountChannel = "lb_hk",
+    language = WhaleCoreLanguage.EN,
+    logLevel = WhaleCoreLogLevel.INFO
+)
+
+withContext(Dispatchers.IO) {
+    WhaleCore.initialize(application, config, isDebug = BuildConfig.DEBUG)
+}
+```
+
+Never log project credentials or complete tokens.
+
+## Lifecycle
+
+```kotlin
+WhaleCore.resume()
+WhaleCore.pause()
+
+withContext(Dispatchers.IO) { WhaleCore.destroy() }
+```
+
+Destroy releases coroutines, WebSockets, caches, and native handles. It can then be initialized with another account.
+
+## Public services
+
+| Method | Service | Main capability |
+| --- | --- | --- |
+| `getQuoteService()` | `QuoteService` | Quote events, snapshots, K-lines, and option chains |
+| `getOrderService()` | `OrderService` | Orders, estimates, replacements, cancellation, and events |
+| `getOrderValidationService()` | `OrderValidationService` | Tradability, constraints, and pre-submit validation |
+| `getPortfoliosService()` | `PortfolioService` | Assets, positions, cash, and settings |
+| `getWatchlistService()` | `WatchlistService` | Groups, stocks, ordering, and events |
+| `getTradeAuthService()` | `TradeAuthService` | Trade tokens and auth state |
+| `getRequestService()` | `RequestService` | General authenticated HTTP requests |
+
+Getting a service before initialization throws `IllegalStateException`. Public operations generally offer both a coroutine method and a callback-based `*Async` variant.
+
+## General HTTP requests
+
+Use `WhaleCore.getRequestService()` to call [TradingAPI](/en/trading-api/overview) endpoints that do not yet have a typed WhaleCore service. Take the endpoint path, parameters, and response schema from the TradingAPI documentation. The host supplies those request values; WhaleCore adds the common parameters and headers for signing, authentication, and tracing. If login or trade authentication expires, the SDK recovers it and retries once.
+
+`HttpRequest` is immutable and accepts:
+
+| Constructor argument | Type | Behavior |
+| --- | --- | --- |
+| `method` | `HttpMethod` | `GET`, `POST`, `PUT`, or `DELETE` |
+| `path` | `String` | Endpoint path beginning with `/` |
+| `query` | `Map<String, Any>?` | Used by GET and DELETE; ignored by POST and PUT |
+| `body` | `Map<String, Any>?` | Used by POST and PUT; ignored by GET and DELETE |
+| `requiresTradeToken` | `Boolean` | When `true`, obtains a valid trade token before sending; defaults to `false` |
+
+`send` returns an `HttpResponse` containing the raw JSON `bodyString` and response `headers`. Parse the body with the JSON library used by the host app.
+
+```kotlin
+import longbridge.whalecore.business.request.model.HttpMethod
+import longbridge.whalecore.business.request.model.HttpRequest
+
+val request = HttpRequest(
+    method = HttpMethod.GET,
+    path = "/v2/member/info",
+    query = mapOf("include_accounts" to true)
+)
+
+val response = WhaleCore.getRequestService().send(request)
+val member = json.decodeFromString<MemberInfo>(response.bodyString)
+println(member.name)
+```
+
+For an endpoint that requires trade authentication:
+
+```kotlin
+val request = HttpRequest(
+    method = HttpMethod.GET,
+    path = "/v5/orders/today",
+    requiresTradeToken = true
+)
+
+val response = WhaleCore.getRequestService().send(request)
+println(response.bodyString)
+```
+
+Java callers can use `sendAsync(request, callback)` instead of the suspending `send` method.
+
+<Note>
+  The first version does not support custom request headers. Do not add signatures or authentication tokens to `query` or `body`; WhaleCore supplies them through its managed session.
+</Note>
+
+## Quotes
+
+```kotlin
+val quoteService = WhaleCore.getQuoteService()
+val stock = quoteService.getStock("ST/US/AAPL")
+
+val subscription = quoteService.subscribe(
+    listOf("ST/US/AAPL"), quoteCallback
+).detail().depth().trade().start()
+```
+
+Observe events as `SharedFlow` or through lifecycle-aware callbacks. Cancel the returned `Subscription` when no longer needed.
+
+## Orders and validation
+
+`OrderService` covers today's/history/detail queries, buying power, position detail, submission, replacement, cancellation, batch cancellation, cost estimates, and order events. Before submission, validation APIs cover:
+
+- `checkTradability`
+- `getOrderConstraints`
+- `validateOrder`
+- `getQualifications`
+- `acceptAgreement`
+- `submitListedDerivAssessment`
+
+## Portfolio, watchlist, and pass-through requests
+
+`PortfolioService` supports subscribe/unsubscribe, refresh, cash detail, position quotes, and member settings. `WatchlistService` supports group and stock mutations, cross-group moves, pinning, ordering, invalid-ticker cleanup, and events.
+
+For a business API not yet wrapped by a typed service, use `RequestService.send(HttpRequest)`. The SDK adds common parameters and auth headers and performs auth recovery; the caller parses the business response.
