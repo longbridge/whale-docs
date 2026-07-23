@@ -1,0 +1,102 @@
+---
+title: Android
+description: WhaleCore SDK Android 安装、初始化、生命周期与公开服务
+---
+
+## 接入要求
+
+交付包包含 WhaleCore 与 Engine AAR，以及用于注入本地和远程依赖的 `whalecore.gradle`：
+
+```kotlin
+apply(from = "<path-to>/whalecore/whalecore.gradle")
+```
+
+宿主需要配置 Android `minSdk`、JVM target 11 或更高版本及 Kotlin 插件；`minSdk < 26` 时接入脚本会配置 core library desugaring。最终支持矩阵以交付版本为准。
+
+## 初始化
+
+`initialize` 会执行网络预热，是阻塞方法，应在 IO 线程调用。重复和并发调用安全，仅首次生效。
+
+```kotlin
+val config = WhaleCoreConfig(
+    appId = "<平台分配>",
+    appKey = "<平台分配>",
+    appSecret = "<平台分配>",
+    token = accessToken,
+    refreshToken = refreshToken,
+    defaultAccountChannel = "lb_hk",
+    language = WhaleCoreLanguage.ZH_HANS,
+    logLevel = WhaleCoreLogLevel.INFO
+)
+
+withContext(Dispatchers.IO) {
+    WhaleCore.initialize(application, config, isDebug = BuildConfig.DEBUG)
+}
+```
+
+不要把项目凭证或完整 token 写入日志。
+
+## 生命周期与销毁
+
+```kotlin
+WhaleCore.resume()
+WhaleCore.pause()
+
+withContext(Dispatchers.IO) {
+    WhaleCore.destroy()
+}
+```
+
+`destroy()` 释放协程、WebSocket、缓存和 native 句柄。销毁后可使用新账号配置重新 `initialize`。
+
+## 服务入口
+
+| 方法 | 服务 | 主要能力 |
+| --- | --- | --- |
+| `getQuoteService()` | `QuoteService` | 行情事件、快照、K 线、期权链 |
+| `getOrderService()` | `OrderService` | 订单、预估、改单、撤单和推送 |
+| `getOrderValidationService()` | `OrderValidationService` | 可交易性、约束与提交前校验 |
+| `getPortfoliosService()` | `PortfolioService` | 资产、持仓、现金和设置 |
+| `getWatchlistService()` | `WatchlistService` | 自选分组、股票和排序 |
+| `getTradeAuthService()` | `TradeAuthService` | trade token 与鉴权状态 |
+| `getRequestService()` | `RequestService` | 通用鉴权 HTTP 请求 |
+
+未初始化时获取服务会抛出 `IllegalStateException`。业务接口通常同时提供协程方法与 `*Async` 回调方法。
+
+## 行情
+
+```kotlin
+val quoteService = WhaleCore.getQuoteService()
+val stock = quoteService.getStock("ST/US/AAPL")
+
+val subscription = quoteService.subscribe(
+    listOf("ST/US/AAPL"),
+    quoteCallback
+).detail().depth().trade().start()
+```
+
+事件既可作为 `SharedFlow` 观察，也可使用生命周期感知回调；不再需要时调用返回的 `Subscription.cancel()`。
+
+## 订单与校验
+
+`OrderService` 提供当日/历史订单、详情、购买力、持仓明细、下单、改单、撤单、批量撤单、费用预估和订单事件。下单前可通过校验服务完成：
+
+- `checkTradability`
+- `getOrderConstraints`
+- `validateOrder`
+- `getQualifications`
+- `acceptAgreement`
+- `submitListedDerivAssessment`
+
+```kotlin
+val result = WhaleCore.getOrderService().submitOrder(request)
+WhaleCore.getOrderService().observeOrderEvents()
+    .collect { order -> render(order) }
+```
+
+## 资产、自选与透传
+
+`PortfolioService` 支持订阅/取消订阅、刷新、现金明细、持仓行情和会员资产设置。`WatchlistService` 支持分组与股票增删改、跨组移动、置顶、排序、无效标的清理和实时事件。
+
+需要调用尚未封装的业务接口时，可通过 `RequestService.send(HttpRequest)` 发起透传请求；SDK 负责公共参数、鉴权头和鉴权恢复，调用方负责解析响应业务数据。
+

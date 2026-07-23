@@ -1,0 +1,113 @@
+---
+title: iOS
+description: WhaleCore SDK iOS installation, initialization, sessions, and public services
+---
+
+## Requirements and installation
+
+- iOS 13.0+
+- Swift 5.9+ and Xcode 15+
+- Swift and Objective-C
+
+```ruby
+platform :ios, '13.0'
+use_frameworks! :linkage => :static
+
+target 'YourApp' do
+  pod 'WhaleCore'
+end
+```
+
+WhaleCore is distributed through a private CocoaPods source. Integration support supplies the source and credentials.
+
+## Initialize
+
+```swift
+import WhaleCore
+
+let config = WhaleCoreConfig(
+    logLevel: .info,
+    appKey: "your_app_key",
+    appSecret: "your_app_secret",
+    appId: "your_app_id",
+    defaultAccountChannel: "lb_hk",
+    token: userAccessToken,
+    refreshToken: userRefreshToken,
+    language: .en
+)
+config.tokenDelegate = session
+WhaleCoreService.initialize(config: config)
+```
+
+Whale supplies project credentials and the default account channel. Broker's login flow obtains the Customer `token` and `refreshToken`. Never log credentials or complete tokens.
+
+## Tokens and trade authentication
+
+Implement `WhaleCoreTokenDelegate` to persist renewed credentials. Optional `resolveExpiredToken` can perform silent login when the refresh token also fails. Concurrent 401 responses trigger a single recovery whose result is shared by pending requests.
+
+```swift
+func didRefreshToken(_ token: String, refreshToken: String) {
+    saveSecurely(token, refreshToken)
+}
+
+func resolveExpiredToken(completion: @escaping (String?, String?) -> Void) {
+    silentLogin { completion($0.token, $0.refreshToken) }
+}
+```
+
+To let the host manage trading passwords, set `tradePasswordEnabled = true` and assign `WhaleCoreTradeAuthDelegate` before initialization. Otherwise, the SDK manages trade authentication.
+
+## Lifecycle
+
+```swift
+WhaleCoreService.onResume()
+WhaleCoreService.onPause()
+WhaleCoreService.logoutAndDestroy()
+```
+
+Destroy clears local tokens, closes WebSockets, and releases services. After account switching, initialize again and re-register delegates and subscriptions.
+
+## Public services
+
+| Service | Main APIs |
+| --- | --- |
+| `quotesService` | `subscribe`, `subscribeKlines`, `getKlines`, `getStock`, option chains and calculator |
+| `orderService` | `submitOrder`, `replaceOrder`, `cancelOrder`, today/history/detail, estimates, and validation |
+| `portfolioService` | Asset subscriptions, cash detail, position quotes, and member settings |
+| `watchlistService` | Group/stock mutations, sorting, pinning, refresh, and events |
+| `requestService` | Authenticated pass-through HTTP with recovery retry |
+
+### Quote subscription
+
+```swift
+let subscription = WhaleCoreService.quotesService
+    .subscribe(counters: ["ST/US/AAPL", "ST/HK/00700"])
+    .detail.depth.trade.preTrade.postTrade
+    .start { updates, error in
+        updates?.forEach { print($0.counter, $0.stock.lastPrice ?? 0) }
+    }
+
+await subscription.cancel()
+```
+
+Selectable data includes `list`, `detail`, `depth`, `trade`, `broker`, `preTrade`, `postTrade`, and `nightTrade`.
+
+### Orders
+
+Order requests use `clientRequestId` as an idempotency key. Reuse it when retrying the same order and generate a new value for a new order. Public models cover limit, market, LIT, MIT, trailing-stop-limit, and take-profit/stop-loss attached orders.
+
+```swift
+let common = WhaleCoreOrderCommon(
+    counterId: "ST/US/AAPL",
+    side: .buy,
+    quantity: .byCount(NSDecimalNumber(value: 100)),
+    settlementCurrency: "USD",
+    clientRequestId: UUID().uuidString
+)
+let request = WhaleCoreOrderSubmitRequest.limit(
+    common: common, kind: .lo, price: NSDecimalNumber(string: "180")
+)
+let result = try await WhaleCoreService.orderService.submitOrder(request)
+```
+
+Order events use `addDelegate` / `removeDelegate`: the first delegate starts the feed and removal of the final delegate stops it.
