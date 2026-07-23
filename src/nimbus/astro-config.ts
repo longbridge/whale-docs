@@ -1,4 +1,5 @@
 import react from "@astrojs/react";
+import tailwindcss from "@tailwindcss/vite";
 import icon from "astro-icon";
 import nimbus, { defineConfig as defineNimbusConfig } from "nimbus-docs";
 import { hastPlugins } from "./plugins/satteri";
@@ -39,6 +40,7 @@ export const markdown = {
       "obj-c": "objective-c",
       kt: "kotlin",
       kts: "kotlin",
+      agsl: "glsl",
     },
   },
 };
@@ -54,6 +56,7 @@ export const integrations = [icon(), react(), nimbus(nimbusConfig, {
 })];
 
 export const vite = {
+  plugins: [tailwindcss()],
   optimizeDeps: {
     noDiscovery: true,
     esbuildOptions: {
