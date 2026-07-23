@@ -29,8 +29,8 @@ const methodVariant = (method: string) =>
 export function operationHref(locale: string, operation: string): string {
   const match = operation.match(/^([A-Z]+)\s+(.+)$/);
   const localePath = locale.toLowerCase();
-  if (!match) return `/${localePath}/broker-api/`;
-  return `/${localePath}/broker-api/${operationRoutePath(locale, match[1], match[2])}/`;
+  if (!match) return `/${localePath}/broker-api`;
+  return `/${localePath}/broker-api/${operationRoutePath(locale, match[1], match[2])}`;
 }
 
 export async function getWhaleSidebar(pathname: string): Promise<SidebarItem[]> {
@@ -52,14 +52,15 @@ export async function getWhaleSidebar(pathname: string): Promise<SidebarItem[]> 
     }
     const isOperation = /^[A-Z]+\s+\//.test(node);
     const localizedNode = node.replace(/^cn(?=\/|$)/, "zh-cn").replace(/^zh-Hant(?=\/|$)/, "zh-hk");
-    const href = isOperation ? operationHref(locale, node) : `/${localizedNode.replace(/^\//, "")}/`;
+    const normalizedNode = localizedNode.replace(/\/index$/, "");
+    const href = isOperation ? operationHref(locale, node) : `/${normalizedNode.replace(/^\//, "")}`;
     const id = localizedNode.toLowerCase().replace(/^\//, "");
     const fallback = node.split("/").filter(Boolean).at(-1)?.replace(/[-_]/g, " ") ?? node;
     return {
       type: "link",
       label: isOperation ? (operationTitles.get(`${locale}:${node}`) ?? fallback) : (titleById.get(id) ?? fallback),
       href,
-      isCurrent: current === href.replace(/\/$/, ""),
+      isCurrent: current === href,
       badge: isOperation ? { text: node.split(" ", 1)[0], variant: methodVariant(node.split(" ", 1)[0]) } : undefined,
       order: 0,
     };
