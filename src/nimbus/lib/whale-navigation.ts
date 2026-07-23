@@ -76,7 +76,9 @@ export async function getWhaleSidebar(pathname: string): Promise<SidebarItem[]> 
   const tab = language.tabs.find((entry) => (sectionForTab[entry.tab] ?? []).includes(section)) ?? language.tabs[0];
   const entries = await getCollection("docs");
   const titleById = new Map(entries.map((entry) => [entry.id.toLowerCase().replace(/\.(md|mdx)$/, ""), entry.data.title]));
-  const current = pathname.replace(/\/$/, "");
+  // Static `file` builds expose `.html` in Astro.url while public links remain
+  // extensionless. Normalize both forms so production marks the current item.
+  const current = pathname.replace(/\.html$/, "").replace(/\/$/, "") || "/";
 
   const convert = (node: PageNode, collapseGroups = false): SidebarItem[] => {
     if (typeof node !== "string") {
