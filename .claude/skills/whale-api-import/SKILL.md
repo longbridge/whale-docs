@@ -53,7 +53,7 @@ paths:
 
 只有源仓库里标了 `x-verified: verified`/`documented`/`inferred` 的接口才会被发布；改动某个接口的核实状态，回源仓库改对应 `.yaml`，然后重跑本仓库的 `convert.py`。
 
-**菜单骨架保留**：`x-lbonly: true` 会让对应的菜单分支彻底消失（内部接口本来就不该让外部知道存在），但 `x-verified: unverified` 不会——`convert.py` 单独跑一遍不做 unverified 过滤的 walk 算出完整菜单骨架（`skeleton_paths`），哪个分组下所有接口暂时都是 unverified、渲染出来是空的，就塞一条指向 `{lang}/api-reference/pending-verification.mdx` 的占位页，而不是把整个分组从侧边栏删掉。接口重新核实通过、`x-verified` 改回 `verified`/`documented`/`inferred` 后，重跑 `convert.py` 占位页会自动被真实接口列表替换。
+**菜单骨架保留（当前默认关闭）**：`x-lbonly: true` 会让对应的菜单分支彻底消失（内部接口本来就不该让外部知道存在）。`x-verified: unverified` 原本也有一套类似机制——`convert.py` 单独跑一遍不做 unverified 过滤的 walk 算出完整菜单骨架（`skeleton_paths`），哪个分组下所有接口暂时都是 unverified、渲染出来是空的，就塞一条指向 `pending-verification.json` manifest + `[locale]/broker-api/pending-verification/[slug].astro` 动态路由的占位页（"待核实"），而不是把整个分组从侧边栏删掉。**但侧边栏里大量只有"待核实"这一个叶子的分组看起来像功能坏了**，所以 `convert.py` 里的 `SHOW_PENDING_VERIFICATION_PLACEHOLDER` 常量目前设为 `False`：占位页机制的代码（skeleton walk、manifest 生成、动态路由）都还在，只是不再往导航树里插入占位条目——一个分支下全部接口都还是 unverified 时，这个分支（以及递归到顶层、如果整个顶层模块都还没有已验证接口）直接从侧边栏消失，而不是显示一个只有"待核实"的空壳。接口重新核实通过、`x-verified` 改回 `verified`/`documented`/`inferred` 后，重跑 `convert.py`，对应分支会自动带着真实接口列表重新出现在侧边栏。想恢复"保留空分组骨架 + 占位页"的效果，把 `SHOW_PENDING_VERIFICATION_PLACEHOLDER` 改回 `True` 即可。
 
 ## 工作流
 
