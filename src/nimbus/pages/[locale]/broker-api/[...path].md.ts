@@ -3,7 +3,7 @@ import { allOperations, operationRoutePath, resolveSchema, type OperationRecord 
 
 export function getStaticPaths() {
   return allOperations().map((record) => ({
-    params: { locale: record.locale, path: operationRoutePath(record.locale, record.method, record.path) },
+    params: { locale: record.locale.toLowerCase(), path: operationRoutePath(record.locale, record.method, record.path) },
     props: record,
   }));
 }

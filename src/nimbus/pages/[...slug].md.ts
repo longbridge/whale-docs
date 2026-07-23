@@ -2,8 +2,8 @@ import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
 
 const routeId = (id: string) => id
-  .replace(/^zh-cn(?=\/|$)/, "zh-CN")
-  .replace(/^zh-hk(?=\/|$)/, "zh-HK")
+  .replace(/^zh-cn(?=\/|$)/i, "zh-cn")
+  .replace(/^zh-hk(?=\/|$)/i, "zh-hk")
   .replace(/\.(md|mdx)$/, "")
   .replace(/\/index$/, "");
 
