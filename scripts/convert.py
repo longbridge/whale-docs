@@ -88,6 +88,22 @@ def norm_menu_seg(name: str) -> str:
     return f"{cn}({en})" if cn != name else name
 
 
+def _slugify_segment(seg: str) -> str:
+    _, en = parse_top_dir(seg)
+    s = re.sub(r"[^a-z0-9]+", "-", en.lower()).strip("-")
+    return s or "x"
+
+
+def pending_verification_slug(menu_path: Tuple[str, ...]) -> str:
+    """Stable, URL-safe, language-independent id for a nav branch that's
+    currently empty (every op under it is x-verified:unverified) -- each
+    branch gets its OWN placeholder page at this slug rather than all of
+    them sharing one page. A shared page means every sidebar entry pointing
+    to it lights up as "active" simultaneously and the breadcrumb/title
+    never reflects which branch was actually clicked."""
+    return "-".join(_slugify_segment(p) for p in menu_path)
+
+
 def load_menu(source: Path) -> Dict[str, Dict[str, str]]:
     """{module_key: {en, zh-CN, zh-HK}} from menu.json, for top-level titles."""
     p = source / "menu.json"
@@ -521,13 +537,35 @@ def ensure_response_descriptions(spec: Dict[str, Any], lang_key: str) -> None:
 
 # Manually-maintained groups around the generated reference groups in the
 # Broker API tab — survive regeneration.
-# Shown in place of a nav group whose every operation is currently
-# x-verified:unverified, so the menu skeleton (business modules and
-# sub-groups) doesn't disappear while content is pending re-verification.
-PENDING_VERIFICATION_PAGE = {
-    "en": "en/broker-api/pending-verification",
-    "cn": "zh-CN/broker-api/pending-verification",
-    "zh-Hant": "zh-HK/broker-api/pending-verification",
+PENDING_VERIFICATION_TEXT = {
+    "en": {
+        "title": "Pending re-verification",
+        "description": "This section's endpoints are being re-verified against the live backend before publishing.",
+        "body": (
+            "The endpoints under **{group}** are temporarily hidden while they are re-verified "
+            "against the real backend. They will reappear here once verification is complete.\n\n"
+            "In the meantime, see the [Broker API overview](/en/broker-api/overview) or "
+            "[get started](/en/broker-api/get-started/quickstart) with an already-published endpoint."
+        ),
+    },
+    "cn": {
+        "title": "待核实",
+        "description": "该分组下的接口正在对真实后端重新核实，核实完成后才会发布。",
+        "body": (
+            "**{group}** 分组下的接口暂时隐藏，正在对真实后端重新核实中，核实通过后会重新出现在这里。\n\n"
+            "如需先了解已发布的接口，可以看 [Broker API 概览](/cn/broker-api/overview) 或 "
+            "[开始使用](/cn/broker-api/get-started/quickstart)。"
+        ),
+    },
+    "zh-Hant": {
+        "title": "待覆核",
+        "description": "該分組下的接口正在對真實後端重新覆核，覆核完成後才會發布。",
+        "body": (
+            "**{group}** 分組下的接口暫時隱藏，正在對真實後端重新覆核中，覆核通過後會重新出現在這裡。\n\n"
+            "如需先了解已發布的接口，可以看 [Broker API 概覽](/zh-Hant/broker-api/overview) 或 "
+            "[開始使用](/zh-Hant/broker-api/get-started/quickstart)。"
+        ),
+    },
 }
 
 BROKER_API_MANUAL_GROUPS = {
@@ -663,6 +701,10 @@ def main() -> int:
     docs_json_path = REPO_ROOT / "docs.json"
     docs = json.loads(docs_json_path.read_text(encoding="utf-8"))
 
+    # slug -> menu_path, populated by render() below for every branch that's
+    # currently empty (all ops unverified) and needs its own placeholder page.
+    pending_pages_needed: Dict[str, Tuple[str, ...]] = {}
+
     def build_groups(lang_key: str, file_suffix: str) -> List[Dict[str, Any]]:
         # tree: {top: {"__pages": [...], sub: {...}}}
         root: Dict[str, Any] = OrderedDict()
@@ -694,7 +736,12 @@ def main() -> int:
                 # Every op under this branch is currently unverified (or the
                 # branch has no leaf pages of its own) -- keep the group in
                 # the menu skeleton with a placeholder instead of vanishing.
-                out.append(PENDING_VERIFICATION_PAGE[lang_key])
+                # Each branch gets its OWN page (not one shared page) so the
+                # sidebar's active-highlight and the page's breadcrumb/title
+                # correctly reflect exactly which branch was clicked.
+                slug = pending_verification_slug(prefix)
+                pending_pages_needed[slug] = prefix
+                out.append(f"{LANG_DIRS[lang_key]}/broker-api/pending-verification/{slug}")
             return out
 
         groups = []
@@ -732,6 +779,25 @@ def main() -> int:
         p = REPO_ROOT / f"openapi.{file_suffix}.json"
         # default=str: YAML auto-parses bare dates in examples into datetime.date
         p.write_text(json.dumps(outputs[lang_key], ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
+
+    # One placeholder page per empty nav branch (not one shared page across
+    # all of them — see the render() comment). Clean up slugs from a
+    # previous run that no longer need a placeholder (content got
+    # re-verified and published, or the branch itself is gone).
+    for lang_key, _, _ in LANGS:
+        pv_dir = REPO_ROOT / "docs" / LANG_DIRS[lang_key] / "broker-api" / "pending-verification"
+        pv_dir.mkdir(parents=True, exist_ok=True)
+        for f in pv_dir.iterdir():
+            if f.suffix == ".mdx" and f.stem not in pending_pages_needed:
+                f.unlink()
+        text = PENDING_VERIFICATION_TEXT[lang_key]
+        for slug, menu_path in pending_pages_needed.items():
+            group_name = localized_sub_name(menu_tree, menu_path, lang_key)
+            body = text["body"].format(group=group_name)
+            content = (
+                f"---\ntitle: {text['title']}\ndescription: {text['description']}\n---\n\n{body}\n"
+            )
+            (pv_dir / f"{slug}.mdx").write_text(content, encoding="utf-8")
 
     # v2 generates no MDX under data-porter — clean up any leftover.
     for lang_dir in LANG_DIRS.values():
