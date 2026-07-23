@@ -1,6 +1,7 @@
 import { getCollection } from "astro:content";
 import type { SidebarItem } from "nimbus-docs/types";
 import docsConfig from "../../../docs.json";
+import pendingVerificationManifest from "../../../pending-verification.json";
 import { allOperations, operationRoutePath } from "./openapi";
 
 type PageNode = string | { group: string; pages: PageNode[] };
@@ -40,6 +41,8 @@ export async function getWhaleSidebar(pathname: string): Promise<SidebarItem[]> 
   const section = segments[1] ?? "introduction";
   const languages = docsConfig.navigation.languages as LanguageNav[];
   const configLocale = locale === "zh-CN" ? "cn" : locale === "zh-HK" ? "zh-Hant" : "en";
+  const urlLocale = locale === "zh-CN" ? "zh-cn" : locale === "zh-HK" ? "zh-hk" : "en";
+  const pendingTitles = (pendingVerificationManifest as Record<string, Record<string, { title: string }>>)[urlLocale] ?? {};
   const language = languages.find((entry) => entry.language === locale || entry.language === configLocale) ?? languages[0];
   const tab = language.tabs.find((entry) => (sectionForTab[entry.tab] ?? []).includes(section)) ?? language.tabs[0];
   const entries = await getCollection("docs");
@@ -55,9 +58,15 @@ export async function getWhaleSidebar(pathname: string): Promise<SidebarItem[]> 
     const href = isOperation ? operationHref(locale, node) : `/${localizedNode.replace(/^\//, "")}/`;
     const id = localizedNode.toLowerCase().replace(/^\//, "");
     const fallback = node.split("/").filter(Boolean).at(-1)?.replace(/[-_]/g, " ") ?? node;
+    // Pending-verification links aren't in the "docs" content collection --
+    // they're rendered from pending-verification.json by a dynamic route --
+    // so titleById has nothing for them and this would otherwise fall back
+    // to the raw slug (e.g. "account assets account balance cash").
+    const pendingSlug = localizedNode.match(/broker-api\/pending-verification\/([^/]+)$/)?.[1];
+    const pendingTitle = pendingSlug ? pendingTitles[pendingSlug]?.title : undefined;
     return {
       type: "link",
-      label: isOperation ? (operationTitles.get(`${locale}:${node}`) ?? fallback) : (titleById.get(id) ?? fallback),
+      label: isOperation ? (operationTitles.get(`${locale}:${node}`) ?? fallback) : (pendingTitle ?? titleById.get(id) ?? fallback),
       href,
       isCurrent: current === href.replace(/\/$/, ""),
       badge: isOperation ? { text: node.split(" ", 1)[0], variant: methodVariant(node.split(" ", 1)[0]) } : undefined,

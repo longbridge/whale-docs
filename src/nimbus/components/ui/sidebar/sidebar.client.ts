@@ -10,6 +10,28 @@ interface SidebarState {
 	scroll: number;
 }
 
+/**
+ * A group's own collapse trigger, scoped to its label area — never a
+ * descendant's. Matches SidebarGroup.astro's two trigger shapes: the
+ * whole label IS the trigger (no landing page), or the trigger sits next
+ * to an `<a>` inside the label div (has a landing page). A static-header
+ * group (icon set, isStaticHeader) has neither and correctly returns null
+ * here instead of falling through to a nested child's trigger.
+ */
+function ownTrigger(group: HTMLElement): HTMLElement | null {
+	return group.querySelector<HTMLElement>(
+		":scope > [data-nb-collapsible-trigger], :scope > [data-nb-sidebar-group-label] [data-nb-collapsible-trigger]",
+	);
+}
+
+/** Every `[data-nb-sidebar-group]` under `root` that owns a direct trigger
+ * (i.e. is actually collapsible) — static headers are excluded. */
+function ownTriggerGroups(root: HTMLElement): HTMLElement[] {
+	return Array.from(
+		root.querySelectorAll<HTMLElement>("[data-nb-sidebar-group]"),
+	).filter((group) => ownTrigger(group) !== null);
+}
+
 function initSidebar(root: HTMLElement): () => void {
 	const teardowns: Array<() => void> = [];
 	const persist = root.hasAttribute("data-nb-sidebar-persist");
@@ -152,16 +174,18 @@ function initPersistence(root: HTMLElement): (() => void) | null {
 	const hash = root.dataset.nbSidebarHash ?? "";
 
 	function readState(): SidebarState {
-		const groups = root.querySelectorAll<HTMLElement>(
-			"[data-nb-sidebar-group]",
+		// Only track groups that own a *direct* trigger (real collapsible
+		// sections). A static-header group (icon set, no trigger of its own —
+		// see SidebarGroup.astro's isStaticHeader branch) has none, but an
+		// unscoped querySelector here would still find one by descending into
+		// its CollapsibleContent and picking up the FIRST nested child's
+		// trigger instead — silently recording that child's state under the
+		// static header's slot. On restore that mismatch causes the wrong
+		// element (an unrelated nested child) to be forced open/closed.
+		const groups = ownTriggerGroups(root);
+		const open: boolean[] = groups.map(
+			(group) => ownTrigger(group)?.getAttribute("data-nb-state") === "open",
 		);
-		const open: boolean[] = [];
-		groups.forEach((group) => {
-			const trigger = group.querySelector<HTMLElement>(
-				"[data-nb-collapsible-trigger]",
-			);
-			open.push(trigger?.getAttribute("data-nb-state") === "open");
-		});
 		return { hash, open, scroll: scrollHost.scrollTop };
 	}
 
