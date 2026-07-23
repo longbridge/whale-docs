@@ -1,12 +1,12 @@
 ---
 name: whale-api-import
 description: |
-  Regenerate this Mintlify site (openapi.{en,cn,zh-hant}.json + docs.json navigation) from the whale-openapi-docs source repo's generated OpenAPI YAMLs. Use when the user adds/updates/removes interfaces in whale-openapi-docs and wants those changes reflected here, or asks to "同步 API"/"重新生成接口文档"/"import interfaces"/"convert whale-openapi-docs" — anything that means "pull the latest interface definitions into whale-apidocs".
+  Regenerate this Astro/Starlight site (openapi.{en,zh-CN,zh-HK}.json + docs.json navigation) from the whale-openapi-docs source repo's generated OpenAPI YAMLs. Use when the user adds/updates/removes interfaces in whale-openapi-docs and wants those changes reflected here, or asks to "同步 API"/"重新生成接口文档"/"import interfaces"/"convert whale-openapi-docs" — anything that means "pull the latest interface definitions into whale-docs".
 ---
 
 # whale-api-import — 从 whale-openapi-docs 同步接口到 whale-apidocs（管线 v2）
 
-本项目是 Whale Docs 门户站（Mintlify），Broker API 参考由隔壁仓库 `whale-openapi-docs` 生成。
+本项目是 Whale Docs 门户站（Astro + Starlight），Broker API 参考由隔壁仓库 `whale-openapi-docs` 生成，并由 `starlight-openapi` 渲染。
 
 **权威源（v2 起）**：源仓库业务目录里的 **OpenAPI YAML 文件**（每个接口一个 `.yaml`，由源仓库的 `whale-openapi-spec-gen` skill 生成）。老的 `.ts` / `.json` 文件仍在源仓库里，但**本管线不再读它们** —— 它们缺多语言字段。
 
@@ -41,7 +41,7 @@ paths:
 
 | 产物 | 说明 |
 |---|---|
-| `openapi.{en,cn,zh-hant}.json` | 三份单语言 spec：`localize()` 把 `x-*` 字段按语言解析进 `summary`/`description` 后**全部剥离**。枚举标签、字段名标签拼进 description |
+| `openapi.{en,zh-CN,zh-HK}.json` | 三份单语言 spec：`localize()` 把 `x-*` 字段按语言解析进 `summary`/`description` 后**全部剥离**。枚举标签、字段名标签拼进 description |
 | `docs.json` Broker API tab | 分组来自 `x-menu-path`（嵌套 1-4 层，标题按 `中文(English)` 括号格式拆语言；顶层名走 `menu.json`+`TOP_DIR_TO_MENU_KEY`）。**分组顺序（顶层模块 + 每层子分组）按 `menu.json` 的完整 `data.menus[].routes` 树排**（`build_menu_tree`+`menu_sort_key`，按段的 en/zh-CN 逐层匹配），不在 menu.json 里的目录回退字母序排在已知项之后。叶子是 `"METHOD /path"` 原生条目，顺序保持文件遍历序。 |
 | ~~MDX~~ | **v2 不再生成任何 MDX**。数据集就是普通 OpenAPI operation。`{lang}/api-reference/data-porter/` 已删除，脚本会清理残留 |
 
@@ -64,18 +64,19 @@ paths:
    ```bash
    python3 scripts/convert.py
    ```
-4. **严格校验（必须过，比本地预览更重要）**
+4. **严格校验（必须通过）**
    ```bash
-   mint validate   # exit 0 才能提交
+   bun run check
+   bun run build
    ```
-   **`mint dev` 是宽松模式**：有 MDX 解析错误的页面本地照样 200，但 Mintlify 云端构建会把它们剔除 —— 线上表现为侧边栏显示原始 slug + 点击 404。已知易错源（来自 Lark HTML）：裸 `*`/`~` 跨行配对成强调/删除线、多行 `<table>/<div>/<ul>` 被 markdown 分段拆散标签对。`convert_console.py` 的 `collapse_html_blocks()` 已做通用处理（HTML 块合并单行 + 文本段 `*`/`~` 转义），新增内容再报错优先检查这两类。
+   `bun run build` 会先生成 `.astro-content/`，随后执行类型检查和完整静态构建。来自 Lark HTML 的裸 `*`/`~`、未闭合 HTML，以及不受支持的 MDX 表达式仍是常见失败原因；应修正原始内容或兼容转换，不要直接改生成目录。
 5. **本地预览**
    ```bash
-   mint dev --port 3999 > /tmp/mint.log 2>&1 &
+   bun run dev -- --port 3999
    ```
 6. **手写页一致性检查**（重要）
    ```bash
-   rg "旧数据集名 | 已删路径" en/ cn/ zh-hant/ --glob '!api-reference/**'
+   rg "旧数据集名 | 已删路径" docs/en/ docs/zh-CN/ docs/zh-HK/ --glob '!api-reference/**'
    ```
    quickstart / authentication / changelog / trading-api 里有请求示例引用具体数据集（当前统一用 `account_cash_balances`，核心稳定数据集）。源里删除/改名数据集后要同步。
 7. **提交**
@@ -86,7 +87,7 @@ paths:
 
 ## convert.py 设计要点
 
-- **语言映射**：`LANGS = [("en","en","en"), ("cn","cn",None), ("zh-Hant","zh-hant","hk")]` —— 第三个元素是 `x-*` 后缀，`None` 表示用基准字段（简体）。
+- **语言映射**：内部导航键兼容旧 `docs.json`，输出文件与 `docs/` 内容目录统一使用 `en`、`zh-CN`、`zh-HK`；第三个元组元素仍是 `x-*` 后缀。
 - **`localize(node, sfx, lang_key)`**：深度遍历，`x-description-<sfx>` 优先于 `description`；`x-name-<sfx>` 作为标签前置拼进 description；`x-enum-details` 渲染成 "Options: `v` = label; …" 追加；其余 `x-*` 键全部丢弃。注意 YAML 里存在**非字符串 key**（未加引号的数字/布尔），判断前要 `str(k)`。
 - **JSON 序列化用 `default=str`**：YAML 会把裸日期（`2026-01-01`）解析成 `datetime.date`。
 - **`walk_yaml_ops`**：只走 `中文(English)` 括号命名的业务目录，跳过 `.git/.Codex/whale-openapi/scripts/data/templates/docs`。
@@ -97,12 +98,12 @@ paths:
 
 | 现象 | 处理 |
 |---|---|
-| `mint dev` 报 openapi invalid | 源 YAML 有非法结构。定位报错 path，回源仓库修 YAML（或在 convert.py 过滤） |
+| `bun run build` 报 OpenAPI invalid | 源 YAML 有非法结构。定位报错 path，回源仓库修 YAML（或在 convert.py 过滤） |
 | 新增业务模块后 docs.json 分组标题/图标不对 | `TOP_DIR_TO_MENU_KEY` + `MODULE_ICONS` 补一行；源 `menu.json` 没有对应 key 时回退目录名 |
 | 英文页出现中文 | 该字段源 YAML 缺 `x-*-en`。回源仓库补翻译（`data/i18n/en.json` 翻译记忆），不要在本仓库硬编码 |
 | 枚举字段 Playground 显示成 input 而不是下拉 | 源 YAML 该字段缺 `enum` 数组（只有 `x-enum-details` 不够）。回源补 `enum` |
 | 源删除/改名数据集，手写页示例失效 | 见工作流第 5 步；示例统一用 `account_cash_balances` |
-| `mint dev` 报 `ENOTEMPTY ... ~/.mintlify/...` | CLI 缓存冲突：`rm -rf ~/.mintlify/mint/apps/client/src/_props/` 重跑 |
+| 页面没有出现新接口 | 确认 `docs.json` 与三份 OpenAPI 已更新，再运行 `bun run prepare:docs`；不要编辑 `.astro-content/` |
 
 ## 手工维护 vs 脚本重跑
 
@@ -112,6 +113,6 @@ paths:
 
 v1 管线读源仓库的 `.ts`（data_porter 模板）/ `.json`（REST 描述），生成 openapi + 每数据集一个 MDX 页。演进过程中踩过的坑：
 - 老 data_porter 契约 `POST /data_porter/query` + body 里 `template_id` → 曾用合成路径 + enum 锁定 workaround → 后来 `/v1/datasets/<name>` 把名字提进 URL，workaround 废弃
-- Mintlify frontmatter `api:` 页面不吃 `<ParamField default/hidden>`，锁定字段必须走 openapi schema
+- 旧 Mintlify frontmatter `api:` 页面不支持 `<ParamField default/hidden>`，因此锁定字段已统一进入 OpenAPI schema
 - `.ts` 的 `nameMulti` 基本为 null → 英文站中文标题 → 这是催生 v2 的直接原因
 - 鉴权从 4 头（X-Api-Key/Authorization/X-Timestamp/X-Api-Signature HMAC 签名）简化为单 Authorization，再演进为 Bearer

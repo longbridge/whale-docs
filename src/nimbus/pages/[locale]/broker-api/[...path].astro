@@ -1,0 +1,159 @@
+---
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import { getPrevNext } from "nimbus-docs";
+import { allOperations, operationRoutePath, resolveSchema, type OperationRecord } from "../../../lib/openapi";
+import { getWhaleSidebar } from "../../../lib/whale-navigation";
+import ApiSchemaFields from "../../../components/api/ApiSchemaFields.astro";
+import ApiResponseSchema from "../../../components/api/ApiResponseSchema.astro";
+import { ApiCodeExample } from "../../../../components/ApiCodeExample";
+import { Badge } from "@components/components/ui/badge";
+import { codeToHtml } from "shiki";
+import { renderInlineMarkdown, renderMarkdown } from "../../../lib/render-markdown";
+
+export const prerender = true;
+export function getStaticPaths() {
+  return allOperations().map((record) => ({
+    params: { locale: record.locale, path: operationRoutePath(record.locale, record.method, record.path) },
+    props: record,
+  }));
+}
+
+const { locale, method, path, operation, document } = Astro.props as OperationRecord;
+const title = operation.summary || operation.operationId || `${method.toUpperCase()} ${path}`;
+const descriptionHtml = renderMarkdown(operation.description);
+const sidebar = await getWhaleSidebar(Astro.url.pathname);
+const currentSlug = Astro.url.pathname.replace(/\/$/, "");
+const prevNext = await getPrevNext(currentSlug, { sidebarTree: sidebar });
+const requestContent = operation.requestBody?.content ?? {};
+const requestType = Object.keys(requestContent)[0];
+const request = requestType ? requestContent[requestType] : undefined;
+const parameters = (operation.parameters ?? []).map((parameter: any) => parameter.$ref ? resolveSchema(document, parameter) : parameter);
+const responses = Object.entries(operation.responses ?? {}) as [string, any][];
+const technicalLabels = {
+  parameters: "Parameters",
+  request: "Request body",
+  responses: "Responses",
+  requestExample: "Request",
+  responseExample: "Response",
+};
+const labels = {
+  ...technicalLabels,
+  ...(locale === "en"
+    ? { reference: "API Reference", required: "Required", optional: "Optional" }
+    : locale === "zh-CN"
+      ? { reference: "API Reference", required: "必填", optional: "可选" }
+      : { reference: "API Reference", required: "必填", optional: "可選" }),
+};
+const example = request?.example ?? request?.examples?.default?.value;
+const requestSchema = resolveSchema(document, request?.schema);
+const baseUrl = "https://b-api.longbridge.xyz";
+const endpointUrl = `${baseUrl}${path}`;
+function schemaExample(schema: any): any {
+  const resolved = resolveSchema(document, schema) ?? schema;
+  if (resolved?.example !== undefined) return resolved.example;
+  if (resolved?.enum?.length) return resolved.enum[0];
+  if (resolved?.type === "object" || resolved?.properties) {
+    const properties = resolved.properties ?? {};
+    if (["code", "message", "data"].every((key) => key in properties)) {
+      return {
+        code: properties.code?.example ?? 0,
+        message: properties.message?.example ?? null,
+        data: schemaExample(properties.data),
+      };
+    }
+    return Object.fromEntries(Object.entries(properties).map(([key, value]) => [key, schemaExample(value)]));
+  }
+  if (resolved?.type === "array") return [schemaExample(resolved.items ?? {})];
+  if (resolved?.type === "integer" || resolved?.type === "number") return 0;
+  if (resolved?.type === "boolean") return true;
+  return "<string>";
+}
+const curlExample = [
+  `curl --request ${method.toUpperCase()} \\`,
+  `  --url '${endpointUrl}' \\`,
+  `  --header 'Authorization: Bearer <token>' \\`,
+  `  --header 'Content-Type: ${requestType ?? "application/json"}'`,
+  request ? `  --data '${JSON.stringify(example ?? schemaExample(requestSchema), null, 2)}'` : "",
+].filter(Boolean).join("\n");
+const curlHtml = await codeToHtml(curlExample, { lang: "bash", theme: "github-light" });
+const fetchOptions = [
+  `  method: "${method.toUpperCase()}",`,
+  `  headers: {`,
+  `    Authorization: "Bearer <token>",`,
+  `    "Content-Type": "${requestType ?? "application/json"}",`,
+  `  },`,
+  request ? `  body: JSON.stringify(${JSON.stringify(example ?? schemaExample(requestSchema), null, 2).replaceAll("\n", "\n  ")}),` : "",
+].filter(Boolean).join("\n");
+const fetchExample = [
+  `const response = await fetch("${endpointUrl}", {`,
+  fetchOptions,
+  `});`,
+  ``,
+  `const data = await response.json();`,
+].join("\n");
+const fetchHtml = await codeToHtml(fetchExample, { lang: "javascript", theme: "github-light" });
+const responseExamples = responses.map(([status, response]) => {
+  const contentType = Object.keys(response.content ?? {})[0];
+  const body = contentType ? response.content[contentType] : undefined;
+  return { status, contentType, response, body, example: body?.example ?? body?.examples?.default?.value };
+});
+const highlightedResponses = await Promise.all(responseExamples.filter(({ body }) => body).map(async ({ status, contentType, body, example: responseExample }) => {
+  const value = responseExample ?? schemaExample(body.schema);
+  const code = JSON.stringify(value, null, 2);
+  return {
+    status,
+    contentType,
+    code,
+    html: await codeToHtml(code, { lang: "json", theme: "github-light" }),
+  };
+}));
+---
+
+<DocsLayout
+  title={title}
+  description={operation.description}
+  descriptionHtml={descriptionHtml}
+  sidebar={sidebar}
+  headings={false}
+  breadcrumbs={[
+    { label: "Whale Docs", href: `/${locale}/introduction/` },
+    { label: "Broker API", href: `/${locale}/broker-api/overview/` },
+    { label: labels.reference },
+  ]}
+  prevNext={prevNext}
+  editUrl={`https://github.com/longbridge/whale-docs/edit/main/openapi.${locale}.json`}
+  wide={true}
+>
+  <div class="api-operation-heading">
+    <Badge class:list={["api-method", `api-method-${method}`]}>{method.toUpperCase()}</Badge>
+    <code>{endpointUrl}</code>
+  </div>
+
+  <div class="api-reference-grid">
+    <div class="api-reference-fields">
+      <section><h2 id="authorization">Authorization</h2><div class="api-schema-fields"><div class="api-schema-field"><div class="api-schema-field-meta"><code>Authorization</code><Badge variant="secondary">string</Badge><Badge variant="outline">header</Badge><Badge variant="destructive">{labels.required}</Badge></div><p>{locale === "en" ? "Send the Broker ACCESS_TOKEN as Authorization: Bearer <token>." : "Broker 获发的 ACCESS_TOKEN，通过 Authorization: Bearer <token> 发送。"}</p></div></div></section>
+      {parameters.length > 0 && <section><h2 id="parameters">{labels.parameters}</h2><div class="api-fields">{parameters.map((parameter: any) => {
+        const schema = resolveSchema(document, parameter.schema);
+        return <div class="api-field"><div class="api-field-title"><code>{parameter.name}</code><Badge variant="secondary">{schema?.type ?? "string"}</Badge><Badge variant={parameter.required ? "destructive" : "outline"}>{parameter.required ? labels.required : labels.optional}</Badge></div>{parameter.description && <div class="api-field-description" set:html={renderMarkdown(parameter.description)} />}</div>;
+      })}</div></section>}
+
+      {request && <section><h2 id="request-body">{labels.request} <small>{requestType}</small></h2><ApiSchemaFields schema={requestSchema} document={document} locale={locale} childrenOpen={false} /></section>}
+
+      <section><h2 id="responses">{labels.responses}</h2>{responseExamples.map(({ status, response, body }) => <div class="api-response-schema"><div class="api-response-status"><code>HTTP {status}</code><span set:html={renderInlineMarkdown(response.description || (status === "200" ? "OK" : "Response"))} /></div>{body?.schema && <ApiResponseSchema schema={body.schema} document={document} locale={locale} />}</div>)}</section>
+    </div>
+
+    <aside class="api-code-panel">
+      <ApiCodeExample
+        client:load
+        requestTitle={labels.requestExample}
+        responseTitle={labels.responseExample}
+        copyLabel={locale === "en" ? "Copy code" : locale === "zh-CN" ? "复制代码" : "複製代碼"}
+        examples={[
+          { id: "curl", label: "cURL", code: curlExample, html: curlHtml },
+          { id: "fetch", label: "Fetch", code: fetchExample, html: fetchHtml },
+        ]}
+        responses={highlightedResponses}
+      />
+    </aside>
+  </div>
+</DocsLayout>

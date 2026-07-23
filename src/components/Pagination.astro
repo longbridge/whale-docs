@@ -1,0 +1,55 @@
+---
+import { ArrowLeft, ArrowRight } from 'lucide-astro';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+const { dir, sidebar } = Astro.locals.starlightRoute;
+const isRtl = dir === 'rtl';
+const path = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.url.pathname}/`;
+const locale = path.split('/')[1] || 'en';
+const paginationLabel = locale === 'en' ? 'Pagination' : locale === 'zh-cn' ? '文档分页' : '文件分頁';
+const contentRoot = fileURLToPath(new URL('../../.astro-content/', import.meta.url));
+type SidebarEntry = (typeof sidebar)[number];
+type PageLink = { href: string; label: string };
+
+const normalize = (href: string) => href.startsWith('/') && !href.endsWith('/') ? `${href}/` : href;
+const containsPath = (entry: SidebarEntry): boolean => entry.type === 'link'
+  ? normalize(entry.href) === path
+  : entry.entries.some(containsPath);
+const linkExists = (href: string) => {
+  if (!href.startsWith(`/${locale}/`)) return false;
+  if (href.includes('/broker-api/reference/')) return true;
+  const relativePath = href.slice(locale.length + 2).replace(/\/$/, '');
+  return existsSync(`${contentRoot}${locale}/${relativePath}.mdx`) || existsSync(`${contentRoot}${locale}/${relativePath}.md`);
+};
+const flatten = (entry: SidebarEntry): PageLink[] => entry.type === 'link'
+  ? linkExists(normalize(entry.href)) ? [{ href: normalize(entry.href), label: entry.label }] : []
+  : entry.entries.flatMap(flatten);
+
+const product = sidebar.find(containsPath);
+const pages = product ? flatten(product) : [];
+const currentIndex = pages.findIndex((page) => page.href === path);
+const prev = currentIndex > 0 ? pages[currentIndex - 1] : undefined;
+const next = currentIndex >= 0 && currentIndex < pages.length - 1 ? pages[currentIndex + 1] : undefined;
+const labels = {
+  previous: Astro.locals.t('page.previousLink'),
+  next: Astro.locals.t('page.nextLink'),
+};
+---
+
+<nav class="border-border mt-12 flex items-center justify-between border-t pt-6 print:hidden" aria-label={paginationLabel} dir={dir}>
+  {prev && (
+    <a class="group text-muted-foreground hover:text-foreground flex items-center gap-2 text-sm no-underline transition-colors" href={prev.href} rel="prev">
+      {isRtl ? <ArrowRight class="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" /> : <ArrowLeft class="size-4 transition-transform group-hover:-translate-x-0.5" aria-hidden="true" />}
+      <span><small class="text-muted-foreground block text-xs">{labels.previous}</small><strong class="text-foreground font-medium">{prev.label}</strong></span>
+    </a>
+  )}
+  {!prev && <span />}
+  {next && (
+    <a class="group text-muted-foreground hover:text-foreground flex items-center gap-2 text-right text-sm no-underline transition-colors" href={next.href} rel="next">
+      <span><small class="text-muted-foreground block text-xs">{labels.next}</small><strong class="text-foreground font-medium">{next.label}</strong></span>
+      {isRtl ? <ArrowLeft class="size-4 transition-transform group-hover:-translate-x-0.5" aria-hidden="true" /> : <ArrowRight class="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />}
+    </a>
+  )}
+  {!next && <span />}
+</nav>

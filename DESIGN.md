@@ -1,10 +1,19 @@
 # Whale Docs Design & Authoring System
 
+> **Astro migration note (2026-07):** Whale Docs now runs on Astro, Starlight,
+> and Bun. `README.md`, `astro.config.mjs`, and `src/styles/whale.css` are the
+> implementation sources of truth. Content lives in `docs/en`, `docs/zh-CN`,
+> and `docs/zh-HK`; generated specifications are
+> `openapi.{en,zh-CN,zh-HK}.json`. References below to the former documentation
+> runtime, `docs.json` styling values, root language folders, or legacy `style.css`
+> describe the preserved visual intent only and do not override this
+> architecture. `docs.json` remains solely as navigation-generation input.
+
 ## 1. Purpose and design direction
 
 This is the implementation guide for **Whale Docs**, the unified documentation
-portal for the Longport Whale solution, built on a hosted documentation platform
-(theme `mint`). Documentation authors, product designers, and coding agents must
+portal for the Longport Whale solution, built with Astro and Starlight.
+Documentation authors, product designers, and coding agents must
 use it when creating or reviewing a page, changing site configuration, or
 styling the portal.
 
@@ -47,12 +56,12 @@ It does **not** duplicate what other files already own:
 | --- | --- |
 | Product & role terminology (Whale, Broker, Customer, …) | `CONTEXT.md` glossary |
 | Repository structure, build, regeneration workflow | `README.md` |
-| Site config values (colors, logo, nav, footer, playground) | `docs.json` |
-| Layout/appearance overrides | `style.css` |
+| Site config values (colors, logo, nav, footer, playground) | `astro.config.mjs` |
+| Layout/appearance overrides | `src/styles/whale.css` |
 | Broker API reference content | generated from `../whale-openapi-docs` |
 | Sync pipeline (YAML → specs + nav) | `.claude/skills/whale-api-import` |
 
-When a rule here and a value in `docs.json` or `style.css` disagree, the config
+When a rule here and a value in `astro.config.mjs` or `src/styles/whale.css` disagree, the config
 file is authoritative for the value; this document is authoritative for the
 *intent* and the constraints on changing it.
 
@@ -63,35 +72,82 @@ The site has two content classes, and design rules apply differently to each.
 - **Authored** — hand-written MDX guides (`introduction`, product overviews,
   get-started, operations, changelog) and site config. These follow every rule
   in this document.
-- **Generated** — the Broker API reference: `openapi.{en,cn,zh-hant}.json`, the
+- **Generated** — the Broker API reference: `openapi.{en,zh-CN,zh-HK}.json`, the
   data-porter MDX pages, and the Broker API navigation groups in `docs.json`.
   These are produced from `../whale-openapi-docs`. **Never hand-edit generated
   files.** To change them, fix the source repo and re-run the import pipeline.
   Design work on generated content happens through the pipeline and through
-  `style.css`, not by editing output.
+  `src/styles/whale.css`, not by editing output.
 
 ## 2. UI style foundation
 
-Whale Docs uses the `mint` theme as its visual foundation. The
-implementation source of truth is `docs.json` (site config) and `style.css`
-(scoped overrides).
+Whale Docs uses Astro's content pipeline and Starlight integrations underneath a
+fully custom Whale presentation layer. The visible shell and documentation
+primitives are adapted from the CC BY 4.0 Cloudflare Nimbus implementation; no
+unthemed Starlight page chrome should remain visible. Nimbus supplies the layout,
+prose, sidebar, table, callout, step, pagination, and state patterns. Whale
+tokens and the established information architecture supply the identity.
+Reusable interactive component structures follow ReUI, and all interface icons
+come from Lucide. Do not introduce a second component or icon vocabulary.
+The implementation source of truth is `astro.config.mjs`, custom components in
+`src/components`, and `src/styles/whale.css`.
 
 | Property | Current standard |
 | --- | --- |
-| Platform | Hosted documentation platform, theme `mint` |
+| Platform | Astro + Starlight, run with Bun |
 | Site name | `Whale Docs` |
 | Brand color | Whale Violet `#7245F2` — see [Design System → Color](/en/design-system/color) |
 | Color mode | Light **and** dark, at full parity |
 | Icon family | Lucide — see [Design System → Iconography](/en/design-system/iconography) |
-| Typography | Platform theme defaults — families and scale per [Design System → Typography](/en/design-system/typography) |
+| Typography | Whale compact scale and families per [Design System → Typography](/en/design-system/typography) |
 | Logo | `logo/whale-light.png`, `logo/whale-dark.png`; favicon `whale-mark.png` |
 | API playground | Interactive (`api.playground.display: "interactive"`) |
-| AI-assistant actions | `copy`, `chatgpt`, `claude`, `cursor`, `vscode` |
-| Languages | `en` (default), `cn`, `zh-Hant` |
+| Page action | Copy the current document body with localized success/error feedback |
+| Languages | `en` (default), `zh-CN`, `zh-HK` |
 
-Compose the theme's built-in appearance before introducing any new rule. The
+The product Design System's `13px` base applies to dense financial application
+interfaces. Documentation is a reading surface and uses a `15px` body size,
+with `32px` / `24px` / `20px` for page, section, and subsection headings.
+Navigation and metadata may remain at `12–14px` to keep the shell compact.
+
+### Documentation component contract
+
+Documentation primitives inherit the vendored Cloudflare Nimbus contract. The
+contract is implemented as `--nb-*` custom properties in
+`src/styles/cloudflare/globals.css`; Whale-specific changes are limited to the
+brand adapter in `src/styles/whale.css`.
+
+| Token | Standard | Used by |
+| --- | --- | --- |
+| `--nb-content-max` | `43.5rem`, `52rem` at ≥1536px | reading column |
+| `--nb-sidebar-width` | `18.75rem` | desktop navigation rail |
+| `--nb-toc-width` | `18rem` | on-page navigation rail |
+| `--nb-h1-size` | `2.1875rem` | page titles |
+| `--nb-h2-size` | `1.3rem` | section headings |
+| `--nb-h3-size` | `1.1rem` | subsection headings |
+| `--nb-font-sans` | Inter Variable stack | prose and interface text |
+| `--nb-font-mono` | JetBrains Mono stack | code and technical tokens |
+| `--nb-border` | semantic neutral | component hairlines |
+| `--nb-card` | semantic surface | code, cards and overlays |
+
+Component appearance follows these rules:
+
+- **Code blocks** use the card surface, one neutral hairline border, the shared
+  surface radius, no shadow, and a compact bordered copy control in the upper
+  corner. They never imitate a dark IDE window in light mode.
+- **Callouts** use the same radius and padding as code blocks. Status color is
+  limited to the icon, border, and a very light semantic tint; title and body
+  retain the normal text hierarchy.
+- **Cards, accordions, and diagrams** use the same neutral hairline and surface
+  radius. Elevation comes from contrast, not drop shadows.
+- **Tables** remain flat reading surfaces with horizontal separators. They do
+  not become cards and do not use vertical grid lines.
+- **Interactive controls** use the shared control radius, Lucide icons, visible
+  focus rings, and ReUI/shadcn state behavior.
+
+Compose the Whale Nimbus primitives before introducing any new rule. The custom
 theme owns component geometry, typography, spacing, and states; authors own
-content, structure, and the small set of documented overrides.
+content and structure.
 
 ### Ownership boundary
 
@@ -100,25 +156,29 @@ language, not a parallel UI kit.
 
 - **Whale Docs owns**: product tab order, navigation grouping, page anatomy,
   content voice, the brand token, cross-linking conventions, and the deliberate
-  layout overrides in `style.css`.
-- **The documentation platform owns**: component geometry and behavior — cards,
-  callouts, accordions, tables, code blocks, the API playground, sidebar, tabs,
-  search, navbar, and footer, including their hover, focus, and dark-mode states.
+  custom page shell and layout rules in `src/styles/whale.css`.
+- **The Whale Nimbus layer owns**: visible component geometry and behavior —
+  cards, callouts, accordions, tables, code blocks, sidebar, tabs, search,
+  navbar, pagination, and footer, including hover, focus, and dark-mode states.
+  Starlight remains an implementation dependency for routing, search, and API
+  reference generation, not the visual theme. Custom Whale wrappers may reuse
+  its search, locale, theme-state, edit-link, and last-updated behavior, provided
+  their visible geometry and states are fully controlled by Whale tokens.
 - **Pages compose** documented platform MDX components with their standard
   props. They must not reproduce a component with hand-styled markup or inline
   CSS.
-- **Do not** encode the theme's current CSS in this guide. The installed theme
-  version remains authoritative as the platform evolves.
+- **Do not** reproduce component geometry in authored MDX. Reusable components
+  and `src/styles/whale.css` remain authoritative as the platform evolves.
 
-### `style.css` discipline
+### `src/styles/whale.css` discipline
 
-`style.css` is a small, deliberate override layer. Every rule in it exists to
-fix a specific mismatch between the marketing-scaled `mint` theme and a
-dense, multi-language API-docs site. The current, sanctioned overrides are:
+`src/styles/whale.css` is the Whale Nimbus theme layer. It maps the design-system
+tokens to the documentation shell and neutralizes any remaining Starlight
+defaults. The current, sanctioned responsibilities are:
 
 - **Wider sidebar** (`20rem` at `lg+`) — deeply nested, localized navigation
   titles need the room; content padding is matched so nothing overlaps.
-- **Full-width layout** — the theme centers content in a capped column with
+- **Full-width layout** — the shell centers content in a capped column with
   large dead margins on wide screens; both content and footer stretch to the
   viewport. Center-mode pages (changelog) are widened to `72rem` instead.
 - **Slim tabs row** (`36px`) and removed inter-row divider — tighten the
@@ -131,38 +191,37 @@ dense, multi-language API-docs site. The current, sanctioned overrides are:
 
 Rules for changing it:
 
-- Add a rule only for a **structural or layout** mismatch that the theme and
-  `docs.json` cannot express. Never add one-off colors, fonts, or decorative
-  effects.
+- Add a rule only when it expresses a reusable Whale token, Nimbus primitive,
+  or structural/layout requirement. Never add one-off per-page decoration.
 - Every rule is **scoped and commented** with what it targets and why. Match the
   existing comment style; unexplained selectors are not accepted.
-- Prefer a `docs.json` setting over CSS whenever one exists.
+- Prefer Astro configuration or a reusable component over a fragile selector.
 - Any color used in an override must have a light-mode and a dark-mode value.
 
 ## 3. Brand color
 
 The brand color is **Whale Violet `#7245F2`**, the canonical primary defined by
 the [Whale Design System](/en/design-system/color#primary-ramp). In this portal
-it is declared once in `docs.json` under `colors` (with theme `light`/`dark`
-variants drawn from the primary ramp) and applied by the theme to links, active
-navigation, primary buttons, and accents.
+it is declared as the `--nb-primary` semantic token in
+`src/styles/whale.css` (with light/dark variants drawn from the primary ramp)
+and applied to links, active navigation, primary buttons, and accents.
 
 The foundation owns the value and its ramp; this section only governs how the
 portal applies it. Do not redefine the brand hex here or approximate a shade.
 
 ### Usage rules
 
-- The brand color is applied **by the theme**, keyed off `docs.json`. Authors do
+- The brand color is applied **by the Whale Nimbus theme**. Authors do
   not paint brand color onto page content.
 - Let links, active nav, and the primary theme controls carry brand identity.
   Body copy, headings, code, and data stay in the theme's neutral text colors.
 - Do not introduce raw hex values (`#7245F2`, `rgb(...)`) in MDX or in
-  `style.css` for decoration. The only place a brand hex belongs is
-  `docs.json colors`.
+  `src/styles/whale.css` for decoration. The only place a brand hex belongs is
+  the semantic token declaration in `src/styles/whale.css`.
 - Never use purple to convey status. Keep success, warning, and error meaning on
   the platform's semantic callouts (`Note`, `Tip`, `Warning`) and the method
   colors on API chips.
-- Do not add purple rules, tints, or per-page accents in `style.css`.
+- Do not add purple rules, tints, or per-page accents outside the semantic tokens.
 
 ## 4. Information architecture and navigation
 
@@ -250,8 +309,8 @@ usage:
 
 ### Cross-linking
 
-- Internal links are language-absolute: `/en/broker-api/overview` (and the `cn`
-  / `zh-Hant` mirrors). Never link across languages.
+- Internal links are language-absolute: `/en/broker-api/overview/` (and the `zh-CN`
+  / `zh-HK` mirrors). Never link across languages.
 - Mark external links with a trailing `↗`, e.g. `[OpenAPI ↗](https://open.longportapp.com)`.
 - Link to the concept's own page rather than restating it; this portal has one
   home for each concept.
@@ -318,15 +377,15 @@ links to the alternative available today. Convert relative dates to absolute.
 
 ### 5.8 Changelog
 
-Center-mode page using dated `Update` components. `style.css` widens center-mode
+Center-mode page using dated `Update` components. `src/styles/whale.css` widens center-mode
 pages to `72rem`; keep entries reverse-chronological and concise.
 
 ## 6. API reference, playground, and examples
 
 - The playground is **interactive** (`api.playground.display`), with servers
   `https://b-api.longbridge.xyz` (test) and `https://b-api.lbkrs.com`
-  (production) declared in `docs.json`.
-- The "Try it" button is tinted per request method by `style.css`. If the
+  (production) declared in the generated OpenAPI specifications.
+- The "Try it" button is tinted per request method by `src/styles/whale.css`. If the
   platform changes the method chip classes, update the scoped selectors — do not
   hardcode a single color.
 - Example requests in authored guides must use a **real, stable dataset** so
@@ -340,12 +399,12 @@ pages to `72rem`; keep entries reverse-chronological and concise.
 
 ## 7. Trilingual contract
 
-- Three languages via `navigation.languages`: `en` (default), `cn`, `zh-Hant`,
+- Three languages: `en` (default), `zh-CN`, `zh-HK`,
   matching the legacy `accept-language` values (`en` / `zh-CN` / `zh-HK`).
-- Every authored page exists in all three directories (`en/`, `cn/`, `zh-Hant/`)
+- Every authored page exists in all three directories (`docs/en/`, `docs/zh-CN/`, `docs/zh-HK/`)
   with **identical structure**. Editing one means editing all three.
 - The API reference ships one spec per language
-  (`openapi.{en,cn,zh-hant}.json`) so each language shows single-language
+  (`openapi.{en,zh-CN,zh-HK}.json`) so each language shows single-language
   content. Keep the three specs in sync — this is handled by the import
   pipeline, not by hand.
 - Never mix languages on a page and never cross-link between language trees.
@@ -367,7 +426,7 @@ pages to `72rem`; keep entries reverse-chronological and concise.
   theme's capped, centered column.
 - The sidebar is `20rem` at `lg+` to fit nested localized titles; content
   padding is matched. Do not narrow it without also fixing the offset.
-- Below `lg`, the theme collapses the sidebar behind its own trigger — keep that
+- Below `lg`, the custom shell collapses the sidebar behind its trigger — keep that
   behavior; do not add a second navigation control.
 - Tables are the primary dense-content device. Keep them readable; do not force
   wide comparison tables into narrow columns.
@@ -381,11 +440,11 @@ from light-only internal Whale surfaces. The foundation treats
 light as the authoritative baseline; see
 [Design System → Color modes](/en/design-system/color#color-modes).
 
-- Every logo, color, and `style.css` override must have a working dark-mode
+- Every logo, color, and `src/styles/whale.css` rule must have a working dark-mode
   form. The logo already ships `light`/`dark` variants; brand colors already
   declare `light`/`dark`.
 - Any new override that sets a color must define both modes (follow the existing
-  `:is(html.dark, [data-theme="dark"])` pattern in `style.css`).
+  `[data-theme="dark"]` pattern in `src/styles/whale.css`).
 - Do not remove or hide the theme's dark-mode toggle from the reading area
   (only the redundant in-footer switch is hidden).
 
@@ -400,7 +459,7 @@ light as the authoritative baseline; see
 - Prefer tables for facts and comparisons; reserve card grids for parallel
   navigation.
 - Fix API reference content at the source repo and re-import — never in place.
-- Keep brand color in `docs.json`; keep `style.css` structural, scoped,
+- Keep brand color in semantic theme tokens; keep `src/styles/whale.css` structural, scoped,
   commented, and dark-mode-complete.
 - Preserve original casing for all technical values.
 
@@ -409,7 +468,7 @@ light as the authoritative baseline; see
 - Do not hand-edit generated files (`openapi.*.json`, data-porter MDX, generated
   nav groups).
 - Do not add one-off colors, fonts, gradients, shadows, or decorative CSS.
-- Do not put raw brand hex values in MDX or `style.css`.
+- Do not put raw brand hex values in MDX or outside the token block in `src/styles/whale.css`.
 - Do not use purple to signal status, or callouts to decorate ordinary prose.
 - Do not reorder or drop product tabs, cross-link between languages, or let the
   three language trees drift apart.
@@ -437,16 +496,16 @@ When implementing or changing a page:
    if generated.
 4. Write the frontmatter, then compose with the sanctioned component vocabulary.
 5. Use language-absolute links and the `↗` external convention.
-6. Mirror the page across `en/`, `cn/`, `zh-Hant/` with identical structure.
+6. Mirror the page across `docs/en/`, `docs/zh-CN/`, `docs/zh-HK/` with identical structure.
 7. Verify light and dark mode.
 8. Check against the Do / Do not rules and the review checklist.
 
 For a configuration or style change:
 
-1. Prefer `docs.json` over `style.css`.
-2. If `style.css` is required, scope the selector, comment the intent, and
+1. Prefer Astro configuration or a reusable component over CSS selectors.
+2. If `src/styles/whale.css` is required, scope the selector, comment the intent, and
    provide both color modes.
-3. Preview with `mint dev` and confirm no layout regression on wide and narrow
+3. Preview with `bun run dev` and confirm no layout regression on wide and narrow
    viewports, both themes.
 
 ### Review checklist
@@ -458,8 +517,8 @@ For a configuration or style change:
 - Are links language-absolute, with `↗` on external links?
 - Does the page exist identically in all three languages?
 - Does it use `CONTEXT.md` terminology, honoring the `Avoid` lists?
-- Is brand color left to the theme, with no raw hex in content?
+- Is brand color consumed through semantic tokens, with no raw hex in content?
 - Are callouts scarce and meaningful, and casing preserved on technical values?
 - Do light and dark both render correctly?
-- If `style.css`/`docs.json` changed: is it scoped, commented, dark-complete,
+- If `src/styles/whale.css`/`astro.config.mjs` changed: is it scoped, commented, dark-complete,
   and free of one-off decoration?

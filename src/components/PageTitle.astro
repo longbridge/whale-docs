@@ -1,0 +1,79 @@
+---
+import { PageActions } from './PageActions';
+
+const { entry } = Astro.locals.starlightRoute;
+const { sidebar } = Astro.locals.starlightRoute;
+const path = Astro.url.pathname;
+const locale = path.split('/')[1] || 'en';
+const copyLabel = locale === 'en' ? 'Copy page' : locale === 'zh-cn' ? '复制页面' : '複製頁面';
+const copiedLabel = locale === 'en' ? 'Copied' : locale === 'zh-cn' ? '已复制' : '已複製';
+const failedLabel = locale === 'en' ? 'Copy failed' : locale === 'zh-cn' ? '复制失败' : '複製失敗';
+const copyLinkLabel = locale === 'en' ? 'Copy link' : locale === 'zh-cn' ? '复制链接' : '複製連結';
+const moreLabel = locale === 'en' ? 'More page actions' : locale === 'zh-cn' ? '更多页面操作' : '更多頁面操作';
+type SidebarEntry = (typeof sidebar)[number];
+const normalize = (href: string) => href.startsWith('/') && !href.endsWith('/') ? `${href}/` : href;
+const findTrail = (items: SidebarEntry[], trail: string[] = []): string[] | undefined => {
+  for (const item of items) {
+    if (item.type === 'link' && normalize(item.href) === normalize(path)) return trail;
+    if (item.type === 'group') {
+      const found = findTrail(item.entries, [...trail, item.label]);
+      if (found) return found;
+    }
+  }
+  return undefined;
+};
+const trail = findTrail(sidebar) ?? [];
+const sectionLabel = trail.at(-1) ?? (locale === 'en' ? 'Overview' : locale === 'zh-cn' ? '概览' : '概覽');
+---
+
+<div class="whale-page-heading">
+  <div class="whale-section-label">{sectionLabel}</div>
+  <div class="whale-heading-row">
+    <h1 id="_top">{entry.data.title}</h1>
+    <div class="whale-page-actions"><PageActions client:load {...{ copyLabel, copiedLabel, failedLabel, copyLinkLabel, moreLabel }} /></div>
+  </div>
+  {entry.data.description && <p>{entry.data.description}</p>}
+</div>
+
+<style>
+  .whale-page-heading {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .whale-page-heading > * {
+    margin: 0;
+  }
+
+  .whale-heading-row {
+    display: flex;
+    gap: 1rem;
+    align-items: start;
+    justify-content: space-between;
+  }
+
+  h1 {
+    color: var(--nb-foreground);
+    font-size: var(--nb-h1-size);
+    line-height: 1.2;
+    font-weight: var(--nb-h1-weight);
+    letter-spacing: var(--nb-h1-tracking);
+    text-wrap: balance;
+  }
+
+  .whale-section-label { margin-bottom: 0.25rem; color: var(--nb-primary); font-size: 0.875rem; font-weight: 650; }
+
+  .whale-page-actions { display: flex; flex: none; margin-top: 0.2rem; }
+
+  p {
+    color: var(--nb-muted-foreground);
+    max-width: 68ch;
+    font-size: 1rem;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 50rem) {
+    .whale-page-actions { display: none; }
+  }
+</style>

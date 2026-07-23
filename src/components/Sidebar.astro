@@ -1,0 +1,51 @@
+---
+import { DocsSidebar } from './DocsSidebar';
+import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+const { sidebar } = Astro.locals.starlightRoute;
+const pathname = Astro.url.pathname;
+const locale = pathname.split('/')[1] || 'en';
+const contentRoot = fileURLToPath(new URL('../../.astro-content/', import.meta.url));
+
+const productIndex = pathname.includes(`/${locale}/whalesdk/`)
+  ? 1
+  : pathname.includes(`/${locale}/broker-api/`)
+    ? 2
+    : pathname.includes(`/${locale}/trading-api/`)
+      ? 3
+      : 0;
+
+const activeProduct = sidebar[productIndex];
+const selected = activeProduct?.type === 'group'
+  ? activeProduct.entries
+  : activeProduct
+    ? [activeProduct]
+    : sidebar;
+
+const belongsToLocale = (entry: (typeof selected)[number]): boolean => {
+  if (entry.type === 'link') {
+    if (!entry.href.startsWith('/')) return true;
+    if (!entry.href.startsWith(`/${locale}/`)) return false;
+    if (entry.href.includes('/broker-api/reference/')) return true;
+    const relativePath = entry.href.slice(locale.length + 2).replace(/\/$/, '');
+    return existsSync(`${contentRoot}${locale}/${relativePath}.mdx`) || existsSync(`${contentRoot}${locale}/${relativePath}.md`);
+  }
+  return entry.entries.some(belongsToLocale);
+};
+
+const filterLocale = (entry: (typeof selected)[number]): (typeof selected)[number] | undefined => {
+  if (entry.type === 'link') return belongsToLocale(entry) ? entry : undefined;
+  const entries = entry.entries.flatMap((child) => {
+    const filtered = filterLocale(child);
+    return filtered ? [filtered] : [];
+  });
+  return entries.length > 0 ? { ...entry, entries } : undefined;
+};
+
+const localizedSidebar = selected.flatMap((entry) => {
+  const filtered = filterLocale(entry);
+  return filtered ? [filtered] : [];
+});
+---
+<DocsSidebar client:load entries={localizedSidebar} pathname={pathname} />

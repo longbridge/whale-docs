@@ -1,0 +1,35 @@
+---
+import { Bell, BookOpen, Braces, ChevronDown, CircleGauge, LifeBuoy, Settings2 } from 'lucide-astro';
+
+type SidebarEntry =
+  | { type: 'link'; label: string; href: string }
+  | { type: 'group'; label: string; entries: SidebarEntry[]; collapsed?: boolean };
+interface Props { entry: SidebarEntry; pathname: string; depth?: number }
+const { entry, pathname, depth = 0 } = Astro.props;
+const normalize = (href: string) => href.startsWith('/') && !href.endsWith('/') ? `${href}/` : href;
+const containsCurrent = (item: SidebarEntry): boolean => item.type === 'link'
+  ? normalize(item.href) === pathname
+  : item.entries.some(containsCurrent);
+const current = entry.type === 'link' && normalize(entry.href) === pathname;
+const groupIcon = entry.type === 'group' && depth === 0
+  ? /消息|message|push/i.test(entry.label) ? Bell
+    : /运维|運維|operation|support|支持/i.test(entry.label) ? Settings2
+      : /api|接口/i.test(entry.label) ? Braces
+        : /指南|guide|get started/i.test(entry.label) ? BookOpen
+          : /概览|概覽|overview/i.test(entry.label) ? CircleGauge
+            : LifeBuoy
+  : undefined;
+const GroupIcon = groupIcon;
+const keepOpen = entry.type === 'group' && /用户、账户与 API|用戶、帳戶與 API|Users, Accounts and API/i.test(entry.label);
+---
+
+{entry.type === 'link' ? (
+  <li><a href={normalize(entry.href)} aria-current={current ? 'page' : undefined}>{entry.label}</a></li>
+) : (
+  <li class="whale-sidebar-group">
+    <details open={containsCurrent(entry) || keepOpen || !entry.collapsed}>
+      <summary><span>{GroupIcon && <GroupIcon size={15} strokeWidth={1.8} aria-hidden="true" />}{entry.label}</span><ChevronDown size={14} aria-hidden="true" /></summary>
+      <ul>{entry.entries.map((child) => <Astro.self entry={child} pathname={pathname} depth={depth + 1} />)}</ul>
+    </details>
+  </li>
+)}
