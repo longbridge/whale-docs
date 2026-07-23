@@ -76,7 +76,6 @@ export default function WhaleAppCarousel({
               ))}
             </CarouselContent>
           </div>
-          <div className="pointer-events-none absolute bottom-[1.7%] left-1/2 z-10 h-1 w-[32%] -translate-x-1/2 rounded-full bg-black/75" />
         </div>
         <CarouselPrevious label={previousLabel} className="hidden sm:inline-flex" />
         <CarouselNext label={nextLabel} className="hidden sm:inline-flex" />
@@ -113,4 +112,3 @@ export default function WhaleAppCarousel({
     </div>
   );
 }
-
