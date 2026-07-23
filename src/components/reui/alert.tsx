@@ -8,7 +8,7 @@ const alertVariants = cva(
     "has-[>[data-slot=alert-title]+[data-slot=alert-description]]:[&_[data-slot=alert-action]]:sm:row-end-3",
     "has-[>[data-slot=alert-title]+[data-slot=alert-description]]:items-start",
     "has-[>[data-slot=alert-title]+[data-slot=alert-description]]:[&_svg]:translate-y-0.5",
-    "rounded-lg",
+    "rounded-xl",
     "px-3",
     "py-2.5",
     "has-[>svg]:gap-x-2.5",
@@ -18,10 +18,10 @@ const alertVariants = cva(
       variant: {
         default: "bg-card text-card-foreground",
         destructive:
-          "border-destructive/30 bg-destructive/4 [&>svg]:text-destructive",
-        info: "border-info/30 bg-info/4 [&>svg]:text-info",
-        success: "border-success/30 bg-success/4 [&>svg]:text-success",
-        warning: "border-warning/30 bg-warning/4 [&>svg]:text-warning",
+          "border-destructive/30 bg-danger-muted [&>svg]:text-destructive",
+        info: "border-info/30 bg-info-muted [&>svg]:text-info",
+        success: "border-success/30 bg-success-muted [&>svg]:text-success",
+        warning: "border-warning/30 bg-warning-muted [&>svg]:text-warning",
         invert:
           "border-invert bg-invert text-invert-foreground [&_[data-slot=alert-description]]:text-invert-foreground/70",
       },
@@ -68,7 +68,7 @@ function AlertDescription({
     <div
       data-slot="alert-description"
       className={cn(
-        "text-muted-foreground col-start-2 grid justify-items-start gap-1 text-sm [&_p]:leading-relaxed",
+        "text-muted-foreground col-span-full col-start-1 mt-1 grid justify-items-start gap-1 text-sm [&_p]:leading-relaxed",
         className
       )}
       {...props}

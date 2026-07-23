@@ -109,13 +109,6 @@ function getPageBackground(): string {
 	return isLightTheme() ? "#ffffff" : "#1d1d1d";
 }
 
-function getThemeColor(name: string, fallback: string): string {
-	const value = getComputedStyle(document.documentElement)
-		.getPropertyValue(name)
-		.trim();
-	return isMermaidSupportedColor(value) ? value : fallback;
-}
-
 function showRenderError(diagram: HTMLPreElement): void {
 	captureDiagramSource(diagram);
 	diagram.textContent = "Diagram failed to render.";
@@ -201,13 +194,14 @@ async function render() {
 	const isLight = isLightTheme();
 	const fontFamily = getFontFamily();
 	const pageBg = getPageBackground();
-	const accent = getThemeColor("--nb-primary", "#ff4801");
-	const accentBg = isLight ? "#fff1e8" : "#3a1708";
+	const diagramBorder = isLight ? "#d4d4d8" : "#52525b";
+	const diagramSurface = isLight ? "#f4f4f5" : "#27272a";
+	const diagramLine = isLight ? "#71717a" : "#a1a1aa";
 
 	const lightThemeVars = {
 		fontFamily,
-		primaryColor: accentBg,
-		primaryBorderColor: accent,
+		primaryColor: diagramSurface,
+		primaryBorderColor: diagramBorder,
 		primaryTextColor: "#1d1d1d",
 		secondaryColor: "#f2f2f2",
 		secondaryBorderColor: "#999999",
@@ -215,9 +209,9 @@ async function render() {
 		tertiaryColor: "#f2f2f2",
 		tertiaryBorderColor: "#999999",
 		tertiaryTextColor: "#1d1d1d",
-		lineColor: accent,
+		lineColor: diagramLine,
 		textColor: "#1d1d1d",
-		mainBkg: accentBg,
+		mainBkg: diagramSurface,
 		errorBkgColor: "#ffefee",
 		errorTextColor: "#3c0501",
 		edgeLabelBackground: pageBg,
@@ -226,8 +220,8 @@ async function render() {
 
 	const darkThemeVars = {
 		fontFamily,
-		primaryColor: accentBg,
-		primaryBorderColor: accent,
+		primaryColor: diagramSurface,
+		primaryBorderColor: diagramBorder,
 		primaryTextColor: "#f2f2f2",
 		secondaryColor: "#313131",
 		secondaryBorderColor: "#797979",
@@ -235,9 +229,9 @@ async function render() {
 		tertiaryColor: "#313131",
 		tertiaryBorderColor: "#797979",
 		tertiaryTextColor: "#f2f2f2",
-		lineColor: accent,
+		lineColor: diagramLine,
 		textColor: "#f2f2f2",
-		mainBkg: accentBg,
+		mainBkg: diagramSurface,
 		background: "#1d1d1d",
 		errorBkgColor: "#3c0501",
 		errorTextColor: "#ffefee",
@@ -301,4 +295,4 @@ function setup() {
 }
 
 setup();
-
+document.addEventListener("astro:page-load", setup);

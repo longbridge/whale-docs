@@ -9,12 +9,12 @@ declare global {
 }
 
 function initCollapsible(root: HTMLElement): () => void {
-	const trigger = root.querySelector<HTMLElement>(
-		"[data-nb-collapsible-trigger]",
-	);
-	const content = root.querySelector<HTMLElement>(
-		"[data-nb-collapsible-content]",
-	);
+	const ownedElement = <T extends HTMLElement>(selector: string): T | undefined =>
+		Array.from(root.querySelectorAll<T>(selector)).find(
+			(element) => element.closest("[data-nb-collapsible]") === root,
+		);
+	const trigger = ownedElement<HTMLElement>("[data-nb-collapsible-trigger]");
+	const content = ownedElement<HTMLElement>("[data-nb-collapsible-content]");
 
 	if (!trigger || !content) return () => {};
 
@@ -34,4 +34,3 @@ function initCollapsible(root: HTMLElement): () => void {
 }
 
 mount("[data-nb-collapsible]", initCollapsible);
-
