@@ -535,6 +535,14 @@ def ensure_response_descriptions(spec: Dict[str, Any], lang_key: str) -> None:
                     response["description"] = fallback.get(str(status)[:1], fallback["default"])
 
 
+# Toggle for the nav-skeleton feature: when True, an empty branch (every op
+# under it is currently x-verified:unverified) still renders as a group with
+# a single "待核实" placeholder page instead of vanishing from the sidebar.
+# Turned off for now -- a sidebar with many skeleton-only "待核实" leaves read
+# as broken/unfinished; flip back to True to restore full skeleton
+# preservation once more of the tree is verified.
+SHOW_PENDING_VERIFICATION_PLACEHOLDER = False
+
 # Manually-maintained groups around the generated reference groups in the
 # Broker API tab — survive regeneration.
 PENDING_VERIFICATION_TEXT = {
@@ -731,8 +739,14 @@ def main() -> int:
             children.sort(key=lambda kv: menu_sort_key(menu_tree, prefix + (kv[0],)))
             for child, child_node in children:
                 child_pages = render(child_node, lang_key, prefix + (child,))
-                out.append({"group": localized_sub_name(menu_tree, prefix + (child,), lang_key), "pages": child_pages})
-            if not out:
+                # SHOW_PENDING_VERIFICATION_PLACEHOLDER off: an empty child
+                # branch (nothing but its own now-suppressed placeholder) is
+                # dropped instead of appearing as a group with only a "待核实"
+                # leaf -- requested because a sidebar with lots of
+                # skeleton-only "待核实" leaves reads as broken/unfinished.
+                if child_pages:
+                    out.append({"group": localized_sub_name(menu_tree, prefix + (child,), lang_key), "pages": child_pages})
+            if not out and SHOW_PENDING_VERIFICATION_PLACEHOLDER:
                 # Every op under this branch is currently unverified (or the
                 # branch has no leaf pages of its own) -- keep the group in
                 # the menu skeleton with a placeholder instead of vanishing.
@@ -755,6 +769,12 @@ def main() -> int:
             _, en_name = parse_top_dir(top)
             icon = MODULE_ICONS.get(TOP_DIR_TO_MENU_KEY.get(en_name) or "shared", "layers")
             pages = render(root[top], lang_key, (top,))
+            if not pages:
+                # Whole top-level module is currently all-unverified -- with
+                # the placeholder suppressed (see SHOW_PENDING_VERIFICATION_PLACEHOLDER)
+                # there is nothing to show for it, so drop the module entirely
+                # rather than render an empty group.
+                continue
             groups.append({
                 "group": localized_top_name(top, menu, lang_key),
                 "icon": icon,
