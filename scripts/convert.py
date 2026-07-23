@@ -338,13 +338,18 @@ def localize(node: Any, sfx: Optional[str], lang_key: str) -> Any:
 # ---------------------------------------------------------------------------
 
 
-def walk_yaml_ops(source: Path, schemas_out: Optional[Dict[str, Any]] = None):
+def walk_yaml_ops(source: Path, schemas_out: Optional[Dict[str, Any]] = None, skip_unverified: bool = True):
     """Yield (menu_path_tuple, path, method, op_dict) in stable order.
 
     Operations with `x-lbonly: true` (Longbridge-internal-only) are skipped
     entirely -- they must not appear in this externally-published site.
-    Operations with `x-verified: unverified` are skipped too -- not yet
-    confirmed against the real backend, so not ready to publish.
+    Operations with `x-verified: unverified` are skipped too when
+    `skip_unverified` is True (the default) -- not yet confirmed against the
+    real backend, so not ready to publish. Pass `skip_unverified=False` to
+    walk the full set anyway (used to compute the nav *skeleton*, so menu
+    branches that are entirely unverified right now still show up as an
+    empty group with a "pending verification" placeholder instead of
+    disappearing from the sidebar).
 
     Each source YAML is a self-contained OpenAPI doc and may declare its own
     `components.schemas` (e.g. a shared error envelope referenced via `$ref`
@@ -383,7 +388,7 @@ def walk_yaml_ops(source: Path, schemas_out: Optional[Dict[str, Any]] = None):
                             continue
                         if op.get("x-lbonly") is True:
                             continue  # Longbridge-internal-only, not published here
-                        if op.get("x-verified") == "unverified":
+                        if skip_unverified and op.get("x-verified") == "unverified":
                             continue  # not yet verified against the real backend, not published here
                         key = (path, method)
                         if key in seen:
@@ -484,6 +489,15 @@ def ensure_response_descriptions(spec: Dict[str, Any], lang_key: str) -> None:
 
 # Manually-maintained groups around the generated reference groups in the
 # Broker API tab — survive regeneration.
+# Shown in place of a nav group whose every operation is currently
+# x-verified:unverified, so the menu skeleton (business modules and
+# sub-groups) doesn't disappear while content is pending re-verification.
+PENDING_VERIFICATION_PAGE = {
+    "en": "en/api-reference/pending-verification",
+    "cn": "cn/api-reference/pending-verification",
+    "zh-Hant": "zh-Hant/api-reference/pending-verification",
+}
+
 BROKER_API_MANUAL_GROUPS = {
     "en": {
         "prefix": [
@@ -561,10 +575,19 @@ def main() -> int:
         "dupes": dupes,
     }
 
+    # nav *skeleton*: every menu_path prefix that exists once x-lbonly:true is
+    # excluded but x-verified:unverified is NOT -- so branches that are
+    # entirely unverified right now still show up in the sidebar (with a
+    # placeholder page) instead of disappearing.
+    skeleton_paths: set = set()
+    for menu_path, _path, _method, _op, _dupes in walk_yaml_ops(source, skip_unverified=False):
+        for i in range(1, len(menu_path) + 1):
+            skeleton_paths.add(menu_path[:i])
+
     # top-level module order: follow menu.json, not the alphabetical dir walk.
     top_order: List[str] = []
-    for menu_path in nav_tree:
-        if menu_path[0] not in top_order:
+    for menu_path in skeleton_paths:
+        if len(menu_path) == 1 and menu_path[0] not in top_order:
             top_order.append(menu_path[0])
     top_order.sort(key=lambda t: menu_sort_key(menu_tree, (t,)))
 
@@ -611,6 +634,13 @@ def main() -> int:
     def build_groups(lang_key: str, file_suffix: str) -> List[Dict[str, Any]]:
         # tree: {top: {"__pages": [...], sub: {...}}}
         root: Dict[str, Any] = OrderedDict()
+        # Seed every skeleton branch first (even ones with zero real pages
+        # right now) so the menu structure survives content being pending
+        # verification; real pages are layered on top below.
+        for menu_path in skeleton_paths:
+            node = root
+            for part in menu_path:
+                node = node.setdefault(part, OrderedDict())
         for menu_path, entries in nav_tree.items():
             node = root
             for part in menu_path:
@@ -627,8 +657,12 @@ def main() -> int:
             children.sort(key=lambda kv: menu_sort_key(menu_tree, prefix + (kv[0],)))
             for child, child_node in children:
                 child_pages = render(child_node, lang_key, prefix + (child,))
-                if child_pages:
-                    out.append({"group": localized_sub_name(child, lang_key), "pages": child_pages})
+                out.append({"group": localized_sub_name(child, lang_key), "pages": child_pages})
+            if not out:
+                # Every op under this branch is currently unverified (or the
+                # branch has no leaf pages of its own) -- keep the group in
+                # the menu skeleton with a placeholder instead of vanishing.
+                out.append(PENDING_VERIFICATION_PAGE[lang_key])
             return out
 
         groups = []
@@ -636,8 +670,6 @@ def main() -> int:
             _, en_name = parse_top_dir(top)
             icon = MODULE_ICONS.get(TOP_DIR_TO_MENU_KEY.get(en_name) or "shared", "layers")
             pages = render(root[top], lang_key, (top,))
-            if not pages:
-                continue
             groups.append({
                 "group": localized_top_name(top, menu, lang_key),
                 "icon": icon,
