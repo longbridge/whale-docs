@@ -16,13 +16,13 @@ type Props = {
   pathname: string
 }
 
-function normalize(href: string) {
-  return href.startsWith("/") && !href.endsWith("/") ? `${href}/` : href
+function normalizePath(pathname: string) {
+  return pathname.replace(/\.html$/, "").replace(/\/$/, "") || "/"
 }
 
 function containsCurrent(entry: DocsSidebarEntry, pathname: string): boolean {
   return entry.type === "link"
-    ? normalize(entry.href) === normalize(pathname)
+    ? normalizePath(entry.href) === normalizePath(pathname)
     : entry.entries.some((child) => containsCurrent(child, pathname))
 }
 
@@ -37,10 +37,10 @@ function groupIcon(label: string): ComponentType<{ "aria-hidden"?: boolean }> {
 
 function SidebarEntry({ entry, pathname, depth = 0 }: { entry: DocsSidebarEntry; pathname: string; depth?: number }) {
   if (entry.type === "link") {
-    const current = normalize(entry.href) === normalize(pathname)
+    const current = normalizePath(entry.href) === normalizePath(pathname)
     return (
       <li>
-        <a data-nb-sidebar-link href={normalize(entry.href)} aria-current={current ? "page" : undefined}>{entry.label}</a>
+        <a data-nb-sidebar-link href={entry.href} aria-current={current ? "page" : undefined}>{entry.label}</a>
       </li>
     )
   }
