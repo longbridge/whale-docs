@@ -61,6 +61,56 @@ Destroy releases coroutines, WebSockets, caches, and native handles. It can then
 
 Getting a service before initialization throws `IllegalStateException`. Public operations generally offer both a coroutine method and a callback-based `*Async` variant.
 
+## General HTTP requests
+
+Use `WhaleCore.getRequestService()` for a business endpoint that does not yet have a typed service. The host supplies the method, path, and parameters; WhaleCore adds the common parameters and headers for signing, authentication, and tracing. If login or trade authentication expires, the SDK recovers it and retries once.
+
+`HttpRequest` is immutable and accepts:
+
+| Constructor argument | Type | Behavior |
+| --- | --- | --- |
+| `method` | `HttpMethod` | `GET`, `POST`, `PUT`, or `DELETE` |
+| `path` | `String` | Endpoint path beginning with `/` |
+| `query` | `Map<String, Any>?` | Used by GET and DELETE; ignored by POST and PUT |
+| `body` | `Map<String, Any>?` | Used by POST and PUT; ignored by GET and DELETE |
+| `requiresTradeToken` | `Boolean` | When `true`, obtains a valid trade token before sending; defaults to `false` |
+
+`send` returns an `HttpResponse` containing the raw JSON `bodyString` and response `headers`. Parse the body with the JSON library used by the host app.
+
+```kotlin
+import longbridge.whalecore.business.request.model.HttpMethod
+import longbridge.whalecore.business.request.model.HttpRequest
+
+val request = HttpRequest(
+    method = HttpMethod.GET,
+    path = "/v2/member/info",
+    query = mapOf("include_accounts" to true)
+)
+
+val response = WhaleCore.getRequestService().send(request)
+val member = json.decodeFromString<MemberInfo>(response.bodyString)
+println(member.name)
+```
+
+For an endpoint that requires trade authentication:
+
+```kotlin
+val request = HttpRequest(
+    method = HttpMethod.GET,
+    path = "/v5/orders/today",
+    requiresTradeToken = true
+)
+
+val response = WhaleCore.getRequestService().send(request)
+println(response.bodyString)
+```
+
+Java callers can use `sendAsync(request, callback)` instead of the suspending `send` method.
+
+<Note>
+  The first version does not support custom request headers. Do not add signatures or authentication tokens to `query` or `body`; WhaleCore supplies them through its managed session.
+</Note>
+
 ## Quotes
 
 ```kotlin
@@ -90,4 +140,3 @@ Observe events as `SharedFlow` or through lifecycle-aware callbacks. Cancel the 
 `PortfolioService` supports subscribe/unsubscribe, refresh, cash detail, position quotes, and member settings. `WatchlistService` supports group and stock mutations, cross-group moves, pinning, ordering, invalid-ticker cleanup, and events.
 
 For a business API not yet wrapped by a typed service, use `RequestService.send(HttpRequest)`. The SDK adds common parameters and auth headers and performs auth recovery; the caller parses the business response.
-

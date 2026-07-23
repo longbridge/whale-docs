@@ -63,6 +63,56 @@ withContext(Dispatchers.IO) {
 
 未初始化时获取服务会抛出 `IllegalStateException`。业务接口通常同时提供协程方法与 `*Async` 回调方法。
 
+## 通用 HTTP 请求
+
+业务接口尚未由类型化 Service 封装时，可以使用 `WhaleCore.getRequestService()`。宿主只需提供请求方法、路径和参数；WhaleCore 会自动补充签名、鉴权、trace 等公共参数与请求头。登录态或 trade token 失效时，SDK 会恢复鉴权并自动重试一次。
+
+`HttpRequest` 是不可变对象，构造参数如下：
+
+| 参数 | 类型 | 行为 |
+| --- | --- | --- |
+| `method` | `HttpMethod` | `GET`、`POST`、`PUT` 或 `DELETE` |
+| `path` | `String` | 以 `/` 开头的接口路径 |
+| `query` | `Map<String, Any>?` | 仅 GET、DELETE 生效；POST、PUT 会忽略 |
+| `body` | `Map<String, Any>?` | 仅 POST、PUT 生效；GET、DELETE 会忽略 |
+| `requiresTradeToken` | `Boolean` | 为 `true` 时发送前确保 trade token 有效；默认为 `false` |
+
+`send` 返回 `HttpResponse`，其中 `bodyString` 是原始 JSON，`headers` 是响应头。请使用宿主 App 已采用的 JSON 库解析业务数据。
+
+```kotlin
+import longbridge.whalecore.business.request.model.HttpMethod
+import longbridge.whalecore.business.request.model.HttpRequest
+
+val request = HttpRequest(
+    method = HttpMethod.GET,
+    path = "/v2/member/info",
+    query = mapOf("include_accounts" to true)
+)
+
+val response = WhaleCore.getRequestService().send(request)
+val member = json.decodeFromString<MemberInfo>(response.bodyString)
+println(member.name)
+```
+
+调用需要交易鉴权的接口时：
+
+```kotlin
+val request = HttpRequest(
+    method = HttpMethod.GET,
+    path = "/v5/orders/today",
+    requiresTradeToken = true
+)
+
+val response = WhaleCore.getRequestService().send(request)
+println(response.bodyString)
+```
+
+Java 调用方可使用 `sendAsync(request, callback)`，无需调用 suspend 方法 `send`。
+
+<Note>
+  首个版本不支持自定义请求头。请勿通过 `query` 或 `body` 传入签名或鉴权 token；WhaleCore 会通过受管会话自动添加。
+</Note>
+
 ## 行情
 
 ```kotlin
@@ -99,4 +149,3 @@ WhaleCore.getOrderService().observeOrderEvents()
 `PortfolioService` 支持订阅/取消订阅、刷新、现金明细、持仓行情和会员资产设置。`WatchlistService` 支持分组与股票增删改、跨组移动、置顶、排序、无效标的清理和实时事件。
 
 需要调用尚未封装的业务接口时，可通过 `RequestService.send(HttpRequest)` 发起透传请求；SDK 负责公共参数、鉴权头和鉴权恢复，调用方负责解析响应业务数据。
-

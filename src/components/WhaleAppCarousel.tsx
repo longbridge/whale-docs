@@ -58,7 +58,7 @@ export default function WhaleAppCarousel({
         className="w-[min(360px,calc(100vw-5rem))]"
         aria-label={ariaLabel}
       >
-        <div className="relative rounded-[15%/7.5%] border border-white/25 bg-gradient-to-br from-neutral-500 via-neutral-950 to-neutral-700 p-3 shadow-2xl">
+        <div className="relative rounded-[15%/7.5%] border border-white/20 bg-black p-3 shadow-2xl">
           <div className="pointer-events-none absolute top-[2.4%] left-1/2 z-10 h-[4.4%] w-[30%] -translate-x-1/2 rounded-full bg-black" />
           <div className="overflow-hidden rounded-[12%/6%] bg-background">
             <CarouselContent className="-ml-0">

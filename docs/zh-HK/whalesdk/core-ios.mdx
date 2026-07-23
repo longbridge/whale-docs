@@ -77,6 +77,56 @@ WhaleCoreService.logoutAndDestroy()
 | `watchlistService` | 分組與股票增刪改、排序、置頂、重新整理和事件 |
 | `requestService` | 自動鑑權與復原重試的通用 HTTP 透傳 |
 
+## 通用 HTTP 請求
+
+業務接口尚未由類型化 Service 封裝時，可以使用 `WhaleCoreService.requestService`。宿主只需提供請求方法、路徑和參數；WhaleCore 會自動補充簽名、鑑權、trace 等公共參數與請求頭。登入狀態或 trade token 失效時，SDK 會復原鑑權並自動重試一次。
+
+`WhaleCoreHTTPRequest` 提供以下屬性：
+
+| 屬性 | 類型 | 行為 |
+| --- | --- | --- |
+| `method` | `WhaleCoreHTTPMethod` | `.get`、`.post`、`.put` 或 `.delete` |
+| `path` | `String` | 以 `/` 開頭的接口路徑 |
+| `query` | `[String: Any]?` | 僅 GET、DELETE 生效；POST、PUT 會忽略 |
+| `body` | `[String: Any]?` | 僅 POST、PUT 生效；GET、DELETE 會忽略 |
+| `requiresTradeToken` | `Bool` | 為 `true` 時發送前確保 trade token 有效；預設為 `false` |
+
+響應透過 `bodyString` 提供原始 JSON，透過 `bodyData` 提供 UTF-8 資料，並透過 `headers` 提供響應頭。Swift 可直接將響應解碼為 `Decodable` 模型。
+
+```swift
+struct MemberInfo: Decodable {
+    let id: String
+    let name: String
+}
+
+let request = WhaleCoreHTTPRequest(
+    method: .get,
+    path: "/v2/member/info"
+)
+request.query = ["include_accounts": true]
+
+let response = try await WhaleCoreService.requestService.send(request)
+let member: MemberInfo = try response.decode()
+print(member.name)
+```
+
+調用需要交易鑑權的接口時：
+
+```swift
+let request = WhaleCoreHTTPRequest(
+    method: .get,
+    path: "/v5/orders/today"
+)
+request.requiresTradeToken = true
+
+let response = try await WhaleCoreService.requestService.send(request)
+print(response.bodyString)
+```
+
+<Note>
+  首個版本不支援自訂請求頭。請勿透過 `query` 或 `body` 傳入簽名或鑑權 token；WhaleCore 會透過受管會話自動添加。
+</Note>
+
 ### 行情訂閱
 
 ```swift

@@ -77,6 +77,56 @@ Destroy clears local tokens, closes WebSockets, and releases services. After acc
 | `watchlistService` | Group/stock mutations, sorting, pinning, refresh, and events |
 | `requestService` | Authenticated pass-through HTTP with recovery retry |
 
+## General HTTP requests
+
+Use `WhaleCoreService.requestService` for a business endpoint that does not yet have a typed service. The host supplies the method, path, and parameters; WhaleCore adds the common parameters and headers for signing, authentication, and tracing. If login or trade authentication expires, the SDK recovers it and retries once.
+
+`WhaleCoreHTTPRequest` exposes:
+
+| Property | Type | Behavior |
+| --- | --- | --- |
+| `method` | `WhaleCoreHTTPMethod` | `.get`, `.post`, `.put`, or `.delete` |
+| `path` | `String` | Endpoint path beginning with `/` |
+| `query` | `[String: Any]?` | Used by GET and DELETE; ignored by POST and PUT |
+| `body` | `[String: Any]?` | Used by POST and PUT; ignored by GET and DELETE |
+| `requiresTradeToken` | `Bool` | When `true`, obtains a valid trade token before sending; defaults to `false` |
+
+The response provides the raw JSON in `bodyString`, its UTF-8 representation in `bodyData`, and response headers in `headers`. Swift can decode the response directly into a `Decodable` model.
+
+```swift
+struct MemberInfo: Decodable {
+    let id: String
+    let name: String
+}
+
+let request = WhaleCoreHTTPRequest(
+    method: .get,
+    path: "/v2/member/info"
+)
+request.query = ["include_accounts": true]
+
+let response = try await WhaleCoreService.requestService.send(request)
+let member: MemberInfo = try response.decode()
+print(member.name)
+```
+
+For an endpoint that requires trade authentication:
+
+```swift
+let request = WhaleCoreHTTPRequest(
+    method: .get,
+    path: "/v5/orders/today"
+)
+request.requiresTradeToken = true
+
+let response = try await WhaleCoreService.requestService.send(request)
+print(response.bodyString)
+```
+
+<Note>
+  The first version does not support custom request headers. Do not add signatures or authentication tokens to `query` or `body`; WhaleCore supplies them through its managed session.
+</Note>
+
 ### Quote subscription
 
 ```swift

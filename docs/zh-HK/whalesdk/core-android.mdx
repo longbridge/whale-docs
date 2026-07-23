@@ -60,6 +60,56 @@ withContext(Dispatchers.IO) { WhaleCore.destroy() }
 
 未初始化時取得服務會拋出 `IllegalStateException`。業務介面通常同時提供協程方法與 `*Async` 回呼方法。
 
+## 通用 HTTP 請求
+
+業務接口尚未由類型化 Service 封裝時，可以使用 `WhaleCore.getRequestService()`。宿主只需提供請求方法、路徑和參數；WhaleCore 會自動補充簽名、鑑權、trace 等公共參數與請求頭。登入狀態或 trade token 失效時，SDK 會復原鑑權並自動重試一次。
+
+`HttpRequest` 是不可變物件，建構參數如下：
+
+| 參數 | 類型 | 行為 |
+| --- | --- | --- |
+| `method` | `HttpMethod` | `GET`、`POST`、`PUT` 或 `DELETE` |
+| `path` | `String` | 以 `/` 開頭的接口路徑 |
+| `query` | `Map<String, Any>?` | 僅 GET、DELETE 生效；POST、PUT 會忽略 |
+| `body` | `Map<String, Any>?` | 僅 POST、PUT 生效；GET、DELETE 會忽略 |
+| `requiresTradeToken` | `Boolean` | 為 `true` 時發送前確保 trade token 有效；預設為 `false` |
+
+`send` 返回 `HttpResponse`，其中 `bodyString` 是原始 JSON，`headers` 是響應頭。請使用宿主 App 已採用的 JSON 程式庫解析業務資料。
+
+```kotlin
+import longbridge.whalecore.business.request.model.HttpMethod
+import longbridge.whalecore.business.request.model.HttpRequest
+
+val request = HttpRequest(
+    method = HttpMethod.GET,
+    path = "/v2/member/info",
+    query = mapOf("include_accounts" to true)
+)
+
+val response = WhaleCore.getRequestService().send(request)
+val member = json.decodeFromString<MemberInfo>(response.bodyString)
+println(member.name)
+```
+
+調用需要交易鑑權的接口時：
+
+```kotlin
+val request = HttpRequest(
+    method = HttpMethod.GET,
+    path = "/v5/orders/today",
+    requiresTradeToken = true
+)
+
+val response = WhaleCore.getRequestService().send(request)
+println(response.bodyString)
+```
+
+Java 調用方可使用 `sendAsync(request, callback)`，無需調用 suspend 方法 `send`。
+
+<Note>
+  首個版本不支援自訂請求頭。請勿透過 `query` 或 `body` 傳入簽名或鑑權 token；WhaleCore 會透過受管會話自動添加。
+</Note>
+
 ## 行情
 
 ```kotlin
