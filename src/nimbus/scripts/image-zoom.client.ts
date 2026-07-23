@@ -11,7 +11,7 @@ let zoom: Zoom | null = null;
 function getZoom(): Zoom {
 	return (zoom ??= mediumZoom({
 		margin: 24,
-		background: "var(--nb-background)",
+		background: "oklch(0 0 0 / 0.1)",
 	}));
 }
 
@@ -114,4 +114,3 @@ document.addEventListener("astro:before-swap", () => {
 });
 
 mount("article.docs-content img, .nb-cl-prose img", initImageZoom);
-

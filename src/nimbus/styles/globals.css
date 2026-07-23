@@ -33,7 +33,7 @@
   --nb-card: oklch(1 0 0);
   --nb-card-foreground: var(--nb-foreground);
 
-  --nb-muted: oklch(0.985 0 0);
+  --nb-muted: oklch(0.955 0 0);
   --nb-muted-foreground: oklch(0.556 0 0);
 
   --nb-accent: oklch(0.967 0 0);
@@ -410,9 +410,16 @@ body {
 /* ---- Image zoom (T8) ---- */
 .medium-zoom-overlay {
   z-index: 200;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 .medium-zoom-image--opened {
   z-index: 201;
+  box-sizing: border-box;
+  border: 1px solid var(--nb-border-strong);
+  border-radius: var(--nb-radius-content-block);
+  background: var(--nb-card);
+  box-shadow: none;
 }
 /* Not `none`: medium-zoom keys off transitionend, which `none` never emits. */
 @media (prefers-reduced-motion: reduce) {
@@ -429,13 +436,13 @@ body {
   z-index: 202;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
-  padding: 10px;
-  border: 2px solid var(--nb-border-strong);
-  border-radius: 50%;
-  background-color: var(--nb-card);
-  color: var(--nb-foreground);
+  width: 32px;
+  height: 32px;
+  padding: 9px;
+  border: 0;
+  border-radius: var(--nb-radius-control);
+  background-color: transparent;
+  color: var(--nb-muted-foreground);
   cursor: zoom-out;
   opacity: 0;
 }
@@ -445,6 +452,10 @@ body {
 }
 .nb-zoom-close--open {
   opacity: 1;
+}
+.nb-zoom-close:hover {
+  background-color: var(--nb-muted);
+  color: var(--nb-foreground);
 }
 @media (prefers-reduced-motion: no-preference) {
   .nb-zoom-close {
@@ -943,48 +954,70 @@ body:not(:has([data-mobile-sidebar])) [data-menu-btn] {
   }
 
   [data-nb-api-sidebar] [data-nb-sidebar-link] {
-    @apply items-start gap-3 rounded-lg py-1.5 font-normal;
+    @apply items-start gap-1 rounded-lg py-1.5 font-normal;
     min-height: 0;
+  }
+
+  [data-nb-api-sidebar] [data-nb-sidebar-link]:has(.api-method-slot) {
+    @apply text-[0.8125rem] leading-[1.125rem];
   }
 
   [data-nb-api-sidebar] .api-method-slot {
     display: flex;
     width: 2rem;
     min-width: 2rem;
+    height: 1.125rem;
     align-items: flex-start;
-    padding-top: 0.125rem;
+    padding-top: 0.0625rem;
+  }
+
+  [data-nb-api-sidebar] .api-method-slot:has(.api-method-delete) {
+    width: 2.5rem;
+    min-width: 2.5rem;
   }
 
   [data-nb-api-sidebar] .api-method-badge {
     min-width: 0 !important;
-    height: auto;
-    padding: 0.125rem 0.25rem !important;
-    border-radius: var(--radius-md) !important;
+    height: 1rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.25rem !important;
+    border-radius: 3px !important;
     font-family: var(--nb-font-mono);
     font-size: 0.55rem !important;
     font-weight: 700;
-    line-height: 1.25;
+    line-height: 1;
+    background: var(--api-method-background) !important;
+    color: var(--api-method-foreground) !important;
   }
 
-  [data-nb-api-sidebar] .api-method-get {
-    background: color-mix(in srgb, #4ade80 20%, transparent) !important;
-    color: #15803d !important;
+  .api-method-get {
+    --api-method-background: color-mix(in srgb, #4ade80 20%, transparent);
+    --api-method-foreground: #15803d;
+    --api-method-active-background: #22c55e;
+    --api-method-active-foreground: white;
   }
 
-  [data-nb-api-sidebar] .api-method-post {
-    background: color-mix(in srgb, #60a5fa 20%, transparent) !important;
-    color: #1d4ed8 !important;
+  .api-method-post {
+    --api-method-background: color-mix(in srgb, #60a5fa 20%, transparent);
+    --api-method-foreground: #1d4ed8;
+    --api-method-active-background: #3064e3;
+    --api-method-active-foreground: white;
   }
 
-  [data-nb-api-sidebar] .api-method-put,
-  [data-nb-api-sidebar] .api-method-patch {
-    background: #fef3c7 !important;
-    color: #b45309 !important;
+  .api-method-put,
+  .api-method-patch {
+    --api-method-background: #fef3c7;
+    --api-method-foreground: #b45309;
+    --api-method-active-background: #d97706;
+    --api-method-active-foreground: white;
   }
 
-  [data-nb-api-sidebar] .api-method-delete {
-    background: #fee2e2 !important;
-    color: #dc2626 !important;
+  .api-method-delete {
+    --api-method-background: #fee2e2;
+    --api-method-foreground: #dc2626;
+    --api-method-active-background: #dc2626;
+    --api-method-active-foreground: white;
   }
 
   /*
@@ -995,10 +1028,14 @@ body:not(:has([data-mobile-sidebar])) [data-menu-btn] {
    * layout, but with this much real nesting that made every level look
    * flush with its parent -- the hierarchy was impossible to read. Keep a
    * visible (if narrower than the generic ml-3/pl-2) step-indent + guide
-   * line per level instead of removing it outright.
+   * line from the second visible nesting level onward. The first visible
+   * level stays flush with the section icon, matching the product sidebar.
    */
-  [data-nb-api-sidebar] [data-nb-sidebar-sublist] {
-    @apply border-border/70 ml-2 border-l pl-2;
+  [data-nb-api-sidebar]
+    [data-nb-sidebar-sublist-depth]:not(
+      [data-nb-sidebar-sublist-depth="0"]
+    ) {
+    @apply border-border/70 ml-3 border-l pl-2;
   }
 
   [data-nb-api-sidebar] [data-nb-sidebar-group-label] {
@@ -1025,16 +1062,9 @@ body:not(:has([data-mobile-sidebar])) [data-menu-btn] {
 
   [data-nb-api-sidebar]
     [data-nb-sidebar-link][aria-current="page"]
-    .api-method-get {
-    background: #22c55e !important;
-    color: white !important;
-  }
-
-  [data-nb-api-sidebar]
-    [data-nb-sidebar-link][aria-current="page"]
-    .api-method-post {
-    background: #3064e3 !important;
-    color: white !important;
+    .api-method-badge {
+    background: var(--api-method-active-background) !important;
+    color: var(--api-method-active-foreground) !important;
   }
 }
 

@@ -21,7 +21,7 @@ styling the portal.
 > and status colors, typography, radius, spacing, and icons, the source of truth
 > is the [Whale Design System](/en/design-system/overview) foundation
 > (`/en/design-system/*`). This document governs portal authoring and information
-> architecture and defers all token *values* to that foundation.
+> architecture and defers all token _values_ to that foundation.
 
 Whale Docs serves broker decision makers, implementation and operations teams,
 and developers integrating through three API paths. Readers scan for the
@@ -52,18 +52,18 @@ trilingual contract.
 
 It does **not** duplicate what other files already own:
 
-| Concern | Source of truth |
-| --- | --- |
-| Product & role terminology (Whale, Broker, Customer, …) | `CONTEXT.md` glossary |
-| Repository structure, build, regeneration workflow | `README.md` |
-| Site config values (colors, logo, nav, footer, playground) | `astro.config.mjs` |
-| Layout/appearance overrides | `src/styles/whale.css` |
-| Broker API reference content | generated from `../whale-openapi-docs` |
-| Sync pipeline (YAML → specs + nav) | `.claude/skills/whale-api-import` |
+| Concern                                                    | Source of truth                        |
+| ---------------------------------------------------------- | -------------------------------------- |
+| Product & role terminology (Whale, Broker, Customer, …)    | `CONTEXT.md` glossary                  |
+| Repository structure, build, regeneration workflow         | `README.md`                            |
+| Site config values (colors, logo, nav, footer, playground) | `astro.config.mjs`                     |
+| Layout/appearance overrides                                | `src/styles/whale.css`                 |
+| Broker API reference content                               | generated from `../whale-openapi-docs` |
+| Sync pipeline (YAML → specs + nav)                         | `.claude/skills/whale-api-import`      |
 
 When a rule here and a value in `astro.config.mjs` or `src/styles/whale.css` disagree, the config
 file is authoritative for the value; this document is authoritative for the
-*intent* and the constraints on changing it.
+_intent_ and the constraints on changing it.
 
 ### Generated-vs-authored boundary
 
@@ -92,18 +92,18 @@ come from Lucide. Do not introduce a second component or icon vocabulary.
 The implementation source of truth is `astro.config.mjs`, custom components in
 `src/components`, and `src/styles/whale.css`.
 
-| Property | Current standard |
-| --- | --- |
-| Platform | Astro + Starlight, run with Bun |
-| Site name | `Whale Docs` |
-| Brand color | Whale Violet `#7245F2` — see [Design System → Color](/en/design-system/color) |
-| Color mode | Light **and** dark, at full parity |
-| Icon family | Lucide — see [Design System → Iconography](/en/design-system/iconography) |
-| Typography | Whale compact scale and families per [Design System → Typography](/en/design-system/typography) |
-| Logo | `logo/whale-light.png`, `logo/whale-dark.png`; favicon `whale-mark.png` |
-| API playground | Interactive (`api.playground.display: "interactive"`) |
-| Page action | Copy the current document body with localized success/error feedback |
-| Languages | `en` (default), `zh-CN`, `zh-HK` |
+| Property       | Current standard                                                                                |
+| -------------- | ----------------------------------------------------------------------------------------------- |
+| Platform       | Astro + Starlight, run with Bun                                                                 |
+| Site name      | `Whale Docs`                                                                                    |
+| Brand color    | Whale Violet `#7245F2` — see [Design System → Color](/en/design-system/color)                   |
+| Color mode     | Light **and** dark, at full parity                                                              |
+| Icon family    | Lucide — see [Design System → Iconography](/en/design-system/iconography)                       |
+| Typography     | Whale compact scale and families per [Design System → Typography](/en/design-system/typography) |
+| Logo           | `logo/whale-light.png`, `logo/whale-dark.png`; favicon `whale-mark.png`                         |
+| API playground | Interactive (`api.playground.display: "interactive"`)                                           |
+| Page action    | Copy the current document body with localized success/error feedback                            |
+| Languages      | `en` (default), `zh-CN`, `zh-HK`                                                                |
 
 The product Design System's `13px` base applies to dense financial application
 interfaces. Documentation is a reading surface and uses a `15px` body size,
@@ -117,18 +117,18 @@ contract is implemented as `--nb-*` custom properties in
 `src/styles/cloudflare/globals.css`; Whale-specific changes are limited to the
 brand adapter in `src/styles/whale.css`.
 
-| Token | Standard | Used by |
-| --- | --- | --- |
-| `--nb-content-max` | `43.5rem`, `52rem` at ≥1536px | reading column |
-| `--nb-sidebar-width` | `18.75rem` | desktop navigation rail |
-| `--nb-toc-width` | `18rem` | on-page navigation rail |
-| `--nb-h1-size` | `2.1875rem` | page titles |
-| `--nb-h2-size` | `1.3rem` | section headings |
-| `--nb-h3-size` | `1.1rem` | subsection headings |
-| `--nb-font-sans` | Inter Variable stack | prose and interface text |
-| `--nb-font-mono` | JetBrains Mono stack | code and technical tokens |
-| `--nb-border` | semantic neutral | component hairlines |
-| `--nb-card` | semantic surface | code, cards and overlays |
+| Token                | Standard                      | Used by                   |
+| -------------------- | ----------------------------- | ------------------------- |
+| `--nb-content-max`   | `43.5rem`, `52rem` at ≥1536px | reading column            |
+| `--nb-sidebar-width` | `18.75rem`                    | desktop navigation rail   |
+| `--nb-toc-width`     | `18rem`                       | on-page navigation rail   |
+| `--nb-h1-size`       | `2.1875rem`                   | page titles               |
+| `--nb-h2-size`       | `1.3rem`                      | section headings          |
+| `--nb-h3-size`       | `1.1rem`                      | subsection headings       |
+| `--nb-font-sans`     | Inter Variable stack          | prose and interface text  |
+| `--nb-font-mono`     | JetBrains Mono stack          | code and technical tokens |
+| `--nb-border`        | semantic neutral              | component hairlines       |
+| `--nb-card`          | semantic surface              | code, cards and overlays  |
 
 Component appearance follows these rules:
 
@@ -144,6 +144,18 @@ Component appearance follows these rules:
   not become cards and do not use vertical grid lines.
 - **Interactive controls** use the shared control radius, Lucide icons, visible
   focus rings, and ReUI/shadcn state behavior.
+
+### Nested radii
+
+Keep nested rounded surfaces concentric:
+
+`inner radius = outer radius - inset`
+
+- Derive the inner radius with `calc()` from the outer radius token and the
+  actual padding or inset.
+- Do not choose an unrelated fixed radius for a nested surface.
+- Apply this relationship to cards, framed controls, badges inside containers,
+  overlays, and every other radius-stacking case.
 
 Compose the Whale Nimbus primitives before introducing any new rule. The custom
 theme owns component geometry, typography, spacing, and states; authors own
@@ -289,16 +301,16 @@ description: <one sentence stating the page's job>
 Use the theme's MDX components for their documented purpose. Current, sanctioned
 usage:
 
-| Component | Use for |
-| --- | --- |
-| `Card` / `CardGroup` | A small set of parallel destinations (product hub, entry points). Give each an accurate Lucide `icon`. |
-| Table | "At a glance" facts and side-by-side comparison. The default for structured key/value and role→task→destination content. |
-| Numbered list | Ordered task steps (quickstart, get-started sequences). |
-| `Note` | Neutral, easily-missed context. The default callout. |
-| `Tip` | Optional best-practice advice. |
-| `Warning` | A real consequence — data, auth, or irreversible impact. |
-| `Accordion` / `AccordionGroup` | Progressive disclosure of secondary detail. |
-| `Update` | Dated changelog entries (changelog page only). |
+| Component                      | Use for                                                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `Card` / `CardGroup`           | A small set of parallel destinations (product hub, entry points). Give each an accurate Lucide `icon`.                   |
+| Table                          | "At a glance" facts and side-by-side comparison. The default for structured key/value and role→task→destination content. |
+| Numbered list                  | Ordered task steps (quickstart, get-started sequences).                                                                  |
+| `Note`                         | Neutral, easily-missed context. The default callout.                                                                     |
+| `Tip`                          | Optional best-practice advice.                                                                                           |
+| `Warning`                      | A real consequence — data, auth, or irreversible impact.                                                                 |
+| `Accordion` / `AccordionGroup` | Progressive disclosure of secondary detail.                                                                              |
+| `Update`                       | Dated changelog entries (changelog page only).                                                                           |
 
 - Prefer a **table** over a card grid for facts and comparisons. Reserve
   `CardGroup` for navigation to a handful of parallel destinations.
@@ -337,7 +349,7 @@ e.g. `broker-api/overview.mdx`. Orients a reader who has picked a product.
 
 ### 5.3 Get-started / task guide
 
-`get-started/*` (quickstart, authentication, passthrough-headers). Gets the
+`get-started/*` (quickstart, authentication, headers). Gets the
 reader to a working request.
 
 - One task per page; state it in the first sentence.
@@ -394,13 +406,15 @@ pages to `72rem`; keep entries reverse-chronological and concise.
   or removes a dataset, update every authored example that references it
   (quickstart, authentication, changelog).
 - Authentication in the reference is `bearerAuth` → `Authorization: Bearer
-  <ACCESS_TOKEN>`. Keep the authored Authentication page consistent with what
+<ACCESS_TOKEN>`. Keep the authored Authentication page consistent with what
   the specs declare.
 
 ## 7. Trilingual contract
 
 - Three languages: `en` (default), `zh-CN`, `zh-HK`,
   matching the legacy `accept-language` values (`en` / `zh-CN` / `zh-HK`).
+- Whenever languages are listed in navigation, documentation, configuration,
+  or generated output, keep the fixed order `en`, `zh-CN`, `zh-HK`.
 - Every authored page exists in all three directories (`docs/en/`, `docs/zh-CN/`, `docs/zh-HK/`)
   with **identical structure**. Editing one means editing all three.
 - The API reference ships one spec per language

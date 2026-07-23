@@ -9,6 +9,14 @@
 - Use the same slug for equivalent pages across `en`, `zh-CN`, and `zh-HK`.
 - When an existing public slug must change, update navigation and internal links for every locale together.
 
+## Stable heading anchors
+
+- Every Markdown or MDX heading must end with an explicit, durable English anchor in the form `## Visible title {/* stable-english-anchor */}`.
+- Use lowercase kebab-case English words for anchors. Keep equivalent headings aligned across `en`, `zh-CN`, and `zh-HK`.
+- Treat the explicit anchor as a public URL. Do not change it merely because the visible title is reworded or translated.
+- When an anchor genuinely must change, update inbound fragment links in every locale together.
+- Run `bun run check:anchors` after adding or reorganizing documentation headings.
+
 ## Verification
 
 - Do not run the full `bun run build` by default because it is expensive in this repository.
