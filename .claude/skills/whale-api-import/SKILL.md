@@ -47,6 +47,12 @@ paths:
 
 **手工组保护**：`BROKER_API_MANUAL_GROUPS`（convert.py 内）定义 Broker API tab 里手工维护的 Overview / Get Started / Operations 组，重跑时自动前后拼接，不会被覆盖。
 
+**发布前过滤**：`walk_yaml_ops()` 里两条 operation 会被整条跳过，不出现在任何生成产物里：
+- `x-lbonly: true`（仅长桥可见的内部接口）
+- `x-verified: unverified`（还没对真实后端核实过，不具备对外发布的质量）
+
+只有源仓库里标了 `x-verified: verified`/`documented`/`inferred` 的接口才会被发布；改动某个接口的核实状态，回源仓库改对应 `.yaml`，然后重跑本仓库的 `convert.py`。
+
 ## 工作流
 
 **默认源路径**：`../whale-openapi-docs`（`--source` 覆盖）。依赖 `pyyaml`。

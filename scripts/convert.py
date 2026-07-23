@@ -343,6 +343,8 @@ def walk_yaml_ops(source: Path, schemas_out: Optional[Dict[str, Any]] = None):
 
     Operations with `x-lbonly: true` (Longbridge-internal-only) are skipped
     entirely -- they must not appear in this externally-published site.
+    Operations with `x-verified: unverified` are skipped too -- not yet
+    confirmed against the real backend, so not ready to publish.
 
     Each source YAML is a self-contained OpenAPI doc and may declare its own
     `components.schemas` (e.g. a shared error envelope referenced via `$ref`
@@ -381,6 +383,8 @@ def walk_yaml_ops(source: Path, schemas_out: Optional[Dict[str, Any]] = None):
                             continue
                         if op.get("x-lbonly") is True:
                             continue  # Longbridge-internal-only, not published here
+                        if op.get("x-verified") == "unverified":
+                            continue  # not yet verified against the real backend, not published here
                         key = (path, method)
                         if key in seen:
                             dupes += 1
