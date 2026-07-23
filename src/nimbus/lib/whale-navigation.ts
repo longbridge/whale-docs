@@ -4,7 +4,7 @@ import docsConfig from "../../../docs.json";
 import pendingVerificationManifest from "../../../pending-verification.json";
 import { allOperations, operationRoutePath } from "./openapi";
 
-type PageNode = string | { group: string; pages: PageNode[] };
+type PageNode = string | { group: string; flatten?: boolean; pages: PageNode[] };
 type NavGroup = { group: string; icon?: string; pages: PageNode[] };
 type NavTab = { tab: string; groups: NavGroup[] };
 type LanguageNav = { language: string; tabs: NavTab[] };
@@ -78,9 +78,11 @@ export async function getWhaleSidebar(pathname: string): Promise<SidebarItem[]> 
   const titleById = new Map(entries.map((entry) => [entry.id.toLowerCase().replace(/\.(md|mdx)$/, ""), entry.data.title]));
   const current = pathname.replace(/\/$/, "");
 
-  const convert = (node: PageNode): SidebarItem => {
+  const convert = (node: PageNode, collapseGroups = false): SidebarItem[] => {
     if (typeof node !== "string") {
-      return { type: "group", label: node.group, collapsed: false, order: 0, children: node.pages.map(convert) };
+      const children = node.pages.flatMap((child) => convert(child, collapseGroups));
+      if (node.flatten) return children;
+      return [{ type: "group", label: node.group, collapsed: collapseGroups, order: 0, children }];
     }
     const isOperation = /^[A-Z]+\s+\//.test(node);
     const localizedNode = node.replace(/^cn(?=\/|$)/, "zh-cn").replace(/^zh-Hant(?=\/|$)/, "zh-hk");
@@ -94,14 +96,14 @@ export async function getWhaleSidebar(pathname: string): Promise<SidebarItem[]> 
     // to the raw slug (e.g. "account assets account balance cash").
     const pendingSlug = localizedNode.match(/broker-api\/pending-verification\/([^/]+)$/)?.[1];
     const pendingTitle = pendingSlug ? pendingTitles[pendingSlug]?.title : undefined;
-    return {
+    return [{
       type: "link",
       label: isOperation ? (operationTitles.get(`${locale}:${node}`) ?? fallback) : (pendingTitle ?? titleById.get(id) ?? fallback),
       href,
       isCurrent: current === href,
       badge: isOperation ? { text: node.split(" ", 1)[0], variant: methodVariant(node.split(" ", 1)[0]) } : undefined,
       order: 0,
-    };
+    }];
   };
 
   return tab.groups.map((group) => ({
@@ -110,6 +112,6 @@ export async function getWhaleSidebar(pathname: string): Promise<SidebarItem[]> 
     collapsed: false,
     order: 0,
     icon: resolveGroupIcon(group.icon),
-    children: group.pages.map(convert),
+    children: group.pages.flatMap((node) => convert(node, Boolean(group.openapi))),
   })) as SidebarItem[];
 }
