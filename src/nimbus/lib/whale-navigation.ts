@@ -8,11 +8,40 @@ type NavGroup = { group: string; icon?: string; pages: PageNode[] };
 type NavTab = { tab: string; groups: NavGroup[] };
 type LanguageNav = { language: string; tabs: NavTab[] };
 
+// Map the short icon names used in docs.json's top-level groups onto concrete
+// Phosphor (astro-icon) names. Every first-level group must resolve to an icon,
+// so unknown/omitted names fall back to a neutral section glyph.
+const GROUP_ICON_ALIASES: Record<string, string> = {
+  rocket: "ph:rocket-launch",
+  "book-open": "ph:book-open",
+  palette: "ph:palette",
+  code: "ph:code",
+  database: "ph:database",
+  "app-window": "ph:app-window",
+  cpu: "ph:cpu",
+  play: "ph:play-circle",
+  wallet: "ph:wallet",
+  banknote: "ph:money",
+  sparkles: "ph:sparkle",
+  shield: "ph:shield-check",
+  "chart-candlestick": "ph:chart-line-up",
+  bell: "ph:bell",
+  settings: "ph:gear",
+  component: "ph:puzzle-piece",
+  wrench: "ph:wrench",
+};
+
+function resolveGroupIcon(name?: string): string {
+  if (!name) return "ph:folder";
+  if (name.includes(":")) return name;
+  return GROUP_ICON_ALIASES[name] ?? "ph:folder";
+}
+
 const sectionForTab: Record<string, string[]> = {
-  "Docs": ["introduction", "docs", "design-system"],
-  "Whale SDK": ["whalesdk"],
-  "Broker API": ["broker-api"],
-  "Trading API": ["trading-api"],
+  "Docs": ["overview", "docs", "design-system"],
+  "WhaleSDK": ["whalesdk"],
+  "BrokerAPI": ["broker-api"],
+  "TradingAPI": ["trading-api"],
   "OpenAPI": ["openapi"],
 };
 
@@ -37,7 +66,7 @@ export async function getWhaleSidebar(pathname: string): Promise<SidebarItem[]> 
   const segments = pathname.split("/").filter(Boolean);
   const requestedLocale = segments[0] ?? "en";
   const locale = requestedLocale.toLowerCase() === "zh-cn" ? "zh-CN" : requestedLocale.toLowerCase() === "zh-hk" ? "zh-HK" : "en";
-  const section = segments[1] ?? "introduction";
+  const section = segments[1] ?? "overview";
   const languages = docsConfig.navigation.languages as LanguageNav[];
   const configLocale = locale === "zh-CN" ? "cn" : locale === "zh-HK" ? "zh-Hant" : "en";
   const language = languages.find((entry) => entry.language === locale || entry.language === configLocale) ?? languages[0];
@@ -71,7 +100,7 @@ export async function getWhaleSidebar(pathname: string): Promise<SidebarItem[]> 
     label: group.group,
     collapsed: false,
     order: 0,
-    icon: group.icon === "rocket" ? "ph:rocket-launch" : group.icon === "book-open" ? "ph:book-open" : group.icon === "palette" ? "ph:palette" : group.icon === "wallet" ? "ph:wallet" : group.icon === "play" ? "ph:play-circle" : undefined,
+    icon: resolveGroupIcon(group.icon),
     children: group.pages.map(convert),
   })) as SidebarItem[];
 }

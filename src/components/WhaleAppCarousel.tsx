@@ -25,7 +25,7 @@ export default function WhaleAppCarousel({
   watchlistLabel = "Watchlist",
   assetsLabel = "Assets",
   newsLabel = "News",
-  ariaLabel = "WhaleApp SDK screen examples",
+  ariaLabel = "WhaleAppSDK screen examples",
   previousLabel = "Previous screen",
   nextLabel = "Next screen",
 }: Props) {
@@ -66,7 +66,7 @@ export default function WhaleAppCarousel({
                 <CarouselItem key={screen.src} className="pl-0">
                   <img
                     src={screen.src}
-                    alt={`${screen.label} — WhaleApp SDK`}
+                    alt={`${screen.label} — WhaleAppSDK`}
                     width={1170}
                     height={2532}
                     loading={index === 0 ? "eager" : "lazy"}
