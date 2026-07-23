@@ -231,43 +231,4 @@ function initPersistence(root: HTMLElement): (() => void) | null {
 	};
 }
 
-// ---------------------------------------------------------------------------
-// Global `/` shortcut — bound once at module load
-// ---------------------------------------------------------------------------
-
-(function bindFilterShortcut() {
-	if (document.documentElement.hasAttribute("data-nb-sidebar-shortcut-bound"))
-		return;
-	document.documentElement.setAttribute("data-nb-sidebar-shortcut-bound", "");
-
-	document.addEventListener("keydown", (e) => {
-		if (e.key !== "/") return;
-		const active = document.activeElement as HTMLElement | null;
-		if (
-			active &&
-			(active.tagName === "INPUT" ||
-				active.tagName === "TEXTAREA" ||
-				active.isContentEditable)
-		) {
-			return;
-		}
-		// Prefer the on-screen filter (mobile drawer when open, else desktop).
-		// getClientRects is empty for display:none (closed dialog / hidden aside).
-		const inputs = Array.from(
-			document.querySelectorAll<HTMLInputElement>(
-				"[data-nb-sidebar-filter-input]",
-			),
-		);
-		const target =
-			inputs.find((el) => el.getClientRects().length > 0) ?? inputs[0];
-		if (!target) return;
-		e.preventDefault();
-		// Reaches document before window (bubble), so this preempts DocSearch's
-		// window-level "/" handler and keeps "/" scoped to the filter.
-		e.stopPropagation();
-		target.focus();
-	});
-})();
-
 mount("[data-nb-sidebar]", initSidebar);
-

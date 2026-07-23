@@ -145,6 +145,18 @@ Component appearance follows these rules:
 - **Interactive controls** use the shared control radius, Lucide icons, visible
   focus rings, and ReUI/shadcn state behavior.
 
+### Nested radii
+
+Keep nested rounded surfaces concentric:
+
+`inner radius = outer radius - inset`
+
+- Derive the inner radius with `calc()` from the outer radius token and the
+  actual padding or inset.
+- Do not choose an unrelated fixed radius for a nested surface.
+- Apply this relationship to cards, framed controls, badges inside containers,
+  overlays, and every other radius-stacking case.
+
 Compose the Whale Nimbus primitives before introducing any new rule. The custom
 theme owns component geometry, typography, spacing, and states; authors own
 content and structure.

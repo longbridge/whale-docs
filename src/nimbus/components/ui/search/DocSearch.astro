@@ -4,29 +4,37 @@ import "@pagefind/default-ui/css/ui.css";
 
 <div id="docsearch" transition:persist="docsearch">
 	<button type="button" id="pagefind-open" aria-label="Search">
-		<svg
-			width="20"
-			height="20"
-			class="pagefind-search-icon"
-			viewBox="0 0 20 20"
-			aria-hidden="true"
-		>
-			<path
-				d="M14.386 14.386l4.0877 4.0877-4.0877-4.0877c-2.9418 2.9419-7.7115 2.9419-10.6533 0-2.9419-2.9418-2.9419-7.7115 0-10.6533 2.9418-2.9419 7.7115-2.9419 10.6533 0 2.9419 2.9418 2.9419 7.7115 0 10.6533z"
-				stroke="currentColor"
-				fill="none"
-				fill-rule="evenodd"
-				stroke-linecap="round"
-				stroke-linejoin="round"></path>
-		</svg>
-		<span class="pagefind-placeholder">Search</span>
+		<span>
+			<svg
+				width="20"
+				height="20"
+				class="pagefind-search-icon"
+				viewBox="0 0 20 20"
+				aria-hidden="true"
+			>
+				<path
+					d="M14.386 14.386l4.0877 4.0877-4.0877-4.0877c-2.9418 2.9419-7.7115 2.9419-10.6533 0-2.9419-2.9418-2.9419-7.7115 0-10.6533 2.9418-2.9419 7.7115-2.9419 10.6533 0 2.9419 2.9418 2.9419 7.7115 0 10.6533z"
+					stroke="currentColor"
+					fill="none"
+					fill-rule="evenodd"
+					stroke-linecap="round"
+					stroke-linejoin="round"></path>
+			</svg>
+			<span class="pagefind-placeholder">Search</span>
+		</span>
 		<span class="pagefind-keys">
-			<kbd>⌘</kbd><kbd>K</kbd>
+			<kbd>⌘K</kbd>
 		</span>
 	</button>
 
-	<dialog id="pagefind-modal" aria-label="Search">
+	<dialog id="pagefind-modal" aria-labelledby="pagefind-title">
+		<h2 id="pagefind-title" class="sr-only">Search documentation</h2>
 		<div id="pagefind-ui"></div>
+		<div class="pagefind-footer" aria-hidden="true">
+			<span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+			<span><kbd>↵</kbd> Open</span>
+			<span><kbd>Esc</kbd> Close</span>
+		</div>
 	</dialog>
 </div>
 
@@ -85,6 +93,11 @@ import "@pagefind/default-ui/css/ui.css";
 		height: 1rem;
 		color: currentColor;
 	}
+	#pagefind-open > span:first-child {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
 	.pagefind-placeholder {
 		display: none;
 		padding: 0;
@@ -102,22 +115,27 @@ import "@pagefind/default-ui/css/ui.css";
 		align-items: center;
 		justify-content: center;
 		height: 1.25rem;
+		width: fit-content;
 		min-width: 1.25rem;
 		padding: 0 0.25rem;
 		margin: 0;
-		border: 1px solid var(--nb-border);
+		border: 0;
 		border-radius: var(--radius-sm);
 		background: var(--nb-muted);
 		box-shadow: none;
 		color: var(--nb-muted-foreground);
-		font-size: 0.6875rem;
-		font-weight: 600;
+		font-family: inherit;
+		font-size: 0.75rem;
+		font-weight: 500;
+		line-height: 1;
+		user-select: none;
 	}
 
 	/* >=768px: expand to the full pill with placeholder + keys. */
 	@media (min-width: 768px) {
 		#pagefind-open {
-			width: auto;
+			width: clamp(18rem, 24vw, 22rem);
+			justify-content: space-between;
 			padding: 0 0.625rem 0 0.75rem;
 			border-color: var(--nb-border);
 			background-color: var(--nb-card);
@@ -134,52 +152,437 @@ import "@pagefind/default-ui/css/ui.css";
 		}
 	}
 
-	/* Search modal */
+	/* ReUI CommandDialog shell */
 	#pagefind-modal {
-		border: 1px solid var(--nb-border);
+		margin: auto;
+		border: 1px solid var(--nb-border-strong);
 		border-radius: var(--nb-radius-lg, 0.75rem);
 		background: var(--nb-card);
-		padding: 1rem;
-		width: min(560px, 90vw);
-		max-height: min(600px, 80vh);
-		overflow-y: auto;
-		box-shadow: var(--nb-shadow-lg);
+		color: var(--nb-card-foreground);
+		padding: 0;
+		width: min(640px, calc(100vw - 2rem));
+		max-height: min(640px, 80vh);
+		overflow: hidden;
+		box-shadow: none;
+		outline: none;
+		opacity: 0;
+		transform: scale(0.95);
+		transition:
+			opacity 100ms ease,
+			transform 100ms ease,
+			overlay 100ms allow-discrete,
+			display 100ms allow-discrete;
+	}
+	#pagefind-modal[open] {
+		opacity: 1;
+		transform: scale(1);
+	}
+	@starting-style {
+		#pagefind-modal[open] {
+			opacity: 0;
+			transform: scale(0.95);
+		}
 	}
 	#pagefind-modal::backdrop {
-		background: oklch(0 0 0 / 0.5);
+		background: oklch(0 0 0 / 0.1);
+		-webkit-backdrop-filter: blur(4px);
 		backdrop-filter: blur(4px);
+		opacity: 0;
+		transition:
+			opacity 100ms ease,
+			overlay 100ms allow-discrete,
+			display 100ms allow-discrete;
 	}
-	/* Keep the inner UI flush with the dialog edges */
+	#pagefind-modal[open]::backdrop {
+		opacity: 1;
+	}
+	@starting-style {
+		#pagefind-modal[open]::backdrop {
+			opacity: 0;
+		}
+	}
 	#pagefind-ui {
 		width: 100%;
 	}
-	/* Make results scrollable inside the modal */
-	#pagefind-modal .pagefind-ui__results-container {
-		max-height: calc(min(600px, 80vh) - 4rem - 3rem);
+
+	/* Pagefind mapped onto ReUI Command primitives. */
+	#pagefind-modal .pagefind-ui__form {
+		position: relative;
+	}
+	#pagefind-modal .pagefind-ui__form::before {
+		left: 1rem;
+		top: 1.5rem;
+		width: 1rem;
+		height: 1rem;
+		transform: translateY(-50%);
+		background-color: var(--nb-muted-foreground);
+	}
+	#pagefind-modal .pagefind-ui__search-input {
+		display: block;
+		box-sizing: border-box;
+		width: 100%;
+		height: 3rem;
+		appearance: none;
+		border: 0;
+		border-bottom: 1px solid var(--nb-border);
+		border-radius: 0;
+		background: transparent;
+		padding: 0 3.25rem 0 2.75rem;
+		box-shadow: none;
+		color: var(--nb-foreground);
+		font-size: 0.875rem;
+		font-weight: 400;
+	}
+	#pagefind-modal .pagefind-ui__search-input::-webkit-search-cancel-button {
+		display: none;
+	}
+	#pagefind-modal .pagefind-ui__search-input:focus {
+		outline: none;
+	}
+	#pagefind-modal .pagefind-ui__search-input::placeholder {
+		color: var(--nb-muted-foreground);
+		opacity: 1;
+	}
+	#pagefind-modal .pagefind-ui__search-clear {
+		position: absolute;
+		z-index: 2;
+		top: 1.5rem;
+		right: 0.75rem;
+		width: 2rem;
+		height: 2rem;
+		border: 0;
+		padding: 0;
+		transform: translateY(-50%);
+		border-radius: var(--nb-radius-control);
+		background: transparent;
+		color: var(--nb-muted-foreground);
+		font-size: 0;
+		transition:
+			background-color 150ms,
+			color 150ms;
+	}
+	#pagefind-modal .pagefind-ui__search-clear:hover {
+		background: var(--nb-muted);
+		color: var(--nb-foreground);
+	}
+	#pagefind-modal .pagefind-ui__search-clear:focus-visible {
+		outline: 2px solid var(--nb-primary);
+		outline-offset: 1px;
+	}
+	#pagefind-modal .pagefind-ui__search-clear::before {
+		content: "";
+		display: block;
+		width: 0.75rem;
+		height: 0.75rem;
+		margin: auto;
+		background: currentColor;
+		-webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 3l10 10M13 3L3 13' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round'/%3E%3C/svg%3E")
+			center / contain no-repeat;
+		mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 3l10 10M13 3L3 13' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round'/%3E%3C/svg%3E")
+			center / contain no-repeat;
+	}
+	#pagefind-ui[data-dev-search-initialized] .pagefind-ui__form::before {
+		display: none;
+	}
+	#pagefind-modal .pagefind-ui__search-icon {
+		position: absolute;
+		top: 1.5rem;
+		left: 1rem;
+		width: 1rem;
+		height: 1rem;
+		transform: translateY(-50%);
+		color: var(--nb-muted-foreground);
+		pointer-events: none;
+	}
+	#pagefind-modal .pagefind-ui__drawer {
+		display: block;
+		min-height: 15rem;
+		max-height: calc(min(640px, 80vh) - 5.5rem);
 		overflow-y: auto;
+		overscroll-behavior: contain;
+		padding: 0.5rem;
+	}
+	#pagefind-modal .pagefind-ui__results-area {
+		margin-top: 0;
+	}
+	#pagefind-modal .pagefind-ui__results-container {
+		max-height: calc(min(640px, 80vh) - 5.5rem);
+		overflow-y: auto;
+	}
+	#pagefind-modal .pagefind-ui__results {
+		padding: 0;
+	}
+	#pagefind-modal .pagefind-ui__message {
+		margin: 0;
+		padding: 0.5rem 0.75rem;
+		color: var(--nb-muted-foreground);
+		font-size: 0.75rem;
+		font-weight: 500;
+	}
+	#pagefind-modal .pagefind-ui__message[hidden] {
+		display: none;
+	}
+	#pagefind-modal .pagefind-blank {
+		display: flex;
+		min-height: 13rem;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
+		padding: 1.5rem;
+		text-align: center;
+	}
+	#pagefind-modal .pagefind-blank[hidden] {
+		display: none;
+	}
+	#pagefind-modal .pagefind-blank-icon {
+		display: inline-flex;
+		width: 2.5rem;
+		height: 2.5rem;
+		align-items: center;
+		justify-content: center;
+		border-radius: var(--nb-radius-control);
+		background: var(--nb-muted);
+		color: var(--nb-muted-foreground);
+	}
+	#pagefind-modal .pagefind-blank-icon svg {
+		width: 1.125rem;
+		height: 1.125rem;
+	}
+	#pagefind-modal .pagefind-blank-title {
+		margin: 0;
+		color: var(--nb-foreground);
+		font-size: 0.875rem;
+		font-weight: 500;
+	}
+	#pagefind-modal .pagefind-blank-description {
+		max-width: 20rem;
+		margin: -0.375rem 0 0;
+		color: var(--nb-muted-foreground);
+		font-size: 0.75rem;
+		line-height: 1.125rem;
+	}
+	#pagefind-modal .pagefind-ui__result {
+		position: relative;
+		display: block;
+		margin: 0;
+		border: 0;
+		border-radius: var(--nb-radius-control);
+		padding: 0;
+		cursor: pointer;
+	}
+	#pagefind-modal .pagefind-ui__result + .pagefind-ui__result {
+		margin-block-start: 0.125rem;
+	}
+	#pagefind-modal .pagefind-ui__result:hover,
+	#pagefind-modal .pagefind-ui__result:focus-within {
+		background: var(--nb-muted);
+	}
+	#pagefind-modal .pagefind-ui__result-inner {
+		display: flex;
+		align-items: flex-start;
+		margin: 0;
+		padding: 0.625rem 0.75rem;
+	}
+	#pagefind-modal .pagefind-ui__result-title {
+		margin: 0;
+		font-size: 0.875rem;
+		font-weight: 500;
+		line-height: 1.25rem;
+	}
+	#pagefind-modal .pagefind-ui__result-link {
+		color: var(--nb-foreground);
+		text-decoration: none;
+	}
+	#pagefind-modal .pagefind-ui__result-link:hover {
+		text-decoration: none;
+	}
+	#pagefind-modal .pagefind-ui__result-excerpt {
+		display: -webkit-box;
+		min-width: 0;
+		margin: 0.125rem 0 0;
+		overflow: hidden;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		color: var(--nb-muted-foreground);
+		font-size: 0.75rem;
+		line-height: 1.125rem;
+	}
+	#pagefind-modal mark {
+		border-radius: 0.125rem;
+		background: color-mix(in oklch, var(--nb-primary) 14%, transparent);
+		color: var(--nb-primary);
+	}
+	#pagefind-modal .pagefind-ui__button {
+		margin: 0.5rem 0 0;
+		border: 1px solid var(--nb-border);
+		border-radius: var(--nb-radius-control);
+		background: var(--nb-background);
+		color: var(--nb-foreground);
+		font-size: 0.8125rem;
+	}
+	.pagefind-footer {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		min-height: 2.5rem;
+		border-top: 1px solid var(--nb-border);
+		padding: 0.5rem 0.75rem;
+		color: var(--nb-muted-foreground);
+		font-size: 0.6875rem;
+	}
+	.pagefind-footer span {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+	.pagefind-footer kbd {
+		display: inline-flex;
+		width: fit-content;
+		min-width: 1.25rem;
+		height: 1.25rem;
+		align-items: center;
+		justify-content: center;
+		border: 0;
+		border-radius: var(--radius-sm);
+		background: var(--nb-muted);
+		padding: 0 0.25rem;
+		color: var(--nb-muted-foreground);
+		font-family: inherit;
+		font-size: 0.75rem;
+		font-weight: 500;
+		line-height: 1;
+		user-select: none;
+	}
+	@media (max-width: 639px) {
+		#pagefind-modal {
+			margin: 4rem auto auto;
+		}
+		.pagefind-footer {
+			display: none;
+		}
 	}
 </style>
 
 <script>
 	import { PagefindUI } from "@pagefind/default-ui";
+	import { lockScroll, unlockScroll } from "nimbus-docs/client";
 
 	let ui: PagefindUI | null = null;
+	let devDocuments: Promise<Array<{ title: string; url: string; text: string }>> | null = null;
 
 	function getModal(): HTMLDialogElement | null {
 		return document.getElementById("pagefind-modal") as HTMLDialogElement | null;
 	}
 
+	function initDevSearch(): void {
+		const root = document.getElementById("pagefind-ui");
+		if (!root || root.dataset.devSearchInitialized) return;
+		root.dataset.devSearchInitialized = "true";
+		root.innerHTML = `
+			<div class="pagefind-ui">
+				<form class="pagefind-ui__form" role="search">
+					<svg class="pagefind-ui__search-icon" viewBox="0 0 20 20" aria-hidden="true">
+						<path d="M14.386 14.386l4.088 4.088m-4.088-4.088a7.533 7.533 0 1 1-10.653-10.653 7.533 7.533 0 0 1 10.653 10.653Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>
+					<input class="pagefind-ui__search-input" type="search" placeholder="Search documentation…" autocomplete="off" />
+					<button class="pagefind-ui__search-clear" type="reset" aria-label="Clear search">Clear</button>
+					<div class="pagefind-ui__drawer">
+						<div class="pagefind-ui__results-area">
+							<div class="pagefind-blank">
+								<span class="pagefind-blank-icon">
+									<svg viewBox="0 0 24 24" aria-hidden="true">
+										<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M14 14l3 3" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+										<circle cx="10.5" cy="10.5" r="3.5" fill="none" stroke="currentColor" stroke-width="1.75"/>
+									</svg>
+								</span>
+								<p class="pagefind-blank-title">Search documentation</p>
+								<p class="pagefind-blank-description">Find guides, concepts, API references, and integration details.</p>
+							</div>
+							<p class="pagefind-ui__message" hidden></p>
+							<ol class="pagefind-ui__results"></ol>
+						</div>
+					</div>
+				</form>
+			</div>`;
+
+		const form = root.querySelector<HTMLFormElement>(".pagefind-ui__form");
+		const input = root.querySelector<HTMLInputElement>(".pagefind-ui__search-input");
+		const message = root.querySelector<HTMLElement>(".pagefind-ui__message");
+		const blank = root.querySelector<HTMLElement>(".pagefind-blank");
+		const results = root.querySelector<HTMLOListElement>(".pagefind-ui__results");
+		if (!form || !input || !message || !blank || !results) return;
+
+		devDocuments ??= fetch("/search-index.json").then((response) => {
+			if (!response.ok) throw new Error(`Search index returned ${response.status}`);
+			return response.json();
+		});
+
+		async function search() {
+			const query = input.value.trim().toLocaleLowerCase();
+			results.replaceChildren();
+			if (!query) {
+				blank.hidden = false;
+				message.hidden = true;
+				message.textContent = "";
+				return;
+			}
+			blank.hidden = true;
+			message.hidden = false;
+			message.textContent = `Searching for ${input.value.trim()}…`;
+			try {
+				const documents = await devDocuments!;
+				const matches = documents
+					.filter((document) =>
+						`${document.title}\n${document.text}`.toLocaleLowerCase().includes(query),
+					)
+					.slice(0, 20);
+				message.textContent = matches.length
+					? `${matches.length} result${matches.length === 1 ? "" : "s"}`
+					: "No results found.";
+				for (const result of matches) {
+					const item = document.createElement("li");
+					item.className = "pagefind-ui__result";
+					const inner = document.createElement("div");
+					inner.className = "pagefind-ui__result-inner";
+					const title = document.createElement("p");
+					title.className = "pagefind-ui__result-title";
+					const link = document.createElement("a");
+					link.className = "pagefind-ui__result-link";
+					link.href = result.url;
+					link.textContent = result.title;
+					title.append(link);
+					inner.append(title);
+					item.append(inner);
+					results.append(item);
+				}
+			} catch {
+				message.textContent = "Search index could not be loaded.";
+			}
+		}
+
+		input.addEventListener("input", search);
+		form.addEventListener("reset", () => {
+			requestAnimationFrame(search);
+		});
+	}
+
 	function openModal(query?: string): void {
 		const modal = getModal();
 		if (!modal) return;
-		if (!ui) {
+		if (import.meta.env.DEV) {
+			initDevSearch();
+		} else if (!ui) {
 			ui = new PagefindUI({
 				element: "#pagefind-ui",
 				showImages: false,
 				resetStyles: false,
 			});
 		}
-		modal.showModal();
+		if (!modal.open) {
+			lockScroll();
+			modal.showModal();
+		}
 		setTimeout(() => {
 			const input = modal.querySelector<HTMLInputElement>(
 				".pagefind-ui__search-input",
@@ -197,17 +600,63 @@ import "@pagefind/default-ui/css/ui.css";
 		const trigger = document.getElementById("pagefind-open");
 		const modal = getModal();
 
-		trigger?.addEventListener("click", () => openModal());
-		modal?.addEventListener("click", (e) => {
-			if (e.target === modal) modal.close();
-		});
+		if (trigger && !trigger.dataset.pagefindInitialized) {
+			trigger.dataset.pagefindInitialized = "true";
+			trigger.addEventListener("click", () => openModal());
+		}
+		if (modal && !modal.dataset.pagefindInitialized) {
+			modal.dataset.pagefindInitialized = "true";
+			modal.addEventListener("close", unlockScroll);
+			modal.addEventListener("click", (e) => {
+				if (e.target === modal) modal.close();
+				const target = e.target as Element | null;
+				const link = target?.closest<HTMLAnchorElement>(
+					".pagefind-ui__result-link",
+				);
+				if (link) {
+					modal.close();
+					return;
+				}
+				const result = target?.closest(".pagefind-ui__result");
+				const resultLink =
+					result?.querySelector<HTMLAnchorElement>(".pagefind-ui__result-link");
+				resultLink?.click();
+			});
+			modal.addEventListener("keydown", (e) => {
+				if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+				const links = Array.from(
+					modal.querySelectorAll<HTMLAnchorElement>(
+						".pagefind-ui__result-link",
+					),
+				).filter((link) => link.getClientRects().length > 0);
+				if (!links.length) return;
+				e.preventDefault();
+				const current = links.indexOf(document.activeElement as HTMLAnchorElement);
+				const next =
+					e.key === "ArrowDown"
+						? current < links.length - 1
+							? current + 1
+							: 0
+						: current > 0
+							? current - 1
+							: links.length - 1;
+				links[next]?.focus();
+			});
+		}
 	}
 
 	// Global ⌘K / Ctrl+K shortcut — registered once for the page lifetime.
 	if (!document.documentElement.dataset.pagefindKey) {
 		document.documentElement.dataset.pagefindKey = "true";
 		document.addEventListener("keydown", (e) => {
-			if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+			const target = e.target as HTMLElement | null;
+			const isTyping =
+				target?.tagName === "INPUT" ||
+				target?.tagName === "TEXTAREA" ||
+				target?.isContentEditable;
+			const isCommandK = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k";
+			const isSlash = e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey && !isTyping;
+			if (isCommandK || isSlash) {
 				e.preventDefault();
 				openModal();
 			}

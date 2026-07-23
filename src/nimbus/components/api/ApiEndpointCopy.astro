@@ -1,0 +1,54 @@
+---
+import { Check, Copy } from "lucide-astro";
+
+interface Props {
+  text: string;
+  label: string;
+  copiedLabel: string;
+}
+
+const { text, label, copiedLabel } = Astro.props;
+---
+
+<api-endpoint-copy data-text={text} data-label={label} data-copied-label={copiedLabel}>
+  <button type="button" class="api-endpoint-copy" aria-label={label} title={label}>
+    <Copy class="api-endpoint-copy-icon size-3.5" aria-hidden="true" />
+    <Check class="api-endpoint-copy-check text-success hidden size-3.5" aria-hidden="true" />
+  </button>
+</api-endpoint-copy>
+
+<script>
+  class ApiEndpointCopy extends HTMLElement {
+    connectedCallback() {
+      if (this.dataset.bound === "true") return;
+      this.dataset.bound = "true";
+
+      const button = this.querySelector<HTMLButtonElement>("button");
+      const copyIcon = this.querySelector<SVGElement>(".api-endpoint-copy-icon");
+      const checkIcon = this.querySelector<SVGElement>(".api-endpoint-copy-check");
+      let resetTimer: number | undefined;
+
+      button?.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(this.dataset.text ?? "");
+          copyIcon?.classList.add("hidden");
+          checkIcon?.classList.remove("hidden");
+          button.setAttribute("aria-label", this.dataset.copiedLabel ?? "Copied");
+
+          window.clearTimeout(resetTimer);
+          resetTimer = window.setTimeout(() => {
+            copyIcon?.classList.remove("hidden");
+            checkIcon?.classList.add("hidden");
+            button.setAttribute("aria-label", this.dataset.label ?? "Copy endpoint");
+          }, 1500);
+        } catch {
+          // Clipboard access can be unavailable or denied.
+        }
+      });
+    }
+  }
+
+  if (!customElements.get("api-endpoint-copy")) {
+    customElements.define("api-endpoint-copy", ApiEndpointCopy);
+  }
+</script>
