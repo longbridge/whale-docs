@@ -553,8 +553,8 @@ PENDING_VERIFICATION_TEXT = {
         "description": "该分组下的接口正在对真实后端重新核实，核实完成后才会发布。",
         "body": (
             "**{group}** 分组下的接口暂时隐藏，正在对真实后端重新核实中，核实通过后会重新出现在这里。\n\n"
-            "如需先了解已发布的接口，可以看 [Broker API 概览](/zh-CN/broker-api/overview) 或 "
-            "[开始使用](/zh-CN/broker-api/get-started/quickstart)。"
+            "如需先了解已发布的接口，可以看 [Broker API 概览](/zh-cn/broker-api/overview) 或 "
+            "[开始使用](/zh-cn/broker-api/get-started/quickstart)。"
         ),
     },
     "zh-Hant": {
@@ -562,8 +562,8 @@ PENDING_VERIFICATION_TEXT = {
         "description": "該分組下的接口正在對真實後端重新覆核，覆核完成後才會發布。",
         "body": (
             "**{group}** 分組下的接口暫時隱藏，正在對真實後端重新覆核中，覆核通過後會重新出現在這裡。\n\n"
-            "如需先了解已發布的接口，可以看 [Broker API 概覽](/zh-HK/broker-api/overview) 或 "
-            "[開始使用](/zh-HK/broker-api/get-started/quickstart)。"
+            "如需先了解已發布的接口，可以看 [Broker API 概覽](/zh-hk/broker-api/overview) 或 "
+            "[開始使用](/zh-hk/broker-api/get-started/quickstart)。"
         ),
     },
 }
@@ -741,7 +741,13 @@ def main() -> int:
                 # correctly reflect exactly which branch was clicked.
                 slug = pending_verification_slug(prefix)
                 pending_pages_needed[slug] = prefix
-                out.append(f"{LANG_DIRS[lang_key]}/broker-api/pending-verification/{slug}")
+                # lang_key (not LANG_DIRS[lang_key]) matches
+                # BROKER_API_MANUAL_GROUPS's own page-string convention --
+                # get_whale_sidebar()/whale-navigation.ts owns the one place
+                # that maps "cn"/"zh-Hant" prefixes to the real (currently
+                # lowercase zh-cn/zh-hk) URL locale segment, so this stays
+                # correct automatically if that mapping ever changes again.
+                out.append(f"{lang_key}/broker-api/pending-verification/{slug}")
             return out
 
         groups = []
@@ -798,7 +804,10 @@ def main() -> int:
                 "description": text["description"],
                 "body": text["body"].format(group=group_name),
             }
-        pending_manifest[LANG_DIRS[lang_key]] = by_slug
+        # Keyed by the actual public URL locale segment (currently lowercase
+        # zh-cn/zh-hk, see the [locale] route's params) so the Astro route
+        # can index straight in without any casing logic of its own.
+        pending_manifest[LANG_DIRS[lang_key].lower()] = by_slug
     manifest_path = REPO_ROOT / "pending-verification.json"
     manifest_path.write_text(
         json.dumps(pending_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
