@@ -49,7 +49,8 @@ export const markdown = {
 } satisfies MarkdownConfig;
 
 export const integrations = [icon(), react(), nimbus(nimbusConfig, {
-  markdown: { hastPlugins },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  markdown: { hastPlugins: hastPlugins as any },
   validateMdx: false,
   rules: {
     "nimbus/frontmatter-shape": "off",
