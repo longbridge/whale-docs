@@ -28,15 +28,27 @@
 			const content = sidebar.querySelector("[data-nb-sidebar]");
 			if (!content) return;
 
+			// Scoped to the group's own label area — never a descendant's. Must
+			// match sidebar.client.ts's ownTrigger() exactly: the two scripts only
+			// share state via the sessionStorage array, so if one counts a group
+			// the other skips, indices drift and every entry after it restores
+			// onto the wrong group. A static-header group (icon set, no trigger
+			// of its own) has neither and correctly yields null here instead of
+			// matching its first nested child's trigger.
+			function ownTrigger(group) {
+				return group.querySelector(
+					":scope > [data-nb-collapsible-trigger], :scope > [data-nb-sidebar-group-label] [data-nb-collapsible-trigger]",
+				);
+			}
+
 			function setGroupOpen(group, open) {
+				const trigger = ownTrigger(group);
+				if (!trigger) return;
 				group.setAttribute("data-nb-default-open", open ? "true" : "false");
-				const trigger = group.querySelector("[data-nb-collapsible-trigger]");
-				const panel = group.querySelector("[data-nb-collapsible-content]");
+				const panel = group.querySelector(":scope > [data-nb-collapsible-content]");
 				const state = open ? "open" : "closed";
-				if (trigger) {
-					trigger.setAttribute("data-nb-state", state);
-					trigger.setAttribute("aria-expanded", String(open));
-				}
+				trigger.setAttribute("data-nb-state", state);
+				trigger.setAttribute("aria-expanded", String(open));
 				if (panel) panel.setAttribute("data-nb-state", state);
 			}
 
@@ -45,7 +57,9 @@
 			if (raw) {
 				state = JSON.parse(raw);
 				if (state && content.dataset.nbSidebarHash === state.hash) {
-					const groups = content.querySelectorAll("[data-nb-sidebar-group]");
+					const groups = Array.from(
+						content.querySelectorAll("[data-nb-sidebar-group]"),
+					).filter((group) => ownTrigger(group) !== null);
 					for (let i = 0; i < groups.length; i++) {
 						if (typeof state.open[i] === "boolean") {
 							setGroupOpen(groups[i], state.open[i]);
