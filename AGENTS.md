@@ -8,3 +8,9 @@
 - Avoid qualifiers such as `technical`, `integration`, `implementation`, `guide`, `setup`, and version numbers unless they distinguish genuinely separate, long-lived concepts.
 - Use the same slug for equivalent pages across `en`, `zh-CN`, and `zh-HK`.
 - When an existing public slug must change, update navigation and internal links for every locale together.
+
+## Verification
+
+- Do not run the full `bun run build` by default because it is expensive in this repository.
+- Prefer targeted checks or `bun run check` while developing.
+- Run `bun run build` only when the user explicitly requests it or when a full production build is essential to the requested task.
