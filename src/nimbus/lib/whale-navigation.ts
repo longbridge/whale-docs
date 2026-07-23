@@ -5,7 +5,7 @@ import pendingVerificationManifest from "../../../pending-verification.json";
 import { allOperations, operationRoutePath } from "./openapi";
 
 type PageNode = string | { group: string; flatten?: boolean; pages: PageNode[] };
-type NavGroup = { group: string; icon?: string; pages: PageNode[] };
+type NavGroup = { group: string; icon?: string; openapi?: unknown; pages: PageNode[] };
 type NavTab = { tab: string; groups: NavGroup[] };
 type LanguageNav = { language: string; tabs: NavTab[] };
 
@@ -82,7 +82,16 @@ export async function getWhaleSidebar(pathname: string): Promise<SidebarItem[]> 
     if (typeof node !== "string") {
       const children = node.pages.flatMap((child) => convert(child, collapseGroups));
       if (node.flatten) return children;
-      return [{ type: "group", label: node.group, collapsed: collapseGroups, order: 0, children }];
+      const directlyContainsOperations = children.some(
+        (child) => child.type === "link" && child.badge,
+      );
+      return [{
+        type: "group",
+        label: node.group,
+        collapsed: collapseGroups && directlyContainsOperations,
+        order: 0,
+        children,
+      }];
     }
     const isOperation = /^[A-Z]+\s+\//.test(node);
     const localizedNode = node.replace(/^cn(?=\/|$)/, "zh-cn").replace(/^zh-Hant(?=\/|$)/, "zh-hk");
