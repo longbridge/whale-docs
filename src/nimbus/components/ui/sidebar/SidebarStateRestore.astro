@@ -8,11 +8,19 @@
  * standalone component so the `is:inline` script lives at the template top
  * level — prettier's Astro parser cannot handle an inline script body nested
  * inside a JSX expression container.
+ *
+ * Runs on `astro:page-load` (fires on both the initial load and every
+ * subsequent View Transitions swap), matching the pattern used by
+ * mobile-sidebar.client.ts / DocsLayout.astro's scrollbar init — without it,
+ * this logic only ran once on the very first page load, so after any
+ * client-side sidebar-link navigation the active item never got a visible
+ * "selected" state, its ancestor groups never expanded, and the sidebar's
+ * scroll position reset to the top instead of following the active item.
  */
 ---
 
 <script is:inline>
-	(function () {
+	document.addEventListener("astro:page-load", function () {
 		try {
 			if (!matchMedia("(min-width: 64rem)").matches) return;
 			const sidebar = document.getElementById("desktop-sidebar");
@@ -20,15 +28,27 @@
 			const content = sidebar.querySelector("[data-nb-sidebar]");
 			if (!content) return;
 
+			// Scoped to the group's own label area — never a descendant's. Must
+			// match sidebar.client.ts's ownTrigger() exactly: the two scripts only
+			// share state via the sessionStorage array, so if one counts a group
+			// the other skips, indices drift and every entry after it restores
+			// onto the wrong group. A static-header group (icon set, no trigger
+			// of its own) has neither and correctly yields null here instead of
+			// matching its first nested child's trigger.
+			function ownTrigger(group) {
+				return group.querySelector(
+					":scope > [data-nb-collapsible-trigger], :scope > [data-nb-sidebar-group-label] [data-nb-collapsible-trigger]",
+				);
+			}
+
 			function setGroupOpen(group, open) {
+				const trigger = ownTrigger(group);
+				if (!trigger) return;
 				group.setAttribute("data-nb-default-open", open ? "true" : "false");
-				const trigger = group.querySelector("[data-nb-collapsible-trigger]");
-				const panel = group.querySelector("[data-nb-collapsible-content]");
+				const panel = group.querySelector(":scope > [data-nb-collapsible-content]");
 				const state = open ? "open" : "closed";
-				if (trigger) {
-					trigger.setAttribute("data-nb-state", state);
-					trigger.setAttribute("aria-expanded", String(open));
-				}
+				trigger.setAttribute("data-nb-state", state);
+				trigger.setAttribute("aria-expanded", String(open));
 				if (panel) panel.setAttribute("data-nb-state", state);
 			}
 
@@ -37,7 +57,9 @@
 			if (raw) {
 				state = JSON.parse(raw);
 				if (state && content.dataset.nbSidebarHash === state.hash) {
-					const groups = content.querySelectorAll("[data-nb-sidebar-group]");
+					const groups = Array.from(
+						content.querySelectorAll("[data-nb-sidebar-group]"),
+					).filter((group) => ownTrigger(group) !== null);
 					for (let i = 0; i < groups.length; i++) {
 						if (typeof state.open[i] === "boolean") {
 							setGroupOpen(groups[i], state.open[i]);
@@ -66,8 +88,7 @@
 			} else if (active) {
 				const sr = sidebar.getBoundingClientRect();
 				if (sidebar.hasAttribute("data-nb-api-sidebar")) {
-					const firstOperation = sidebar.querySelector(".api-method-badge");
-					const topLevel = firstOperation && firstOperation.closest(".top-level > li");
+					const topLevel = active.closest(".top-level > li");
 					const anchor = topLevel && topLevel.querySelector("[data-nb-sidebar-group-label]");
 					if (anchor) {
 						const ar = anchor.getBoundingClientRect();
@@ -81,5 +102,5 @@
 		} catch {
 			// Never let state restore break navigation.
 		}
-	})();
+	});
 </script>

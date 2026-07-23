@@ -53,6 +53,8 @@ paths:
 
 只有源仓库里标了 `x-verified: verified`/`documented`/`inferred` 的接口才会被发布；改动某个接口的核实状态，回源仓库改对应 `.yaml`，然后重跑本仓库的 `convert.py`。
 
+**菜单骨架保留**：`x-lbonly: true` 会让对应的菜单分支彻底消失（内部接口本来就不该让外部知道存在），但 `x-verified: unverified` 不会——`convert.py` 单独跑一遍不做 unverified 过滤的 walk 算出完整菜单骨架（`skeleton_paths`），哪个分组下所有接口暂时都是 unverified、渲染出来是空的，就塞一条指向 `{lang}/api-reference/pending-verification.mdx` 的占位页，而不是把整个分组从侧边栏删掉。接口重新核实通过、`x-verified` 改回 `verified`/`documented`/`inferred` 后，重跑 `convert.py` 占位页会自动被真实接口列表替换。
+
 ## 工作流
 
 **默认源路径**：`../whale-openapi-docs`（`--source` 覆盖）。依赖 `pyyaml`。
