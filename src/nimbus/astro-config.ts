@@ -62,13 +62,15 @@ export const vite = {
   plugins: [tailwindcss()],
   optimizeDeps: {
     noDiscovery: true,
-    esbuildOptions: {
+    rolldownOptions: {
       // Astro's dev transform emits jsxDEV calls. Keep React's pre-bundled
       // development runtime in the same mode even when the parent process was
       // launched with NODE_ENV=production; otherwise jsxDEV is undefined and
       // every hydrated React island is cleared after its SSR HTML first paints.
-      define: {
-        "process.env.NODE_ENV": '"development"',
+      transform: {
+        define: {
+          "process.env.NODE_ENV": '"development"',
+        },
       },
     },
     include: [
