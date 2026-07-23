@@ -2,7 +2,7 @@
 
 Documentation for Longport Whale, built with Astro and Bun.
 
-The site covers Docs, Whale SDK, Broker API, Trading API, and OpenAPI in English,
+The site covers Docs, WhaleSDK, BrokerAPI, TradingAPI, and OpenAPI in English,
 Simplified Chinese, and Traditional Chinese.
 
 ## Development
@@ -25,7 +25,7 @@ bun run preview
 ```text
 astro.config.mjs                # Astro entrypoint
 docs.json                       # Product and sidebar navigation source
-openapi.{en,zh-CN,zh-HK}.json  # Broker API specifications
+openapi.{en,zh-CN,zh-HK}.json  # BrokerAPI specifications
 docs/en/                        # English source documents
 docs/zh-CN/                     # Simplified Chinese source documents
 docs/zh-HK/                     # Traditional Chinese source documents
@@ -36,7 +36,7 @@ src/nimbus/styles/              # Design tokens, prose, and component styles
 Source Markdown and MDX files remain unchanged under `docs/`. Public locale
 routes are `/en/`, `/zh-CN/`, and `/zh-HK/`.
 
-## Updating Broker API
+## Updating BrokerAPI
 
 The API source lives in the sibling `../whale-openapi-docs` repository. Do not
 edit the generated OpenAPI JSON files directly.

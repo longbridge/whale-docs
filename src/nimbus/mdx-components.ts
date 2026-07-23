@@ -9,6 +9,7 @@ import Step from "./components/ui/steps/Step.astro";
 import Steps from "./components/ui/steps/Steps.astro";
 import Mermaid from "../components/docs/Mermaid.astro";
 import Update from "../components/docs/Update.astro";
+import WhaleAppShowcase from "./components/whale/WhaleAppShowcase.astro";
 
 export const components = {
   Accordion,
@@ -22,4 +23,5 @@ export const components = {
   Tip,
   Update,
   Warning,
+  WhaleAppShowcase,
 };

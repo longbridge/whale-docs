@@ -88,6 +88,22 @@ def norm_menu_seg(name: str) -> str:
     return f"{cn}({en})" if cn != name else name
 
 
+def _slugify_segment(seg: str) -> str:
+    _, en = parse_top_dir(seg)
+    s = re.sub(r"[^a-z0-9]+", "-", en.lower()).strip("-")
+    return s or "x"
+
+
+def pending_verification_slug(menu_path: Tuple[str, ...]) -> str:
+    """Stable, URL-safe, language-independent id for a nav branch that's
+    currently empty (every op under it is x-verified:unverified) -- each
+    branch gets its OWN placeholder page at this slug rather than all of
+    them sharing one page. A shared page means every sidebar entry pointing
+    to it lights up as "active" simultaneously and the breadcrumb/title
+    never reflects which branch was actually clicked."""
+    return "-".join(_slugify_segment(p) for p in menu_path)
+
+
 def load_menu(source: Path) -> Dict[str, Dict[str, str]]:
     """{module_key: {en, zh-CN, zh-HK}} from menu.json, for top-level titles."""
     p = source / "menu.json"
@@ -192,8 +208,40 @@ def localized_top_name(raw: str, menu: Dict[str, Any], lang_key: str) -> str:
     return en if lang_key == "en" else cn
 
 
-def localized_sub_name(raw: str, lang_key: str) -> str:
+def _lookup_menu_node(menu_tree: List[Dict[str, Any]], menu_path: Tuple[str, ...]):
+    """Walk `menu_tree` following `menu_path` segment by segment (same
+    zh-CN/en matching as `menu_sort_key`) and return the final node, or
+    None if any segment along the way has no match."""
+    nodes = menu_tree
+    node = None
+    for part in menu_path:
+        zh, en = parse_top_dir(part)
+        hit = _match_menu_node(nodes, zh, en)
+        if not hit:
+            return None
+        node = hit[1]
+        nodes = node.get("routes") or []
+    return node
+
+
+def localized_sub_name(menu_tree: List[Dict[str, Any]], menu_path: Tuple[str, ...], lang_key: str) -> str:
+    """Localize a nav sub-group's display name for one language.
+
+    `menu.json` carries a real `zh-HK` (Traditional) name at every nesting
+    level, not just the top -- look it up via the full `menu_path` the same
+    way `menu_sort_key` does. Only sub-groups with no menu.json match at all
+    (e.g. Shared Components, which is intentionally unregistered) fall back
+    to the raw zh-CN text for zh-Hant; that's the best available source
+    when nothing else exists, but it means Traditional-Chinese readers will
+    see Simplified characters for those few groups."""
+    raw = menu_path[-1]
+    node = _lookup_menu_node(menu_tree, menu_path)
     cn, en = parse_top_dir(raw)
+    if node:
+        lookup = {"en": "en", "cn": "zh-CN", "zh-Hant": "zh-HK"}[lang_key]
+        val = (node.get("name") or {}).get(lookup)
+        if val:
+            return val
     return en if lang_key == "en" else cn
 
 
@@ -338,13 +386,18 @@ def localize(node: Any, sfx: Optional[str], lang_key: str) -> Any:
 # ---------------------------------------------------------------------------
 
 
-def walk_yaml_ops(source: Path, schemas_out: Optional[Dict[str, Any]] = None):
+def walk_yaml_ops(source: Path, schemas_out: Optional[Dict[str, Any]] = None, skip_unverified: bool = True):
     """Yield (menu_path_tuple, path, method, op_dict) in stable order.
 
     Operations with `x-lbonly: true` (Longbridge-internal-only) are skipped
     entirely -- they must not appear in this externally-published site.
-    Operations with `x-verified: unverified` are skipped too -- not yet
-    confirmed against the real backend, so not ready to publish.
+    Operations with `x-verified: unverified` are skipped too when
+    `skip_unverified` is True (the default) -- not yet confirmed against the
+    real backend, so not ready to publish. Pass `skip_unverified=False` to
+    walk the full set anyway (used to compute the nav *skeleton*, so menu
+    branches that are entirely unverified right now still show up as an
+    empty group with a "pending verification" placeholder instead of
+    disappearing from the sidebar).
 
     Each source YAML is a self-contained OpenAPI doc and may declare its own
     `components.schemas` (e.g. a shared error envelope referenced via `$ref`
@@ -383,7 +436,7 @@ def walk_yaml_ops(source: Path, schemas_out: Optional[Dict[str, Any]] = None):
                             continue
                         if op.get("x-lbonly") is True:
                             continue  # Longbridge-internal-only, not published here
-                        if op.get("x-verified") == "unverified":
+                        if skip_unverified and op.get("x-verified") == "unverified":
                             continue  # not yet verified against the real backend, not published here
                         key = (path, method)
                         if key in seen:
@@ -484,6 +537,37 @@ def ensure_response_descriptions(spec: Dict[str, Any], lang_key: str) -> None:
 
 # Manually-maintained groups around the generated reference groups in the
 # Broker API tab — survive regeneration.
+PENDING_VERIFICATION_TEXT = {
+    "en": {
+        "title": "Pending re-verification",
+        "description": "This section's endpoints are being re-verified against the live backend before publishing.",
+        "body": (
+            "The endpoints under **{group}** are temporarily hidden while they are re-verified "
+            "against the real backend. They will reappear here once verification is complete.\n\n"
+            "In the meantime, see the [Broker API overview](/en/broker-api/overview) or "
+            "[get started](/en/broker-api/get-started/quickstart) with an already-published endpoint."
+        ),
+    },
+    "cn": {
+        "title": "待核实",
+        "description": "该分组下的接口正在对真实后端重新核实，核实完成后才会发布。",
+        "body": (
+            "**{group}** 分组下的接口暂时隐藏，正在对真实后端重新核实中，核实通过后会重新出现在这里。\n\n"
+            "如需先了解已发布的接口，可以看 [Broker API 概览](/zh-cn/broker-api/overview) 或 "
+            "[开始使用](/zh-cn/broker-api/get-started/quickstart)。"
+        ),
+    },
+    "zh-Hant": {
+        "title": "待覆核",
+        "description": "該分組下的接口正在對真實後端重新覆核，覆核完成後才會發布。",
+        "body": (
+            "**{group}** 分組下的接口暫時隱藏，正在對真實後端重新覆核中，覆核通過後會重新出現在這裡。\n\n"
+            "如需先了解已發布的接口，可以看 [Broker API 概覽](/zh-hk/broker-api/overview) 或 "
+            "[開始使用](/zh-hk/broker-api/get-started/quickstart)。"
+        ),
+    },
+}
+
 BROKER_API_MANUAL_GROUPS = {
     "en": {
         "prefix": [
@@ -561,10 +645,19 @@ def main() -> int:
         "dupes": dupes,
     }
 
+    # nav *skeleton*: every menu_path prefix that exists once x-lbonly:true is
+    # excluded but x-verified:unverified is NOT -- so branches that are
+    # entirely unverified right now still show up in the sidebar (with a
+    # placeholder page) instead of disappearing.
+    skeleton_paths: set = set()
+    for menu_path, _path, _method, _op, _dupes in walk_yaml_ops(source, skip_unverified=False):
+        for i in range(1, len(menu_path) + 1):
+            skeleton_paths.add(menu_path[:i])
+
     # top-level module order: follow menu.json, not the alphabetical dir walk.
     top_order: List[str] = []
-    for menu_path in nav_tree:
-        if menu_path[0] not in top_order:
+    for menu_path in skeleton_paths:
+        if len(menu_path) == 1 and menu_path[0] not in top_order:
             top_order.append(menu_path[0])
     top_order.sort(key=lambda t: menu_sort_key(menu_tree, (t,)))
 
@@ -608,9 +701,20 @@ def main() -> int:
     docs_json_path = REPO_ROOT / "docs.json"
     docs = json.loads(docs_json_path.read_text(encoding="utf-8"))
 
+    # slug -> menu_path, populated by render() below for every branch that's
+    # currently empty (all ops unverified) and needs its own placeholder page.
+    pending_pages_needed: Dict[str, Tuple[str, ...]] = {}
+
     def build_groups(lang_key: str, file_suffix: str) -> List[Dict[str, Any]]:
         # tree: {top: {"__pages": [...], sub: {...}}}
         root: Dict[str, Any] = OrderedDict()
+        # Seed every skeleton branch first (even ones with zero real pages
+        # right now) so the menu structure survives content being pending
+        # verification; real pages are layered on top below.
+        for menu_path in skeleton_paths:
+            node = root
+            for part in menu_path:
+                node = node.setdefault(part, OrderedDict())
         for menu_path, entries in nav_tree.items():
             node = root
             for part in menu_path:
@@ -627,8 +731,23 @@ def main() -> int:
             children.sort(key=lambda kv: menu_sort_key(menu_tree, prefix + (kv[0],)))
             for child, child_node in children:
                 child_pages = render(child_node, lang_key, prefix + (child,))
-                if child_pages:
-                    out.append({"group": localized_sub_name(child, lang_key), "pages": child_pages})
+                out.append({"group": localized_sub_name(menu_tree, prefix + (child,), lang_key), "pages": child_pages})
+            if not out:
+                # Every op under this branch is currently unverified (or the
+                # branch has no leaf pages of its own) -- keep the group in
+                # the menu skeleton with a placeholder instead of vanishing.
+                # Each branch gets its OWN page (not one shared page) so the
+                # sidebar's active-highlight and the page's breadcrumb/title
+                # correctly reflect exactly which branch was clicked.
+                slug = pending_verification_slug(prefix)
+                pending_pages_needed[slug] = prefix
+                # lang_key (not LANG_DIRS[lang_key]) matches
+                # BROKER_API_MANUAL_GROUPS's own page-string convention --
+                # get_whale_sidebar()/whale-navigation.ts owns the one place
+                # that maps "cn"/"zh-Hant" prefixes to the real (currently
+                # lowercase zh-cn/zh-hk) URL locale segment, so this stays
+                # correct automatically if that mapping ever changes again.
+                out.append(f"{lang_key}/broker-api/pending-verification/{slug}")
             return out
 
         groups = []
@@ -636,8 +755,6 @@ def main() -> int:
             _, en_name = parse_top_dir(top)
             icon = MODULE_ICONS.get(TOP_DIR_TO_MENU_KEY.get(en_name) or "shared", "layers")
             pages = render(root[top], lang_key, (top,))
-            if not pages:
-                continue
             groups.append({
                 "group": localized_top_name(top, menu, lang_key),
                 "icon": icon,
@@ -668,6 +785,40 @@ def main() -> int:
         p = REPO_ROOT / f"openapi.{file_suffix}.json"
         # default=str: YAML auto-parses bare dates in examples into datetime.date
         p.write_text(json.dumps(outputs[lang_key], ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
+
+    # One manifest entry per empty nav branch (not one shared page across all
+    # of them — see the render() comment), consumed by the
+    # [locale]/broker-api/pending-verification/[slug].astro dynamic route.
+    # A manifest + dynamic route (rather than one physical .mdx file per
+    # branch per language) means there is nothing to remember to delete when
+    # a branch gets re-verified and published: this file is fully overwritten
+    # every run, and an unlisted slug just 404s.
+    pending_manifest: Dict[str, Dict[str, Dict[str, str]]] = {}
+    for lang_key, _, _ in LANGS:
+        text = PENDING_VERIFICATION_TEXT[lang_key]
+        by_slug: Dict[str, Dict[str, str]] = {}
+        for slug, menu_path in pending_pages_needed.items():
+            group_name = localized_sub_name(menu_tree, menu_path, lang_key)
+            by_slug[slug] = {
+                "title": text["title"],
+                "description": text["description"],
+                "body": text["body"].format(group=group_name),
+            }
+        # Keyed by the actual public URL locale segment (currently lowercase
+        # zh-cn/zh-hk, see the [locale] route's params) so the Astro route
+        # can index straight in without any casing logic of its own.
+        pending_manifest[LANG_DIRS[lang_key].lower()] = by_slug
+    manifest_path = REPO_ROOT / "pending-verification.json"
+    manifest_path.write_text(
+        json.dumps(pending_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    # Clean up the old per-branch .mdx files this used to generate.
+    for lang_dir in LANG_DIRS.values():
+        pv_dir = REPO_ROOT / "docs" / lang_dir / "broker-api" / "pending-verification"
+        if pv_dir.is_dir():
+            for f in pv_dir.iterdir():
+                f.unlink()
+            pv_dir.rmdir()
 
     # v2 generates no MDX under data-porter — clean up any leftover.
     for lang_dir in LANG_DIRS.values():

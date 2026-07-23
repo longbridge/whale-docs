@@ -1,0 +1,133 @@
+---
+title: Android
+description: WhaleCoreSDK Android 安裝、初始化、生命週期與公開服務
+---
+
+## 接入
+
+交付套件包含 WhaleCore 與 Engine AAR，以及用於注入本機和遠端依賴的 `whalecore.gradle`：
+
+```kotlin
+apply(from = "<path-to>/whalecore/whalecore.gradle")
+```
+
+宿主需要設定 Android `minSdk`、JVM target 11 或以上及 Kotlin 外掛程式；`minSdk < 26` 時腳本會設定 core library desugaring。最終支援矩陣以交付版本為準。
+
+## 初始化
+
+`initialize` 會執行網絡預熱，是阻塞方法，應在 IO 執行緒呼叫。重複和並行呼叫安全，只有首次生效。
+
+```kotlin
+val config = WhaleCoreConfig(
+    appId = "<平台分配>",
+    appKey = "<平台分配>",
+    appSecret = "<平台分配>",
+    token = accessToken,
+    refreshToken = refreshToken,
+    defaultAccountChannel = "lb_hk",
+    language = WhaleCoreLanguage.ZH_HK,
+    logLevel = WhaleCoreLogLevel.INFO
+)
+
+withContext(Dispatchers.IO) {
+    WhaleCore.initialize(application, config, isDebug = BuildConfig.DEBUG)
+}
+```
+
+請勿把專案憑證或完整 token 寫入日誌。
+
+## 生命週期與銷毀
+
+```kotlin
+WhaleCore.resume()
+WhaleCore.pause()
+withContext(Dispatchers.IO) { WhaleCore.destroy() }
+```
+
+`destroy()` 釋放協程、WebSocket、快取和 native handle。銷毀後可使用新帳戶設定重新初始化。
+
+## 公開服務
+
+| 方法 | 服務 | 主要能力 |
+| --- | --- | --- |
+| `getQuoteService()` | `QuoteService` | 行情事件、快照、K 線、期權鏈 |
+| `getOrderService()` | `OrderService` | 訂單、預估、改單、撤單和推送 |
+| `getOrderValidationService()` | `OrderValidationService` | 可交易性、約束與提交前校驗 |
+| `getPortfoliosService()` | `PortfolioService` | 資產、持倉、現金和設定 |
+| `getWatchlistService()` | `WatchlistService` | 自選分組、股票和排序 |
+| `getTradeAuthService()` | `TradeAuthService` | trade token 與鑑權狀態 |
+| `getRequestService()` | `RequestService` | 通用鑑權 HTTP 請求 |
+
+未初始化時取得服務會拋出 `IllegalStateException`。業務介面通常同時提供協程方法與 `*Async` 回呼方法。
+
+## 通用 HTTP 請求
+
+需要調用尚未由 WhaleCore 類型化 Service 封裝的 [TradingAPI](/zh-hk/trading-api/overview) 時，可以使用 `WhaleCore.getRequestService()`。接口路徑、參數和響應結構以 TradingAPI 文檔為準；宿主提供這些請求資訊，WhaleCore 自動補充簽名、鑑權、trace 等公共參數與請求頭。登入狀態或 trade token 失效時，SDK 會復原鑑權並自動重試一次。
+
+`HttpRequest` 是不可變物件，建構參數如下：
+
+| 參數 | 類型 | 行為 |
+| --- | --- | --- |
+| `method` | `HttpMethod` | `GET`、`POST`、`PUT` 或 `DELETE` |
+| `path` | `String` | 以 `/` 開頭的接口路徑 |
+| `query` | `Map<String, Any>?` | 僅 GET、DELETE 生效；POST、PUT 會忽略 |
+| `body` | `Map<String, Any>?` | 僅 POST、PUT 生效；GET、DELETE 會忽略 |
+| `requiresTradeToken` | `Boolean` | 為 `true` 時發送前確保 trade token 有效；預設為 `false` |
+
+`send` 返回 `HttpResponse`，其中 `bodyString` 是原始 JSON，`headers` 是響應頭。請使用宿主 App 已採用的 JSON 程式庫解析業務資料。
+
+```kotlin
+import longbridge.whalecore.business.request.model.HttpMethod
+import longbridge.whalecore.business.request.model.HttpRequest
+
+val request = HttpRequest(
+    method = HttpMethod.GET,
+    path = "/v2/member/info",
+    query = mapOf("include_accounts" to true)
+)
+
+val response = WhaleCore.getRequestService().send(request)
+val member = json.decodeFromString<MemberInfo>(response.bodyString)
+println(member.name)
+```
+
+調用需要交易鑑權的接口時：
+
+```kotlin
+val request = HttpRequest(
+    method = HttpMethod.GET,
+    path = "/v5/orders/today",
+    requiresTradeToken = true
+)
+
+val response = WhaleCore.getRequestService().send(request)
+println(response.bodyString)
+```
+
+Java 調用方可使用 `sendAsync(request, callback)`，無需調用 suspend 方法 `send`。
+
+<Note>
+  首個版本不支援自訂請求頭。請勿透過 `query` 或 `body` 傳入簽名或鑑權 token；WhaleCore 會透過受管會話自動添加。
+</Note>
+
+## 行情
+
+```kotlin
+val quoteService = WhaleCore.getQuoteService()
+val stock = quoteService.getStock("ST/US/AAPL")
+val subscription = quoteService.subscribe(
+    listOf("ST/US/AAPL"), quoteCallback
+).detail().depth().trade().start()
+```
+
+事件可作為 `SharedFlow` 觀察，也可使用生命週期感知回呼；不再需要時取消傳回的 `Subscription`。
+
+## 訂單與校驗
+
+`OrderService` 提供當日/歷史訂單、詳情、購買力、持倉明細、下單、改單、撤單、批次撤單、費用預估和訂單事件。提交前可使用 `checkTradability`、`getOrderConstraints`、`validateOrder`、`getQualifications`、`acceptAgreement` 和 `submitListedDerivAssessment`。
+
+## 資產、自選與透傳
+
+`PortfolioService` 支援訂閱、取消訂閱、重新整理、現金明細、持倉行情和會員資產設定。`WatchlistService` 支援分組與股票增刪改、跨組移動、置頂、排序、無效標的清理和即時事件。
+
+需要呼叫尚未封裝的業務介面時，可透過 `RequestService.send(HttpRequest)` 發起透傳請求；SDK 負責公共參數、鑑權 header 和鑑權復原，呼叫方負責解析回應業務數據。

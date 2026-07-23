@@ -17,7 +17,7 @@ export function HeaderMenu({ options }: { options: LanguageOption[] }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={<Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" />}
+        render={<Button variant="ghost" size="sm" className="text-muted-foreground hover:bg-foreground/[0.07] hover:text-foreground aria-expanded:bg-foreground/[0.07] data-popup-open:bg-foreground/[0.07]" />}
       >
         {current.label}
         <ChevronDownIcon data-icon="inline-end" />

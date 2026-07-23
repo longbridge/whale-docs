@@ -1,0 +1,163 @@
+---
+title: iOS
+description: WhaleCoreSDK iOS 安裝、初始化、工作階段與公開服務
+---
+
+## 系統要求與安裝
+
+- iOS 13.0+
+- Swift 5.9+、Xcode 15+
+- Swift 與 Objective-C
+
+```ruby
+platform :ios, '13.0'
+use_frameworks! :linkage => :static
+
+target 'YourApp' do
+  pod 'WhaleCore'
+end
+```
+
+WhaleCore 透過私有 CocoaPods 來源分發，來源位址與存取憑證由接入支援提供。
+
+## 初始化
+
+```swift
+import WhaleCore
+
+let config = WhaleCoreConfig(
+    logLevel: .info,
+    appKey: "your_app_key",
+    appSecret: "your_app_secret",
+    appId: "your_app_id",
+    defaultAccountChannel: "lb_hk",
+    token: userAccessToken,
+    refreshToken: userRefreshToken,
+    language: .zhHant
+)
+config.tokenDelegate = session
+WhaleCoreService.initialize(config: config)
+```
+
+專案憑證和預設帳戶渠道由 Whale 提供；Customer 的 `token` 與 `refreshToken` 由 Broker 登入流程取得。請勿把憑證或完整 token 寫入日誌。
+
+## Token 與交易鑑權
+
+實作 `WhaleCoreTokenDelegate` 以保存自動更新後的憑證。可選的 `resolveExpiredToken` 可在 refresh token 也失效時執行靜默登入；並行 401 只觸發一次復原，結果由等候中的請求共用。
+
+```swift
+func didRefreshToken(_ token: String, refreshToken: String) {
+    saveSecurely(token, refreshToken)
+}
+
+func resolveExpiredToken(completion: @escaping (String?, String?) -> Void) {
+    silentLogin { completion($0.token, $0.refreshToken) }
+}
+```
+
+宿主自行處理交易密碼時，將 `tradePasswordEnabled` 設為 `true`，並在初始化前設定 `WhaleCoreTradeAuthDelegate`；否則由 SDK 內部處理交易鑑權。
+
+## 生命週期
+
+```swift
+WhaleCoreService.onResume()
+WhaleCoreService.onPause()
+WhaleCoreService.logoutAndDestroy()
+```
+
+銷毀會清除本機 token、斷開 WebSocket 並釋放服務。切換帳戶後可再次初始化，但必須重新註冊 delegate 和訂閱。
+
+## 公開服務
+
+| 服務 | 主要 API |
+| --- | --- |
+| `quotesService` | `subscribe`、`subscribeKlines`、`getKlines`、`getStock`、期權鏈與計算器 |
+| `orderService` | 下單、改單、撤單、當日/歷史/詳情、預估和校驗 |
+| `portfolioService` | 資產訂閱、現金明細、持倉行情和會員設定 |
+| `watchlistService` | 分組與股票增刪改、排序、置頂、重新整理和事件 |
+| `requestService` | 自動鑑權與復原重試的通用 HTTP 透傳 |
+
+## 通用 HTTP 請求
+
+需要調用尚未由 WhaleCore 類型化 Service 封裝的 [TradingAPI](/zh-hk/trading-api/overview) 時，可以使用 `WhaleCoreService.requestService`。接口路徑、參數和響應結構以 TradingAPI 文檔為準；宿主提供這些請求資訊，WhaleCore 自動補充簽名、鑑權、trace 等公共參數與請求頭。登入狀態或 trade token 失效時，SDK 會復原鑑權並自動重試一次。
+
+`WhaleCoreHTTPRequest` 提供以下屬性：
+
+| 屬性 | 類型 | 行為 |
+| --- | --- | --- |
+| `method` | `WhaleCoreHTTPMethod` | `.get`、`.post`、`.put` 或 `.delete` |
+| `path` | `String` | 以 `/` 開頭的接口路徑 |
+| `query` | `[String: Any]?` | 僅 GET、DELETE 生效；POST、PUT 會忽略 |
+| `body` | `[String: Any]?` | 僅 POST、PUT 生效；GET、DELETE 會忽略 |
+| `requiresTradeToken` | `Bool` | 為 `true` 時發送前確保 trade token 有效；預設為 `false` |
+
+響應透過 `bodyString` 提供原始 JSON，透過 `bodyData` 提供 UTF-8 資料，並透過 `headers` 提供響應頭。Swift 可直接將響應解碼為 `Decodable` 模型。
+
+```swift
+struct MemberInfo: Decodable {
+    let id: String
+    let name: String
+}
+
+let request = WhaleCoreHTTPRequest(
+    method: .get,
+    path: "/v2/member/info"
+)
+request.query = ["include_accounts": true]
+
+let response = try await WhaleCoreService.requestService.send(request)
+let member: MemberInfo = try response.decode()
+print(member.name)
+```
+
+調用需要交易鑑權的接口時：
+
+```swift
+let request = WhaleCoreHTTPRequest(
+    method: .get,
+    path: "/v5/orders/today"
+)
+request.requiresTradeToken = true
+
+let response = try await WhaleCoreService.requestService.send(request)
+print(response.bodyString)
+```
+
+<Note>
+  首個版本不支援自訂請求頭。請勿透過 `query` 或 `body` 傳入簽名或鑑權 token；WhaleCore 會透過受管會話自動添加。
+</Note>
+
+### 行情訂閱
+
+```swift
+let subscription = WhaleCoreService.quotesService
+    .subscribe(counters: ["ST/US/AAPL", "ST/HK/00700"])
+    .detail.depth.trade.preTrade.postTrade
+    .start { updates, error in
+        updates?.forEach { print($0.counter, $0.stock.lastPrice ?? 0) }
+    }
+
+await subscription.cancel()
+```
+
+可選數據包括 `list`、`detail`、`depth`、`trade`、`broker`、`preTrade`、`postTrade` 和 `nightTrade`。
+
+### 訂單
+
+訂單請求使用 `clientRequestId` 作為冪等鍵；重試同一訂單必須重用，新訂單必須產生新值。公開模型支援限價、市價、LIT、MIT、追蹤止損限價及止盈/止損附帶單。
+
+```swift
+let common = WhaleCoreOrderCommon(
+    counterId: "ST/US/AAPL",
+    side: .buy,
+    quantity: .byCount(NSDecimalNumber(value: 100)),
+    settlementCurrency: "USD",
+    clientRequestId: UUID().uuidString
+)
+let request = WhaleCoreOrderSubmitRequest.limit(
+    common: common, kind: .lo, price: NSDecimalNumber(string: "180")
+)
+let result = try await WhaleCoreService.orderService.submitOrder(request)
+```
+
+訂單推送透過 `addDelegate` / `removeDelegate` 管理：首個 delegate 自動啟動，最後一個移除後自動停止。

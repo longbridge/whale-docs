@@ -1,0 +1,363 @@
+---
+title: Web
+description: WebTrade 新标签页与 iframe 集成、SSO 和页面通信
+---
+
+## 一、概述
+
+本文档面向需要将自有登录系统与 WebTrade 集成的 Broker，说明如何通过 SSO 方式实现统一登录以及语言、黑白主题同步、涨跌色同步。
+
+## 二、集成方案
+
+### 2.1 核心原理
+
+通过共享 Cookie 的方式实现 SSO 登录和语言、主题同步：
+
+- Broker 官网和 WebTrade 使用相同的根域名（如 `.example.com`）
+
+- 登录成功后，Broker 将 token 信息（token 和 refresh_token）写入根域名 Cookie
+
+- WebTrade 从 Cookie 中读取 token 完成自动登录
+
+- 语言、主题、涨跌色配置存入约定好的 cookie key，由 WebTrade 读取
+
+### 2.2 集成方式选择
+
+支持两种形式集成：
+
+1. **新标签页模式**：Broker 网站提供「WebTrade 入口按钮」，点击后通过新标签页打开 WebTrade。通信方式仅限 Cookie 共享。
+
+2. **iframe 嵌入模式**：Broker 网站提供"壳子页面"，自行渲染 header、footer，通过 iframe 将 WebTrade 页面嵌入。通信方式为 Cookie 共享 + postMessage 双向通信。
+
+### 2.3 配置项说明
+
+#### 打包配置（编译时配置，Broker 提供值，由 Whale 进行配置）
+
+|配置项 key（Whale 打包配置）|说明|可选值|Broker 示例|
+|---|---|---|---|
+|`cookie_token_key`|登录 token 的 Cookie key||`xx_token`|
+|`cookie_refresh_token_key`|刷新 token 的 Cookie key||`xx_refresh_token`|
+|`cookie_app_id_key`|应用 ID 的 Cookie key||`xx_app_id`|
+|`logout_redirect_link_address`|webTrade 登出或未登录时跳转的 Broker 地址，支持 `{tenant_origin}` 占位符（见 2.5 节）||`https://www.example.com/login?from=longport`|
+|`cookie_locale_key`|同步语言 Cookie key，用于 webTrade 初始化设置|`en`, `zh-CN`, `zh-HK`|`xx_locale`|
+|`cookie_theme_key`|同步界面主题 Cookie key，用于 webTrade 初始化设置|`light`, `dark`|`xx_theme`|
+|`cookie_stock_color_preference_key`|股票涨跌色偏好（红涨绿跌、绿涨红跌），用于 webTrade 初始化设置|`green_up`, `red_up`|`xx_stock_color_preference`|
+|`disable_language_setting`|禁用 webTrade 语言设置，设为 true 会隐藏 webTrade 语言设置|`true`, `false`||
+
+> **为什么需要约定 Cookie key?**
+>
+> 当 Broker 官网和 WebTrade 共享根域名时，如果都使用默认的 `token` 作为 Cookie key，可能会发生冲突。通过打包配置自定义 Cookie key，可以避免这个问题。
+>
+>
+
+#### Broker 配置（运行时配置，Broker 提供值，由 Whale 在服务端配置）
+
+|配置项（Whale Broker 配置）|说明|
+|---|---|
+|`hide_logout_entrance`|布尔值，是否隐藏 WebTrade 的退出登录按钮|
+
+> **什么时候需要隐藏退出登录按钮？**
+>
+> 如果 Broker 希望用户统一在官网退出登录（而不是在 WebTrade 内退出），可以通过 Broker 配置将此项设为 true。 建议 Broker 始终隐藏 WebTrade 的退出登录按钮，由 Broker 控制登录态。
+>
+>
+
+### 2.4 Broker 网站和 WebTrade 通信方式
+
+#### 公共方式（新标签页 + iframe 均支持）
+
+**URL 传递参数指定 WebTrade 导航：**
+
+|参数|说明|示例|
+|---|---|---|
+|`tab`|指定初始导航 Tab，枚举值：`quote`（行情）、`stock`（个股）、`favorite`（自选）、`portfolio`（资产）、`stockSelect`（选股器）|`tab=quote`|
+|`symbol`|个股锚定（[`symbol` 格式](/zh-cn/docs/glossary#标的标识)）|`symbol=700.HK`|
+|`tenant_origin`|Broker origin，用于 postMessage 白名单校验和退出时回跳（详见 2.5 节）|`tenant_origin=https://www.example.com`|
+
+**共享 Cookie：**
+
+具体见打包配置中的 Cookie 配置项。
+
+#### iframe 嵌入模式专用：postMessage 通信
+
+> **注意：以下 postMessage 通信机制仅适用于 iframe 嵌入模式。** 新标签页模式没有父页面，不支持 postMessage。
+>
+>
+
+采用 postMessage 通信，Broker 网站可通知 WebTrade 更改主题色、涨跌色、语言。WebTrade 会校验消息来源是否为合法的 `tenant_origin`（见 2.5 节）。
+
+**消息格式：**
+
+统一使用 `window.postMessage()` 发送 JSON 格式消息：
+
+```typescript
+{
+  "type": "消息类型",
+  "payload": { */* 消息数据 */* }
+}
+```
+
+**消息类型：**
+
+**Broker → WebTrade 方向：**
+
+- **SET_LANG** — 设置语言
+
+```typescript
+{
+  "type": "SET_LANG",
+  "payload": {
+    "lang": "zh-HK" // 可选值: zh-CN(简体中文) | zh-HK(繁体中文) | en(英文)
+  }
+}
+```
+
+- **SET_THEME** — 设置主题
+
+```typescript
+{
+  "type": "SET_THEME",
+  "payload": {
+    "theme": "dark" // 可选值: dark(深色) | light(浅色)
+  }
+}
+```
+
+- **SET_STOCK_COLOR_PREFERENCE** — 设置股票涨跌色偏好
+
+```typescript
+{
+  "type": "SET_STOCK_COLOR_PREFERENCE",
+  "payload": {
+    "color": "green_up" // 可选值：green_up（绿涨红跌） | red_up（红涨绿跌）
+  }
+}
+```
+
+**WebTrade → Broker 方向：**
+
+- **WEBTRADE_READY** — WebTrade 加载完成通知
+
+WebTrade 挂载完成后会立即向父页面发送此消息，Broker 可监听该事件隐藏 loading 遮罩。
+
+```typescript
+{
+  "type": "WEBTRADE_READY"
+}
+```
+
+- **ON_LOGOUT** — WebTrade 通知 Broker 网站退出登录
+
+```typescript
+{
+  "type": "ON_LOGOUT"
+}
+```
+
+### 2.5 tenant_origin 机制
+
+`tenant_origin` 用于告知 WebTrade Broker 父页面的 origin，有两个作用：
+
+1. **postMessage 白名单校验**：WebTrade 只接受来自合法 `tenant_origin` 的消息，也只向该 origin 发送消息
+
+2. **退出跳转 URL 替换**：`logout_redirect_link_address` 中的 `{tenant_origin}` 占位符会被替换为实际的 Broker origin
+
+#### origin 校验规则
+
+- 必须是 `https` 协议
+
+- 必须与 WebTrade 共享同一根域名
+
+- 不能包含路径（只允许根路径 `/`）
+
+#### origin 解析优先级
+
+1. **项目专用映射**（优先级最高）：针对交付时已约定的 Broker 域名，在配置中维护映射，命中后直接使用映射值
+
+2. **localStorage 缓存**：从上一次 URL 参数设置中读取
+
+3. **URL 参数**：首次访问时通过 `?tenant_origin=https://www.example.com` 传入
+
+#### `{tenant_origin}` 占位符替换
+
+如果 `logout_redirect_link_address` 包含 `{tenant_origin}`，WebTrade 退出登录时会将其替换为实际的 Broker origin。
+
+示例：
+
+- 配置值：`{tenant_origin}/login?from=webtrade`
+
+- 实际 Broker origin（`tenant_origin`）：`https://www.example.com`
+
+- 替换后：`https://www.example.com/login?from=webtrade`
+
+## 三、集成流程
+
+### 3.1 首次登录流程
+
+**新标签页模式：**
+
+1. 用户在 Broker 官网完成登录，Broker 服务端返回 token、refresh_token、app_id
+
+2. Broker 前端将上述信息写入根域名 Cookie（key 使用打包配置中约定的名称）
+
+3. 用户点击 WebTrade 入口按钮，新标签页打开 WebTrade URL
+
+4. WebTrade 加载时从 Cookie 读取 token（优先级：Cookie \> 本地缓存）
+
+5. token 有效 → 完成登录，进入交易页面
+
+6. token 无效或不存在 → 跳转到 `logout_redirect_link_address`
+
+**iframe 嵌入模式：**
+
+1. 用户在 Broker 官网完成登录，Broker 前端将 token 信息写入根域名 Cookie
+
+2. Broker 页面创建 iframe，URL 中携带 `tenant_origin` 参数（如 `?tenant_origin=https://www.example.com`）
+
+3. WebTrade 在 iframe 中加载，从 Cookie 读取 token 完成登录
+
+4. WebTrade 挂载完成后向父页面发送 `WEBTRADE_READY` 消息
+
+5. Broker 监听到 `WEBTRADE_READY` 后可隐藏 loading 遮罩
+
+### 3.2 退出登录流程
+
+**新标签页模式：**
+
+1. 用户在 WebTrade 内点击退出登录
+
+2. WebTrade 清除所有登录相关 Cookie 和本地存储
+
+3. 跳转到 `logout_redirect_link_address`（如已配置），否则跳转到 Whale 登录页
+
+**iframe 嵌入模式：**
+
+1. 用户在 WebTrade 内点击退出登录（如果未隐藏退出按钮）
+
+2. WebTrade 清除所有登录相关 Cookie 和本地存储
+
+3. 向父页面发送 `ON_LOGOUT` postMessage
+
+4. 延迟 200ms 后跳转到 `logout_redirect_link_address`（给父页面响应时间）
+
+5. Broker 监听到 `ON_LOGOUT` 后应执行自身的退出逻辑
+
+## 四、 Broker 需要实现的内容
+
+### 4.1 Cookie 设置要求
+
+登录成功后，Broker 需要在根域名下设置以下 Cookie：
+
+|Cookie Key（使用打包配置约定的值）|是否必填|说明|
+|---|---|---|
+|`{cookie_token_key}`|是|登录 token|
+|`{cookie_refresh_token_key}`|是|刷新 token|
+|`{cookie_app_id_key}`|是|应用 ID|
+|`{cookie_locale_key}`|建议|语言设置，WebTrade 启动时读取|
+|`{cookie_theme_key}`|建议|主题（`dark` 或 `light`），未设置默认 `dark`|
+|`{cookie_stock_color_preference_key}`|建议|涨跌色偏好（`red_up` 或 `green_up`）|
+
+**Cookie 设置要求：**
+
+- `domain` 必须设置为根域名（例如 `.example.com`）
+
+- **不能**设置 `HttpOnly`（WebTrade 需要通过 JS 读取）
+
+- `path` 设置为 `/`
+
+**语言（locale）的检测优先级：**
+
+WebTrade 启动时按以下顺序确定语言：
+
+1. **Cookie**（最高优先级）：读取 `{cookie_locale_key}` 的值，合法值为 `en`、`zh-CN`、`zh-HK`
+
+2. **浏览器语言**：从 `navigator.language` 中匹配
+
+3. **默认兜底**：`en`（英文）
+
+```javascript
+type SUPPORT_LOCALE = 'en' | 'zh-HK' | 'zh-CN'
+
+function getDefaultLocaleForWeb(): SUPPORT_LOCALE {
+  const defaultLocale = 'en'
+  let locale = defaultLocale
+
+  // 1) Cookie（使用打包配置约定的 key）
+  const cookieKey = appConfig.cookieLocaleKey
+  const fromCookie = Cookies.get(cookieKey)
+  if (fromCookie && isSupportLocale(fromCookie)) return fromCookie
+
+  // 2) 浏览器语言
+  const match = navigator.language.match(/(zh-HK|zh-CN|en)/)
+  if (match?.[1]) locale = match[1] as SUPPORT_LOCALE
+
+  // 3) 默认值
+  return locale
+}
+```
+
+### 4.2 登出处理要求
+
+1. **提供登出后的跳转地址**
+
+    - 需要在打包配置中指定 `logout_redirect_link_address`
+
+    - 支持 `{tenant_origin}` 占位符，WebTrade 会在退出时自动替换为 Broker origin（见 2.5 节）
+
+    - 建议 Broker 拼接来源参数（如 `from=webtrade`），并强制跳转登录页
+
+2. **当用户退出登录时，Broker 需要：**
+
+    1. 清除所有 WebTrade 登录相关的 Cookie
+
+    2. 调用 Whale 退出登录 API，确保 token 在 Whale 服务端失效
+
+3. **iframe 嵌入模式额外要求：**
+
+    - 监听 `ON_LOGOUT` postMessage 事件
+
+    - 收到事件后及时执行 Broker 侧退出逻辑（WebTrade 会在发送消息后 200ms 执行跳转）
+
+### 4.3 域名配置要求
+
+- Broker 官网和 WebTrade 必须在同一个根域名下
+
+- 示例：
+
+    - Broker 官网：`tenant.example.com`
+
+    - WebTrade: `trade.example.com`
+
+    - 共享根域名：`.example.com`
+
+## 五、配置示例
+
+### 打包配置
+
+```json
+{"cookie_token_key": "xx_token","cookie_refresh_token_key": "xx_refresh_token","cookie_app_id_key": "xx_app_id","cookie_locale_key": "xx_locale","cookie_theme_key": "xx_theme","cookie_stock_color_preference_key": "xx_stock_color_preference","logout_redirect_link_address": "https://www.example.com/login?from=webtrade","disable_language_setting": true}
+```
+
+### Broker 配置
+
+```json
+{"hide_logout_entrance": true}
+```
+
+### Broker 需要设置的 Cookie
+
+|Cookie Key|是否必填|
+|---|---|
+|`xx_token`|是|
+|`xx_refresh_token`|是|
+|`xx_app_id`|是|
+|`xx_locale`|建议（未设置时 WebTrade 按浏览器语言 → 默认英文的优先级确定）|
+|`xx_theme`|建议（未设置时默认 `dark`）|
+
+## 六、部署方式
+
+有两种方式部署：
+
+- **Whale 部署**：由 Whale 完成构建和部署，Broker 提供域名和配置
+
+- **Broker 自行部署**：Whale 将 Broker 定制的 WebTrade 本地打包后，将 zip 交付给 Broker 自行部署，优点是可以解决证书或者 Broker 需要多域名的问题

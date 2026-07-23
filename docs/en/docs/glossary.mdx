@@ -11,22 +11,22 @@ Single source of truth for Whale Docs terminology. Product pages link here inste
 | --- | --- |
 | **Longport Whale** | The SaaS securities business solution for brokers; the product this portal describes. |
 | **Whale Docs** | The unified documentation portal for Longport Whale. It is a portal, not an API product. |
-| **Whale SDK** | The umbrella name for Whale client SDK products, containing the graphical WhaleApp SDK and the UI-free WhaleCore SDK. |
-| **WhaleApp SDK** | The graphical SDK in Whale SDK, delivered as iOS, Android, and WebTrade form factors. |
-| **WhaleCore SDK** | The UI-free data SDK in Whale SDK, targeting iOS, Android, and Web. iOS and Android are available; the WebAssembly version for Web is in development. It provides market-data subscriptions, WebSocket connectivity, request signing, and token renewal. |
-| **WebTrade** | The WhaleApp SDK form factor for web pages, iframes, or WebView containers. |
-| **Broker API** | Institution-grade API for Server-to-Server integration or a Broker's self-built administration system. Requests originate from a Broker-controlled server and may cover approved data and SaaS back-office capabilities. |
-| **Trading API** | The customer-scoped HTTP API used by a Broker App with WhaleCore SDK when the Broker builds the securities UI from scratch. |
+| **WhaleSDK** | The umbrella name for Whale client SDK products, containing the graphical WhaleAppSDK and the UI-free WhaleCoreSDK. |
+| **WhaleAppSDK** | The graphical SDK in WhaleSDK, delivered as iOS, Android, and WebTrade form factors. |
+| **WhaleCoreSDK** | The UI-free data SDK in WhaleSDK, targeting iOS, Android, and Web. iOS and Android are available; the WebAssembly version for Web is in development. It provides market-data subscriptions, WebSocket connectivity, request signing, and token renewal. |
+| **WebTrade** | The WhaleAppSDK form factor for web pages, iframes, or WebView containers. |
+| **BrokerAPI** | Institution-grade API for Server-to-Server integration or a Broker's self-built administration system. Requests originate from a Broker-controlled server and may cover approved data and SaaS back-office capabilities. |
+| **TradingAPI** | The customer-scoped HTTP API used by a Broker App with WhaleCoreSDK when the Broker builds the securities UI from scratch. |
 | **OpenAPI** | Open capabilities for Broker Customers building algorithmic trading, quantitative analysis, and developer tools. MCP and other AI-native interfaces let a Customer authorize AI access to account, asset, quote, and fundamental data. |
 
 ## Parties & roles
 
 | Term | Definition |
 | --- | --- |
-| **Broker** | The licensed securities firm that purchases and operates Longport Whale; also the authorization boundary of Broker API. |
-| **Customer** | The end customer served by a broker; the authorization boundary of Trading API and OpenAPI. |
+| **Broker** | The licensed securities firm that purchases and operates Longport Whale; also the authorization boundary of BrokerAPI. |
+| **Customer** | The end customer served by a broker; the authorization boundary of TradingAPI and OpenAPI. |
 | **Broker Developer** | A developer building server-side integrations or in-house clients on behalf of the broker. |
-| **Broker App Developer** | A developer integrating WhaleApp SDK (iOS, Android, or WebTrade) or WhaleCore SDK into Broker App. |
+| **Broker App Developer** | A developer integrating WhaleAppSDK (iOS, Android, or WebTrade) or WhaleCoreSDK into Broker App. |
 | **Developer Customer** | A Broker Customer using OpenAPI for algorithmic trading, quantitative analysis, developer tools, or AI applications. |
 
 ## Authorization
@@ -35,3 +35,57 @@ Single source of truth for Whale Docs terminology. Product pages link here inste
 | --- | --- |
 | **Broker-scoped Authorization** | Institution-level access granted by the broker; can reach data across the broker's approved scope. |
 | **Customer-scoped Authorization** | Access granted by a single customer; covers only that customer's private data plus platform-public content. |
+
+## Security identifiers
+
+A security has two identifier formats in Whale: `counter_id` is used internally, and `symbol` is used by OpenAPI. A `counter_id` converts to a `symbol` one-way, but not the reverse.
+
+### counter_id
+
+`counter_id` is the identifier used throughout the Longport Whale system. Wherever a `counter_id` appears across internal APIs and scenarios, its meaning is consistent. The format is `{TYPE}/{MARKET}/{CODE}`.
+
+| Segment | Meaning | Notes |
+| --- | --- | --- |
+| `TYPE` | Security type | See the table below; uppercased when parsed |
+| `MARKET` | Market | e.g. `US`, `HK`, `SH`, `SZ`, `SG`, `JP`; uppercased when parsed |
+| `CODE` | Security code | Case-sensitive; kept as-is |
+
+`TYPE` values:
+
+| TYPE | Meaning |
+| --- | --- |
+| `ST` | Stock |
+| `ETF` | Exchange-traded fund |
+| `UT` | Off-exchange fund (excluding money market) |
+| `MMF` | Money market fund |
+| `WT` | Warrant |
+| `IX` | Market index |
+| `BK` | Sector / custom index |
+| `OP` | Option (US only) |
+| `DLC` | Singapore Daily Leverage Certificate |
+| `VA` | Virtual asset (crypto) |
+| `PE` | Private equity fund |
+| `LB` | Unlisted company |
+| `TN` | Private security (no quote) |
+| `DP` | Wealth derivatives product |
+
+Examples:
+
+- `ST/US/NVDA` — Nvidia (US)
+- `ST/HK/700` — Tencent (HK)
+- `ST/SZ/11245`, `ST/SH/076251` — A-shares (`SH` and `SZ` belong to region `CN`)
+- `ST/SG/D05` — Singapore stock
+- `OP/US/BILI/220304C30500` — US option (the `CODE` segment may contain additional `/`)
+
+Notes:
+
+- `CODE` is case-sensitive; `TYPE` and `MARKET` are uppercased when parsed.
+- HK numeric codes are zero-padded to 5 digits for display (e.g. `00700`), but the `counter_id` string itself uses the raw code (e.g. `700`).
+
+### symbol
+
+`symbol` is used by OpenAPI, with the format `{CODE}.{MARKET}` — for example `TSLA.US`, `700.HK`.
+
+<Note>
+Conversion is one-way: drop the `TYPE` segment from a `counter_id` and reorder it to `{CODE}.{MARKET}` to get the `symbol` (e.g. `ST/HK/700` → `700.HK`). The reverse is not possible directly, since a `symbol` carries no `TYPE`.
+</Note>

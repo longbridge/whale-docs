@@ -1,0 +1,13 @@
+import { defineConfig } from "astro/config";
+import { integrations, markdown, vite } from "./src/nimbus/astro-config.ts";
+
+export default defineConfig({
+  site: "https://docs.longportwhale.com",
+  srcDir: "./src/nimbus",
+  build: {
+    format: "file",
+  },
+  markdown,
+  integrations,
+  vite,
+});

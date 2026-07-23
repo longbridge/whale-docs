@@ -9,9 +9,9 @@ Whale 的訂單、帳戶及其他業務訊息可以透過兩種方式送達 Cust
 
 本頁用於說明總體方案和責任邊界。原始對接材料中的配置項、欄位和完整示例分別保留在以下頁面：
 
-- [訊息推送方案選擇](/zh-Hant/docs/message-push-options)
-- [推送渠道資訊收集](/zh-Hant/docs/push-channel-credentials)
-- [Broker 自有推送渠道](/zh-Hant/docs/server-message-forwarding)
+- [訊息推送方案選擇](/zh-hk/docs/message-push-options)
+- [推送渠道資訊收集](/zh-hk/docs/push-channel-credentials)
+- [Broker 自有推送渠道](/zh-hk/docs/server-message-forwarding)
 
 ## 選擇接入方案
 
@@ -21,7 +21,7 @@ Whale 的訂單、帳戶及其他業務訊息可以透過兩種方式送達 Cust
 | Broker 服務端開發 | 無 | 需要實現訊息接收、處理和分發服務 |
 | 雲推送配置 | Broker 將 App 渠道憑證安全提供給 Whale | Broker 自行管理，通常不向 Whale 提供廠商憑證 |
 | 訊息控制能力 | 按 Whale 已配置的模板和策略投遞 | Broker 可決定過濾、合併、延遲和具體渠道 |
-| 客戶端工作 | 註冊裝置，並將推送訊息交給 WhaleApp SDK | 註冊自有渠道，並將標準訊息體交給 WhaleApp SDK |
+| 客戶端工作 | 註冊裝置，並將推送訊息交給 WhaleAppSDK | 註冊自有渠道，並將標準訊息體交給 WhaleAppSDK |
 | 適用場景 | 希望快速上線、減少服務端工作 | 已有統一訊息平臺，或需要自主控制訊息分發 |
 
 <Tip>
@@ -37,7 +37,7 @@ flowchart LR
     B --> D[Android 廠商渠道]
     C --> E[Broker App]
     D --> E
-    E --> F[將標準訊息體交給 WhaleApp SDK]
+    E --> F[將標準訊息體交給 WhaleAppSDK]
 ```
 
 ### 開通流程
@@ -46,7 +46,7 @@ flowchart LR
 2. Broker 在 Apple 或 Android 廠商控制檯建立 App、啟用推送能力並生成對應憑證。
 3. Broker 透過雙方約定的加密渠道向 Whale 交付憑證資訊。
 4. Whale 為相應環境建立並配置雲推送應用。
-5. Broker App 完成系統通知許可權、裝置 token 註冊和 WhaleApp SDK 訊息處理。
+5. Broker App 完成系統通知許可權、裝置 token 註冊和 WhaleAppSDK 訊息處理。
 6. 雙方分別驗證前臺、後臺、App 被終止及點選通知後的行為。
 
 ### Android 渠道資訊
@@ -96,7 +96,7 @@ sequenceDiagram
     participant Endpoint as Broker 接收介面
     participant Center as Broker 訊息中心
     participant Channel as Broker 推送渠道
-    participant App as Broker App / WhaleApp SDK
+    participant App as Broker App / WhaleAppSDK
 
     Whale->>Endpoint: POST 標準訊息（X-Api-Key、X-Trace-Id）
     Endpoint->>Endpoint: 鑑權、校驗 post_id 並去重
@@ -104,7 +104,7 @@ sequenceDiagram
     Endpoint->>Center: 寫入訊息並應用分發策略
     Center->>Channel: 投遞到目標 Customer 的裝置
     Channel-->>App: title、body、user_info
-    App->>App: 將標準訊息體交給 WhaleApp SDK
+    App->>App: 將標準訊息體交給 WhaleAppSDK
 ```
 
 ### Broker 提供的資訊
@@ -163,7 +163,7 @@ sequenceDiagram
 | `title` / `body` | 已生成的標題和摘要 | 可直接展示，或按雙方確認規則重新渲染 |
 | `template_params` | 業務模板引數 | 欄位隨模板變化，消費者應向前相容 |
 | `pre_params` | Whale 內建預設引數 | 可能包含個人資料，按敏感資料處理 |
-| `user_info` | 客戶端透傳資料 | 推送到 App 後原樣交給 WhaleApp SDK |
+| `user_info` | 客戶端透傳資料 | 推送到 App 後原樣交給 WhaleAppSDK |
 
 響應示例：
 
@@ -189,7 +189,7 @@ sequenceDiagram
 
 ## 客戶端實現
 
-無論選擇哪一種服務端路徑，最終交給 WhaleApp SDK 的訊息結構一致：
+無論選擇哪一種服務端路徑，最終交給 WhaleAppSDK 的訊息結構一致：
 
 ```json
 {
@@ -206,17 +206,17 @@ sequenceDiagram
 }
 ```
 
-整合 WhaleApp SDK 的 Broker App 需要完成：
+整合 WhaleAppSDK 的 Broker App 需要完成：
 
 1. 向作業系統申請通知許可權，並按照平臺要求取得裝置 token。
 2. 將 token 註冊到所選推送服務，並在 token 更新、登入使用者變化或登出時同步更新綁定。
 3. 在前臺收到訊息、後臺點選通知和冷啟動點選通知時，解析相同的標準結構。
-4. 將 `title`、`body` 和完整 `user_info` 交給當前版本 WhaleApp SDK 的訊息處理入口。
+4. 將 `title`、`body` 和完整 `user_info` 交給當前版本 WhaleAppSDK 的訊息處理入口。
 5. 對 `link` 做允許列表和引數校驗後再導航，不能直接執行任意外部 URL 或未識別 scheme。
 6. 對未知訊息型別或缺少可選欄位保持相容，並記錄可診斷但已脫敏的日誌。
 
 <Note>
-WhaleApp SDK 的具體方法名和初始化位置可能隨 iOS、Android 版本變化，應以專案交付的對應版本 SDK 文件為準。本頁定義的是穩定的責任邊界和訊息格式。
+WhaleAppSDK 的具體方法名和初始化位置可能隨 iOS、Android 版本變化，應以專案交付的對應版本 SDK 文件為準。本頁定義的是穩定的責任邊界和訊息格式。
 </Note>
 
 ## 聯調與驗收
@@ -233,4 +233,4 @@ WhaleApp SDK 的具體方法名和初始化位置可能隨 iOS、Android 版本�
 - Broker 接收介面超時、返回失敗及下游廠商失敗均可觀測。
 - 金鑰輪換後舊金鑰按計劃失效，且訊息投遞不中斷。
 
-訊息推送應作為上線驗收的一部分，連同帳戶、資金和交易主流程一起完成生產就緒檢查。完整交付階段見[客戶接入與交付流程](/zh-Hant/docs/broker-onboarding)。
+訊息推送應作為上線驗收的一部分，連同帳戶、資金和交易主流程一起完成生產就緒檢查。完整交付階段見[客戶接入與交付流程](/zh-hk/docs/broker-onboarding)。

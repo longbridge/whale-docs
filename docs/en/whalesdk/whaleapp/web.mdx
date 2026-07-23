@@ -1,0 +1,221 @@
+---
+title: Web
+description: New-tab and iframe integration, SSO, and page communication for WhaleAppSDK WebTrade
+---
+
+WebTrade is the Web form factor of WhaleAppSDK. It lets Broker connect its own sign-in system to a complete trading UI and synchronize language, theme, and price-color preferences.
+
+## Integration model
+
+SSO uses cookies shared under the same registrable domain:
+
+- Broker website and WebTrade use subdomains of the same root domain, such as `.example.com`.
+- After sign-in, Broker writes `token`, `refresh_token`, and `app_id` to the agreed root-domain cookies.
+- WebTrade reads those cookies and signs the Customer in automatically.
+- Language, theme, and price-color preferences use separate agreed cookie keys.
+
+Two presentation modes are supported:
+
+1. **New tab:** Broker opens WebTrade in a new browser tab. Communication is limited to shared cookies and URL parameters.
+2. **iframe:** Broker renders its own shell and embeds WebTrade. Communication uses shared cookies, URL parameters, and validated two-way `postMessage` events.
+
+## Configuration supplied to Whale
+
+### Build-time configuration
+
+| Key | Purpose | Values / example |
+| --- | --- | --- |
+| `cookie_token_key` | Token cookie key | `broker_token` |
+| `cookie_refresh_token_key` | Refresh-token cookie key | `broker_refresh_token` |
+| `cookie_app_id_key` | App-ID cookie key | `broker_app_id` |
+| `logout_redirect_link_address` | Broker URL used after logout or when no session exists; supports `{tenant_origin}` | `https://www.example.com/login?from=webtrade` |
+| `cookie_locale_key` | Language cookie key | `en`, `zh-CN`, or `zh-HK` |
+| `cookie_theme_key` | Theme cookie key | `light` or `dark` |
+| `cookie_stock_color_preference_key` | Price-color preference cookie key | `green_up` or `red_up` |
+| `disable_language_setting` | Hide WebTrade language settings | `true` or `false` |
+
+Custom cookie keys prevent collisions between Broker website cookies and WebTrade cookies.
+
+### Runtime Broker configuration
+
+| Key | Purpose |
+| --- | --- |
+| `hide_logout_entrance` | Hide the WebTrade logout control so Broker website owns the sign-out experience |
+
+Whale recommends that Broker own logout and hide the WebTrade logout control.
+
+## URL parameters
+
+Both modes support these parameters:
+
+| Parameter | Purpose | Example |
+| --- | --- | --- |
+| `tab` | Initial navigation: `quote`, `stock`, `favorite`, `portfolio`, or `stockSelect` | `tab=quote` |
+| `symbol` | Initial instrument in [`symbol` format](/en/docs/glossary#security-identifiers) | `symbol=700.HK` |
+| `tenant_origin` | Broker origin used for iframe message validation and logout redirection | `tenant_origin=https://www.example.com` |
+
+## iframe `postMessage` protocol
+
+This section applies only to iframe mode. WebTrade accepts messages only from the validated `tenant_origin` and sends events only to that origin.
+
+### Broker → WebTrade
+
+```typescript
+// Set language
+{ type: 'SET_LANG', payload: { lang: 'zh-HK' } }
+
+// Set theme
+{ type: 'SET_THEME', payload: { theme: 'dark' } }
+
+// Set price-color preference
+{ type: 'SET_STOCK_COLOR_PREFERENCE', payload: { color: 'green_up' } }
+```
+
+Allowed values:
+
+- Language: `zh-CN`, `zh-HK`, or `en`.
+- Theme: `dark` or `light`.
+- Price color: `green_up` or `red_up`.
+
+### WebTrade → Broker
+
+```typescript
+// WebTrade has mounted; Broker may hide its loading mask.
+{ type: 'WEBTRADE_READY' }
+
+// WebTrade has started logout; Broker must clear its own session.
+{ type: 'ON_LOGOUT' }
+```
+
+Always check `event.origin` before handling an incoming message.
+
+## `tenant_origin` validation
+
+`tenant_origin` has two purposes:
+
+1. It is the allowlisted origin for two-way iframe messages.
+2. It replaces `{tenant_origin}` in `logout_redirect_link_address`.
+
+The origin must:
+
+- use `https`;
+- share the same root domain as WebTrade; and
+- contain no path other than `/`.
+
+WebTrade resolves the origin in this order:
+
+1. A project-specific mapping agreed and configured during delivery.
+2. The value cached in `localStorage` from a previous URL parameter.
+3. The `tenant_origin` URL parameter on first access.
+
+For example, with `tenant_origin=https://www.example.com`, a configured redirect of `{tenant_origin}/login?from=webtrade` resolves to `https://www.example.com/login?from=webtrade`.
+
+## Sign-in flow
+
+### New-tab mode
+
+1. Customer signs in to Broker website; Broker Server returns `token`, `refresh_token`, and `app_id`.
+2. Broker frontend writes them to the agreed root-domain cookies.
+3. Customer opens WebTrade in a new tab.
+4. WebTrade reads the token, preferring the cookie over its local cache.
+5. A valid token opens the trading UI; a missing or invalid token redirects to `logout_redirect_link_address`.
+
+### iframe mode
+
+1. Customer signs in and Broker writes the session cookies.
+2. Broker creates the iframe and passes `tenant_origin` in its URL.
+3. WebTrade reads the cookies and signs the Customer in.
+4. WebTrade sends `WEBTRADE_READY` after mounting.
+5. Broker hides its loading state after validating and receiving the event.
+
+## Logout flow
+
+### New-tab mode
+
+1. Customer starts logout in WebTrade.
+2. WebTrade clears its login cookies and local storage.
+3. WebTrade redirects to `logout_redirect_link_address`; if none is configured, it falls back to the Whale sign-in page.
+
+### iframe mode
+
+1. Customer starts logout when the control is not hidden.
+2. WebTrade clears its login cookies and local storage.
+3. WebTrade sends `ON_LOGOUT` to the validated parent origin.
+4. WebTrade waits 200 ms, then performs the configured redirect.
+5. Broker handles `ON_LOGOUT`, clears its own session, and completes server-side logout.
+
+## Broker implementation requirements
+
+### Cookies
+
+| Cookie | Required | Purpose |
+| --- | --- | --- |
+| `{cookie_token_key}` | Yes | Customer token |
+| `{cookie_refresh_token_key}` | Yes | Customer refresh token |
+| `{cookie_app_id_key}` | Yes | App ID |
+| `{cookie_locale_key}` | Recommended | Initial language |
+| `{cookie_theme_key}` | Recommended | Initial theme; defaults to `dark` |
+| `{cookie_stock_color_preference_key}` | Recommended | Initial price-color preference |
+
+Set `domain` to the shared root domain, for example `.example.com`, and `path=/`. WebTrade must read these cookies from JavaScript, so the current integration contract requires them not to be `HttpOnly`. Use HTTPS, restrict the domain and path exactly as agreed, and coordinate the security model with the Whale project team.
+
+WebTrade resolves language in this order:
+
+1. A valid language in `{cookie_locale_key}`.
+2. A supported value derived from `navigator.language`.
+3. English (`en`).
+
+```javascript
+type SupportLocale = 'en' | 'zh-HK' | 'zh-CN'
+
+function getDefaultLocaleForWeb(): SupportLocale {
+  const fromCookie = Cookies.get(appConfig.cookieLocaleKey)
+  if (fromCookie && isSupportLocale(fromCookie)) return fromCookie
+
+  const match = navigator.language.match(/(zh-HK|zh-CN|en)/)
+  return (match?.[1] as SupportLocale | undefined) ?? 'en'
+}
+```
+
+### Logout
+
+Broker must:
+
+1. Provide `logout_redirect_link_address`, optionally with `{tenant_origin}`.
+2. Clear every WebTrade login cookie when the Customer signs out.
+3. Call the Whale logout API so the server-side Customer token becomes invalid.
+4. In iframe mode, validate and handle `ON_LOGOUT` immediately.
+
+### Domains
+
+Broker website and WebTrade must share a root domain. For example:
+
+- Broker website: `broker.example.com`.
+- WebTrade: `trade.example.com`.
+- Shared cookie domain: `.example.com`.
+
+## Configuration example
+
+```json
+{
+  "cookie_token_key": "broker_token",
+  "cookie_refresh_token_key": "broker_refresh_token",
+  "cookie_app_id_key": "broker_app_id",
+  "cookie_locale_key": "broker_locale",
+  "cookie_theme_key": "broker_theme",
+  "cookie_stock_color_preference_key": "broker_stock_color_preference",
+  "logout_redirect_link_address": "https://www.example.com/login?from=webtrade",
+  "disable_language_setting": true
+}
+```
+
+```json
+{
+  "hide_logout_entrance": true
+}
+```
+
+## Deployment
+
+- **Whale-managed deployment:** Whale builds and deploys WebTrade; Broker supplies its domain and project configuration.
+- **Broker-managed deployment:** Whale delivers a project-specific WebTrade zip for Broker to deploy, which can accommodate Broker-managed certificates or multiple domains.
