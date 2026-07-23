@@ -553,8 +553,8 @@ PENDING_VERIFICATION_TEXT = {
         "description": "该分组下的接口正在对真实后端重新核实，核实完成后才会发布。",
         "body": (
             "**{group}** 分组下的接口暂时隐藏，正在对真实后端重新核实中，核实通过后会重新出现在这里。\n\n"
-            "如需先了解已发布的接口，可以看 [Broker API 概览](/cn/broker-api/overview) 或 "
-            "[开始使用](/cn/broker-api/get-started/quickstart)。"
+            "如需先了解已发布的接口，可以看 [Broker API 概览](/zh-CN/broker-api/overview) 或 "
+            "[开始使用](/zh-CN/broker-api/get-started/quickstart)。"
         ),
     },
     "zh-Hant": {
@@ -562,8 +562,8 @@ PENDING_VERIFICATION_TEXT = {
         "description": "該分組下的接口正在對真實後端重新覆核，覆核完成後才會發布。",
         "body": (
             "**{group}** 分組下的接口暫時隱藏，正在對真實後端重新覆核中，覆核通過後會重新出現在這裡。\n\n"
-            "如需先了解已發布的接口，可以看 [Broker API 概覽](/zh-Hant/broker-api/overview) 或 "
-            "[開始使用](/zh-Hant/broker-api/get-started/quickstart)。"
+            "如需先了解已發布的接口，可以看 [Broker API 概覽](/zh-HK/broker-api/overview) 或 "
+            "[開始使用](/zh-HK/broker-api/get-started/quickstart)。"
         ),
     },
 }
@@ -780,24 +780,36 @@ def main() -> int:
         # default=str: YAML auto-parses bare dates in examples into datetime.date
         p.write_text(json.dumps(outputs[lang_key], ensure_ascii=False, indent=2, default=str) + "\n", encoding="utf-8")
 
-    # One placeholder page per empty nav branch (not one shared page across
-    # all of them — see the render() comment). Clean up slugs from a
-    # previous run that no longer need a placeholder (content got
-    # re-verified and published, or the branch itself is gone).
+    # One manifest entry per empty nav branch (not one shared page across all
+    # of them — see the render() comment), consumed by the
+    # [locale]/broker-api/pending-verification/[slug].astro dynamic route.
+    # A manifest + dynamic route (rather than one physical .mdx file per
+    # branch per language) means there is nothing to remember to delete when
+    # a branch gets re-verified and published: this file is fully overwritten
+    # every run, and an unlisted slug just 404s.
+    pending_manifest: Dict[str, Dict[str, Dict[str, str]]] = {}
     for lang_key, _, _ in LANGS:
-        pv_dir = REPO_ROOT / "docs" / LANG_DIRS[lang_key] / "broker-api" / "pending-verification"
-        pv_dir.mkdir(parents=True, exist_ok=True)
-        for f in pv_dir.iterdir():
-            if f.suffix == ".mdx" and f.stem not in pending_pages_needed:
-                f.unlink()
         text = PENDING_VERIFICATION_TEXT[lang_key]
+        by_slug: Dict[str, Dict[str, str]] = {}
         for slug, menu_path in pending_pages_needed.items():
             group_name = localized_sub_name(menu_tree, menu_path, lang_key)
-            body = text["body"].format(group=group_name)
-            content = (
-                f"---\ntitle: {text['title']}\ndescription: {text['description']}\n---\n\n{body}\n"
-            )
-            (pv_dir / f"{slug}.mdx").write_text(content, encoding="utf-8")
+            by_slug[slug] = {
+                "title": text["title"],
+                "description": text["description"],
+                "body": text["body"].format(group=group_name),
+            }
+        pending_manifest[LANG_DIRS[lang_key]] = by_slug
+    manifest_path = REPO_ROOT / "pending-verification.json"
+    manifest_path.write_text(
+        json.dumps(pending_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    # Clean up the old per-branch .mdx files this used to generate.
+    for lang_dir in LANG_DIRS.values():
+        pv_dir = REPO_ROOT / "docs" / lang_dir / "broker-api" / "pending-verification"
+        if pv_dir.is_dir():
+            for f in pv_dir.iterdir():
+                f.unlink()
+            pv_dir.rmdir()
 
     # v2 generates no MDX under data-porter — clean up any leftover.
     for lang_dir in LANG_DIRS.values():
