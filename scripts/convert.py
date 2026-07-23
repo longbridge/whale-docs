@@ -192,8 +192,40 @@ def localized_top_name(raw: str, menu: Dict[str, Any], lang_key: str) -> str:
     return en if lang_key == "en" else cn
 
 
-def localized_sub_name(raw: str, lang_key: str) -> str:
+def _lookup_menu_node(menu_tree: List[Dict[str, Any]], menu_path: Tuple[str, ...]):
+    """Walk `menu_tree` following `menu_path` segment by segment (same
+    zh-CN/en matching as `menu_sort_key`) and return the final node, or
+    None if any segment along the way has no match."""
+    nodes = menu_tree
+    node = None
+    for part in menu_path:
+        zh, en = parse_top_dir(part)
+        hit = _match_menu_node(nodes, zh, en)
+        if not hit:
+            return None
+        node = hit[1]
+        nodes = node.get("routes") or []
+    return node
+
+
+def localized_sub_name(menu_tree: List[Dict[str, Any]], menu_path: Tuple[str, ...], lang_key: str) -> str:
+    """Localize a nav sub-group's display name for one language.
+
+    `menu.json` carries a real `zh-HK` (Traditional) name at every nesting
+    level, not just the top -- look it up via the full `menu_path` the same
+    way `menu_sort_key` does. Only sub-groups with no menu.json match at all
+    (e.g. Shared Components, which is intentionally unregistered) fall back
+    to the raw zh-CN text for zh-Hant; that's the best available source
+    when nothing else exists, but it means Traditional-Chinese readers will
+    see Simplified characters for those few groups."""
+    raw = menu_path[-1]
+    node = _lookup_menu_node(menu_tree, menu_path)
     cn, en = parse_top_dir(raw)
+    if node:
+        lookup = {"en": "en", "cn": "zh-CN", "zh-Hant": "zh-HK"}[lang_key]
+        val = (node.get("name") or {}).get(lookup)
+        if val:
+            return val
     return en if lang_key == "en" else cn
 
 
@@ -494,8 +526,8 @@ def ensure_response_descriptions(spec: Dict[str, Any], lang_key: str) -> None:
 # sub-groups) doesn't disappear while content is pending re-verification.
 PENDING_VERIFICATION_PAGE = {
     "en": "en/api-reference/pending-verification",
-    "cn": "cn/api-reference/pending-verification",
-    "zh-Hant": "zh-Hant/api-reference/pending-verification",
+    "cn": "zh-CN/api-reference/pending-verification",
+    "zh-Hant": "zh-HK/api-reference/pending-verification",
 }
 
 BROKER_API_MANUAL_GROUPS = {
@@ -657,7 +689,7 @@ def main() -> int:
             children.sort(key=lambda kv: menu_sort_key(menu_tree, prefix + (kv[0],)))
             for child, child_node in children:
                 child_pages = render(child_node, lang_key, prefix + (child,))
-                out.append({"group": localized_sub_name(child, lang_key), "pages": child_pages})
+                out.append({"group": localized_sub_name(menu_tree, prefix + (child,), lang_key), "pages": child_pages})
             if not out:
                 # Every op under this branch is currently unverified (or the
                 # branch has no leaf pages of its own) -- keep the group in
