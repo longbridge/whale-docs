@@ -1,10 +1,10 @@
-# Contributing to Whale Docs {/* contributing-to-whale-docs */}
+# Contributing to Whale Docs
 
 This guide covers local development and repository maintenance. Read
 `AGENTS.md` for repository-specific agent rules and `COPYWRITING.md` for
 documentation standards.
 
-## Local development {/* local-development */}
+## Local development
 
 Install dependencies and start the development server:
 
@@ -15,7 +15,7 @@ bun run dev
 
 The local site is available at <http://localhost:4321>.
 
-## Repository structure {/* repository-structure */}
+## Repository structure
 
 ```text
 astro.config.mjs                       Astro entry point
@@ -32,7 +32,7 @@ src/nimbus/                            Application shell and Whale adapters
 Keep internal drafts and decision records in the ignored `docs/internal/`
 directory. Do not add them to public navigation or Git history.
 
-## Documentation changes {/* documentation-changes */}
+## Documentation changes
 
 Before editing public content:
 
@@ -46,7 +46,7 @@ Do not edit generated API reference copy only in this repository when an
 authoritative upstream source exists. Fix the source and regenerate all locale
 specifications so the change is reproducible.
 
-## BrokerAPI updates {/* broker-api-updates */}
+## BrokerAPI updates
 
 The authoritative BrokerAPI source is maintained in the sibling
 `../whale-openapi-docs` repository. This repository does not currently contain
@@ -60,7 +60,7 @@ updates with the project owner and verify all locale specifications and
 `docs.json` together. Do not treat a direct patch to one generated file as a
 permanent fix.
 
-## TradingAPI updates {/* trading-api-updates */}
+## TradingAPI updates
 
 The authoritative TradingAPI source is maintained in the sibling
 `../LBFrontendAPIGenerator` repository. The capture workflow can retrieve
@@ -89,7 +89,7 @@ Do not add `POST`, `PUT`, `PATCH`, or `DELETE` operations to automatic capture.
 Capturing a state-changing operation requires explicit approval for the target
 test account and a separate reviewed workflow.
 
-## Verification {/* verification */}
+## Verification
 
 Run the smallest relevant check while developing. For most documentation
 changes, run:

@@ -45,14 +45,14 @@ User binding and account opening are not a single synchronous call. First establ
 
 | Identifier | Owning system | Purpose | Recommended storage |
 | --- | --- | --- | --- |
-| `open_id` | Broker | Stable unique identifier for a Customer in Broker's user system | Broker Server |
+| `open_id` | Broker | Stable unique identifier for a Client in Broker's user system | Broker Server |
 | `member_id` | Whale | Unique Whale user identifier returned by the sign-in API | Broker Server |
 | `application_id` | Whale | Identifier for one account-opening application, used to query asynchronous status | Broker Server |
 | `account_no` | Whale | Securities account number after successful opening | Broker Server |
 | `sid` | Whale session | Session ID required for logout; decode it from the sign-in token's JWT payload | Session storage |
 
 <Warning>
-`open_id` must be stable and must never be reused by another Customer. Broker Server must verify the ownership relationships among `member_id`, `application_id`, and `account_no`; it must not trust related identifiers supplied directly by Broker App.
+`open_id` must be stable and must never be reused by another Client. Broker Server must verify the ownership relationships among `member_id`, `application_id`, and `account_no`; it must not trust related identifiers supplied directly by Broker App.
 </Warning>
 
 ## Detailed design {/* detailed-design */}
@@ -62,11 +62,11 @@ User binding and account opening are not a single synchronous call. First establ
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Customer as Customer
+    actor Client as Client
     participant Broker as Broker system
     participant API as BrokerAPI
     participant Ops as Whale account-opening process
-    Customer->>Broker: Register, sign in, or bind account
+    Client->>Broker: Register, sign in, or bind account
     Broker->>API: POST /v1/whaleapi/auth/open_id/login
     API-->>Broker: member_id, token, refresh_token
     Broker->>API: POST /v2/whaleapi/account/submit_application
@@ -77,7 +77,7 @@ sequenceDiagram
         Broker->>API: POST /v1/whaleapi/account/get_application
         API-->>Broker: Current state, reason, or account_no
     end
-    Broker-->>Customer: Display account-opening result
+    Broker-->>Client: Display account-opening result
 ```
 
 ### Flow details {/* flow-details */}
@@ -207,7 +207,7 @@ Use `state` as the source of truth: `5` submitted, `6` approved, `7` opening, `8
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `member_id` | integer | Y | User ID |
-| `client_type` | integer | Y | Customer type: `1` individual, `2` corporate |
+| `client_type` | integer | Y | Client type: `1` individual, `2` corporate |
 | `open_info` | object | Y | Account-opening form |
 | `+ account_no` | string | N | Securities account number |
 | `+ mark` | string | N | Account marker |
@@ -348,7 +348,7 @@ Use `state` as the source of truth: `5` submitted, `6` approved, `7` opening, `8
       },
       "employ": {
         "type": "employed",
-        "email": "customer@example.com",
+        "email": "client@example.com",
         "contact": {
           "phones": [
             {
@@ -358,7 +358,7 @@ Use `state` as the source of truth: `5` submitted, `6` approved, `7` opening, `8
           ],
           "emails": [
             {
-              "email": "customer@example.com"
+              "email": "client@example.com"
             }
           ]
         },
@@ -407,10 +407,10 @@ Use `state` as the source of truth: `5` submitted, `6` approved, `7` opening, `8
 | --- | --- | --- |
 | `400` | Invalid parameters | Check required fields, types, and enum values |
 | `500` | Service error | Record the request correlation information and contact the Whale project team |
-| `401033` | User frozen | Block further operations and show the account status to the Customer |
+| `401033` | User frozen | Block further operations and show the account status to the Client |
 | `401040` | User account closed | Clear the local session and unavailable-account state |
 | `401047` | Required system configuration is missing | Ask the Whale project team to complete the configuration |
-| `404002` | Identity information already exists; use the original account for securities trading | Guide the Customer to the original account |
+| `404002` | Identity information already exists; use the original account for securities trading | Guide the Client to the original account |
 | `404013` | Duplicate submission is not allowed | Query the existing application instead of creating another one |
 | `404050` | A new account cannot be opened within three months after account closure | Display the restriction and stop submission |
 | `404056` | Account opening failed | Display `reason` and confirm whether retry is allowed |

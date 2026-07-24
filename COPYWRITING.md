@@ -1,4 +1,4 @@
-# Whale Docs Copywriting Guide {/* whale-docs-copywriting-guide */}
+# Whale Docs Copywriting Guide
 
 This file is the shared standard for AI agents and human contributors who write, rewrite, translate, or review Whale Docs. It is based on this repository's existing documentation, OpenAPI structure, and component capabilities, and incorporates relevant content and formatting practices from Cloudflare Docs. Repository rules and verified product behavior always take precedence over external references.
 
@@ -11,7 +11,7 @@ This guide applies to:
 - Tabs, groups, and navigation labels in `docs.json`.
 - Public documentation created, translated, completed, reorganized, or reviewed by AI.
 
-## 1. Goals and priorities {/* goals-and-priorities */}
+## 1. Goals and priorities
 
 Documentation should first help readers complete a task, understand a boundary, or resolve a problem. Do not write primarily to promote the product, enumerate features, or restate code.
 
@@ -25,11 +25,11 @@ Resolve conflicts in this order:
 
 Existing content is useful evidence, but not every legacy pattern should be preserved. Correct duplicate titles, unstable URLs, vague descriptions, unsupported numbers, and localization mismatches instead of copying them.
 
-## 2. Factual boundaries for AI {/* factual-boundaries-for-ai */}
+## 2. Factual boundaries for AI
 
 AI must distinguish verified facts, recommendations, and information that still requires confirmation.
 
-### 2.1 Source-of-truth order {/* source-of-truth-order */}
+### 2.1 Source-of-truth order
 
 Use sources in this order:
 
@@ -41,7 +41,7 @@ Use sources in this order:
 
 Do not let search snippets, blogs, forums, old screenshots, or model memory override primary sources. When sources conflict, document the verifiable current behavior and report the conflict in the delivery note.
 
-### 2.2 Do not guess {/* do-not-guess */}
+### 2.2 Do not guess
 
 Without evidence, do not invent:
 
@@ -53,7 +53,7 @@ Without evidence, do not invent:
 
 If unverified information must remain, label it explicitly, for example: “The project team still needs to confirm this limit.” Do not hide missing evidence behind fluent prose. Public pages should not retain a `TODO` without an owner and a confirmation path.
 
-### 2.3 Time-sensitive information {/* time-sensitive-information */}
+### 2.3 Time-sensitive information
 
 For versions, historical performance, compatibility matrices, and statistics, state:
 
@@ -64,11 +64,11 @@ For versions, historical performance, compatibility matrices, and statistics, st
 
 Do not present historical samples as an SLA unless a contract or formal product policy defines them as one.
 
-### 2.4 Security and privacy {/* security-and-privacy */}
+### 2.4 Security and privacy
 
-Use fictional values or clear placeholders in examples. Never expose real tokens, keys, cookies, phone numbers, email addresses, identity documents, account numbers, or customer data. Show redaction in log examples. For writes, funds, trading, permissions, identity, and production cutovers, state the prerequisites, affected scope, failure handling, and verification method.
+Use fictional values or clear placeholders in examples. Never expose real tokens, keys, cookies, phone numbers, email addresses, identity documents, account numbers, or client data. Show redaction in log examples. For writes, funds, trading, permissions, identity, and production cutovers, state the prerequisites, affected scope, failure handling, and verification method.
 
-## 3. Choose a content type first {/* choose-a-content-type-first */}
+## 3. Choose a content type first
 
 Each page should have one primary purpose. Do not combine conceptual explanation, an end-to-end tutorial, a field dictionary, and troubleshooting without clear boundaries.
 
@@ -85,7 +85,7 @@ Each page should have one primary purpose. Do not combine conceptual explanation
 
 Organize Whale Docs around the reader journey: understand, choose, integrate, verify, launch, and operate. Do not organize public documentation around internal teams or code modules.
 
-### 3.1 Page scope {/* page-scope */}
+### 3.1 Page scope
 
 Consider splitting a page when:
 
@@ -97,9 +97,9 @@ Consider splitting a page when:
 
 After splitting, add context and reciprocal links. Do not force readers to infer the path with the browser Back button.
 
-## 4. Voice, terms, and sentences {/* voice-terms-and-sentences */}
+## 4. Voice, terms, and sentences
 
-### 4.1 Base voice {/* base-voice */}
+### 4.1 Base voice
 
 Use a professional, direct, calm, and trustworthy voice:
 
@@ -112,19 +112,19 @@ Use a professional, direct, calm, and trustworthy voice:
 
 Avoid empty or dismissive terms such as “very simple,” “obviously,” “just,” “easy,” “powerful,” “revolutionary,” and “seamless.” Do not use words such as “supported,” “automatic,” “real-time,” or “secure” as undefined promises.
 
-### 4.2 Audience and participants {/* audience-and-participants */}
+### 4.2 Audience and participants
 
 Address the reader as “you” in instructions. Use established domain terms for responsibilities:
 
 - `Broker`: the brokerage institution integrating with Whale.
-- `Broker App`: the Broker's Customer-facing application.
+- `Broker App`: the Broker's Client-facing application.
 - `Broker Server`: a server controlled by the Broker.
-- `Customer`: the Broker's end customer.
+- `Client`: the Broker's end client.
 - `Whale`: the Longport Whale product or system.
 
-Do not interchange user, customer, member, and account within the same context. `open_id`, `member_id`, `application_id`, and `account_no` identify different objects and must remain distinct.
+Do not interchange user, client, member, and account within the same context. `open_id`, `member_id`, `application_id`, and `account_no` identify different objects and must remain distinct.
 
-### 4.3 Language and localization {/* language-and-localization */}
+### 4.3 Language and localization
 
 - Use plain technical English. Avoid slang, cultural jokes, compressed colloquialisms, and contractions.
 - Use terminology natural to Mainland China in Simplified Chinese.
@@ -135,7 +135,7 @@ Do not interchange user, customer, member, and account within the same context. 
 
 Maintain shared terminology in the locale's glossary. Decide translations for terms that affect multiple pages before expanding their use.
 
-### 4.4 User-interface actions {/* user-interface-actions */}
+### 4.4 User-interface actions
 
 - Bold buttons, menu items, tabs, and interactive UI labels: “Select **Settings** > **API tokens**.”
 - Match the UI label and capitalization exactly.
@@ -144,7 +144,7 @@ Maintain shared terminology in the locale's glossary. Decide translations for te
 - Say whether to turn a setting on or off; do not say only “toggle.”
 - Format tools, commands, file paths, and configuration keys as inline code.
 
-### 4.5 Chinese copy basics {/* chinese-copy-basics */}
+### 4.5 Chinese copy basics
 
 Chinese documentation and UI copy should be formal, restrained, and concise. Check typos, omissions, duplicated words, terminology, and punctuation before publishing.
 
@@ -155,7 +155,7 @@ Chinese documentation and UI copy should be formal, restrained, and concise. Che
 - Use “的”, “地”, and “得” correctly.
 - Never omit conditions, risks, units, or outcomes merely to shorten copy.
 
-### 4.6 Chinese, English, and number spacing {/* chinese-english-number-spacing */}
+### 4.6 Chinese, English, and number spacing
 
 Normally insert one half-width space between Chinese text and English words or numbers:
 
@@ -186,11 +186,11 @@ Insert a space between a number and a normal unit or currency code:
 
 Chinese prose may use Chinese numerals when precision and scanning do not suffer. Use Arabic numerals for interface values, versions, dates, times, amounts, percentages, measurements, step numbers, and statistics.
 
-### 4.7 Proper nouns and capitalization {/* proper-nouns-and-capitalization */}
+### 4.7 Proper nouns and capitalization
 
 Follow official spelling for brands, platforms, protocols, and products, including `Android`, `iOS`, `iPhone`, `Google`, `Apple`, `GitHub`, `OpenAPI`, `HTTP`, `IPO`, and `ETF`. Verify uncertain spelling against the owner's official source. Preserve source capitalization for code identifiers.
 
-### 4.8 Chinese punctuation {/* chinese-punctuation */}
+### 4.8 Chinese punctuation
 
 Use full-width Chinese punctuation in Chinese sentences and Chinese-dominant mixed-language sentences. Use half-width punctuation in complete English sentences.
 
@@ -206,7 +206,7 @@ Do not add spaces around Chinese punctuation. Avoid exclamation marks and never 
 - 请求可能需要 1-2 分钟，（具体时间取决于数据量）。
 ```
 
-### 4.9 Brackets and title marks {/* brackets-and-title-marks */}
+### 4.9 Brackets and title marks
 
 Do not insert spaces immediately inside parentheses:
 
@@ -222,9 +222,9 @@ Choose punctuation by content:
 - Do not use the visually heavy `【】` for ordinary labels. Prefer `「」` for natural-language labels and `[]` for machine syntax.
 - Markdown links, arrays, optional parameters, and code syntax follow their own grammar.
 
-## 5. Files, URLs, and navigation {/* files-urls-and-navigation */}
+## 5. Files, URLs, and navigation
 
-### 5.1 Stable slugs {/* stable-slugs */}
+### 5.1 Stable slugs
 
 Keep filenames and URL segments short, simple, durable, and based on a long-lived subject:
 
@@ -236,7 +236,7 @@ Keep filenames and URL segments short, simple, durable, and based on a long-live
 
 Treat a public slug as an API. When it changes, update navigation, internal links, and required redirects for all locales.
 
-### 5.2 Navigation labels {/* navigation-labels */}
+### 5.2 Navigation labels
 
 Navigation labels should:
 
@@ -248,7 +248,7 @@ Navigation labels should:
 
 An OpenAPI navigation entry in the form `METHOD /path` must match a real operation in the specification.
 
-## 6. Frontmatter {/* frontmatter */}
+## 6. Frontmatter
 
 Standard public MDX frontmatter:
 
@@ -271,7 +271,7 @@ Rules:
 
 Localize titles and descriptions while preserving the same information scope.
 
-## 7. Page opening and information order {/* page-opening-and-information-order */}
+## 7. Page opening and information order
 
 After frontmatter, begin with a short introduction that answers:
 
@@ -292,9 +292,9 @@ Recommended order for task pages:
 
 For concept pages, explain context, core objects, relationships, boundaries, and related tasks. For reference pages, state scope, definitions, limits, exact examples, and related operations.
 
-## 8. Headings and stable anchors {/* headings-and-stable-anchors */}
+## 8. Headings and stable anchors
 
-Every Markdown or MDX heading must end with an explicit stable English anchor:
+Every heading in documentation content under `docs/` must end with an explicit stable English anchor. Do not add these anchors to repository Markdown files outside `docs/`, such as this guide or `README.md`.
 
 ```md
 ## Obtain credentials {/* obtain-credentials */}
@@ -318,9 +318,9 @@ When an anchor must change, update inbound fragment links in all locales. Run:
 bun run check:anchors
 ```
 
-## 9. Paragraphs, lists, and procedures {/* paragraphs-lists-and-steps */}
+## 9. Paragraphs, lists, and procedures
 
-### 9.1 Paragraphs {/* paragraphs */}
+### 9.1 Paragraphs
 
 - Keep each paragraph to one subject, usually one to three sentences.
 - Put the conclusion or condition first.
@@ -329,7 +329,7 @@ bun run check:anchors
 - Separate paragraphs with one blank line and do not indent them.
 - Prefer a list or table when more than three parallel items need scanning.
 
-### 9.2 Lists {/* lists */}
+### 9.2 Lists
 
 - End complete sentences with periods; short labels and noun phrases may omit punctuation.
 - Keep grammar parallel within a list.
@@ -338,7 +338,7 @@ bun run check:anchors
 - Do not use lists for data that requires column comparison.
 - Use `1. `, `2. `, and `3. ` for Markdown ordered lists and `- ` for unordered lists.
 
-### 9.3 Procedures {/* procedures */}
+### 9.3 Procedures
 
 Start each step with a clear action and include an observable result where possible. Use a Markdown ordered list for simple tasks and components for steps containing substantial code or notes:
 
@@ -353,7 +353,7 @@ Start each step with a clear action and include an observable result where possi
 
 Do not mix numbering systems. Label optional steps explicitly. Combine login with opening the destination when login is only a prerequisite. End with verification or a next step.
 
-## 10. Links {/* links */}
+## 10. Links
 
 Link text must identify the destination. Do not use “click here,” “more,” or a bare URL.
 
@@ -367,13 +367,13 @@ Link text must identify the destination. Do not use “click here,” “more,�
 - In Chinese prose, normally insert a half-width space around a link, with sentence-ending punctuation immediately after it.
 - Display domains in lowercase and omit meaningless `www.`, trailing slashes, or capitalization variants.
 
-## 11. Code, commands, and examples {/* code-commands-and-examples */}
+## 11. Code, commands, and examples
 
-### 11.1 Inline code {/* inline-code */}
+### 11.1 Inline code
 
 Use backticks for filenames, paths, commands, environment variables, classes, methods, functions, parameters, fields, enum values, HTTP methods, status codes, and short header values. Do not use code formatting for product names, ordinary technical concepts, or natural-language UI labels.
 
-### 11.2 Code blocks {/* code-blocks */}
+### 11.2 Code blocks
 
 Give every code block an accurate lowercase language; use `txt` when no language applies.
 
@@ -391,7 +391,7 @@ Use uppercase snake case for shell environment variables, such as `$ACCESS_TOKEN
 
 Do not include `$`, `%`, or `PS>` prompts in command blocks. Put output in a separate `txt` block. Use reserved example domains and documentation IP ranges. Protect `{}` and `<>` from MDX parsing with code formatting or escaping.
 
-### 11.3 Output and error examples {/* output-and-error-examples */}
+### 11.3 Output and error examples
 
 Keep only fields required to verify the task and state when output is abbreviated. For errors, explain:
 
@@ -403,9 +403,9 @@ Keep only fields required to verify the task and state when output is abbreviate
 
 Do not imply that every non-`200` response has the same structure unless OpenAPI defines it.
 
-## 12. Tables, diagrams, and images {/* tables-diagrams-and-images */}
+## 12. Tables, diagrams, and images
 
-### 12.1 Tables {/* tables */}
+### 12.1 Tables
 
 Use tables for exact comparisons of fields, responsibilities, states, or options.
 
@@ -419,19 +419,19 @@ Use tables for exact comparisons of fields, responsibilities, states, or options
 - Sort by business logic or, if none exists, by name.
 - Confirm the table remains understandable on narrow screens.
 
-### 12.2 Mermaid diagrams {/* mermaid-diagrams */}
+### 12.2 Mermaid diagrams
 
 Use Mermaid when it explains relationships, state, or cross-system sequence more clearly than prose. Keep node names short, include critical conditions and failures, and explain the reader's action after the diagram. A diagram must not be the only source of a fact. Keep logic aligned across locales.
 
-### 12.3 Images and screenshots {/* images-and-screenshots */}
+### 12.3 Images and screenshots
 
 - Add a screenshot only when visual position or output is hard to explain in text.
 - Provide concise, meaningful alt text.
-- Crop irrelevant areas and redact personal data, customer data, account details, and credentials.
+- Crop irrelevant areas and redact personal data, client data, account details, and credentials.
 - Avoid screenshots of rapidly changing UI when stable prose or code is sufficient.
 - Do not communicate critical information only through color, arrows, or small text in an image.
 
-## 13. MDX components {/* mdx-components */}
+## 13. MDX components
 
 The repository provides `Note`, `Tip`, `Warning`, `Steps`, `Step`, `CardGroup`, `Card`, `AccordionGroup`, `Accordion`, `Update`, and `Mermaid` without per-page imports.
 
@@ -445,11 +445,11 @@ The repository provides `Note`, `Tip`, `Warning`, `Steps`, `Step`, `CardGroup`, 
 
 Do not copy Cloudflare-specific component names. First check for an equivalent Whale Docs component; otherwise prefer standard Markdown unless new interaction is genuinely required.
 
-## 14. OpenAPI copywriting {/* openapi-copywriting */}
+## 14. OpenAPI copywriting
 
 OpenAPI is an API contract, not ordinary prose. BrokerAPI generated files are imported from an upstream source repository. Fix copy in the source and regenerate instead of maintaining direct edits here.
 
-### 14.1 Info, servers, and tags {/* openapi-info-servers-and-tags */}
+### 14.1 Info, servers, and tags
 
 - Use the formal product name in `info.title`.
 - Use one sentence in `info.description` to state the audience, calling boundary, and core purpose.
@@ -458,7 +458,7 @@ OpenAPI is an API contract, not ordinary prose. BrokerAPI generated files are im
 - Use stable business domains for tags, not internal services or teams.
 - Keep tag scope and order aligned across locales.
 
-### 14.2 Operations {/* openapi-operations */}
+### 14.2 Operations
 
 Every operation should include:
 
@@ -470,7 +470,7 @@ Every operation should include:
 
 Do not repeat `summary` as `description`. Avoid empty prefixes such as “This interface is used to”; state the result directly.
 
-### 14.3 Parameters and schemas {/* openapi-parameters-and-schemas */}
+### 14.3 Parameters and schemas
 
 Field descriptions should explain the field's meaning, format, unit, time zone, precision, case rules, range, length, pattern, default, enum meanings, conditional requirements, lifecycle, and stability where applicable.
 
@@ -487,7 +487,7 @@ Call contract supports extended sessions:
 
 Reject low-quality descriptions such as duplicated field names, “Data,” “Status,” untranslated fragments, or “Success” without explaining returned data or business completion.
 
-### 14.4 Requests and responses {/* openapi-requests-and-responses */}
+### 14.4 Requests and responses
 
 - Specify the correct media type.
 - Describe the purpose of the whole request body and the meaning of each field.
@@ -499,20 +499,20 @@ Reject low-quality descriptions such as duplicated field names, “Data,” “S
 - Define partial success, per-item errors, and atomicity for batch operations.
 - Document idempotency keys, duplicate requests, and timeout retry semantics for writes; do not assume unknown behavior.
 
-### 14.5 Examples {/* openapi-examples */}
+### 14.5 Examples
 
 Provide at least one representative success example and important failure or boundary examples as needed. Examples must validate against the schema.
 
 - Use related identifiers consistently between request and response.
 - Use valid enum, date, timestamp, amount, and quantity formats.
-- Never use real customer data.
+- Never use real client data.
 - Choose informative values instead of filling everything with `string`, `0`, or an empty object.
 - Do not include response fields absent from the schema.
 - Translate explanatory prose but keep machine values aligned across locales.
 
 For cURL, use the complete API URL, clear environment variables, `Authorization` before `Content-Type`, valid two-space JSON, and single quotes around the full `--data` value. Do not add `--request POST` when a body already implies `POST`; specify methods without a body when needed.
 
-### 14.6 Deprecation and versioning {/* deprecation-and-versioning */}
+### 14.6 Deprecation and versioning
 
 For deprecated operations or fields:
 
@@ -522,7 +522,7 @@ For deprecated operations or fields:
 - Keep old links reachable during the support period.
 - Do not use versioned page slugs as a substitute for a versioning strategy.
 
-## 15. FAQ, troubleshooting, and operations {/* faq-troubleshooting-and-operations */}
+## 15. FAQ, troubleshooting, and operations
 
 Write FAQ headings as complete questions readers would search. Lead each answer with the conclusion, followed by conditions and actions.
 
@@ -538,7 +538,7 @@ Structure troubleshooting content as:
 
 Do not use “retry” or “contact support” as an answer without diagnostic information. Operations pages should define evidence such as trace ID, business identifier, time range, environment, and reproduction steps, while prohibiting secrets and personal data.
 
-## 16. Localization parity {/* localization-parity */}
+## 16. Localization parity
 
 Equivalent pages across all locales must preserve:
 
@@ -550,9 +550,9 @@ Equivalent pages across all locales must preserve:
 
 Adjust sentence order, punctuation, and title length naturally, but do not make one locale a reduced summary. Search all locales and OpenAPI variants when changing a shared fact. Revalidate code and links after translation.
 
-## 17. AI writing workflow {/* ai-writing-workflow */}
+## 17. AI writing workflow
 
-### 17.1 Before writing {/* before-writing */}
+### 17.1 Before writing
 
 1. Read `AGENTS.md` and instructions for the target directory.
 2. Confirm the audience, task, content type, and page scope.
@@ -561,7 +561,7 @@ Adjust sentence order, punctuation, and title length naturally, but do not make 
 5. Check OpenAPI or SDK signatures to avoid duplicating generated reference material.
 6. Prefer improving an existing page when a new page is unnecessary.
 
-### 17.2 While writing {/* while-writing */}
+### 17.2 While writing
 
 1. State the page purpose and successful outcome.
 2. Write the shortest usable main path.
@@ -571,7 +571,7 @@ Adjust sentence order, punctuation, and title length naturally, but do not make 
 6. Recheck the source for every number, promise, and security statement.
 7. Keep terminology aligned across locales.
 
-### 17.3 While reviewing {/* while-reviewing */}
+### 17.3 While reviewing
 
 Review in four passes:
 
@@ -582,9 +582,9 @@ Review in four passes:
 
 Report unresolved facts instead of silently completing them.
 
-## 18. Page templates {/* page-templates */}
+## 18. Page templates
 
-### 18.1 How-to template {/* how-to-template */}
+### 18.1 How-to template
 
 ```mdx
 ---
@@ -619,12 +619,12 @@ Send a test event and confirm that the service returns the agreed success respon
 Read [Operations and support](/en/docs/operations-support) to configure logging and alerts.
 ```
 
-### 18.2 Concept template {/* concept-template */}
+### 18.2 Concept template
 
 ```mdx
 ---
 title: Sessions and accounts
-description: Understand the relationship between Customer sessions, Whale users, and brokerage accounts
+description: Understand the relationship between Client sessions, Whale users, and brokerage accounts
 ---
 
 These objects have different identifiers and lifecycles. Distinguishing them prevents incorrect authorization and resource association.
@@ -642,7 +642,7 @@ Explain relationships, state changes, and authorization boundaries.
 Link to a task the reader can perform.
 ```
 
-### 18.3 API operation template {/* api-operation-template */}
+### 18.3 API operation template
 
 ```yaml
 summary: Query account cash balances
@@ -653,18 +653,18 @@ description: >-
 
 Define required fields, formats, enums, and constraints in the schema. Define success and error semantics in responses. Use examples that reflect a valid, verifiable structure.
 
-## 19. Pre-publication checklist {/* pre-publication-checklist */}
+## 19. Pre-publication checklist
 
-### Content and facts {/* content-and-facts */}
+### Content and facts
 
 - [ ] The page has one clear purpose and audience.
 - [ ] The primary answer, prerequisites, successful result, and next step are easy to find.
 - [ ] Primary sources verify product behavior, APIs, SDKs, versions, and numbers.
 - [ ] Unknowns, historical samples, and recommendations are not presented as commitments.
 - [ ] Security, permission, data-impact, and irreversible operations are explicit.
-- [ ] No real secrets, personal data, or customer data appear.
+- [ ] No real secrets, personal data, or client data appear.
 
-### Structure and format {/* structure-and-format */}
+### Structure and format
 
 - [ ] Filenames and URLs are short and stable, with aligned locale slugs.
 - [ ] `title` and `description` are accurate and self-contained.
@@ -674,7 +674,7 @@ Define required fields, formats, enums, and constraints in the schema. Define su
 - [ ] Lists, steps, tables, and MDX components fit their content.
 - [ ] Images have alt text, and diagrams are not the only source of facts.
 
-### Code and API {/* code-and-api */}
+### Code and API
 
 - [ ] Every code block has the correct language and is copyable.
 - [ ] Variables, placeholders, environments, and expected results are clear.
@@ -682,7 +682,7 @@ Define required fields, formats, enums, and constraints in the schema. Define su
 - [ ] OpenAPI examples validate against the schema.
 - [ ] Writes describe side effects, asynchronous states, retry behavior, or idempotency boundaries.
 
-### Localization and verification {/* localization-and-verification */}
+### Localization and verification
 
 - [ ] Facts, anchors, code, and warnings match across locales.
 - [ ] Simplified and Traditional Chinese have been edited naturally.
@@ -691,7 +691,7 @@ Define required fields, formats, enums, and constraints in the schema. Define su
 - [ ] A relevant targeted check, normally `bun run check`, has passed.
 - [ ] The expensive full build was not run unless explicitly requested or essential.
 
-## 20. Cloudflare reference boundary {/* cloudflare-reference-boundary */}
+## 20. Cloudflare reference boundary
 
 This guide adopts these general Cloudflare Docs principles:
 
