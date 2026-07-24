@@ -6,12 +6,11 @@ import { renderMarkdown } from "../../lib/render-markdown";
 interface Props {
   schema: any;
   document: OpenApiDocument;
-  prefix?: string;
   locale: "en" | "zh-CN" | "zh-HK";
   childrenOpen?: boolean;
 }
 
-const { schema: rawSchema, document, prefix = "", locale, childrenOpen = true } = Astro.props;
+const { schema: rawSchema, document, locale, childrenOpen = true } = Astro.props;
 const schema = resolveSchema(document, rawSchema) ?? {};
 const properties = Object.entries(schema.properties ?? {}) as [string, any][];
 const required = new Set<string>(schema.required ?? []);
@@ -22,13 +21,15 @@ const childLabel = locale === "en" ? "Child attributes" : locale === "zh-CN" ? "
 <div class="api-schema-fields" data-slot="api-schema-fields">
   {properties.map(([name, unresolved]) => {
     const field = resolveSchema(document, unresolved) ?? unresolved;
-    const fieldName = prefix ? `${prefix}.${name}` : name;
-    const hasChildren = Boolean(field?.properties && Object.keys(field.properties).length);
-    const type = field?.type === "array" ? `array<${field.items?.type ?? "object"}>` : field?.type ?? "object";
+    const childSchema = field?.type === "array"
+      ? resolveSchema(document, field.items) ?? field.items
+      : field;
+    const hasChildren = Boolean(childSchema?.properties && Object.keys(childSchema.properties).length);
+    const type = field?.type === "array" ? `array<${childSchema?.type ?? "object"}>` : field?.type ?? "object";
     return (
       <div class="api-schema-field" data-slot="api-schema-field">
         <div class="api-schema-field-meta" data-slot="api-schema-field-meta">
-          <code>{fieldName}</code>
+          <code>{name}</code>
           <Badge variant="secondary">{type}</Badge>
           {required.has(name) && <Badge variant="destructive">{requiredLabel}</Badge>}
         </div>
@@ -40,7 +41,7 @@ const childLabel = locale === "en" ? "Child attributes" : locale === "zh-CN" ? "
               <span>{childLabel}</span>
               <span class="api-schema-chevron" aria-hidden="true"></span>
             </summary>
-            <Astro.self schema={field} document={document} prefix={fieldName} locale={locale} childrenOpen={childrenOpen} />
+            <Astro.self schema={childSchema} document={document} locale={locale} childrenOpen={childrenOpen} />
           </details>
         )}
       </div>

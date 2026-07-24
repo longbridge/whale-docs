@@ -1,0 +1,315 @@
+---
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import { getPrevNext } from "nimbus-docs";
+import { resolveSchema } from "../../../lib/openapi";
+import {
+  allTradingOperations,
+  tradingOperationRoutePath,
+  type TradingOperationRecord,
+} from "../../../lib/trading-openapi";
+import { getWhaleSidebar } from "../../../lib/whale-navigation";
+import ApiSchemaFields from "../../../components/api/ApiSchemaFields.astro";
+import ApiResponseSchema from "../../../components/api/ApiResponseSchema.astro";
+import ApiEndpointCopy from "../../../components/api/ApiEndpointCopy.astro";
+import { ApiCodeExample } from "../../../../components/ApiCodeExample";
+import { Badge } from "@components/components/ui/badge";
+import { codeToHtml } from "shiki";
+import { renderInlineMarkdown, renderMarkdown } from "../../../lib/render-markdown";
+
+export const prerender = true;
+
+export function getStaticPaths() {
+  return allTradingOperations().map((record) => ({
+    params: {
+      locale: record.locale.toLowerCase(),
+      path: tradingOperationRoutePath(record.method, record.path),
+    },
+    props: record,
+  }));
+}
+
+const { locale, method, path, operation, document } = Astro.props as TradingOperationRecord;
+const localePath = locale.toLowerCase();
+const title = operation.summary || operation.operationId || `${method.toUpperCase()} ${path}`;
+const labels = locale === "en"
+  ? {
+      reference: "API Reference",
+      permissions: "Permissions",
+      parameters: "Parameters",
+      requestBody: "Request body",
+      responses: "Responses",
+      responseExamples: "Response examples",
+      requestExample: "Request",
+      responseExample: "Response",
+      copyCode: "Copy example",
+      actualResponseExample: "Response Example",
+      illustrativeExample: "Example response",
+      required: "Required",
+      optional: "Optional",
+      response: "Response",
+      copyPath: "Copy endpoint",
+      copiedPath: "Endpoint copied",
+    }
+  : locale === "zh-CN"
+    ? {
+        reference: "API Reference",
+        permissions: "权限要求",
+        parameters: "参数",
+        requestBody: "请求体",
+        responses: "响应",
+        responseExamples: "响应示例",
+        requestExample: "Request",
+        responseExample: "Response",
+        copyCode: "复制示例",
+        actualResponseExample: "Response Example",
+        illustrativeExample: "示例响应",
+        required: "必填",
+        optional: "可选",
+        response: "响应",
+        copyPath: "复制接口地址",
+        copiedPath: "接口地址已复制",
+      }
+    : {
+        reference: "API Reference",
+        permissions: "權限要求",
+        parameters: "參數",
+        requestBody: "請求體",
+        responses: "響應",
+        responseExamples: "響應示例",
+        requestExample: "Request",
+        responseExample: "Response",
+        copyCode: "複製示例",
+        actualResponseExample: "Response Example",
+        illustrativeExample: "示例回應",
+        required: "必填",
+        optional: "可選",
+        response: "響應",
+        copyPath: "複製介面位址",
+        copiedPath: "介面位址已複製",
+      };
+const sidebar = await getWhaleSidebar(Astro.url.pathname);
+const currentSlug = Astro.url.pathname.replace(/\/$/, "");
+const prevNext = await getPrevNext(currentSlug, { sidebarTree: sidebar });
+const parameters = (operation.parameters ?? []).map((parameter: any) =>
+  parameter.$ref ? resolveSchema(document, parameter) : parameter
+);
+const requestContent = operation.requestBody?.content ?? {};
+const requestType = Object.keys(requestContent)[0];
+const request = requestType ? requestContent[requestType] : undefined;
+const requestSchema = resolveSchema(document, request?.schema);
+const responses = Object.entries(operation.responses ?? {}) as [string, any][];
+const permissionDescriptions: Record<string, Record<TradingOperationRecord["locale"], string>> = {
+  trade_token: {
+    en: "The Customer must complete trade authentication before the Broker App sends this request.",
+    "zh-CN": "Broker App 发送请求前，Customer 必须完成交易认证。",
+    "zh-HK": "Broker App 發送請求前，Customer 必須完成交易認證。",
+  },
+};
+const permissions = (operation["x-permissions"] ?? []).map(
+  (permission: string) => permissionDescriptions[permission]?.[locale] ?? permission,
+);
+const queryExample = Object.fromEntries(
+  parameters
+    .filter((parameter: any) => parameter.in === "query" && parameter.example !== undefined)
+    .map((parameter: any) => [parameter.name, parameter.example]),
+);
+function schemaExample(schema: any): any {
+  const resolved = resolveSchema(document, schema) ?? schema;
+  if (resolved?.example !== undefined) return resolved.example;
+  if (resolved?.enum?.length) return resolved.enum[0];
+  if (resolved?.type === "object" || resolved?.properties) {
+    return Object.fromEntries(
+      Object.entries(resolved.properties ?? {}).map(([key, value]) => [key, schemaExample(value)]),
+    );
+  }
+  if (resolved?.type === "array") return [schemaExample(resolved.items ?? {})];
+  if (resolved?.type === "integer" || resolved?.type === "number") return 0;
+  if (resolved?.type === "boolean") return true;
+  return "<string>";
+}
+const requestBodyExample = request?.example ?? (request ? schemaExample(requestSchema) : undefined);
+const baseUrl = document.servers?.[0]?.url ?? "https://api.lbkrs.com";
+const endpointUrl = `${baseUrl}${path}`;
+function sdkLiteral(value: any, platform: "swift" | "kotlin", depth = 0): string {
+  if (value === null) return platform === "swift" ? "NSNull()" : "null";
+  if (typeof value === "string") return JSON.stringify(value);
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  const indent = "    ".repeat(depth);
+  const childIndent = "    ".repeat(depth + 1);
+  if (Array.isArray(value)) {
+    if (!value.length) return platform === "swift" ? "[]" : "emptyList()";
+    const values = value.map((child) => `${childIndent}${sdkLiteral(child, platform, depth + 1)}`);
+    return platform === "swift"
+      ? `[\n${values.join(",\n")}\n${indent}]`
+      : `listOf(\n${values.join(",\n")}\n${indent})`;
+  }
+  const entries = Object.entries(value ?? {}).map(([key, child]) => {
+    return platform === "swift"
+      ? `${childIndent}${JSON.stringify(key)}: ${sdkLiteral(child, platform, depth + 1)}`
+      : `${childIndent}${JSON.stringify(key)} to ${sdkLiteral(child, platform, depth + 1)}`;
+  });
+  if (!entries.length) return platform === "swift" ? "[:]" : "emptyMap()";
+  return platform === "swift"
+    ? `[\n${entries.join(",\n")}\n${indent}]`
+    : `mapOf(\n${entries.join(",\n")}\n${indent})`;
+}
+const requiresTradeToken = permissions.length > 0;
+const swiftAssignments = [
+  Object.keys(queryExample).length ? `request.query = ${sdkLiteral(queryExample, "swift")}` : "",
+  requestBodyExample !== undefined ? `request.body = ${sdkLiteral(requestBodyExample, "swift")}` : "",
+  requiresTradeToken ? `request.requiresTradeToken = true` : "",
+].filter(Boolean);
+const swiftExample = [
+  `let request = WhaleCoreHTTPRequest(`,
+  `    method: .${method.toLowerCase()},`,
+  `    path: ${JSON.stringify(path)}`,
+  `)`,
+  ...swiftAssignments,
+  ``,
+  `let response = try await WhaleCoreService.requestService.send(request)`,
+  `print(response.bodyString)`,
+].join("\n");
+const kotlinArguments = [
+  `    method = HttpMethod.${method.toUpperCase()},`,
+  `    path = ${JSON.stringify(path)},`,
+  Object.keys(queryExample).length ? `    query = ${sdkLiteral(queryExample, "kotlin", 1)},` : "",
+  requestBodyExample !== undefined ? `    body = ${sdkLiteral(requestBodyExample, "kotlin", 1)},` : "",
+  requiresTradeToken ? `    requiresTradeToken = true,` : "",
+].filter(Boolean);
+const kotlinExample = [
+  `val request = HttpRequest(`,
+  ...kotlinArguments,
+  `)`,
+  ``,
+  `val response = WhaleCore.getRequestService().send(request)`,
+  `println(response.bodyString)`,
+].join("\n");
+const webExample = [
+  `// The WhaleCore Web SDK request API is not publicly available yet.`,
+  `// Do not call TradingAPI with fetch; the SDK must sign each request.`,
+].join("\n");
+const [swiftHtml, kotlinHtml, webHtml] = await Promise.all([
+  codeToHtml(swiftExample, { lang: "swift", theme: "github-light" }),
+  codeToHtml(kotlinExample, { lang: "kotlin", theme: "github-light" }),
+  codeToHtml(webExample, { lang: "typescript", theme: "github-light" }),
+]);
+const exampleBlocks = await Promise.all(
+  responses.flatMap(([status, response]) =>
+    Object.entries(response.content ?? {}).flatMap(([contentType, content]: [string, any]) => {
+      const example = content.example ?? content.examples?.default?.value;
+      if (example === undefined) return [];
+      const code = JSON.stringify(example, null, 2);
+      return [{
+        status,
+        contentType,
+        exampleKind: content["x-example-kind"],
+        exampleSource: content["x-example-source"],
+        capturedAt: content["x-example-captured-at"],
+        code,
+        html: codeToHtml(code, { lang: "json", theme: "github-light" }),
+      }];
+    }),
+  ).map(async (entry) => ({ ...entry, html: await entry.html })),
+);
+---
+
+<DocsLayout
+  title={title}
+  description={operation.description}
+  descriptionHtml={renderMarkdown(operation.description)}
+  sidebar={sidebar}
+  headings={false}
+  breadcrumbs={[
+    { label: "Whale Docs", href: `/${localePath}/overview` },
+    { label: "TradingAPI", href: `/${localePath}/trading-api/overview` },
+    { label: labels.reference },
+  ]}
+  prevNext={prevNext}
+  editUrl={`https://github.com/longbridge/whale-docs/edit/main/openapi.trading.${locale}.json`}
+  wide={true}
+>
+  <div class="api-operation-heading">
+    <Badge className={`api-method api-method-${method.toLowerCase()}`}>{method.toUpperCase()}</Badge>
+    <code>{endpointUrl}</code>
+    <ApiEndpointCopy text={endpointUrl} label={labels.copyPath} copiedLabel={labels.copiedPath} />
+  </div>
+
+  <div class="api-reference-grid">
+  <div class="api-reference-fields">
+    {permissions.length > 0 && (
+      <section>
+        <h2 id="permissions">{labels.permissions}</h2>
+        {permissions.map((description: string) => <div set:html={renderMarkdown(description)} />)}
+      </section>
+    )}
+
+    {parameters.length > 0 && (
+      <section>
+        <h2 id="parameters">{labels.parameters}</h2>
+        <div class="api-fields">
+          {parameters.map((parameter: any) => {
+            const schema = resolveSchema(document, parameter.schema) ?? parameter.schema;
+            return (
+              <div class="api-field">
+                <div class="api-field-title">
+                  <code>{parameter.name}</code>
+                  <Badge variant="secondary">{schema?.type ?? "string"}</Badge>
+                  <Badge variant="outline">{parameter.in}</Badge>
+                  <Badge variant={parameter.required ? "destructive" : "outline"}>
+                    {parameter.required ? labels.required : labels.optional}
+                  </Badge>
+                </div>
+                {parameter.description && <div class="api-field-description" set:html={renderMarkdown(parameter.description)} />}
+                {schema?.enum && <p class="api-schema-enum">{schema.enum.map((value: unknown) => <code>{String(value)}</code>)}</p>}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    )}
+
+    {request && (
+      <section>
+        <h2 id="request-body">{labels.requestBody} <small>{requestType}</small></h2>
+        <ApiSchemaFields schema={requestSchema} document={document} locale={locale} childrenOpen={false} />
+      </section>
+    )}
+
+    <section>
+      <h2 id="responses">{labels.responses}</h2>
+      {responses.map(([status, response]) => {
+        const contentType = Object.keys(response.content ?? {})[0];
+        const body = contentType ? response.content[contentType] : undefined;
+        return (
+          <div class="api-response-schema">
+            <div class="api-response-status">
+              <code>HTTP {status}</code>
+              <span set:html={renderInlineMarkdown(response.description || labels.response)} />
+            </div>
+            {body?.schema && <ApiResponseSchema schema={body.schema} document={document} locale={locale} />}
+          </div>
+        );
+      })}
+    </section>
+
+  </div>
+  <aside class="api-code-panel">
+    <ApiCodeExample
+      client:load
+      requestTitle={labels.requestExample}
+      responseTitle={
+        exampleBlocks[0]?.exampleKind === "illustrative"
+          ? labels.illustrativeExample
+          : labels.actualResponseExample
+      }
+      copyLabel={labels.copyCode}
+      examples={[
+        { id: "ios", label: "iOS", code: swiftExample, html: swiftHtml },
+        { id: "android", label: "Android", code: kotlinExample, html: kotlinHtml },
+        { id: "web", label: "Web", code: webExample, html: webHtml },
+      ]}
+      responses={exampleBlocks}
+    />
+  </aside>
+  </div>
+</DocsLayout>

@@ -3,6 +3,7 @@ import type { SidebarItem } from "nimbus-docs/types";
 import docsConfig from "../../../docs.json";
 import pendingVerificationManifest from "../../../pending-verification.json";
 import { allOperations, operationRoutePath } from "./openapi";
+import { allTradingOperations, tradingOperationRoutePath } from "./trading-openapi";
 
 type PageNode = string | { group: string; flatten?: boolean; pages: PageNode[] };
 type NavGroup = { group: string; icon?: string; openapi?: unknown; pages: PageNode[] };
@@ -47,10 +48,10 @@ const sectionForTab: Record<string, string[]> = {
 };
 
 const operationTitles = new Map(
-  allOperations().map(({ locale, method, path, operation }) => [
-    `${locale}:${method.toUpperCase()} ${path}`,
-    operation.summary || operation.operationId || path,
-  ]),
+  [...allOperations(), ...allTradingOperations()].map(({ locale, method, path, operation }) => [
+      `${locale}:${method.toUpperCase()} ${path}`,
+      operation.summary || operation.operationId || path,
+    ]),
 );
 
 const methodVariant = (method: string) =>
@@ -61,6 +62,13 @@ export function operationHref(locale: string, operation: string): string {
   const localePath = locale.toLowerCase();
   if (!match) return `/${localePath}/broker-api`;
   return `/${localePath}/broker-api/${operationRoutePath(locale, match[1], match[2])}`;
+}
+
+export function tradingOperationHref(locale: string, operation: string): string {
+  const match = operation.match(/^([A-Z]+)\s+(.+)$/);
+  const localePath = locale.toLowerCase();
+  if (!match) return `/${localePath}/trading-api`;
+  return `/${localePath}/trading-api/${tradingOperationRoutePath(match[1], match[2])}`;
 }
 
 export async function getWhaleSidebar(pathname: string): Promise<SidebarItem[]> {
@@ -98,7 +106,9 @@ export async function getWhaleSidebar(pathname: string): Promise<SidebarItem[]> 
     const isOperation = /^[A-Z]+\s+\//.test(node);
     const localizedNode = node.replace(/^cn(?=\/|$)/, "zh-cn").replace(/^zh-Hant(?=\/|$)/, "zh-hk");
     const normalizedNode = localizedNode.replace(/\/index$/, "");
-    const href = isOperation ? operationHref(locale, node) : `/${normalizedNode.replace(/^\//, "")}`;
+    const href = isOperation
+      ? section === "trading-api" ? tradingOperationHref(locale, node) : operationHref(locale, node)
+      : `/${normalizedNode.replace(/^\//, "")}`;
     const id = localizedNode.toLowerCase().replace(/^\//, "");
     const fallback = node.split("/").filter(Boolean).at(-1)?.replace(/[-_]/g, " ") ?? node;
     // Pending-verification links aren't in the "docs" content collection --

@@ -1,5 +1,11 @@
 # Repository Guidelines
 
+## Documentation copywriting
+
+- Before creating, rewriting, translating, or reviewing public documentation, OpenAPI copy, or navigation labels, read and follow [`COPYWRITING.md`](./COPYWRITING.md).
+- Treat `COPYWRITING.md` as the repository's writing, terminology, localization, formatting, and AI authoring standard.
+- If instructions conflict, verified product behavior and this `AGENTS.md` take precedence over `COPYWRITING.md`.
+
 ## Stable documentation URLs
 
 - Keep documentation filenames and URL segments short, simple, and durable.
@@ -22,3 +28,12 @@
 - Do not run the full `bun run build` by default because it is expensive in this repository.
 - Prefer targeted checks or `bun run check` while developing.
 - Run `bun run build` only when the user explicitly requests it or when a full production build is essential to the requested task.
+
+## Repository scripts
+
+- Write new repository automation and maintenance scripts in TypeScript using the `.ts` extension.
+- Run TypeScript scripts with Bun.
+- Do not add new `.js`, `.mjs`, Ruby, Python, or shell scripts unless a required toolchain cannot support the task in TypeScript.
+- Do not commit one-off migration, formatting, translation, or bulk-rewrite scripts.
+- Use AI with `COPYWRITING.md` for documentation wording, translation, and Markdown formatting instead of encoding prose rewrites as transformation scripts.
+- Keep a script only when it is a durable, repeatable maintenance entry point with a clear ongoing purpose.

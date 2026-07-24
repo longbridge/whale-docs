@@ -244,7 +244,7 @@ languages.
 
 Product entries per language, in **fixed order**:
 
-**Docs → WhaleSDK → Broker API → Trading API → OpenAPI**
+**Docs → WhaleSDK → Broker API → TradingAPI → OpenAPI**
 
 - The order is a deliberate reader journey (understand → operate → embed →
   integrate server-side → integrate client-side → open platform). Do not
