@@ -33,9 +33,14 @@ export const markdown = {
     excludeLangs: ["math", "mermaid"],
   },
   shikiConfig: {
+    // Explicit light + dark palettes. A custom theme pair keeps Shiki tokens
+    // inline (--shiki-light / --shiki-dark on each span); globals.css then
+    // switches token color by `data-mode`. Nimbus' alternative "classed" path
+    // (nb-shiki-* + a generated _nimbus/shiki.css) isn't wired into this app,
+    // so inline is what actually paints colors — hence the explicit themes.
     themes: {
       light: "github-light-high-contrast",
-      dark: "github-light-high-contrast",
+      dark: "github-dark-high-contrast",
     },
     defaultColor: false,
     langAlias: {

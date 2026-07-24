@@ -143,7 +143,8 @@
   color-scheme: dark;
 
   --nb-background: oklch(0.192 0 0);
-  --nb-foreground: oklch(0.925 0.016 42.4);
+  /* Neutral near-white; no warm chroma so body text reads white, not yellow. */
+  --nb-foreground: oklch(0.95 0 0);
 
   --nb-card: oklch(0.168 0 0);
   --nb-card-foreground: var(--nb-foreground);
@@ -157,7 +158,11 @@
   /* Darker than `card` (0.168) so the inverted header recedes below the body. */
   --nb-surface-sunken: oklch(0.13 0 0);
 
-  /* --nb-primary / --nb-primary-foreground / --nb-primary-hover inherit from :root (identical). */
+  /* Soften the brand purple for dark: the root #7245f2 reads as glaring neon on
+     a dark canvas, so use a calmer periwinkle (hover lifts a touch lighter). */
+  --nb-primary: #7e84ff;
+  --nb-primary-hover: #9499ff;
+  --nb-primary-foreground: #ffffff;
 
   --nb-border: oklch(0.285 0 0);
   --nb-border-strong: oklch(0.371 0 0);
@@ -404,6 +409,19 @@ body {
 :root[data-nb-pref="dark"] .nb-theme-ico-dark,
 :root[data-nb-pref="auto"] .nb-theme-ico-auto,
 :root:not([data-nb-pref]) .nb-theme-ico-auto {
+  display: block;
+}
+
+/* ---- Header wordmark: swap light/dark lockup by resolved theme ----
+   Global (not component-scoped) so it keys off `data-mode` on <html> without
+   depending on Astro's per-component scope hash. */
+.logo-dark {
+  display: none;
+}
+[data-mode="dark"] .logo-light {
+  display: none;
+}
+[data-mode="dark"] .logo-dark {
   display: block;
 }
 
@@ -870,12 +888,23 @@ body:not(:has([data-mobile-sidebar])) [data-menu-btn] {
 }
 
 @layer components {
+  /*
+   * Section headings anchor the rail: full-strength (foreground) and semibold
+   * so they read as titles above their items, which stay at `medium` weight.
+   * Applies in both themes; active/current/static states override below.
+   */
   [data-nb-sidebar-group-label] {
-    @apply text-muted-foreground flex min-h-8 items-center rounded-lg px-3 py-0.5 text-[0.875rem] font-medium no-underline transition-colors duration-150;
+    @apply text-foreground flex min-h-8 items-center rounded-lg px-3 py-0.5 text-[0.875rem] font-semibold no-underline transition-colors duration-150;
   }
-  [data-mode="dark"]
-    [data-nb-sidebar-group-label]:not([data-nb-active]):not([data-nb-current]) {
-    color: var(--nb-foreground);
+  /*
+   * Step the type size down by tree depth so nesting is legible at a glance:
+   * first-level sections are largest, nested groups a notch smaller.
+   */
+  [data-nb-sidebar-group][data-nb-sidebar-depth="0"] > [data-nb-sidebar-group-label] {
+    @apply text-[0.9375rem];
+  }
+  [data-nb-sidebar-group]:not([data-nb-sidebar-depth="0"]) > [data-nb-sidebar-group-label] {
+    @apply text-[0.8125rem];
   }
   [data-mode="dark"] [data-nb-sidebar-group-text] .text-muted-foreground {
     color: var(--nb-foreground);
@@ -989,15 +1018,21 @@ body:not(:has([data-mobile-sidebar])) [data-menu-btn] {
     color: var(--api-method-foreground) !important;
   }
 
+  /*
+   * All four methods share one visual tier: a translucent tint of the method
+   * hue (works on any canvas) plus a solid hue for the active/selected state.
+   * PUT/PATCH and DELETE previously used solid light fills, which read as a
+   * different, brighter tier than GET/POST — especially in dark mode.
+   */
   .api-method-get {
-    --api-method-background: color-mix(in srgb, #4ade80 20%, transparent);
+    --api-method-background: color-mix(in srgb, #22c55e 18%, transparent);
     --api-method-foreground: #15803d;
     --api-method-active-background: #22c55e;
     --api-method-active-foreground: white;
   }
 
   .api-method-post {
-    --api-method-background: color-mix(in srgb, #60a5fa 20%, transparent);
+    --api-method-background: color-mix(in srgb, #3b82f6 18%, transparent);
     --api-method-foreground: #1d4ed8;
     --api-method-active-background: #3064e3;
     --api-method-active-foreground: white;
@@ -1005,17 +1040,32 @@ body:not(:has([data-mobile-sidebar])) [data-menu-btn] {
 
   .api-method-put,
   .api-method-patch {
-    --api-method-background: #fef3c7;
+    --api-method-background: color-mix(in srgb, #f59e0b 18%, transparent);
     --api-method-foreground: #b45309;
     --api-method-active-background: #d97706;
     --api-method-active-foreground: white;
   }
 
   .api-method-delete {
-    --api-method-background: #fee2e2;
+    --api-method-background: color-mix(in srgb, #ef4444 18%, transparent);
     --api-method-foreground: #dc2626;
     --api-method-active-background: #dc2626;
     --api-method-active-foreground: white;
+  }
+
+  /* Dark mode: lift each translucent badge's foreground to a legible tint. */
+  [data-mode="dark"] .api-method-get {
+    --api-method-foreground: #4ade80;
+  }
+  [data-mode="dark"] .api-method-post {
+    --api-method-foreground: #60a5fa;
+  }
+  [data-mode="dark"] .api-method-put,
+  [data-mode="dark"] .api-method-patch {
+    --api-method-foreground: #fbbf24;
+  }
+  [data-mode="dark"] .api-method-delete {
+    --api-method-foreground: #f87171;
   }
 
   /*

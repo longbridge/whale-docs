@@ -24,8 +24,47 @@ const lang = path.startsWith("/zh-cn/") ? "zh-CN" : path.startsWith("/zh-hk/") ?
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script is:inline>
-      document.documentElement.setAttribute("data-theme", "light");
-      document.documentElement.style.colorScheme = "light";
+      // Pre-paint theme resolution — runs before first paint to avoid FOUC.
+      // Reads the saved preference ("ui-mode": light | dark | auto), resolves
+      // "auto" against the OS setting, and applies it to <html> via the
+      // attributes the stylesheet keys off (data-mode for dark, data-nb-pref
+      // for the toggle icon). ThemeToggle only writes localStorage and calls
+      // window.__nbApplyTheme, so this script owns all DOM application.
+      (function () {
+        function apply() {
+          var pref = "auto";
+          try {
+            var v = localStorage.getItem("ui-mode");
+            if (v === "light" || v === "dark" || v === "auto") pref = v;
+          } catch (e) {}
+          var systemDark = false;
+          try {
+            systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          } catch (e) {}
+          var mode = pref === "dark" || (pref === "auto" && systemDark) ? "dark" : "light";
+          var root = document.documentElement;
+          root.setAttribute("data-nb-pref", pref);
+          root.setAttribute("data-mode", mode);
+          root.setAttribute("data-theme", mode);
+          root.style.colorScheme = mode;
+        }
+        window.__nbApplyTheme = apply;
+        apply();
+        if (!window.__nbThemeBound) {
+          window.__nbThemeBound = true;
+          try {
+            window
+              .matchMedia("(prefers-color-scheme: dark)")
+              .addEventListener("change", function () {
+                if (window.__nbApplyTheme) window.__nbApplyTheme();
+              });
+          } catch (e) {}
+          // ClientRouter view transitions replace <html>; reapply after swap.
+          document.addEventListener("astro:after-swap", function () {
+            if (window.__nbApplyTheme) window.__nbApplyTheme();
+          });
+        }
+      })();
     </script>
     <PageHead title={title} description={description} noindex={noindex} socialImage={socialImage} head={head} meta={meta} />
     <ClientRouter />
