@@ -1,9 +1,9 @@
 // Renders `pre.mermaid` blocks: lazy-loads mermaid only on pages that have a
-// diagram, applies brand theme variables, and adds an expand-to-dialog modal
-// and annotation footer. Adapted from cloudflare-docs (src/scripts/mermaid.ts);
+// diagram, applies brand theme variables, and adds an "open in new tab" button
+// that serves the rendered SVG on its own so the reader can pan and zoom with
+// native browser controls. Adapted from cloudflare-docs (src/scripts/mermaid.ts);
 // dark mode keys off `[data-mode="dark"]`.
 
-let dialog: HTMLDialogElement | null = null;
 let themeObserver: MutationObserver | null = null;
 // Per-<pre> guard: capture source text once, before mermaid replaces innerHTML.
 const captured = new WeakSet<HTMLPreElement>();
@@ -15,81 +15,26 @@ function uniqueMermaidId(): string {
 	return `mermaid-${random}`;
 }
 
-function getDialog(): HTMLDialogElement {
-	if (dialog) return dialog;
+// Serialize the rendered SVG to a standalone document and open it in a new tab.
+// The browser then provides free zoom and pan — better than a fixed-size modal
+// for large, content-heavy diagrams.
+function openInNewTab(container: HTMLElement) {
+	const svg = container.querySelector("svg");
+	if (!svg) return;
 
-	dialog = document.createElement("dialog");
-	dialog.className = "mermaid-dialog";
-	dialog.innerHTML = `
-    <div class="mermaid-dialog-body"></div>
-    <button class="mermaid-dialog-close" aria-label="Close">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="18" y2="18"></line>
-      </svg>
-    </button>
-  `;
-	document.body.appendChild(dialog);
-
-	function closeWithAnimation() {
-		if (!dialog || !dialog.open) return;
-		dialog.classList.add("closing");
-		dialog.addEventListener(
-			"animationend",
-			() => {
-				dialog!.classList.remove("closing");
-				dialog!.close();
-				document.documentElement.style.overflow = "";
-			},
-			{ once: true },
-		);
+	const clone = svg.cloneNode(true) as SVGSVGElement;
+	// Drop the max-width constraint so the standalone SVG uses its natural size.
+	clone.removeAttribute("style");
+	if (!clone.getAttribute("xmlns")) {
+		clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
 	}
 
-	dialog.addEventListener("click", (e) => {
-		if (e.target === dialog) closeWithAnimation();
-	});
-	dialog
-		.querySelector(".mermaid-dialog-close")
-		?.addEventListener("click", () => {
-			closeWithAnimation();
-		});
-	dialog.addEventListener("cancel", (e) => {
-		e.preventDefault();
-		closeWithAnimation();
-	});
-
-	return dialog;
-}
-
-function openDiagram(container: HTMLElement) {
-	const d = getDialog();
-	const clone = container.cloneNode(true) as HTMLElement;
-
-	clone.querySelector(".mermaid-expand")?.remove();
-
-	const svg = clone.querySelector("svg");
-	if (svg) {
-		svg.removeAttribute("style");
-		svg.setAttribute("width", "100%");
-		svg.setAttribute("height", "auto");
-	}
-
-	const body = d.querySelector(".mermaid-dialog-body");
-	if (!body) return;
-	body.replaceChildren(clone);
-
-	clone.addEventListener("click", (e) => {
-		const target = e.target as Element;
-		const anchor = target.closest("a");
-		const clickable = target.closest(".clickable");
-		if (anchor || clickable) {
-			d.close();
-			document.documentElement.style.overflow = "";
-		}
-	});
-
-	document.documentElement.style.overflow = "hidden";
-	d.showModal();
+	const serialized = new XMLSerializer().serializeToString(clone);
+	const blob = new Blob([serialized], { type: "image/svg+xml;charset=utf-8" });
+	const url = URL.createObjectURL(blob);
+	window.open(url, "_blank", "noopener");
+	// Release the object URL after the new tab has had time to load it.
+	setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
 function getFontFamily(): string {
@@ -147,14 +92,15 @@ function wrapDiagram(diagram: HTMLPreElement, title: string | null) {
 
 	const expandBtn = document.createElement("button");
 	expandBtn.className = "mermaid-expand";
-	expandBtn.setAttribute("aria-label", "Expand diagram");
+	expandBtn.setAttribute("aria-label", "Open diagram in a new tab");
+	expandBtn.setAttribute("title", "Open in a new tab to zoom");
 	expandBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <polyline points="15 3 21 3 21 9"></polyline>
     <polyline points="9 21 3 21 3 15"></polyline>
     <line x1="21" y1="3" x2="14" y2="10"></line>
     <line x1="3" y1="21" x2="10" y2="14"></line>
   </svg>`;
-	expandBtn.addEventListener("click", () => openDiagram(container));
+	expandBtn.addEventListener("click", () => openInNewTab(container));
 	container.appendChild(expandBtn);
 
 	if (title) {

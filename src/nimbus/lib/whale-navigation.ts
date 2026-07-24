@@ -10,33 +10,11 @@ type NavGroup = { group: string; icon?: string; openapi?: unknown; pages: PageNo
 type NavTab = { tab: string; groups: NavGroup[] };
 type LanguageNav = { language: string; tabs: NavTab[] };
 
-// Map the short icon names used in docs.json's top-level groups onto concrete
-// Phosphor (astro-icon) names. Every first-level group must resolve to an icon,
-// so unknown/omitted names fall back to a neutral section glyph.
-const GROUP_ICON_ALIASES: Record<string, string> = {
-  rocket: "ph:rocket-launch",
-  "book-open": "ph:book-open",
-  palette: "ph:palette",
-  code: "ph:code",
-  database: "ph:database",
-  "app-window": "ph:app-window",
-  cpu: "ph:cpu",
-  play: "ph:play-circle",
-  wallet: "ph:wallet",
-  banknote: "ph:money",
-  sparkles: "ph:sparkle",
-  shield: "ph:shield-check",
-  "chart-candlestick": "ph:chart-line-up",
-  bell: "ph:bell",
-  settings: "ph:gear",
-  component: "ph:puzzle-piece",
-  wrench: "ph:wrench",
-};
-
+// docs.json's group icons use Lucide kebab-case names (e.g. "rocket",
+// "book-open", "square-terminal"), rendered via <LucideIcon name=...>. Names
+// are passed through as-is; an omitted name falls back to a neutral folder glyph.
 function resolveGroupIcon(name?: string): string {
-  if (!name) return "ph:folder";
-  if (name.includes(":")) return name;
-  return GROUP_ICON_ALIASES[name] ?? "ph:folder";
+  return name ?? "folder";
 }
 
 const sectionForTab: Record<string, string[]> = {
