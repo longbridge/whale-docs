@@ -1,5 +1,11 @@
 # Repository Guidelines
 
+## Documentation copywriting
+
+- Before creating, rewriting, translating, or reviewing public documentation, OpenAPI copy, or navigation labels, read and follow [`COPYWRITING.md`](./COPYWRITING.md).
+- Treat `COPYWRITING.md` as the repository's writing, terminology, localization, formatting, and AI authoring standard.
+- If instructions conflict, verified product behavior and this `AGENTS.md` take precedence over `COPYWRITING.md`.
+
 ## Stable documentation URLs
 
 - Keep documentation filenames and URL segments short, simple, and durable.
