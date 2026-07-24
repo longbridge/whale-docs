@@ -1,64 +1,32 @@
-# Whale Docs
+# Whale Docs {/* whale-docs */}
 
-Documentation for Longport Whale, built with Astro and Bun.
+The documentation site for Longport Whale, built with Astro and Bun.
 
-The site covers Docs, WhaleSDK, BrokerAPI, TradingAPI, and OpenAPI in English,
-Simplified Chinese, and Traditional Chinese.
+Whale Docs includes product documentation, WhaleSDK guides, BrokerAPI and
+TradingAPI references, and OpenAPI specifications in English, Simplified
+Chinese, and Traditional Chinese.
 
-## Development
+## Documentation {/* documentation */}
 
-```bash
-bun install
-bun run dev
-```
+Public documentation is available under three locale routes:
 
-The local server starts at <http://localhost:4321>. To build and preview the
-production output:
+- `/en/`
+- `/zh-CN/`
+- `/zh-HK/`
 
-```bash
-bun run build
-bun run preview
-```
+Documentation source files live in `docs/`. API references are generated from
+the OpenAPI specifications in the repository, and `docs.json` defines product
+and sidebar navigation.
 
-## Repository structure
+## Contributing {/* contributing */}
 
-```text
-astro.config.mjs                # Astro entrypoint
-docs.json                       # Product and sidebar navigation source
-openapi.{en,zh-CN,zh-HK}.json  # BrokerAPI specifications
-docs/en/                        # English source documents
-docs/zh-CN/                     # Simplified Chinese source documents
-docs/zh-HK/                     # Traditional Chinese source documents
-src/nimbus/                     # Nimbus application shell and Whale adapters
-src/nimbus/styles/              # Design tokens, prose, and component styles
-```
+Read [CONTRIBUTING.md](./CONTRIBUTING.md) for local development, documentation
+standards, API maintenance notes, and verification commands.
 
-Source Markdown and MDX files remain unchanged under `docs/`. Public locale
-routes are `/en/`, `/zh-CN/`, and `/zh-HK/`.
+AI agents and human contributors must follow [COPYWRITING.md](./COPYWRITING.md)
+when writing or reviewing public content.
 
-## Updating BrokerAPI
+## Attribution {/* attribution */}
 
-The API source lives in the sibling `../whale-openapi-docs` repository. Do not
-edit the generated OpenAPI JSON files directly.
-
-```bash
-python3 scripts/convert.py --dry-run
-python3 scripts/convert.py
-bun run build
-```
-
-The import updates all three specifications and the business-domain navigation
-in `docs.json`. Enable the repository hook in each clone when automatic API sync
-is required:
-
-```bash
-git config core.hooksPath .githooks
-```
-
-## UI foundation
-
-The UI uses the Nimbus documentation application as its foundation with Whale
-branding and navigation. See [NOTICE.md](./NOTICE.md) for attribution.
-
-Keep internal drafts and decision records in the ignored `docs/internal/`
-directory. They must not appear in public navigation or Git history.
+The site uses the Nimbus documentation application as its UI foundation with
+Whale branding and navigation. See [NOTICE.md](./NOTICE.md) for attribution.
