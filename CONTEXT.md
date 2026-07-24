@@ -42,11 +42,11 @@ _Avoid_: Web TradingAPI、独立文档产品
 _Avoid_: b-api、Whale API、OpenAPI
 
 **TradingAPI**:
-供 Broker App 使用的 Customer 级 HTTP API，以单个 Customer 身份授权，通常与 WhaleCore SDK 配合，用于完全自行实现证券功能 UI。
+供 Broker App 使用的客户级 HTTP API，以单个客户身份授权，通常与 WhaleCore SDK 配合，用于完全自行实现证券功能 UI。
 _Avoid_: Client API、App API、Mobile API
 
 **OpenAPI**:
-面向 Broker 的 Customer 的开放能力，以单个 Customer 身份授权。用于策略交易、量化分析和开发者工具，并通过 MCP 等 AI-native 方式让 Customer 授权 AI 接入其账户、资产、行情和基本面数据。
+面向 Broker 的客户的开放能力，以单个客户身份授权。用于策略交易、量化分析和开发者工具，并通过 MCP 等 AI-native 方式让客户授权 AI 接入其账户、资产、行情和基本面数据。
 _Avoid_: Broker API、开放平台（单独指代 API 时）
 
 ## 参与方与授权
@@ -55,28 +55,28 @@ _Avoid_: Broker API、开放平台（单独指代 API 时）
 采购并运营 Longport Whale 的持牌券商机构，也是 Broker API 的授权边界。
 _Avoid_: SaaS Tenant、Member、Organization（作为对外统称时）
 
-**Customer**:
+**Client**:
 Broker 服务的终端客户，是 TradingAPI 与 OpenAPI 的授权边界。
-_Avoid_: Client、User、Investor（作为统一身份概念时）
+_Avoid_: Customer、User、Investor（作为统一身份概念时）
 
 **Broker Developer**:
 代表 Broker 建设服务端集成或自研 App 的开发人员。
-_Avoid_: Developer Customer
+_Avoid_: Developer（单独使用时特指终端客户侧的 Developer）
 
 **Broker App Developer**:
 代表 Broker 集成 WhaleApp SDK（iOS、Android 或 WebTrade）或 WhaleCore SDK 的 Broker App 开发人员。
-_Avoid_: Developer Customer、Broker Operator
+_Avoid_: Developer（单独使用时特指终端客户侧的 Developer）、Broker Operator
 
 **Broker Operator**:
 代表 Broker 代表 Broker 执行日常柜台业务、审核、配置、查询和异常处理的操作人员。
 _Avoid_: Admin、Staff、User（作为统一角色名称时）
 
-**Developer Customer**:
-使用 OpenAPI 开发策略交易、量化分析、开发者工具或 AI 应用的 Broker Customer。
-_Avoid_: Broker Developer
+**Developer**:
+使用 OpenAPI 开发策略交易、量化分析、开发者工具或 AI 应用的 Broker 客户，是 Client 的一种。
+_Avoid_: Developer Client、Developer Customer、Broker Developer
 
 **Broker-scoped Authorization**:
 由 Broker 授予的机构级访问权限，可按获批能力访问该 Broker 范围内的数据。
 
-**Customer-scoped Authorization**:
-由单个 Customer 授予的访问权限，只覆盖该 Customer 的私有数据和平台公开数据。
+**Client-scoped Authorization**:
+由单个客户授予的访问权限，只覆盖该客户的私有数据和平台公开数据。

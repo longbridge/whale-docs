@@ -54,7 +54,7 @@ It does **not** duplicate what other files already own:
 
 | Concern                                                    | Source of truth                        |
 | ---------------------------------------------------------- | -------------------------------------- |
-| Product & role terminology (Whale, Broker, Customer, …)    | `CONTEXT.md` glossary                  |
+| Product & role terminology (Whale, Broker, Client, …)    | `CONTEXT.md` glossary                  |
 | Repository structure, build, regeneration workflow         | `README.md`                            |
 | Site config values (colors, logo, nav, footer, playground) | `astro.config.mjs`                     |
 | Layout/appearance overrides                                | `src/styles/whale.css`                 |

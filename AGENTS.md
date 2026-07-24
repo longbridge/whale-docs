@@ -17,7 +17,8 @@
 
 ## Stable heading anchors
 
-- Every Markdown or MDX heading must end with an explicit, durable English anchor in the form `## Visible title {/* stable-english-anchor */}`.
+- Every heading in documentation content under `docs/` must end with an explicit, durable English anchor in the form `## Visible title {/* stable-english-anchor */}`.
+- Do not add these anchors to repository Markdown files outside `docs/` (for example `README.md`, `CONTRIBUTING.md`, or `COPYWRITING.md`).
 - Use lowercase kebab-case English words for anchors. Keep equivalent headings aligned across `en`, `zh-CN`, and `zh-HK`.
 - Treat the explicit anchor as a public URL. Do not change it merely because the visible title is reworded or translated.
 - When an anchor genuinely must change, update inbound fragment links in every locale together.
