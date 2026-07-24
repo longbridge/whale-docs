@@ -27,8 +27,12 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { Content, headings } = await render(entry);
 const currentSlug = Astro.url.pathname.replace(/\/$/, "") || "/";
-const sidebar = await getWhaleSidebar(Astro.url.pathname);
-const prevNext = await getPrevNext(currentSlug, { sidebarTree: sidebar });
+// Standalone guide pages (e.g. Whale Console) render on their own — no sidebar,
+// TOC, or prev/next pagination.
+const pageSlug = entry.id.replace(/\.(md|mdx)$/, "").replace(/^(en|zh-cn|zh-hk)\//i, "");
+const isStandalone = pageSlug === "whale-console";
+const sidebar = isStandalone ? false : await getWhaleSidebar(Astro.url.pathname);
+const prevNext = isStandalone ? undefined : await getPrevNext(currentSlug, { sidebarTree: sidebar });
 const breadcrumbs = await getBreadcrumbs(currentSlug, { collection: entry.collection });
 // Astro includes MDX's explicit `{/* english-anchor */}` marker in heading
 // metadata even though the marker is not visible in the rendered heading.
@@ -48,7 +52,7 @@ const editUrl = `https://github.com/longbridge/whale-docs/edit/main/docs/${entry
   title={entry.data.title}
   description={entry.data.description}
   sidebar={sidebar}
-  headings={toc}
+  headings={isStandalone ? false : toc}
   breadcrumbs={breadcrumbs}
   prevNext={prevNext}
   markdownUrl={markdownUrl}

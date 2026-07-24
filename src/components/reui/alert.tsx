@@ -4,29 +4,22 @@ import { cn } from "@components/lib/utils"
 
 const alertVariants = cva(
   [
-    "relative w-full text-sm border has-[>svg]:grid-cols-[calc(var(--spacing)*3)_1fr] grid-cols-[0_1fr] grid gap-y-0.5 items-center [&>svg:not([class*=size-])]:size-4",
-    "has-[>[data-slot=alert-title]+[data-slot=alert-description]]:[&_[data-slot=alert-action]]:sm:row-end-3",
+    "relative grid w-full grid-cols-[0_1fr] items-center gap-y-0.5 rounded-lg border px-3 py-2.5 text-sm",
+    "has-[>svg]:grid-cols-[calc(var(--spacing)*3)_1fr] has-[>svg]:gap-x-2.5 [&>svg:not([class*=size-])]:size-4",
     "has-[>[data-slot=alert-title]+[data-slot=alert-description]]:items-start",
     "has-[>[data-slot=alert-title]+[data-slot=alert-description]]:[&_svg]:translate-y-0.5",
-    "rounded-xl",
-    "px-3",
-    "py-2.5",
-    "has-[>svg]:gap-x-2.5",
   ],
   {
+    // ReUI's own variant colours: semantic token at /4 tint + /30 border, only
+    // the icon carries the accent. `default` (Note) is the neutral card.
     variants: {
       variant: {
-        default: "bg-card text-card-foreground",
+        default: "border-border bg-card text-card-foreground",
+        info: "border-info/30 bg-info/4 [&>svg]:text-info",
+        success: "border-success/30 bg-success/4 [&>svg]:text-success",
+        warning: "border-warning/30 bg-warning/4 [&>svg]:text-warning",
         destructive:
-          "border-destructive/30 bg-red-500/10 text-destructive [&>svg]:text-destructive [&_[data-slot=alert-description]]:text-destructive",
-        info:
-          "border-info/30 bg-blue-500/10 text-info [&>svg]:text-info [&_[data-slot=alert-description]]:text-info",
-        success:
-          "border-success/30 bg-emerald-500/10 text-success [&>svg]:text-success [&_[data-slot=alert-description]]:text-success",
-        warning:
-          "border-warning/30 bg-amber-500/10 text-warning [&>svg]:text-warning [&_[data-slot=alert-description]]:text-warning",
-        invert:
-          "border-invert bg-invert text-invert-foreground [&_[data-slot=alert-description]]:text-invert-foreground/70",
+          "border-destructive/30 bg-destructive/4 [&>svg]:text-destructive",
       },
     },
     defaultVariants: {
@@ -43,7 +36,7 @@ function Alert({
   return (
     <div
       data-slot="alert"
-      role="alert"
+      role="note"
       className={cn(alertVariants({ variant }), className)}
       {...props}
     />
@@ -71,7 +64,7 @@ function AlertDescription({
     <div
       data-slot="alert-description"
       className={cn(
-        "text-muted-foreground col-span-full col-start-1 mt-1 grid justify-items-start gap-1 text-sm [&_p]:leading-relaxed",
+        "text-muted-foreground col-start-2 grid justify-items-start gap-1 text-sm [&_a]:underline [&_a]:underline-offset-2 [&_p]:leading-relaxed",
         className
       )}
       {...props}
@@ -79,17 +72,4 @@ function AlertDescription({
   )
 }
 
-function AlertAction({ className, ...props }: React.ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="alert-action"
-      className={cn(
-        "flex gap-1.5 max-sm:col-start-2 max-sm:mt-2 max-sm:justify-start sm:col-start-3 sm:row-start-1 sm:justify-end sm:self-center",
-        className
-      )}
-      {...props}
-    />
-  )
-}
-
-export { Alert, AlertTitle, AlertDescription, AlertAction }
+export { Alert, AlertTitle, AlertDescription }
