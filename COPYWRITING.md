@@ -72,16 +72,16 @@ Use fictional values or clear placeholders in examples. Never expose real tokens
 
 Each page should have one primary purpose. Do not combine conceptual explanation, an end-to-end tutorial, a field dictionary, and troubleshooting without clear boundaries.
 
-| Content type | Reader question | Preferred title | Required content |
-| --- | --- | --- | --- |
-| Overview | What is this, who is it for, and where do I go next? | Product name or short noun | One-sentence value, scope, capabilities, entry points, next step |
-| Get started / Quickstart | How do I reach the first successful result quickly? | “Quickstart” or a goal phrase | Prerequisites, shortest path, runnable example, verification, next step |
-| How-to | How do I complete a specific task? | Verb phrase | Prerequisites, ordered steps, result per step, final verification |
-| Concept | Why is this designed this way, and how do the objects relate? | Short noun phrase | Context, objects or mechanism, boundaries, relationships, task links |
-| Reference | What are the exact rules for this setting, field, or behavior? | Noun phrase | Scope, structured definitions, constraints, examples, related content |
-| API reference | How do I call this operation? | Short action | Purpose, authentication, input, output, errors, examples, limits |
-| Troubleshooting / FAQ | How do I diagnose and resolve this symptom? | Symptom or user question | Symptom, causes, diagnosis, resolution, verification, escalation |
-| Implementation guide | How do I deliver and launch this across phases? | Goal or phase | Roles, dependencies, phases, deliverables, completion criteria, rollback or support |
+| Content type             | Reader question                                                | Preferred title               | Required content                                                                    |
+| ------------------------ | -------------------------------------------------------------- | ----------------------------- | ----------------------------------------------------------------------------------- |
+| Overview                 | What is this, who is it for, and where do I go next?           | Product name or short noun    | One-sentence value, scope, capabilities, entry points, next step                    |
+| Get started / Quickstart | How do I reach the first successful result quickly?            | “Quickstart” or a goal phrase | Prerequisites, shortest path, runnable example, verification, next step             |
+| How-to                   | How do I complete a specific task?                             | Verb phrase                   | Prerequisites, ordered steps, result per step, final verification                   |
+| Concept                  | Why is this designed this way, and how do the objects relate?  | Short noun phrase             | Context, objects or mechanism, boundaries, relationships, task links                |
+| Reference                | What are the exact rules for this setting, field, or behavior? | Noun phrase                   | Scope, structured definitions, constraints, examples, related content               |
+| API reference            | How do I call this operation?                                  | Short action                  | Purpose, authentication, input, output, errors, examples, limits                    |
+| Troubleshooting / FAQ    | How do I diagnose and resolve this symptom?                    | Symptom or user question      | Symptom, causes, diagnosis, resolution, verification, escalation                    |
+| Implementation guide     | How do I deliver and launch this across phases?                | Goal or phase                 | Roles, dependencies, phases, deliverables, completion criteria, rollback or support |
 
 Organize Whale Docs around the reader journey: understand, choose, integrate, verify, launch, and operate. Do not organize public documentation around internal teams or code modules.
 
@@ -345,7 +345,9 @@ Start each step with a clear action and include an observable result where possi
 ```mdx
 <Steps>
   <Step title="Set the access token">Save the token in `ACCESS_TOKEN`.</Step>
-  <Step title="Send the request">Run the command and confirm that `code` is `0`.</Step>
+  <Step title="Send the request">
+    Run the command and confirm that `code` is `0`.
+  </Step>
 </Steps>
 ```
 
@@ -474,7 +476,7 @@ Field descriptions should explain the field's meaning, format, unit, time zone, 
 
 Express machine constraints through OpenAPI keywords such as `type`, `format`, `enum`, `minimum`, `maximum`, `minLength`, `pattern`, and `deprecated`.
 
-List multiple enum or status values separately, using backticks and ` - `:
+List multiple enum or status values separately, using backticks and `-`:
 
 ```markdown
 Call contract supports extended sessions:
@@ -600,8 +602,12 @@ Configure event forwarding so Broker Server can receive and process Whale events
 ## Configure forwarding {/* configure-forwarding */}
 
 <Steps>
-  <Step title="Create the receiving endpoint">Implement request verification and idempotent processing.</Step>
-  <Step title="Submit the configuration">Provide the verified endpoint information to the project team.</Step>
+  <Step title="Create the receiving endpoint">
+    Implement request verification and idempotent processing.
+  </Step>
+  <Step title="Submit the configuration">
+    Provide the verified endpoint information to the project team.
+  </Step>
 </Steps>
 
 ## Verify the result {/* verify-the-result */}
