@@ -2,7 +2,11 @@ import en from "../../../openapi.en.json";
 import zhCN from "../../../openapi.zh-CN.json";
 import zhHK from "../../../openapi.zh-HK.json";
 
-export type OpenApiDocument = typeof en;
+export type OpenApiDocument = {
+  paths: Record<string, Record<string, unknown>>;
+  components?: Record<string, any>;
+  [key: string]: any;
+};
 export type OperationRecord = {
   locale: "en" | "zh-CN" | "zh-HK";
   method: string;
@@ -47,6 +51,23 @@ export function allOperations(): OperationRecord[] {
 }
 
 export function resolveSchema(document: OpenApiDocument, schema: any): any {
-  if (!schema?.$ref) return schema;
-  return schema.$ref.replace(/^#\//, "").split("/").reduce((value: any, key: string) => value?.[key], document);
+  if (!schema) return schema;
+  if (schema.$ref) {
+    return resolveSchema(
+      document,
+      schema.$ref.replace(/^#\//, "").split("/").reduce((value: any, key: string) => value?.[key], document),
+    );
+  }
+  if (!schema.allOf) return schema;
+
+  const parts = schema.allOf.map((part: any) => resolveSchema(document, part) ?? {});
+  return parts.reduce(
+    (merged: any, part: any) => ({
+      ...merged,
+      ...part,
+      properties: { ...(merged.properties ?? {}), ...(part.properties ?? {}) },
+      required: [...new Set([...(merged.required ?? []), ...(part.required ?? [])])],
+    }),
+    { ...schema, allOf: undefined },
+  );
 }

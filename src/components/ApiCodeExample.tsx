@@ -15,7 +15,7 @@ import {
 import { Frame, FrameHeader, FramePanel, FrameTitle } from "@components/reui/frame"
 
 type CodeExample = {
-  id: "curl" | "fetch"
+  id: string
   label: string
   code: string
   html: string
@@ -45,7 +45,7 @@ function CodeCard({
   examples: CodeExample[]
   copyLabel: string
 }) {
-  const [selectedId, setSelectedId] = useState<CodeExample["id"]>(examples[0]?.id ?? "curl")
+  const [selectedId, setSelectedId] = useState<CodeExample["id"]>(examples[0]?.id ?? "")
   const [copied, setCopied] = useState(false)
   const selected = examples.find((example) => example.id === selectedId) ?? examples[0]
 
