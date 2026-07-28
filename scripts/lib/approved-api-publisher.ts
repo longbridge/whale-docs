@@ -249,6 +249,38 @@ function localizeNode(value: unknown, locale: Locale): unknown {
   return result;
 }
 
+function removeOrderBy(value: unknown): void {
+  if (Array.isArray(value)) {
+    value.forEach(removeOrderBy);
+    return;
+  }
+  if (!value || typeof value !== "object") return;
+  const node = value as JsonObject;
+  if (node.properties && typeof node.properties === "object") {
+    delete node.properties.orderBy;
+  }
+  if (Array.isArray(node.required)) {
+    node.required = node.required.filter((name: unknown) => name !== "orderBy");
+    if (node.required.length === 0) delete node.required;
+  }
+  Object.values(node).forEach(removeOrderBy);
+}
+
+function keepOnlyDownloadFilters(operation: JsonObject): void {
+  for (const media of Object.values(
+    operation.requestBody?.content ?? {},
+  ) as JsonObject[]) {
+    const schema = media?.schema;
+    if (!schema?.properties?.filters) continue;
+    schema.properties = { filters: schema.properties.filters };
+    schema.required = Array.isArray(schema.required) &&
+      schema.required.includes("filters")
+      ? ["filters"]
+      : undefined;
+    if (!schema.required) delete schema.required;
+  }
+}
+
 function deepEqual(left: unknown, right: unknown): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
 }
@@ -390,9 +422,40 @@ export function buildLocalizedSpec(
   };
   const paths: JsonObject = {};
   const tags = new Map<string, JsonObject>();
+  const approvedByKey = new Map(
+    operations.map((source) => [source.key, source]),
+  );
 
   for (const source of operations) {
     const localized = localizeNode(source.operation, locale) as JsonObject;
+    removeOrderBy(localized);
+    const isDatasetDownload =
+      source.path.startsWith("/v1/datasets/") &&
+      source.path.endsWith("/download");
+    const basePath = isDatasetDownload
+      ? source.path.slice(0, -"/download".length)
+      : source.path;
+    const baseSource = approvedByKey.get(operationKey(source.method, basePath));
+    const downloadSource = approvedByKey.get(
+      operationKey(source.method, `${source.path}/download`),
+    );
+    if (isDatasetDownload && baseSource) {
+      keepOnlyDownloadFilters(localized);
+      localized["x-dataset-parent"] = {
+        method: baseSource.method,
+        path: baseSource.path,
+        operationId: baseSource.operationId,
+      };
+    } else if (
+      source.path.startsWith("/v1/datasets/") &&
+      downloadSource
+    ) {
+      localized["x-dataset-download"] = {
+        method: downloadSource.method,
+        path: downloadSource.path,
+        operationId: downloadSource.operationId,
+      };
+    }
     const menu = localizedMenuSegments(source, locale, menuTranslations);
     const tagName = menu[0] ?? String(localized.tags?.[0] ?? "Misc");
     localized.tags = [tagName];
@@ -458,7 +521,18 @@ export function buildGeneratedNavigationGroups(
   iconByGroup: Map<string, string> = new Map(),
 ): NavigationGroup[] {
   const groups: NavigationGroup[] = [];
+  const approvedKeys = new Set(operations.map((operation) => operation.key));
   for (const operation of operations) {
+    const isPairedDownload =
+      operation.path.startsWith("/v1/datasets/") &&
+      operation.path.endsWith("/download") &&
+      approvedKeys.has(
+        operationKey(
+          operation.method,
+          operation.path.slice(0, -"/download".length),
+        ),
+      );
+    if (isPairedDownload) continue;
     insertPage(
       groups,
       localizedMenuSegments(operation, locale, menuTranslations),

@@ -116,6 +116,62 @@ describe("localized output", () => {
     expect(spec.tags).toEqual([{ name: "Examples" }]);
   });
 
+  test("pairs dataset downloads, removes orderBy, and keeps only download filters", () => {
+    const base = structuredClone(sourceOperation);
+    base.path = "/v1/datasets/examples";
+    base.key = "POST /v1/datasets/examples";
+    base.operationId = "examples";
+    base.operation.operationId = "examples";
+    base.operation.requestBody = {
+      content: {
+        "application/json": {
+          schema: {
+            type: "object",
+            properties: {
+              filters: { type: "object" },
+              page: { type: "integer" },
+              orderBy: { type: "string" },
+            },
+            required: ["filters", "orderBy"],
+          },
+        },
+      },
+    };
+    base.pathItem = { post: base.operation };
+    const download = structuredClone(base);
+    download.path = "/v1/datasets/examples/download";
+    download.key = "POST /v1/datasets/examples/download";
+    download.operationId = "examples_download";
+    download.operation.operationId = "examples_download";
+    download.operation.requestBody.content[
+      "application/json"
+    ].schema.properties.mode = { type: "integer" };
+    download.pathItem = { post: download.operation };
+
+    const spec = buildLocalizedSpec([base, download], "zh-CN");
+    const baseOperation = spec.paths[base.path].post;
+    const downloadOperation = spec.paths[download.path].post;
+    expect(baseOperation["x-dataset-download"].path).toBe(download.path);
+    expect(
+      baseOperation.requestBody.content["application/json"].schema.properties
+        .orderBy,
+    ).toBeUndefined();
+    expect(downloadOperation["x-dataset-parent"].path).toBe(base.path);
+    expect(
+      Object.keys(
+        downloadOperation.requestBody.content["application/json"].schema
+          .properties,
+      ),
+    ).toEqual(["filters"]);
+
+    const groups = buildGeneratedNavigationGroups(
+      [base, download],
+      "zh-CN",
+      new Map(),
+    );
+    expect(groups[0].pages).toEqual([base.key]);
+  });
+
   test("uses verified Traditional Chinese menu names", () => {
     const translations = parseMenuTranslations({
       data: {

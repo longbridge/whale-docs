@@ -45,6 +45,7 @@ export function allOperations(): OperationRecord[] {
     Object.entries(document.paths).flatMap(([path, pathItem]) =>
       Object.entries(pathItem as Record<string, unknown>)
         .filter(([method]) => ["get", "post", "put", "patch", "delete"].includes(method))
+        .filter(([, operation]) => !(operation as Record<string, any>)["x-dataset-parent"])
         .map(([method, operation]) => ({ locale: locale as OperationRecord["locale"], method, path, operation: operation as Record<string, any>, document: document as OpenApiDocument })),
     ),
   );

@@ -5,7 +5,8 @@ description: |
   whale-openapi-docs repository into this documentation site. Use when the user
   provides APIs that are confirmed safe to publish, asks to approve or publish
   Broker APIs, asks which APIs belong with a template or DataTable screen, or
-  asks to regenerate the approved API reference.
+  asks to regenerate or organize the approved API reference, including Dataset
+  export operations.
 ---
 
 # Publish approved Whale Broker APIs
@@ -104,6 +105,26 @@ derived **Include** items only when the relationship is direct and the
 `whale-openapi-docs` match is unique. Present **Review** items for confirmation;
 do not silently approve them.
 
+## Pair Dataset exports
+
+Treat `POST /v1/datasets/<name>` and
+`POST /v1/datasets/<name>/download` as one public feature when both operations
+are approved and uniquely defined in `whale-openapi-docs`.
+
+- Keep both operations in the generated OpenAPI contract.
+- Mark the base operation with `x-dataset-download` and the download operation
+  with `x-dataset-parent`.
+- Add only the base Dataset operation to `docs.json` navigation. Never create a
+  separate Sidebar entry or page for a paired `/download` operation.
+- Render the download endpoint, request, and response inside the base Dataset
+  page's Export section.
+- Publish only `filters` in a paired download request body. The filters must
+  use the same schema as the base Dataset query.
+- Remove `orderBy` from every published request schema. Dataset sorting through
+  `orderBy` is not supported, including on `/download`.
+- Do not synthesize a download operation. Pair it only when the exact
+  `/download` path exists in approved source YAML.
+
 ## Publish workflow
 
 Use the TypeScript command:
@@ -125,6 +146,8 @@ The command:
 - scans the source OpenAPI YAML files;
 - rejects missing, duplicated, or changed approved operations;
 - extracts only approved operations and the components they reference;
+- pairs approved Dataset downloads with their base operations;
+- removes unsupported `orderBy` fields and limits download bodies to `filters`;
 - generates `openapi.en.json`, `openapi.zh-CN.json`, and
   `openapi.zh-HK.json`;
 - replaces generated BrokerAPI navigation while preserving manual groups;
