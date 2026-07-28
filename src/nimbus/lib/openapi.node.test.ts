@@ -68,4 +68,31 @@ describe("published Broker API domains", () => {
       }
     }
   });
+
+  test("keeps public operation copy free of internal names and invalid terminology", () => {
+    const invalidTerm =
+      /\b(?:hashkey|crs|ccass|atm)\b|(?:^|[^$A-Za-z])ref(?=[^A-Za-z]|$)|[Qq]uery[Tt]able|[Dd]ata[Tt]able/;
+    const missingChineseSpace =
+      /[\p{Script=Han}](?:V[0-9]+|IPO|PI|HashKey|CRS|CCASS|ATM|Ref)|(?:V[0-9]+|IPO|PI|HashKey|CRS|CCASS|ATM|Ref)[\p{Script=Han}]/u;
+
+    for (const { operation } of allOperations()) {
+      const publicCopy = [
+        operation.summary,
+        operation.description,
+        operation["x-description-en"],
+        operation["x-description-hk"],
+        operation["x-mint"]?.metadata?.sidebarTitle,
+      ].filter((value): value is string => typeof value === "string");
+
+      for (const value of publicCopy) {
+        expect(value).not.toMatch(invalidTerm);
+        expect(value).not.toMatch(missingChineseSpace);
+      }
+      if (operation["x-mint"]?.metadata?.sidebarTitle) {
+        expect(operation["x-mint"].metadata.sidebarTitle).toBe(
+          operation.summary,
+        );
+      }
+    }
+  });
 });

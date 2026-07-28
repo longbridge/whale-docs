@@ -88,8 +88,19 @@ For operations that do not yet exist in the public specs:
 2. Create localized copies in the matching `broker-api/<domain>.<locale>.yml`
    files. Follow `COPYWRITING.md`; do not fall back from Hong Kong Traditional
    Chinese to Simplified Chinese.
+   Keep a half-width space before reader-facing API version markers, for
+   example `获取账户列表 V2`, `獲取賬戶列表 V2`, and
+   `Query Account List V2`.
+   Preserve official capitalization and Chinese spacing for product names and
+   initialisms. Use the exact public forms `HashKey`, `IPO`, `PI`, `CRS`,
+   `CCASS`, `ATM`, and `Ref`. Apply the same terminology to `summary`,
+   `x-mint.metadata.sidebarTitle`, and operation descriptions without changing
+   paths, operation IDs, schema keys, or `$ref`.
 3. Remove internal source extensions that are not part of the public contract.
    Preserve public permission and source metadata already used by the site.
+   Remove internal frontend component names such as `QueryTable`, `DataTable`,
+   page components, and service wrappers from public summaries and
+   descriptions. Describe the business capability instead.
 4. Add only the new operations and required components. Do not rewrite the
    surrounding document or existing operations.
 5. Add only the new base operations to the matching locale navigation in
