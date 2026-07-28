@@ -30,6 +30,22 @@ import "@pagefind/default-ui/css/ui.css";
 	<dialog id="pagefind-modal" aria-labelledby="pagefind-title">
 		<h2 id="pagefind-title" class="sr-only">Search documentation</h2>
 		<div id="pagefind-ui"></div>
+		<div id="pagefind-empty" class="pagefind-blank" aria-hidden="true" hidden>
+			<span class="pagefind-blank-icon">
+				<svg viewBox="0 0 24 24" aria-hidden="true">
+					<path
+						d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M14 14l3 3"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.75"
+						stroke-linecap="round"
+						stroke-linejoin="round"></path>
+					<circle cx="10.5" cy="10.5" r="3.5" fill="none" stroke="currentColor" stroke-width="1.75"></circle>
+				</svg>
+			</span>
+			<p class="pagefind-blank-title"></p>
+			<p class="pagefind-blank-description"></p>
+		</div>
 		<div class="pagefind-footer" aria-hidden="true">
 			<span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
 			<span><kbd>↵</kbd> Open</span>
@@ -161,6 +177,7 @@ import "@pagefind/default-ui/css/ui.css";
 		color: var(--nb-card-foreground);
 		padding: 0;
 		width: min(640px, calc(100vw - 2rem));
+		min-height: min(18.5rem, 80vh);
 		max-height: min(640px, 80vh);
 		overflow: hidden;
 		box-shadow: none;
@@ -176,6 +193,16 @@ import "@pagefind/default-ui/css/ui.css";
 	#pagefind-modal[open] {
 		opacity: 1;
 		transform: scale(1);
+		display: flex;
+		flex-direction: column;
+	}
+	/* Let the search body grow to fill the modal's min-height so the panel
+	   keeps a stable height even after the empty-state blankslate is hidden. */
+	#pagefind-modal[open] #pagefind-ui {
+		display: flex;
+		flex: 1 1 auto;
+		min-height: 0;
+		flex-direction: column;
 	}
 	@starting-style {
 		#pagefind-modal[open] {
@@ -463,6 +490,7 @@ import "@pagefind/default-ui/css/ui.css";
 	@media (max-width: 639px) {
 		#pagefind-modal {
 			margin: 4rem auto auto;
+			min-height: min(16rem, calc(100vh - 8rem));
 		}
 		.pagefind-footer {
 			display: none;
@@ -481,6 +509,54 @@ import "@pagefind/default-ui/css/ui.css";
 		return document.getElementById("pagefind-modal") as HTMLDialogElement | null;
 	}
 
+	type Lang = "en" | "zh-CN" | "zh-HK";
+	const EMPTY_COPY: Record<Lang, { title: string; description: string }> = {
+		en: {
+			title: "Search documentation",
+			description: "Find guides, concepts, API references, and integration details.",
+		},
+		"zh-CN": {
+			title: "搜索文档",
+			description: "查找指南、概念、API 参考与集成细节。",
+		},
+		"zh-HK": {
+			title: "搜尋文件",
+			description: "尋找指南、概念、API 參考與整合細節。",
+		},
+	};
+
+	function currentLang(): Lang {
+		const lang = document.documentElement.lang;
+		return lang === "zh-CN" || lang === "zh-HK" ? lang : "en";
+	}
+
+	// Fill the empty-state title/description from the tri-lingual dictionary based
+	// on the current <html lang>. Re-run on every openModal so it tracks the
+	// language of the page under a persisted dialog.
+	function applyEmptyStateCopy(): void {
+		const empty = getModal()?.querySelector<HTMLElement>("#pagefind-empty");
+		if (!empty) return;
+		const copy = EMPTY_COPY[currentLang()];
+		const title = empty.querySelector<HTMLElement>(".pagefind-blank-title");
+		const description = empty.querySelector<HTMLElement>(".pagefind-blank-description");
+		if (title) title.textContent = copy.title;
+		if (description) description.textContent = copy.description;
+	}
+
+	// Single source of truth for the empty-state visibility: shown only while the
+	// search input is empty. Works for both the dev shell and the production
+	// PagefindUI since it never touches third-party internal DOM.
+	function syncEmptyState(): void {
+		const modal = getModal();
+		if (!modal) return;
+		const empty = modal.querySelector<HTMLElement>("#pagefind-empty");
+		if (!empty) return;
+		const input = modal.querySelector<HTMLInputElement>(".pagefind-ui__search-input");
+		const isBlank = !input || input.value.trim() === "";
+		empty.hidden = !isBlank;
+		empty.setAttribute("aria-hidden", String(!isBlank));
+	}
+
 	function initDevSearch(): void {
 		const root = document.getElementById("pagefind-ui");
 		if (!root || root.dataset.devSearchInitialized) return;
@@ -495,16 +571,6 @@ import "@pagefind/default-ui/css/ui.css";
 					<button class="pagefind-ui__search-clear" type="reset" aria-label="Clear search">Clear</button>
 					<div class="pagefind-ui__drawer">
 						<div class="pagefind-ui__results-area">
-							<div class="pagefind-blank">
-								<span class="pagefind-blank-icon">
-									<svg viewBox="0 0 24 24" aria-hidden="true">
-										<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M14 14l3 3" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-										<circle cx="10.5" cy="10.5" r="3.5" fill="none" stroke="currentColor" stroke-width="1.75"/>
-									</svg>
-								</span>
-								<p class="pagefind-blank-title">Search documentation</p>
-								<p class="pagefind-blank-description">Find guides, concepts, API references, and integration details.</p>
-							</div>
 							<p class="pagefind-ui__message" hidden></p>
 							<ol class="pagefind-ui__results"></ol>
 						</div>
@@ -515,9 +581,8 @@ import "@pagefind/default-ui/css/ui.css";
 		const form = root.querySelector<HTMLFormElement>(".pagefind-ui__form");
 		const input = root.querySelector<HTMLInputElement>(".pagefind-ui__search-input");
 		const message = root.querySelector<HTMLElement>(".pagefind-ui__message");
-		const blank = root.querySelector<HTMLElement>(".pagefind-blank");
 		const results = root.querySelector<HTMLOListElement>(".pagefind-ui__results");
-		if (!form || !input || !message || !blank || !results) return;
+		if (!form || !input || !message || !results) return;
 
 		devDocuments ??= fetch("/search-index.json").then((response) => {
 			if (!response.ok) throw new Error(`Search index returned ${response.status}`);
@@ -528,12 +593,10 @@ import "@pagefind/default-ui/css/ui.css";
 			const query = input.value.trim().toLocaleLowerCase();
 			results.replaceChildren();
 			if (!query) {
-				blank.hidden = false;
 				message.hidden = true;
 				message.textContent = "";
 				return;
 			}
-			blank.hidden = true;
 			message.hidden = false;
 			message.textContent = `Searching for ${input.value.trim()}…`;
 			try {
@@ -599,6 +662,8 @@ import "@pagefind/default-ui/css/ui.css";
 				input.value = query;
 				input.dispatchEvent(new Event("input", { bubbles: true }));
 			}
+			applyEmptyStateCopy();
+			syncEmptyState();
 		}, 50);
 	}
 
@@ -613,6 +678,17 @@ import "@pagefind/default-ui/css/ui.css";
 		if (modal && !modal.dataset.pagefindInitialized) {
 			modal.dataset.pagefindInitialized = "true";
 			modal.addEventListener("close", unlockScroll);
+			// Empty-state visibility, delegated on the persistent dialog so it
+			// stays idempotent across astro:page-load and never binds to
+			// third-party internal nodes.
+			modal.addEventListener("input", (e) => {
+				const target = e.target as HTMLElement | null;
+				if (target?.classList.contains("pagefind-ui__search-input")) {
+					syncEmptyState();
+				}
+			});
+			// reset (clear button / form.reset) clears input.value next frame.
+			modal.addEventListener("reset", () => requestAnimationFrame(syncEmptyState));
 			modal.addEventListener("click", (e) => {
 				if (e.target === modal) modal.close();
 				const target = e.target as Element | null;
