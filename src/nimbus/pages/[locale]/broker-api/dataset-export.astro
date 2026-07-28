@@ -1,0 +1,320 @@
+---
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import {
+  allOperations,
+  resolveSchema,
+  type OperationRecord,
+} from "../../../lib/openapi";
+import { getWhaleSidebar } from "../../../lib/whale-navigation";
+import ApiSchemaFields from "../../../components/api/ApiSchemaFields.astro";
+import ApiResponseSchema from "../../../components/api/ApiResponseSchema.astro";
+import ApiEndpointCopy from "../../../components/api/ApiEndpointCopy.astro";
+import { Badge } from "@components/components/ui/badge";
+import { renderInlineMarkdown } from "../../../lib/render-markdown";
+
+export const prerender = true;
+export function getStaticPaths() {
+  const seen = new Map<string, OperationRecord>();
+  for (const record of allOperations()) {
+    if (!seen.has(record.locale)) seen.set(record.locale, record);
+  }
+  return [...seen.entries()].map(([locale, record]) => ({
+    params: { locale: locale.toLowerCase() },
+    props: { locale, document: record.document },
+  }));
+}
+
+const { locale, document } = Astro.props as {
+  locale: OperationRecord["locale"];
+  document: OperationRecord["document"];
+};
+const localePath = locale.toLowerCase();
+
+// Source the uniform export contract from a representative dataset download operation.
+let downloadOp: Record<string, any> | undefined;
+for (const [p, item] of Object.entries(document.paths ?? {})) {
+  const post = (item as Record<string, any>)?.post;
+  if (p.endsWith("/download") && post?.["x-dataset-parent"]) {
+    downloadOp = post;
+    break;
+  }
+}
+const requestContent = downloadOp?.requestBody?.content ?? {};
+const requestType = Object.keys(requestContent)[0] ?? "application/json";
+const requestSchema = resolveSchema(document, requestContent[requestType]?.schema);
+const exportProperties = Object.fromEntries(
+  Object.entries(requestSchema?.properties ?? {}).filter(
+    ([name]) => name !== "filters",
+  ),
+);
+const exportSchema: Record<string, any> = {
+  type: "object",
+  properties: exportProperties,
+  required: (requestSchema?.required ?? []).filter(
+    (name: string) => name !== "filters" && name in exportProperties,
+  ),
+};
+if (exportSchema.required.length === 0) delete exportSchema.required;
+
+const responseRows = Object.entries(downloadOp?.responses ?? {}).map(
+  ([status, response]: [string, any]) => {
+    const body = (response.content ?? {})["application/json"];
+    return { status, response, schema: body?.schema };
+  },
+);
+
+const baseUrl = "https://b-api.longbridge.xyz";
+const placeholder = "{name}";
+const endpointTemplate = `${baseUrl}/v1/datasets/${placeholder}/download`;
+const sidebar = await getWhaleSidebar(Astro.url.pathname);
+
+const t =
+  locale === "en"
+    ? {
+        title: "Dataset Export",
+        intro:
+          "Every exportable Dataset shares this export endpoint. Open it from a Dataset's **Export** card — the Dataset name is passed in the URL and filled in below. The export uses the **same `filters` as that Dataset's query**; see the linked query endpoint for the available filter fields.",
+        endpoint: "Endpoint",
+        copy: "Copy endpoint",
+        copied: "Endpoint copied",
+        current: "Current Dataset",
+        filtersTitle: "Filters",
+        filtersBody:
+          "The export reuses the **same `filters`** as the Dataset query. See the query endpoint for the full filter reference:",
+        filtersLink: "Open the query endpoint",
+        options: "Export options",
+        responses: "Responses",
+        related: "Related",
+        records: "View export records",
+        recordsDesc: "List of past export tasks and their status.",
+        downloadInfo: "Asynchronous download details",
+        downloadInfoDesc: "Poll or delete an async export task by id.",
+        pickHint: "Open this page from a Dataset's Export card to target a specific Dataset.",
+      }
+    : locale === "zh-CN"
+      ? {
+          title: "数据集导出",
+          intro:
+            "所有支持导出的 Dataset 共用此导出接口。请从某个 Dataset 的 **导出** 卡片进入——Dataset 名称通过链接传入并自动填入下方。导出使用**与该 Dataset 查询相同的 `filters`**,可用筛选字段见对应查询接口。",
+          endpoint: "接口地址",
+          copy: "复制接口地址",
+          copied: "接口地址已复制",
+          current: "当前 Dataset",
+          filtersTitle: "筛选条件 (filters)",
+          filtersBody:
+            "导出复用与 Dataset 查询**相同的 `filters`**。完整筛选字段请查看对应的查询接口:",
+          filtersLink: "打开对应查询接口",
+          options: "导出选项",
+          responses: "响应",
+          related: "相关接口",
+          records: "查看导出记录",
+          recordsDesc: "历史导出任务列表及其状态。",
+          downloadInfo: "异步下载说明",
+          downloadInfoDesc: "按 id 轮询或删除异步导出任务。",
+          pickHint: "从某个 Dataset 的导出卡片进入本页,即可定位到具体 Dataset。",
+        }
+      : {
+          title: "數據集匯出",
+          intro:
+            "所有支援匯出的 Dataset 共用此匯出介面。請從某個 Dataset 的 **匯出** 卡片進入——Dataset 名稱透過連結傳入並自動填入下方。匯出使用**與該 Dataset 查詢相同的 `filters`**,可用篩選欄位見對應查詢介面。",
+          endpoint: "介面位址",
+          copy: "複製介面位址",
+          copied: "介面位址已複製",
+          current: "目前 Dataset",
+          filtersTitle: "篩選條件 (filters)",
+          filtersBody:
+            "匯出複用與 Dataset 查詢**相同的 `filters`**。完整篩選欄位請查看對應的查詢介面:",
+          filtersLink: "開啟對應查詢介面",
+          options: "匯出選項",
+          responses: "回應",
+          related: "相關介面",
+          records: "查看匯出記錄",
+          recordsDesc: "歷史匯出任務列表及其狀態。",
+          downloadInfo: "非同步下載說明",
+          downloadInfoDesc: "按 id 輪詢或刪除非同步匯出任務。",
+          pickHint: "從某個 Dataset 的匯出卡片進入本頁,即可定位到具體 Dataset。",
+        };
+
+const recordsHref = `/${localePath}/broker-api/v1/datasets/download_records`;
+const downloadInfoHref = `/${localePath}/broker-api/v1/datasets/download/id`;
+const queryHrefTemplate = `/${localePath}/broker-api/v1/datasets/${placeholder}`;
+---
+
+<DocsLayout
+  title={t.title}
+  sidebar={sidebar}
+  headings={false}
+  prevNext={{}}
+  breadcrumbs={[
+    { label: "Whale Docs", href: `/${localePath}/overview` },
+    { label: "BrokerAPI", href: `/${localePath}/broker-api/overview/` },
+    { label: t.title },
+  ]}
+  wide={true}
+>
+  <p class="dsx-intro" set:html={renderInlineMarkdown(t.intro)} />
+
+  <div class="api-operation-heading">
+    <Badge className="api-method api-method-get">GET</Badge>
+    <code id="dsx-endpoint" data-template={endpointTemplate}>{endpointTemplate}</code>
+    <span id="dsx-copy" data-template={endpointTemplate}>
+      <ApiEndpointCopy text={endpointTemplate} label={t.copy} copiedLabel={t.copied} />
+    </span>
+  </div>
+
+  <p id="dsx-current" class="dsx-current" hidden>
+    {t.current}: <code id="dsx-current-name"></code>
+  </p>
+  <p id="dsx-pick-hint" class="dsx-pick-hint">{t.pickHint}</p>
+
+  <section class="dsx-filters">
+    <h2 id="filters">{t.filtersTitle}</h2>
+    <p set:html={renderInlineMarkdown(t.filtersBody)} />
+    <p>
+      <a id="dsx-query-link" href={`/${localePath}/broker-api/v1/datasets`} data-template={queryHrefTemplate}>
+        {t.filtersLink} →
+      </a>
+    </p>
+  </section>
+
+  {Object.keys(exportProperties).length > 0 && (
+    <section>
+      <h2 id="options">{t.options} <small>{requestType}</small></h2>
+      <ApiSchemaFields schema={exportSchema} document={document} locale={locale} childrenOpen={false} />
+    </section>
+  )}
+
+  <section>
+    <h2 id="responses">{t.responses}</h2>
+    {responseRows.map(({ status, response, schema }) => (
+      <div class="api-response-schema">
+        <div class="api-response-status">
+          <code>HTTP {status}</code>
+          <span set:html={renderInlineMarkdown(response.description || (status === "200" ? "OK" : "Response"))} />
+        </div>
+        {schema && <ApiResponseSchema schema={schema} document={document} locale={locale} />}
+      </div>
+    ))}
+  </section>
+
+  <section class="dsx-related">
+    <h2 id="related">{t.related}</h2>
+    <div class="dsx-related-grid">
+      <a class="dsx-related-card" href={recordsHref}>
+        <span class="dsx-related-title">{t.records}</span>
+        <span class="dsx-related-desc">{t.recordsDesc}</span>
+      </a>
+      <a class="dsx-related-card" href={downloadInfoHref}>
+        <span class="dsx-related-title">{t.downloadInfo}</span>
+        <span class="dsx-related-desc">{t.downloadInfoDesc}</span>
+      </a>
+    </div>
+  </section>
+</DocsLayout>
+
+<script>
+  // Idempotent: always derive from the pristine data-template, never from the current
+  // (already-substituted) value. Re-run on every client-side navigation via astro:page-load
+  // so a second visit (or a different ?name=) updates the endpoint and query link correctly.
+  function applyDatasetExportName() {
+    const endpoint = document.getElementById("dsx-endpoint");
+    if (!endpoint) return; // not on this page
+    const params = new URLSearchParams(window.location.search);
+    const name = (params.get("name") ?? "").trim().replace(/[^a-zA-Z0-9_-]/g, "");
+    const copySpan = document.getElementById("dsx-copy");
+    const copyEl = copySpan?.querySelector("api-endpoint-copy");
+    const link = document.getElementById("dsx-query-link") as HTMLAnchorElement | null;
+    const current = document.getElementById("dsx-current");
+    const currentName = document.getElementById("dsx-current-name");
+    const hint = document.getElementById("dsx-pick-hint");
+    const sub = (tpl: string | null | undefined) =>
+      (tpl ?? "").replaceAll("%7Bname%7D", "{name}").replace("{name}", name || "{name}");
+
+    endpoint.textContent = sub(endpoint.dataset.template);
+    if (copyEl && copySpan) copyEl.setAttribute("data-text", sub(copySpan.dataset.template));
+    if (link) {
+      const tpl = link.dataset.template ?? "";
+      link.setAttribute(
+        "href",
+        name ? sub(tpl) : tpl.replace(/\/(?:%7Bname%7D|\{name\})$/, ""),
+      );
+    }
+    if (currentName) currentName.textContent = name;
+    if (current) current.hidden = !name;
+    if (hint) hint.hidden = !!name;
+  }
+
+  applyDatasetExportName();
+  document.addEventListener("astro:page-load", applyDatasetExportName);
+</script>
+
+<style>
+  .dsx-intro {
+    margin-block: 0 1.25rem;
+    color: var(--sl-color-gray-2, #5c6570);
+  }
+
+  .dsx-current {
+    margin-block: 0.75rem 0;
+    font-size: 0.9rem;
+    color: var(--sl-color-gray-2, #5c6570);
+  }
+
+  .dsx-pick-hint {
+    margin-block: 0.75rem 0;
+    font-size: 0.85rem;
+    color: var(--sl-color-gray-3, #8891a0);
+  }
+
+  .dsx-filters {
+    margin-block-start: 1.75rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--sl-color-gray-5, #d8dee9);
+    border-left: 3px solid var(--sl-color-accent, #4f8cff);
+    border-radius: 0.6rem;
+    background: var(--sl-color-gray-6, #f6f7f9);
+  }
+
+  .dsx-filters h2 {
+    margin-block: 0 0.4rem;
+    font-size: 1rem;
+  }
+
+  .dsx-filters p { margin-block: 0.3rem 0; font-size: 0.9rem; }
+
+  .dsx-related-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+
+  .dsx-related-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--sl-color-gray-5, #d8dee9);
+    border-radius: 0.6rem;
+    background: var(--sl-color-bg, #fff);
+    text-decoration: none;
+    color: var(--sl-color-text, #1b1f24);
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .dsx-related-card:hover {
+    border-color: var(--sl-color-accent, #4f8cff);
+    transform: translateY(-1px);
+  }
+
+  .dsx-related-title { font-weight: 600; font-size: 0.9rem; }
+  .dsx-related-desc { font-size: 0.82rem; color: var(--sl-color-gray-3, #8891a0); }
+
+  @media (max-width: 34rem) {
+    .dsx-related-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dsx-related-card { transition: none; }
+    .dsx-related-card:hover { transform: none; }
+  }
+</style>

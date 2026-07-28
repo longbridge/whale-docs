@@ -3,11 +3,9 @@ import type { OpenApiDocument, OperationRecord } from "../../lib/openapi";
 import {
   operationRoutePath,
   resolveDatasetDownload,
-  resolveSchema,
 } from "../../lib/openapi";
 import { renderMarkdown } from "../../lib/render-markdown";
 import ApiEndpointCopy from "./ApiEndpointCopy.astro";
-import ApiSchemaFields from "./ApiSchemaFields.astro";
 import { Badge } from "@components/components/ui/badge";
 
 type Props = {
@@ -19,23 +17,6 @@ type Props = {
 
 const { locale, operation, document, baseUrl } = Astro.props;
 const download = resolveDatasetDownload(document, operation);
-const requestContent = download?.operation.requestBody?.content ?? {};
-const requestType = Object.keys(requestContent)[0];
-const request = requestType ? requestContent[requestType] : undefined;
-const requestSchema = resolveSchema(document, request?.schema);
-const exportProperties = Object.fromEntries(
-  Object.entries(requestSchema?.properties ?? {}).filter(
-    ([name]) => name !== "filters",
-  ),
-);
-const exportSchema = {
-  type: "object",
-  properties: exportProperties,
-  required: (requestSchema?.required ?? []).filter(
-    (name: string) => name !== "filters" && name in exportProperties,
-  ),
-};
-if (exportSchema.required.length === 0) delete exportSchema.required;
 const labels = locale === "en"
   ? {
       title: "Export",
@@ -46,6 +27,7 @@ const labels = locale === "en"
       copied: "Endpoint copied",
       records: "View export records",
       downloadInfo: "View asynchronous download details",
+      detail: "View export endpoint details",
     }
   : locale === "zh-CN"
     ? {
@@ -57,6 +39,7 @@ const labels = locale === "en"
         copied: "接口地址已复制",
         records: "查看导出记录",
         downloadInfo: "查看异步下载说明",
+        detail: "查看导出接口详情",
       }
     : {
         title: "匯出",
@@ -67,9 +50,16 @@ const labels = locale === "en"
         copied: "介面位址已複製",
         records: "查看匯出記錄",
         downloadInfo: "查看異步下載說明",
+        detail: "查看匯出介面詳情",
       };
 const endpointUrl = download ? `${baseUrl}${download.link.path}` : "";
+const datasetName = download
+  ? (download.link.path.match(/\/v1\/datasets\/([^/]+)\/download$/)?.[1] ?? "")
+  : "";
 const localePath = locale.toLowerCase();
+const exportDetailHref = datasetName
+  ? `/${localePath}/broker-api/dataset-export?name=${datasetName}`
+  : `/${localePath}/broker-api/dataset-export`;
 const exportRecordsHref = `/${localePath}/broker-api/${operationRoutePath(
   locale,
   "GET",
@@ -83,53 +73,89 @@ const downloadInfoHref = `/${localePath}/broker-api/${operationRoutePath(
 ---
 
 {download && (
-  <details class="dataset-export">
-    <summary>{labels.title}</summary>
-    <div class="dataset-export-content">
-      <div set:html={renderMarkdown(labels.description)} />
-      <p>
-        <a href={exportRecordsHref}>{labels.records}</a>
-        {" · "}
-        <a href={downloadInfoHref}>{labels.downloadInfo}</a>
-      </p>
-      <div class="api-operation-heading">
-        <Badge className={`api-method api-method-${download.link.method.toLowerCase()}`}>
-          {download.link.method.toUpperCase()}
-        </Badge>
-        <code>{endpointUrl}</code>
-        <ApiEndpointCopy
-          text={endpointUrl}
-          label={labels.copy}
-          copiedLabel={labels.copied}
-        />
-      </div>
-      {Object.keys(exportProperties).length > 0 && (
-        <>
-          <h3>{labels.request} <small>{requestType}</small></h3>
-          <ApiSchemaFields
-            schema={exportSchema}
-            document={document}
-            locale={locale}
-            childrenOpen={false}
-          />
-        </>
-      )}
+  <section class="dataset-export" aria-label={labels.title}>
+    <h3 class="dataset-export__title">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" y1="15" x2="12" y2="3" />
+      </svg>
+      {labels.title}
+    </h3>
+    <div class="dataset-export__desc" set:html={renderMarkdown(labels.description)} />
+
+    <div class="api-operation-heading dataset-export__endpoint">
+      <Badge className="api-method api-method-get">GET</Badge>
+      <code>{endpointUrl}</code>
+      <ApiEndpointCopy
+        text={endpointUrl}
+        label={labels.copy}
+        copiedLabel={labels.copied}
+      />
     </div>
-  </details>
+
+    <p class="dataset-export__links">
+      <a href={exportDetailHref}>{labels.detail} →</a>
+      <span class="dataset-export__sep" aria-hidden="true">·</span>
+      <a href={exportRecordsHref}>{labels.records}</a>
+      <span class="dataset-export__sep" aria-hidden="true">·</span>
+      <a href={downloadInfoHref}>{labels.downloadInfo}</a>
+    </p>
+  </section>
 )}
 
 <style>
   .dataset-export {
-    border-block: 1px solid var(--sl-color-gray-5, #d8dee9);
-    padding-block: 0.85rem;
+    margin-block: 1.5rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--sl-color-gray-5, #d8dee9);
+    border-left: 3px solid var(--sl-color-accent, #4f8cff);
+    border-radius: 0.6rem;
+    background: var(--sl-color-gray-6, #f6f7f9);
   }
 
-  .dataset-export summary {
-    cursor: pointer;
+  .dataset-export__title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    font-size: 0.95rem;
     font-weight: 650;
+    line-height: 1.2;
   }
 
-  .dataset-export-content {
-    padding-block-start: 1rem;
+  .dataset-export__title svg { flex: none; color: var(--sl-color-gray-3, #8891a0); }
+
+  .dataset-export__desc {
+    margin-block-start: 0.3rem;
+    font-size: 0.85rem;
+    color: var(--sl-color-gray-2, #5c6570);
   }
+
+  .dataset-export__desc :global(p) { margin: 0; }
+
+  /* endpoint row reuses the global .api-operation-heading style so the URL <code>,
+     method badge and copy button match the main endpoint exactly; only add spacing. */
+  .dataset-export__endpoint {
+    margin-block-start: 0.8rem;
+  }
+
+  .dataset-export__links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-block: 0.7rem 0;
+    font-size: 0.85rem;
+  }
+
+  .dataset-export__links a {
+    color: var(--sl-color-accent, #4f8cff);
+    text-decoration: none;
+    font-weight: 550;
+  }
+
+  .dataset-export__links a:hover { text-decoration: underline; }
+
+  .dataset-export__sep { color: var(--sl-color-gray-4, #c2c9d3); }
 </style>
