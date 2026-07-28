@@ -24,7 +24,7 @@ delete previously published operations.
 Resolve every approved API to:
 
 ```yaml
-method: POST
+method: GET
 path: /v1/datasets/broker_teams
 operationId: broker_teams
 ```
@@ -113,15 +113,15 @@ Do not use a bulk regeneration or synchronization script for this workflow.
 
 ## Pair Dataset exports
 
-Treat `POST /v1/datasets/<name>` and
+Treat `GET /v1/datasets/<name>` and
 `POST /v1/datasets/<name>/download` as one feature when both are explicitly
 approved and uniquely defined in source YAML.
 
-Dataset query operations are read-only even when they use `POST`. The general
-Dataset interface uses `POST` to carry structured filters and other query
-parameters that may be too large for a practical URL query string. Do not
-describe a Dataset operation as changing business data based only on its HTTP
-method; use the verified operation behavior.
+Dataset query operations are read-only and use `GET` as the documented primary
+method. Mark them with `x-post-fallback: true`: if the encoded filters and other
+query parameters are too large for a practical URL query string, callers may
+send the same parameters as a JSON body with `POST` to the same path. Neither
+method changes business data. Keep export `/download` operations as `POST`.
 
 - Keep both operations in the OpenAPI contract.
 - Mark the base operation with `x-dataset-download`.
@@ -144,7 +144,7 @@ method; use the verified operation behavior.
 
 The shared export operations are:
 
-- `POST /v1/datasets/download_records`: query export records. `template_id` is
+- `GET /v1/datasets/download_records`: query export records. `template_id` is
   a `filters` property used to limit records to a Dataset template.
 - `GET /v1/datasets/download/{id}`: query an asynchronous export task and obtain
   its download URL.

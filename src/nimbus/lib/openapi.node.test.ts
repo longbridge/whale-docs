@@ -69,6 +69,39 @@ describe("published Broker API domains", () => {
     }
   });
 
+  test("publishes Dataset queries as GET with an optional POST fallback", async () => {
+    const operations = allOperations();
+    const navigation = JSON.parse(await Bun.file("docs.json").text());
+
+    expect(JSON.stringify(navigation)).not.toMatch(/POST \/v1\/datasets\//);
+
+    for (const locale of locales) {
+      const localized = operations.filter((record) => record.locale === locale);
+      const fallbackQueries = localized.filter(
+        ({ operation }) => operation["x-post-fallback"] === true,
+      );
+
+      expect(fallbackQueries).toHaveLength(38);
+      expect(
+        localized.some(
+          ({ method, path }) =>
+            method === "post" &&
+            path.startsWith("/v1/datasets/") &&
+            !path.endsWith("/download"),
+        ),
+      ).toBe(false);
+
+      for (const record of fallbackQueries) {
+        expect(record.method).toBe("get");
+        expect(record.path).toStartWith("/v1/datasets/");
+        expect(record.path).not.toEndWith("/download");
+        if (record.operation["x-dataset-download"]) {
+          expect(record.operation["x-dataset-download"].method).toBe("POST");
+        }
+      }
+    }
+  });
+
   test("keeps public operation copy free of internal names and invalid terminology", () => {
     const invalidTerm =
       /\b(?:hashkey|crs|ccass|atm)\b|(?:^|[^$A-Za-z])ref(?=[^A-Za-z]|$)|[Qq]uery[Tt]able|[Dd]ata[Tt]able/;

@@ -30,11 +30,12 @@ const prevNext = await getPrevNext(currentSlug, { sidebarTree: sidebar });
 const requestContent = operation.requestBody?.content ?? {};
 const requestType = Object.keys(requestContent)[0];
 const request = requestType ? requestContent[requestType] : undefined;
+const hasPostFallback = method === "get" && operation["x-post-fallback"] === true;
 const parameters = (operation.parameters ?? []).map((parameter: any) => parameter.$ref ? resolveSchema(document, parameter) : parameter);
 const responses = Object.entries(operation.responses ?? {}) as [string, any][];
 const technicalLabels = {
   parameters: "Parameters",
-  request: "Request body",
+  request: hasPostFallback ? "Query parameters" : "Request body",
   responses: "Responses",
   requestExample: "Request",
   responseExample: "Response",
@@ -51,6 +52,13 @@ const example = request?.example ?? request?.examples?.default?.value;
 const requestSchema = resolveSchema(document, request?.schema);
 const baseUrl = "https://b-api.longbridge.xyz";
 const endpointUrl = `${baseUrl}${path}`;
+const postFallbackNote = hasPostFallback
+  ? locale === "en"
+    ? "This Dataset query is read-only. Use GET by default. If the encoded query parameters are too large, send the same parameters as a JSON body with POST to the same path."
+    : locale === "zh-CN"
+      ? "此 Dataset 查询为只读接口，默认使用 GET。如果编码后的查询参数过大，可改用 POST，并将相同参数以 JSON 请求体发送到同一路径。"
+      : "此 Dataset 查詢為唯讀介面，預設使用 GET。如果編碼後的查詢參數過大，可改用 POST，並將相同參數以 JSON 請求內容傳送至同一路徑。"
+  : "";
 const copyEndpointLabel = locale === "en" ? "Copy endpoint" : locale === "zh-CN" ? "复制接口地址" : "複製介面位址";
 const copiedEndpointLabel = locale === "en" ? "Endpoint copied" : locale === "zh-CN" ? "接口地址已复制" : "介面位址已複製";
 function schemaExample(schema: any): any {
@@ -73,29 +81,58 @@ function schemaExample(schema: any): any {
   if (resolved?.type === "boolean") return true;
   return "<string>";
 }
-const curlExample = [
-  `curl --request ${method.toUpperCase()} \\`,
-  `  --url '${endpointUrl}' \\`,
-  `  --header 'Authorization: Bearer <token>' \\`,
-  `  --header 'Content-Type: ${requestType ?? "application/json"}'`,
-  request ? `  --data '${JSON.stringify(example ?? schemaExample(requestSchema), null, 2)}'` : "",
-].filter(Boolean).join("\n");
+const requestValue = example ?? schemaExample(requestSchema);
+const queryEntries = hasPostFallback && requestValue && typeof requestValue === "object"
+  ? Object.entries(requestValue)
+  : [];
+const encodeQueryValue = (value: unknown) =>
+  typeof value === "object" && value !== null ? JSON.stringify(value) : String(value);
+const shellQuote = (value: string) => value.replaceAll("'", "'\\''");
+const curlExample = hasPostFallback
+  ? [
+      `curl --get`,
+      `  --url '${endpointUrl}'`,
+      `  --header 'Authorization: Bearer <token>'`,
+      ...queryEntries.map(([name, value]) => `  --data-urlencode '${shellQuote(`${name}=${encodeQueryValue(value)}`)}'`),
+    ].join(" \\\n")
+  : [
+      `curl --request ${method.toUpperCase()} \\`,
+      `  --url '${endpointUrl}' \\`,
+      `  --header 'Authorization: Bearer <token>' \\`,
+      `  --header 'Content-Type: ${requestType ?? "application/json"}'`,
+      request ? `  --data '${JSON.stringify(requestValue, null, 2)}'` : "",
+    ].filter(Boolean).join("\n");
 const curlHtml = await codeToHtml(curlExample, { lang: "bash", themes: { light: "github-light", dark: "github-dark" }, defaultColor: false });
-const fetchOptions = [
-  `  method: "${method.toUpperCase()}",`,
-  `  headers: {`,
-  `    Authorization: "Bearer <token>",`,
-  `    "Content-Type": "${requestType ?? "application/json"}",`,
-  `  },`,
-  request ? `  body: JSON.stringify(${JSON.stringify(example ?? schemaExample(requestSchema), null, 2).replaceAll("\n", "\n  ")}),` : "",
-].filter(Boolean).join("\n");
-const fetchExample = [
-  `const response = await fetch("${endpointUrl}", {`,
-  fetchOptions,
-  `});`,
-  ``,
-  `const data = await response.json();`,
-].join("\n");
+const fetchExample = hasPostFallback
+  ? [
+      `const params = new URLSearchParams();`,
+      ...queryEntries.map(([name, value]) =>
+        typeof value === "object" && value !== null
+          ? `params.set(${JSON.stringify(name)}, JSON.stringify(${JSON.stringify(value)}));`
+          : `params.set(${JSON.stringify(name)}, String(${JSON.stringify(value)}));`,
+      ),
+      ``,
+      `const response = await fetch(\`${endpointUrl}?\${params}\`, {`,
+      `  method: "GET",`,
+      `  headers: { Authorization: "Bearer <token>" },`,
+      `});`,
+      ``,
+      `const data = await response.json();`,
+    ].join("\n")
+  : [
+      `const response = await fetch("${endpointUrl}", {`,
+      [
+        `  method: "${method.toUpperCase()}",`,
+        `  headers: {`,
+        `    Authorization: "Bearer <token>",`,
+        `    "Content-Type": "${requestType ?? "application/json"}",`,
+        `  },`,
+        request ? `  body: JSON.stringify(${JSON.stringify(requestValue, null, 2).replaceAll("\n", "\n  ")}),` : "",
+      ].filter(Boolean).join("\n"),
+      `});`,
+      ``,
+      `const data = await response.json();`,
+    ].join("\n");
 const fetchHtml = await codeToHtml(fetchExample, { lang: "javascript", themes: { light: "github-light", dark: "github-dark" }, defaultColor: false });
 const responseExamples = responses.map(([status, response]) => {
   const contentType = Object.keys(response.content ?? {})[0];
@@ -134,6 +171,7 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
     <code>{endpointUrl}</code>
     <ApiEndpointCopy text={endpointUrl} label={copyEndpointLabel} copiedLabel={copiedEndpointLabel} />
   </div>
+  {postFallbackNote && <p class="api-operation-note">{postFallbackNote}</p>}
 
   <DatasetExport
     locale={locale}
@@ -150,7 +188,7 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
         return <div class="api-field"><div class="api-field-title"><code>{parameter.name}</code><Badge variant="secondary">{schema?.type ?? "string"}</Badge>{parameter.required && <Badge variant="destructive">{labels.required}</Badge>}</div>{parameter.description && <div class="api-field-description" set:html={renderMarkdown(parameter.description)} />}</div>;
       })}</div></section>}
 
-      {request && <section><h2 id="request-body">{labels.request} <small>{requestType}</small></h2><ApiSchemaFields schema={requestSchema} document={document} locale={locale} childrenOpen={false} /></section>}
+      {request && <section><h2 id={hasPostFallback ? "query-parameters" : "request-body"}>{labels.request} {!hasPostFallback && <small>{requestType}</small>}</h2><ApiSchemaFields schema={requestSchema} document={document} locale={locale} childrenOpen={false} /></section>}
 
       <section><h2 id="responses">{labels.responses}</h2>{responseExamples.map(({ status, response, body }) => <div class="api-response-schema"><div class="api-response-status"><code>HTTP {status}</code><span set:html={renderInlineMarkdown(response.description || (status === "200" ? "OK" : "Response"))} /></div>{body?.schema && <ApiResponseSchema schema={body.schema} document={document} locale={locale} />}</div>)}</section>
     </div>
