@@ -117,6 +117,12 @@ Treat `POST /v1/datasets/<name>` and
 `POST /v1/datasets/<name>/download` as one feature when both are explicitly
 approved and uniquely defined in source YAML.
 
+Dataset query operations are read-only even when they use `POST`. The general
+Dataset interface uses `POST` to carry structured filters and other query
+parameters that may be too large for a practical URL query string. Do not
+describe a Dataset operation as changing business data based only on its HTTP
+method; use the verified operation behavior.
+
 - Keep both operations in the OpenAPI contract.
 - Mark the base operation with `x-dataset-download`.
 - Mark the download operation with `x-dataset-parent`.
