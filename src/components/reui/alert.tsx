@@ -4,7 +4,7 @@ import { cn } from "@components/lib/utils"
 
 const alertVariants = cva(
   [
-    "relative grid w-full grid-cols-[0_1fr] items-center gap-y-0.5 rounded-lg border-0 px-3 py-2.5 text-sm",
+    "relative grid w-full grid-cols-[0_1fr] items-center gap-y-0.5 rounded-r-lg border-0 px-3 py-2.5 text-sm",
     "has-[>svg]:grid-cols-[calc(var(--spacing)*3)_1fr] has-[>svg]:gap-x-2.5 [&>svg:not([class*=size-])]:size-4",
     "has-[>[data-slot=alert-title]+[data-slot=alert-description]]:items-start",
     "has-[>[data-slot=alert-title]+[data-slot=alert-description]]:[&_svg]:translate-y-0.5",
