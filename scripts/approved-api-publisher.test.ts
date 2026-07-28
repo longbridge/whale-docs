@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   buildLocalizedSpec,
+  parseMenuTranslations,
   parseApprovalManifest,
   resolveApprovals,
   type SourceOperation,
@@ -28,11 +29,42 @@ const sourceOperation: SourceOperation = {
     responses: {
       "200": {
         content: {
-          "application/json": { schema: { $ref: "#/components/schemas/Result" } },
+          "application/json": {
+            schema: {
+              allOf: [
+                { $ref: "#/components/schemas/Result" },
+                {
+                  type: "object",
+                  properties: {
+                    state: {
+                      type: "string",
+                      enum: ["active"],
+                      "x-enum-details": [
+                        {
+                          value: "active",
+                          cn: "启用",
+                          hk: "啟用",
+                          en: "Active",
+                        },
+                      ],
+                    },
+                  },
+                },
+              ],
+            },
+          },
         },
       },
     },
   },
+  pathItem: {},
+};
+
+sourceOperation.pathItem = {
+  parameters: [
+    { name: "account-channel", in: "header", schema: { type: "string" } },
+  ],
+  post: sourceOperation.operation,
 };
 
 describe("approval manifest", () => {
@@ -74,7 +106,31 @@ describe("localized output", () => {
     expect(spec.paths["/v1/example"].post.summary).toBe("Create example");
     expect(spec.paths["/v1/example"].post["x-summary-en"]).toBeUndefined();
     expect(spec.components.schemas.Result.type).toBe("object");
+    expect(spec.paths["/v1/example"].parameters[0].name).toBe("account-channel");
+    expect(
+      spec.paths["/v1/example"].post.responses["200"].content[
+        "application/json"
+      ].schema.allOf[1].properties.state.description,
+    ).toContain("`active` - Active");
     expect(spec.tags).toEqual([{ name: "Examples" }]);
   });
-});
 
+  test("uses verified Traditional Chinese menu names", () => {
+    const translations = parseMenuTranslations({
+      data: {
+        menus: [
+          {
+            name: {
+              en: "Examples",
+              "zh-CN": "示例",
+              "zh-HK": "範例",
+            },
+          },
+        ],
+      },
+    });
+    const spec = buildLocalizedSpec([sourceOperation], "zh-HK", translations);
+    expect(spec.tags).toEqual([{ name: "範例" }]);
+    expect(spec.info.description).toContain("伺服器端 API");
+  });
+});

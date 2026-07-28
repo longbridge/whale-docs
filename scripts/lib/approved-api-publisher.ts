@@ -31,6 +31,7 @@ export interface SourceOperation {
   path: string;
   operationId: string;
   operation: JsonObject;
+  pathItem: JsonObject;
   document: JsonObject;
   sourceFile: string;
 }
@@ -109,15 +110,13 @@ export async function scanSourceOperations(sourceDirectory: string): Promise<Sou
         const operation = (pathItem as JsonObject)?.[method];
         if (!operation) continue;
         const operationId = String(operation.operationId ?? "");
-        if (!operationId) {
-          throw new Error(`${relative(sourceDirectory, sourceFile)}: ${method.toUpperCase()} ${path} has no operationId.`);
-        }
         operations.push({
           key: operationKey(method, path),
           method: method.toUpperCase(),
           path,
           operationId,
           operation,
+          pathItem,
           document,
           sourceFile,
         });
@@ -158,20 +157,50 @@ export function resolveApprovals(
 }
 
 const LOCALES = {
-  en: { suffix: "en", apiDirectory: "en/api-reference" },
-  "zh-CN": { suffix: "cn", apiDirectory: "zh-CN/api-reference" },
-  "zh-HK": { suffix: "hk", apiDirectory: "zh-HK/api-reference" },
+  en: {
+    suffix: "en",
+    apiDirectory: "en/api-reference",
+    infoDescription: "Server-to-server API for brokers using Longport Whale.",
+    tokenDescription: "Broker ACCESS_TOKEN sent as `Authorization: Bearer <token>`.",
+    test: "Test",
+    production: "Production",
+    options: "Allowed values",
+  },
+  "zh-CN": {
+    suffix: "cn",
+    apiDirectory: "zh-CN/api-reference",
+    infoDescription: "供使用 Longport Whale 的 Broker 调用的服务端 API。",
+    tokenDescription: "Broker ACCESS_TOKEN，通过 `Authorization: Bearer <token>` 发送。",
+    test: "测试环境",
+    production: "生产环境",
+    options: "可选值",
+  },
+  "zh-HK": {
+    suffix: "hk",
+    apiDirectory: "zh-HK/api-reference",
+    infoDescription: "供使用 Longport Whale 的 Broker 調用的伺服器端 API。",
+    tokenDescription: "Broker ACCESS_TOKEN，透過 `Authorization: Bearer <token>` 傳送。",
+    test: "測試環境",
+    production: "生產環境",
+    options: "可選值",
+  },
 } as const;
 
 export type Locale = keyof typeof LOCALES;
 
 function localizedValue(node: JsonObject, key: string, suffix: string): unknown {
   if (suffix === "cn") return node[key];
-  return node[`x-${key}-${suffix}`] ?? node[key];
+  const localizedKey = `x-${key}-${suffix}`;
+  if (key in node && !(localizedKey in node)) {
+    throw new Error(`Missing ${localizedKey} for ${key}: ${String(node[key]).slice(0, 80)}`);
+  }
+  return node[localizedKey];
 }
 
-function localizeNode(value: unknown, suffix: string): unknown {
-  if (Array.isArray(value)) return value.map((item) => localizeNode(item, suffix));
+function localizeNode(value: unknown, locale: Locale): unknown {
+  const policy = LOCALES[locale];
+  const suffix = policy.suffix;
+  if (Array.isArray(value)) return value.map((item) => localizeNode(item, locale));
   if (!value || typeof value !== "object") return value;
 
   const node = value as JsonObject;
@@ -179,21 +208,36 @@ function localizeNode(value: unknown, suffix: string): unknown {
   for (const [key, child] of Object.entries(node)) {
     if (key.startsWith("x-")) {
       if (["x-permission-key", "x-lbonly", "x-source"].includes(key)) {
-        result[key] = localizeNode(child, suffix);
+        result[key] = localizeNode(child, locale);
       }
       continue;
     }
-    result[key] = localizeNode(child, suffix);
+    result[key] = localizeNode(child, locale);
   }
 
   for (const key of ["summary", "description"]) {
     const localized = localizedValue(node, key, suffix);
-    if (localized !== undefined) result[key] = localizeNode(localized, suffix);
+    if (localized !== undefined) result[key] = localizeNode(localized, locale);
   }
 
   const label = node[`x-name-${suffix}`] ?? (suffix === "cn" ? node["x-name-cn"] : undefined);
   if (label && typeof result.description === "string" && !result.description.startsWith(String(label))) {
     result.description = `${label}. ${result.description}`;
+  }
+  if (Array.isArray(node["x-enum-details"])) {
+    const options = node["x-enum-details"].map((entry: JsonObject) => {
+      const optionLabel = entry[suffix] ?? (suffix === "cn" ? entry.cn : undefined);
+      if (optionLabel === undefined) {
+        throw new Error(`Missing ${suffix} enum label for value ${String(entry.value)}`);
+      }
+      return `- \`${String(entry.value)}\` - ${String(optionLabel)}`;
+    });
+    const rendered = `**${policy.options}:**\n${options.join("\n")}`;
+    if (typeof result.description !== "string" || !result.description.includes(options[0])) {
+      result.description = result.description
+        ? `${result.description}\n\n${rendered}`
+        : rendered;
+    }
   }
   return result;
 }
@@ -233,6 +277,7 @@ function addReferencedComponents(
   source: JsonObject,
   seed: unknown,
   sourceFile: string,
+  locale: Locale,
 ): void {
   const pending = [...collectRefs(seed)];
   const visited = new Set<string>();
@@ -244,37 +289,74 @@ function addReferencedComponents(
     const name = nameParts.join("/");
     const component = source.components?.[section]?.[name];
     if (component === undefined) throw new Error(`Unresolved reference ${ref} in ${sourceFile}`);
-    mergeComponent(target, section, name, component, sourceFile);
+    mergeComponent(
+      target,
+      section,
+      name,
+      localizeNode(component, locale),
+      sourceFile,
+    );
     for (const childRef of collectRefs(component)) pending.push(childRef);
   }
 }
 
-function localizedMenuSegments(operation: SourceOperation, locale: Locale): string[] {
+export type MenuTranslations = Map<string, Record<Locale, string>>;
+
+export function parseMenuTranslations(menu: JsonObject): MenuTranslations {
+  const translations: MenuTranslations = new Map();
+  const visit = (routes: unknown): void => {
+    if (!Array.isArray(routes)) return;
+    for (const route of routes) {
+      const names = (route as JsonObject).name;
+      if (names?.en && names?.["zh-CN"] && names?.["zh-HK"]) {
+        const localized = {
+          en: String(names.en),
+          "zh-CN": String(names["zh-CN"]),
+          "zh-HK": String(names["zh-HK"]),
+        };
+        translations.set(localized.en, localized);
+        translations.set(localized["zh-CN"], localized);
+      }
+      visit((route as JsonObject).routes);
+    }
+  };
+  visit(menu?.data?.menus);
+  return translations;
+}
+
+function localizedMenuSegments(
+  operation: SourceOperation,
+  locale: Locale,
+  menuTranslations: MenuTranslations,
+): string[] {
   const raw = Array.isArray(operation.operation["x-menu-path"])
     ? operation.operation["x-menu-path"].map(String)
     : [];
   return raw.map((segment) => {
     const match = segment.match(/^(.*?)\s*\((.+)\)\s*$/);
     if (!match) return segment;
-    if (locale === "en") return match[2].trim();
-    return match[1].trim();
+    const simplified = match[1].trim();
+    const english = match[2].trim();
+    const known = menuTranslations.get(english) ?? menuTranslations.get(simplified);
+    if (known) return known[locale];
+    if (locale === "en") return english;
+    if (locale === "zh-CN") return simplified;
+    throw new Error(`Missing zh-HK menu translation for ${simplified} (${english})`);
   });
 }
 
 export function buildLocalizedSpec(
   operations: SourceOperation[],
   locale: Locale,
+  menuTranslations: MenuTranslations = new Map(),
 ): JsonObject {
-  const suffix = LOCALES[locale].suffix;
+  const policy = LOCALES[locale];
   const components: JsonObject = {
     securitySchemes: {
       bearerAuth: {
         type: "http",
         scheme: "bearer",
-        description:
-          locale === "en"
-            ? "ACCESS_TOKEN issued to the broker, sent as `Authorization: Bearer <token>`."
-            : "由 Whale 向 Broker 签发 ACCESS_TOKEN，并通过 `Authorization: Bearer <token>` 发送。",
+        description: policy.tokenDescription,
       },
     },
   };
@@ -282,8 +364,8 @@ export function buildLocalizedSpec(
   const tags = new Map<string, JsonObject>();
 
   for (const source of operations) {
-    const localized = localizeNode(source.operation, suffix) as JsonObject;
-    const menu = localizedMenuSegments(source, locale);
+    const localized = localizeNode(source.operation, locale) as JsonObject;
+    const menu = localizedMenuSegments(source, locale, menuTranslations);
     const tagName = menu[0] ?? String(localized.tags?.[0] ?? "Misc");
     localized.tags = [tagName];
     localized["x-mint"] = {
@@ -291,28 +373,36 @@ export function buildLocalizedSpec(
       metadata: { sidebarTitle: localized.summary ?? source.operationId },
     };
     paths[source.path] ??= {};
+    for (const [key, value] of Object.entries(source.pathItem)) {
+      if (!HTTP_METHODS.includes(key as (typeof HTTP_METHODS)[number])) {
+        paths[source.path][key] = localizeNode(value, locale);
+      }
+    }
     paths[source.path][source.method.toLowerCase()] = localized;
     tags.set(tagName, { name: tagName });
-    addReferencedComponents(components, source.document, source.operation, source.sourceFile);
+    addReferencedComponents(
+      components,
+      source.document,
+      source.pathItem,
+      source.sourceFile,
+      locale,
+    );
   }
 
   return {
     openapi: "3.1.1",
     info: {
       title: "Longport Whale Broker API",
-      description:
-        locale === "en"
-          ? "Institution-grade server-to-server API for brokers running on Longport Whale."
-          : "面向使用 Longport Whale 的 Broker 的服务端 API。",
+      description: policy.infoDescription,
       version: "2.0.0",
     },
     servers: [
-      { url: "https://b-api.longbridge.xyz", description: locale === "en" ? "Test" : "测试环境" },
-      { url: "https://b-api.lbkrs.com", description: locale === "en" ? "Production" : "生产环境" },
+      { url: "https://b-api.longbridge.xyz", description: policy.test },
+      { url: "https://b-api.lbkrs.com", description: policy.production },
     ],
     tags: [...tags.values()],
     paths,
-    components: localizeNode(components, suffix),
+    components,
     security: [{ bearerAuth: [] }],
   };
 }
@@ -336,11 +426,16 @@ function insertPage(groups: NavigationGroup[], segments: string[], page: string)
 export function buildGeneratedNavigationGroups(
   operations: SourceOperation[],
   locale: Locale,
+  menuTranslations: MenuTranslations,
   iconByGroup: Map<string, string> = new Map(),
 ): NavigationGroup[] {
   const groups: NavigationGroup[] = [];
   for (const operation of operations) {
-    insertPage(groups, localizedMenuSegments(operation, locale), operation.key);
+    insertPage(
+      groups,
+      localizedMenuSegments(operation, locale, menuTranslations),
+      operation.key,
+    );
   }
   for (const group of groups) {
     group.icon = iconByGroup.get(group.group) ?? "component";
@@ -355,6 +450,7 @@ export function buildGeneratedNavigationGroups(
 export function replaceBrokerNavigation(
   docs: JsonObject,
   operations: SourceOperation[],
+  menuTranslations: MenuTranslations = new Map(),
 ): JsonObject {
   const copy = structuredClone(docs);
   for (const language of copy.navigation?.languages ?? []) {
@@ -370,10 +466,14 @@ export function replaceBrokerNavigation(
     );
     brokerTab.groups = [
       ...manual.filter((group: JsonObject) => group.group !== "Operations"),
-      ...buildGeneratedNavigationGroups(operations, locale, existingIcons),
+      ...buildGeneratedNavigationGroups(
+        operations,
+        locale,
+        menuTranslations,
+        existingIcons,
+      ),
       ...manual.filter((group: JsonObject) => group.group === "Operations"),
     ];
   }
   return copy;
 }
-

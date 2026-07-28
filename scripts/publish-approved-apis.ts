@@ -1,10 +1,18 @@
-import { mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
+import {
+  copyFile,
+  mkdtemp,
+  readFile,
+  rename,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import process from "node:process";
 import {
   buildLocalizedSpec,
   parseApprovalManifest,
+  parseMenuTranslations,
   replaceBrokerNavigation,
   resolveApprovals,
   scanSourceOperations,
@@ -34,14 +42,36 @@ async function gitCommit(directory: string): Promise<string> {
   return result.exitCode === 0 ? result.stdout.toString().trim() : "unknown";
 }
 
-async function writeAtomically(target: string, content: string): Promise<void> {
+async function replaceOutputs(outputs: Map<string, string>): Promise<void> {
+  const firstTarget = outputs.keys().next().value as string;
   const temporaryDirectory = await mkdtemp(
-    resolve(dirname(target), ".whale-api-publish-"),
+    resolve(dirname(firstTarget), ".whale-api-publish-"),
   );
-  const temporaryFile = resolve(temporaryDirectory, target.split("/").at(-1)!);
+  const staged = new Map<string, string>();
+  const backups = new Map<string, string>();
   try {
-    await writeFile(temporaryFile, content);
-    await rename(temporaryFile, target);
+    let index = 0;
+    for (const [target, content] of outputs) {
+      const stagedFile = resolve(temporaryDirectory, `staged-${index}`);
+      const backupFile = resolve(temporaryDirectory, `backup-${index}`);
+      await writeFile(stagedFile, content);
+      await copyFile(target, backupFile);
+      staged.set(target, stagedFile);
+      backups.set(target, backupFile);
+      index += 1;
+    }
+    const replaced: string[] = [];
+    try {
+      for (const [target, stagedFile] of staged) {
+        await rename(stagedFile, target);
+        replaced.push(target);
+      }
+    } catch (error) {
+      for (const target of replaced.reverse()) {
+        await copyFile(backups.get(target)!, target);
+      }
+      throw error;
+    }
   } finally {
     await rm(temporaryDirectory, { recursive: true, force: true });
   }
@@ -57,6 +87,32 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
   const sourceOperations = await scanSourceOperations(options.source);
   const approved = resolveApprovals(manifest, sourceOperations);
   const sourceCommit = await gitCommit(options.source);
+  const menuTranslations = parseMenuTranslations(
+    JSON.parse(await readFile(resolve(options.source, "menu.json"), "utf8")),
+  );
+
+  const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+  const docsPath = resolve(root, "docs.json");
+  const docs = JSON.parse(await readFile(docsPath, "utf8"));
+  const outputs = new Map<string, string>();
+  for (const locale of ["en", "zh-CN", "zh-HK"] as Locale[]) {
+    outputs.set(
+      resolve(root, `openapi.${locale}.json`),
+      `${JSON.stringify(
+        buildLocalizedSpec(approved, locale, menuTranslations),
+        null,
+        2,
+      )}\n`,
+    );
+  }
+  outputs.set(
+    docsPath,
+    `${JSON.stringify(
+      replaceBrokerNavigation(docs, approved, menuTranslations),
+      null,
+      2,
+    )}\n`,
+  );
 
   console.log(`Source: ${options.source}`);
   console.log(`Source commit: ${sourceCommit}`);
@@ -69,22 +125,7 @@ export async function main(args = process.argv.slice(2)): Promise<void> {
     return;
   }
 
-  const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-  const docsPath = resolve(root, "docs.json");
-  const docs = JSON.parse(await readFile(docsPath, "utf8"));
-  const outputs = new Map<string, string>();
-  for (const locale of ["en", "zh-CN", "zh-HK"] as Locale[]) {
-    outputs.set(
-      resolve(root, `openapi.${locale}.json`),
-      `${JSON.stringify(buildLocalizedSpec(approved, locale), null, 2)}\n`,
-    );
-  }
-  outputs.set(
-    docsPath,
-    `${JSON.stringify(replaceBrokerNavigation(docs, approved), null, 2)}\n`,
-  );
-
-  for (const [target, content] of outputs) await writeAtomically(target, content);
+  await replaceOutputs(outputs);
   console.log(`\nPublished ${approved.length} approved APIs.`);
 }
 
