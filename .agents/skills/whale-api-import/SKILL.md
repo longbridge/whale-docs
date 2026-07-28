@@ -4,7 +4,8 @@ description: |
   Publish an explicitly approved allowlist of Broker APIs from the sibling
   whale-openapi-docs repository into this documentation site. Use when the user
   provides APIs that are confirmed safe to publish, asks to approve or publish
-  Broker APIs, or asks to regenerate the approved API reference.
+  Broker APIs, asks which APIs belong with a template or DataTable screen, or
+  asks to regenerate the approved API reference.
 ---
 
 # Publish approved Whale Broker APIs
@@ -38,6 +39,70 @@ When the user gives operationIds or informal API names:
 
 Do not infer approval from `x-verified`, the current generated OpenAPI files, or
 the fact that an API exists in the source repository.
+
+## Discover related APIs from a template
+
+When the user supplies a template, do not limit the analysis to the matching
+dataset operation. Use `../fe-wealth-admin` to understand the complete UI
+surface that starts from that template.
+
+`fe-wealth-admin` is evidence of relationship only. It is never an API
+definition source. Never copy a path, method, schema, description, or
+operationId from it into the public specification.
+
+Follow this investigation sequence:
+
+1. Search `../fe-wealth-admin` for the exact template string. Ignore unrelated
+   template systems such as audit-log or message-rendering templates.
+2. Find where the template is passed into the table stack. The component may be
+   named `QueryTable`, `Table`, `DataTable`, `Detail`, or a local wrapper.
+   Follow imports, aliases, variables, and wrapper props instead of relying on
+   a single component name.
+3. Identify the owning page and route. Treat that page, its table, expanded
+   rows, drawers, modals, forms, row actions, toolbar actions, and directly
+   reached detail/edit pages as the UI investigation boundary.
+4. Trace the page's imports into services and hooks. Record:
+   - the starting query template;
+   - other table/query templates on the same UI surface;
+   - export or download templates;
+   - REST calls used by primary actions such as create, update, delete,
+     confirm, revoke, or detail;
+   - calls made by directly owned child components.
+5. Exclude shared infrastructure such as authentication, permissions, feature
+   flags, telemetry, localization, generic upload helpers, and global lookup
+   calls unless the screen's documented business workflow cannot function
+   without that specific API.
+6. For every candidate, independently search `../whale-openapi-docs` and
+   resolve it to exactly one YAML-defined operation. Match using the strongest
+   available evidence: exact template/operationId, then exact method and path,
+   then service-function evidence. Inspect the YAML itself before accepting the
+   match.
+7. Exclude and report any candidate that has no unique operation in
+   `whale-openapi-docs`. A frontend call is never sufficient authority to
+   create, reconstruct, or guess an API definition.
+
+Classify the result before changing the allowlist:
+
+- **Include**: the starting operation and uniquely defined APIs directly needed
+  for the same screen's primary business workflow.
+- **Review**: uniquely defined APIs reached only through optional actions,
+  conditional variants, or a separate detail/edit route whose publication
+  scope is unclear.
+- **Exclude**: infrastructure, incidental shared calls, unrelated navigation
+  targets, and anything not uniquely defined in `whale-openapi-docs`.
+
+For each Include or Review item, retain a short evidence chain:
+
+```text
+template → DataTable/page → action or child component
+         → frontend service call → whale-openapi-docs YAML
+         → METHOD /path + operationId
+```
+
+Apply the user's confirmed publication scope to the starting template. Add
+derived **Include** items only when the relationship is direct and the
+`whale-openapi-docs` match is unique. Present **Review** items for confirmation;
+do not silently approve them.
 
 ## Publish workflow
 
