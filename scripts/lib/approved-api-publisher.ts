@@ -343,7 +343,7 @@ function localizedMenuSegments(
   const raw = Array.isArray(operation.operation["x-menu-path"])
     ? operation.operation["x-menu-path"].map(String)
     : [];
-  return raw.map((segment) => {
+  const segments = raw.map((segment) => {
     const match = segment.match(/^(.*?)\s*\((.+)\)\s*$/);
     if (!match) return segment;
     const simplified = match[1].trim();
@@ -356,6 +356,21 @@ function localizedMenuSegments(
     if (locale === "zh-CN") return simplified;
     throw new Error(`Missing zh-HK menu translation for ${simplified} (${english})`);
   });
+  const englishPath = raw
+    .map((segment) => segment.match(/^(.*?)\s*\((.+)\)\s*$/)?.[2]?.trim() ?? segment)
+    .join("/");
+  if (
+    englishPath === "Account Assets/Account/Account Balance" ||
+    englishPath.startsWith("Account Assets/Account/Account Balance/")
+  ) {
+    segments[2] =
+      locale === "en"
+        ? "Account Balance"
+        : locale === "zh-CN"
+          ? "帐户余额"
+          : "帳戶餘額";
+  }
+  return segments;
 }
 
 export function buildLocalizedSpec(

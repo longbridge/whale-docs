@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   buildLocalizedSpec,
+  buildGeneratedNavigationGroups,
   parseMenuTranslations,
   parseApprovalManifest,
   resolveApprovals,
@@ -132,5 +133,21 @@ describe("localized output", () => {
     const spec = buildLocalizedSpec([sourceOperation], "zh-HK", translations);
     expect(spec.tags).toEqual([{ name: "範例" }]);
     expect(spec.info.description).toContain("伺服器端 API");
+  });
+
+  test("disambiguates the Account Assets account balance label", () => {
+    const operation = structuredClone(sourceOperation);
+    operation.operation["x-menu-path"] = [
+      "资产账户 (Account Assets)",
+      "账户 (Account)",
+      "账户余额 (Account Balance)",
+      "现金 (Cash)",
+    ];
+    const groups = buildGeneratedNavigationGroups(
+      [operation],
+      "zh-CN",
+      new Map(),
+    );
+    expect(groups[0].pages[0].pages[0].group).toBe("帐户余额");
   });
 });
