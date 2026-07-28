@@ -225,7 +225,14 @@ function localizeNode(value: unknown, locale: Locale): unknown {
     result.description = `${label}. ${result.description}`;
   }
   if (Array.isArray(node["x-enum-details"])) {
-    const options = node["x-enum-details"].map((entry: JsonObject) => {
+    const enumDetails = node["x-enum-details"] as JsonObject[];
+    // Generated source descriptions already contain curated, localized option
+    // copy. Use enum details only when the source has no description to avoid
+    // duplicating that copy or requiring redundant labels.
+    if (typeof result.description === "string" && result.description.trim()) {
+      return result;
+    }
+    const options = enumDetails.map((entry: JsonObject) => {
       const optionLabel = entry[suffix] ?? (suffix === "cn" ? entry.cn : undefined);
       if (optionLabel === undefined) {
         throw new Error(`Missing ${suffix} enum label for value ${String(entry.value)}`);
@@ -302,6 +309,10 @@ function addReferencedComponents(
 
 export type MenuTranslations = Map<string, Record<Locale, string>>;
 
+function normalizeMenuName(value: string): string {
+  return value.replaceAll("／", "/").replace(/\s+/g, " ").trim();
+}
+
 export function parseMenuTranslations(menu: JsonObject): MenuTranslations {
   const translations: MenuTranslations = new Map();
   const visit = (routes: unknown): void => {
@@ -314,8 +325,8 @@ export function parseMenuTranslations(menu: JsonObject): MenuTranslations {
           "zh-CN": String(names["zh-CN"]),
           "zh-HK": String(names["zh-HK"]),
         };
-        translations.set(localized.en, localized);
-        translations.set(localized["zh-CN"], localized);
+        translations.set(normalizeMenuName(localized.en), localized);
+        translations.set(normalizeMenuName(localized["zh-CN"]), localized);
       }
       visit((route as JsonObject).routes);
     }
@@ -337,7 +348,9 @@ function localizedMenuSegments(
     if (!match) return segment;
     const simplified = match[1].trim();
     const english = match[2].trim();
-    const known = menuTranslations.get(english) ?? menuTranslations.get(simplified);
+    const known =
+      menuTranslations.get(normalizeMenuName(english)) ??
+      menuTranslations.get(normalizeMenuName(simplified));
     if (known) return known[locale];
     if (locale === "en") return english;
     if (locale === "zh-CN") return simplified;
@@ -453,26 +466,42 @@ export function replaceBrokerNavigation(
   menuTranslations: MenuTranslations = new Map(),
 ): JsonObject {
   const copy = structuredClone(docs);
+  const navigationLocales: Record<string, Locale> = {
+    en: "en",
+    cn: "zh-CN",
+    "zh-Hant": "zh-HK",
+    "zh-CN": "zh-CN",
+    "zh-HK": "zh-HK",
+  };
   for (const language of copy.navigation?.languages ?? []) {
-    const locale = language.language as Locale;
-    if (!(locale in LOCALES)) continue;
+    const locale = navigationLocales[String(language.language)];
+    if (!locale) continue;
     const brokerTab = language.tabs?.find((tab: JsonObject) => tab.tab === "BrokerAPI");
     if (!brokerTab) throw new Error(`BrokerAPI tab not found for ${locale}`);
-    const manual = brokerTab.groups.filter((group: JsonObject) => !group.openapi);
+    const manualGroups = brokerTab.groups.filter(
+      (group: JsonObject) => !group.openapi,
+    );
+    const isOperationsGroup = (group: JsonObject) =>
+      group.group === "Operations" ||
+      JSON.stringify(group.pages ?? []).includes("/broker-api/operations");
+    const manualBefore = manualGroups.filter(
+      (group: JsonObject) => !isOperationsGroup(group),
+    );
+    const manualAfter = manualGroups.filter(isOperationsGroup);
     const existingIcons = new Map<string, string>(
       brokerTab.groups
         .filter((group: JsonObject) => group.openapi && group.icon)
         .map((group: JsonObject) => [group.group, group.icon]),
     );
     brokerTab.groups = [
-      ...manual.filter((group: JsonObject) => group.group !== "Operations"),
+      ...manualBefore,
       ...buildGeneratedNavigationGroups(
         operations,
         locale,
         menuTranslations,
         existingIcons,
       ),
-      ...manual.filter((group: JsonObject) => group.group === "Operations"),
+      ...manualAfter,
     ];
   }
   return copy;
