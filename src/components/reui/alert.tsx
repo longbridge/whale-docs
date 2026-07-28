@@ -4,22 +4,19 @@ import { cn } from "@components/lib/utils"
 
 const alertVariants = cva(
   [
-    "relative grid w-full grid-cols-[0_1fr] items-center gap-y-0.5 rounded-lg border px-3 py-2.5 text-sm",
+    "relative grid w-full grid-cols-[0_1fr] items-center gap-y-0.5 rounded-r-lg border-0 px-3 py-2.5 text-sm",
     "has-[>svg]:grid-cols-[calc(var(--spacing)*3)_1fr] has-[>svg]:gap-x-2.5 [&>svg:not([class*=size-])]:size-4",
     "has-[>[data-slot=alert-title]+[data-slot=alert-description]]:items-start",
     "has-[>[data-slot=alert-title]+[data-slot=alert-description]]:[&_svg]:translate-y-0.5",
   ],
   {
-    // ReUI's own variant colours: semantic token at /4 tint + /30 border, only
-    // the icon carries the accent. `default` (Note) is the neutral card.
     variants: {
       variant: {
-        default: "border-border bg-card text-card-foreground",
-        info: "border-info/30 bg-info/4 [&>svg]:text-info",
-        success: "border-success/30 bg-success/4 [&>svg]:text-success",
-        warning: "border-warning/30 bg-warning/4 [&>svg]:text-warning",
-        destructive:
-          "border-destructive/30 bg-destructive/4 [&>svg]:text-destructive",
+        default: "text-card-foreground",
+        info: "[&>svg]:text-info",
+        success: "[&>svg]:text-success",
+        warning: "[&>svg]:text-warning",
+        destructive: "[&>svg]:text-destructive",
       },
     },
     defaultVariants: {
