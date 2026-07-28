@@ -32,9 +32,18 @@ operationId: broker_teams
 Use `method + path` as the stable identity and `operationId` as a drift check.
 Do not approve an API using only a filename, summary, or operationId.
 
-If the operation already exists in `openapi.en.json`, `openapi.zh-CN.json`, or
-`openapi.zh-HK.json`, treat it as already published and leave all three copies
-unchanged. Report source drift instead of overwriting the committed copy.
+Broker API specifications live under `broker-api/` as localized `.yml` files:
+
+- `whaleapi.<locale>.yml` contains the operations migrated from the original
+  monolithic public specification;
+- `account-assets.<locale>.yml` contains Asset Account operations;
+- `misc.<locale>.yml` contains shared and miscellaneous operations.
+
+Add future domains as separate, stable YAML files instead of rebuilding a
+monolithic specification. If the operation already exists in any published
+Broker API YAML file, treat it as already published and leave all localized
+copies unchanged. Report source drift instead of overwriting the committed
+copy.
 
 ## Discover related APIs from a template
 
@@ -76,9 +85,9 @@ template → DataTable/page → action or child component
 For operations that do not yet exist in the public specs:
 
 1. Read the complete source YAML operation and every referenced component.
-2. Create localized copies in `openapi.en.json`, `openapi.zh-CN.json`, and
-   `openapi.zh-HK.json`. Follow `COPYWRITING.md`; do not fall back from Hong
-   Kong Traditional Chinese to Simplified Chinese.
+2. Create localized copies in the matching `broker-api/<domain>.<locale>.yml`
+   files. Follow `COPYWRITING.md`; do not fall back from Hong Kong Traditional
+   Chinese to Simplified Chinese.
 3. Remove internal source extensions that are not part of the public contract.
    Preserve public permission and source metadata already used by the site.
 4. Add only the new operations and required components. Do not rewrite the
@@ -102,13 +111,29 @@ approved and uniquely defined in source YAML.
 - Mark the download operation with `x-dataset-parent`.
 - Add only the base Dataset operation to `docs.json`; do not create a separate
   Sidebar entry or standalone page for the paired download.
-- Show the download endpoint, request, and response in the base page's Export
-  section.
-- Give the paired download the same `filters` schema as the base query and
-  remove every other request property.
+- Show one reusable, collapsible Export section directly below the base API
+  path. Do not create a standalone page for the paired download.
+- Give the paired download the same `filters` schema as the base query. Besides
+  `filters`, retain only these export-specific properties when present in the
+  approved YAML: `mode`, `ext`, `file_name`, `down_fields`,
+  `ticket_content`, `ticket_preview_url`, and `hide`.
+- In the collapsed Export section, do not repeat `filters` or the response
+  schema. Show only the endpoint and export-specific properties.
+- Link the Export section to the shared export record and asynchronous download
+  documentation under Misc.
 - Remove `orderBy` from newly imported Dataset and download schemas. It is not
   supported.
 - Never synthesize a `/download` operation that is absent from approved YAML.
+
+The shared export operations are:
+
+- `POST /v1/datasets/download_records`: query export records. `template_id` is
+  a `filters` property used to limit records to a Dataset template.
+- `GET /v1/datasets/download/{id}`: query an asynchronous export task and obtain
+  its download URL.
+
+Publish these operations under **Misc → Dataset Export** only after explicit
+approval. Dataset Export sections may then link to these common pages.
 
 These rules apply while importing new operations. Do not reopen previously
 published operations during a later import merely to normalize them.
@@ -127,6 +152,8 @@ essential. Before committing, confirm:
 - every added operation was explicitly approved;
 - every added contract came from a unique source YAML;
 - no existing operation changed;
+- every operation present on the merge-base branch is still present with the
+  same method, path, and operationId;
 - paired downloads are absent from Sidebar navigation;
 - newly imported request schemas contain no `orderBy`;
 - all three locales contain equivalent API contracts and navigation.

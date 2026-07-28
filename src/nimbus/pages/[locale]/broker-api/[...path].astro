@@ -6,6 +6,7 @@ import { getWhaleSidebar } from "../../../lib/whale-navigation";
 import ApiSchemaFields from "../../../components/api/ApiSchemaFields.astro";
 import ApiResponseSchema from "../../../components/api/ApiResponseSchema.astro";
 import ApiEndpointCopy from "../../../components/api/ApiEndpointCopy.astro";
+import DatasetExport from "../../../components/api/DatasetExport.astro";
 import { ApiCodeExample } from "../../../../components/ApiCodeExample";
 import { Badge } from "@components/components/ui/badge";
 import { codeToHtml } from "shiki";
@@ -19,7 +20,7 @@ export function getStaticPaths() {
   }));
 }
 
-const { locale, method, path, operation, document } = Astro.props as OperationRecord;
+const { locale, method, path, sourceFile, operation, document } = Astro.props as OperationRecord;
 const localePath = locale.toLowerCase();
 const title = operation.summary || operation.operationId || `${method.toUpperCase()} ${path}`;
 const descriptionHtml = renderMarkdown(operation.description);
@@ -50,41 +51,8 @@ const example = request?.example ?? request?.examples?.default?.value;
 const requestSchema = resolveSchema(document, request?.schema);
 const baseUrl = "https://b-api.longbridge.xyz";
 const endpointUrl = `${baseUrl}${path}`;
-const datasetDownloadMetadata = operation["x-dataset-download"];
-const datasetDownloadOperation = datasetDownloadMetadata
-  ? document.paths?.[datasetDownloadMetadata.path]?.[
-      datasetDownloadMetadata.method.toLowerCase()
-    ] as Record<string, any> | undefined
-  : undefined;
-const datasetDownloadContent = datasetDownloadOperation?.requestBody?.content ?? {};
-const datasetDownloadType = Object.keys(datasetDownloadContent)[0];
-const datasetDownloadRequest = datasetDownloadType
-  ? datasetDownloadContent[datasetDownloadType]
-  : undefined;
-const datasetDownloadSchema = resolveSchema(
-  document,
-  datasetDownloadRequest?.schema,
-);
-const datasetDownloadResponses = Object.entries(
-  datasetDownloadOperation?.responses ?? {},
-) as [string, any][];
-const datasetDownloadUrl = `${baseUrl}${datasetDownloadMetadata?.path ?? ""}`;
 const copyEndpointLabel = locale === "en" ? "Copy endpoint" : locale === "zh-CN" ? "复制接口地址" : "複製介面位址";
 const copiedEndpointLabel = locale === "en" ? "Endpoint copied" : locale === "zh-CN" ? "接口地址已复制" : "介面位址已複製";
-const exportLabels = locale === "en"
-  ? {
-      title: "Export",
-      description: "Export uses the same `filters` as the dataset query. Sorting with `orderBy` is not supported.",
-    }
-  : locale === "zh-CN"
-    ? {
-        title: "导出",
-        description: "导出使用与 Dataset 查询相同的 `filters`。不支持通过 `orderBy` 排序。",
-      }
-    : {
-        title: "匯出",
-        description: "匯出使用與 Dataset 查詢相同的 `filters`。不支援透過 `orderBy` 排序。",
-      };
 function schemaExample(schema: any): any {
   const resolved = resolveSchema(document, schema) ?? schema;
   if (resolved?.example !== undefined) return resolved.example;
@@ -158,7 +126,7 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
     { label: labels.reference },
   ]}
   prevNext={prevNext}
-  editUrl={`https://github.com/longbridge/whale-docs/edit/main/openapi.${locale}.json`}
+  editUrl={`https://github.com/longbridge/whale-docs/edit/main/${sourceFile}`}
   wide={true}
 >
   <div class="api-operation-heading">
@@ -166,6 +134,13 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
     <code>{endpointUrl}</code>
     <ApiEndpointCopy text={endpointUrl} label={copyEndpointLabel} copiedLabel={copiedEndpointLabel} />
   </div>
+
+  <DatasetExport
+    locale={locale}
+    operation={operation}
+    document={document}
+    baseUrl={baseUrl}
+  />
 
   <div class="api-reference-grid">
     <div class="api-reference-fields">
@@ -176,53 +151,6 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
       })}</div></section>}
 
       {request && <section><h2 id="request-body">{labels.request} <small>{requestType}</small></h2><ApiSchemaFields schema={requestSchema} document={document} locale={locale} childrenOpen={false} /></section>}
-
-      {datasetDownloadOperation && (
-        <section>
-          <h2 id="export">{exportLabels.title}</h2>
-          <div set:html={renderMarkdown(exportLabels.description)} />
-          <div class="api-operation-heading">
-            <Badge className={`api-method api-method-${datasetDownloadMetadata.method.toLowerCase()}`}>
-              {datasetDownloadMetadata.method.toUpperCase()}
-            </Badge>
-            <code>{datasetDownloadUrl}</code>
-            <ApiEndpointCopy
-              text={datasetDownloadUrl}
-              label={copyEndpointLabel}
-              copiedLabel={copiedEndpointLabel}
-            />
-          </div>
-          {datasetDownloadRequest && (
-            <>
-              <h3>{labels.request} <small>{datasetDownloadType}</small></h3>
-              <ApiSchemaFields
-                schema={datasetDownloadSchema}
-                document={document}
-                locale={locale}
-                childrenOpen={false}
-              />
-            </>
-          )}
-          {datasetDownloadResponses.length > 0 && (
-            <>
-              <h3>{labels.responses}</h3>
-              {datasetDownloadResponses.map(([status, response]) => {
-                const contentType = Object.keys(response.content ?? {})[0];
-                const body = contentType ? response.content[contentType] : undefined;
-                return (
-                  <div class="api-response-schema">
-                    <div class="api-response-status">
-                      <code>HTTP {status}</code>
-                      <span set:html={renderInlineMarkdown(response.description || (status === "200" ? "OK" : "Response"))} />
-                    </div>
-                    {body?.schema && <ApiResponseSchema schema={body.schema} document={document} locale={locale} />}
-                  </div>
-                );
-              })}
-            </>
-          )}
-        </section>
-      )}
 
       <section><h2 id="responses">{labels.responses}</h2>{responseExamples.map(({ status, response, body }) => <div class="api-response-schema"><div class="api-response-status"><code>HTTP {status}</code><span set:html={renderInlineMarkdown(response.description || (status === "200" ? "OK" : "Response"))} /></div>{body?.schema && <ApiResponseSchema schema={body.schema} document={document} locale={locale} />}</div>)}</section>
     </div>
