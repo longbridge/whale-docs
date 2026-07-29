@@ -1,0 +1,992 @@
+openapi: 3.1.1
+info:
+  title: Longport Whale 券商 API
+  description: 面向使用 Longport Whale 的券商提供机构级服务端 API。
+  version: 2.0.0
+servers:
+- url: https://b-api.longbridge.xyz
+  description: 测试环境
+- url: https://b-api.lbkrs.com
+  description: 生产环境
+security:
+- bearerAuth: []
+tags:
+- name: 可疑事件监控
+paths:
+  /account/kyc/import:
+    post:
+      operationId: kyc_import
+      summary: 批量导入可疑事件
+      tags:
+      - 可疑事件监控
+      x-permission-key:
+      - account.apply_edit_member
+      - account.modify_transaction_channel
+      - account.sem_update
+      - account.suspend_account
+      - account.update_appid
+      - b2b_customer.submit_account
+      - kyc.blacklist_hit_status
+      - kyc.blacklist_members
+      - kyc.blacklist_names
+      - kyc.update_account_info
+      - ticket.import_agent
+      - ticket.import_relation
+      x-lbonly: false
+      description: 'type 固定传 SuspiciousIncident。
+
+
+        ### 请求参数
+
+
+        - 必填：`type`（导入文件类型）
+
+        - 可选：`s3_key`（上传文件 S3 Key）、`name`（名称）、`filename`（文件名）、`base_account_ids`（基础账号ID列表）、`audit_frontend_resource`（审计上下文）
+
+        - 各字段的格式、取值范围、默认行为和业务含义见对应字段说明。
+
+
+        ### 处理结果
+
+
+        成功时完成所述业务操作，具体返回内容见 `200` 响应定义。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - type
+              properties:
+                s3_key:
+                  type: string
+                  description: 文件上传后返回的对象存储 Key，用于定位本次请求处理的文件。
+                name:
+                  type: string
+                  description: 用于指定「名称」。
+                type:
+                  type: string
+                  description: 可疑事件导入时固定传入 `SuspiciousIncident`。
+                filename:
+                  type: string
+                  description: 本次请求处理的文件名，包含文件扩展名。
+                base_account_ids:
+                  type: array
+                  description: 基础账号ID列表，以 JSON 数组形式提交。
+                  items:
+                    type: string
+                audit_frontend_resource:
+                  type: object
+                  description: 调用方提交的审计上下文，用于记录本次操作。
+            example:
+              s3_key: ''
+              name: ''
+              type: SuspiciousIncident
+              filename: ''
+              base_account_ids: []
+              audit_frontend_resource: {}
+      responses:
+        '200':
+          description: 请求处理成功。响应的 `data` 不包含额外业务字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code`
+
+                      判断具体结果。
+
+
+                      - `401`：未登录。
+
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /account/kyc/submit_suspicious_event:
+    post:
+      operationId: submit_suspicious_event
+      summary: 新建可疑事件
+      tags:
+      - 可疑事件监控
+      x-permission-key:
+      - account.sem_update
+      - kyc.suspicious_incident_monitoring
+      x-lbonly: true
+      description: '新建可疑事件。
+
+
+        ### 请求参数
+
+
+        - 必填：`aaid`（证券账号）
+
+        - 可选：`trigger_indicator`（触发指标）、`trigger_remark`（触发备注）、`last_alert_date`（最近预警日期）
+
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+
+        ### 处理结果
+
+
+        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - aaid
+              properties:
+                aaid:
+                  type: string
+                  description: 本次请求关联的证券账号。此字段为必填项。
+                trigger_indicator:
+                  type: string
+                  description: 用于指定「触发指标」。
+                trigger_remark:
+                  type: string
+                  description: 用于指定「触发备注」。
+                last_alert_date:
+                  type: string
+                  description: 本次请求对应的最近预警日期。请按接口约定的日期格式提交。
+            example:
+              aaid: H00000000
+              trigger_indicator: ''
+              trigger_remark: ''
+              last_alert_date: 2026-07-10
+      responses:
+        '200':
+          description: 请求处理成功。响应的 `data` 不包含额外业务字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code`
+
+                      判断具体结果。
+
+
+                      - `401`：未登录。
+
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /account/kyc/edit_suspicious_event:
+    post:
+      operationId: edit_suspicious_event
+      summary: 编辑可疑事件
+      tags:
+      - 可疑事件监控
+      x-permission-key:
+      - account.sem_update
+      - kyc.suspicious_incident_monitoring
+      x-lbonly: true
+      description: '编辑可疑事件。
+
+
+        ### 请求参数
+
+
+        - 必填：`event_id`（事件ID）、`aaid`（证券账号）、`trigger_indicator`（触发指标）、`trigger_remark`（触发备注）、`last_alert_date`（最近预警日期）
+
+        - 可选：`audit_frontend_resource`（审计上下文）
+
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+
+        ### 处理结果
+
+
+        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - event_id
+              - aaid
+              - trigger_indicator
+              - trigger_remark
+              - last_alert_date
+              properties:
+                event_id:
+                  type: string
+                  description: 事件ID，用于标识本次请求关联的业务对象。此字段为必填项。
+                aaid:
+                  type: string
+                  description: 本次请求关联的证券账号。此字段为必填项。
+                trigger_indicator:
+                  type: string
+                  description: 用于指定「触发指标」。此字段为必填项。
+                trigger_remark:
+                  type: string
+                  description: 用于指定「触发备注」。此字段为必填项。
+                last_alert_date:
+                  type: string
+                  description: 本次请求对应的最近预警日期。请按接口约定的日期格式提交。此字段为必填项。
+                audit_frontend_resource:
+                  type: object
+                  description: 调用方提交的审计上下文，用于记录本次操作。
+            example:
+              event_id: '123'
+              aaid: H00000000
+              trigger_indicator: ''
+              trigger_remark: ''
+              last_alert_date: 2026-07-10
+              audit_frontend_resource: {}
+      responses:
+        '200':
+          description: 请求处理成功。响应的 `data` 不包含额外业务字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code`
+
+                      判断具体结果。
+
+
+                      - `401`：未登录。
+
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /v1/datasets/aml_suspicious_events/download:
+    post:
+      operationId: aml_suspicious_events_download
+      summary: 可疑事件列表导出
+      tags:
+      - 可疑事件监控
+      x-permission-key:
+      - account.sem_query
+      x-lbonly: false
+      description: '将「可疑事件列表」数据导出为文件。`filters` 决定导出范围，`down_fields` 可限制导出字段。
+
+
+        ### 导出模式
+
+
+        - `mode: 0`：同步导出，成功后直接返回下载地址。
+
+        - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
+
+        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 字段同 aml_suspicious_events.yaml（query 能力）里的 filters
+                  properties:
+                    member_id:
+                      type: string
+                      description: 用于按「客户」筛选结果。
+                    tigger_indicator:
+                      type: string
+                      description: '用于按「触发指标」筛选结果。
+
+
+                        支持多选；提交时使用英文逗号（`,`）拼接多个值。不传时不按此字段筛选。
+
+
+                        **可选值：**
+
+                        - `1` - 表示出入金异常
+
+                        - `2` - 表示交易异常
+
+                        - `3` - 表示其他'
+                      example: 1,2
+                      enum:
+                      - '1'
+                      - '2'
+                      - '3'
+                      x-enum-details:
+                      - value: '1'
+                        label: 出入金异常
+                      - value: '2'
+                        label: 交易异常
+                      - value: '3'
+                        label: 其他
+                    process_status:
+                      type: string
+                      description: '用于按「审核状态」筛选结果。
+
+
+                        支持多选；提交时使用英文逗号（`,`）拼接多个值。不传时不按此字段筛选。
+
+
+                        **可选值：**
+
+                        - `1` - 表示待跟进
+
+                        - `2` - 表示跟进中
+
+                        - `3` - 表示待审批
+
+                        - `4` - 表示已完成'
+                      example: 1,2
+                      enum:
+                      - '1'
+                      - '2'
+                      - '3'
+                      - '4'
+                      x-enum-details:
+                      - value: '1'
+                        label: 待跟进
+                      - value: '2'
+                        label: 跟进中
+                      - value: '3'
+                        label: 待审批
+                      - value: '4'
+                        label: 已完成
+                    created_at:
+                      type: object
+                      description: 用于按「创建日期」筛选结果。
+                      properties:
+                        gte:
+                          type: string
+                          format: date
+                          description: 筛选范围的下限，匹配值包含该值。
+                        lte:
+                          type: string
+                          format: date
+                          description: 筛选范围的上限，匹配值包含该值。
+                    updated_at:
+                      type: string
+                      format: date
+                      description: 用于按「早于更新日期」筛选结果。
+                    created_by:
+                      type: string
+                      description: '用于按「创建人」筛选结果。
+
+
+                        候选值会动态变化。请调用 `GET /v1/datasets/refs/operators` 获取当前可用的数据字典，并使用返回项的 `key` 作为本参数值。'
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/operators
+                mode:
+                  type: integer
+                  default: 0
+                  description: '不传时默认 0（同步）
+
+
+                    **可选值：**
+
+                    - `0` - 表示同步
+
+                    - `1` - 表示异步'
+                  enum:
+                  - 0
+                  - 1
+                  x-enum-details:
+                  - value: 0
+                    label: 同步
+                  - value: 1
+                    label: 异步
+                ext:
+                  type: string
+                  description: '下载文件格式。不传时默认为 `csv`。
+
+
+                    **可选值：**
+
+                    - `csv` - 表示 CSV
+
+                    - `xlsx` - 表示 Excel'
+                  enum:
+                  - csv
+                  - xlsx
+                file_name:
+                  type: string
+                  description: 导出文件名称。不传时由服务端生成。
+                down_fields:
+                  type: array
+                  description: 不传时导出全部字段；取值范围见 items.enum（同查询接口 data.list.items 的字段列表）
+                  items:
+                    type: string
+                    enum:
+                    - event_no
+                    - member_id
+                    - real_name
+                    - en_name
+                    - origin_id
+                    - last_alert_date
+                    - tigger_indicator
+                    - tigger_indicator_val
+                    - tigger_indicator_remark
+                    - remark
+                    - created_at
+                    - created_by
+                    - created_by_val
+                    - data_source
+                    - data_source_val
+                    - process_status
+                    - process_status_val
+                    - result_status
+                    - result_status_val
+                    - last_reviewed_by
+                    - last_reviewed_by_val
+                    - last_reviewed_at
+                    - updated_at
+                ticket_content:
+                  type: string
+                  description: 模板配置了下载审核工单时，供审批人查看
+                ticket_preview_url:
+                  type: string
+                  description: 导出审批详情地址；仅在导出需要审批时使用。
+                hide:
+                  type: integer
+                  description: '是否在下载记录列表中隐藏本次导出记录。
+
+
+                    **可选值：**
+
+                    - `0` - 表示不隐藏
+
+                    - `1` - 表示隐藏'
+                  enum:
+                  - 0
+                  - 1
+                  x-enum-details:
+                  - value: 0
+                    label: 不隐藏
+                  - value: 1
+                    label: 隐藏
+            example:
+              filters: {}
+              mode: 0
+              ext: csv
+              file_name: ''
+              remark: ''
+              down_fields: []
+              ticket_content: ''
+              ticket_preview_url: ''
+              hide: 0
+      responses:
+        '200':
+          description: 成功时返回「可疑事件列表导出」任务信息。同步导出直接提供下载地址；异步导出提供用于后续查询的 `file_download_id`。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                - data
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code`
+
+                      判断具体结果。
+
+
+                      - `401`：未登录。
+
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        description: '同步模式（`mode: 0`）下返回，异步模式下为空'
+                      file_download_id:
+                        type: string
+                        description: '异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
+
+                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。'
+                      ticket_id:
+                        type: string
+                        description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
+              example:
+                code: 0
+                message: success
+                data:
+                  url: https://b-api.longbridge.xyz/download/export_result.csv
+                  file_download_id: ''
+                  ticket_id: ''
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-dataset-parent:
+        method: GET
+        path: /v1/datasets/aml_suspicious_events
+        operationId: aml_suspicious_events
+  /v1/datasets/aml_suspicious_events:
+    get:
+      operationId: aml_suspicious_events
+      summary: 可疑事件列表
+      tags:
+      - 可疑事件监控
+      x-permission-key:
+      - account.sem_query
+      x-lbonly: false
+      description: '查询「可疑事件列表」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+
+
+        ### 返回结果
+
+
+        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 组合业务过滤条件。省略某个过滤字段时，不按该字段筛选。
+                  properties:
+                    member_id:
+                      type: string
+                      description: 用于按「客户」筛选结果。
+                    tigger_indicator:
+                      type: string
+                      description: '用于按「触发指标」筛选结果。
+
+
+                        支持多选；提交时使用英文逗号（`,`）拼接多个值。不传时不按此字段筛选。
+
+
+                        **可选值：**
+
+                        - `1` - 表示出入金异常
+
+                        - `2` - 表示交易异常
+
+                        - `3` - 表示其他'
+                      example: 1,2
+                      enum:
+                      - '1'
+                      - '2'
+                      - '3'
+                      x-enum-details:
+                      - value: '1'
+                        label: 出入金异常
+                      - value: '2'
+                        label: 交易异常
+                      - value: '3'
+                        label: 其他
+                    process_status:
+                      type: string
+                      description: '用于按「审核状态」筛选结果。
+
+
+                        支持多选；提交时使用英文逗号（`,`）拼接多个值。不传时不按此字段筛选。
+
+
+                        **可选值：**
+
+                        - `1` - 表示待跟进
+
+                        - `2` - 表示跟进中
+
+                        - `3` - 表示待审批
+
+                        - `4` - 表示已完成'
+                      example: 1,2
+                      enum:
+                      - '1'
+                      - '2'
+                      - '3'
+                      - '4'
+                      x-enum-details:
+                      - value: '1'
+                        label: 待跟进
+                      - value: '2'
+                        label: 跟进中
+                      - value: '3'
+                        label: 待审批
+                      - value: '4'
+                        label: 已完成
+                    created_at:
+                      type: object
+                      description: 用于按「创建日期」筛选结果。
+                      properties:
+                        gte:
+                          type: string
+                          format: date
+                          description: 筛选范围的下限，匹配值包含该值。
+                        lte:
+                          type: string
+                          format: date
+                          description: 筛选范围的上限，匹配值包含该值。
+                    updated_at:
+                      type: string
+                      format: date
+                      description: 用于按「早于更新日期」筛选结果。
+                    created_by:
+                      type: string
+                      description: '用于按「创建人」筛选结果。
+
+
+                        候选值会动态变化。请调用 `GET /v1/datasets/refs/operators` 获取当前可用的数据字典，并使用返回项的 `key` 作为本参数值。'
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/operators
+                page:
+                  type: integer
+                  description: 要查询的页码，从 `1` 开始。
+                page_size:
+                  type: integer
+                  description: 每页返回的记录数量。
+            example:
+              filters: {}
+              page: 1
+              page_size: 20
+      responses:
+        '200':
+          description: 成功时分页返回「可疑事件列表」记录，以及页码、每页数量和总记录数等分页信息。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                - data
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code`
+
+                      判断具体结果。
+
+
+                      - `401`：未登录。
+
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                    - list
+                    - total
+                    properties:
+                      list:
+                        type: array
+                        description: '**返回值：** 列表列表。'
+                        items:
+                          type: object
+                          properties:
+                            event_no:
+                              type: string
+                              description: '**返回值：** 事件编号。'
+                            member_id:
+                              type: string
+                              description: '**返回值：** 客户编号。'
+                            real_name:
+                              type: string
+                              description: '**返回值：** 客户中文名称。'
+                            en_name:
+                              type: string
+                              description: '**返回值：** 客户英文名称。'
+                            origin_id:
+                              type: string
+                              description: '**返回值：** 证券账号。'
+                            last_alert_date:
+                              type: string
+                              description: '**返回值：** 最后警报日期；时间或日期格式以接口实际返回值为准。'
+                            tigger_indicator:
+                              type: string
+                              description: '**返回值：** 触发指标。'
+                            tigger_indicator_val:
+                              type: string
+                              description: 字段 tigger_indicator 的原始值：tigger_indicator 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            tigger_indicator_remark:
+                              type: string
+                              description: '**返回值：** 触发指标备注。'
+                            remark:
+                              type: string
+                              description: '**返回值：** 事件备注。'
+                            created_at:
+                              type: string
+                              description: '**返回值：** 创建时间；时间或日期格式以接口实际返回值为准。'
+                            created_by:
+                              type: string
+                              description: '**返回值：** 创建人。'
+                            created_by_val:
+                              type: string
+                              description: 字段 created_by 的原始值：created_by 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            data_source:
+                              type: string
+                              description: '**返回值：** 数据来源。'
+                            data_source_val:
+                              type: string
+                              description: 字段 data_source 的原始值：data_source 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            process_status:
+                              type: string
+                              description: '**返回值：** 审核状态。'
+                            process_status_val:
+                              type: string
+                              description: 字段 process_status 的原始值：process_status 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            result_status:
+                              type: string
+                              description: '**返回值：** 审核结果。'
+                            result_status_val:
+                              type: string
+                              description: 字段 result_status 的原始值：result_status 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            last_reviewed_by:
+                              type: string
+                              description: '**返回值：** 最后审核人。'
+                            last_reviewed_by_val:
+                              type: string
+                              description: 字段 last_reviewed_by 的原始值：last_reviewed_by 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            last_reviewed_at:
+                              type: string
+                              description: '**返回值：** 最后审核时间；时间或日期格式以接口实际返回值为准。'
+                            updated_at:
+                              type: string
+                              description: '**返回值：** 更新时间；时间或日期格式以接口实际返回值为准。'
+                      total:
+                        type: integer
+                        description: '**返回值：** 符合查询条件的记录总数，用于计算分页。'
+              example:
+                code: 0
+                message: success
+                data:
+                  list:
+                  - event_no: S2026063043342047
+                    member_id: '1000000000000000000'
+                    real_name: 示例用户
+                    en_name: FANG GULU
+                    origin_id: H00000000
+                    last_alert_date: '1782843340'
+                    tigger_indicator: Trading Anomaly
+                    tigger_indicator_val: '2'
+                    tigger_indicator_remark: ''
+                    remark: ''
+                    created_at: '1782843342'
+                    created_by: 大奔 (Fang Benben)
+                    created_by_val: '12965'
+                    data_source: Manual Entry
+                    data_source_val: single
+                    process_status: Pending Follow-up
+                    process_status_val: '1'
+                    result_status: ''
+                    result_status_val: ''
+                    last_reviewed_by: ''
+                    last_reviewed_by_val: ''
+                    last_reviewed_at: '0'
+                    updated_at: '1782843342'
+                  total: 135
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-post-fallback: true
+      x-dataset-download:
+        method: POST
+        path: /v1/datasets/aml_suspicious_events/download
+        operationId: aml_suspicious_events_download
+components:
+  schemas:
+    BrokerGatewayErrorEnvelope:
+      type: object
+      description: Broker API Gateway 返回的错误响应结构。`code` 为业务错误码，`message` 为错误信息，`data` 通常为空。
+      required:
+      - code
+      - message
+      - data
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data: {}
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
