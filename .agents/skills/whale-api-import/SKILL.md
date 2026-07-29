@@ -160,6 +160,57 @@ they confirm a replacement, correct it in the localized `.yml` (source `.ts`
 is read-only). A `作废`/`Void` marker that names a genuine void operation
 (e.g. `合单规则作废`, `PUT /billing/market_rule_void`) is correct — keep it.
 
+## Import the full lifecycle, not just create + query
+
+When a screen or feature is approved, import its **complete operation set**, not
+only the create form and the list/dataset query. List the source directory for
+the feature and account for every lifecycle operation: detail (`GET .../{id}`),
+edit (`PUT .../{id}`), delete (`DELETE .../{id}`), and any state toggles
+(`PUT .../{id}/state`, enable/disable). These row-action and drawer endpoints are
+easy to miss because an approved list often names only the create endpoint and
+the dataset, while the edit/delete/state operations live on the list rows.
+
+Reconcile before finishing: enumerate every `(METHOD, path)` under the feature's
+source directory and diff it against what you imported. Anything not imported
+must be a deliberate exclusion (internal-only / `x-lbonly`, a cache-flush, an
+unapproved endpoint) — `log` or report the exclusions so a gap reads as a
+decision, not an oversight. Do not rely on `x-verified` alone as the import gate;
+the approved set is what the user confirmed, and sibling lifecycle operations of
+an approved feature are normally in scope.
+
+## Edit endpoints need their real request body
+
+An edit endpoint (`PUT .../{id}`) almost always takes a request body, not just
+the path `id`. Source `.json` files sometimes leave the body empty with a note
+like `未实调` ("not verified") — importing that verbatim yields a page with no
+Request Body, which is wrong. Recover the real body:
+
+- The edit body usually mirrors the corresponding **create** endpoint's body
+  (same fields), plus the path `id`. Reuse the create's already-localized
+  request schema rather than leaving it empty.
+- When there is no create counterpart, read the frontend service and its call
+  site (e.g. `fe-wealth-admin`) to find the fields actually submitted, then
+  document those.
+- Describe caller-provided audit context (`audit_frontend_resource`) neutrally
+  only if the create body documents it too; keep create and edit consistent.
+
+Never publish an edit/create/submit endpoint with an empty request body when the
+API clearly accepts one — treat an empty body on such an operation as a gap to
+resolve, the same way a missing operation is.
+
+## Document value sources for reference fields
+
+Many request fields are IDs chosen from a dropdown whose options come from a
+reference endpoint, not free input. Document where the candidate values come
+from, or an integrator cannot know what to send. Find the source in the frontend
+form: an option list bound to `options.<ref_id>` / a `ref_ids: [...]` fetch
+(via `/data_porter/refs`) maps to the public ref endpoint
+`GET /v1/datasets/refs/<ref_id>`. For each such field, add a sentence to its
+description ("candidate values come from `GET /v1/datasets/refs/<ref_id>`; use
+the returned entry's `key`") and an `x-value-source: { endpoint: ... }`, matching
+the pattern already used on dataset filter fields. A field the form renders as a
+plain text input has no ref source — leave it as free input.
+
 ## Pair Dataset exports
 
 Treat `GET /v1/datasets/<name>` and
@@ -196,7 +247,15 @@ method changes business data. Keep export `/download` operations as `POST`.
   documentation under Misc.
 - Remove `orderBy` from newly imported Dataset and download schemas. It is not
   supported.
-- Never synthesize a `/download` operation that is absent from approved YAML.
+- A dataset's export exists whenever its source `.ts` template defines a
+  `downAccess` field — even if the source repo never generated a
+  `<name>_download.yaml`. In that case the export must still be paired: model the
+  download on a sibling dataset's `/download` (same structure, export-specific
+  properties, and standard export response), reuse the base query's `filters` and
+  derive `down_fields` from the base response field list, and take
+  `x-permission-key` from `downAccess`. Presence of `<name>_download.yaml` is not
+  the signal; `downAccess` in the `.ts` is. Conversely, never invent a download
+  for a dataset whose `.ts` has no `downAccess` — that dataset has no export.
 
 The shared export operations are:
 
@@ -233,6 +292,13 @@ essential. Before committing, confirm:
   nested subgroups carry no redundant `openapi` field;
 - no published summary carries an unreviewed deprecation marker or a name that
   contradicts its menu group;
+- the feature's full lifecycle is imported (detail / edit / delete / state), and
+  any operation under the feature's source directory left out is a deliberate,
+  reported exclusion;
+- every edit/create/submit endpoint that accepts a body has a non-empty
+  `requestBody` (no `未实调`-style empty bodies survive);
+- every dataset whose `.ts` defines `downAccess` has a paired `/download`
+  (`x-dataset-download` / `x-dataset-parent`) and a rendered Export section;
 - newly imported request schemas contain no `orderBy`;
 - all three locales contain equivalent API contracts and navigation.
 
