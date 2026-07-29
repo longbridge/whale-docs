@@ -46,7 +46,34 @@ pod install
 1. 下載並解壓 `LBWhaleAppSDK-XXX.zip`。
 2. 將 `LBWhaleAppSDK.xcframework` 拖入 Xcode 專案。
 3. 在 **General** > **Frameworks, Libraries, and Embedded Content** 中設定為 **Embed & Sign**。
-4. 在 **Build Phases** > **Link Binary With Libraries** 中新增系統程式庫。
+4. 在 **Build Phases** > **Link Binary With Libraries** 中新增以下系統程式庫：
+
+```txt
+Foundation
+UIKit
+Security
+SystemConfiguration
+CoreGraphics
+QuartzCore
+CoreText
+ImageIO
+WebKit
+AVFoundation
+AudioToolbox
+CoreMedia
+VideoToolbox
+Photos
+AssetsLibrary
+CoreLocation
+AddressBook
+AddressBookUI
+Contacts
+ContactsUI
+MessageUI
+SafariServices
+StoreKit
+UserNotifications
+```
 
 ## 初始化 SDK {/* initialize-sdk */}
 
@@ -98,7 +125,7 @@ SDK 回調中 `NSError` 的 `domain` 統一為 `@"LBWhaleApp"`，常見錯誤碼
 |error.code|含義|觸發場景|建議處理|
 |---|---|---|---|
 |400|配置引數錯誤|`startWithConfig:` 時缺少必填引數（appKey / appSecret / appId / appName.en / defaultAccountChannel / webDomainPrefix / token / refreshToken）或重複初始化|檢查 `LBWhaleAppConfig` 各欄位是否完整，修正後重新啟動|
-|401|鑑權失效|使用者被異地登入踢出、token 重新整理失敗、SDK 未啟動時呼叫介面|呼叫 `[LBWhaleApp logoutAndDestroy]` 銷燬 SDK，引導使用者重新登入|
+|401|鑑權失效|使用者被異地登入踢出、token 重新整理失敗|呼叫 `[LBWhaleApp logoutAndDestroy]` 銷燬 SDK，引導使用者重新登入|
 |403xxx|API Key 非法|服務端校驗 appKey 不合法|收到 403 開頭的錯誤，如：403201 或 403203 等確認 appKey 是否正確、聯絡服務端排查|
 
 ```objective-c
@@ -235,12 +262,6 @@ SDK 回調中 `NSError` 的 `domain` 統一為 `@"LBWhaleApp"`，常見錯誤碼
 - (void)lbWhaleAppRefreshTokenExpiredWithResolver:(void(^)(NSString *token, NSString *refreshToken))resolveCompleted {
     resolveCompleted(nil, nil);
 }
-
-/// 9. SDK 分析事件（可選）
-/// 僅在專案需要承接 WhaleAppSDK 分析事件時實現；不要在事件屬性中補充 token 等敏感資訊。
-- (void)lbWhaleAppAnalyticsEventWithName:(NSString *)name properties:(NSDictionary *)properties {
-    [MyAnalytics track:name properties:properties];
-}
 ```
 
 <Note>
@@ -262,6 +283,10 @@ config.sdkUIDelegate = self;
     // SDK 頁面數量從 1 變為 0
 }
 ```
+
+<Note>
+以下方法均需在 SDK 啟動成功（`sdkStatus == LBWhaleAppStatusStarted`）後呼叫。
+</Note>
 
 ### 頁面路由使用 {/* page-routing */}
 
@@ -294,6 +319,26 @@ NSDictionary *params = @{
 }];
 ```
 
+### 更換主題 {/* change-theme */}
+
+SDK 沒有獨立的切換方法，直接修改 `LBWhaleApp.config` 的 `theme` 屬性即可即時生效：
+
+```objective-c
+LBWhaleApp.config.theme = LBWhaleAppConfigThemeDark;
+```
+
+### 更換語言 {/* change-language */}
+
+```objective-c
+LBWhaleApp.config.language = LBWhaleAppConfigLanguageZhCN;
+```
+
+### 更換漲跌色 {/* change-price-color */}
+
+```objective-c
+LBWhaleApp.config.priceColorType = LBWhaleAppConfigPriceColorRedUpGreenDown;
+```
+
 ### 登出並銷燬 SDK {/* logout-and-destroy-sdk */}
 
 登出並銷燬 SDK，釋放記憶體與網路請求。
@@ -307,8 +352,8 @@ NSDictionary *params = @{
 獲取 SDK 當前頁面所需要支援的螢幕方向
 
 ```objective-c
-// SDK 需要支援的 UIInterfaceOrientationMask，如果返回 NSNumber ：0，表示當前頁面非 SDK 頁面，由 Broker App 決定支援的方向
-**+ (NSUInteger)requiredAppInterfaceOrientationMask*
+// SDK 需要支援的 UIInterfaceOrientationMask，如果返回 0，表示當前頁面非 SDK 頁面，由 Broker App 決定支援的方向
++ (NSUInteger)requiredAppInterfaceOrientationMask;
 ```
 
 為了使 SDK 內頁面可以正常顯示橫屏狀態，Broker App 需要在 AppDelegate 中實現以下代理方法
@@ -327,6 +372,11 @@ NSDictionary *params = @{
 
 SDK 支援兩種推送接入方式，請根據你的推送基礎設施情況選擇其一：
 
+| 接入方式 | 適用場景 |
+| --- | --- |
+| [方式一：走 SDK 內建渠道](#whale-managed-channel) | 由 Whale 服務端透過 SDK 內建的阿里雲 + APNs 通道直接下發訊息，Broker App 無需自建推送體系 |
+| [方式二：走 Broker 自己的渠道](#broker-managed-channel) | Broker App 已有自建推送通道（如 FCM、自研後端等），由 Broker App 負責訊息送達，SDK 只負責識別 Whale 訊息並完成 tip 展示與路由跳轉 |
+
 兩種方式互不依賴，按照實際場景接入對應小節即可。
 
 ### 方式一：走 SDK 內建渠道 {/* whale-managed-channel */}
@@ -335,7 +385,9 @@ Whale 透過 SDK 內建的推送通道直接下發訊息給 Broker App。Broker 
 
 #### 初始化推送服務 {/* initialize-push-service */}
 
-推送服務的啟動獨立於 SDK 主體啟動，建議在 App 啟動時即執行。
+推送服務的啟動獨立於 SDK 啟動，建議在 App 啟動時即執行。
+
+常見啟動失敗原因（對應 `NotificationErrorPushStartFailed`）：push key/secret 配置錯誤、Bundle ID 與推送控制台配置不一致等。
 
 ```objective-c
 // 啟動推送服務（推送服務的啟動不依賴於 SDK，可獨立啟動，建議在應用啟動時就執行）
@@ -447,10 +499,26 @@ Broker App 已經有自有推送通道（如 FCM、自有後端等），訊息�
 
 #### 識別是否為 Whale 訊息 {/* identify-whale-messages */}
 
-Broker App 從自有通道收到訊息後，先用 `checkIsLBNotificationWithUserInfo:` 判斷該訊息是否由 Whale 下發，只有屬於 Whale 的訊息才需要透傳給 SDK：
+建議由 Broker App 與自己的服務端約定標識欄位，自行判斷訊息來源，並在必要時對資料重新組裝後交給 SDK 處理。
+
+Whale 也開放了內部的訊息來源判斷方法供 Broker App 使用：從自有通道收到訊息後，可呼叫 `checkIsLBNotificationWithUserInfo:` 判斷該訊息是否可由 Whale SDK 處理。使用該方法判斷時，需確保傳入的資料結構符合以下示例，且包含關鍵欄位 `lb_push_from`：
 
 ```objective-c
-NSDictionary *userInfo = /* 從自有推送通道收到的訊息字典 */;
+NSDictionary *userInfo = @{
+    @"title": @"訊息標題",
+    @"body": @"訊息摘要",
+    // 透傳 Whale 下發訊息中的 user_info 欄位內容
+    @"user_info": @{
+        @"t": @"xx",
+        @"tn": @"xx",
+        @"id": @"xx",
+        // Whale 推送關鍵標識，SDK 依據此欄位判斷是否由自身處理該訊息
+        @"lb_push_from": @"xx",
+        @"link": @"跳轉連結",
+        @"json": @"業務 JSON 串"
+    }
+};
+
 if ([LBWhaleAppPushService checkIsLBNotificationWithUserInfo:userInfo]) {
     // 交由 SDK 處理（見下文步驟 2 / 步驟 3）
 } else {
@@ -463,19 +531,27 @@ if ([LBWhaleAppPushService checkIsLBNotificationWithUserInfo:userInfo]) {
 App 處於前臺時收到 Whale 訊息，呼叫 `sdkShowTipWithNotificationInfo:routerHandler:` 讓 SDK 展示 tip，並在使用者點擊 tip 時透過 `routerHandler` 回調路由地址：
 
 ```objective-c
-// 使用自定義封裝的引數處理前臺推送
 NSDictionary *customNotification = @{
-   // ...透傳服務端訊息字典
+    @"title": @"訊息標題",
+    @"body": @"訊息摘要",
+    @"user_info": @{
+        @"t": @"xx",
+        @"tn": @"xx",
+        @"id": @"xx",
+        // Whale 推送關鍵標識
+        @"lb_push_from": @"xx",
+        // SDK 會根據此連結在特定業務場景下觸發頁面跳轉。
+        // 若連結無法被解析，則透過 -lbWhaleAppSDKDidRequestOpenURL: 回調給 Broker App 處理。
+        // 若 Broker App 實現了 routerHandler，則所有跳轉均透過 routerHandler 回調，SDK 不再自行解析路由。
+        @"link": @"跳轉連結",
+        @"json": @"業務 JSON 串"
+    }
 };
 
 NSError *error = [LBWhaleApp.pushService sdkShowTipWithNotificationInfo:customNotification routerHandler:^(NSString * _Nonnull routerUrl) {
-        /**
-         1. 處理路由跳轉前的 Broker App 需要執行的自定義操作...
-         2. 跳轉 block 回調的路由地址
-        /
-        // ... App 自定義操作
-        // 開啟路由跳轉
-        [LBWhaleApp pushURL:routerUrl];
+    // 1. 執行跳轉前 Broker App 所需的自定義操作
+    // 2. 手動觸發路由跳轉
+    [LBWhaleApp pushURL:routerUrl];
 }];
 if (!error) {
     // SDK 已處理通知
@@ -633,9 +709,6 @@ SDK 啟動配置，包含身份憑證、介面選項和事件回調代理。透�
 /// 執行環境，預設生產環境；一般不需要修改
 @property (nonatomic, assign) LBWhaleAppConfigEnv env;
 
-/// 清除當前客戶憑證，用於在不銷燬 SDK 的情況下切換賬號
-- (void)logout;
-
 @end
 ```
 
@@ -749,6 +822,12 @@ LBWhaleAppConfig *config = [[LBWhaleAppConfig alloc] initAppKey:@"YOUR_APP_KEY"
 ```
 
 #### 支援的字型型別 {/* supported-font-types */}
+
+| 字型鍵名 | 用途 | 值型別 |
+| --- | --- | --- |
+| `LBAPPSDKConfigKeyFontMonospacedBold` | 自定義等寬字型（粗體） | `UIFontDescriptor`，size 傳 0 由 SDK 決定 |
+| `LBAPPSDKConfigKeyFontMonospaced` | 自定義等寬字型（常規） | `UIFontDescriptor`，size 傳 0 由 SDK 決定 |
+| `LBAPPSDKConfigKeyFontCrypto` | 自定義像素/加密字型 | `UIFontDescriptor`，size 傳 0 由 SDK 決定 |
 
 #### 注意事項 {/* notes */}
 
@@ -869,9 +948,6 @@ SDK 事件回調代理。
 /// SDK 內建 token 重新整理失敗後的兜底回調；必須在超時前呼叫 resolveCompleted
 - (void)lbWhaleAppRefreshTokenExpiredWithResolver:(void(^)(NSString *token, NSString *refreshToken))resolveCompleted;
 
-/// SDK 分析事件回調（可選）
-- (void)lbWhaleAppAnalyticsEventWithName:(NSString *)name properties:(NSDictionary *)properties;
-
 @end
 ```
 
@@ -954,6 +1030,8 @@ typedef enum : NSInteger {
 ```
 
 ### 其他注意事項 {/* additional-notes */}
+
+以下依賴衝突解決方案僅適用於透過 CocoaPods（參見[CocoaPods 整合](#cocoapods-integration)）整合的場景；若採用手動整合，請聯絡 Whale 專案團隊獲取對應的排查方式。
 
 WhaleAppSDK 在 podspec 中宣告以下第三方依賴：
 

@@ -36,7 +36,34 @@ Then run `pod install` and open the generated workspace.
 1. Extract `LBWhaleAppSDK-XXX.zip`.
 2. Drag `LBWhaleAppSDK.xcframework` into the Xcode project.
 3. In **General → Frameworks, Libraries, and Embedded Content**, select **Embed & Sign**.
-4. Add all system frameworks listed in the delivered package to **Build Phases → Link Binary With Libraries**.
+4. Add the following system frameworks to **Build Phases → Link Binary With Libraries**:
+
+```txt
+Foundation
+UIKit
+Security
+SystemConfiguration
+CoreGraphics
+QuartzCore
+CoreText
+ImageIO
+WebKit
+AVFoundation
+AudioToolbox
+CoreMedia
+VideoToolbox
+Photos
+AssetsLibrary
+CoreLocation
+AddressBook
+AddressBookUI
+Contacts
+ContactsUI
+MessageUI
+SafariServices
+StoreKit
+UserNotifications
+```
 
 ## Start WhaleAppSDK {/* initialize-sdk */}
 
@@ -96,7 +123,7 @@ Callbacks that carry an `NSError` always use the domain `@"LBWhaleApp"`. Common 
 | `NSError.code` | Meaning | Handling |
 | --- | --- | --- |
 | `400` | Missing required configuration or duplicate start | Correct `LBWhaleAppConfig` and start again |
-| `401` | Unrecoverable authentication failure or state-dependent API used before startup | Destroy the SDK when needed and require Client sign-in |
+| `401` | Unrecoverable authentication failure | Destroy the SDK when needed and require Client sign-in |
 | `403xxx` | Invalid API Key or project configuration | Verify the delivered project configuration with Whale |
 
 The SDK checks and renews tokens internally; Broker App does not call check-token or refresh-token APIs.
@@ -196,6 +223,26 @@ NSDictionary *parameters = @{ @"id": @"ST/US/AAPL" };
 
 `pushURL:` and `presentURL:` each provide variants for `animated`, `parameters`, and a completion callback.
 
+### Change the theme {/* change-theme */}
+
+The SDK has no dedicated method for this. Set the `theme` property on `LBWhaleApp.config` directly; the change takes effect immediately:
+
+```objective-c
+LBWhaleApp.config.theme = LBWhaleAppConfigThemeDark;
+```
+
+### Change the language {/* change-language */}
+
+```objective-c
+LBWhaleApp.config.language = LBWhaleAppConfigLanguageZhCN;
+```
+
+### Change the price color {/* change-price-color */}
+
+```objective-c
+LBWhaleApp.config.priceColorType = LBWhaleAppConfigPriceColorRedUpGreenDown;
+```
+
 ### Log out and destroy the SDK {/* logout-and-destroy-sdk */}
 
 Use `[LBWhaleApp logoutAndDestroy]` when the Client signs out or authentication becomes unrecoverable. It releases SDK memory and network resources. The public configuration object also declares `-[LBWhaleAppConfig logout]`, which clears the current credentials without destroying the SDK. The source integration does not define a complete account-switch sequence, so use this method only after Whale confirms the applicable SDK version and call sequence for the project.
@@ -228,11 +275,13 @@ Choose one delivery path for each project. See [Message-push integration](/en/do
 
 ### Whale-managed channel {/* whale-managed-channel */}
 
-Whale delivers messages to Broker App through the SDK's built-in channel. Broker App only starts the push service and reports the device token; the SDK owns notification display and click routing after startup (`NotificationErrorNotStarted` means the SDK must be started before routing).
+Whale delivers messages to Broker App through the SDK's built-in Aliyun + APNs channel. Broker App only starts the push service and reports the device token; the SDK owns notification display and click routing after startup (`NotificationErrorNotStarted` means the SDK must be started before routing).
 
 #### Start the push service {/* initialize-push-service */}
 
 Start the push service independently of SDK startup, ideally when the App launches.
+
+Common causes of `NotificationErrorPushStartFailed`: an incorrect push key or secret, or a bundle ID that does not match the push console configuration.
 
 ```objective-c
 [[LBWhaleApp pushService]
@@ -429,8 +478,6 @@ Startup configuration containing identity credentials, UI options, and the event
                    delegate:(nullable id<LBWhaleAppDelegate>)delegate
           extraCustomConfig:(nullable NSDictionary *)extraCustomConfig;
 
-/// Clears the current Client credentials to switch accounts without destroying the SDK.
-- (void)logout;
 @end
 ```
 
@@ -488,6 +535,12 @@ LBWhaleAppConfig *config = [[LBWhaleAppConfig alloc]
 ```
 
 #### Supported font types {/* supported-font-types */}
+
+| Font key | Purpose | Value type |
+| --- | --- | --- |
+| `LBAPPSDKConfigKeyFontMonospacedBold` | Custom monospaced font (bold) | `UIFontDescriptor`; pass `0` for size and let the SDK decide |
+| `LBAPPSDKConfigKeyFontMonospaced` | Custom monospaced font (regular) | `UIFontDescriptor`; pass `0` for size and let the SDK decide |
+| `LBAPPSDKConfigKeyFontCrypto` | Custom pixel/crypto font | `UIFontDescriptor`; pass `0` for size and let the SDK decide |
 
 #### Notes {/* notes */}
 
@@ -591,9 +644,6 @@ SDK event-callback delegate. Every method is optional.
 /// credentials, or with (nil, nil) before the timeout to fail the request.
 - (void)lbWhaleAppRefreshTokenExpiredWithResolver:(void(^)(NSString *token, NSString *refreshToken))resolveCompleted;
 
-/// Forwards SDK analytics events. Never add credentials or Client-sensitive information.
-- (void)lbWhaleAppAnalyticsEventWithName:(NSString *)name properties:(NSDictionary *)properties;
-
 @end
 ```
 
@@ -648,6 +698,8 @@ Push-service class. Access the shared instance through `LBWhaleApp.pushService`;
 `LBWhaleNotificationHandlingErrorCode` contains `NotificationErrorNotStarted`, `NotificationErrorNonSDK`, and `NotificationErrorPushStartFailed`.
 
 ### Additional notes {/* additional-notes */}
+
+These dependency-conflict fixes apply only to [CocoaPods integration](#cocoapods-integration). If the project uses manual integration instead, contact the Whale project team for the equivalent fix.
 
 The delivered podspec declares these external dependencies:
 
