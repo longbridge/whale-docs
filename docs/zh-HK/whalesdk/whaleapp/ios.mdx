@@ -15,7 +15,7 @@ description: iOS LBWhaleAppSDK 完整接入與 API 文件
 
 - **開發語言**：Objective-C、Swift
 
-- **其他**：不支援橫屏展示。
+- **其他**：Broker App 通常為豎屏。SDK 內個別頁面需要橫屏時，按 [SDK 內橫屏頁面支援](#landscape-support) 轉發螢幕方向。
 
 ## 整合方式 {/* integration */}
 
@@ -107,12 +107,20 @@ LBWhaleAppConfig *config = [[LBWhaleAppConfig alloc] initAppKey:@"LB_app_key"
     refreshToken:@"user_refresh_token"
     delegate:self
     extraCustomConfig:nil];
-// 設定主題和語言（可選）
+// 設定主題、語言等介面選項（可選）
 config.theme = LBWhaleAppConfigThemeAuto;
 config.language = LBWhaleAppConfigLanguageEn;
+config.priceColorType = LBWhaleAppConfigPriceColorFollowUserSetting;
+config.env = LBWhaleAppConfigEnvProd;
+// 設定 SDK 頁面進出回調代理（可選）
+config.sdkUIDelegate = self;
 // 啟動 SDK
 [LBWhaleApp startWithConfig:config];
 ```
+
+<Warning>
+只使用專案交付的環境與憑證。不要把真實的 `appSecret`、`token`、`refreshToken` 硬編碼進程式碼倉庫。
+</Warning>
 
 ### 實現代理方法 {/* implement-delegate-methods */}
 
@@ -264,6 +272,8 @@ SDK 回調中 `NSError` 的 `domain` 統一為 `@"LBWhaleApp"`，常見錯誤碼
 }
 ```
 
+`lbWhaleAppSDKDidRequestOpenURL:` 透傳過來的 URL，在開啟前請先校驗 scheme、網域和路由白名單。
+
 <Note>
 `lbWhaleAppRefreshTokenExpiredWithResolver:` 是極低機率異常的兜底擴充套件點，不是 Broker App 的常規 token 重新整理入口。等待時間預設 30 秒，可透過 `LBAPPSDKConfigKeyRefreshTokenResolverTimeout` 調整。
 </Note>
@@ -319,6 +329,8 @@ NSDictionary *params = @{
 }];
 ```
 
+`pushURL:` 和 `presentURL:` 各自提供 `animated`、`parameters` 與結果回調的多種過載，完整宣告見 [LBWhaleApp](#lb-whale-app)。
+
 ### 更換主題 {/* change-theme */}
 
 SDK 沒有獨立的切換方法，直接修改 `LBWhaleApp.config` 的 `theme` 屬性即可即時生效：
@@ -341,11 +353,13 @@ LBWhaleApp.config.priceColorType = LBWhaleAppConfigPriceColorRedUpGreenDown;
 
 ### 登出並銷燬 SDK {/* logout-and-destroy-sdk */}
 
-登出並銷燬 SDK，釋放記憶體與網路請求。
+在使用者登出或鑑權已不可恢復時呼叫，釋放記憶體與網路請求。
 
 ```objective-c
 [LBWhaleApp logoutAndDestroy];
 ```
+
+配置類另外宣告了 `-[LBWhaleAppConfig logout]`，它只清除當前憑證而不銷燬 SDK。源整合未定義完整的切換帳號時序，因此請在 Whale 確認專案適用的 SDK 版本與呼叫順序後再使用該方法。
 
 ### SDK 內橫屏頁面支援 {/* landscape-support */}
 
@@ -377,7 +391,7 @@ SDK 支援兩種推送接入方式，請根據你的推送基礎設施情況選�
 | [方式一：走 SDK 內建渠道](#whale-managed-channel) | 由 Whale 服務端透過 SDK 內建的阿里雲 + APNs 通道直接下發訊息，Broker App 無需自建推送體系 |
 | [方式二：走 Broker 自己的渠道](#broker-managed-channel) | Broker App 已有自建推送通道（如 FCM、自研後端等），由 Broker App 負責訊息送達，SDK 只負責識別 Whale 訊息並完成 tip 展示與路由跳轉 |
 
-兩種方式互不依賴，按照實際場景接入對應小節即可。
+兩種方式互不依賴，按照實際場景接入對應小節即可。服務端配置與標準訊息結構見[訊息推送接入](/zh-hk/docs/message-push)。
 
 ### 方式一：走 SDK 內建渠道 {/* whale-managed-channel */}
 
@@ -592,6 +606,17 @@ if (!error) {
 
 SDK 的主入口類，提供啟動、登出和頁面路由等核心功能。
 
+| 成員 | 用途 |
+| --- | --- |
+| `sdkVersion` | SDK 版本號 |
+| `pushService` | 共享的 `LBWhaleAppPushService` 例項 |
+| `config` | 當前啟動配置 |
+| `sdkStatus` | `NotStarted`、`Starting`、`Started` 或 `IsDestroying` |
+| `startWithConfig:` | 非同步啟動 SDK |
+| `logoutAndDestroy` | 登出並釋放 SDK 資源 |
+| `pushURL:...` / `presentURL:...` | 開啟 SDK 頁面，可帶引數、轉場動畫和結果回調 |
+| `requiredAppInterfaceOrientationMask` | 當前 SDK 頁面需要的螢幕方向；非 SDK 頁面返回 `0` |
+
 ```objective-c
 /// SDK 執行狀態
 typedef enum : NSUInteger {
@@ -714,7 +739,21 @@ SDK 啟動配置，包含身份憑證、介面選項和事件回調代理。透�
 
 ### 自定義引數 {/* custom-parameters */}
 
-透過傳入自定義引數動態配置自定義配置內容
+透過傳入自定義引數動態配置自定義配置內容。`extraCustomConfig` 支援以下公開 key：
+
+| Key | 值型別 | 用途 |
+| --- | --- | --- |
+| `LBAPPSDKConfigKeyDisableIDFA` | `NSNumber` 布林值 | 禁用 IDFA 讀取與 ATT 授權彈框 |
+| `LBAPPSDKConfigDebugEggDisable` | `NSNumber` 布林值 | 禁用系統 debug 資訊彩蛋 |
+| `LBAPPSDKConfigKeyDeviceId` | `NSString` | 傳入專案自定義的裝置標識 |
+| `LBAPPSDKConfigKeyFileDirectory` | `NSString` | 覆蓋 SDK 快取目錄 |
+| `LBAPPSDKConfigKeyRefreshTokenResolverTimeout` | `NSNumber` 秒數 | 調整 token 重新整理兜底回調的等待時間 |
+| `LBAPPSDKConfigKeyColor` | 巢狀字典 | 自定義支援的推送 tip 顏色 |
+| `LBAPPSDKConfigKeyFontCrypto` | `UIFontDescriptor` | 替換行情數字字型 |
+| `LBAPPSDKConfigKeyFontMonospaced` | `UIFontDescriptor` | 替換常規等寬字型 |
+| `LBAPPSDKConfigKeyFontMonospacedBold` | `UIFontDescriptor` | 替換粗體等寬字型 |
+
+顏色配置的淺色與深色值分別使用 `LBAPPSDKConfigKeyColorLight` 和 `LBAPPSDKConfigKeyColorDark`。推送 tip 支援的完整 key 為 `LBAPPSDKConfigKeyPushTipView`、`LBAPPSDKConfigKeyPTVDefaultBackground`、`LBAPPSDKConfigKeyPTVDefaultTitle`、`LBAPPSDKConfigKeyPTVDefaultContent`、`LBAPPSDKConfigKeyPTVDefaultIcon`、`LBAPPSDKConfigKeyPTVOrderCompleted`、`LBAPPSDKConfigKeyPTVOrderFailed`、`LBAPPSDKConfigKeyPTVOrderLimit`、`LBAPPSDKConfigKeyPTVOther`、`LBAPPSDKConfigKeyPTVLimitTitleColor`、`LBAPPSDKConfigKeyPTVLimitContentColor` 和 `LBAPPSDKConfigKeyPTVLimitIconColor`。
 
 ```objective-c
 @{

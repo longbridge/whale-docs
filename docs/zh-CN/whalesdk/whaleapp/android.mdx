@@ -75,11 +75,16 @@ android.enableR8.fullMode=false
 在 `Application onCreate` 中调用 SDK 的 Init 方法进行必要资源的初始化准备，请在主线程调用该方法。
 
 ```kotlin
-LBWhaleApp.init(application)
+LBWhaleApp.init(application, debug = false)
 ```
+
+`debug` 参数控制是否启用调试日志，默认为 `false`。
+
 ps: 如未开启 ARouter 预编译优化，该方法耗时将会大幅度增加
 
 ## 4. 配置推送 {/* configure-push */}
+
+推送的服务端渠道选择、云控制台配置以及标准消息结构，请参考[消息推送接入](/zh-cn/docs/message-push)。
 
 ### 4.1 方式一：走 SDK 内置渠道 {/* whale-managed-channel */}
 
@@ -161,10 +166,34 @@ class DemoFirebaseMessagingService : FirebaseMessagingService() {
 }
 ```
 
+`repotThirdToken` 是当前 SDK 中该方法的真实拼写，请勿按 `reportThirdToken` 调用。
+
 ### 4.2 方式二：走 Broker 自有渠道 {/* broker-managed-channel */}
 
 Broker App 可以选择自行接入第三方推送服务，业务消息由 Whale 转发至 Broker Server，再由 Broker Server 推送到 Broker App。
 在收到消息时可调用 SDK 方法对消息进行解析处理，SDK 提供 `LBWhaleApp.pushService.handleNotificationReceived` 方法用于解析消息并展示应用内通知。
+
+Broker App 既可以传入已解析的字段，也可以直接传入完整的标准消息 JSON：
+
+```kotlin
+//传入完整标准消息 JSON，SDK 自行解析 title、body 和 user_info
+val result = LBWhaleApp.pushService.handleNotificationReceived(messageJson)
+
+val clickResult = LBWhaleApp.pushService.handleNotificationOpened(messageJson)
+```
+
+字段重载接收 `title`、`summary` 以及完整的 `user_info` map。请勿自行拆平或重命名 `user_info` 中的字段。
+
+两个方法均返回 `LBWhaleAppResult<Unit>`：
+
+```kotlin
+when (val result = LBWhaleApp.pushService.handleNotificationOpened(messageJson)) {
+    is LBWhaleAppResult.Success -> Unit
+    is LBWhaleAppResult.Error -> reportSanitized(result.cause)
+}
+```
+
+`cause` 可能为 `NotInitialized`、`UnrecognizedPushMessage`、`MissingPushLink` 或 `InternalError`。
 
 ### 4.3 通知事件处理 {/* notification-event-handling */}
 #### 4.3.1 通知展示 {/* notification-display */}
@@ -236,9 +265,15 @@ val config = LBWhaleAppConfig(
 LBWhaleApp.startWithConfig(application, config)
 ```
 
-SDK 启动为异步，启动结果将通过 Callback 进行回调通知
+SDK 启动为异步，启动结果将通过 [Callback](#implement-callback) 进行回调通知
+
+<Warning>
+只使用项目交付的环境与凭证。不要把真实的 `appSecret`、`token`、`refreshToken` 硬编码进代码仓库。
+</Warning>
 
 ## 6. 实现 Callback 方法 {/* implement-callback */}
+
+`LBWhaleApp.callback` 需要在调用 `startWithConfig` 之前赋值。
 
 ```kotlin
 LBWhaleApp.callback = object : LBWhaleAppCallback {
@@ -247,7 +282,21 @@ LBWhaleApp.callback = object : LBWhaleAppCallback {
 
     //SDK 启动失败，错误类型请参考错误处理章节
     //可能的错误：InvalidConfig / InvalidAppKey / InvalidAppSecret / InvalidToken / TokenExpired / RefreshTokenExpired / RequestFailed / SyncAccountFailed
-    override fun onLBWhaleAppStartFailed(error: Exception) {}
+    override fun onLBWhaleAppStartFailed(error: Exception) {
+        reportSanitized(error)
+        when (error) {
+            //凭证问题：引导用户重新登录，获取一组新的 token
+            is LBWhaleAppError.InvalidToken,
+            is LBWhaleAppError.TokenExpired,
+            is LBWhaleAppError.RefreshTokenExpired -> redirectToLogin()
+            //接入问题：检查项目交付的配置与启动参数
+            is LBWhaleAppError.InvalidAppKey,
+            is LBWhaleAppError.InvalidAppSecret,
+            is LBWhaleAppError.InvalidConfig -> showIntegrationError(error)
+            //可重试问题：检查网络后重新启动 SDK
+            else -> showRetryableError(error)
+        }
+    }
 
     //运行期间发生错误，错误类型请参考下方错误处理
     //可能的错误：
@@ -270,6 +319,10 @@ LBWhaleApp.callback = object : LBWhaleAppCallback {
     }
 }
 ```
+
+WhaleAppSDK 在内部完成凭证的校验与续期。Broker App 只需在启动时提供初始的 `token` 与 `refreshToken`，不需要调用 check token 或 refresh token 接口。
+
+`onLBWhaleAppRefreshTokenExpired` 是常规续期失败后的兜底回调。上面的默认实现会放弃重试，随后运行时错误回调会抛出 `RefreshTokenExpired`，Broker App 据此销毁 SDK 并返回登出状态。仅当项目另有约定、且 Broker 能取得一组全新的客户凭证时，才通过 resolver 返回新凭证。
 
 <Note>
 正常情况下，WhaleAppSDK 自动完成 token 校验与续期，Broker App 不调用 check token 或 refresh token 接口。`onLBWhaleAppRefreshTokenExpired` 是极低概率异常的兜底扩展点，不应被实现为常规刷新流程。
@@ -317,6 +370,8 @@ LBWhaleApp.pushUrl("page_router", bundle)
 LBWhaleApp.pushUrl("page_router", bundle, Intent.FLAG_ACTIVITY_NEW_TASK)
 ```
 
+`onWhaleAppSdkOpenUrlRequested` 回调收到的 URL 在交给 Broker App 路由前，请先校验 scheme、域名和路由白名单。
+
 ### 8.2 更换主题 {/* change-theme */}
 
 ```kotlin
@@ -343,7 +398,23 @@ LBWhaleApp.changePriceColor(LBWhaleAppConfigPriceColor.RED_UP_GREEN_DOWN)
 LBWhaleApp.logoutAndDestroy()
 ```
 
+在用户登出、切换账号，或 SDK 报告不可恢复的鉴权失败时调用。该方法会关闭 SDK 页面、停止 SDK 活动并清除当前启动配置。
+
 ## 9. 错误处理 {/* error-handling */}
+
+| `LBWhaleAppError` | 触发场景 | 建议处理 |
+| --- | --- | --- |
+| `InvalidConfig(field)` | 启动时必填字段为空 | 修正接入配置后重新启动 |
+| `NotInitialized` | 启动成功前调用了依赖 SDK 状态的方法 | 等待 `onLBWhaleAppStarted` 后再调用 |
+| `SyncAccountFailed` | 启动过程中同步账户信息失败 | 检查网络后重新启动 SDK |
+| `InvalidAppKey` / `InvalidAppSecret` | 项目凭证被服务端拒绝 | 核对项目交付的配置 |
+| `InvalidToken` / `TokenExpired` | 传入的初始客户凭证无效 | 重新获取一组新的登录会话 |
+| `RefreshTokenExpired` | 会话无法续期 | 销毁 SDK 并返回登出状态 |
+| `RequestFailed(message, code)` | 其他网络请求失败 | 记录脱敏后的 code 与 message，按项目重试策略处理 |
+| `UnrecognizedPushMessage` | 消息不是 Whale 推送消息 | 交由 Broker App 自行处理 |
+| `MissingPushLink` | 是 Whale 消息但解析后无跳转路由 | 不执行跳转，上报脱敏后的元信息 |
+| `InternalError(cause)` | 路由或 SDK 操作中的未预期异常 | 通过项目监控上报脱敏后的堆栈 |
+
 ```kotlin
 sealed class LBWhaleAppError(message: String, cause: Throwable? = null) : Exception(message, cause) {
     //SDK Configuration Errors
@@ -509,9 +580,35 @@ fun handleNotificationOpened(
     json: String,
     callback: NotificationRouterCallback? = null
 ): LBWhaleAppResult<Unit>
+
+//路由回调，SDK 完成通知解析后回传最终跳转的 URL
+fun interface NotificationRouterCallback {
+    fun onRouter(url: String)
+}
+
+//当前支持的第三方厂商通道
+enum class ThirdPush { FCM }
 ```
 
+完整 JSON 重载会先读取 `title`、`body` 和 `user_info`，再调用对应的字段重载。两个字段重载均通过 `@JvmOverloads` 为 Java 生成重载方法。
+
 `handleNotificationReceived` 和 `handleNotificationOpened` 返回 `LBWhaleAppResult<Unit>`。成功时为 `LBWhaleAppResult.Success`；失败时为 `LBWhaleAppResult.Error`，通过 `cause` 读取具体的 `LBWhaleAppError`。Broker 自有渠道应优先传入 [标准消息结构](/zh-cn/docs/message-push#http-convention)，不要自行拆改 `user_info`。
+
+```kotlin
+sealed class LBWhaleAppResult<out T> {
+    data class Success<T>(val value: T) : LBWhaleAppResult<T>()
+    data class Error(val cause: Throwable) : LBWhaleAppResult<Nothing>()
+
+    val isSuccess: Boolean
+    val isError: Boolean
+
+    companion object {
+        @JvmField val Ok: LBWhaleAppResult<Unit>
+    }
+}
+```
+
+Kotlin 侧提供 `onSuccess`、`onError`、`map`、`fold`、`getOrNull`、`getOrElse` 等扩展函数。
 
 ### 11.3 LBWhaleAppConfig - 启动配置 {/* startup-configuration */}
 
@@ -535,6 +632,8 @@ class LBWhaleAppConfig(
 )
 ```
 
+相关类型见下方 [应用名称](#application-name)、[主题模式](#theme-mode)、[显示语言](#display-language)、[运行环境](#runtime-environment) 和 [涨跌色设置](#price-color-settings)。
+
 ### 11.4 LBWhaleAppConfigName - 应用名称 {/* application-name */}
 
 ```kotlin
@@ -544,6 +643,8 @@ data class LBWhaleAppConfigName(
     val zhHK: String? = null //繁中名称
 )
 ```
+
+`en` 为必填，`zhCN` 和 `zhHK` 可选。
 
 ### 11.5 LBWhaleAppConfigTheme - 主题模式 {/* theme-mode */}
 
@@ -574,6 +675,8 @@ enum class LBWhaleAppConfigEnv() {
 }
 ```
 
+除非 Whale 项目团队提供了对应的配置，否则不要选择非生产环境。
+
 ### 11.8 LBWhaleAppConfigPriceColor - 涨跌色设置 {/* price-color-settings */}
 ```kotlin
 enum class LBWhaleAppConfigPriceColor(val value: Int) {
@@ -582,6 +685,8 @@ enum class LBWhaleAppConfigPriceColor(val value: Int) {
     GREEN_UP_RED_DOWN(2)//指定绿涨红跌，该配置将会隐藏 SDK 内涨跌色设置入口
 }
 ```
+
+`RED_UP_GREEN_DOWN` 和 `GREEN_UP_RED_DOWN` 会隐藏 SDK 内的涨跌色设置入口；`FOLLOW_USER_SETTING` 保留该入口，并跟随用户在 SDK 内的选择。
 
 ### ExtraCustomConfigKey - 高级配置 {/* advanced-configuration */}
 
@@ -607,7 +712,16 @@ class LBWhalePushConfig private constructor(
     val disableMultiDevice: Boolean, //是否关闭多设备推送，默认 false
     val notificationConfig: NotificationConfig, //通知配置
     val pushCallback: LBWhalePushCallback? //推送事件回调
-)
+) {
+    class Builder {
+        fun appKey(appKey: String): Builder
+        fun appSecret(appSecret: String): Builder
+        fun disableMultiDevice(disableMultiDevice: Boolean): Builder
+        fun notificationConfig(config: NotificationConfig): Builder
+        fun pushCallback(callback: LBWhalePushCallback): Builder
+        fun build(): LBWhalePushConfig
+    }
+}
 ```
 
 ### 11.10 NotificationConfig - 通知配置 {/* notification-configuration */}
