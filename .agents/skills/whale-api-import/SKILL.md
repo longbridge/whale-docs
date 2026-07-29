@@ -111,6 +111,55 @@ For operations that do not yet exist in the public specs:
 
 Do not use a bulk regeneration or synchronization script for this workflow.
 
+## Navigation structure and grouping
+
+Build the navigation to mirror the source menu hierarchy, not a flat list.
+Each source operation carries `x-menu-path` (e.g.
+`[业务参数设置 (Service Parameter), 计费管理 (Billing Management), 客户端展示 (Client-side Display)]`).
+Nest `docs.json` groups to match: place a new domain's operations under the
+existing top-level menu group they belong to, subdivided by the deeper
+`x-menu-path` levels — do not dump a whole domain flat under one new
+top-level group. If a top-level menu group already exists (for example a
+`Service Parameter` group carrying whaleapi operations), nest the new domain's
+subgroups under it and keep any pages already there, rather than creating a
+second group with the same display name.
+
+How navigation resolves operations (do not misuse the `openapi` field):
+
+- Operation entries are strings of the form `METHOD /path`. `allOperations()`
+  merges every published spec and resolves each entry **globally by
+  `method + path`** — the entry is looked up across all documents regardless of
+  which group it sits in.
+- A group's `openapi: { source, directory }` field does **not** scope which spec
+  an operation comes from. It only sets the default-collapsed state of that
+  group's operation subgroups (`Boolean(group.openapi)` in
+  `whale-navigation.ts`).
+- Therefore **nested subgroups do not need — and should not carry — their own
+  `openapi` source**. Set `openapi` only on the top-level group (matching the
+  primary spec for that menu), and leave nested subgroups with just `group` and
+  `pages`. Operations from a different spec file still resolve correctly when
+  listed inside such a subgroup.
+
+The sidebar label and method badge for an operation entry come from the
+operation's real `summary` and real HTTP method, keyed as
+`${locale}:${METHOD} ${path}` in `operationTitles`. If the `docs.json` entry's
+method does not match the operation's actual method, the lookup misses: the
+badge shows the wrong method and the label falls back to the raw path slug
+(e.g. `booking packages`). Always write the entry with the operation's real
+primary method — see the Dataset rule below.
+
+## Watch for stale source names
+
+Source `.ts` template `name` fields and source `.json` summaries are copied
+verbatim into `summary`. Some carry legacy or wrong labels — e.g. a template
+literally named `用户费率 (作废)` ("... (Deprecated)") that no longer matches
+what the API does. Do not publish such names blindly. When a resolved summary
+contains a deprecation marker (`作废` / `作廢` / `Deprecated`) or a name that
+contradicts its menu group, flag it to the user as a **Review** item and, once
+they confirm a replacement, correct it in the localized `.yml` (source `.ts`
+is read-only). A `作废`/`Void` marker that names a genuine void operation
+(e.g. `合单规则作废`, `PUT /billing/market_rule_void`) is correct — keep it.
+
 ## Pair Dataset exports
 
 Treat `GET /v1/datasets/<name>` and
@@ -128,6 +177,13 @@ method changes business data. Keep export `/download` operations as `POST`.
 - Mark the download operation with `x-dataset-parent`.
 - Add only the base Dataset operation to `docs.json`; do not create a separate
   Sidebar entry or standalone page for the paired download.
+- Write the base Dataset navigation entry as `GET /v1/datasets/<name>`, matching
+  its documented primary method — never `POST`. The paired download is `POST`,
+  but it is filtered out of navigation, so a `POST /v1/datasets/<name>` entry
+  would resolve to nothing: the sidebar would show a `POST` badge and fall back
+  to the raw slug while the link still opens the `GET` page. This mismatch is a
+  common regression; grep `docs.json` for `POST /v1/datasets/` before committing
+  and confirm every dataset query entry is `GET`.
 - Show one reusable, collapsible Export section directly below the base API
   path. Do not create a standalone page for the paired download.
 - Give the paired download the same `filters` schema as the base query. Besides
@@ -172,6 +228,11 @@ essential. Before committing, confirm:
 - every operation present on the merge-base branch is still present with the
   same method, path, and operationId;
 - paired downloads are absent from Sidebar navigation;
+- every dataset query navigation entry is `GET /v1/datasets/<name>`, not `POST`;
+- new operations are nested under the correct menu group per `x-menu-path`, and
+  nested subgroups carry no redundant `openapi` field;
+- no published summary carries an unreviewed deprecation marker or a name that
+  contradicts its menu group;
 - newly imported request schemas contain no `orderBy`;
 - all three locales contain equivalent API contracts and navigation.
 
