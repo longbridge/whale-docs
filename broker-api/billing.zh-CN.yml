@@ -8973,6 +8973,581 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /billing/personal_fee/{id}:
+    get:
+      operationId: personal_fee_detail
+      summary: 个人费率详情
+      tags:
+      - 业务参数设置
+      x-permission-key:
+      - lb_hk_charging.lb_hk_fee_level_query
+      x-lbonly: false
+      description: '按 `id` 查找单条个人费率的费用配置详情。
+
+
+        ### 请求参数
+
+
+        - 必填：`id`（个人费率记录 id），拼在路径上。
+
+
+        ### 处理结果
+
+
+        成功时在 `data.fee` 中返回该个人费率的费用配置（结构同机构收费）。各字段含义见 `200` 响应字段说明。'
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: 个人费率记录 id，拼在路径里。
+      responses:
+        '200':
+          description: 请求处理成功。`data.fee` 为该个人费率的费用配置。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code`
+
+                      判断具体结果。
+
+
+                      - `401`：未登录。
+
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      fee:
+                        type: object
+                        description: '费用配置，结构同「机构收费详情」。主要子字段：
+
+
+                          - `billing_item_id`：关联的收费场景 id。
+
+                          - `currency`：币种。
+
+                          - `min` / `max` / `threshold`：计费区间与起征阈值。
+
+                          - `rates`：分档费率列表，每档含 `gt`、`lte`、`fee_rate`、`min`。
+
+                          - `fee_rate_type`：费率类型。
+
+                          - `special_fees`：特殊费率列表（含 `conditions` 匹配条件）。
+
+                          - `metric_type` / `granularity`：计费方式与粒度。
+
+                          - `cutoff_method` / `cutoff_digits`：进位方式与保留位数。
+
+                          - `billing_item`：内嵌的收费场景配置，字段同「收费场景详情」。
+
+                          - `calculation_method`：计算方式。'
+              example:
+                code: 0
+                message: success
+                data:
+                  fee:
+                    billing_item_id: '10288'
+                    currency: CNH
+                    max: '2000002'
+                    min: '2.1'
+                    threshold: '0'
+                    rates:
+                    - id: '0'
+                      fee_id: '335469'
+                      gt: '0'
+                      lte: '3500'
+                      fee_rate: '0.044'
+                      min: '0'
+                    fee_rate_type: 2
+                    special_fees: []
+                    metric_type: 2
+                    granularity: 2
+                    cutoff_method: 1
+                    cutoff_digits: 2
+                    calculation_method: 1
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /billing/billing_item_name:
+    get:
+      operationId: billing_item_name
+      summary: 查询收费类型
+      tags:
+      - 业务参数设置
+      x-lbonly: false
+      description: '按 biz_type（业务类型）查询可选的收费类型（计费项名称）列表，供「新建收费场景」等请求的 name_id 下拉框联动查询用。
+
+
+        ### 请求参数
+
+
+        - 必填：`biz_type`（biz_type）
+
+        - 各字段的格式、取值范围、默认行为和业务含义见对应字段说明。
+
+
+        ### 处理结果
+
+
+        成功时返回查询结果，具体结构见 `200` 响应定义。'
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: biz_type
+        in: query
+        required: true
+        schema:
+          type: string
+        description: '用于筛选收费类型的业务类型。
+
+
+          请调用 `GET /v1/datasets/refs/billing_business_type_all` 获取当前可用的数据字典，并使用返回项的 `key` 作为本参数值。'
+        x-value-source:
+          endpoint: GET /v1/datasets/refs/billing_business_type_all
+      responses:
+        '200':
+          description: 请求处理成功。业务结果位于 `data`，包含 `names` 字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code`
+
+                      判断具体结果。
+
+
+                      - `401`：未登录。
+
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      names:
+                        type: array
+                        description: '**返回值：** 收费类型列表列表。'
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: number
+                              description: 用于「新建收费场景」请求 name_id 字段提交
+                            name_en:
+                              type: string
+                              description: '**返回值：** 名称（英文）。'
+                            name_zh:
+                              type: string
+                              description: '**返回值：** 名称（简体中文）。'
+                            name_zh_hk:
+                              type: string
+                              description: '**返回值：** 名称（繁体中文）。'
+                            state:
+                              type: number
+                              description: 取值含义见 billing_item_name_state 数据字典
+                            charing_party:
+                              type: number
+                              description: 取值含义见 billing_item_name_charing_party 数据字典
+                            type:
+                              type: number
+                              description: 取值含义见 billing_item_name_type 数据字典
+                            code:
+                              type: string
+                              description: '**返回值：** 费用代码。'
+              example:
+                code: 0
+                message: success
+                data:
+                  names:
+                  - id: 0
+                    name_en: string
+                    name_zh: string
+                    name_zh_hk: string
+                    state: 0
+                    charing_party: 0
+                    type: 0
+                    code: string
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /billing/item_fields:
+    get:
+      operationId: item_fields
+      summary: 查询计费项字段规则
+      tags:
+      - 业务参数设置
+      x-lbonly: false
+      description: '查询新建/编辑收费场景（计费项）时各 biz_type（业务类型）分别允许的字段取值范围和默认值，供「新建收费场景」等请求联动过滤下拉选项用。不带请求参数。
+
+
+        ### 请求参数
+
+
+        该接口不接收业务参数。
+
+
+        ### 处理结果
+
+
+        成功时返回查询结果，具体结构见 `200` 响应定义。'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: 请求处理成功。业务结果位于 `data`，包含 `biz_map` 字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code`
+
+                      判断具体结果。
+
+
+                      - `401`：未登录。
+
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      biz_map:
+                        type: object
+                        description: key 为 biz_type 取值（如 "1"、"2"，含义见 billing_business_type_all 数据字典），value
+                          为该业务类型下的字段规则
+                        properties:
+                          fields:
+                            type: array
+                            description: '**返回值：** 字段规则列表列表。'
+                            items:
+                              type: object
+                              properties:
+                                name:
+                                  type: string
+                                  description: 对应「新建收费场景」请求体里的字段名，如 divisor/metric_type/granularity/cutoff_method/benchmark_rate
+                                    等
+                                allow_options:
+                                  type: array
+                                  description: 该字段在当前业务类型下允许的取值列表；为空表示不限制
+                                  items:
+                                    type: string
+                                default:
+                                  type: string
+                                  description: '**返回值：** 默认值。'
+              example:
+                code: 0
+                message: success
+                data:
+                  biz_map:
+                    fields:
+                    - name: string
+                      allow_options: []
+                      default: string
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /v1/datasets/billing_item_for_secondary_item:
+    get:
+      operationId: billing_item_for_secondary_item
+      summary: 收费场景列表
+      tags:
+      - 业务参数设置
+      x-permission-key:
+      - lb_hk_charging.lb_hk_scene_query
+      x-lbonly: false
+      description: '查询「收费场景列表」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+
+
+        ### 返回结果
+
+
+        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 组合业务过滤条件。省略某个过滤字段时，不按该字段筛选。
+                  properties:
+                    biz_type_code:
+                      type: string
+                      description: '用于按「收费类型」筛选结果。
+
+
+                        候选值会动态变化。请调用 `GET /v1/datasets/refs/billing_business_type_code` 获取当前可用的数据字典，并使用返回项的
+                        `key` 作为本参数值。'
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/billing_business_type_code
+                page:
+                  type: integer
+                  description: 要查询的页码，从 `1` 开始。
+                page_size:
+                  type: integer
+                  description: 每页返回的记录数量。
+            example:
+              filters: {}
+              page: 1
+              page_size: 20
+      responses:
+        '200':
+          description: 成功时分页返回「收费场景列表」记录，以及页码、每页数量和总记录数等分页信息。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                - data
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code`
+
+                      判断具体结果。
+
+
+                      - `401`：未登录。
+
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                    - list
+                    - total
+                    properties:
+                      list:
+                        type: array
+                        description: '**返回值：** 列表列表。'
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: '**返回值：** 当前记录的唯一标识。'
+                            biz_type:
+                              type: string
+                              description: '**返回值：** 业务类型。'
+                            biz_type_val:
+                              type: string
+                              description: 字段 biz_type 的原始值：biz_type 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            name_id:
+                              type: string
+                              description: '**返回值：** 收费类型。'
+                            name_id_val:
+                              type: string
+                              description: 字段 name_id 的原始值：name_id 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            basis_type:
+                              type: string
+                              description: '**返回值：** 依据类型。'
+                            basis_type_val:
+                              type: string
+                              description: 字段 basis_type 的原始值：basis_type 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            basis:
+                              type: string
+                              description: '**返回值：** 市场/币种。'
+                            metric_type:
+                              type: string
+                              description: '**返回值：** 计费方式。'
+                            metric_type_val:
+                              type: string
+                              description: 字段 metric_type 的原始值：metric_type 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            benchmark_rate_show:
+                              type: string
+                              description: '**返回值：** 基准费率。'
+                            granularity:
+                              type: string
+                              description: '**返回值：** 计费精度。'
+                            granularity_val:
+                              type: string
+                              description: 字段 granularity 的原始值：granularity 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            coefficient:
+                              type: string
+                              description: '**返回值：** 计费分子。'
+                            divisor:
+                              type: string
+                              description: '**返回值：** 年费率天数。'
+                            direction:
+                              type: string
+                              description: '**返回值：** 收费方向。'
+                            direction_val:
+                              type: string
+                              description: 字段 direction 的原始值：direction 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            cutoff_method:
+                              type: string
+                              description: '**返回值：** 截取方式。'
+                            cutoff_method_val:
+                              type: string
+                              description: 字段 cutoff_method 的原始值：cutoff_method 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            cutoff_digits:
+                              type: string
+                              description: '**返回值：** 截取位数。'
+                      total:
+                        type: integer
+                        description: '**返回值：** 符合查询条件的记录总数，用于计算分页。'
+              example:
+                code: 0
+                message: success
+                data:
+                  list:
+                  - id: string
+                    biz_type: string
+                    biz_type_val: string
+                    name_id: string
+                    name_id_val: string
+                    basis_type: string
+                    basis_type_val: string
+                    basis: string
+                    metric_type: string
+                    metric_type_val: string
+                    benchmark_rate_show: string
+                    granularity: string
+                    granularity_val: string
+                    coefficient: string
+                    divisor: string
+                    direction: string
+                    direction_val: string
+                    cutoff_method: string
+                    cutoff_method_val: string
+                    cutoff_digits: string
+                  total: 1
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-post-fallback: true
 components:
   schemas:
     BrokerGatewayErrorEnvelope:
