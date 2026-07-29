@@ -8,6 +8,9 @@ import accountAssetsZhHKSource from "../../../broker-api/account-assets.zh-HK.ym
 import miscEnSource from "../../../broker-api/misc.en.yml?raw";
 import miscZhCNSource from "../../../broker-api/misc.zh-CN.yml?raw";
 import miscZhHKSource from "../../../broker-api/misc.zh-HK.yml?raw";
+import clearingEnSource from "../../../broker-api/clearing.en.yml?raw";
+import clearingZhCNSource from "../../../broker-api/clearing.zh-CN.yml?raw";
+import clearingZhHKSource from "../../../broker-api/clearing.zh-HK.yml?raw";
 
 export type OpenApiDocument = {
   paths: Record<string, Record<string, unknown>>;
@@ -41,6 +44,9 @@ const accountAssetsZhHK = parse(accountAssetsZhHKSource) as OpenApiDocument;
 const miscEn = parse(miscEnSource) as OpenApiDocument;
 const miscZhCN = parse(miscZhCNSource) as OpenApiDocument;
 const miscZhHK = parse(miscZhHKSource) as OpenApiDocument;
+const clearingEn = parse(clearingEnSource) as OpenApiDocument;
+const clearingZhCN = parse(clearingZhCNSource) as OpenApiDocument;
+const clearingZhHK = parse(clearingZhHKSource) as OpenApiDocument;
 
 function mergeDocuments(
   base: OpenApiDocument,
@@ -68,24 +74,27 @@ function mergeDocuments(
 }
 
 const documents = {
-  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn),
-  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN),
-  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK),
+  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, clearingEn),
+  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, clearingZhCN),
+  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, clearingZhHK),
 } as const;
 
 const domainDocuments = {
   en: [
     ["broker-api/account-assets.en.yml", accountAssetsEn],
+    ["broker-api/clearing.en.yml", clearingEn],
     ["broker-api/misc.en.yml", miscEn],
     ["broker-api/whaleapi.en.yml", whaleApiEn],
   ],
   "zh-CN": [
     ["broker-api/account-assets.zh-CN.yml", accountAssetsZhCN],
+    ["broker-api/clearing.zh-CN.yml", clearingZhCN],
     ["broker-api/misc.zh-CN.yml", miscZhCN],
     ["broker-api/whaleapi.zh-CN.yml", whaleApiZhCN],
   ],
   "zh-HK": [
     ["broker-api/account-assets.zh-HK.yml", accountAssetsZhHK],
+    ["broker-api/clearing.zh-HK.yml", clearingZhHK],
     ["broker-api/misc.zh-HK.yml", miscZhHK],
     ["broker-api/whaleapi.zh-HK.yml", whaleApiZhHK],
   ],

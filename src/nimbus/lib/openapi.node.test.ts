@@ -36,7 +36,7 @@ describe("published Broker API domains", () => {
 
     for (const locale of locales) {
       const localized = operations.filter((record) => record.locale === locale);
-      expect(localized).toHaveLength(282);
+      expect(localized).toHaveLength(292);
       expect(
         localized.some(
           ({ path }) =>
@@ -81,7 +81,7 @@ describe("published Broker API domains", () => {
         ({ operation }) => operation["x-post-fallback"] === true,
       );
 
-      expect(fallbackQueries).toHaveLength(38);
+      expect(fallbackQueries).toHaveLength(45);
       expect(
         localized.some(
           ({ method, path }) =>
