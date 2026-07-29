@@ -20,7 +20,7 @@ export async function GET() {
 		return {
 			title: entry.data.title,
 			url: `/${id}`,
-			text: entry.body,
+			text: entry.body ?? "",
 		};
 	});
 
