@@ -14,6 +14,9 @@ import billingZhHKSource from "../../../broker-api/billing.zh-HK.yml?raw";
 import suspiciousEnSource from "../../../broker-api/suspicious.en.yml?raw";
 import suspiciousZhCNSource from "../../../broker-api/suspicious.zh-CN.yml?raw";
 import suspiciousZhHKSource from "../../../broker-api/suspicious.zh-HK.yml?raw";
+import clearingEnSource from "../../../broker-api/clearing.en.yml?raw";
+import clearingZhCNSource from "../../../broker-api/clearing.zh-CN.yml?raw";
+import clearingZhHKSource from "../../../broker-api/clearing.zh-HK.yml?raw";
 
 export type OpenApiDocument = {
   paths: Record<string, Record<string, unknown>>;
@@ -53,6 +56,9 @@ const billingZhHK = parse(billingZhHKSource) as OpenApiDocument;
 const suspiciousEn = parse(suspiciousEnSource) as OpenApiDocument;
 const suspiciousZhCN = parse(suspiciousZhCNSource) as OpenApiDocument;
 const suspiciousZhHK = parse(suspiciousZhHKSource) as OpenApiDocument;
+const clearingEn = parse(clearingEnSource) as OpenApiDocument;
+const clearingZhCN = parse(clearingZhCNSource) as OpenApiDocument;
+const clearingZhHK = parse(clearingZhHKSource) as OpenApiDocument;
 
 function mergeDocuments(
   base: OpenApiDocument,
@@ -80,14 +86,15 @@ function mergeDocuments(
 }
 
 const documents = {
-  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, billingEn, suspiciousEn),
-  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, billingZhCN, suspiciousZhCN),
-  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, billingZhHK, suspiciousZhHK),
+  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, clearingEn, billingEn, suspiciousEn),
+  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, clearingZhCN, billingZhCN, suspiciousZhCN),
+  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, clearingZhHK, billingZhHK, suspiciousZhHK),
 } as const;
 
 const domainDocuments = {
   en: [
     ["broker-api/account-assets.en.yml", accountAssetsEn],
+    ["broker-api/clearing.en.yml", clearingEn],
     ["broker-api/misc.en.yml", miscEn],
     ["broker-api/whaleapi.en.yml", whaleApiEn],
     ["broker-api/billing.en.yml", billingEn],
@@ -95,6 +102,7 @@ const domainDocuments = {
   ],
   "zh-CN": [
     ["broker-api/account-assets.zh-CN.yml", accountAssetsZhCN],
+    ["broker-api/clearing.zh-CN.yml", clearingZhCN],
     ["broker-api/misc.zh-CN.yml", miscZhCN],
     ["broker-api/whaleapi.zh-CN.yml", whaleApiZhCN],
     ["broker-api/billing.zh-CN.yml", billingZhCN],
@@ -102,6 +110,7 @@ const domainDocuments = {
   ],
   "zh-HK": [
     ["broker-api/account-assets.zh-HK.yml", accountAssetsZhHK],
+    ["broker-api/clearing.zh-HK.yml", clearingZhHK],
     ["broker-api/misc.zh-HK.yml", miscZhHK],
     ["broker-api/whaleapi.zh-HK.yml", whaleApiZhHK],
     ["broker-api/billing.zh-HK.yml", billingZhHK],
