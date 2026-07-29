@@ -9548,6 +9548,226 @@ paths:
               schema:
                 $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
       x-post-fallback: true
+      x-dataset-download:
+        method: POST
+        path: /v1/datasets/billing_item_for_secondary_item/download
+        operationId: billing_item_for_secondary_item_download
+  /v1/datasets/billing_item_for_secondary_item/download:
+    post:
+      operationId: billing_item_for_secondary_item_download
+      summary: 收费场景列表导出
+      tags:
+      - 业务参数设置
+      x-permission-key:
+      - lb_hk_charging.lb_hk_scene_query
+      x-lbonly: false
+      description: '将「收费场景列表」数据导出为文件。`filters` 决定导出范围，`down_fields` 可限制导出字段。
+
+
+        ### 导出模式
+
+
+        - `mode: 0`：同步导出，成功后直接返回下载地址。
+
+        - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
+
+        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 组合业务过滤条件。省略某个过滤字段时，不按该字段筛选。
+                  properties:
+                    biz_type_code:
+                      type: string
+                      description: '用于按「收费类型」筛选结果。
+
+
+                        候选值会动态变化。请调用 `GET /v1/datasets/refs/billing_business_type_code` 获取当前可用的数据字典，并使用返回项的
+                        `key` 作为本参数值。'
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/billing_business_type_code
+                mode:
+                  type: integer
+                  default: 0
+                  description: '不传时默认 0（同步）
+
+
+                    **可选值：**
+
+                    - `0` - 表示同步
+
+                    - `1` - 表示异步'
+                  enum:
+                  - 0
+                  - 1
+                  x-enum-details:
+                  - value: 0
+                    label: 同步
+                  - value: 1
+                    label: 异步
+                ext:
+                  type: string
+                  description: '下载文件格式。不传时默认为 `csv`。
+
+
+                    **可选值：**
+
+                    - `csv` - 表示 CSV
+
+                    - `xlsx` - 表示 Excel'
+                  enum:
+                  - csv
+                  - xlsx
+                file_name:
+                  type: string
+                  description: 导出文件名称。不传时由服务端生成。
+                down_fields:
+                  type: array
+                  description: 不传时导出全部字段；取值范围见 items.enum（同查询接口 data.list.items 的字段列表）
+                  items:
+                    type: string
+                    enum:
+                    - id
+                    - biz_type
+                    - biz_type_val
+                    - name_id
+                    - name_id_val
+                    - basis_type
+                    - basis_type_val
+                    - basis
+                    - metric_type
+                    - metric_type_val
+                    - benchmark_rate_show
+                    - granularity
+                    - granularity_val
+                    - coefficient
+                    - divisor
+                    - direction
+                    - direction_val
+                    - cutoff_method
+                    - cutoff_method_val
+                    - cutoff_digits
+                ticket_content:
+                  type: string
+                  description: 模板配置了下载审核工单时，供审批人查看
+                ticket_preview_url:
+                  type: string
+                  description: 导出审批详情地址；仅在导出需要审批时使用。
+                hide:
+                  type: integer
+                  description: '是否在下载记录列表中隐藏本次导出记录。
+
+
+                    **可选值：**
+
+                    - `0` - 表示不隐藏
+
+                    - `1` - 表示隐藏'
+                  enum:
+                  - 0
+                  - 1
+                  x-enum-details:
+                  - value: 0
+                    label: 不隐藏
+                  - value: 1
+                    label: 隐藏
+            example:
+              filters: {}
+              mode: 0
+              ext: csv
+              file_name: ''
+              remark: ''
+              down_fields: []
+              ticket_content: ''
+              ticket_preview_url: ''
+              hide: 0
+      responses:
+        '200':
+          description: 成功时返回「收费场景列表导出」任务信息。同步导出直接提供下载地址；异步导出提供用于后续查询的 `file_download_id`。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                - data
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code`
+
+                      判断具体结果。
+
+
+                      - `401`：未登录。
+
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        description: '同步模式（`mode: 0`）下返回，异步模式下为空'
+                      file_download_id:
+                        type: string
+                        description: '异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
+
+                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。'
+                      ticket_id:
+                        type: string
+                        description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
+              example:
+                code: 0
+                message: success
+                data:
+                  url: https://b-api.longbridge.xyz/download/export_result.csv
+                  file_download_id: ''
+                  ticket_id: ''
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-dataset-parent:
+        method: GET
+        path: /v1/datasets/billing_item_for_secondary_item
+        operationId: billing_item_for_secondary_item
 components:
   schemas:
     BrokerGatewayErrorEnvelope:

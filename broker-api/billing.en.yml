@@ -9936,6 +9936,237 @@ paths:
               schema:
                 $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
       x-post-fallback: true
+      x-dataset-download:
+        method: POST
+        path: /v1/datasets/billing_item_for_secondary_item/download
+        operationId: billing_item_for_secondary_item_download
+  /v1/datasets/billing_item_for_secondary_item/download:
+    post:
+      operationId: billing_item_for_secondary_item_download
+      summary: 收费场景列表 Export
+      tags:
+      - Service Parameter
+      x-permission-key:
+      - lb_hk_charging.lb_hk_scene_query
+      x-lbonly: false
+      description: 'Exports 收费场景列表 data to a file. `filters` defines the export scope, and `down_fields`
+        can restrict the exported columns.
+
+
+        ### Export modes
+
+
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}`
+        to obtain the download URL.
+
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record you no longer need.'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: Combines business filters. Omit a filter field to disable that filter.
+                  properties:
+                    biz_type_code:
+                      type: string
+                      description: 'Filters results by Fee Type.
+
+
+                        Values are dynamic. Call `GET /v1/datasets/refs/billing_business_type_code` to
+                        retrieve the current data dictionary, and use the returned entry''s `key` as this
+                        parameter''s value.'
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/billing_business_type_code
+                mode:
+                  type: integer
+                  default: 0
+                  description: 'Defaults to `0` (synchronous mode) when omitted.
+
+
+                    **Allowed values:**
+
+                    - `0` - Sync
+
+                    - `1` - Async'
+                  enum:
+                  - 0
+                  - 1
+                  x-enum-details:
+                  - value: 0
+                    label: Sync
+                  - value: 1
+                    label: Async
+                ext:
+                  type: string
+                  description: 'Download file format. Defaults to `csv` when omitted.
+
+
+                    **Allowed values:**
+
+                    - `csv` - CSV
+
+                    - `xlsx` - Excel'
+                  enum:
+                  - csv
+                  - xlsx
+                file_name:
+                  type: string
+                  description: Export file name. The server generates a name when omitted.
+                down_fields:
+                  type: array
+                  description: 'When omitted, all fields are exported; allowed values are listed under
+                    items.enum (the
+
+                    same field list as the query endpoint''s data.list.items).'
+                  items:
+                    type: string
+                    enum:
+                    - id
+                    - biz_type
+                    - biz_type_val
+                    - name_id
+                    - name_id_val
+                    - basis_type
+                    - basis_type_val
+                    - basis
+                    - metric_type
+                    - metric_type_val
+                    - benchmark_rate_show
+                    - granularity
+                    - granularity_val
+                    - coefficient
+                    - divisor
+                    - direction
+                    - direction_val
+                    - cutoff_method
+                    - cutoff_method_val
+                    - cutoff_digits
+                ticket_content:
+                  type: string
+                  description: Information shown to the approver when download approval is enabled for
+                    the template.
+                ticket_preview_url:
+                  type: string
+                  description: Export approval detail URL. Used only when the export requires approval.
+                hide:
+                  type: integer
+                  description: 'Whether to hide this export from the download-record list.
+
+
+                    **Allowed values:**
+
+                    - `0` - Not Hidden
+
+                    - `1` - Hidden'
+                  enum:
+                  - 0
+                  - 1
+                  x-enum-details:
+                  - value: 0
+                    label: Not Hidden
+                  - value: 1
+                    label: Hidden
+            example:
+              filters: {}
+              mode: 0
+              ext: csv
+              file_name: ''
+              remark: ''
+              down_fields: []
+              ticket_content: ''
+              ticket_preview_url: ''
+              hide: 0
+      responses:
+        '200':
+          description: On success, returns information about the 收费场景列表 export task. Synchronous exports
+            provide a download URL directly; asynchronous exports provide `file_download_id` for subsequent
+            status queries.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                - data
+                properties:
+                  code:
+                    type: integer
+                    description: "`0` indicates success. A non-zero value is a business error code, in\
+                      \ which case\n`data` is usually empty.\n\nHTTP status codes use their standard semantics.\
+                      \ A successful request normally\nreturns `200`; errors may return `400`, `401`,\
+                      \ `403`, `408`, or another applicable\nstatus. Interpret the HTTP status together\
+                      \ with the business `code`.\n\n- `401`: The user is not authenticated.\n- `403`:\
+                      \ The current account is not authorized to use this function. Grant access\n  through\
+                      \ User Permission."
+                    x-enum-details:
+                    - value: 0
+                      label: Success
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        description: 'Returned in synchronous mode (`mode: 0`); empty in asynchronous
+                          mode.'
+                      file_download_id:
+                        type: string
+                        description: 'Returned in async mode (`mode: 1`); it is the `{id}` in
+
+                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
+
+                          obtains the final download URL, DELETE deletes the export record.'
+                      ticket_id:
+                        type: string
+                        description: '**Returned value:** Approval ticket ID. Returned only when the operation
+                          starts an approval workflow.'
+              example:
+                code: 0
+                message: success
+                data:
+                  url: https://b-api.longbridge.xyz/download/export_result.csv
+                  file_download_id: ''
+                  ticket_id: ''
+        '400':
+          description: Bad request. Check the business error code in `code` and the error details in `message`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: The user is not authenticated, or the login session has expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: The current account is not authorized to use this feature. Grant the required permission
+            to the account in User Permission.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: The request timed out. Check the business error code in `code` and the error details
+            in `message`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-dataset-parent:
+        method: GET
+        path: /v1/datasets/billing_item_for_secondary_item
+        operationId: billing_item_for_secondary_item
 components:
   schemas:
     BrokerGatewayErrorEnvelope:
