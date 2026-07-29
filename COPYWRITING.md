@@ -133,6 +133,12 @@ Do not interchange user, client, member, and account within the same context. `o
 - Expand or immediately explain unfamiliar abbreviations on first use.
 - Keep facts, limits, step order, and security warnings equivalent across all locales without requiring literal translation.
 
+Do not expose internal frontend component or implementation names in public API
+titles and descriptions. Names such as `QueryTable`, `DataTable`, page
+components, template identifiers, and internal service wrappers may be used as
+authoring evidence, but public copy must describe the reader-facing business
+capability.
+
 Maintain shared terminology in the locale's glossary. Decide translations for terms that affect multiple pages before expanding their use.
 
 ### 4.4 User-interface actions
@@ -183,6 +189,43 @@ Insert a space between a number and a normal unit or currency code:
 + 成功率为 99.9%。
 - 成功率为 99.9 %。
 ```
+
+Treat an API version marker as a separate token in reader-facing names. Insert
+one half-width space before `V2`, `V3`, or another version marker in every
+locale:
+
+```diff
++ 获取账户列表 V2
+- 获取账户列表V2
++ Query Account List V2
+- Query Account ListV2
+```
+
+Preserve the official capitalization of product names and initialisms, and
+separate them from adjacent Chinese text with half-width spaces:
+
+```diff
++ 查询 HashKey 现金列表
+- 查询hashkey的现金列表
++ 修改 IPO 申购订单
+- 修改IPO申购订单
++ 获取用户风险测评及 PI 信息
+- 获取用户风险测评以及Pi信息
+```
+
+Use these exact forms in reader-facing Broker API copy:
+
+- `HashKey`
+- `IPO`
+- `PI`
+- `CRS`
+- `CCASS`
+- `ATM`
+- `Ref`
+
+Apply the terminology to API summaries, Sidebar titles, and operation
+descriptions. Do not change the spelling of API paths, operation IDs, parameter
+names, schema keys, or `$ref`.
 
 Chinese prose may use Chinese numerals when precision and scanning do not suffer. Use Arabic numerals for interface values, versions, dates, times, amounts, percentages, measurements, step numbers, and statistics.
 
