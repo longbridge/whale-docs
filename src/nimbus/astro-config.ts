@@ -97,23 +97,6 @@ export const vite = {
       "@": new URL("./", import.meta.url).pathname,
       "~": new URL("./", import.meta.url).pathname,
       "@components": new URL("../components/", import.meta.url).pathname,
-      // Migration-only alias for the theme package's internals.
-      //
-      // A Vite alias rewrites to a filesystem path before Node resolution, so
-      // it sidesteps the package's `exports` map — which lets .astro, .ts and
-      // .css all resolve uniformly while the theme's public surface stays
-      // small. Resolved through node resolution rather than a hardcoded
-      // ../../packages/... path, so it keeps working after the workspace link
-      // becomes a published dependency.
-      //
-      // Temporary: once every import is moved over, these are rewritten to the
-      // public subpaths (@longbridge/astro-theme-docs/ui/card, ...) and this
-      // alias is deleted. Until then it also serves as the escape hatch —
-      // pointing it back at ./ restores the pre-migration tree.
-      "@theme": new URL(
-        ".",
-        import.meta.resolve("@longbridge/astro-theme-docs/package.json"),
-      ).pathname + "src/",
     },
   },
 };
