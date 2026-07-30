@@ -45,11 +45,19 @@ export function docsTheme(options: DocsThemeOptions = {}): AstroIntegration {
   return {
     name: '@longbridge/astro-theme-docs',
     hooks: {
-      'astro:config:setup': ({ injectScript }) => {
+      'astro:config:setup': ({ injectScript, config }) => {
         // "page-ssr" runs for every page, and these imports are emitted after
         // BaseLayout's own, so they win at equal specificity.
+        //
+        // Relative entries must be resolved against the project root first: the
+        // injected code becomes a virtual module (astro:scripts/page-ssr.js), so
+        // "./src/styles/brand.css" would otherwise be looked up relative to
+        // that, and fail. Bare specifiers are passed through untouched.
         for (const href of customStyles) {
-          injectScript('page-ssr', `import ${JSON.stringify(href)};`);
+          const specifier = href.startsWith('.')
+            ? new URL(href, config.root).pathname
+            : href;
+          injectScript('page-ssr', `import ${JSON.stringify(specifier)};`);
         }
       },
     },
