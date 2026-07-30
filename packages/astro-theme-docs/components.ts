@@ -1,9 +1,9 @@
-import Accordion from './src/components/whale/Accordion.astro';
-import AccordionGroup from './src/components/whale/AccordionGroup.astro';
-import Card from './src/components/whale/Card.astro';
-import Note from './src/components/whale/Note.astro';
-import Tip from './src/components/whale/Tip.astro';
-import Warning from './src/components/whale/Warning.astro';
+import Accordion from './src/components/mdx/Accordion.astro';
+import AccordionGroup from './src/components/mdx/AccordionGroup.astro';
+import Card from './src/components/mdx/Card.astro';
+import Note from './src/components/mdx/Note.astro';
+import Tip from './src/components/mdx/Tip.astro';
+import Warning from './src/components/mdx/Warning.astro';
 
 export const mdxComponents = {
   Accordion,
