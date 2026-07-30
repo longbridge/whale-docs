@@ -17,6 +17,9 @@ import suspiciousZhHKSource from "../../../broker-api/suspicious.zh-HK.yml?raw";
 import clearingEnSource from "../../../broker-api/clearing.en.yml?raw";
 import clearingZhCNSource from "../../../broker-api/clearing.zh-CN.yml?raw";
 import clearingZhHKSource from "../../../broker-api/clearing.zh-HK.yml?raw";
+import serviceParamEnSource from "../../../broker-api/service-param.en.yml?raw";
+import serviceParamZhCNSource from "../../../broker-api/service-param.zh-CN.yml?raw";
+import serviceParamZhHKSource from "../../../broker-api/service-param.zh-HK.yml?raw";
 
 export type OpenApiDocument = {
   paths: Record<string, Record<string, unknown>>;
@@ -59,6 +62,9 @@ const suspiciousZhHK = parse(suspiciousZhHKSource) as OpenApiDocument;
 const clearingEn = parse(clearingEnSource) as OpenApiDocument;
 const clearingZhCN = parse(clearingZhCNSource) as OpenApiDocument;
 const clearingZhHK = parse(clearingZhHKSource) as OpenApiDocument;
+const serviceParamEn = parse(serviceParamEnSource) as OpenApiDocument;
+const serviceParamZhCN = parse(serviceParamZhCNSource) as OpenApiDocument;
+const serviceParamZhHK = parse(serviceParamZhHKSource) as OpenApiDocument;
 
 function mergeDocuments(
   base: OpenApiDocument,
@@ -86,9 +92,9 @@ function mergeDocuments(
 }
 
 const documents = {
-  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, clearingEn, billingEn, suspiciousEn),
-  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, clearingZhCN, billingZhCN, suspiciousZhCN),
-  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, clearingZhHK, billingZhHK, suspiciousZhHK),
+  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, clearingEn, billingEn, suspiciousEn, serviceParamEn),
+  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, clearingZhCN, billingZhCN, suspiciousZhCN, serviceParamZhCN),
+  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, clearingZhHK, billingZhHK, suspiciousZhHK, serviceParamZhHK),
 } as const;
 
 const domainDocuments = {
@@ -99,6 +105,7 @@ const domainDocuments = {
     ["broker-api/whaleapi.en.yml", whaleApiEn],
     ["broker-api/billing.en.yml", billingEn],
     ["broker-api/suspicious.en.yml", suspiciousEn],
+    ["broker-api/service-param.en.yml", serviceParamEn],
   ],
   "zh-CN": [
     ["broker-api/account-assets.zh-CN.yml", accountAssetsZhCN],
@@ -107,6 +114,7 @@ const domainDocuments = {
     ["broker-api/whaleapi.zh-CN.yml", whaleApiZhCN],
     ["broker-api/billing.zh-CN.yml", billingZhCN],
     ["broker-api/suspicious.zh-CN.yml", suspiciousZhCN],
+    ["broker-api/service-param.zh-CN.yml", serviceParamZhCN],
   ],
   "zh-HK": [
     ["broker-api/account-assets.zh-HK.yml", accountAssetsZhHK],
@@ -115,6 +123,7 @@ const domainDocuments = {
     ["broker-api/whaleapi.zh-HK.yml", whaleApiZhHK],
     ["broker-api/billing.zh-HK.yml", billingZhHK],
     ["broker-api/suspicious.zh-HK.yml", suspiciousZhHK],
+    ["broker-api/service-param.zh-HK.yml", serviceParamZhHK],
   ],
 } satisfies Record<
   OperationRecord["locale"],
