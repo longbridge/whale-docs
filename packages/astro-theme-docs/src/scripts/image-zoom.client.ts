@@ -2,13 +2,19 @@
 // starlight-image-zoom-style unzoom control.
 
 import { mount } from "nimbus-docs/client";
-import mediumZoom from "medium-zoom";
+// Type-only: erased at build time, so it adds no runtime dependency.
 import type { Zoom } from "medium-zoom";
-import "medium-zoom/dist/style.css";
 
+// medium-zoom is an optional dependency. It is loaded dynamically (with its
+// stylesheet) and `mount` is deferred until it resolves; if the package is
+// absent, image zoom simply stays off instead of breaking the build.
+type MediumZoomFactory = typeof import("medium-zoom").default;
+
+let mediumZoom: MediumZoomFactory | null = null;
 let zoom: Zoom | null = null;
 
 function getZoom(): Zoom {
+	if (!mediumZoom) throw new Error("medium-zoom accessed before it loaded");
 	return (zoom ??= mediumZoom({
 		margin: 24,
 		background: "oklch(0 0 0 / 0.1)",
@@ -113,4 +119,15 @@ document.addEventListener("astro:before-swap", () => {
 	settle();
 });
 
-mount("article.docs-content img, .nb-cl-prose img", initImageZoom);
+void (async () => {
+	try {
+		const [lib] = await Promise.all([
+			import("medium-zoom"),
+			import("medium-zoom/dist/style.css"),
+		]);
+		mediumZoom = lib.default;
+	} catch {
+		return; // Not installed — zoom is opt-in.
+	}
+	mount("article.docs-content img, .nb-cl-prose img", initImageZoom);
+})();

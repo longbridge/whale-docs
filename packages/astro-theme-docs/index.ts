@@ -1,31 +1,57 @@
 import type { AstroIntegration } from 'astro';
 
-/** docsTheme() 配置选项 */
+/** docsTheme() options. All optional. */
 export interface DocsThemeOptions {
   /**
-   * 额外注入的 CSS 文件路径（追加到主题基础样式之后）。
-   * 路径为相对于消费方项目根目录的绝对路径或 URL 字符串。
-   * @example ['./src/styles/brand.css']
+   * Extra stylesheets to load after the theme's own, for overriding design
+   * tokens (`--nb-primary` and friends) or adding site-specific rules.
+   *
+   * Each entry resolves the way an `import` in your project would: a path
+   * relative to the project root (`./src/styles/brand.css`), or a bare package
+   * specifier.
+   *
+   * @example
+   *   docsTheme({ customStyles: ['./src/styles/brand.css'] })
    */
   customStyles?: string[];
 }
 
 /**
- * Astro Theme Docs Integration
- * @param options - 主题配置，所有字段可选
- * @returns AstroIntegration 对象，传入 astro.config.ts 的 integrations 数组
+ * Astro integration for the docs theme.
  *
- * MDX components from this theme can be registered via:
- *   import { mdxComponents } from 'astro-theme-docs/components';
+ * Its only job is injecting `customStyles`. Everything else stays explicit by
+ * design: base CSS is imported by BaseLayout, MDX components are exported from
+ * `./components` for you to pass to `<Content components={…} />`, and the
+ * Markdown pipeline is exported from `./markdown` for you to hand to `nimbus()`.
+ *
+ * It deliberately does not wrap `nimbus()`. You already have to give nimbus your
+ * own NimbusConfig, so proxying it here would create a second place where
+ * configuration lives.
+ *
+ *   import { docsTheme } from '@longbridge/astro-theme-docs';
+ *   import { hastPlugins } from '@longbridge/astro-theme-docs/markdown';
+ *
+ *   export default defineConfig({
+ *     integrations: [
+ *       icon(), react(),
+ *       nimbus(nimbusConfig, { markdown: { hastPlugins: hastPlugins() } }),
+ *       docsTheme({ customStyles: ['./src/styles/brand.css'] }),
+ *     ],
+ *   });
  */
-export function docsTheme(_options: DocsThemeOptions = {}): AstroIntegration {
+export function docsTheme(options: DocsThemeOptions = {}): AstroIntegration {
+  const { customStyles = [] } = options;
+
   return {
-    name: 'astro-theme-docs',
+    name: '@longbridge/astro-theme-docs',
     hooks: {
-      // Hook is intentionally minimal — CSS is imported by the layout components
-      // (BaseLayout.astro), and MDX components are exported from components.ts
-      // for consumers to pass explicitly to their MDX <Content> renders.
-      'astro:config:setup': (_) => {},
+      'astro:config:setup': ({ injectScript }) => {
+        // "page-ssr" runs for every page, and these imports are emitted after
+        // BaseLayout's own, so they win at equal specificity.
+        for (const href of customStyles) {
+          injectScript('page-ssr', `import ${JSON.stringify(href)};`);
+        }
+      },
     },
   };
 }

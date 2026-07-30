@@ -1,20 +1,34 @@
 ---
+/**
+ * Header — logo, optional language menu, search slot, theme toggle, optional
+ * GitHub link, and an optional row of product tabs.
+ *
+ * Nothing here is derived from a URL convention. Locale routing, which section
+ * is active, and where the logo points differ per site, so they arrive as
+ * props. Search is a slot so that a site with no search ships no Pagefind.
+ */
 import LucideIcon from "../ui/icon/LucideIcon.astro";
 import { Button } from "../ui/button";
-import { DocSearch } from "../ui/search";
 import { HeaderMenu } from "../../react/HeaderMenu";
 import { ThemeMenu } from "../../react/ThemeMenu";
 
 /** A single navigation tab in the header nav bar. */
 interface TabItem {
   label: string;
-  /** lucide-astro icon name */
-  icon: string;
+  /** Lucide icon name. Omit for a text-only tab. */
+  icon?: string;
   href: string;
   /** URL path segments that mark this tab as active, e.g. ["whalesdk"]. */
   sections: string[];
   /** When true the tab is pinned to the right side of the nav bar. */
   aside?: boolean;
+}
+
+/** One entry in the language menu. */
+interface LanguageOption {
+  label: string;
+  href: string;
+  active: boolean;
 }
 
 interface Props {
@@ -25,10 +39,20 @@ interface Props {
   logoLightSrc?: string;
   /** Dark-mode logo src. */
   logoDarkSrc?: string;
-  /** Logo link href. Defaults to the locale-aware overview path. */
+  /** Logo link href. Defaults to "/". */
   logoHref?: string;
   /** GitHub repository URL. When provided, a GitHub icon link is shown. */
   githubHref?: string;
+  /**
+   * Language switcher entries. Omitted or empty means no language menu — the
+   * theme has no opinion about how locales appear in your URLs.
+   */
+  languageOptions?: LanguageOption[];
+  /**
+   * Which tab is current, matched against each tab's `sections`. Defaults to
+   * the first path segment.
+   */
+  activeSection?: string;
 }
 
 const {
@@ -36,20 +60,13 @@ const {
   tabs = [],
   logoLightSrc = "",
   logoDarkSrc = "",
+  logoHref = "/",
   githubHref,
+  languageOptions = [],
 } = Astro.props;
 
 const pathname = Astro.url.pathname;
-const locale = pathname.startsWith("/zh-cn/") ? "zh-CN" : pathname.startsWith("/zh-hk/") ? "zh-HK" : "en";
-const localePath = locale.toLowerCase();
-const logoHref = Astro.props.logoHref ?? `/${localePath}/overview`;
-const suffix = pathname.replace(/^\/(en|zh-cn|zh-hk)(?=\/|$)/, "") || "/overview";
-const languageOptions = [
-  { label: "English", href: `/en${suffix}`, active: locale === "en" },
-  { label: "简体中文", href: `/zh-cn${suffix}`, active: locale === "zh-CN" },
-  { label: "繁體中文", href: `/zh-hk${suffix}`, active: locale === "zh-HK" },
-];
-const section = pathname.split("/").filter(Boolean)[1] ?? "overview";
+const section = Astro.props.activeSection ?? pathname.split("/").filter(Boolean)[0] ?? "";
 ---
 
 <header data-nb-header class="site-header sticky top-0 z-30">
@@ -58,8 +75,8 @@ const section = pathname.split("/").filter(Boolean)[1] ?? "overview";
       <img src={logoLightSrc} alt="" width="170" height="48" class="logo-light h-7 w-auto" />
       <img src={logoDarkSrc} alt="" width="170" height="48" class="logo-dark h-7 w-auto" />
     </a>
-    <div><HeaderMenu client:load options={languageOptions} /></div>
-    <div class="absolute left-1/2 hidden -translate-x-1/2 md:flex"><DocSearch /></div>
+    {languageOptions.length > 0 && <div><HeaderMenu client:load options={languageOptions} /></div>}
+    <div class="absolute left-1/2 hidden -translate-x-1/2 md:flex"><slot name="search" /></div>
     <div class="ml-auto flex items-center gap-2">
       <ThemeMenu client:load />
       {githubHref && (
@@ -83,7 +100,7 @@ const section = pathname.split("/").filter(Boolean)[1] ?? "overview";
             aria-current={active ? "page" : undefined}
             class:list={["site-tab text-foreground relative flex shrink-0 items-center gap-2 px-3.5 text-sm font-medium no-underline transition-colors", firstAside && "ml-auto"]}
           >
-            <LucideIcon name={icon} class="size-4 opacity-90" />{label}
+            {icon && <LucideIcon name={icon} class="size-4 opacity-90" />}{label}
             {external && <LucideIcon name="arrow-up-right" class="size-3 opacity-60" />}
             {active && <span class="tab-indicator" aria-hidden="true"></span>}
           </a>
@@ -136,8 +153,8 @@ const section = pathname.split("/").filter(Boolean)[1] ?? "overview";
 </style>
 
 <script>
-  if (!(window as unknown as { __whaleHeaderScroll?: boolean }).__whaleHeaderScroll) {
-    (window as unknown as { __whaleHeaderScroll?: boolean }).__whaleHeaderScroll = true;
+  if (!(window as unknown as { __nbHeaderScroll?: boolean }).__nbHeaderScroll) {
+    (window as unknown as { __nbHeaderScroll?: boolean }).__nbHeaderScroll = true;
     const apply = () => {
       const header = document.querySelector("[data-nb-header]");
       if (header) header.toggleAttribute("data-scrolled", window.scrollY > 4);

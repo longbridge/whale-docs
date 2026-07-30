@@ -11,7 +11,8 @@
  * never await the result, so keeping it fire-and-forget lets call sites stay
  * unchanged. A tooltip simply appears once the chunk has loaded.
  *
- * Consumers must also load `styles/tippy.css` for the tooltip to be styled.
+ * Both stylesheets ride along in the same dynamic import, so a site with no
+ * tooltips ships neither the library nor its CSS.
  */
 
 /** Mirrors the subset of tippy's Props we accept, plus our own `hideAfter`. */
@@ -25,7 +26,13 @@ export function addTooltip(
 	void (async () => {
 		let tippy: typeof import("tippy.js").default;
 		try {
-			tippy = (await import("tippy.js")).default;
+			const [lib] = await Promise.all([
+				import("tippy.js"),
+				// Base layout from the library, then our token overrides.
+				import("tippy.js/dist/tippy.css"),
+				import("../styles/tippy.css"),
+			]);
+			tippy = lib.default;
 		} catch {
 			// tippy.js not installed — tooltips are opt-in, so stay silent.
 			return;
