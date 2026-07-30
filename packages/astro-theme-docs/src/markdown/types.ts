@@ -18,7 +18,14 @@ export function isElement(
 }
 
 export function classNames(node: Element): string[] {
-	const cn = node.properties?.className;
+	// hast declares className as `Array<string> | undefined`, which makes the
+	// string branch below unreachable to the type checker. Keep it anyway: nodes
+	// reaching a hast plugin can come from raw HTML where the attribute arrives
+	// as a single space-separated string. Widen the type to say so out loud.
+	const cn = node.properties?.className as
+		| string
+		| Array<string | number>
+		| undefined;
 	if (Array.isArray(cn)) return cn.map(String);
 	if (typeof cn === "string") return cn.split(/\s+/).filter(Boolean);
 	return [];

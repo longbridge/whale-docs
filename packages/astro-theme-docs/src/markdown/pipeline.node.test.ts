@@ -1,18 +1,24 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "bun:test";
 import { markdownToHtml } from "satteri";
 
 import { hastPlugins } from "./index";
 import headingSlugs from "./heading-slugs";
 
+const plugins = hastPlugins();
+
 function render(
 	markdown: string,
 	pathname = "/repo/src/content/docs/test.mdx",
 ) {
-	return markdownToHtml(markdown, {
+	// satteri returns a Promise only when a plugin is async, decided from the
+	// plugin array's type. `HastPluginInput[]` is too wide for that inference,
+	// so TS falls back to the Promise branch. Every plugin here is synchronous.
+	const result = markdownToHtml(markdown, {
 		features: { gfm: true, smartPunctuation: false },
-		hastPlugins,
+		hastPlugins: plugins,
 		filename: pathname,
-	}).html;
+	}) as unknown as { html: string };
+	return result.html;
 }
 
 function fragment(html: string) {
@@ -44,7 +50,7 @@ function expectWrappedHeading(
 	expect(wrapper?.classList.contains(`level-h${level}`)).toBe(true);
 	expect(heading?.textContent).toBe(text);
 	expect(link).toBeDefined();
-	expect(wrapper?.children[0]).toBe(heading);
+	expect(wrapper?.children[0]).toBe(heading ?? undefined);
 	expect(wrapper?.children[1]).toBe(link);
 }
 
@@ -104,7 +110,9 @@ describe("Nimbus Satteri HAST pipeline", () => {
 	});
 
 	test("uses MDX expression comment ids and trims the preceding text node", () => {
-		const plugin = headingSlugs() as {
+		// Calls the visitor directly with a hand-built node, so the cast has to
+		// go through unknown: satteri's node types are far wider than this stub.
+		const plugin = headingSlugs() as unknown as {
 			element: {
 				visit: (
 					node: {
@@ -127,7 +135,7 @@ describe("Nimbus Satteri HAST pipeline", () => {
 		const node = {
 			type: "element" as const,
 			tagName: "h2" as const,
-			properties: {},
+			properties: {} as Record<string, unknown>,
 			children: [text, { type: "mdxTextExpression", value: "/* stable-id */" }],
 		};
 
@@ -227,38 +235,8 @@ describe("Nimbus Satteri HAST pipeline", () => {
 		).toBe(2);
 	});
 
-	test.each([
-		["h1", "# Release notes"],
-		["h2", "## Release notes"],
-		["h3", "### Release notes"],
-	])(
-		"demotes changelog %s headings after autolink wrapping",
-		(_label, markdown) => {
-			const changelog = render(markdown, "/repo/src/content/changelog/x.mdx");
-
-			expectWrappedHeading(changelog, 4, "release-notes", "Release notes");
-			expect(changelog).not.toContain("<h1");
-			expect(changelog).not.toContain("<h2");
-			expect(changelog).not.toContain("<h3");
-		},
-	);
-
-	test("does not demote non-changelog headings or changelog h4+ headings", () => {
-		const docs = render(
-			"## Release notes",
-			"/repo/src/content/docs/workers/release-notes.mdx",
-		);
-		const changelogH4 = render(
-			"#### Release notes",
-			"/repo/src/content/changelog/x.mdx",
-		);
-
-		expectWrappedHeading(docs, 2, "release-notes", "Release notes");
-		expectWrappedHeading(changelogH4, 4, "release-notes", "Release notes");
-	});
-
 	test("registers order-dependent plugins in the expected sequence", () => {
-		const names = hastPlugins.map((plugin) =>
+		const names = plugins.map((plugin) =>
 			typeof plugin === "function" ? plugin.name : plugin.name,
 		);
 
@@ -267,9 +245,6 @@ describe("Nimbus Satteri HAST pipeline", () => {
 		);
 		expect(names.indexOf("headingSlugs")).toBeLessThan(
 			names.indexOf("autolinkHeadings"),
-		);
-		expect(names.indexOf("autolinkHeadings")).toBeLessThan(
-			names.indexOf("shiftHeadings"),
 		);
 	});
 

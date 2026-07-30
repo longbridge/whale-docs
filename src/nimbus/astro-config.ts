@@ -3,7 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig as defineAstroConfig } from "astro/config";
 import icon from "astro-icon";
 import nimbus, { defineConfig as defineNimbusConfig } from "nimbus-docs";
-import { hastPlugins } from "./plugins/satteri";
+import { hastPlugins } from "@longbridge/astro-theme-docs/markdown";
 
 type MarkdownConfig = NonNullable<Parameters<typeof defineAstroConfig>[0]["markdown"]>;
 
@@ -54,8 +54,7 @@ export const markdown = {
 } satisfies MarkdownConfig;
 
 export const integrations = [icon(), react(), nimbus(nimbusConfig, {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  markdown: { hastPlugins: hastPlugins as any },
+  markdown: { hastPlugins: hastPlugins() },
   validateMdx: false,
   rules: {
     "nimbus/frontmatter-shape": "off",
