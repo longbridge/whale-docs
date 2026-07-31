@@ -1,7 +1,44 @@
-import type { HastPluginDefinition, HastVisitorContext } from "satteri";
+/**
+ * Plugin types, derived from nimbus-docs rather than imported from satteri.
+ *
+ * satteri ships platform-specific native bindings (`@bruits/satteri-*`) and is a
+ * runtime dependency of nimbus-docs, which loads it while rendering. Naming it
+ * in THIS package's manifest — dependency, peer or dev — makes the installer
+ * place a second copy under the package, and the copy nimbus-docs then resolves
+ * has no usable binding: the build dies at "generating static routes" with
+ * "Cannot find native binding". Verified against a clean clone, where a tree
+ * with no satteri entry here builds and one with any entry does not.
+ *
+ * So this package names satteri nowhere. nimbus-docs re-exports
+ * `HastPluginInput` and everything else is reachable from it by inference,
+ * which also means these types come from a declared peer instead of relying on
+ * satteri being hoisted.
+ */
+import type { HastPluginInput } from "nimbus-docs/types";
 import type { Element, ElementContent, Text } from "hast";
 
-export type { HastPluginDefinition, HastVisitorContext };
+/**
+ * A plugin object. `HastPluginInput` is `HastPluginDefinition | (() => …)`, so
+ * excluding the callable arm leaves the definition.
+ */
+export type HastPluginDefinition = Exclude<
+	HastPluginInput,
+	(...args: never[]) => unknown
+>;
+
+/**
+ * The context passed to a visitor — second parameter of `element.visit`.
+ * `element` accepts either one visitor or an array of them, so the array arm is
+ * excluded before indexing.
+ */
+type ElementVisitor = Exclude<
+	NonNullable<HastPluginDefinition["element"]>,
+	readonly unknown[]
+>;
+export type HastVisitorContext = Parameters<
+	NonNullable<ElementVisitor["visit"]>
+>[1];
+
 export type { Element, ElementContent, Text };
 
 export const HEADING_TAGS = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
@@ -30,4 +67,3 @@ export function classNames(node: Element): string[] {
 	if (typeof cn === "string") return cn.split(/\s+/).filter(Boolean);
 	return [];
 }
-

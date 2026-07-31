@@ -1,3 +1,4 @@
+/// <reference types="bun-types" />
 import { describe, expect, test } from "bun:test";
 import { markdownToHtml } from "satteri";
 
