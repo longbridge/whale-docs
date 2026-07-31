@@ -1,14 +1,14 @@
-import Accordion from "./components/whale/Accordion.astro";
-import AccordionGroup from "./components/whale/AccordionGroup.astro";
-import Card from "./components/whale/Card.astro";
-import CardGroup from "./components/ui/card-grid/CardGrid.astro";
-import Note from "./components/whale/Note.astro";
-import Tip from "./components/whale/Tip.astro";
-import Warning from "./components/whale/Warning.astro";
-import Step from "./components/ui/steps/Step.astro";
-import Steps from "./components/ui/steps/Steps.astro";
-import Mermaid from "../components/docs/Mermaid.astro";
-import Update from "../components/docs/Update.astro";
+import Accordion from "@longbridge/astro-theme-docs/mdx/Accordion";
+import AccordionGroup from "@longbridge/astro-theme-docs/mdx/AccordionGroup";
+import Card from "@longbridge/astro-theme-docs/mdx/Card";
+import { CardGrid as CardGroup } from "@longbridge/astro-theme-docs/ui/card-grid";
+import Note from "@longbridge/astro-theme-docs/mdx/Note";
+import Tip from "@longbridge/astro-theme-docs/mdx/Tip";
+import Warning from "@longbridge/astro-theme-docs/mdx/Warning";
+import { Step } from "@longbridge/astro-theme-docs/ui/steps";
+import { Steps } from "@longbridge/astro-theme-docs/ui/steps";
+import Mermaid from "./components/whale/Mermaid.astro";
+import Update from "./components/whale/Update.astro";
 import WhaleAppShowcase from "./components/whale/WhaleAppShowcase.astro";
 
 export const components = {

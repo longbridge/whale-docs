@@ -1,0 +1,88 @@
+---
+/**
+ * Renders a response schema. When the schema looks like an envelope — a wrapper
+ * object whose real payload sits in one field — the envelope is summarised and
+ * the payload is expanded. Otherwise the schema is rendered flat.
+ *
+ * Both the envelope's shape and all copy are configurable: the theme cannot
+ * assume any particular API convention, and `{code, message, data}` is only one
+ * of many. Pass `envelope={false}` to always render flat.
+ */
+import { Badge } from "../ui/badge";
+import { resolveSchema, type OpenApiDocument } from "../../lib/openapi";
+import ApiSchemaFields, { type ApiSchemaFieldsLabels } from "./ApiSchemaFields.astro";
+import { renderMarkdown } from "../../lib/render-markdown";
+
+export interface ApiResponseSchemaLabels extends ApiSchemaFieldsLabels {
+	/** Heading for the recognised envelope. Default "Standard response envelope". */
+	envelope?: string;
+	/** Caption next to the payload field's type. Default "data structure". */
+	dataStructure?: string;
+	/** Shown when the payload has no nested fields. Default "No nested fields". */
+	empty?: string;
+}
+
+interface Props {
+	schema: any;
+	document: OpenApiDocument;
+	labels?: ApiResponseSchemaLabels;
+	/**
+	 * Property names that together identify an envelope, all of which must be
+	 * present. Defaults to `["code", "message", "data"]`. Pass `false` to skip
+	 * envelope detection entirely.
+	 */
+	envelope?: string[] | false;
+	/** Which envelope property holds the payload. Defaults to "data". */
+	payloadKey?: string;
+}
+
+const {
+	schema: rawSchema,
+	document,
+	labels = {},
+	envelope = ["code", "message", "data"],
+	payloadKey = "data",
+} = Astro.props;
+
+const envelopeLabel = labels.envelope ?? "Standard response envelope";
+const dataStructureLabel = labels.dataStructure ?? "data structure";
+const emptyLabel = labels.empty ?? "No nested fields";
+
+const schema = resolveSchema(document, rawSchema) ?? {};
+const properties = schema.properties ?? {};
+const isEnvelope =
+	envelope !== false && envelope.every((name) => name in properties);
+
+const dataField = isEnvelope
+	? resolveSchema(document, properties[payloadKey]) ?? properties[payloadKey]
+	: undefined;
+const dataSchema = dataField?.type === "array"
+	? resolveSchema(document, dataField.items) ?? dataField.items
+	: dataField;
+const dataType = dataField?.type === "array"
+	? `array<${dataSchema?.type ?? "object"}>`
+	: dataField?.type ?? "object";
+const hasDataProperties = Boolean(
+	dataSchema?.properties && Object.keys(dataSchema.properties).length,
+);
+---
+
+{isEnvelope ? (
+  <div class="api-response-envelope" data-slot="api-response-envelope">
+    <div class="api-response-envelope-summary">
+      <span>{envelopeLabel}</span>
+      {(envelope as string[]).map((name) => <code>{name}</code>)}
+    </div>
+    <div class="api-response-data-heading">
+      <code>{payloadKey}</code>
+      <Badge variant="default" text={dataType} />
+      <span>{dataStructureLabel}</span>
+    </div>
+    {dataField?.description && <div class="api-response-data-description" set:html={renderMarkdown(dataField.description)} />}
+    {hasDataProperties
+      ? <div class="api-response-data-fields"><ApiSchemaFields schema={dataSchema} document={document} labels={labels} /></div>
+      : <p class="api-response-data-empty">{emptyLabel}</p>}
+  </div>
+) : (
+  <ApiSchemaFields schema={schema} document={document} labels={labels} />
+)}

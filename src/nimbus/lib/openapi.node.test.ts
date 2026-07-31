@@ -36,7 +36,7 @@ describe("published Broker API domains", () => {
 
     for (const locale of locales) {
       const localized = operations.filter((record) => record.locale === locale);
-      expect(localized).toHaveLength(292);
+      expect(localized).toHaveLength(431);
       expect(
         localized.some(
           ({ path }) =>
@@ -48,7 +48,7 @@ describe("published Broker API domains", () => {
       const datasets = localized.filter(
         ({ operation }) => operation["x-dataset-download"],
       );
-      expect(datasets).toHaveLength(35);
+      expect(datasets).toHaveLength(66);
 
       for (const record of datasets) {
         const download = resolveDatasetDownload(
@@ -81,7 +81,7 @@ describe("published Broker API domains", () => {
         ({ operation }) => operation["x-post-fallback"] === true,
       );
 
-      expect(fallbackQueries).toHaveLength(45);
+      expect(fallbackQueries).toHaveLength(80);
       expect(
         localized.some(
           ({ method, path }) =>

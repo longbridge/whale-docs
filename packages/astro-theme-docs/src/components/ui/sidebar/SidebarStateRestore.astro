@@ -1,0 +1,153 @@
+---
+/**
+ * SidebarStateRestore — pre-sets sidebar data attributes before the disclosure
+ * module loads so collapsed/scrolled state survives navigation.
+ *
+ * Render this only when the desktop sidebar is present; the inline script is
+ * dead code otherwise (the `desktop-sidebar` element doesn't exist). Kept as a
+ * standalone component so the `is:inline` script lives at the template top
+ * level — prettier's Astro parser cannot handle an inline script body nested
+ * inside a JSX expression container.
+ *
+ * Runs on `astro:page-load` (fires on both the initial load and every
+ * subsequent View Transitions swap), matching the pattern used by
+ * mobile-sidebar.client.ts / DocsLayout.astro's scrollbar init — without it,
+ * this logic only ran once on the very first page load, so after any
+ * client-side sidebar-link navigation the active item never got a visible
+ * "selected" state, its ancestor groups never expanded, and the sidebar's
+ * scroll position reset to the top instead of following the active item.
+ */
+---
+
+<script is:inline>
+	document.addEventListener("astro:page-load", function () {
+		try {
+			if (!matchMedia("(min-width: 64rem)").matches) return;
+			const sidebar = document.getElementById("desktop-sidebar");
+			if (!sidebar) return;
+			const content = sidebar.querySelector("[data-nb-sidebar]");
+			if (!content) return;
+
+			// Scoped to the group's own label area — never a descendant's. Must
+			// match sidebar.client.ts's ownTrigger() exactly: the two scripts only
+			// share state via the sessionStorage array, so if one counts a group
+			// the other skips, indices drift and every entry after it restores
+			// onto the wrong group. A static-header group (icon set, no trigger
+			// of its own) has neither and correctly yields null here instead of
+			// matching its first nested child's trigger.
+			function ownTrigger(group) {
+				return group.querySelector(
+					":scope > [data-nb-collapsible-trigger], :scope > [data-nb-sidebar-group-label] [data-nb-collapsible-trigger]",
+				);
+			}
+
+			function setGroupOpen(group, open) {
+				const trigger = ownTrigger(group);
+				if (!trigger) return;
+				group.setAttribute("data-nb-default-open", open ? "true" : "false");
+				const panel = group.querySelector(":scope > [data-nb-collapsible-content]");
+				const state = open ? "open" : "closed";
+				trigger.setAttribute("data-nb-state", state);
+				trigger.setAttribute("aria-expanded", String(open));
+				if (panel) panel.setAttribute("data-nb-state", state);
+			}
+
+			// Suppress the 250ms open/close transition (see globals.css) while
+			// we reapply saved state and measure layout below -- without this,
+			// getBoundingClientRect() reads mid-animation geometry, which made
+			// the scroll correction land somewhere different (sometimes near
+			// the top, sometimes near the bottom) on every navigation.
+			sidebar.setAttribute("data-nb-sidebar-restoring", "");
+
+			// broker-api opts out of remembered sidebar state: never restore saved
+			// open/scroll, so only the active page's own branch expands (below) and
+			// we scroll to the active item. Reading `raw` as null skips both the
+			// open-state restore and the saved-scroll restore in one shot.
+			const activeOnly = sidebar.hasAttribute("data-nb-sidebar-active-only");
+
+			const raw = activeOnly ? null : sessionStorage.getItem("sidebar-state");
+			let state;
+			if (raw) {
+				state = JSON.parse(raw);
+				if (state && content.dataset.nbSidebarHash === state.hash) {
+					const groups = Array.from(
+						content.querySelectorAll("[data-nb-sidebar-group]"),
+					).filter((group) => ownTrigger(group) !== null);
+					for (let i = 0; i < groups.length; i++) {
+						if (typeof state.open[i] === "boolean") {
+							setGroupOpen(groups[i], state.open[i]);
+						}
+					}
+				}
+			}
+
+			// broker-api: rebuild deterministically. Close every group first so
+			// only the active branch (opened just below) stays expanded after any
+			// navigation — not whatever happened to be open on the previous page.
+			if (activeOnly) {
+				Array.from(content.querySelectorAll("[data-nb-sidebar-group]"))
+					.filter((group) => ownTrigger(group) !== null)
+					.forEach((group) => setGroupOpen(group, false));
+			}
+
+			// Active page's group must always be open, regardless of stored state
+			const active = sidebar.querySelector("[aria-current='page']");
+			if (active) {
+				let d = active.closest("[data-nb-sidebar-group]");
+				while (d) {
+					setGroupOpen(d, true);
+					d =
+						d.parentElement &&
+						d.parentElement.closest("[data-nb-sidebar-group]");
+				}
+			}
+
+			// Restore scroll. On first API-reference load, align the active
+			// top-level business domain to the top so its hierarchy remains visible;
+			// ordinary docs keep the active-item centering behavior.
+			if (raw && state && state.scroll) {
+				sidebar.scrollTop = state.scroll;
+			} else if (active) {
+				const sr = sidebar.getBoundingClientRect();
+				if (
+					sidebar.getAttribute("data-nb-sidebar-variant") === "compact" &&
+					!activeOnly
+				) {
+					const topLevel = active.closest(".top-level > li");
+					const anchor = topLevel && topLevel.querySelector("[data-nb-sidebar-group-label]");
+					if (anchor) {
+						const ar = anchor.getBoundingClientRect();
+						sidebar.scrollTop += ar.top - sr.top - 24;
+					}
+				} else {
+					const ar = active.getBoundingClientRect();
+					sidebar.scrollTop += ar.top - sr.top - sr.height / 2 + ar.height / 2;
+				}
+			}
+
+			// A saved scroll offset can predate a collapse/expand that happened
+			// right before this navigation -- everything below the toggled
+			// group shifts up or down, so blindly restoring the old offset can
+			// leave the newly active item outside the visible sidebar viewport
+			// even though the restore "succeeded". Nudge into view as a final
+			// correction, regardless of which branch above set the scroll.
+			if (active) {
+				const sr2 = sidebar.getBoundingClientRect();
+				const ar2 = active.getBoundingClientRect();
+				const margin = 24;
+				if (ar2.top < sr2.top + margin) {
+					sidebar.scrollTop -= sr2.top + margin - ar2.top;
+				} else if (ar2.bottom > sr2.bottom - margin) {
+					sidebar.scrollTop += ar2.bottom - (sr2.bottom - margin);
+				}
+			}
+
+			// Layout is now settled at its final (non-transitioning) state;
+			// re-enable the normal open/close transition for subsequent
+			// user-driven toggles.
+			sidebar.removeAttribute("data-nb-sidebar-restoring");
+		} catch {
+			// Never let state restore break navigation.
+		}
+	});
+</script>

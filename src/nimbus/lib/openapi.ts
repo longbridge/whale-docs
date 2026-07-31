@@ -1,3 +1,16 @@
+// Whale-specific OpenAPI plumbing: loads the three-locale broker-api YAML,
+// merges the domain documents, and resolves the x-dataset-download extension.
+//
+// The generic parts — $ref/allOf resolution and path-to-slug — live in the
+// theme and are re-exported here so existing call sites keep working with a
+// single implementation.
+export {
+  resolveSchema,
+  operationPath,
+} from "@longbridge/astro-theme-docs/lib/openapi";
+import { operationPath as themeOperationPath } from "@longbridge/astro-theme-docs/lib/openapi";
+export type { OpenApiDocument as ThemeOpenApiDocument } from "@longbridge/astro-theme-docs/lib/openapi";
+
 import { parse } from "yaml";
 import whaleApiEnSource from "../../../broker-api/whaleapi.en.yml?raw";
 import whaleApiZhCNSource from "../../../broker-api/whaleapi.zh-CN.yml?raw";
@@ -140,13 +153,6 @@ for (const [locale, document] of Object.entries(documents)) {
   }
 }
 
-export function operationPath(path: string): string {
-  return path
-    .replace(/^\//, "")
-    .replace(/[{}]/g, "")
-    .replace(/[^a-zA-Z0-9/_-]+/g, "-");
-}
-
 /** Public docs URL: mirror the API resource path. Only append the HTTP method
  * for the small set of OpenAPI paths that define multiple operations. */
 export function operationRoutePath(
@@ -154,7 +160,7 @@ export function operationRoutePath(
   method: string,
   path: string,
 ): string {
-  const resourcePath = operationPath(path);
+  const resourcePath = themeOperationPath(path);
   return (pathMethodCounts.get(`${locale}:${path}`) ?? 0) > 1
     ? `${resourcePath}/${method.toLowerCase()}`
     : resourcePath;
@@ -198,31 +204,3 @@ export function resolveDatasetDownload(
   return download ? { link, operation: download } : undefined;
 }
 
-export function resolveSchema(document: OpenApiDocument, schema: any): any {
-  if (!schema) return schema;
-  if (schema.$ref) {
-    return resolveSchema(
-      document,
-      schema.$ref
-        .replace(/^#\//, "")
-        .split("/")
-        .reduce((value: any, key: string) => value?.[key], document),
-    );
-  }
-  if (!schema.allOf) return schema;
-
-  const parts = schema.allOf.map(
-    (part: any) => resolveSchema(document, part) ?? {},
-  );
-  return parts.reduce(
-    (merged: any, part: any) => ({
-      ...merged,
-      ...part,
-      properties: { ...(merged.properties ?? {}), ...(part.properties ?? {}) },
-      required: [
-        ...new Set([...(merged.required ?? []), ...(part.required ?? [])]),
-      ],
-    }),
-    { ...schema, allOf: undefined },
-  );
-}

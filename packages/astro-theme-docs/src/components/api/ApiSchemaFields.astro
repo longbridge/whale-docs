@@ -1,0 +1,82 @@
+---
+/**
+ * Renders an OpenAPI schema as a nested field list: name, type, required flag,
+ * description and enum values, recursing into object/array children.
+ *
+ * Copy is passed in via `labels` rather than derived from a locale, so the
+ * theme carries no language table. Callers that are localised map their own
+ * locale to labels at the call site.
+ */
+import { resolveSchema, type OpenApiDocument } from "../../lib/openapi";
+import { Badge } from "../ui/badge";
+import { renderMarkdown } from "../../lib/render-markdown";
+
+export interface ApiSchemaFieldsLabels {
+	/** Badge on a required property. Default "required". */
+	required?: string;
+	/** Disclosure label for nested properties. Default "Child attributes". */
+	childAttributes?: string;
+}
+
+interface Props {
+	schema: any;
+	document: OpenApiDocument;
+	labels?: ApiSchemaFieldsLabels;
+	childrenOpen?: boolean;
+}
+
+const {
+	schema: rawSchema,
+	document,
+	labels = {},
+	childrenOpen = true,
+} = Astro.props;
+
+const requiredLabel = labels.required ?? "required";
+const childLabel = labels.childAttributes ?? "Child attributes";
+
+const schema = resolveSchema(document, rawSchema) ?? {};
+const properties = Object.entries(schema.properties ?? {}) as [string, any][];
+const required = new Set<string>(schema.required ?? []);
+---
+
+<div class="api-schema-fields" data-slot="api-schema-fields">
+  {properties.map(([name, unresolved]) => {
+    const field = resolveSchema(document, unresolved) ?? unresolved;
+    const childSchema = field?.type === "array"
+      ? resolveSchema(document, field.items) ?? field.items
+      : field;
+    const hasChildren = Boolean(childSchema?.properties && Object.keys(childSchema.properties).length);
+    const type = field?.type === "array" ? `array<${childSchema?.type ?? "object"}>` : field?.type ?? "object";
+    return (
+      <div class="api-schema-field" data-slot="api-schema-field">
+        <div class="api-schema-field-meta" data-slot="api-schema-field-meta">
+          <code>{name}</code>
+          <Badge variant="default" text={type} />
+          {required.has(name) && <Badge variant="danger" text={requiredLabel} />}
+        </div>
+        {field?.description && <div class="api-field-description" set:html={renderMarkdown(field.description)} />}
+        {field?.enum && (
+          <p class="api-schema-enum">
+            {field.enum.map((value: unknown) => {
+              const detail = (field["x-enum-details"] ?? []).find(
+                (d: any) => String(d.value) === String(value),
+              );
+              const label = detail?.label ?? detail?.cn ?? detail?.en;
+              return <code>{label ? `${String(value)} · ${label}` : String(value)}</code>;
+            })}
+          </p>
+        )}
+        {hasChildren && (
+          <details class="api-schema-children" data-slot="accordion-item" open={childrenOpen}>
+            <summary data-slot="accordion-trigger">
+              <span>{childLabel}</span>
+              <span class="api-schema-chevron" aria-hidden="true"></span>
+            </summary>
+            <Astro.self schema={childSchema} document={document} labels={labels} childrenOpen={childrenOpen} />
+          </details>
+        )}
+      </div>
+    );
+  })}
+</div>
