@@ -94,7 +94,7 @@ just missing styles. Re-export it from your own entry and declare your sources:
 ```astro
 ---
 import { getCollection, render } from "astro:content";
-import { getTOC, getPrevNext, getBreadcrumbs } from "nimbus-docs";
+import { getTOC, getPrevNext, getBreadcrumbs, getSidebar } from "nimbus-docs";
 import DocsLayout from "@longbridge/astro-theme-docs/layouts/DocsLayout";
 import { mdxComponents } from "@longbridge/astro-theme-docs/components";
 import "../styles/site.css";
@@ -111,12 +111,15 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 const { Content, headings } = await render(entry);
+
+// A SidebarItem[] — see "Sidebar data" below for how to produce one.
+const sidebar = await getSidebar(Astro.url.pathname, { collection: "docs" });
 ---
 
 <DocsLayout
   title={entry.data.title}
   description={entry.data.description}
-  sidebar={/* SidebarItem[] — see "Sidebar data" below */}
+  sidebar={sidebar}
   headings={getTOC(headings)}
   breadcrumbs={getBreadcrumbs(entry.id, { collection: "docs" })}
   prevNext={getPrevNext(entry.id, { sidebarTree: sidebar })}
@@ -291,7 +294,7 @@ Loading and assembling the document is yours — that part is too project-specif
 to generalise.
 
 ```ts
-import { resolveSchema, operationPath } from "@longbridge/astro-theme-docs/api";
+import { resolveSchema, operationPath } from "@longbridge/astro-theme-docs/lib/openapi";
 ```
 
 `resolveSchema(document, schema)` follows `$ref` and flattens `allOf`.
