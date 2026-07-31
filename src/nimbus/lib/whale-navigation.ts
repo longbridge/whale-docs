@@ -65,6 +65,10 @@ export async function getWhaleSidebar(pathname: string): Promise<SidebarItem[]> 
   // Static `file` builds expose `.html` in Astro.url while public links remain
   // extensionless. Normalize both forms so production marks the current item.
   const current = pathname.replace(/\.html$/, "").replace(/\/$/, "") || "/";
+  // Broker API has a deep group tree; collapse every subgroup by default so the
+  // sidebar opens showing only the top-level section headers. Other API tabs
+  // keep the narrower "collapse only operation-bearing subgroups" behavior.
+  const collapseAllSubgroups = section === "broker-api";
 
   const convert = (node: PageNode, collapseGroups = false): SidebarItem[] => {
     if (typeof node !== "string") {
@@ -76,7 +80,7 @@ export async function getWhaleSidebar(pathname: string): Promise<SidebarItem[]> 
       return [{
         type: "group",
         label: node.group,
-        collapsed: collapseGroups && directlyContainsOperations,
+        collapsed: collapseGroups && (collapseAllSubgroups || directlyContainsOperations),
         order: 0,
         children,
       }];
