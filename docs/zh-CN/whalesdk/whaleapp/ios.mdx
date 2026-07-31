@@ -15,7 +15,7 @@ description: iOS LBWhaleAppSDK 完整接入与 API 文档
 
 - **开发语言**：Objective-C、Swift
 
-- **其他**：不支持横屏展示。
+- **其他**：Broker App 通常为竖屏。SDK 内个别页面需要横屏时，按 [SDK 内横屏页面支持](#landscape-support) 转发屏幕方向。
 
 ## 集成方式 {/* integration */}
 
@@ -46,7 +46,34 @@ pod install
 1. 下载并解压 `LBWhaleAppSDK-XXX.zip`。
 2. 将 `LBWhaleAppSDK.xcframework` 拖入 Xcode 项目。
 3. 在 **General** > **Frameworks, Libraries, and Embedded Content** 中设置为 **Embed & Sign**。
-4. 在 **Build Phases** > **Link Binary With Libraries** 中添加系统库。
+4. 在 **Build Phases** > **Link Binary With Libraries** 中添加以下系统库：
+
+```txt
+Foundation
+UIKit
+Security
+SystemConfiguration
+CoreGraphics
+QuartzCore
+CoreText
+ImageIO
+WebKit
+AVFoundation
+AudioToolbox
+CoreMedia
+VideoToolbox
+Photos
+AssetsLibrary
+CoreLocation
+AddressBook
+AddressBookUI
+Contacts
+ContactsUI
+MessageUI
+SafariServices
+StoreKit
+UserNotifications
+```
 
 ## 初始化 SDK {/* initialize-sdk */}
 
@@ -80,12 +107,20 @@ LBWhaleAppConfig *config = [[LBWhaleAppConfig alloc] initAppKey:@"LB_app_key"
     refreshToken:@"user_refresh_token"
     delegate:self
     extraCustomConfig:nil];
-// 设置主题和语言（可选）
+// 设置主题、语言等界面选项（可选）
 config.theme = LBWhaleAppConfigThemeAuto;
 config.language = LBWhaleAppConfigLanguageEn;
+config.priceColorType = LBWhaleAppConfigPriceColorFollowUserSetting;
+config.env = LBWhaleAppConfigEnvProd;
+// 设置 SDK 页面进出回调代理（可选）
+config.sdkUIDelegate = self;
 // 启动 SDK
 [LBWhaleApp startWithConfig:config];
 ```
+
+<Warning>
+只使用项目交付的环境与凭证。不要把真实的 `appSecret`、`token`、`refreshToken` 硬编码进代码仓库。
+</Warning>
 
 ### 实现代理方法 {/* implement-delegate-methods */}
 
@@ -98,7 +133,7 @@ SDK 回调中 `NSError` 的 `domain` 统一为 `@"LBWhaleApp"`，常见错误码
 |error.code|含义|触发场景|建议处理|
 |---|---|---|---|
 |400|配置参数错误|`startWithConfig:` 时缺少必填参数（appKey / appSecret / appId / appName.en / defaultAccountChannel / webDomainPrefix / token / refreshToken）或重复初始化|检查 `LBWhaleAppConfig` 各字段是否完整，修正后重新启动|
-|401|鉴权失效|用户被异地登录踢出、token 刷新失败、SDK 未启动时调用接口|调用 `[LBWhaleApp logoutAndDestroy]` 销毁 SDK，引导用户重新登录|
+|401|鉴权失效|用户被异地登录踢出、token 刷新失败|调用 `[LBWhaleApp logoutAndDestroy]` 销毁 SDK，引导用户重新登录|
 |403xxx|API Key 非法|服务端校验 appKey 不合法|收到 403 开头的错误，如：403201 或 403203 等确认 appKey 是否正确、联系服务端排查|
 
 ```objective-c
@@ -235,13 +270,9 @@ SDK 回调中 `NSError` 的 `domain` 统一为 `@"LBWhaleApp"`，常见错误码
 - (void)lbWhaleAppRefreshTokenExpiredWithResolver:(void(^)(NSString *token, NSString *refreshToken))resolveCompleted {
     resolveCompleted(nil, nil);
 }
-
-/// 9. SDK 分析事件（可选）
-/// 仅在项目需要承接 WhaleAppSDK 分析事件时实现；不要在事件属性中补充 token 等敏感信息。
-- (void)lbWhaleAppAnalyticsEventWithName:(NSString *)name properties:(NSDictionary *)properties {
-    [MyAnalytics track:name properties:properties];
-}
 ```
+
+`lbWhaleAppSDKDidRequestOpenURL:` 透传过来的 URL，在打开前请先校验 scheme、域名和路由白名单。
 
 <Note>
 `lbWhaleAppRefreshTokenExpiredWithResolver:` 是极低概率异常的兜底扩展点，不是 Broker App 的常规 token 刷新入口。等待时间默认 30 秒，可通过 `LBAPPSDKConfigKeyRefreshTokenResolverTimeout` 调整。
@@ -262,6 +293,10 @@ config.sdkUIDelegate = self;
     // SDK 页面数量从 1 变为 0
 }
 ```
+
+<Note>
+以下方法均需在 SDK 启动成功（`sdkStatus == LBWhaleAppStatusStarted`）后调用。
+</Note>
 
 ### 页面路由使用 {/* page-routing */}
 
@@ -294,21 +329,45 @@ NSDictionary *params = @{
 }];
 ```
 
+`pushURL:` 和 `presentURL:` 各自提供 `animated`、`parameters` 与结果回调的多种重载，完整声明见 [LBWhaleApp](#lb-whale-app)。
+
+### 更换主题 {/* change-theme */}
+
+SDK 没有独立的切换方法，直接修改 `LBWhaleApp.config` 的 `theme` 属性即可实时生效：
+
+```objective-c
+LBWhaleApp.config.theme = LBWhaleAppConfigThemeDark;
+```
+
+### 更换语言 {/* change-language */}
+
+```objective-c
+LBWhaleApp.config.language = LBWhaleAppConfigLanguageZhCN;
+```
+
+### 更换涨跌色 {/* change-price-color */}
+
+```objective-c
+LBWhaleApp.config.priceColorType = LBWhaleAppConfigPriceColorRedUpGreenDown;
+```
+
 ### 登出并销毁 SDK {/* logout-and-destroy-sdk */}
 
-登出并销毁 SDK，释放内存与网络请求。
+在用户登出或鉴权已不可恢复时调用，释放内存与网络请求。
 
 ```objective-c
 [LBWhaleApp logoutAndDestroy];
 ```
+
+配置类另外声明了 `-[LBWhaleAppConfig logout]`，它只清除当前凭证而不销毁 SDK。源集成未定义完整的切换账号时序，因此请在 Whale 确认项目适用的 SDK 版本与调用顺序后再使用该方法。
 
 ### SDK 内横屏页面支持 {/* landscape-support */}
 
 获取 SDK 当前页面所需要支持的屏幕方向
 
 ```objective-c
-// SDK 需要支持的 UIInterfaceOrientationMask，如果返回 NSNumber ：0，表示当前页面非 SDK 页面，由 Broker App 决定支持的方向
-**+ (NSUInteger)requiredAppInterfaceOrientationMask*
+// SDK 需要支持的 UIInterfaceOrientationMask，如果返回 0，表示当前页面非 SDK 页面，由 Broker App 决定支持的方向
++ (NSUInteger)requiredAppInterfaceOrientationMask;
 ```
 
 为了使 SDK 内页面可以正常显示横屏状态，Broker App 需要在 AppDelegate 中实现以下代理方法
@@ -327,7 +386,12 @@ NSDictionary *params = @{
 
 SDK 支持两种推送接入方式，请根据你的推送基础设施情况选择其一：
 
-两种方式互不依赖，按照实际场景接入对应小节即可。
+| 接入方式 | 适用场景 |
+| --- | --- |
+| [方式一：走 SDK 内置渠道](#whale-managed-channel) | 由 Whale 服务端通过 SDK 内置的阿里云 + APNs 通道直接下发消息，Broker App 无需自建推送体系 |
+| [方式二：走 Broker 自己的渠道](#broker-managed-channel) | Broker App 已有自建推送通道（如 FCM、自研后端等），由 Broker App 负责消息送达，SDK 只负责识别 Whale 消息并完成 tip 展示与路由跳转 |
+
+两种方式互不依赖，按照实际场景接入对应小节即可。服务端配置与标准消息结构见[消息推送接入](/zh-cn/docs/message-push)。
 
 ### 方式一：走 SDK 内置渠道 {/* whale-managed-channel */}
 
@@ -335,7 +399,9 @@ Whale 通过 SDK 内置的推送通道直接下发消息给 Broker App。Broker 
 
 #### 初始化推送服务 {/* initialize-push-service */}
 
-推送服务的启动独立于 SDK 主体启动，建议在 App 启动时即执行。
+推送服务的启动独立于 SDK 启动，建议在 App 启动时即执行。
+
+常见启动失败原因（对应 `NotificationErrorPushStartFailed`）：push key/secret 配置错误、Bundle ID 与推送控制台配置不一致等。
 
 ```objective-c
 // 启动推送服务（推送服务的启动不依赖于 SDK，可独立启动，建议在应用启动时就执行）
@@ -447,10 +513,26 @@ Broker App 已经有自有推送通道（如 FCM、自有后端等），消息�
 
 #### 识别是否为 Whale 消息 {/* identify-whale-messages */}
 
-Broker App 从自有通道收到消息后，先用 `checkIsLBNotificationWithUserInfo:` 判断该消息是否由 Whale 下发，只有属于 Whale 的消息才需要透传给 SDK：
+推荐由 Broker App 与自己的服务端约定标识字段，自行判断消息来源，并在必要时对数据重新组装后交给 SDK 处理。
+
+Whale 也开放了内部的消息来源判断方法供 Broker App 使用：从自有通道收到消息后，可调用 `checkIsLBNotificationWithUserInfo:` 判断该消息是否可由 Whale SDK 处理。使用该方法判断时，需确保传入的数据结构符合以下示例，且包含关键字段 `lb_push_from`：
 
 ```objective-c
-NSDictionary *userInfo = /* 从自有推送通道收到的消息字典 */;
+NSDictionary *userInfo = @{
+    @"title": @"消息标题",
+    @"body": @"消息摘要",
+    // 透传 Whale 下发消息中的 user_info 字段内容
+    @"user_info": @{
+        @"t": @"xx",
+        @"tn": @"xx",
+        @"id": @"xx",
+        // Whale 推送关键标识，SDK 依据此字段判断是否由自身处理该消息
+        @"lb_push_from": @"xx",
+        @"link": @"跳转链接",
+        @"json": @"业务 JSON 串"
+    }
+};
+
 if ([LBWhaleAppPushService checkIsLBNotificationWithUserInfo:userInfo]) {
     // 交由 SDK 处理（见下文步骤 2 / 步骤 3）
 } else {
@@ -463,19 +545,27 @@ if ([LBWhaleAppPushService checkIsLBNotificationWithUserInfo:userInfo]) {
 App 处于前台时收到 Whale 消息，调用 `sdkShowTipWithNotificationInfo:routerHandler:` 让 SDK 展示 tip，并在用户点击 tip 时通过 `routerHandler` 回调路由地址：
 
 ```objective-c
-// 使用自定义封装的参数处理前台推送
 NSDictionary *customNotification = @{
-   // ...透传服务端消息字典
+    @"title": @"消息标题",
+    @"body": @"消息摘要",
+    @"user_info": @{
+        @"t": @"xx",
+        @"tn": @"xx",
+        @"id": @"xx",
+        // Whale 推送关键标识
+        @"lb_push_from": @"xx",
+        // SDK 会根据此链接在特定业务场景下触发页面跳转。
+        // 若链接无法被解析，则通过 -lbWhaleAppSDKDidRequestOpenURL: 回调给 Broker App 处理。
+        // 若 Broker App 实现了 routerHandler，则所有跳转均通过 routerHandler 回调，SDK 不再自行解析路由。
+        @"link": @"跳转链接",
+        @"json": @"业务 JSON 串"
+    }
 };
 
 NSError *error = [LBWhaleApp.pushService sdkShowTipWithNotificationInfo:customNotification routerHandler:^(NSString * _Nonnull routerUrl) {
-        /**
-         1. 处理路由跳转前的 Broker App 需要执行的自定义操作...
-         2. 跳转 block 回调的路由地址
-        /
-        // ... App 自定义操作
-        // 打开路由跳转
-        [LBWhaleApp pushURL:routerUrl];
+    // 1. 执行跳转前 Broker App 所需的自定义操作
+    // 2. 手动触发路由跳转
+    [LBWhaleApp pushURL:routerUrl];
 }];
 if (!error) {
     // SDK 已处理通知
@@ -515,6 +605,17 @@ if (!error) {
 ### LBWhaleApp {/* lb-whale-app */}
 
 SDK 的主入口类，提供启动、登出和页面路由等核心功能。
+
+| 成员 | 用途 |
+| --- | --- |
+| `sdkVersion` | SDK 版本号 |
+| `pushService` | 共享的 `LBWhaleAppPushService` 实例 |
+| `config` | 当前启动配置 |
+| `sdkStatus` | `NotStarted`、`Starting`、`Started` 或 `IsDestroying` |
+| `startWithConfig:` | 异步启动 SDK |
+| `logoutAndDestroy` | 登出并释放 SDK 资源 |
+| `pushURL:...` / `presentURL:...` | 打开 SDK 页面，可带参数、转场动画和结果回调 |
+| `requiredAppInterfaceOrientationMask` | 当前 SDK 页面需要的屏幕方向；非 SDK 页面返回 `0` |
 
 ```objective-c
 /// SDK 运行状态
@@ -633,15 +734,26 @@ SDK 启动配置，包含身份凭证、界面选项和事件回调代理。通�
 /// 运行环境，默认生产环境；一般不需要修改
 @property (nonatomic, assign) LBWhaleAppConfigEnv env;
 
-/// 清除当前客户凭证，用于在不销毁 SDK 的情况下切换账号
-- (void)logout;
-
 @end
 ```
 
 ### 自定义参数 {/* custom-parameters */}
 
-通过传入自定义参数动态配置自定义配置内容
+通过传入自定义参数动态配置自定义配置内容。`extraCustomConfig` 支持以下公开 key：
+
+| Key | 值类型 | 用途 |
+| --- | --- | --- |
+| `LBAPPSDKConfigKeyDisableIDFA` | `NSNumber` 布尔值 | 禁用 IDFA 读取与 ATT 授权弹框 |
+| `LBAPPSDKConfigDebugEggDisable` | `NSNumber` 布尔值 | 禁用系统 debug 信息彩蛋 |
+| `LBAPPSDKConfigKeyDeviceId` | `NSString` | 传入项目自定义的设备标识 |
+| `LBAPPSDKConfigKeyFileDirectory` | `NSString` | 覆盖 SDK 缓存目录 |
+| `LBAPPSDKConfigKeyRefreshTokenResolverTimeout` | `NSNumber` 秒数 | 调整 token 刷新兜底回调的等待时间 |
+| `LBAPPSDKConfigKeyColor` | 嵌套字典 | 自定义支持的推送 tip 颜色 |
+| `LBAPPSDKConfigKeyFontCrypto` | `UIFontDescriptor` | 替换行情数字字体 |
+| `LBAPPSDKConfigKeyFontMonospaced` | `UIFontDescriptor` | 替换常规等宽字体 |
+| `LBAPPSDKConfigKeyFontMonospacedBold` | `UIFontDescriptor` | 替换粗体等宽字体 |
+
+颜色配置的浅色与深色值分别使用 `LBAPPSDKConfigKeyColorLight` 和 `LBAPPSDKConfigKeyColorDark`。推送 tip 支持的完整 key 为 `LBAPPSDKConfigKeyPushTipView`、`LBAPPSDKConfigKeyPTVDefaultBackground`、`LBAPPSDKConfigKeyPTVDefaultTitle`、`LBAPPSDKConfigKeyPTVDefaultContent`、`LBAPPSDKConfigKeyPTVDefaultIcon`、`LBAPPSDKConfigKeyPTVOrderCompleted`、`LBAPPSDKConfigKeyPTVOrderFailed`、`LBAPPSDKConfigKeyPTVOrderLimit`、`LBAPPSDKConfigKeyPTVOther`、`LBAPPSDKConfigKeyPTVLimitTitleColor`、`LBAPPSDKConfigKeyPTVLimitContentColor` 和 `LBAPPSDKConfigKeyPTVLimitIconColor`。
 
 ```objective-c
 @{
@@ -749,6 +861,12 @@ LBWhaleAppConfig *config = [[LBWhaleAppConfig alloc] initAppKey:@"YOUR_APP_KEY"
 ```
 
 #### 支持的字体类型 {/* supported-font-types */}
+
+| 字体键名 | 用途 | 值类型 |
+| --- | --- | --- |
+| `LBAPPSDKConfigKeyFontMonospacedBold` | 自定义等宽字体（粗体） | `UIFontDescriptor`，size 传 0 由 SDK 决定 |
+| `LBAPPSDKConfigKeyFontMonospaced` | 自定义等宽字体（常规） | `UIFontDescriptor`，size 传 0 由 SDK 决定 |
+| `LBAPPSDKConfigKeyFontCrypto` | 自定义像素/加密字体 | `UIFontDescriptor`，size 传 0 由 SDK 决定 |
 
 #### 注意事项 {/* notes */}
 
@@ -869,9 +987,6 @@ SDK 事件回调代理。
 /// SDK 内置 token 刷新失败后的兜底回调；必须在超时前调用 resolveCompleted
 - (void)lbWhaleAppRefreshTokenExpiredWithResolver:(void(^)(NSString *token, NSString *refreshToken))resolveCompleted;
 
-/// SDK 分析事件回调（可选）
-- (void)lbWhaleAppAnalyticsEventWithName:(NSString *)name properties:(NSDictionary *)properties;
-
 @end
 ```
 
@@ -954,6 +1069,8 @@ typedef enum : NSInteger {
 ```
 
 ### 其他注意事项 {/* additional-notes */}
+
+以下依赖冲突解决方案仅适用于通过 CocoaPods（参见[CocoaPods 集成](#cocoapods-integration)）集成的场景；若采用手动集成，请联系 Whale 项目团队获取对应的排查方式。
 
 WhaleAppSDK 在 podspec 中声明以下第三方依赖：
 

@@ -21,6 +21,18 @@ import accountAssetsZhHKSource from "../../../broker-api/account-assets.zh-HK.ym
 import miscEnSource from "../../../broker-api/misc.en.yml?raw";
 import miscZhCNSource from "../../../broker-api/misc.zh-CN.yml?raw";
 import miscZhHKSource from "../../../broker-api/misc.zh-HK.yml?raw";
+import billingEnSource from "../../../broker-api/billing.en.yml?raw";
+import billingZhCNSource from "../../../broker-api/billing.zh-CN.yml?raw";
+import billingZhHKSource from "../../../broker-api/billing.zh-HK.yml?raw";
+import suspiciousEnSource from "../../../broker-api/suspicious.en.yml?raw";
+import suspiciousZhCNSource from "../../../broker-api/suspicious.zh-CN.yml?raw";
+import suspiciousZhHKSource from "../../../broker-api/suspicious.zh-HK.yml?raw";
+import clearingEnSource from "../../../broker-api/clearing.en.yml?raw";
+import clearingZhCNSource from "../../../broker-api/clearing.zh-CN.yml?raw";
+import clearingZhHKSource from "../../../broker-api/clearing.zh-HK.yml?raw";
+import serviceParamEnSource from "../../../broker-api/service-param.en.yml?raw";
+import serviceParamZhCNSource from "../../../broker-api/service-param.zh-CN.yml?raw";
+import serviceParamZhHKSource from "../../../broker-api/service-param.zh-HK.yml?raw";
 
 export type OpenApiDocument = {
   paths: Record<string, Record<string, unknown>>;
@@ -54,6 +66,18 @@ const accountAssetsZhHK = parse(accountAssetsZhHKSource) as OpenApiDocument;
 const miscEn = parse(miscEnSource) as OpenApiDocument;
 const miscZhCN = parse(miscZhCNSource) as OpenApiDocument;
 const miscZhHK = parse(miscZhHKSource) as OpenApiDocument;
+const billingEn = parse(billingEnSource) as OpenApiDocument;
+const billingZhCN = parse(billingZhCNSource) as OpenApiDocument;
+const billingZhHK = parse(billingZhHKSource) as OpenApiDocument;
+const suspiciousEn = parse(suspiciousEnSource) as OpenApiDocument;
+const suspiciousZhCN = parse(suspiciousZhCNSource) as OpenApiDocument;
+const suspiciousZhHK = parse(suspiciousZhHKSource) as OpenApiDocument;
+const clearingEn = parse(clearingEnSource) as OpenApiDocument;
+const clearingZhCN = parse(clearingZhCNSource) as OpenApiDocument;
+const clearingZhHK = parse(clearingZhHKSource) as OpenApiDocument;
+const serviceParamEn = parse(serviceParamEnSource) as OpenApiDocument;
+const serviceParamZhCN = parse(serviceParamZhCNSource) as OpenApiDocument;
+const serviceParamZhHK = parse(serviceParamZhHKSource) as OpenApiDocument;
 
 function mergeDocuments(
   base: OpenApiDocument,
@@ -81,26 +105,38 @@ function mergeDocuments(
 }
 
 const documents = {
-  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn),
-  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN),
-  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK),
+  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, clearingEn, billingEn, suspiciousEn, serviceParamEn),
+  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, clearingZhCN, billingZhCN, suspiciousZhCN, serviceParamZhCN),
+  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, clearingZhHK, billingZhHK, suspiciousZhHK, serviceParamZhHK),
 } as const;
 
 const domainDocuments = {
   en: [
     ["broker-api/account-assets.en.yml", accountAssetsEn],
+    ["broker-api/clearing.en.yml", clearingEn],
     ["broker-api/misc.en.yml", miscEn],
     ["broker-api/whaleapi.en.yml", whaleApiEn],
+    ["broker-api/billing.en.yml", billingEn],
+    ["broker-api/suspicious.en.yml", suspiciousEn],
+    ["broker-api/service-param.en.yml", serviceParamEn],
   ],
   "zh-CN": [
     ["broker-api/account-assets.zh-CN.yml", accountAssetsZhCN],
+    ["broker-api/clearing.zh-CN.yml", clearingZhCN],
     ["broker-api/misc.zh-CN.yml", miscZhCN],
     ["broker-api/whaleapi.zh-CN.yml", whaleApiZhCN],
+    ["broker-api/billing.zh-CN.yml", billingZhCN],
+    ["broker-api/suspicious.zh-CN.yml", suspiciousZhCN],
+    ["broker-api/service-param.zh-CN.yml", serviceParamZhCN],
   ],
   "zh-HK": [
     ["broker-api/account-assets.zh-HK.yml", accountAssetsZhHK],
+    ["broker-api/clearing.zh-HK.yml", clearingZhHK],
     ["broker-api/misc.zh-HK.yml", miscZhHK],
     ["broker-api/whaleapi.zh-HK.yml", whaleApiZhHK],
+    ["broker-api/billing.zh-HK.yml", billingZhHK],
+    ["broker-api/suspicious.zh-HK.yml", suspiciousZhHK],
+    ["broker-api/service-param.zh-HK.yml", serviceParamZhHK],
   ],
 } satisfies Record<
   OperationRecord["locale"],

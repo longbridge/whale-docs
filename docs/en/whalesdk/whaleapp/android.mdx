@@ -3,55 +3,59 @@ title: Android
 description: Complete WhaleAppSDK integration and public API reference for Android
 ---
 
-## Requirements {/* system-requirements */}
 
-- Min SDK 24 and Target SDK 35.
-- JDK 17 or later, Kotlin 1.8.22 or later, AGP 8.5.2 or later, and Gradle 8.7 or later.
-- Java and Kotlin Broker Apps are supported.
-- `arm64-v8a` and `armeabi-v7a` architectures are supported.
-- Android Studio 2025.1.3 or later is recommended.
-- Landscape is not supported.
+## 1. Requirements {/* system-requirements */}
 
-## Install the SDK {/* integration */}
+- **Min Android SDK**: 24
+- **Target Android SDK**: 35
+- **JDK**: 17+
+- **Kotlin**: 1.8.22+
+- **AGP**: 8.5.2+
+- **Gradle**: 8.7+
+- **Architectures**: arm64-v8a, armeabi-v7a
+- **Languages**: Java, Kotlin
+- **Android Studio**: 2025.1.3+ recommended; upgrade if an older version produces build incompatibilities
+- **Other**: Landscape display is not supported.
 
-Extract `LBWhaleAppSDK-XXX.zip`, which contains the AARs and Demo, and place the SDK directory in the project. In the App-level Gradle file, load the delivered configuration:
+## 2. Install the SDK {/* integration */}
+
+Extract `LBWhaleAppSDK-XXX.zip` (which contains the AARs and the Demo), copy the SDK directory into the App module directory (for example, `app/`), and add the following below `plugins` in the App-level `build.gradle` to load the SDK configuration file.
 
 ```groovy
-// Adjust the path to the actual SDK location.
+//The path below assumes LBWhaleAppSDK sits in the app directory; adjust it to the actual location.
 apply from: "${project.file('LBWhaleAppSDK/whale-sdk-config.gradle')}"
 ```
 
-### ARouter preprocessing is required {/* arouter-precompilation */}
-
-WhaleAppSDK uses ARouter internally. Without the preprocessing plugin, `init` becomes substantially slower.
-
+### 2.1 ARouter preprocessing (must be enabled) {/* arouter-precompilation */}
+WhaleAppSDK uses ARouter internally for routing. If preprocessing is **not enabled**, the **`init` call becomes substantially slower**. Add the following plugin to the project-level `build.gradle`:
 ```groovy
-// Project-level build.gradle
 buildscript {
     dependencies {
+        //Adjust the path to the actual LBWhaleAppSDK location.
         classpath files('./../LBWhaleAppSDK/libs/lb-arouter-register-1.1.4.jar')
     }
 }
 ```
-
+Add the plugin to `plugins` in the App-level `build.gradle`:
 ```groovy
-// App-level build.gradle
 plugins {
     id("com.longbridge.arouter")
 }
 ```
 
-### Kapt and Data Binding {/* kapt-and-data-binding */}
+### 2.2 Kapt and Data Binding {/* kapt-and-data-binding */}
+WhaleAppSDK requires Kapt and DataBinding support. Skip this step if the project already enables them; otherwise enable them as follows.
 
+Add the following to the project-level `build.gradle`:
 ```groovy
 apply plugin: 'kotlin-kapt'
 ```
 
+Add the following to the App-level `build.gradle`:
 ```groovy
 plugins {
     id("org.jetbrains.kotlin.kapt")
 }
-
 android {
     buildFeatures {
         viewBinding = true
@@ -60,100 +64,119 @@ android {
 }
 ```
 
-### R8 compatibility mode {/* r8-configuration */}
-
-Add this to the root `gradle.properties`:
-
-```properties
+### 2.3 R8 compilation configuration {/* r8-configuration */}
+When building the App, R8 must run in compatibility mode; otherwise the SDK raises internal exceptions. Add the following to `gradle.properties` in the project root.
+```agsl
 android.enableR8.fullMode=false
 ```
 
-## Initialize SDK {/* initialize-sdk */}
+## 3. Initialize SDK {/* initialize-sdk */}
 
-Call `init` on the main thread from `Application.onCreate`:
+Call the SDK's `init` method from `Application onCreate` to prepare the required resources. Call it on the main thread.
 
 ```kotlin
 LBWhaleApp.init(application, debug = false)
 ```
 
-Without ARouter preprocessing enabled, this call becomes substantially slower.
+The `debug` parameter controls whether debug logging is enabled; it defaults to `false`.
 
-## Configure push {/* configure-push */}
+ps: without ARouter preprocessing enabled, this call takes substantially longer.
 
-See [Message-push integration](/en/docs/message-push) for server-channel selection, cloud setup, and the standard message shape.
+## 4. Configure push {/* configure-push */}
 
-### Whale-managed channel {/* whale-managed-channel */}
+For server-channel selection, cloud console setup, and the standard message shape, see [Message-push integration](/en/docs/message-push).
 
-Initialize the push service on the main thread after `LBWhaleApp.init`:
+### 4.1 Option 1: Whale-managed channel {/* whale-managed-channel */}
 
+WhaleAppSDK embeds Aliyun push. Business messages can be delivered to the client through this channel.
+
+When a message arrives while the App is in the foreground, an **in-app notification** is shown; when the App is in the background, a **system tray notification** is shown.
+
+To use the built-in Aliyun push, call the method below after SDK initialization. `LBWhaleApp.pushService.init(application, pushConfig)` must be called on the main thread.
 ```kotlin
 val notificationConfig = NotificationConfig(
     notificationIcon = R.mipmap.logo_notification,
     notificationSmallIcon = R.mipmap.lb_push_small_notification,
-    notificationChannelId = "trading-messages"
+    notificationChannelId = channelId,
 )
 
+//Create the push configuration
 val pushConfig = LBWhalePushConfig.Builder()
-    .appKey("<aliyun-push-app-key>")
-    .appSecret("<aliyun-push-app-secret>")
-    .disableMultiDevice(false)
+    .appKey(BuildConfig.ALIYUN_PUSH_APP_KEY)
+    .appSecret(BuildConfig.ALIYUN_PUSH_APP_SECRET)
+    .disableMultiDevice(false) //Optional: whether to disable multi-device push
     .notificationConfig(notificationConfig)
     .pushCallback(object : LBWhalePushCallback {
-        override fun onNotificationOpened(
-            title: String,
-            summary: String,
-            extMap: Map<String, String>
-        ) {
-            if (LBWhaleApp.isStarted()) {
-                LBWhaleApp.pushService.handleNotificationOpened(
-                    title, summary, extMap
-                )
-            } else {
-                // Start the SDK, then handle the pending click.
-            }
+        override fun onNotificationOpened(title: String, summary: String, extMap: Map<String, String>) {
+          //Fired when a tray notification is tapped. Check here whether the SDK is running,
+          //then call handleNotificationOpened to process the tap and navigate to the page.
+          if (LBWhaleApp.isStarted()) {
+            LBWhaleApp.pushService.handleNotificationOpened(title, summary, extMap)
+            return
+          }
+          //If the SDK has not started, start it first and then call handleNotificationOpened.
         }
 
-        override fun onPushRegisterFailed(
-            errorCode: String?,
-            errorMessage: String?
-        ) {
-            reportPushRegistrationFailure(errorCode, errorMessage)
+        override fun onPushRegisterFailed(errorCode: String?, errorMessage: String?) {
+          //Fired when push-channel registration fails. Verify the Aliyun configuration values passed in.
         }
     })
     .build()
 
-LBWhaleApp.pushService.init(application, pushConfig)
+//Initialize the push service
+LBWhaleApp.pushService.init(this, pushConfig)
 ```
 
-#### Vendor-channel push (FCM) {/* vendor-channel-push */}
+#### 4.1.1 Vendor-channel push {/* vendor-channel-push */}
+The built-in Aliyun push supports blending in third-party vendor channels to improve delivery rates. The example below uses FCM to show how SDK business messages are forwarded as FCM messages.
 
-WhaleAppSDK's built-in Aliyun push supports blending in third-party vendor channels to improve delivery. The following example forwards SDK messages through FCM.
-
-Report the FCM token and pass payload-bearing messages to the SDK:
+Initialize Firebase and report the FCM token to the SDK:
 
 ```kotlin
-override fun onNewToken(token: String) {
-    LBWhaleApp.pushService.repotThirdToken(
-        this, LBWhalePushService.ThirdPush.FCM, token
-    )
+FirebaseApp.initializeApp(this, options)
+FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+  if (task.isSuccessful) {
+    val token = task.result
+    //Report the token to the SDK
+    LBWhaleApp.pushService.repotThirdToken(this, LBWhalePushService.ThirdPush.FCM, token)
+  }
 }
+```
 
-override fun onMessageReceived(message: RemoteMessage) {
-    message.data["payload"]?.takeIf { it.isNotEmpty() }?.let { payload ->
-        LBWhaleApp.pushService.onThirdPushMsg(
-            this, LBWhalePushService.ThirdPush.FCM, payload
-        )
+Update the token and handle messages in `FirebaseMessagingService`:
+```kotlin
+class DemoFirebaseMessagingService : FirebaseMessagingService() {
+  private val logger = SDKLogger.get(this::class)
+
+  override fun onNewToken(token: String) {
+    logger.i("onNewToken: $token")
+    //Report the token to the SDK
+    LBWhaleApp.pushService.repotThirdToken(this, LBWhalePushService.ThirdPush.FCM, token)
+  }
+
+  override fun onMessageReceived(message: RemoteMessage) {
+    logger.i("onMessageReceived:${message.messageId}")
+    //Messages the SDK's Aliyun push delivers through FCM carry a payload field; use it to identify the message source here.
+    //When payload content is present, pass it to the SDK for processing.
+    val msg = message.getData()["payload"]
+    if(msg.isNotEmpty()){
+      LBWhaleApp.pushService.onThirdPushMsg(this,LBWhalePushService.ThirdPush.FCM, msg)
     }
+  }
 }
 ```
 
-`repotThirdToken` is the actual public API spelling in the current SDK.
+`repotThirdToken` is the actual public API spelling in the current SDK; do not call it as `reportThirdToken`.
 
-### Broker-managed channel {/* broker-managed-channel */}
+### 4.2 Option 2: Broker-managed channel {/* broker-managed-channel */}
 
-Broker Server delivers Whale's standard message through Broker's own provider. Broker App may pass either parsed fields or the complete standard JSON to the SDK:
+Broker App may integrate a third-party push provider itself. Business messages are forwarded by Whale to Broker Server, which then pushes them to Broker App.
+On receiving a message, call the SDK to parse and handle it. The SDK provides `LBWhaleApp.pushService.handleNotificationReceived` to parse the message and display an in-app notification.
+
+Broker App may pass either the parsed fields or the complete standard message JSON:
 
 ```kotlin
+//Pass the complete standard message JSON; the SDK parses title, body, and user_info itself
 val result = LBWhaleApp.pushService.handleNotificationReceived(messageJson)
 
 val clickResult = LBWhaleApp.pushService.handleNotificationOpened(messageJson)
@@ -170,216 +193,287 @@ when (val result = LBWhaleApp.pushService.handleNotificationOpened(messageJson))
 }
 ```
 
-Possible causes include `NotInitialized`, `UnrecognizedPushMessage`, `MissingPushLink`, and `InternalError`.
+`cause` may be `NotInitialized`, `UnrecognizedPushMessage`, `MissingPushLink`, or `InternalError`.
 
-### Notification event handling {/* notification-event-handling */}
+### 4.3 Notification event handling {/* notification-event-handling */}
+#### 4.3.1 Notification display {/* notification-display */}
+In-app notification display
+- Whale-managed channel: handled internally by the SDK
+- Broker-managed channel: call `LBWhaleApp.pushService.handleNotificationReceived` after receiving a message; it parses and displays the message. This only takes effect after the SDK has started.
 
-#### Notification display {/* notification-display */}
+Out-of-app notification display
+- Whale-managed channel: handled internally by the SDK
+- Broker-managed channel: handled by Broker App
 
-In-app notifications:
-
-- Whale-managed channel: handled internally by the SDK.
-- Broker-managed channel: call `LBWhaleApp.pushService.handleNotificationReceived` after receiving a message to parse and display it. This only takes effect after the SDK has started.
-
-Out-of-app (system tray) notifications:
-
-- Whale-managed channel: handled internally by the SDK.
-- Broker-managed channel: handled by Broker App.
-
-#### Notification click events {/* notification-click-events */}
-
-In-app notification tapped:
-
-- Whale-managed channel: handled internally by the SDK.
+#### 4.3.2 Notification click events {/* notification-click-events */}
+In-app notification tapped
+- Whale-managed channel: handled internally by the SDK
 - Broker-managed channel: if `LBWhaleApp.pushService.handleNotificationReceived` was used to display the message, the SDK also handles the tap; otherwise Broker App must handle it.
 
-Out-of-app (system tray) notification tapped:
+Out-of-app notification tapped
+- Whale-managed channel: delivered to the App through `LBWhalePushCallback`. On receiving this callback, Broker App may handle it directly, or call `LBWhaleApp.pushService.handleNotificationOpened`, which parses the notification and navigates to the matching page. This only takes effect after the SDK has started.
+- Broker-managed channel: call `LBWhaleApp.pushService.handleNotificationOpened` to handle the tap; it parses the notification and navigates to the matching page. This only takes effect after the SDK has started.
 
-- Whale-managed channel: delivered through `LBWhalePushCallback`. Broker App may handle it directly, or call `LBWhaleApp.pushService.handleNotificationOpened`, which parses the notification and navigates to the matching page. This only takes effect after the SDK has started.
-- Broker-managed channel: call `LBWhaleApp.pushService.handleNotificationOpened` to parse the notification and navigate to the matching page. This only takes effect after the SDK has started.
-
-## Start SDK {/* start-sdk */}
-
-Start the SDK before opening any SDK page:
+## 5. Start SDK {/* start-sdk */}
+Start the SDK before opening any SDK page.
 
 ```kotlin
-val config = LBWhaleAppConfig(
-    appName = LBWhaleAppConfigName(
-        en = "My Trading App",
-        zhCN = "我的交易应用",
-        zhHK = "我的交易應用"
-    ),
-    appKey = "<app-key>",
-    appSecret = "<app-secret>",
-    appId = "<app-id>",
-    token = "<client-token>",
-    refreshToken = "<client-refresh-token>",
-    theme = LBWhaleAppConfigTheme.AUTO,
-    language = LBWhaleAppConfigLanguage.EN,
-    priceColor = LBWhaleAppConfigPriceColor.FOLLOW_USER_SETTING,
-    defaultAccountChannel = "<account-channel>",
-    webDomainPrefix = "<web-domain-prefix>",
-    env = LBWhaleAppConfigEnv.PROD
+//extraCustomConfig holds additional SDK configuration; follow the structure described in this document.
+val cryptoFont = Typeface.createFromAsset(FApp.getResources().assets, "Crypto.ttf")
+val extraConfigMap = mapOf(
+    //Whether the debug egg panel is enabled (a hidden entry point that shows internal SDK debug information; true/on, false/off)
+    ExtraCustomConfigKey.LB_APPSDK_CONFIG_DEBUG_EGG to true,
+    //Fonts
+    ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_FONT_CRYPTO to cryptoFont,
+    ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_FONT_MONOSPACED to cryptoFont,
+    ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_FONT_MONOSPACED_BOLD to cryptoFont,
+    //Push tip colors
+    ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR to mapOf(
+        ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_PUSH_TIP_VIEW to mapOf(
+            ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_PTV_DEFAULT_BACKGROUND to mapOf(
+                ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR_LIGHT to "#FFFFFF",
+                ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR_DARK to "#000000",
+            ),
+            ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_PTV_DEFAULT_TITLE to mapOf(
+                ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR_LIGHT to "#000000",
+                ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR_DARK to "#FFFFFF",
+            ),
+            ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_PTV_DEFAULT_CONTENT to mapOf(
+                ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR_LIGHT to "#000000",
+                ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR_DARK to "#FFFFFF",
+            ),
+            ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_PTV_DEFAULT_ICON to mapOf(
+                ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR_LIGHT to "#000000",
+                ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_COLOR_DARK to "#FFFFFF",
+            ),
+        )
+    )
 )
-
+val config = LBWhaleAppConfig(
+    appName = LBWhaleAppConfigName(en = "Your_AppName"), //App name; English, Simplified and Traditional Chinese are supported
+    appKey = "LB_appKey",
+    appSecret = "LB_appSecret",
+    appId = "LB_appId",
+    token = "LB_token",
+    refreshToken = "LB_refreshToken",
+    theme = LBWhaleAppConfigTheme.AUTO, // Theme: AUTO, LIGHT, DARK
+    language = LBWhaleAppConfigLanguage.EN, // Display language: EN, ZH_CN, ZH_HK
+    priceColor = LBWhaleAppConfigPriceColor.FOLLOW_USER_SETTING, //Price up/down color configuration
+    extraCustomConfig = extraConfigMap, //extraCustomConfig holds additional SDK configuration
+    env = LBWhaleAppConfigEnv.PROD //Runtime environment; defaults to PROD
+)
 LBWhaleApp.startWithConfig(application, config)
 ```
 
-Startup is asynchronous. The result is delivered through the callback registered in [Implement the callback](#implement-callback).
+Startup is asynchronous. The result is delivered through the [callback](#implement-callback).
 
 <Warning>
-Use only the environment and credentials delivered for the project. Do not hard-code real `appSecret`, token, or refresh-token values in the repository.
+Use only the environment and credentials delivered for the project. Do not hard-code real `appSecret`, `token`, or `refreshToken` values into the code repository.
 </Warning>
 
-## Implement the callback {/* implement-callback */}
+## 6. Implement the callback {/* implement-callback */}
 
-Register `LBWhaleApp.callback` before calling `startWithConfig`:
+`LBWhaleApp.callback` must be assigned before calling `startWithConfig`.
 
 ```kotlin
 LBWhaleApp.callback = object : LBWhaleAppCallback {
-    override fun onLBWhaleAppStarted() {
-        // SDK-dependent UI may now be opened.
-    }
+    //Fired when the SDK starts successfully; LBWhaleApp methods may only be called after this point.
+    override fun onLBWhaleAppStarted() {}
 
+    //SDK startup failed; see the error-handling section for the error types.
+    //Possible errors: InvalidConfig / InvalidAppKey / InvalidAppSecret / InvalidToken / TokenExpired / RefreshTokenExpired / RequestFailed / SyncAccountFailed
     override fun onLBWhaleAppStartFailed(error: Exception) {
         reportSanitized(error)
         when (error) {
+            //Credential problem: guide the Client back to sign-in to obtain a new token
             is LBWhaleAppError.InvalidToken,
             is LBWhaleAppError.TokenExpired,
             is LBWhaleAppError.RefreshTokenExpired -> redirectToLogin()
+            //Integration problem: check the delivered project configuration and startup parameters
             is LBWhaleAppError.InvalidAppKey,
             is LBWhaleAppError.InvalidAppSecret,
             is LBWhaleAppError.InvalidConfig -> showIntegrationError(error)
-            is LBWhaleAppError.SyncAccountFailed,
-            is LBWhaleAppError.RequestFailed -> showRetryableError(error)
+            //Retryable problem: check the network and start the SDK again
             else -> showRetryableError(error)
         }
     }
 
-    override fun onLBWhaleAppRunInError(error: Exception) {
-        if (error is LBWhaleAppError.RefreshTokenExpired) {
-            LBWhaleApp.logoutAndDestroy()
-            redirectToLogin()
-        }
-    }
+    //A runtime error occurred; see the error handling below for the error types.
+    //Possible errors:
+    //  - RefreshTokenExpired: the refresh token expired at runtime; Broker App must destroy and restart the SDK
+    //  - NotInitialized: pushUrl / changeTheme / changeLanguage / changePriceColor or another start-dependent method
+    //    was called while the SDK had not started (status != STARTED)
+    //Note: when refresh_token becomes invalid, onLBWhaleAppRefreshTokenExpired fires first; if it does not recover,
+    //this method is called with a RefreshTokenExpired error.
+    override fun onLBWhaleAppRunInError(error: Exception) {}
 
-    override fun onLBWhaleAppTokenChanged(token: String, refreshToken: String) {
-        // Notification only. The SDK continues to manage validity and renewal.
-    }
+    //Notification after the SDK renews credentials automatically; validity and subsequent renewal stay managed by the SDK.
+    override fun onLBWhaleAppTokenChanged(token: String, refreshToken: String) {}
 
-    override fun onWhaleAppSdkOpenUrlRequested(url: String) {
-        brokerRouter.openValidated(url)
-    }
+    //Fired when the SDK requests navigation to another route. Parse the URL here and hand it to the Broker App router;
+    //this URL is configured by Broker on the server side.
+    override fun onWhaleAppSdkOpenUrlRequested(url: String) {}
 
-    override fun onLBWhaleAppRefreshTokenExpired(
-        resolver: LBWhaleAppRefreshTokenResolver
-    ) {
+    //Fired when neither token nor refresh_token can be renewed.
+    //The default implementation abandons retry and enters the unrecoverable authentication-failure path;
+    //Broker App should destroy the SDK and return to the logged-out state.
+    //Only call resolver.resolve(newToken, newRefreshToken) when the project has explicitly agreed on a separate way
+    //to obtain a completely new Client credential pair.
+    override fun onLBWhaleAppRefreshTokenExpired(resolver: LBWhaleAppRefreshTokenResolver) {
         resolver.resolve("", "")
     }
 }
 ```
 
-WhaleAppSDK validates and renews credentials internally. Broker App supplies the initial `token` and `refreshToken`; it does not call check-token or refresh-token APIs.
+WhaleAppSDK validates and renews credentials internally. Broker App only supplies the initial `token` and `refreshToken` at startup; it does not call check-token or refresh-token APIs.
 
-`onLBWhaleAppRefreshTokenExpired` is an exceptional fallback after normal renewal fails. The default implementation above abandons retry, after which the runtime error callback reports `RefreshTokenExpired` so Broker App can destroy the SDK and return to the logged-out state. Only resolve with a completely new credential pair when the project has explicitly agreed on a separate way to obtain one.
+`onLBWhaleAppRefreshTokenExpired` is the fallback callback after normal renewal fails. The default implementation above abandons retry, after which the runtime error callback raises `RefreshTokenExpired` so Broker App can destroy the SDK and return to the logged-out state. Only resolve with a new credential pair when the project has explicitly agreed on a separate way for Broker to obtain one.
 
 <Note>
-Under normal operation, WhaleAppSDK completes token validation and renewal automatically, and Broker App never calls a check-token or refresh-token API directly. `onLBWhaleAppRefreshTokenExpired` is a fallback extension point for a rare failure case, not a channel to implement a regular refresh flow.
+Under normal operation, WhaleAppSDK completes token validation and renewal automatically, and Broker App does not call check-token or refresh-token APIs. `onLBWhaleAppRefreshTokenExpired` is a fallback extension point for a very rare failure case and should not be implemented as a regular refresh flow.
 </Note>
 
-## Implement the UI callback (optional) {/* implement-ui-callback */}
+## 7. Implement the UI callback (optional) {/* implement-ui-callback */}
 
 `LBWhaleAppUICallback` reports when the Client **enters or exits SDK pages**. It is independent of `callback`; register it only if needed.
 
 - **Enter SDK**: fires when the first SDK page opens (live SDK page count 0 → 1).
 - **Exit SDK**: fires when the last SDK page closes (live SDK page count 1 → 0).
-- Determined by whether a page exists (`onCreate` / `onDestroy`), not by foreground/background visibility — moving Broker App to the background while an SDK page is still alive does not count as an exit.
-- Destroying the SDK (`logoutAndDestroy`) emits one more exit callback if an SDK page is still alive at that point.
-- Both callbacks run on the main thread and may update UI directly. Each method has a default empty implementation, so override only the ones needed.
+- Determined by whether a page exists (`onCreate` / `onDestroy`), not by foreground/background visibility: moving the App to the background while an SDK page is still alive does not count as an exit.
+- When the SDK is destroyed (`logoutAndDestroy`) while an SDK page is still open, one more exit callback is emitted.
+- Both callbacks run on the main thread and may update UI directly. Every interface method has a default empty implementation, so override only the ones needed.
 
 ```kotlin
 LBWhaleApp.uiCallback = object : LBWhaleAppUICallback {
-    override fun onLBWhaleAppEnterSdkPage() {
-        // First live SDK page opened (0 → 1).
-    }
+    //Enter SDK: the first SDK page opened
+    override fun onLBWhaleAppEnterSdkPage() {}
 
-    override fun onLBWhaleAppExitSdkPage() {
-        // Last live SDK page closed (1 → 0).
-    }
+    //Exit SDK: all SDK pages closed
+    override fun onLBWhaleAppExitSdkPage() {}
 }
 ```
 
-## Basic usage {/* basic-usage */}
+## 8. Basic usage {/* basic-usage */}
 
 <Warning>
-Call these methods only after the SDK has started successfully.
+Call the following methods only after the SDK has initialized successfully.
 </Warning>
 
-### Page routing {/* page-routing */}
+### 8.1 Page routing {/* page-routing */}
 
-Use the router to open SDK pages:
+Use the router API to open the matching page.
 
 ```kotlin
-LBWhaleApp.pushUrl("lb://page/main")
+//Page without parameters
+LBWhaleApp.pushUrl("page_router")
 
-val bundle = Bundle().apply { putString("id", "ST/US/AAPL") }
-LBWhaleApp.pushUrl(
-    "lb://page/stock/detail",
-    bundle,
-    Intent.FLAG_ACTIVITY_NEW_TASK
-)
+//Page that requires parameters
+val bundle = Bundle().apply { putString("key", "value") }
+LBWhaleApp.pushUrl("page_router", bundle)
+
+//Open with specific Intent flags
+LBWhaleApp.pushUrl("page_router", bundle, Intent.FLAG_ACTIVITY_NEW_TASK)
 ```
 
-Validate any URL received by `onWhaleAppSdkOpenUrlRequested` before opening it in Broker App.
+Validate the scheme, domain, and route allowlist for any URL received through `onWhaleAppSdkOpenUrlRequested` before handing it to the Broker App router.
 
-### Change theme {/* change-theme */}
+### 8.2 Change the theme {/* change-theme */}
 
 ```kotlin
 LBWhaleApp.changeTheme(LBWhaleAppConfigTheme.AUTO)
 ```
 
-Related: switch the price-up/price-down color scheme with `changePriceColor`:
-
-```kotlin
-LBWhaleApp.changePriceColor(LBWhaleAppConfigPriceColor.FOLLOW_USER_SETTING)
-```
-
-### Change language {/* change-language */}
+### 8.3 Change the language {/* change-language */}
 
 ```kotlin
 LBWhaleApp.changeLanguage(LBWhaleAppConfigLanguage.EN)
 ```
 
-### Log out and destroy the SDK {/* logout-and-destroy-sdk */}
+### 8.4 Change the price color {/* change-price-color */}
+
+```kotlin
+LBWhaleApp.changePriceColor(LBWhaleAppConfigPriceColor.RED_UP_GREEN_DOWN)
+```
+
+### 8.5 Log out and destroy the SDK {/* logout-and-destroy-sdk */}
+
+Log out and destroy the SDK, releasing memory and network requests.
 
 ```kotlin
 LBWhaleApp.logoutAndDestroy()
 ```
 
-Call this when the Client signs out, switches accounts, or the SDK reports unrecoverable authentication failure. It closes SDK pages, stops SDK activity, and clears the current startup configuration, releasing memory and network requests.
+Call this when the Client signs out, switches accounts, or the SDK reports an unrecoverable authentication failure. It closes SDK pages, stops SDK activity, and clears the current startup configuration.
 
-## Error types {/* error-handling */}
+## 9. Error handling {/* error-handling */}
 
 | `LBWhaleAppError` | When it occurs | Handling |
 | --- | --- | --- |
-| `InvalidConfig(field)` | A required startup field is empty | Correct integration configuration |
-| `NotInitialized` | A state-dependent API is called before startup succeeds | Wait for `onLBWhaleAppStarted` |
-| `SyncAccountFailed` | Account synchronization fails during startup | Check network and retry startup |
-| `InvalidAppKey` / `InvalidAppSecret` | Project credentials are rejected | Verify the delivered configuration |
-| `InvalidToken` / `TokenExpired` | Initial Client credential is invalid | Obtain a new sign-in session |
-| `RefreshTokenExpired` | The session cannot be renewed | Destroy the SDK and return to logged-out state |
-| `RequestFailed(message, code)` | Another network request fails | Log sanitized code and message and apply project retry policy |
-| `UnrecognizedPushMessage` | Message is not a Whale message | Let Broker App handle it |
-| `MissingPushLink` | Recognized message has no route | Do not navigate; report sanitized metadata |
-| `InternalError(cause)` | Unexpected routing or SDK operation failure | Report the sanitized stack through project monitoring |
+| `InvalidConfig(field)` | A required startup field is empty | Correct the integration configuration and start again |
+| `NotInitialized` | A state-dependent method is called before startup succeeds | Wait for `onLBWhaleAppStarted` before calling it |
+| `SyncAccountFailed` | Account synchronization fails during startup | Check the network and start the SDK again |
+| `InvalidAppKey` / `InvalidAppSecret` | Project credentials are rejected by the server | Verify the delivered project configuration |
+| `InvalidToken` / `TokenExpired` | The initial Client credential passed in is invalid | Obtain a new sign-in session |
+| `RefreshTokenExpired` | The session cannot be renewed | Destroy the SDK and return to the logged-out state |
+| `RequestFailed(message, code)` | Another network request fails | Log the sanitized code and message and apply the project retry policy |
+| `UnrecognizedPushMessage` | The message is not a Whale push message | Let Broker App handle it |
+| `MissingPushLink` | A Whale message that resolves to no route | Do not navigate; report sanitized metadata |
+| `InternalError(cause)` | Unexpected exception during routing or an SDK operation | Report the sanitized stack through project monitoring |
 
-## Dependency conflicts {/* dependency-conflicts */}
+```kotlin
+sealed class LBWhaleAppError(message: String, cause: Throwable? = null) : Exception(message, cause) {
+    //SDK Configuration Errors
+    //If a required parameter is empty when startWithConfig is called, this exception is returned through
+    //onLBWhaleAppStartFailed. Check the startup parameters.
+    class InvalidConfig(field: String) : LBWhaleAppError("Invalid SDK config field: $field")
+
+    //If an SDK method is called before the SDK has started, this exception is returned through
+    //onLBWhaleAppRunInError. Start the SDK before calling the method.
+    object NotInitialized : LBWhaleAppError("SDK not initialized")
+
+    //If fetching account information fails during startup, this exception is returned through
+    //onLBWhaleAppStartFailed. Try a different network or simply restart the SDK.
+    object SyncAccountFailed : LBWhaleAppError("Sync account status error")
+
+    //Authentication Errors
+    //If an invalid parameter is passed to startWithConfig, this exception is returned through onLBWhaleAppStartFailed.
+    object InvalidAppKey : LBWhaleAppError("Invalid App Key provided")
+    object InvalidAppSecret : LBWhaleAppError("Invalid App Secret provided")
+    object InvalidToken : LBWhaleAppError("Access token is invalid")
+    object TokenExpired : LBWhaleAppError("Access token has expired")
+
+    //If the refresh token passed to startWithConfig is invalid, this exception is returned in the
+    //onLBWhaleAppStartFailed callback; obtain new tokens and start the SDK again.
+    //Receiving it in onLBWhaleAppRunInError means the account signed in on another device: call logoutAndDestroy
+    //to log the SDK out, then start it again after obtaining new tokens.
+    object RefreshTokenExpired : LBWhaleAppError("Refresh token has expired")
+
+    //Network Request Errors
+    //If another network request error occurs during startWithConfig, this exception is returned through
+    //onLBWhaleAppStartFailed. Try a different network or simply restart the SDK.
+    class RequestFailed(message: String, val code: Int) : LBWhaleAppError("Request failed (code $code): $message")
+
+    //Push Message Errors
+    //Returned when LBWhaleApp.pushService.handleNotificationOpened detects a message that is not an LB message.
+    object UnrecognizedPushMessage : LBWhaleAppError("Unrecognized push message format")
+
+    //Returned when LBWhaleApp.pushService.handleNotificationOpened receives an LB push message
+    //whose parsed navigation link is empty.
+    object MissingPushLink : LBWhaleAppError("Push message missing link")
+
+    //Uniform wrapper for unexpected internal SDK exceptions; cause keeps the original Throwable for stack reporting.
+    class InternalError(cause: Throwable, message: String? = cause.message)
+        : LBWhaleAppError(message ?: "Internal SDK error", cause)
+}
+```
+
+## 10. Dependency conflicts {/* dependency-conflicts */}
 
 ### Customized third-party libraries {/* customized-third-party-libraries */}
 
-The delivered SDK customizes, patches, or upgrades several open-source third-party libraries. If Broker App depends on the original version of one of these, a code conflict can occur.
+The SDK customizes, patches, or upgrades several open-source third-party libraries. When Broker uses the original version of one of these libraries, a code conflict can occur.
 
-The following libraries may conflict:
+The following third-party libraries may conflict:
 
 | Package | Upstream project |
 | --- | --- |
@@ -392,7 +486,7 @@ The following libraries may conflict:
 | `com.github.tbruyelle:rxpermissions` | [RxPermissions](https://github.com/tbruyelle/RxPermissions) |
 | `com.github.gzu-liyujiang` | [Android_CN_OAID](https://github.com/gzu-liyujiang/Android_CN_OAID) |
 
-If the project depends on the original library directly, remove that dependency and use the SDK's customized version instead. If another third-party library pulls it in transitively, exclude it in Gradle:
+If the project depends on the original library directly, remove that dependency and use the SDK's customized version. If another third-party library in the project pulls in the original dependency transitively, exclude it with Gradle:
 
 ```groovy
 implementation("xxxxxxxxxx") {
@@ -400,40 +494,74 @@ implementation("xxxxxxxxxx") {
 }
 ```
 
-## Public API reference {/* api-reference */}
+## 11. API reference {/* api-reference */}
 
-### `LBWhaleApp` {/* lb-whale-app */}
+### 11.1 LBWhaleApp {/* lb-whale-app */}
+
+The SDK's main entry-point class, providing initialization, startup, logout, page routing, and other core capabilities.
 
 ```kotlin
+//SDK event callback; must be assigned before startWithConfig
 var callback: LBWhaleAppCallback?
+
+//SDK page enter / exit callback (optional); assigning it before startWithConfig is recommended
 var uiCallback: LBWhaleAppUICallback?
+
+//The SDK's built-in push service instance
 val pushService: LBWhalePushService
 
+//Initialize the SDK; the debug parameter controls whether debug logging is enabled
 fun init(application: Application, debug: Boolean = false)
+
+//Start the SDK (asynchronous); the result is delivered through LBWhaleAppCallback
 fun startWithConfig(application: Application, config: LBWhaleAppConfig)
+
+//Log out and destroy the SDK, releasing memory and network requests
 fun logoutAndDestroy()
+
+//Navigate to a route page
 fun pushUrl(uriString: String, bundle: Bundle? = null, flags: Int? = null)
+
+//Change the theme
 fun changeTheme(theme: LBWhaleAppConfigTheme)
+
+//Change the language
 fun changeLanguage(language: LBWhaleAppConfigLanguage)
+
+//Change the price up/down color configuration
 fun changePriceColor(priceColor: LBWhaleAppConfigPriceColor)
+
+//Whether the SDK has started (status == STARTED)
 fun isStarted(): Boolean
+
+//Get the SDK's current status (IDLE / STARTING / STARTED / RELEASING, etc.)
 fun getStatus(): Status
+
+//Get the SDK version (including the git commit id)
 fun getVersion(): String
+
+//Get the appId in the current startup configuration
 fun getAppId(): String
 ```
 
-`Status` values are `IDLE`, `STARTING`, `STARTED`, and `RELEASING`.
-
-### `LBWhalePushService` {/* lb-whale-push-service */}
-
-Available through `LBWhaleApp.pushService`.
-
+### 11.2 LBWhalePushService {/* lb-whale-push-service */}
+Available through `LBWhaleApp.pushService`; manages push-service capabilities.
 ```kotlin
+//Initialize the push service (must be called on the main thread)
 fun init(application: Application, pushConfig: LBWhalePushConfig)
-fun repotThirdToken(context: Context, thirdPush: ThirdPush, token: String)
-fun onThirdPushMsg(context: Context, thirdPush: ThirdPush, msg: String?)
+
+//Get the push-service device ID
 fun getPushDeviceId(): String
 
+//Report a third-party vendor-channel (for example, FCM) token to the SDK
+fun repotThirdToken(context: Context, thirdPush: ThirdPush, token: String)
+
+//Pass a message received from a third-party vendor channel to the SDK for parsing
+fun onThirdPushMsg(context: Context, thirdPush: ThirdPush, msg: String?)
+
+//Parse a notification message and display an in-app notification (called after a Broker-managed channel receives a message)
+//Returns LBWhaleAppResult<Unit>; on LBWhaleAppResult.Error, cause may be NotInitialized (SDK not started) /
+//UnrecognizedPushMessage (not an LB push message) / InternalError (unexpected internal exception)
 fun handleNotificationReceived(
     title: String,
     summary: String,
@@ -441,11 +569,18 @@ fun handleNotificationReceived(
     callback: NotificationRouterCallback? = null
 ): LBWhaleAppResult<Unit>
 
+//Accept the complete standard message JSON directly; the SDK parses title, body, and user_info
 fun handleNotificationReceived(
     json: String,
     callback: NotificationRouterCallback? = null
 ): LBWhaleAppResult<Unit>
 
+//Handle a tray notification tap
+//Returns LBWhaleAppResult<Unit>; on LBWhaleAppResult.Error, cause may be:
+//  - LBWhaleAppError.NotInitialized          : the SDK has not started (call LBWhaleApp.startWithConfig first)
+//  - LBWhaleAppError.UnrecognizedPushMessage : extMap has no lb_push_from field, so the message did not come from LB push
+//  - LBWhaleAppError.MissingPushLink         : an LB push message whose parsed navigation link is empty
+//  - LBWhaleAppError.InternalError           : fallback wrapper for unexpected exceptions raised during routing / tracking
 fun handleNotificationOpened(
     title: String,
     summary: String,
@@ -453,19 +588,22 @@ fun handleNotificationOpened(
     callback: NotificationRouterCallback? = null
 ): LBWhaleAppResult<Unit>
 
+//Accept the complete standard message JSON directly and handle the notification tap routing
 fun handleNotificationOpened(
     json: String,
     callback: NotificationRouterCallback? = null
 ): LBWhaleAppResult<Unit>
 
+//Router callback; the SDK returns the final navigation URL after parsing the notification
 fun interface NotificationRouterCallback {
     fun onRouter(url: String)
 }
 
+//Currently supported third-party vendor channels
 enum class ThirdPush { FCM }
 ```
 
-The complete-JSON overloads read `title`, `body`, and `user_info`, then call the field overloads. Both field overloads are generated for Java through `@JvmOverloads`.
+The complete-JSON overloads first read `title`, `body`, and `user_info`, then call the matching field overloads. Both field overloads are generated for Java through `@JvmOverloads`.
 
 `handleNotificationReceived` and `handleNotificationOpened` return `LBWhaleAppResult<Unit>`: `LBWhaleAppResult.Success` on success, or `LBWhaleAppResult.Error` on failure — read the specific `LBWhaleAppError` through `cause`. Broker-managed channels should prefer passing the [standard message shape](/en/docs/message-push#http-convention) rather than reconstructing `user_info` by hand.
 
@@ -485,7 +623,9 @@ sealed class LBWhaleAppResult<out T> {
 
 Kotlin extensions include `onSuccess`, `onError`, `map`, `fold`, `getOrNull`, and `getOrElse`.
 
-### Startup configuration {/* startup-configuration */}
+### 11.3 LBWhaleAppConfig - startup configuration {/* startup-configuration */}
+
+The SDK configuration class, used to set the parameters the SDK needs at startup.
 
 ```kotlin
 class LBWhaleAppConfig(
@@ -497,8 +637,7 @@ class LBWhaleAppConfig(
     val refreshToken: String,
     var theme: LBWhaleAppConfigTheme = LBWhaleAppConfigTheme.AUTO,
     var language: LBWhaleAppConfigLanguage = LBWhaleAppConfigLanguage.EN,
-    var priceColor: LBWhaleAppConfigPriceColor =
-        LBWhaleAppConfigPriceColor.FOLLOW_USER_SETTING,
+    var priceColor: LBWhaleAppConfigPriceColor = LBWhaleAppConfigPriceColor.FOLLOW_USER_SETTING,
     val defaultAccountChannel: String = "",
     val webDomainPrefix: String = "",
     val extraCustomConfig: Map<String, Any>? = null,
@@ -506,92 +645,86 @@ class LBWhaleAppConfig(
 )
 ```
 
-See [Application name](#application-name), [Theme mode](#theme-mode), [Display language](#display-language), [Runtime environment](#runtime-environment), and [Price and color display](#price-color-settings) below for the related types.
+For the related types, see [Application name](#application-name), [Theme mode](#theme-mode), [Display language](#display-language), [Runtime environment](#runtime-environment), and [Price color settings](#price-color-settings) below.
 
-### Application name {/* application-name */}
+### 11.4 LBWhaleAppConfigName - application name {/* application-name */}
 
 ```kotlin
 data class LBWhaleAppConfigName(
-    val en: String,
-    val zhCN: String? = null,
-    val zhHK: String? = null
+    val en: String, //English name
+    val zhCN: String? = null, //Simplified Chinese name
+    val zhHK: String? = null //Traditional Chinese name
 )
 ```
 
 `en` is required; `zhCN` and `zhHK` are optional.
 
-### Theme mode {/* theme-mode */}
+### 11.5 LBWhaleAppConfigTheme - theme mode {/* theme-mode */}
 
 ```kotlin
 enum class LBWhaleAppConfigTheme {
-    AUTO,
-    LIGHT,
-    DARK
+    AUTO, //Follow the system
+    LIGHT, //Light theme
+    DARK //Dark theme
 }
 ```
 
-### Display language {/* display-language */}
+### 11.6 LBWhaleAppConfigLanguage - display language {/* display-language */}
 
 ```kotlin
 enum class LBWhaleAppConfigLanguage {
-    EN,
-    ZH_CN,
-    ZH_HK
+    EN, //English
+    ZH_CN, //Simplified Chinese
+    ZH_HK //Traditional Chinese
 }
 ```
 
-### Runtime environment {/* runtime-environment */}
-
+### 11.7 LBWhaleAppConfigEnv - runtime environment {/* runtime-environment */}
 ```kotlin
-enum class LBWhaleAppConfigEnv {
-    PROD,
-    SIT,
-    TEST
+enum class LBWhaleAppConfigEnv() {
+    PROD, // Production environment
+    SIT, // SIT environment
+    TEST // Test environment
 }
 ```
 
 Do not select a non-production environment unless the Whale project team supplies matching configuration.
 
-### Price and color display {/* price-color-settings */}
-
+### 11.8 LBWhaleAppConfigPriceColor - price color settings {/* price-color-settings */}
 ```kotlin
 enum class LBWhaleAppConfigPriceColor(val value: Int) {
-    FOLLOW_USER_SETTING(0),
-    RED_UP_GREEN_DOWN(1),
-    GREEN_UP_RED_DOWN(2)
+    FOLLOW_USER_SETTING(0),//Follow the user's in-SDK setting
+    RED_UP_GREEN_DOWN(1),//Force red-up / green-down; this hides the in-SDK price-color setting entry point
+    GREEN_UP_RED_DOWN(2)//Force green-up / red-down; this hides the in-SDK price-color setting entry point
 }
 ```
 
-`RED_UP_GREEN_DOWN` and `GREEN_UP_RED_DOWN` hide the in-SDK price-color setting entry point. `FOLLOW_USER_SETTING` keeps that entry point visible and follows the user's own in-SDK choice.
+`RED_UP_GREEN_DOWN` and `GREEN_UP_RED_DOWN` hide the in-SDK price-color setting entry point; `FOLLOW_USER_SETTING` keeps that entry point and follows the user's own in-SDK choice.
 
-### Advanced configuration {/* advanced-configuration */}
+### ExtraCustomConfigKey - advanced configuration {/* advanced-configuration */}
 
-`extraCustomConfig` supports project-level font and push-tip color overrides, the debug panel flag, and the exceptional renewal callback timeout. Use the constants in `ExtraCustomConfigKey`; do not copy string literals into Broker App.
-
-| Constant | Value | Purpose |
+| Constant | Value type | Purpose |
 | --- | --- | --- |
-| `LB_APPSDK_CONFIG_DEBUG_EGG` | `Boolean` | Enable the debug panel |
+| `LB_APPSDK_CONFIG_DEBUG_EGG` | `Boolean` | Whether the debug egg panel is enabled |
 | `LB_APPSDK_CONFIG_KEY_FONT_CRYPTO` | `Typeface` | Market-data digit font |
 | `LB_APPSDK_CONFIG_KEY_FONT_MONOSPACED` | `Typeface` | Regular monospaced font |
 | `LB_APPSDK_CONFIG_KEY_FONT_MONOSPACED_BOLD` | `Typeface` | Bold monospaced font |
-| `LB_APPSDK_CONFIG_KEY_COLOR` | `Map` | Root color map |
-| `LB_APPSDK_CONFIG_KEY_PUSH_TIP_VIEW` | `Map` | Push-tip color map |
+| `LB_APPSDK_CONFIG_KEY_COLOR` | `Map` | Root node of the custom color configuration |
+| `LB_APPSDK_CONFIG_KEY_PUSH_TIP_VIEW` | `Map` | Push tip color configuration |
 | `LB_APPSDK_CONFIG_KEY_DEVICE_ID` | `String` | Broker-provided device identifier |
-| `LB_APPSDK_CONFIG_KEY_REFRESH_TOKEN_RESOLVER_TIMEOUT` | seconds | Exceptional renewal callback timeout; defaults to 30 seconds |
+| `LB_APPSDK_CONFIG_KEY_REFRESH_TOKEN_RESOLVER_TIMEOUT` | seconds | Timeout for the exceptional token-renewal fallback callback; defaults to 30 seconds |
 
-Push-tip color maps support order-completed, order-failed, order-limit, other-message, default background, title, content, and icon values. Light and dark values use `LB_APPSDK_CONFIG_KEY_COLOR_LIGHT` and `LB_APPSDK_CONFIG_KEY_COLOR_DARK`.
+Push tips support order-completed, order-failed, order-limit, and other-message states, as well as the default background, title, content, and icon colors. Light and dark values use `LB_APPSDK_CONFIG_KEY_COLOR_LIGHT` and `LB_APPSDK_CONFIG_KEY_COLOR_DARK` respectively. Reference the `ExtraCustomConfigKey` constants in the current SDK directly; do not copy the string literals into Broker App.
 
-### Push configuration {/* push-configuration */}
-
+### 11.9 LBWhalePushConfig - push configuration {/* push-configuration */}
 Built through `LBWhalePushConfig.Builder()`.
-
 ```kotlin
 class LBWhalePushConfig private constructor(
-    val appKey: String,
-    val appSecret: String,
-    val disableMultiDevice: Boolean,
-    val notificationConfig: NotificationConfig,
-    val pushCallback: LBWhalePushCallback?
+    val appKey: String, //Aliyun appKey
+    val appSecret: String, //Aliyun appSecret
+    val disableMultiDevice: Boolean, //Whether to disable multi-device push; defaults to false
+    val notificationConfig: NotificationConfig, //Notification configuration
+    val pushCallback: LBWhalePushCallback? //Push event callback
 ) {
     class Builder {
         fun appKey(appKey: String): Builder
@@ -604,81 +737,91 @@ class LBWhalePushConfig private constructor(
 }
 ```
 
-### Notification configuration {/* notification-configuration */}
-
-Create directly through the constructor. All three fields are required, or an `IllegalArgumentException` is thrown.
-
+### 11.10 NotificationConfig - notification configuration {/* notification-configuration */}
+Create it directly through the constructor. All three fields are required, or an `IllegalArgumentException` is thrown.
 ```kotlin
 data class NotificationConfig(
-    val notificationIcon: Int,
-    val notificationSmallIcon: Int,
-    val notificationChannelId: String = ""
+    val notificationIcon: Int, //Notification icon; non-zero
+    val notificationSmallIcon: Int, //Status-bar small notification icon; non-zero
+    val notificationChannelId: String = "", //Notification channel id; non-empty
 )
 ```
 
-### FCM push configuration {/* fcm-push-configuration */}
-
-All four fields of this public data type are required, or an `IllegalArgumentException` is thrown. The current `LBWhalePushConfig.Builder` does not accept this object — configure FCM through Broker App and forward its token and payload through `repotThirdToken` and `onThirdPushMsg`; do not infer a builder API from older README examples.
-
+### 11.11 FCMPushConfig - FCM push configuration {/* fcm-push-configuration */}
+All four fields of this public data type are required, or an `IllegalArgumentException` is thrown. The current `LBWhalePushConfig.Builder` does not accept this object; integrate the FCM vendor channel through `repotThirdToken` and `onThirdPushMsg`.
 ```kotlin
 data class FCMPushConfig(
     val sendId: String,
     val applicationId: String,
     val projectId: String,
-    val apiKey: String
+    val apiKey: String,
 )
 ```
 
-### SDK event callback {/* sdk-event-callback */}
+### 11.12 LBWhaleAppCallback - SDK event callback {/* sdk-event-callback */}
 
 ```kotlin
 interface LBWhaleAppCallback {
+    //SDK started successfully
     fun onLBWhaleAppStarted()
+
+    //SDK startup failed
     fun onLBWhaleAppStartFailed(error: Exception)
+
+    //A runtime error occurred
     fun onLBWhaleAppRunInError(error: Exception)
+
+    //Notification after the SDK renews credentials automatically; validity and subsequent renewal stay managed by the SDK
     fun onLBWhaleAppTokenChanged(token: String, refreshToken: String)
+
+    //Callback requesting navigation to a specific URL
     fun onWhaleAppSdkOpenUrlRequested(url: String)
-    fun onLBWhaleAppAnalyticsEvent(eventName: String, properties: JSONObject) {}
-    fun onLBWhaleAppRefreshTokenExpired(
-        resolver: LBWhaleAppRefreshTokenResolver
-    ) {
+
+    /**
+     * Fired when the refresh token becomes invalid.
+     * A completely new token and refresh token pair may be returned through the resolver; the default timeout is 30s.
+     * The default implementation immediately calls resolve("", "") to abandon retry, after which the runtime error
+     * callback tells Broker App to sign the Client out.
+     */
+    fun onLBWhaleAppRefreshTokenExpired(resolver: LBWhaleAppRefreshTokenResolver) {
         resolver.resolve("", "")
     }
 }
 ```
 
-`onLBWhaleAppAnalyticsEvent` has a default empty implementation; override it only when the project needs to capture SDK analytics events:
-
-```kotlin
-override fun onLBWhaleAppAnalyticsEvent(
-    eventName: String,
-    properties: JSONObject
-) {
-    analytics.track(eventName, properties)
-}
-```
-
-Forward only event names and properties agreed for the project. Never append credentials or Client-sensitive information.
-
-### Push event callback {/* push-event-callback */}
-
+### 11.13 LBWhalePushCallback - push event callback {/* push-event-callback */}
 ```kotlin
 interface LBWhalePushCallback {
-    fun onNotificationOpened(
-        title: String,
-        summary: String,
-        extMap: Map<String, String>
-    )
+    /**
+     * Fired when the Client taps a tray notification.
+     * Parameters: title is the notification title, summary is the notification summary,
+     * and extMap holds the extension fields passed through by Aliyun.
+     * Check inside the callback whether the SDK has started: if it has, call
+     * LBWhaleApp.pushService.handleNotificationOpened to complete the navigation;
+     * if it has not, start the SDK first and then handle the tap.
+     */
+    fun onNotificationOpened(title: String, summary: String, extMap: Map<String, String>)
 
+    /**
+     * Fired when push-channel (Aliyun) registration fails; the iOS counterpart is NotificationErrorPushStartFailed.
+     * Common causes: wrong appKey/appSecret, an AndroidManifest package name that differs from the console,
+     * or the push service not being enabled in the Aliyun console.
+     * Note: PUSH_20110 (device already registered) does not trigger this callback.
+     */
     fun onPushRegisterFailed(errorCode: String?, errorMessage: String?) {}
 }
 ```
 
-### SDK page lifecycle callback {/* sdk-page-lifecycle-callback */}
+### 11.14 LBWhaleAppUICallback - SDK page enter / exit callback {/* sdk-page-lifecycle-callback */}
+
+Enter and exit are determined by whether a page exists (`onCreate` / `onDestroy`), not by foreground/background visibility. Both methods have a default empty implementation, so override only the ones needed; both are called on the main thread.
 
 ```kotlin
 interface LBWhaleAppUICallback {
+    //Enter SDK: fired when the first SDK page opens (live SDK page count 0 -> 1)
     fun onLBWhaleAppEnterSdkPage() {}
+
+    //Exit SDK: fired when all SDK pages close (live SDK page count 1 -> 0); emitted once more if the SDK is destroyed while a page is still open
     fun onLBWhaleAppExitSdkPage() {}
 }
 ```

@@ -19,7 +19,7 @@ description: Android WhaleAppSDK 完整接入與 API 文件
 
 ## 2. 整合方式 {/* integration */}
 
-下載 `LBWhaleAppSDK-XXX.zip (內含 aar 和 Demo)` 解壓後將 SDK 目錄複製到專案目錄下， 在 App 級別的 `build.gradle` 的 `plugins` 下方新增下列程式碼匯入 SDK 配置檔案。
+下載 `LBWhaleAppSDK-XXX.zip (內含 aar 和 Demo)` 解壓後，將 SDK 目錄複製到 App 模組目錄下（如 `app/` 目錄），在 App 級別的 `build.gradle` 的 `plugins` 下方新增下列程式碼匯入 SDK 配置檔案。
 
 ```groovy
 //下方路徑示範是將 LBWhaleAppSDK 放置到 app 目錄下，實際路徑請根據 LBWhaleAppSDK 存放目錄進行調整
@@ -75,11 +75,16 @@ android.enableR8.fullMode=false
 在 `Application onCreate` 中呼叫 SDK 的 Init 方法進行必要資源的初始化準備，請在主執行緒呼叫該方法。
 
 ```kotlin
-LBWhaleApp.init(application)
+LBWhaleApp.init(application, debug = false)
 ```
+
+`debug` 參數控制是否啟用除錯日誌，預設為 `false`。
+
 ps: 如未開啟 ARouter 預編譯最佳化，該方法耗時將會大幅度增加
 
 ## 4. 配置推送 {/* configure-push */}
+
+推送的服務端渠道選擇、雲控制檯配置以及標準訊息結構，請參考[訊息推送接入](/zh-hk/docs/message-push)。
 
 ### 4.1 方式一：走 SDK 內建渠道 {/* whale-managed-channel */}
 
@@ -161,10 +166,34 @@ class DemoFirebaseMessagingService : FirebaseMessagingService() {
 }
 ```
 
+`repotThirdToken` 是當前 SDK 中該方法的真實拼寫，請勿按 `reportThirdToken` 呼叫。
+
 ### 4.2 方式二：走 Broker 自有渠道 {/* broker-managed-channel */}
 
 Broker App 可以選擇自行接入第三方推送服務，業務訊息由 Whale 轉發至 Broker Server，再由 Broker Server 推送到 Broker App。
 在收到訊息時可呼叫 SDK 方法對訊息進行解析處理，SDK 提供 `LBWhaleApp.pushService.handleNotificationReceived` 方法用於解析訊息並展示應用內通知。
+
+Broker App 既可以傳入已解析的欄位，也可以直接傳入完整的標準訊息 JSON：
+
+```kotlin
+//傳入完整標準訊息 JSON，SDK 自行解析 title、body 和 user_info
+val result = LBWhaleApp.pushService.handleNotificationReceived(messageJson)
+
+val clickResult = LBWhaleApp.pushService.handleNotificationOpened(messageJson)
+```
+
+欄位過載接收 `title`、`summary` 以及完整的 `user_info` map。請勿自行拆平或重新命名 `user_info` 中的欄位。
+
+兩個方法均返回 `LBWhaleAppResult<Unit>`：
+
+```kotlin
+when (val result = LBWhaleApp.pushService.handleNotificationOpened(messageJson)) {
+    is LBWhaleAppResult.Success -> Unit
+    is LBWhaleAppResult.Error -> reportSanitized(result.cause)
+}
+```
+
+`cause` 可能為 `NotInitialized`、`UnrecognizedPushMessage`、`MissingPushLink` 或 `InternalError`。
 
 ### 4.3 通知事件處理 {/* notification-event-handling */}
 #### 4.3.1 通知展示 {/* notification-display */}
@@ -192,7 +221,7 @@ Broker App 可以選擇自行接入第三方推送服務，業務訊息由 Whale
 //extraCustomConfig 為 SDK 額外配置，請參考本文件結構進行配置
 val cryptoFont = Typeface.createFromAsset(FApp.getResources().assets, "Crypto.ttf")
 val extraConfigMap = mapOf(
-    //設定彩蛋面板是否開啟(true/開啟，false/關閉)
+    //設定彩蛋面板是否開啟（用於展示 SDK 內部除錯資訊的隱藏入口，true/開啟，false/關閉）
     ExtraCustomConfigKey.LB_APPSDK_CONFIG_DEBUG_EGG to true,
     //設定字型
     ExtraCustomConfigKey.LB_APPSDK_CONFIG_KEY_FONT_CRYPTO to cryptoFont,
@@ -236,9 +265,15 @@ val config = LBWhaleAppConfig(
 LBWhaleApp.startWithConfig(application, config)
 ```
 
-SDK 啟動為非同步，啟動結果將透過 Callback 進行回調通知
+SDK 啟動為非同步，啟動結果將透過 [Callback](#implement-callback) 進行回調通知
+
+<Warning>
+只使用專案交付的環境與憑證。不要把真實的 `appSecret`、`token`、`refreshToken` 硬編碼進程式碼倉庫。
+</Warning>
 
 ## 6. 實現 Callback 方法 {/* implement-callback */}
+
+`LBWhaleApp.callback` 需要在呼叫 `startWithConfig` 之前賦值。
 
 ```kotlin
 LBWhaleApp.callback = object : LBWhaleAppCallback {
@@ -247,7 +282,21 @@ LBWhaleApp.callback = object : LBWhaleAppCallback {
 
     //SDK 啟動失敗，錯誤型別請參考錯誤處理章節
     //可能的錯誤：InvalidConfig / InvalidAppKey / InvalidAppSecret / InvalidToken / TokenExpired / RefreshTokenExpired / RequestFailed / SyncAccountFailed
-    override fun onLBWhaleAppStartFailed(error: Exception) {}
+    override fun onLBWhaleAppStartFailed(error: Exception) {
+        reportSanitized(error)
+        when (error) {
+            //憑證問題：引導使用者重新登入，取得一組新的 token
+            is LBWhaleAppError.InvalidToken,
+            is LBWhaleAppError.TokenExpired,
+            is LBWhaleAppError.RefreshTokenExpired -> redirectToLogin()
+            //接入問題：檢查專案交付的配置與啟動引數
+            is LBWhaleAppError.InvalidAppKey,
+            is LBWhaleAppError.InvalidAppSecret,
+            is LBWhaleAppError.InvalidConfig -> showIntegrationError(error)
+            //可重試問題：檢查網路後重新啟動 SDK
+            else -> showRetryableError(error)
+        }
+    }
 
     //執行期間發生錯誤，錯誤型別請參考下方錯誤處理
     //可能的錯誤：
@@ -270,6 +319,10 @@ LBWhaleApp.callback = object : LBWhaleAppCallback {
     }
 }
 ```
+
+WhaleAppSDK 在內部完成憑證的校驗與續期。Broker App 只需在啟動時提供初始的 `token` 與 `refreshToken`，不需要呼叫 check token 或 refresh token 介面。
+
+`onLBWhaleAppRefreshTokenExpired` 是常規續期失敗後的兜底回調。上面的預設實現會放棄重試，隨後執行時錯誤回調會丟擲 `RefreshTokenExpired`，Broker App 據此銷燬 SDK 並返回登出狀態。僅當專案另有約定、且 Broker 能取得一組全新的客戶憑證時，才透過 resolver 返回新憑證。
 
 <Note>
 正常情況下，WhaleAppSDK 自動完成 token 校驗與續期，Broker App 不呼叫 check token 或 refresh token 介面。`onLBWhaleAppRefreshTokenExpired` 是極低機率異常的兜底擴充套件點，不應被實現為常規重新整理流程。
@@ -317,6 +370,8 @@ LBWhaleApp.pushUrl("page_router", bundle)
 LBWhaleApp.pushUrl("page_router", bundle, Intent.FLAG_ACTIVITY_NEW_TASK)
 ```
 
+`onWhaleAppSdkOpenUrlRequested` 回調收到的 URL 在交給 Broker App 路由前，請先校驗 scheme、網域和路由白名單。
+
 ### 8.2 更換主題 {/* change-theme */}
 
 ```kotlin
@@ -329,7 +384,13 @@ LBWhaleApp.changeTheme(LBWhaleAppConfigTheme.AUTO)
 LBWhaleApp.changeLanguage(LBWhaleAppConfigLanguage.EN)
 ```
 
-### 8.4 登出並銷燬 SDK {/* logout-and-destroy-sdk */}
+### 8.4 更換漲跌色 {/* change-price-color */}
+
+```kotlin
+LBWhaleApp.changePriceColor(LBWhaleAppConfigPriceColor.RED_UP_GREEN_DOWN)
+```
+
+### 8.5 登出並銷燬 SDK {/* logout-and-destroy-sdk */}
 
 登出並銷燬 SDK，釋放記憶體與網路請求。
 
@@ -337,7 +398,23 @@ LBWhaleApp.changeLanguage(LBWhaleAppConfigLanguage.EN)
 LBWhaleApp.logoutAndDestroy()
 ```
 
+在使用者登出、切換帳號，或 SDK 報告不可恢復的鑑權失敗時呼叫。該方法會關閉 SDK 頁面、停止 SDK 活動並清除當前啟動配置。
+
 ## 9. 錯誤處理 {/* error-handling */}
+
+| `LBWhaleAppError` | 觸發場景 | 建議處理 |
+| --- | --- | --- |
+| `InvalidConfig(field)` | 啟動時必填欄位為空 | 修正接入配置後重新啟動 |
+| `NotInitialized` | 啟動成功前呼叫了依賴 SDK 狀態的方法 | 等待 `onLBWhaleAppStarted` 後再呼叫 |
+| `SyncAccountFailed` | 啟動過程中同步帳戶資訊失敗 | 檢查網路後重新啟動 SDK |
+| `InvalidAppKey` / `InvalidAppSecret` | 專案憑證被服務端拒絕 | 核對專案交付的配置 |
+| `InvalidToken` / `TokenExpired` | 傳入的初始客戶憑證無效 | 重新取得一組新的登入工作階段 |
+| `RefreshTokenExpired` | 工作階段無法續期 | 銷燬 SDK 並返回登出狀態 |
+| `RequestFailed(message, code)` | 其他網路請求失敗 | 記錄脫敏後的 code 與 message，按專案重試策略處理 |
+| `UnrecognizedPushMessage` | 訊息不是 Whale 推送訊息 | 交由 Broker App 自行處理 |
+| `MissingPushLink` | 是 Whale 訊息但解析後無跳轉路由 | 不執行跳轉，上報脫敏後的元資訊 |
+| `InternalError(cause)` | 路由或 SDK 操作中的未預期異常 | 透過專案監控上報脫敏後的堆疊 |
+
 ```kotlin
 sealed class LBWhaleAppError(message: String, cause: Throwable? = null) : Exception(message, cause) {
     //SDK Configuration Errors
@@ -409,7 +486,7 @@ implementation("xxxxxxxxxx") {
 
 ### 11.1 LBWhaleApp {/* lb-whale-app */}
 
-SDK 的主入口類，提供啟動、登出和頁面路由等核心功能。
+SDK 的主入口類，提供初始化、啟動、登出和頁面路由等核心功能。
 
 ```kotlin
 //SDK 事件回調，需在 startWithConfig 之前賦值
@@ -445,7 +522,7 @@ fun changePriceColor(priceColor: LBWhaleAppConfigPriceColor)
 //判斷 SDK 是否已啟動（status == STARTED）
 fun isStarted(): Boolean
 
-//獲取 SDK 當前狀態（IDLE / STARTING / STARTED / RELEASING）
+//獲取 SDK 當前狀態（IDLE / STARTING / STARTED / RELEASING 等）
 fun getStatus(): Status
 
 //獲取 SDK 版本號（含 git commit id）
@@ -471,7 +548,7 @@ fun repotThirdToken(context: Context, thirdPush: ThirdPush, token: String)
 fun onThirdPushMsg(context: Context, thirdPush: ThirdPush, msg: String?)
 
 //解析通知訊息並展示應用內通知（Broker 自有渠道收到訊息後呼叫）
-//返回值為 LBWhaleAppResult<Unit>，可能失敗原因與 handleNotificationOpened 一致
+//返回值為 LBWhaleAppResult<Unit>，LBWhaleAppResult.Error 時 cause 可能為 NotInitialized（SDK 未啟動）/ UnrecognizedPushMessage（非 LB 推送訊息）/ InternalError（內部未預期異常）
 fun handleNotificationReceived(
     title: String,
     summary: String,
@@ -503,9 +580,35 @@ fun handleNotificationOpened(
     json: String,
     callback: NotificationRouterCallback? = null
 ): LBWhaleAppResult<Unit>
+
+//路由回調，SDK 完成通知解析後回傳最終跳轉的 URL
+fun interface NotificationRouterCallback {
+    fun onRouter(url: String)
+}
+
+//當前支援的第三方廠商通道
+enum class ThirdPush { FCM }
 ```
 
+完整 JSON 過載會先讀取 `title`、`body` 和 `user_info`，再呼叫對應的欄位過載。兩個欄位過載均透過 `@JvmOverloads` 為 Java 生成過載方法。
+
 `handleNotificationReceived` 和 `handleNotificationOpened` 返回 `LBWhaleAppResult<Unit>`。成功時為 `LBWhaleAppResult.Success`；失敗時為 `LBWhaleAppResult.Error`，透過 `cause` 讀取具體的 `LBWhaleAppError`。Broker 自有渠道應優先傳入 [標準訊息結構](/zh-hk/docs/message-push#http-convention)，不要自行拆改 `user_info`。
+
+```kotlin
+sealed class LBWhaleAppResult<out T> {
+    data class Success<T>(val value: T) : LBWhaleAppResult<T>()
+    data class Error(val cause: Throwable) : LBWhaleAppResult<Nothing>()
+
+    val isSuccess: Boolean
+    val isError: Boolean
+
+    companion object {
+        @JvmField val Ok: LBWhaleAppResult<Unit>
+    }
+}
+```
+
+Kotlin 側提供 `onSuccess`、`onError`、`map`、`fold`、`getOrNull`、`getOrElse` 等擴充套件函式。
 
 ### 11.3 LBWhaleAppConfig - 啟動配置 {/* startup-configuration */}
 
@@ -529,6 +632,8 @@ class LBWhaleAppConfig(
 )
 ```
 
+相關型別見下方 [應用名稱](#application-name)、[主題模式](#theme-mode)、[顯示語言](#display-language)、[執行環境](#runtime-environment) 和 [漲跌色設定](#price-color-settings)。
+
 ### 11.4 LBWhaleAppConfigName - 應用名稱 {/* application-name */}
 
 ```kotlin
@@ -538,6 +643,8 @@ data class LBWhaleAppConfigName(
     val zhHK: String? = null //繁中名稱
 )
 ```
+
+`en` 為必填，`zhCN` 和 `zhHK` 可選。
 
 ### 11.5 LBWhaleAppConfigTheme - 主題模式 {/* theme-mode */}
 
@@ -568,6 +675,8 @@ enum class LBWhaleAppConfigEnv() {
 }
 ```
 
+除非 Whale 專案團隊提供了對應的配置，否則不要選擇非生產環境。
+
 ### 11.8 LBWhaleAppConfigPriceColor - 漲跌色設定 {/* price-color-settings */}
 ```kotlin
 enum class LBWhaleAppConfigPriceColor(val value: Int) {
@@ -576,6 +685,8 @@ enum class LBWhaleAppConfigPriceColor(val value: Int) {
     GREEN_UP_RED_DOWN(2)//指定綠漲紅跌，該配置將會隱藏 SDK 內漲跌色設定入口
 }
 ```
+
+`RED_UP_GREEN_DOWN` 和 `GREEN_UP_RED_DOWN` 會隱藏 SDK 內的漲跌色設定入口；`FOLLOW_USER_SETTING` 保留該入口，並跟隨使用者在 SDK 內的選擇。
 
 ### ExtraCustomConfigKey - 高階設定 {/* advanced-configuration */}
 
@@ -601,7 +712,16 @@ class LBWhalePushConfig private constructor(
     val disableMultiDevice: Boolean, //是否關閉多裝置推送，預設 false
     val notificationConfig: NotificationConfig, //通知配置
     val pushCallback: LBWhalePushCallback? //推送事件回調
-)
+) {
+    class Builder {
+        fun appKey(appKey: String): Builder
+        fun appSecret(appSecret: String): Builder
+        fun disableMultiDevice(disableMultiDevice: Boolean): Builder
+        fun notificationConfig(config: NotificationConfig): Builder
+        fun pushCallback(callback: LBWhalePushCallback): Builder
+        fun build(): LBWhalePushConfig
+    }
+}
 ```
 
 ### 11.10 NotificationConfig - 通知配置 {/* notification-configuration */}
@@ -643,9 +763,6 @@ interface LBWhaleAppCallback {
 
     //跳轉特定 Url 回調
     fun onWhaleAppSdkOpenUrlRequested(url: String)
-
-    //SDK 分析事件回調；預設空實現，僅在專案需要承接分析事件時覆蓋
-    fun onLBWhaleAppAnalyticsEvent(eventName: String, properties: JSONObject) {}
 
     /**
      * 當 refresh token 失效時觸發。
