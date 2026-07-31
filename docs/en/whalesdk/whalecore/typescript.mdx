@@ -14,7 +14,7 @@ The TypeScript package runs WhaleCore in the browser. The engine is compiled to 
 | TypeScript | Optional. Declarations ship with the package |
 | Node.js | Not a runtime target. The engine requires `window`, `localStorage`, and `WebSocket`, and there is no server-side build |
 
-The package is not published to a public registry. The Whale project team delivers the archive privately, and each archive is built for one tenant, because the signing key is compiled into the WebAssembly binary. See [Signing and tenancy](/en/whalesdk/whalecore/typescript#signing-and-tenancy). Install the file you received, and check it in or store it where the build can reach it.
+The package is not published to a public registry. The Whale project team delivers the archive privately, and each archive is built for one tenant, because the signing key is compiled into the WebAssembly binary. Install the file you received, and check it in or store it where the build can reach it.
 
 One runtime dependency follows: `protobufjs`, because quote payloads are Protobuf. Code that only calls `initialize` and `request` imports from the root entry, and the bundler removes the decoder.
 
@@ -116,10 +116,9 @@ await initialize({
 | `defaultHeaders` | — | Additional headers on every request |
 | `language` | — | `en`, `zh-CN`, or `zh-HK`. Any other value falls back to `en` |
 | `version` / `build` | — | Reported as `x-application-version` and `x-application-build` |
-| `baseURL` | — | Development only, see [Local development](/en/whalesdk/whalecore/typescript#local-development) |
 | `logger` | — | Engine logs; `fields` carries `level` and the tracing metadata |
 
-Signing credentials are not configuration fields, see [Signing and tenancy](/en/whalesdk/whalecore/typescript#signing-and-tenancy). The engine ignores unrecognized keys, so a misspelled field never fails; it takes no effect. Let the `EngineConfig` type check the object.
+Signing credentials are not configuration fields; the key pair is compiled into the binary. The engine ignores unrecognized keys, so a misspelled field never fails; it takes no effect. Let the `EngineConfig` type check the object.
 
 Call `initialize` once per page load. A second call rebuilds the HTTP client, but it does not close the previous market-data connection, and `appId`, `version`, and `build` keep the values from the first call. Switching accounts requires no second call, see [Lifecycle](/en/whalesdk/whalecore/typescript#lifecycle).
 
@@ -211,7 +210,7 @@ Return the new pair. The engine stores both, exchanges the refresh token for a f
 | Initialize | `await initialize(config)`, once per page load |
 | Foreground and background | No call. The browser throttles timers, and the engine reconnects on its own |
 | Switch account in the same tenant | `portfolio.logout()`, write the new `token` and `refresh_token`, `portfolio.login()`, discover accounts again, resubscribe |
-| Switch tenant | Load the page with the binary built for that tenant, see [Signing and tenancy](/en/whalesdk/whalecore/typescript#signing-and-tenancy) |
+| Switch tenant | Load the page with the binary built for that tenant |
 | Log out | `portfolio.logout()` clears `token` and `refresh_token` and unmounts every engine component |
 | Tear down | Reload the page. There is no explicit teardown call |
 
@@ -240,46 +239,6 @@ An incorrect `aaid` fails silently in the portfolio module, with no view and no 
 | `whalecore-web/portfolio` | Assets, holdings, cash, leverage, and a per-account cache |
 
 Orders and trading have no module, see [Not available yet](/en/whalesdk/whalecore/typescript#not-available-yet).
-
-## General HTTP requests {/* general-http-requests */}
-
-Use `request` for [TradingAPI](/en/trading-api/overview) endpoints that have no typed module. Signing, authentication, retries, and token renewal still apply.
-
-```ts
-import { request, ApiError } from 'whalecore-web';
-
-try {
-  const { data, headers } = await request<MemberInfo>('GET', '/v2/member/info');
-  console.log(data.member, headers['x-trace-id']);
-} catch (err) {
-  if (err instanceof ApiError && err.info.kind === 'http') {
-    console.warn(err.info.status, err.info.code);
-  }
-}
-```
-
-| Option | Behavior |
-| --- | --- |
-| `params` | Appended as a query string. Nested objects become `a[b]=c`, arrays repeat the key, and `null` values are dropped |
-| `data` | JSON request body |
-| `headers` | Merged over the defaults from `initialize` |
-| `timeout` | Milliseconds. `0` or an omitted value uses the engine default of 15 seconds |
-| `singleflight` | Deduplicates concurrent identical requests. Enabled by default for `GET`, `HEAD`, and `OPTIONS`; the other callers fail with `ErrorCode.DEDUPLICATED` |
-
-The generic parameter is a type assertion only, and nothing is validated at runtime.
-
-### Errors {/* errors */}
-
-`ApiError.info` is a discriminated union on `kind`:
-
-| `kind` | Meaning | Notable fields |
-| --- | --- | --- |
-| `http` | The server returned an error envelope | `status`, `code`, `message`, `detail`, `traceId`, `headers`, `data` |
-| `request` | Transport failed, including network, CORS, and timeout | `code`, `traceId` |
-| `websocket` | Push channel error | `code`, `status`, `message` |
-| `other` | Everything else | `code`, `error` |
-
-The HTTP status is not the business code. An invalid token arrives as HTTP `400` carrying business code `401004`. Branch on `info.code` rather than `info.status`. The codes that end a session are `401003`, `401004`, `401005`, and `401008`.
 
 ## Quotes {/* quotes */}
 
@@ -390,33 +349,45 @@ Two behaviors need handling:
 
 Per-channel events carry no collapsed value. Call `readyState` inside the listener when the interface renders the combined state.
 
-## Local development {/* local-development */}
+## General HTTP requests {/* general-http-requests */}
 
-The gateway returns `Access-Control-Allow-Origin` for an allow-list of production web domains. `http://localhost` is not on it, so a development server cannot call the API directly; the browser discards the response first.
-
-Run a same-origin reverse proxy and point the engine at it:
+Use `request` for [TradingAPI](/en/trading-api/overview) endpoints that have no typed module. Signing, authentication, retries, and token renewal still apply.
 
 ```ts
-await initialize({ /* … */ baseURL: location.origin }); // development only
+import { request, ApiError } from 'whalecore-web';
+
+try {
+  const { data, headers } = await request<MemberInfo>('GET', '/v2/member/info');
+  console.log(data.member, headers['x-trace-id']);
+} catch (err) {
+  if (err instanceof ApiError && err.info.kind === 'http') {
+    console.warn(err.info.status, err.info.code);
+  }
+}
 ```
 
-The development server forwards everything that is not a static asset to the API host. Two rules apply:
+| Option | Behavior |
+| --- | --- |
+| `params` | Appended as a query string. Nested objects become `a[b]=c`, arrays repeat the key, and `null` values are dropped |
+| `data` | JSON request body |
+| `headers` | Merged over the defaults from `initialize` |
+| `timeout` | Milliseconds. `0` or an omitted value uses the engine default of 15 seconds |
+| `singleflight` | Deduplicates concurrent identical requests. Enabled by default for `GET`, `HEAD`, and `OPTIONS`; the other callers fail with `ErrorCode.DEDUPLICATED` |
 
-- Do not rewrite the path. The signature covers the path the engine produced, and a rewrite invalidates it, which the gateway answers with `403`.
-- When `baseURL` carries a path prefix such as `http://localhost:5173/api`, the engine excludes that prefix from the signature, so the proxy must strip exactly that prefix and nothing more.
+The generic parameter is a type assertion only, and nothing is validated at runtime.
 
-Market data is unaffected, because WebSocket handshakes are not subject to CORS and the engine dials the quote host directly. The one-time password for that handshake travels over HTTP and passes through the proxy. `baseURL` also selects an environment, but treat it as a development affordance and let production use the default host.
+### Errors {/* errors */}
 
-## Signing and tenancy {/* signing-and-tenancy */}
+`ApiError.info` is a discriminated union on `kind`:
 
-Every request is signed with `x-api-key`, `x-api-signature`, and `x-timestamp`, and the gateway identifies the tenant from that signature. An unsigned request receives `403`.
+| `kind` | Meaning | Notable fields |
+| --- | --- | --- |
+| `http` | The server returned an error envelope | `status`, `code`, `message`, `detail`, `traceId`, `headers`, `data` |
+| `request` | Transport failed, including network, CORS, and timeout | `code`, `traceId` |
+| `websocket` | Push channel error | `code`, `status`, `message` |
+| `other` | Everything else | `code`, `error` |
 
-The key pair is compiled into the WebAssembly binary. It is not a configuration field, not an environment variable the host reads, and not a value that `initialize` accepts. Two consequences follow:
-
-- A binary belongs to one tenant. Install the artifact issued for yours. Serving two tenants requires two binaries and one tenant per page load.
-- Rotating the key means shipping a new binary rather than editing configuration.
-
-The signing secret therefore never passes through Broker App code, so there is nothing to store, inject, or log. It is not a server-side secret: the binary reaches the browser like any other asset, and strings can be extracted from it. Treat it as a tenant identifier that is inconvenient to extract. When the signature must be computed under Broker Server control, that requires a server-side signing proxy, which this package cannot provide, because the engine always signs with its built-in key.
+The HTTP status is not the business code. An invalid token arrives as HTTP `400` carrying business code `401004`. Branch on `info.code` rather than `info.status`. The codes that end a session are `401003`, `401004`, `401005`, and `401008`.
 
 ## Not available yet {/* not-available-yet */}
 

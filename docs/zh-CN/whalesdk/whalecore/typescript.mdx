@@ -14,7 +14,7 @@ TypeScript 包让 WhaleCore 在浏览器里运行。引擎编译为 WebAssembly�
 | TypeScript | 可选。类型声明随包一起分发 |
 | Node.js | 不是运行目标。引擎需要 `window`、`localStorage` 和 `WebSocket`，且没有服务端构建产物 |
 
-本包不发布到公开 registry。压缩包由 Whale 项目团队私下交付，并且**每份产物只对应一个租户** —— 签名密钥编译进了 WebAssembly 二进制文件，见[签名与租户](/zh-cn/whalesdk/whalecore/typescript#signing-and-tenancy)。请安装收到的那份文件，并把它放在构建流程能读到的位置。
+本包不发布到公开 registry。压缩包由 Whale 项目团队私下交付，并且**每份产物只对应一个租户** —— 签名密钥编译进了 WebAssembly 二进制文件。请安装收到的那份文件，并把它放在构建流程能读到的位置。
 
 包会带入一个运行时依赖 `protobufjs`，因为行情载荷是 Protobuf。只调用 `initialize` 和 `request` 的代码从根入口引入即可，打包工具会移除解码器。
 
@@ -116,10 +116,9 @@ await initialize({
 | `defaultHeaders` | — | 附加到所有请求的额外请求头 |
 | `language` | — | `en`、`zh-CN` 或 `zh-HK`。其他取值会回落到 `en` |
 | `version` / `build` | — | 以 `x-application-version` 和 `x-application-build` 上报 |
-| `baseURL` | — | 仅用于开发联调，见[本地开发](/zh-cn/whalesdk/whalecore/typescript#local-development) |
 | `logger` | — | 引擎日志；`fields` 携带 `level` 与 tracing 元数据 |
 
-签名凭证不是配置字段，见[签名与租户](/zh-cn/whalesdk/whalecore/typescript#signing-and-tenancy)。引擎会忽略无法识别的键，所以写错字段名不会报错，只是不生效。请让 `EngineConfig` 类型来校验这个对象。
+签名凭证不是配置字段，密钥对编译在产物内。引擎会忽略无法识别的键，所以写错字段名不会报错，只是不生效。请让 `EngineConfig` 类型来校验这个对象。
 
 `initialize` 每次页面加载只调用一次。第二次调用会重建 HTTP 客户端，但不会关闭上一条行情长连接，而 `appId`、`version` 和 `build` 仍保留首次调用的取值。切换账户不需要再次调用，见[生命周期](/zh-cn/whalesdk/whalecore/typescript#lifecycle)。
 
@@ -211,7 +210,7 @@ const binding = {
 | 初始化 | `await initialize(config)`，每次页面加载一次 |
 | 前台与后台 | 无需调用。浏览器会节流定时器，引擎自行重连 |
 | 同租户内切换账户 | `portfolio.logout()`，写入新的 `token` 与 `refresh_token`，`portfolio.login()`，重新发现账户，重新订阅 |
-| 切换租户 | 加载为该租户构建的产物，见[签名与租户](/zh-cn/whalesdk/whalecore/typescript#signing-and-tenancy) |
+| 切换租户 | 加载为该租户构建的产物 |
 | 登出 | `portfolio.logout()` 清除 `token` 与 `refresh_token`，并卸载全部引擎组件 |
 | 销毁 | 重新加载页面。没有显式的销毁调用 |
 
@@ -240,46 +239,6 @@ const accounts = data.status.map((a) => ({ accountChannel: a.account_channel, aa
 | `whalecore-web/portfolio` | 资产、持仓、现金、杠杆，以及按账户的缓存 |
 
 订单与交易没有对应模块，见[尚未提供的能力](/zh-cn/whalesdk/whalecore/typescript#not-available-yet)。
-
-## 通用 HTTP 请求 {/* general-http-requests */}
-
-调用尚未类型化封装的 [TradingAPI](/zh-cn/trading-api/overview) 接口时使用 `request`。签名、鉴权、重试与令牌续期依然生效。
-
-```ts
-import { request, ApiError } from 'whalecore-web';
-
-try {
-  const { data, headers } = await request<MemberInfo>('GET', '/v2/member/info');
-  console.log(data.member, headers['x-trace-id']);
-} catch (err) {
-  if (err instanceof ApiError && err.info.kind === 'http') {
-    console.warn(err.info.status, err.info.code);
-  }
-}
-```
-
-| 选项 | 行为 |
-| --- | --- |
-| `params` | 追加为查询字符串。嵌套对象展开为 `a[b]=c`，数组重复同一个键，`null` 值会被丢弃 |
-| `data` | JSON 请求体 |
-| `headers` | 覆盖合并到 `initialize` 的默认请求头之上 |
-| `timeout` | 毫秒。为 `0` 或不传时使用引擎默认的 15 秒 |
-| `singleflight` | 对并发的相同请求去重。`GET`、`HEAD` 和 `OPTIONS` 默认开启；其余调用方以 `ErrorCode.DEDUPLICATED` 失败 |
-
-泛型参数只是类型断言，运行时不做校验。
-
-### 错误 {/* errors */}
-
-`ApiError.info` 是按 `kind` 区分的可辨识联合：
-
-| `kind` | 含义 | 主要字段 |
-| --- | --- | --- |
-| `http` | 服务端返回了错误信封 | `status`、`code`、`message`、`detail`、`traceId`、`headers`、`data` |
-| `request` | 传输失败，包含网络、CORS 与超时 | `code`、`traceId` |
-| `websocket` | 推送通道错误 | `code`、`status`、`message` |
-| `other` | 其他情况 | `code`、`error` |
-
-HTTP 状态码不等于业务码。令牌失效时返回的是 HTTP `400`，业务码为 `401004`。请按 `info.code` 分支，而不是 `info.status`。表示会话已结束的业务码是 `401003`、`401004`、`401005` 和 `401008`。
 
 ## 行情 {/* quotes */}
 
@@ -390,33 +349,45 @@ const off = onConnectionChange(({ channel, state }) => {
 
 分通道事件不携带归一后的取值。界面渲染合并状态时，请在回调里调用 `readyState`。
 
-## 本地开发 {/* local-development */}
+## 通用 HTTP 请求 {/* general-http-requests */}
 
-网关只对白名单内的生产站点域名返回 `Access-Control-Allow-Origin`。`http://localhost` 不在其中，因此开发服务器无法直接调用接口 —— 浏览器会先丢弃响应。
-
-请运行一个同源反向代理，并把引擎指向它：
+调用尚未类型化封装的 [TradingAPI](/zh-cn/trading-api/overview) 接口时使用 `request`。签名、鉴权、重试与令牌续期依然生效。
 
 ```ts
-await initialize({ /* … */ baseURL: location.origin }); // 仅用于开发
+import { request, ApiError } from 'whalecore-web';
+
+try {
+  const { data, headers } = await request<MemberInfo>('GET', '/v2/member/info');
+  console.log(data.member, headers['x-trace-id']);
+} catch (err) {
+  if (err instanceof ApiError && err.info.kind === 'http') {
+    console.warn(err.info.status, err.info.code);
+  }
+}
 ```
 
-开发服务器随后把非静态资源的请求转发到接口域名。有两条规则：
+| 选项 | 行为 |
+| --- | --- |
+| `params` | 追加为查询字符串。嵌套对象展开为 `a[b]=c`，数组重复同一个键，`null` 值会被丢弃 |
+| `data` | JSON 请求体 |
+| `headers` | 覆盖合并到 `initialize` 的默认请求头之上 |
+| `timeout` | 毫秒。为 `0` 或不传时使用引擎默认的 15 秒 |
+| `singleflight` | 对并发的相同请求去重。`GET`、`HEAD` 和 `OPTIONS` 默认开启；其余调用方以 `ErrorCode.DEDUPLICATED` 失败 |
 
-- 不要改写路径。签名覆盖的是引擎生成的路径，改写会让签名失效，网关返回 `403`。
-- 当 `baseURL` 带路径前缀，如 `http://localhost:5173/api` 时，引擎会把该前缀排除在签名之外，因此代理必须、且只能剥掉这一段前缀。
+泛型参数只是类型断言，运行时不做校验。
 
-行情不受影响，因为 WebSocket 握手不做 CORS 检查，引擎直连行情域名。该握手所需的一次性密码走 HTTP，会经过代理。`baseURL` 也能切换环境，但请把它当作开发期的便利手段，生产使用默认域名。
+### 错误 {/* errors */}
 
-## 签名与租户 {/* signing-and-tenancy */}
+`ApiError.info` 是按 `kind` 区分的可辨识联合：
 
-每个请求都带 `x-api-key`、`x-api-signature` 和 `x-timestamp` 签名，网关据此识别租户。未签名的请求返回 `403`。
+| `kind` | 含义 | 主要字段 |
+| --- | --- | --- |
+| `http` | 服务端返回了错误信封 | `status`、`code`、`message`、`detail`、`traceId`、`headers`、`data` |
+| `request` | 传输失败，包含网络、CORS 与超时 | `code`、`traceId` |
+| `websocket` | 推送通道错误 | `code`、`status`、`message` |
+| `other` | 其他情况 | `code`、`error` |
 
-密钥对编译在 WebAssembly 二进制文件里。它不是配置字段，不是宿主读取的环境变量，也不是 `initialize` 接受的取值。由此有两点结论：
-
-- 一份产物属于一个租户。请安装为你的租户签发的那份。服务两个租户需要两份产物，每次页面加载只能对应一个租户。
-- 轮换密钥意味着交付新的产物，而不是修改配置。
-
-因此签名密钥不会流经 Broker App 的代码，既不需要保存，也不需要注入，更不会被误写入日志。但它**不是**服务端密钥：二进制文件像其他静态资源一样发到浏览器，其中的字符串是可以被提取的。请把它当作一个不便提取的租户标识。若签名必须在 Broker Server 控制的位置计算，那需要服务端签名代理，本包无法提供，因为引擎总是用内置密钥签名。
+HTTP 状态码不等于业务码。令牌失效时返回的是 HTTP `400`，业务码为 `401004`。请按 `info.code` 分支，而不是 `info.status`。表示会话已结束的业务码是 `401003`、`401004`、`401005` 和 `401008`。
 
 ## 尚未提供的能力 {/* not-available-yet */}
 

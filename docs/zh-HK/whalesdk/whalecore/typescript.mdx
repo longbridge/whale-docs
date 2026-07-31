@@ -14,7 +14,7 @@ TypeScript 套件讓 WhaleCore 在瀏覽器裡執行。引擎編譯為 WebAssemb
 | TypeScript | 可選。類型宣告隨套件一起分發 |
 | Node.js | 不是執行目標。引擎需要 `window`、`localStorage` 和 `WebSocket`，且沒有伺服器端建置產物 |
 
-本套件不發佈到公開 registry。壓縮檔由 Whale 專案團隊私下交付，而且**每份產物只對應一個租戶** —— 簽名密鑰編譯進了 WebAssembly 二進位檔案，見[簽名與租戶](/zh-hk/whalesdk/whalecore/typescript#signing-and-tenancy)。請安裝收到的那份檔案，並放在建置流程能讀取的位置。
+本套件不發佈到公開 registry。壓縮檔由 Whale 專案團隊私下交付，而且**每份產物只對應一個租戶** —— 簽名密鑰編譯進了 WebAssembly 二進位檔案。請安裝收到的那份檔案，並放在建置流程能讀取的位置。
 
 套件會帶入一個執行時依賴 `protobufjs`，因為行情載荷是 Protobuf。只調用 `initialize` 和 `request` 的程式碼從根入口引入即可，打包工具會移除解碼器。
 
@@ -116,10 +116,9 @@ await initialize({
 | `defaultHeaders` | — | 附加到所有請求的額外請求頭 |
 | `language` | — | `en`、`zh-CN` 或 `zh-HK`。其他取值會回落到 `en` |
 | `version` / `build` | — | 以 `x-application-version` 和 `x-application-build` 上報 |
-| `baseURL` | — | 僅用於開發聯調，見[本機開發](/zh-hk/whalesdk/whalecore/typescript#local-development) |
 | `logger` | — | 引擎日誌；`fields` 攜帶 `level` 與 tracing 元數據 |
 
-簽名憑證不是設定欄位，見[簽名與租戶](/zh-hk/whalesdk/whalecore/typescript#signing-and-tenancy)。引擎會忽略無法識別的鍵，所以寫錯欄位名不會報錯，只是不生效。請讓 `EngineConfig` 類型來檢查這個物件。
+簽名憑證不是設定欄位，密鑰對編譯在產物內。引擎會忽略無法識別的鍵，所以寫錯欄位名不會報錯，只是不生效。請讓 `EngineConfig` 類型來檢查這個物件。
 
 `initialize` 每次頁面載入只調用一次。第二次調用會重建 HTTP 用戶端，但不會關閉上一條行情長連線，而 `appId`、`version` 和 `build` 仍保留首次調用的取值。切換帳戶不需要再次調用，見[生命週期](/zh-hk/whalesdk/whalecore/typescript#lifecycle)。
 
@@ -211,7 +210,7 @@ const binding = {
 | 初始化 | `await initialize(config)`，每次頁面載入一次 |
 | 前景與背景 | 無需調用。瀏覽器會節流計時器，引擎自行重連 |
 | 同租戶內切換帳戶 | `portfolio.logout()`，寫入新的 `token` 與 `refresh_token`，`portfolio.login()`，重新發現帳戶，重新訂閱 |
-| 切換租戶 | 載入為該租戶建置的產物，見[簽名與租戶](/zh-hk/whalesdk/whalecore/typescript#signing-and-tenancy) |
+| 切換租戶 | 載入為該租戶建置的產物 |
 | 登出 | `portfolio.logout()` 清除 `token` 與 `refresh_token`，並卸載全部引擎元件 |
 | 銷毀 | 重新載入頁面。沒有明確的銷毀調用 |
 
@@ -240,46 +239,6 @@ const accounts = data.status.map((a) => ({ accountChannel: a.account_channel, aa
 | `whalecore-web/portfolio` | 資產、持倉、現金、槓桿，以及按帳戶的快取 |
 
 訂單與交易沒有對應模組，見[尚未提供的能力](/zh-hk/whalesdk/whalecore/typescript#not-available-yet)。
-
-## 通用 HTTP 請求 {/* general-http-requests */}
-
-調用尚未類型化封裝的 [TradingAPI](/zh-hk/trading-api/overview) 接口時使用 `request`。簽名、鑑權、重試與令牌續期依然生效。
-
-```ts
-import { request, ApiError } from 'whalecore-web';
-
-try {
-  const { data, headers } = await request<MemberInfo>('GET', '/v2/member/info');
-  console.log(data.member, headers['x-trace-id']);
-} catch (err) {
-  if (err instanceof ApiError && err.info.kind === 'http') {
-    console.warn(err.info.status, err.info.code);
-  }
-}
-```
-
-| 選項 | 行為 |
-| --- | --- |
-| `params` | 追加為查詢字串。嵌套物件展開為 `a[b]=c`，陣列重複同一個鍵，`null` 值會被丟棄 |
-| `data` | JSON 請求體 |
-| `headers` | 覆蓋合併到 `initialize` 的預設請求頭之上 |
-| `timeout` | 毫秒。為 `0` 或不傳時使用引擎預設的 15 秒 |
-| `singleflight` | 對並行的相同請求去重。`GET`、`HEAD` 和 `OPTIONS` 預設開啟；其餘調用方以 `ErrorCode.DEDUPLICATED` 失敗 |
-
-泛型參數只是類型斷言，執行時不做檢查。
-
-### 錯誤 {/* errors */}
-
-`ApiError.info` 是按 `kind` 區分的可辨識聯合：
-
-| `kind` | 含義 | 主要欄位 |
-| --- | --- | --- |
-| `http` | 伺服器返回了錯誤信封 | `status`、`code`、`message`、`detail`、`traceId`、`headers`、`data` |
-| `request` | 傳輸失敗，包含網絡、CORS 與逾時 | `code`、`traceId` |
-| `websocket` | 推送通道錯誤 | `code`、`status`、`message` |
-| `other` | 其他情況 | `code`、`error` |
-
-HTTP 狀態碼不等於業務碼。令牌失效時返回的是 HTTP `400`，業務碼為 `401004`。請按 `info.code` 分支，而不是 `info.status`。表示工作階段已結束的業務碼是 `401003`、`401004`、`401005` 和 `401008`。
 
 ## 行情 {/* quotes */}
 
@@ -390,33 +349,45 @@ const off = onConnectionChange(({ channel, state }) => {
 
 分通道事件不攜帶歸一後的取值。界面顯示合併狀態時，請在回呼裡調用 `readyState`。
 
-## 本機開發 {/* local-development */}
+## 通用 HTTP 請求 {/* general-http-requests */}
 
-閘道只對白名單內的生產站點網域返回 `Access-Control-Allow-Origin`。`http://localhost` 不在其中，因此開發伺服器無法直接調用接口 —— 瀏覽器會先丟棄響應。
-
-請執行一個同源反向代理，並把引擎指向它：
+調用尚未類型化封裝的 [TradingAPI](/zh-hk/trading-api/overview) 接口時使用 `request`。簽名、鑑權、重試與令牌續期依然生效。
 
 ```ts
-await initialize({ /* … */ baseURL: location.origin }); // 僅用於開發
+import { request, ApiError } from 'whalecore-web';
+
+try {
+  const { data, headers } = await request<MemberInfo>('GET', '/v2/member/info');
+  console.log(data.member, headers['x-trace-id']);
+} catch (err) {
+  if (err instanceof ApiError && err.info.kind === 'http') {
+    console.warn(err.info.status, err.info.code);
+  }
+}
 ```
 
-開發伺服器隨後把非靜態資源的請求轉發到接口網域。有兩條規則：
+| 選項 | 行為 |
+| --- | --- |
+| `params` | 追加為查詢字串。嵌套物件展開為 `a[b]=c`，陣列重複同一個鍵，`null` 值會被丟棄 |
+| `data` | JSON 請求體 |
+| `headers` | 覆蓋合併到 `initialize` 的預設請求頭之上 |
+| `timeout` | 毫秒。為 `0` 或不傳時使用引擎預設的 15 秒 |
+| `singleflight` | 對並行的相同請求去重。`GET`、`HEAD` 和 `OPTIONS` 預設開啟；其餘調用方以 `ErrorCode.DEDUPLICATED` 失敗 |
 
-- 不要改寫路徑。簽名覆蓋的是引擎產生的路徑，改寫會讓簽名失效，閘道返回 `403`。
-- 當 `baseURL` 帶路徑前綴，如 `http://localhost:5173/api` 時，引擎會把該前綴排除在簽名之外，因此代理必須、且只能剝掉這一段前綴。
+泛型參數只是類型斷言，執行時不做檢查。
 
-行情不受影響，因為 WebSocket 握手不做 CORS 檢查，引擎直連行情網域。該握手所需的一次性密碼走 HTTP，會經過代理。`baseURL` 也能切換環境，但請把它當作開發期的便利手段，生產使用預設網域。
+### 錯誤 {/* errors */}
 
-## 簽名與租戶 {/* signing-and-tenancy */}
+`ApiError.info` 是按 `kind` 區分的可辨識聯合：
 
-每個請求都帶 `x-api-key`、`x-api-signature` 和 `x-timestamp` 簽名，閘道據此識別租戶。未簽名的請求返回 `403`。
+| `kind` | 含義 | 主要欄位 |
+| --- | --- | --- |
+| `http` | 伺服器返回了錯誤信封 | `status`、`code`、`message`、`detail`、`traceId`、`headers`、`data` |
+| `request` | 傳輸失敗，包含網絡、CORS 與逾時 | `code`、`traceId` |
+| `websocket` | 推送通道錯誤 | `code`、`status`、`message` |
+| `other` | 其他情況 | `code`、`error` |
 
-密鑰對編譯在 WebAssembly 二進位檔案裡。它不是設定欄位，不是宿主讀取的環境變數，也不是 `initialize` 接受的取值。由此有兩點結論：
-
-- 一份產物屬於一個租戶。請安裝為你的租戶簽發的那份。服務兩個租戶需要兩份產物，每次頁面載入只能對應一個租戶。
-- 輪換密鑰意味著交付新的產物，而不是修改設定。
-
-因此簽名密鑰不會流經 Broker App 的程式碼，既不需要保存，也不需要注入，更不會被誤寫入日誌。但它**不是**伺服器端密鑰：二進位檔案像其他靜態資源一樣送到瀏覽器，其中的字串是可以被提取的。請把它當作一個不便提取的租戶標識。若簽名必須在 Broker Server 控制的位置計算，那需要伺服器端簽名代理，本套件無法提供，因為引擎總是用內建密鑰簽名。
+HTTP 狀態碼不等於業務碼。令牌失效時返回的是 HTTP `400`，業務碼為 `401004`。請按 `info.code` 分支，而不是 `info.status`。表示工作階段已結束的業務碼是 `401003`、`401004`、`401005` 和 `401008`。
 
 ## 尚未提供的能力 {/* not-available-yet */}
 
