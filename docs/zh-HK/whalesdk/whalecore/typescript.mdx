@@ -1,0 +1,431 @@
+---
+title: TypeScript
+description: WhaleCoreSDK TypeScript 安裝、WebAssembly 託管、初始化、工作階段與公開模組
+---
+
+TypeScript 套件讓 WhaleCore 在瀏覽器裡執行。引擎編譯為 WebAssembly，套件在其上提供類型化的 ES 模組，涵蓋 HTTP 透傳、實時行情、自選股和資產。Broker App 負責全部界面，套件負責工作階段、連線與數據。
+
+## 系統要求與安裝 {/* requirements-and-installation */}
+
+| 要求 | 說明 |
+| --- | --- |
+| 執行環境 | 支援 WebAssembly、ES 模組和 `WebSocket` 的瀏覽器 |
+| 打包工具 | 能解析 `exports` 子路徑和 `import.meta.url` 的打包工具，如 Vite、esbuild、webpack 5、Rspack 或 Parcel 2 |
+| TypeScript | 可選。類型宣告隨套件一起分發 |
+| Node.js | 不是執行目標。引擎需要 `window`、`localStorage` 和 `WebSocket`，且沒有伺服器端建置產物 |
+
+本套件不發佈到公開 registry。壓縮檔由 Whale 專案團隊私下交付，而且**每份產物只對應一個租戶** —— 簽名密鑰編譯進了 WebAssembly 二進位檔案，見[簽名與租戶](/zh-hk/whalesdk/whalecore/typescript#signing-and-tenancy)。請安裝收到的那份檔案，並放在建置流程能讀取的位置。
+
+套件會帶入一個執行時依賴 `protobufjs`，因為行情載荷是 Protobuf。只調用 `initialize` 和 `request` 的程式碼從根入口引入即可，打包工具會移除解碼器。
+
+每個模組都是獨立子路徑：
+
+```ts
+import { initialize, request } from 'whalecore-web';
+import { quotes, SubType } from 'whalecore-web/quotes';
+import { Watchlist } from 'whalecore-web/watchlist';
+import { Portfolio } from 'whalecore-web/portfolio';
+```
+
+如果 TypeScript 對隨套件分發的類型宣告報出 `Symbol.dispose` 錯誤，請在 `lib` 中加入 `ESNext.Disposable`，或啟用 `skipLibCheck`。
+
+## 託管 WebAssembly 檔案 {/* host-the-wasm-binary */}
+
+`engine_bg.wasm` 在執行時按 URL 取得，任何打包工具都不會內嵌它。請把它複製到建置產物旁邊，並以 `Content-Type: application/wasm` 提供。
+
+```js
+import { copyFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
+
+const require = createRequire(import.meta.url);
+const pkg = join(dirname(require.resolve('whalecore-web/quotes')), '..', '..');
+copyFileSync(join(pkg, 'engine', 'pkg', 'engine_bg.wasm'), 'public/engine_bg.wasm');
+```
+
+請解析套件路徑，不要寫死 `node_modules` 路徑，因為 `file:` 連結和 pnpm 儲存都是符號連結。Vite 用 `publicDir` 完成同樣的複製，webpack 用 `CopyPlugin`。
+
+引擎會在自己的 JavaScript 模組旁邊尋找該檔案。當打包工具改變產物位置，或者二進位檔案由 CDN 提供時，請在 `initialize` 之前明確載入：
+
+```ts
+import { load, initialize } from 'whalecore-web';
+
+await load('https://cdn.example.com/engine_bg.wasm');
+await initialize({ /* … */ });
+```
+
+`load` 是冪等的，可以安全重試。宿主不調用時，`initialize` 會代為調用。
+
+### 壓縮檔案 {/* compress-the-binary */}
+
+發佈的二進位檔案已經是 release 建置並做過體積最佳化，為 1.92 MiB。餘下的成本在傳輸：Brotli quality 11 可以把它壓到 607 KiB，減少 69%，而 `gzip -9` 只能到 806 KiB。請在建置期壓縮，而不是每次請求都壓縮。
+
+```js
+// vite.config.js
+import compression from 'vite-plugin-compression';
+
+export default { plugins: [compression({ algorithm: 'brotliCompress', ext: '.br', threshold: 0 })] };
+```
+
+```js
+// webpack.config.js
+const zlib = require('node:zlib');
+const CompressionPlugin = require('compression-webpack-plugin');
+
+module.exports = {
+  plugins: [
+    new CompressionPlugin({
+      filename: '[path][base].br',
+      algorithm: 'brotliCompress',
+      test: /\.wasm$/,
+      compressionOptions: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11 } },
+    }),
+  ],
+};
+```
+
+<Warning>
+  壓縮後的檔案必須同時帶上 `Content-Encoding: br` 和 `Content-Type: application/wasm`。載入器使用 `WebAssembly.instantiateStreaming`，它要求這個 MIME 類型；換成其他值，瀏覽器會先把整個模組緩衝完再編譯。部分 CDN 的可壓縮類型清單裡沒有 `application/wasm`，會靜默地把檔案按未壓縮交付。
+</Warning>
+
+## 初始化 {/* initialize */}
+
+```ts
+import { initialize } from 'whalecore-web';
+
+await initialize({
+  appId: 'com.example.app',
+  accountChannel: 'lb',
+  deviceID: await deviceID(),
+  language: 'zh-HK',
+  version: '1.0.0',
+  binding: {
+    renewToken: () => fetchCredentials(),
+    renewTradeToken: () => { throw new Error('trade auth not supported'); },
+  },
+  logger: (message, fields) => console.debug(fields.get('level'), message),
+});
+```
+
+| 欄位 | 必填 | 用途 |
+| --- | --- | --- |
+| `binding` | 是 | 憑證兜底回呼，見 [Token 與交易鑑權](/zh-hk/whalesdk/whalecore/typescript#tokens-and-trade-authentication)。缺少時拋出 `no binding` |
+| `appId` | — | 應用標識，同時作為 `x-app-id` 發送 |
+| `accountChannel` | — | 工作階段標識，並作為 `account-channel` 請求頭附加到所有請求 |
+| `deviceID` | — | 作為 `x-device-id` 發送，見[裝置標識](/zh-hk/whalesdk/whalecore/typescript#device-identifier) |
+| `defaultHeaders` | — | 附加到所有請求的額外請求頭 |
+| `language` | — | `en`、`zh-CN` 或 `zh-HK`。其他取值會回落到 `en` |
+| `version` / `build` | — | 以 `x-application-version` 和 `x-application-build` 上報 |
+| `baseURL` | — | 僅用於開發聯調，見[本機開發](/zh-hk/whalesdk/whalecore/typescript#local-development) |
+| `logger` | — | 引擎日誌；`fields` 攜帶 `level` 與 tracing 元數據 |
+
+簽名憑證不是設定欄位，見[簽名與租戶](/zh-hk/whalesdk/whalecore/typescript#signing-and-tenancy)。引擎會忽略無法識別的鍵，所以寫錯欄位名不會報錯，只是不生效。請讓 `EngineConfig` 類型來檢查這個物件。
+
+`initialize` 每次頁面載入只調用一次。第二次調用會重建 HTTP 用戶端，但不會關閉上一條行情長連線，而 `appId`、`version` 和 `build` 仍保留首次調用的取值。切換帳戶不需要再次調用，見[生命週期](/zh-hk/whalesdk/whalecore/typescript#lifecycle)。
+
+### 裝置標識 {/* device-identifier */}
+
+`deviceID` 會成為 `x-device-id` 請求頭。瀏覽器不提供裝置序號，所以這個值由 Broker App 自行產生並自行保存，目標是「同一台機器上的同一個瀏覽器長期保持同一個值」。
+
+先讀儲存，只有每一層都為空時才產生：
+
+```ts
+import FingerprintJS from '@fingerprintjs/fingerprintjs';
+
+const KEY = 'whalecore.device-id';
+
+function stored(): string | undefined {
+  const found =
+    localStorage.getItem(KEY) ??
+    document.cookie.match(/(?:^|; )whalecore\.device-id=([^;]+)/)?.[1];
+  return found === null || found === undefined || found === '' ? undefined : found;
+}
+
+function persist(id: string): void {
+  localStorage.setItem(KEY, id);
+  document.cookie = `${KEY}=${id}; max-age=63072000; path=/; secure; samesite=lax`;
+}
+
+export async function deviceID(): Promise<string> {
+  const found = stored();
+  if (found !== undefined) {
+    persist(found);
+    return found;
+  }
+  const { visitorId } = await (await FingerprintJS.load()).get();
+  persist(visitorId);
+  return visitorId;
+}
+```
+
+在每一層儲存都被清空之後，指紋能重新算出接近相同的標識，而 `crypto.randomUUID` 做不到這一點。`@fingerprintjs/fingerprintjs` 是 fingerprintjs2 的後繼專案，其開源版本不需要帳號。不打算引入這個依賴時，用 `crypto.randomUUID` 配合同一套持久化也是合理的，只是失去這項復原能力。
+
+- 儲存優先於指紋。`visitorId` 會隨瀏覽器升級而變化，因此不要用新算出的值覆蓋已經存下來的值。
+- 保留兩層儲存。`localStorage` 與長期有效的第一方 cookie 被清理的時機不同，可以互相復原。請每次造訪都重新寫入，讓被清掉的那一層自動補回。
+- 在 `initialize` 之前把值取到。指紋計算是非同步的，而引擎一啟動就會發出請求。
+- 保持取值不透明。它會隨請求頭進入伺服器端日誌，所以請用哈希或 UUID，不要放入任何可識別到個人的資訊。
+
+無痕視窗、另一個瀏覽器或另一台機器按定義就是不同裝置，會得到新的標識。不傳 `deviceID` 也是允許的：請求頭不出現，引擎不會替你產生替代值。
+
+### 客戶工作階段 {/* client-session */}
+
+存取令牌存放在引擎工作階段中，在瀏覽器裡就是不帶前綴的 `localStorage`。客戶的 `token` 與 `refresh_token` 由 Broker 登入流程取得。請在 `initialize` 之前寫入兩者，因為引擎一啟動就會發出請求。請勿把憑證或完整 token 寫入日誌。
+
+```ts
+const { token, refresh_token } = await fetchCredentials();
+localStorage.setItem('token', token);
+localStorage.setItem('refresh_token', refresh_token);
+await initialize({ /* … */ });
+```
+
+設定裡沒有 token 欄位。交易令牌使用 `trade_token:<accountChannel>` 和 `trade_refresh_token:<accountChannel>` 兩個鍵。
+
+## Token 與交易鑑權 {/* tokens-and-trade-authentication */}
+
+引擎自行附加 `Authorization`，交易接口使用 `x-authorization`，並用手上的 refresh token 為已過期的存取令牌續期。`binding` 覆蓋它唯一無法獨自處理的情況：refresh token 也沒有了。
+
+```ts
+const binding = {
+  // 工作階段中沒有 refresh_token 且請求返回 401003 時調用
+  async renewToken() {
+    const res = await fetch('/session/login', { method: 'POST' });
+    return (await res.json()).credentials; // { token, refresh_token }
+  },
+  // 工作階段中沒有交易 refresh token 且請求返回 402000 時調用
+  async renewTradeToken() {
+    throw new Error('unsupported');
+  },
+};
+```
+
+請返回新的一對憑證。引擎會保存兩者，用 refresh token 換取新的存取令牌，並重放原來的請求，因此 `request` 的調用方察覺不到這一次往返。拋出例外、reject 或返回結構不符的值，都表示無法續期：引擎停止嘗試，原始的 `ApiError` 拋給調用方，客戶由此回到登入頁。兩個回呼都可能在多個請求同時收到 `401` 時並行觸發；引擎會把續期收斂為一次，所以請保持回呼輕量，也不要自行加鎖。
+
+<Note>
+  首次取得交易令牌尚未實作，因為該流程需要交易密碼交換。在它交付之前，`renewTradeToken` 是宿主唯一的入口：返回由 Broker Server 取得的憑證，或者讓 `402000` 拋給調用方。已開戶的帳戶讀取資產時往往不需要交易令牌。
+</Note>
+
+## 生命週期 {/* lifecycle */}
+
+| 任務 | 做法 |
+| --- | --- |
+| 初始化 | `await initialize(config)`，每次頁面載入一次 |
+| 前景與背景 | 無需調用。瀏覽器會節流計時器，引擎自行重連 |
+| 同租戶內切換帳戶 | `portfolio.logout()`，寫入新的 `token` 與 `refresh_token`，`portfolio.login()`，重新發現帳戶，重新訂閱 |
+| 切換租戶 | 載入為該租戶建置的產物，見[簽名與租戶](/zh-hk/whalesdk/whalecore/typescript#signing-and-tenancy) |
+| 登出 | `portfolio.logout()` 清除 `token` 與 `refresh_token`，並卸載全部引擎元件 |
+| 銷毀 | 重新載入頁面。沒有明確的銷毀調用 |
+
+### 發現帳戶 {/* discover-accounts */}
+
+列舉帳戶不屬於本 SDK 的能力。請從 [TradingAPI](/zh-hk/trading-api/overview) 取得 `accountChannel` 與 `aaid`：
+
+```ts
+interface AccountList {
+  status: { account_channel: string; aaid: string }[];
+}
+
+const { data } = await request<AccountList>('GET', '/v3/account/list');
+const accounts = data.status.map((a) => ({ accountChannel: a.account_channel, aaid: a.aaid }));
+```
+
+`aaid` 傳錯時資產模組會靜默失敗，既沒有視圖也沒有錯誤，所以請從接口讀取，不要自行拼裝。
+
+## 公開模組 {/* public-modules */}
+
+| 引入路徑 | 能力 |
+| --- | --- |
+| `whalecore-web` | `initialize`、`load`、`request`、`setLanguage`、`ApiError`、`ErrorCode`、`readyState`、`isOpen`、`onConnectionChange` |
+| `whalecore-web/quotes` | 行情倉庫，含訂閱、快照與推送合併；`Counter`、`Decimal` 輔助函式、衍生指標和 `greeks` |
+| `whalecore-web/watchlist` | 分組、成員、置頂、排序與隨行情重排 |
+| `whalecore-web/portfolio` | 資產、持倉、現金、槓桿，以及按帳戶的快取 |
+
+訂單與交易沒有對應模組，見[尚未提供的能力](/zh-hk/whalesdk/whalecore/typescript#not-available-yet)。
+
+## 通用 HTTP 請求 {/* general-http-requests */}
+
+調用尚未類型化封裝的 [TradingAPI](/zh-hk/trading-api/overview) 接口時使用 `request`。簽名、鑑權、重試與令牌續期依然生效。
+
+```ts
+import { request, ApiError } from 'whalecore-web';
+
+try {
+  const { data, headers } = await request<MemberInfo>('GET', '/v2/member/info');
+  console.log(data.member, headers['x-trace-id']);
+} catch (err) {
+  if (err instanceof ApiError && err.info.kind === 'http') {
+    console.warn(err.info.status, err.info.code);
+  }
+}
+```
+
+| 選項 | 行為 |
+| --- | --- |
+| `params` | 追加為查詢字串。嵌套物件展開為 `a[b]=c`，陣列重複同一個鍵，`null` 值會被丟棄 |
+| `data` | JSON 請求體 |
+| `headers` | 覆蓋合併到 `initialize` 的預設請求頭之上 |
+| `timeout` | 毫秒。為 `0` 或不傳時使用引擎預設的 15 秒 |
+| `singleflight` | 對並行的相同請求去重。`GET`、`HEAD` 和 `OPTIONS` 預設開啟；其餘調用方以 `ErrorCode.DEDUPLICATED` 失敗 |
+
+泛型參數只是類型斷言，執行時不做檢查。
+
+### 錯誤 {/* errors */}
+
+`ApiError.info` 是按 `kind` 區分的可辨識聯合：
+
+| `kind` | 含義 | 主要欄位 |
+| --- | --- | --- |
+| `http` | 伺服器返回了錯誤信封 | `status`、`code`、`message`、`detail`、`traceId`、`headers`、`data` |
+| `request` | 傳輸失敗，包含網絡、CORS 與逾時 | `code`、`traceId` |
+| `websocket` | 推送通道錯誤 | `code`、`status`、`message` |
+| `other` | 其他情況 | `code`、`error` |
+
+HTTP 狀態碼不等於業務碼。令牌失效時返回的是 HTTP `400`，業務碼為 `401004`。請按 `info.code` 分支，而不是 `info.status`。表示工作階段已結束的業務碼是 `401003`、`401004`、`401005` 和 `401008`。
+
+## 行情 {/* quotes */}
+
+行情倉庫把引擎推送物化成完整的 `Stock` 快照。啟動一次，掛載頁面需要的標的，然後訂閱。
+
+```ts
+import { quotes, SubType, Change, Counter, compare } from 'whalecore-web/quotes';
+
+quotes.start();
+await quotes.mount('watchlist', ['ST/HK/700', 'ST/US/AAPL'], SubType.List | SubType.Depth);
+
+const off = quotes.watch('ST/HK/700', (stock, flags) => {
+  if (flags & Change.Price) render(stock.trading);
+  if (flags & Change.Depth) renderBook(stock.depths);
+});
+```
+
+- 標的以 counter 為主鍵，寫作 `ST/HK/700` 而不是 `00700.HK`。`Counter.parse` 返回補齊後的顯示代碼，以及 `isStock`、`isOption` 這類品種判斷。
+- `mount(id, counters, subtypes)` 是宣告式的：該標識持有的正是傳入的那批標的，從列表中移除的標的會被退訂。請給每個頁面獨立的標識。
+- `SubType` 是位標記，取值有 `List`、`Detail`、`Depth`、`Trade`、`Broker`、`PreTrade`、`PostTrade`、`NightTrade`、`TotalView` 和 `TotalViewBrief`，另有組合值 `Trades`。預設值是 `SubType.List`，它已經包含盤前、盤後與夜盤價格。
+- 價格是 `Decimal`，即字串，以保留伺服器精度。在 JavaScript 裡 `'9' > '10'` 為 `true`，所以請用 `compare` 比較。`changePercent`、`marketCap`、`turnoverRate` 和 `greeks` 等衍生指標返回 `number`，適合排序與粗略顯示，不適合金額計算。
+- `version(counter)` 與 `subscribe(listener)` 的形狀與 `useSyncExternalStore` 的要求一致。
+
+行情變動頻繁。請用 `requestAnimationFrame` 批量渲染，不要逐條響應。
+
+## 自選股 {/* watchlist */}
+
+```ts
+import { Watchlist, WatchlistChange, SortField } from 'whalecore-web/watchlist';
+
+const watchlist = new Watchlist({ accountChannel: 'lb', aaid });
+await watchlist.refresh({ subscribe: true });
+
+watchlist.subscribe((flags) => {
+  if (flags & WatchlistChange.Groups) renderTabs(watchlist.groups());
+  if (flags & WatchlistChange.Order) renderList(watchlist.counters());
+});
+
+watchlist.setGroup(groupId, { field: SortField.ChangePercent, asc: false });
+await watchlist.addStocks(['ST/HK/700'], [groupId]);
+await watchlist.tie(['ST/HK/700']);
+```
+
+`groups`、`counters`、`stockInfo`、`fundInfo`、`tied`、`sort` 和 `version` 都是對本機快取的同步讀取。寫操作是非同步的，並與伺服器對帳。排序在本機基於行情倉庫完成，所以何時重排由宿主決定，請在批次處理的影格裡調用 `resort`。
+
+跨裝置同步預設開啟：實例會監聽 `watchlist/groups` 主題並自行重新整理。傳 `sync: false` 可以關閉；建立多個實例時請給出不同的 `id`。
+
+## 資產 {/* portfolio */}
+
+資產由引擎計算，包含匯率、成本價、盈虧與顯示格式。本模組是帶按帳戶快取的類型化傳輸層：宣告要訂閱的帳戶，引擎每影格推送一份完整視圖快照。
+
+```ts
+import { Portfolio } from 'whalecore-web/portfolio';
+
+const portfolio = new Portfolio();
+portfolio.login();
+portfolio.setUser({ currency: 'HKD', costType: 'dilute' });
+portfolio.watch([{ accountChannel: 'lb', aaid }]);
+
+portfolio.subscribe((event) => {
+  if (event.kind === 'view') {
+    render(event.view.overview.total_fortune, event.view.stock_hold.HK);
+  } else {
+    console.log(event.error);
+  }
+});
+```
+
+| 方法 | 作用 |
+| --- | --- |
+| `login()` / `logout()` | 通知工作階段發生變化。`logout` 同時清除令牌與元件 |
+| `setUser(settings)` | 幣種與會員口徑：`currency`、`costType`、`usePrePostPrice`、`useOvernightPrice`、`useOptionExtendPrice` |
+| `watch(accounts)` | 宣告式，本次列表取代上一次。現金明細與行情驅動重算保持開啟，且每次調用都會重新拉取。重新整理同一批帳戶請用 `refresh` |
+| `refresh(aaid?)` | 強制重新拉取單個帳戶或全部帳戶 |
+| `unwatch()` | 停止全部訂閱並清空快取 |
+| `get(aaid)` / `aaids()` / `version()` | 對快取的同步讀取 |
+
+關於視圖有三點需要注意：
+
+- 欄位是 `snake_case`，而入參是 camelCase，因為載荷是引擎自身的序列化結果，原樣透傳。
+- 取值已按顯示格式處理。金額是 `Decimal` 字串，百分比自帶 `%`，如 `"12.34%"`，不要再乘 100；取不到的數值是字面值 `'--'`；期權希臘字母是 JSON number，同樣可能是 `'--'`。
+- 首個影格可能不完整。隨著引擎的取數陸續落地，各分區會在最初幾個影格內補齊，現金明細與資產分佈通常晚一點到達。某個分區沒有出現在首個影格，並不表示引擎不提供它。
+
+多數失敗按設計是靜默的：`aaid` 傳錯、網絡錯誤、`5xx`，或者任何未被映射的業務碼，都不會產生事件，與「仍在載入」無法區分。六個業務碼映射為四種類型：`401003`、`401004`、`401005` 和 `401008` 對應 `tokenRequired`；`402000` 和 `402001` 對應 `tradeTokenRequired`，並攜帶 `accountChannel`；另有 `tradeAccountLimited` 與 `unknown`。需要「載入失敗」狀態時，請在 `watch` 之後自行加逾時。
+
+## 連線狀態 {/* connection-state */}
+
+引擎維護兩條 WebSocket。`quote` 通道承載行情數據，`text` 通道承載業務推送，如訂單變化、資產訊號和自選股主題。兩條通道各自獨立建連與重連。
+
+```ts
+import { readyState, isOpen, onConnectionChange, ReadyState } from 'whalecore-web';
+
+readyState('quote'); // ReadyState.Open
+isOpen(); // 兩條通道都已連線
+
+const off = onConnectionChange(({ channel, state }) => {
+  console.log(channel, ReadyState[state]); // 枚舉帶反向映射
+  setOnline(isOpen());
+});
+```
+
+不傳通道時，`readyState` 會把兩條歸一，取其中較差的那個：兩條都是 `Open` 才得到 `Open`，任一為 `Closed` 時以 `Closed` 為準，其次是 `Reconnecting`，再次是 `Opening`。兩個調用都是同步的，只跨越 WebAssembly 邊界。這一層不做快取，所以監聽器掛載得晚也不會與實際狀態不一致；需要當前值時隨時再問一次。在 React 中，`useSyncExternalStore(onConnectionChange, () => readyState('quote'))` 得到的是穩定快照。
+
+有兩種行為需要處理：
+
+- 首次建連之前狀態是 `Reconnecting` 而不是 `Closed`，因為這是兩條通道的初始值。「從未連線」與「斷開後正在重連」共用同一個取值，所以文案不要寫成連線已經失去。
+- 同一個通道與狀態會重複出現。握手失敗會重試，每次嘗試都會再報一次 `Opening`。這裡不做去重：請與上一次的值比較，或者交給 React 比較快照。
+
+分通道事件不攜帶歸一後的取值。界面顯示合併狀態時，請在回呼裡調用 `readyState`。
+
+## 本機開發 {/* local-development */}
+
+閘道只對白名單內的生產站點網域返回 `Access-Control-Allow-Origin`。`http://localhost` 不在其中，因此開發伺服器無法直接調用接口 —— 瀏覽器會先丟棄響應。
+
+請執行一個同源反向代理，並把引擎指向它：
+
+```ts
+await initialize({ /* … */ baseURL: location.origin }); // 僅用於開發
+```
+
+開發伺服器隨後把非靜態資源的請求轉發到接口網域。有兩條規則：
+
+- 不要改寫路徑。簽名覆蓋的是引擎產生的路徑，改寫會讓簽名失效，閘道返回 `403`。
+- 當 `baseURL` 帶路徑前綴，如 `http://localhost:5173/api` 時，引擎會把該前綴排除在簽名之外，因此代理必須、且只能剝掉這一段前綴。
+
+行情不受影響，因為 WebSocket 握手不做 CORS 檢查，引擎直連行情網域。該握手所需的一次性密碼走 HTTP，會經過代理。`baseURL` 也能切換環境，但請把它當作開發期的便利手段，生產使用預設網域。
+
+## 簽名與租戶 {/* signing-and-tenancy */}
+
+每個請求都帶 `x-api-key`、`x-api-signature` 和 `x-timestamp` 簽名，閘道據此識別租戶。未簽名的請求返回 `403`。
+
+密鑰對編譯在 WebAssembly 二進位檔案裡。它不是設定欄位，不是宿主讀取的環境變數，也不是 `initialize` 接受的取值。由此有兩點結論：
+
+- 一份產物屬於一個租戶。請安裝為你的租戶簽發的那份。服務兩個租戶需要兩份產物，每次頁面載入只能對應一個租戶。
+- 輪換密鑰意味著交付新的產物，而不是修改設定。
+
+因此簽名密鑰不會流經 Broker App 的程式碼，既不需要保存，也不需要注入，更不會被誤寫入日誌。但它**不是**伺服器端密鑰：二進位檔案像其他靜態資源一樣送到瀏覽器，其中的字串是可以被提取的。請把它當作一個不便提取的租戶標識。若簽名必須在 Broker Server 控制的位置計算，那需要伺服器端簽名代理，本套件無法提供，因為引擎總是用內建密鑰簽名。
+
+## 尚未提供的能力 {/* not-available-yet */}
+
+| 能力 | 現狀 |
+| --- | --- |
+| 訂單、訂單歷史與交易 | 沒有對應模組 |
+| 透過交易密碼交換取得首個交易令牌 | 尚未實作；`renewTradeToken` 是唯一入口 |
+| 前景與背景回呼 | 不需要；引擎自行重連 |
+| 明確銷毀 | 重新載入頁面 |
+| 單頁面服務多個租戶 | 無法實現；簽名密鑰編譯在產物內 |
+| 以設定欄位傳入存取令牌 | 請在 `initialize` 之前寫入工作階段鍵 |
+| 列舉帳戶 | 不屬於本 SDK；請自行提供 `accountChannel` 與 `aaid` |
