@@ -29,6 +29,15 @@ import bookkeepingZhHKSource from "../../../broker-api/bookkeeping.zh-HK.yml?raw
 import announcementEnSource from "../../../broker-api/announcement.en.yml?raw";
 import announcementZhCNSource from "../../../broker-api/announcement.zh-CN.yml?raw";
 import announcementZhHKSource from "../../../broker-api/announcement.zh-HK.yml?raw";
+import brokerManagementEnSource from "../../../broker-api/broker-management.en.yml?raw";
+import brokerManagementZhCNSource from "../../../broker-api/broker-management.zh-CN.yml?raw";
+import brokerManagementZhHKSource from "../../../broker-api/broker-management.zh-HK.yml?raw";
+import corporateActionEnSource from "../../../broker-api/corporate-action.en.yml?raw";
+import corporateActionZhCNSource from "../../../broker-api/corporate-action.zh-CN.yml?raw";
+import corporateActionZhHKSource from "../../../broker-api/corporate-action.zh-HK.yml?raw";
+import reportsEnSource from "../../../broker-api/reports.en.yml?raw";
+import reportsZhCNSource from "../../../broker-api/reports.zh-CN.yml?raw";
+import reportsZhHKSource from "../../../broker-api/reports.zh-HK.yml?raw";
 
 export type OpenApiDocument = {
   paths: Record<string, Record<string, unknown>>;
@@ -83,6 +92,15 @@ const bookkeepingZhHK = parse(bookkeepingZhHKSource) as OpenApiDocument;
 const announcementEn = parse(announcementEnSource) as OpenApiDocument;
 const announcementZhCN = parse(announcementZhCNSource) as OpenApiDocument;
 const announcementZhHK = parse(announcementZhHKSource) as OpenApiDocument;
+const brokerManagementEn = parse(brokerManagementEnSource) as OpenApiDocument;
+const brokerManagementZhCN = parse(brokerManagementZhCNSource) as OpenApiDocument;
+const brokerManagementZhHK = parse(brokerManagementZhHKSource) as OpenApiDocument;
+const corporateActionEn = parse(corporateActionEnSource) as OpenApiDocument;
+const corporateActionZhCN = parse(corporateActionZhCNSource) as OpenApiDocument;
+const corporateActionZhHK = parse(corporateActionZhHKSource) as OpenApiDocument;
+const reportsEn = parse(reportsEnSource) as OpenApiDocument;
+const reportsZhCN = parse(reportsZhCNSource) as OpenApiDocument;
+const reportsZhHK = parse(reportsZhHKSource) as OpenApiDocument;
 
 function mergeDocuments(
   base: OpenApiDocument,
@@ -110,9 +128,9 @@ function mergeDocuments(
 }
 
 const documents = {
-  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, clearingEn, billingEn, suspiciousEn, serviceParamEn, tradingPanelEn, bookkeepingEn, announcementEn),
-  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, clearingZhCN, billingZhCN, suspiciousZhCN, serviceParamZhCN, tradingPanelZhCN, bookkeepingZhCN, announcementZhCN),
-  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, clearingZhHK, billingZhHK, suspiciousZhHK, serviceParamZhHK, tradingPanelZhHK, bookkeepingZhHK, announcementZhHK),
+  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, clearingEn, billingEn, suspiciousEn, serviceParamEn, tradingPanelEn, bookkeepingEn, announcementEn, brokerManagementEn, corporateActionEn, reportsEn),
+  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, clearingZhCN, billingZhCN, suspiciousZhCN, serviceParamZhCN, tradingPanelZhCN, bookkeepingZhCN, announcementZhCN, brokerManagementZhCN, corporateActionZhCN, reportsZhCN),
+  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, clearingZhHK, billingZhHK, suspiciousZhHK, serviceParamZhHK, tradingPanelZhHK, bookkeepingZhHK, announcementZhHK, brokerManagementZhHK, corporateActionZhHK, reportsZhHK),
 } as const;
 
 const domainDocuments = {
@@ -127,6 +145,9 @@ const domainDocuments = {
     ["broker-api/trading-panel.en.yml", tradingPanelEn],
     ["broker-api/bookkeeping.en.yml", bookkeepingEn],
     ["broker-api/announcement.en.yml", announcementEn],
+    ["broker-api/broker-management.en.yml", brokerManagementEn],
+    ["broker-api/corporate-action.en.yml", corporateActionEn],
+    ["broker-api/reports.en.yml", reportsEn],
   ],
   "zh-CN": [
     ["broker-api/account-assets.zh-CN.yml", accountAssetsZhCN],
@@ -139,6 +160,9 @@ const domainDocuments = {
     ["broker-api/trading-panel.zh-CN.yml", tradingPanelZhCN],
     ["broker-api/bookkeeping.zh-CN.yml", bookkeepingZhCN],
     ["broker-api/announcement.zh-CN.yml", announcementZhCN],
+    ["broker-api/broker-management.zh-CN.yml", brokerManagementZhCN],
+    ["broker-api/corporate-action.zh-CN.yml", corporateActionZhCN],
+    ["broker-api/reports.zh-CN.yml", reportsZhCN],
   ],
   "zh-HK": [
     ["broker-api/account-assets.zh-HK.yml", accountAssetsZhHK],
@@ -151,6 +175,9 @@ const domainDocuments = {
     ["broker-api/trading-panel.zh-HK.yml", tradingPanelZhHK],
     ["broker-api/bookkeeping.zh-HK.yml", bookkeepingZhHK],
     ["broker-api/announcement.zh-HK.yml", announcementZhHK],
+    ["broker-api/broker-management.zh-HK.yml", brokerManagementZhHK],
+    ["broker-api/corporate-action.zh-HK.yml", corporateActionZhHK],
+    ["broker-api/reports.zh-HK.yml", reportsZhHK],
   ],
 } satisfies Record<
   OperationRecord["locale"],

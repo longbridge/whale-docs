@@ -1,0 +1,3923 @@
+openapi: 3.1.1
+info:
+  title: Whale OpenAPI (whale-openapi-docs 自动生成)
+  version: 1.0.0
+servers:
+- url: https://b-api.longbridge.xyz
+  description: 测试环境
+- url: https://b-api.lbkrs.com
+  description: 生产环境
+security:
+- bearerAuth: []
+tags:
+- name: 经纪人管理 (Broker Management)
+  description: 經紀人關係、團隊、分成套餐、佣金分成等經紀人業務管理接口。
+paths:
+  /account/import:
+    post:
+      operationId: account_import
+      summary: 批量導入經紀人-客戶關係
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - account.apply_edit_member
+      - account.modify_transaction_channel
+      - account.suspend_account
+      - account.update_appid
+      - b2b_customer.submit_account
+      - kyc.update_account_info
+      - ticket.import_agent
+      - ticket.import_relation
+      x-lbonly: false
+      description: '批量導入經紀人與客戶的綁定關係。先上傳關係文件，再用返回的文件標識提交導入。
+
+
+        ### 請求參數
+
+
+        - 必填：`type`（導入文件類型）
+
+        - 可選：`s3_key`（上傳文件 S3 Key）、`name`（名稱）、`filename`（文件名）、`service`（服務標識）、`base_account_ids`（基礎賬號ID列表）、`audit_frontend_resource`（審計上下文）
+
+        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段說明。
+
+
+        ### 處理結果
+
+
+        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - type
+              properties:
+                s3_key:
+                  type: string
+                  description: 文件上傳後返回的對象存儲 Key，用於定位本次請求處理的文件。
+                name:
+                  type: string
+                  description: 用於指定「名稱」。
+                type:
+                  type: string
+                  description: 用於指定「導入文件類型」。此字段為必填項。
+                filename:
+                  type: string
+                  description: 本次請求處理的文件名，包含文件擴展名。
+                service:
+                  type: string
+                  description: 用於指定「服務標識」。
+                base_account_ids:
+                  type: array
+                  description: 基礎賬號ID列表，以 JSON 數組形式提交。
+                  items:
+                    type: string
+                audit_frontend_resource:
+                  type: object
+                  description: 調用方提交的審計上下文，用於記錄本次操作。
+            example:
+              s3_key: ''
+              name: ''
+              type: ''
+              filename: ''
+              service: ''
+              base_account_ids: []
+              audit_frontend_resource: {}
+      responses:
+        '200':
+          description: 請求處理成功。響應的 `data` 不包含額外業務字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /v1/datasets/broker_relationship_accounts:
+    post:
+      operationId: broker_relationship_accounts
+      summary: 經紀人客戶關系
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_agent_manage.list_relation
+      x-lbonly: false
+      description: '查詢「經紀人客戶關系」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+
+
+        ### 返回結果
+
+
+        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段說明。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 組合業務過濾條件。省略某個過濾字段時，不按該字段篩選。
+                  properties:
+                    team_code:
+                      type: string
+                      description: 用於按「團隊編號」篩選結果。
+                    name:
+                      type: string
+                      description: 用於按「團隊名稱」篩選結果。
+                    broker_code:
+                      type: string
+                      description: '用於按「經紀人」篩選結果。
+
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/broker_accounts` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。'
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/broker_accounts
+                    member_id:
+                      type: string
+                      description: 用於按「客戶」篩選結果。
+                    account_type:
+                      type: string
+                      description: '用於按「賬戶類型」篩選結果。
+
+
+                        **可選值：**
+
+                        - `M` - 表示融資賬戶
+
+                        - `C` - 表示現金賬戶
+
+                        - `F` - 表示期貨賬戶'
+                      enum:
+                      - M
+                      - C
+                      - F
+                      x-enum-details:
+                      - value: M
+                        label: 融資賬戶
+                      - value: C
+                        label: 現金賬戶
+                      - value: F
+                        label: 期貨賬戶
+                page:
+                  type: integer
+                  description: 要查詢的頁碼，從 `1` 開始。
+                page_size:
+                  type: integer
+                  description: 每頁返回的記錄數量。
+            example:
+              filters: {}
+              page: 1
+              page_size: 20
+      responses:
+        '200':
+          description: 成功時分頁返回「經紀人客戶關系」記錄，以及頁碼、每頁數量和總記錄數等分頁信息。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                - data
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                    - list
+                    - total
+                    properties:
+                      list:
+                        type: array
+                        description: '**返回值：** 列表列表。'
+                        items:
+                          type: object
+                          properties:
+                            display_id:
+                              type: string
+                              description: '**返回值：** 證券賬號。'
+                            real_name:
+                              type: string
+                              description: '**返回值：** 客戶姓名。'
+                            account_type:
+                              type: string
+                              description: '**返回值：** 賬戶類型。'
+                            account_type_val:
+                              type: string
+                              description: 字段 account_type 的原始值：account_type 返回的是經字典/關聯表映射解析後的可讀展示值，本字段返回映射前的原始編碼/ID。
+                            account_state:
+                              type: string
+                              description: '**返回值：** 賬戶狀態。'
+                            account_state_val:
+                              type: string
+                              description: 字段 account_state 的原始值：account_state 返回的是經字典/關聯表映射解析後的可讀展示值，本字段返回映射前的原始編碼/ID。
+                            account_disable:
+                              type: string
+                              description: '**返回值：** 賬戶凍結狀態。'
+                            account_disable_val:
+                              type: string
+                              description: 字段 account_disable 的原始值：account_disable 返回的是經字典/關聯表映射解析後的可讀展示值，本字段返回映射前的原始編碼/ID。
+                            broker_code:
+                              type: string
+                              description: '**返回值：** 經紀人編號。'
+                            team_code:
+                              type: string
+                              description: '**返回值：** 所屬團隊。'
+                            broker_state:
+                              type: string
+                              description: '**返回值：** 經紀人狀態。'
+                            broker_state_val:
+                              type: string
+                              description: 字段 broker_state 的原始值：broker_state 返回的是經字典/關聯表映射解析後的可讀展示值，本字段返回映射前的原始編碼/ID。
+                      total:
+                        type: integer
+                        description: '**返回值：** 符合查詢條件的記錄總數，用於計算分頁。'
+              example:
+                code: 0
+                message: success
+                data:
+                  list:
+                  - display_id: H00000000
+                    real_name: 示例用户
+                    account_type: Margin
+                    account_type_val: M
+                    account_state: Active
+                    account_state_val: '1'
+                    account_disable: Unfrozen
+                    account_disable_val: 'false'
+                    broker_code: LB851987964599174
+                    team_code: DT0001
+                    broker_state: Active
+                    broker_state_val: '1'
+                  total: 1272276
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-post-fallback: true
+      x-dataset-download:
+        method: POST
+        path: /v1/datasets/broker_relationship_accounts/download
+        operationId: broker_relationship_accounts_download
+  /v1/datasets/broker_relationship_accounts/download:
+    post:
+      operationId: broker_relationship_accounts_download
+      summary: 經紀人客戶關系導出
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_agent_manage.list_relation
+      x-lbonly: false
+      description: '將「經紀人客戶關系」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+
+
+        ### 導出模式
+
+
+        - `mode: 0`：同步導出，成功後直接返回下載地址。
+
+        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+
+        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 字段同 broker_relationship_accounts.yaml（query 能力）裏的 filters
+                  properties:
+                    team_code:
+                      type: string
+                      description: 用於按「團隊編號」篩選結果。
+                    name:
+                      type: string
+                      description: 用於按「團隊名稱」篩選結果。
+                    broker_code:
+                      type: string
+                      description: '用於按「經紀人」篩選結果。
+
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/broker_accounts` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。'
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/broker_accounts
+                    member_id:
+                      type: string
+                      description: 用於按「客戶」篩選結果。
+                    account_type:
+                      type: string
+                      description: '用於按「賬戶類型」篩選結果。
+
+
+                        **可選值：**
+
+                        - `M` - 表示融資賬戶
+
+                        - `C` - 表示現金賬戶
+
+                        - `F` - 表示期貨賬戶'
+                      enum:
+                      - M
+                      - C
+                      - F
+                      x-enum-details:
+                      - value: M
+                        label: 融資賬戶
+                      - value: C
+                        label: 現金賬戶
+                      - value: F
+                        label: 期貨賬戶
+                mode:
+                  type: integer
+                  default: 0
+                  description: '不傳時默認 0（同步）
+
+
+                    **可選值：**
+
+                    - `0` - 表示同步
+
+                    - `1` - 表示异步'
+                  enum:
+                  - 0
+                  - 1
+                  x-enum-details:
+                  - value: 0
+                    label: 同步
+                  - value: 1
+                    label: 异步
+                ext:
+                  type: string
+                  description: '下載文件格式。不傳時默認為 `csv`。
+
+
+                    **可選值：**
+
+                    - `csv` - 表示 CSV
+
+                    - `xlsx` - 表示 Excel'
+                  enum:
+                  - csv
+                  - xlsx
+                file_name:
+                  type: string
+                  description: 導出文件名稱。不傳時由服務端生成。
+                remark:
+                  type: string
+                  description: 與本次操作一並保存的備註。
+                down_fields:
+                  type: array
+                  description: 不傳時導出全部字段；取值範圍見 items.enum（同查詢接口 data.list.items 的字段列表）
+                  items:
+                    type: string
+                    enum:
+                    - display_id
+                    - real_name
+                    - account_type
+                    - account_type_val
+                    - account_state
+                    - account_state_val
+                    - account_disable
+                    - account_disable_val
+                    - broker_code
+                    - team_code
+                    - broker_state
+                    - broker_state_val
+                ticket_content:
+                  type: string
+                  description: 模板配置了下載審核工單時，供審批人查看
+                ticket_preview_url:
+                  type: string
+                  description: 導出審批詳情地址；僅在導出需要審批時使用。
+                hide:
+                  type: integer
+                  description: '是否在下載記錄列表中隱藏本次導出記錄。
+
+
+                    **可選值：**
+
+                    - `0` - 表示不隐藏
+
+                    - `1` - 表示隐藏'
+                  enum:
+                  - 0
+                  - 1
+                  x-enum-details:
+                  - value: 0
+                    label: 不隐藏
+                  - value: 1
+                    label: 隐藏
+            example:
+              filters: {}
+              mode: 0
+              ext: csv
+              file_name: ''
+              remark: ''
+              down_fields: []
+              ticket_content: ''
+              ticket_preview_url: ''
+              hide: 0
+      responses:
+        '200':
+          description: 成功時返回「經紀人客戶關系導出」任務信息。同步導出直接提供下載地址；異步導出提供用於後續查詢的 `file_download_id`。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                - data
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        description: '同步模式（`mode: 0`）下返回，異步模式下為空'
+                      file_download_id:
+                        type: string
+                        description: '異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
+
+                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。'
+                      ticket_id:
+                        type: string
+                        description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
+              example:
+                code: 0
+                message: success
+                data:
+                  url: https://b-api.longbridge.xyz/download/export_result.csv
+                  file_download_id: ''
+                  ticket_id: ''
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-dataset-parent:
+        method: POST
+        path: /v1/datasets/broker_relationship_accounts
+        operationId: broker_relationship_accounts
+  /account/biz_assign_broker_account:
+    post:
+      operationId: biz_assign_broker_account
+      summary: 經紀人下級管理
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_agent_manage.downline_agent
+      x-lbonly: false
+      description: '為指定經紀人設置其管理的下級經紀人列表。
+
+
+        ### 請求參數
+
+
+        - 必填：`broker_code`（經紀人編號）、`broker_codes`（管理的下級經紀人編號列表）
+
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+
+        ### 處理結果
+
+
+        成功時更新該經紀人管理的下級經紀人列表，業務結果位於 `data`；請結合業務 `code` 判斷是否成功。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - broker_code
+              - broker_codes
+              properties:
+                broker_code:
+                  type: string
+                  description: 經紀人編號。
+                broker_codes:
+                  type: array
+                  items:
+                    type: string
+                  description: 管理的下級經紀人編號列表。
+                  example:
+                  - AE002
+                  - AE003
+            example:
+              broker_code: AE001
+              broker_codes:
+              - AE002
+              - AE003
+      responses:
+        '200':
+          description: 請求處理成功。業務結果位於 `data`。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    description: 業務結果，通常為空對象。
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /account/biz_update_broker_account:
+    post:
+      operationId: biz_update_broker_account
+      summary: 修改經紀人信息
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_agent_manage.update_agent
+      x-lbonly: false
+      description: '修改經紀人（AE）的基本信息、所屬團隊及上級關係。
+
+
+        ### 請求參數
+
+
+        - 必填：`account`（交易員賬號）、`name`（經紀人名稱）、`broker_code`（經紀人編號）
+
+        - 可選：`team_code`（所屬團隊編號）、`home_tel`（家庭電話）、`office_tel`（辦公電話）、`email`（電子郵箱）、`remark`（備註）、`default_dcp_code`（默認分佣套餐 ID）、`ce_number`（經紀人牌照編號）、`parent_broker_code`（上級經紀人編號）
+
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+
+        ### 處理結果
+
+
+        成功時更新經紀人信息，業務結果位於 `data`；請結合業務 `code` 判斷是否成功。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - account
+              - broker_code
+              - name
+              properties:
+                account:
+                  type: string
+                  description: 交易員賬號。
+                name:
+                  type: string
+                  description: 經紀人名稱。
+                broker_code:
+                  type: string
+                  description: 經紀人編號（AE CODE）。
+                team_code:
+                  type: string
+                  description: 所屬團隊編號（AE GROUP CODE），不傳時不修改。
+                home_tel:
+                  type: string
+                  description: 家庭電話，不傳時不修改。
+                office_tel:
+                  type: string
+                  description: 辦公電話，不傳時不修改。
+                email:
+                  type: string
+                  description: 電子郵箱，不傳時不修改。
+                remark:
+                  type: string
+                  description: 備註，不傳時不修改。
+                default_dcp_code:
+                  type: string
+                  description: 默認分佣套餐 ID，不傳時不修改。
+                ce_number:
+                  type: string
+                  description: 經紀人牌照編號，不傳時不修改。
+                parent_broker_code:
+                  type: string
+                  description: 上級經紀人編號，不傳時不修改。
+            example:
+              account: AE10001
+              name: 张三
+              broker_code: AE001
+              team_code: G001
+              email: broker001@example.com
+              parent_broker_code: AE000
+      responses:
+        '200':
+          description: 請求處理成功。業務結果位於 `data`。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    description: 業務結果，通常為空對象。
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /v1/datasets/broker_teams:
+    post:
+      operationId: broker_teams
+      summary: To B 經紀人組列表
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_agent_manage.list_team
+      x-lbonly: false
+      description: '查詢「To B 經紀人組列表」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+
+
+        ### 返回結果
+
+
+        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段說明。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 組合業務過濾條件。省略某個過濾字段時，不按該字段篩選。
+                  properties:
+                    team_code:
+                      type: string
+                      description: 用於按「團隊編號」篩選結果。
+                    name:
+                      type: string
+                      description: 用於按「團隊名稱」篩選結果。
+                    type:
+                      type: string
+                      description: '用於按「團隊類型」篩選結果。
+
+
+                        **可選值：**
+
+                        - `1` - 表示經紀人
+
+                        - `2` - 表示營銷人員'
+                      enum:
+                      - '1'
+                      - '2'
+                      x-enum-details:
+                      - value: '1'
+                        label: 經紀人
+                      - value: '2'
+                        label: 營銷人員
+                    state:
+                      type: string
+                      description: '用於按「團隊狀態」篩選結果。
+
+
+                        **可選值：**
+
+                        - `1` - 表示激活
+
+                        - `2` - 表示凍結'
+                      enum:
+                      - '1'
+                      - '2'
+                      x-enum-details:
+                      - value: '1'
+                        label: 激活
+                      - value: '2'
+                        label: 凍結
+                page:
+                  type: integer
+                  description: 要查詢的頁碼，從 `1` 開始。
+                page_size:
+                  type: integer
+                  description: 每頁返回的記錄數量。
+            example:
+              filters: {}
+              page: 1
+              page_size: 20
+      responses:
+        '200':
+          description: 成功時分頁返回「To B 經紀人組列表」記錄，以及頁碼、每頁數量和總記錄數等分頁信息。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                - data
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                    - list
+                    - total
+                    properties:
+                      list:
+                        type: array
+                        description: '**返回值：** 列表列表。'
+                        items:
+                          type: object
+                          properties:
+                            team_code:
+                              type: string
+                              description: '**返回值：** 團隊編號。'
+                            name:
+                              type: string
+                              description: '**返回值：** 團隊名稱。'
+                            type:
+                              type: string
+                              description: '**返回值：** 團隊類型。'
+                            type_val:
+                              type: string
+                              description: 字段 type 的原始值：type 返回的是經字典/關聯表映射解析後的可讀展示值，本字段返回映射前的原始編碼/ID。
+                            state:
+                              type: string
+                              description: '**返回值：** 團隊狀態。'
+                            state_val:
+                              type: string
+                              description: 字段 state 的原始值：state 返回的是經字典/關聯表映射解析後的可讀展示值，本字段返回映射前的原始編碼/ID。
+                            remark:
+                              type: string
+                              description: '**返回值：** 備註。'
+                      total:
+                        type: integer
+                        description: '**返回值：** 符合查詢條件的記錄總數，用於計算分頁。'
+              example:
+                code: 0
+                message: success
+                data:
+                  list:
+                  - team_code: test133269618481592
+                    name: '245115561396428'
+                    type: Broker
+                    type_val: '1'
+                    state: Active
+                    state_val: '1'
+                    remark: '1'
+                  total: 493
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-post-fallback: true
+      x-dataset-download:
+        method: POST
+        path: /v1/datasets/broker_teams/download
+        operationId: broker_teams_download
+  /v1/datasets/broker_teams/download:
+    post:
+      operationId: broker_teams_download
+      summary: To B 經紀人組列表導出
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_agent_manage.list_team
+      x-lbonly: false
+      description: '將「To B 經紀人組列表」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+
+
+        ### 導出模式
+
+
+        - `mode: 0`：同步導出，成功後直接返回下載地址。
+
+        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+
+        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 字段同 broker_teams.yaml（query 能力）裏的 filters
+                  properties:
+                    team_code:
+                      type: string
+                      description: 用於按「團隊編號」篩選結果。
+                    name:
+                      type: string
+                      description: 用於按「團隊名稱」篩選結果。
+                    type:
+                      type: string
+                      description: '用於按「團隊類型」篩選結果。
+
+
+                        **可選值：**
+
+                        - `1` - 表示經紀人
+
+                        - `2` - 表示營銷人員'
+                      enum:
+                      - '1'
+                      - '2'
+                      x-enum-details:
+                      - value: '1'
+                        label: 經紀人
+                      - value: '2'
+                        label: 營銷人員
+                    state:
+                      type: string
+                      description: '用於按「團隊狀態」篩選結果。
+
+
+                        **可選值：**
+
+                        - `1` - 表示激活
+
+                        - `2` - 表示凍結'
+                      enum:
+                      - '1'
+                      - '2'
+                      x-enum-details:
+                      - value: '1'
+                        label: 激活
+                      - value: '2'
+                        label: 凍結
+                mode:
+                  type: integer
+                  default: 0
+                  description: '不傳時默認 0（同步）
+
+
+                    **可選值：**
+
+                    - `0` - 表示同步
+
+                    - `1` - 表示异步'
+                  enum:
+                  - 0
+                  - 1
+                  x-enum-details:
+                  - value: 0
+                    label: 同步
+                  - value: 1
+                    label: 异步
+                ext:
+                  type: string
+                  description: '下載文件格式。不傳時默認為 `csv`。
+
+
+                    **可選值：**
+
+                    - `csv` - 表示 CSV
+
+                    - `xlsx` - 表示 Excel'
+                  enum:
+                  - csv
+                  - xlsx
+                file_name:
+                  type: string
+                  description: 導出文件名稱。不傳時由服務端生成。
+                remark:
+                  type: string
+                  description: 與本次操作一並保存的備註。
+                down_fields:
+                  type: array
+                  description: 不傳時導出全部字段；取值範圍見 items.enum（同查詢接口 data.list.items 的字段列表）
+                  items:
+                    type: string
+                    enum:
+                    - team_code
+                    - name
+                    - type
+                    - type_val
+                    - state
+                    - state_val
+                    - remark
+                ticket_content:
+                  type: string
+                  description: 模板配置了下載審核工單時，供審批人查看
+                ticket_preview_url:
+                  type: string
+                  description: 導出審批詳情地址；僅在導出需要審批時使用。
+                hide:
+                  type: integer
+                  description: '是否在下載記錄列表中隱藏本次導出記錄。
+
+
+                    **可選值：**
+
+                    - `0` - 表示不隐藏
+
+                    - `1` - 表示隐藏'
+                  enum:
+                  - 0
+                  - 1
+                  x-enum-details:
+                  - value: 0
+                    label: 不隐藏
+                  - value: 1
+                    label: 隐藏
+            example:
+              filters: {}
+              mode: 0
+              ext: csv
+              file_name: ''
+              remark: ''
+              down_fields: []
+              ticket_content: ''
+              ticket_preview_url: ''
+              hide: 0
+      responses:
+        '200':
+          description: 成功時返回「To B 經紀人組列表導出」任務信息。同步導出直接提供下載地址；異步導出提供用於後續查詢的 `file_download_id`。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                - data
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        description: '同步模式（`mode: 0`）下返回，異步模式下為空'
+                      file_download_id:
+                        type: string
+                        description: '異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
+
+                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。'
+                      ticket_id:
+                        type: string
+                        description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
+              example:
+                code: 0
+                message: success
+                data:
+                  url: https://b-api.longbridge.xyz/download/export_result.csv
+                  file_download_id: ''
+                  ticket_id: ''
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-dataset-parent:
+        method: POST
+        path: /v1/datasets/broker_teams
+        operationId: broker_teams
+  /v1/datasets/brokers:
+    post:
+      operationId: brokers
+      summary: To B 經紀人列表
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_agent_manage.list_agent
+      x-lbonly: false
+      description: 查詢To B 經紀人列表。
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  properties:
+                    broker_code:
+                      type: string
+                      description: 經紀人編號
+                    name:
+                      type: string
+                      description: 經紀人姓名
+                    team_code:
+                      type: string
+                      description: 取值來自 b2b_team_list 動態枚舉，非固定
+                    state:
+                      type: string
+                      enum:
+                      - '1'
+                      - '2'
+                      x-enum-details:
+                      - value: '1'
+                        label: 激活
+                      - value: '2'
+                        label: 凍結
+                      description: 經紀人狀態
+                  description: 過濾條件
+                page:
+                  type: integer
+                  description: 頁碼
+                page_size:
+                  type: integer
+                  description: 每頁數量
+            example:
+              filters: {}
+              page: 1
+              page_size: 20
+      responses:
+        '200':
+          description: 分頁返回列表。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                - data
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                    - list
+                    - total
+                    properties:
+                      list:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            broker_code:
+                              type: string
+                              description: 經紀人編號
+                            name:
+                              type: string
+                              description: 經紀人姓名
+                            team_name:
+                              type: string
+                              description: 團隊名稱
+                            ce_number:
+                              type: string
+                              description: 牌照號碼
+                            created_at:
+                              type: string
+                              description: 開通日期
+                            state:
+                              type: string
+                              description: 經紀人狀態
+                            state_val:
+                              type: string
+                              description: 字段 state 的原始值：state 返回的是經字典/關聯表映射解析後的可讀展示值，本字段返回映射前的原始編碼/ID。
+                            default_dcp_code:
+                              type: string
+                              description: 分傭套餐
+                            default_dcp_code_val:
+                              type: string
+                              description: 字段 default_dcp_code 的原始值：default_dcp_code 返回的是經字典/關聯表映射解析後的可讀展示值，本字段返回映射前的原始編碼/ID。
+                            billing_package_id:
+                              type: string
+                              description: 計費客戶組編號（默認）
+                            billing_package_id_val:
+                              type: string
+                              description: 字段 billing_package_id 的原始值：billing_package_id 返回的是經字典/關聯表映射解析後的可讀展示值，本字段返回映射前的原始編碼/ID。
+                        description: 列表
+                      total:
+                        type: integer
+                        description: 總條數
+              example:
+                code: 0
+                message: success
+                data:
+                  list:
+                  - broker_code: string
+                    name: string
+                    team_name: string
+                    ce_number: string
+                    created_at: string
+                    state: string
+                    state_val: string
+                    default_dcp_code: string
+                    default_dcp_code_val: string
+                    billing_package_id: string
+                    billing_package_id_val: string
+                  total: 1
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-post-fallback: true
+  /account/biz_create_broker_team:
+    post:
+      operationId: create_biz_broker_team
+      summary: 新建經紀人團隊
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_agent_manage.new_team
+      x-lbonly: false
+      description: '新建經紀人團隊。
+
+
+        ### 請求參數
+
+
+        - 必填：`name`（經紀人組名稱）
+
+        - 可選：`team_code`（AE GROUP CODE）、`state`（狀態）、`type`（團隊類型）、`remark`（備註）
+
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+
+        ### 處理結果
+
+
+        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - name
+              properties:
+                team_code:
+                  type: string
+                  description: 用於指定「AE GROUP CODE」。
+                name:
+                  type: string
+                  description: 用於指定「經紀人組名稱」。此字段為必填項。
+                state:
+                  type: string
+                  description: 本次請求要設置的目標狀態。
+                type:
+                  type: string
+                  description: 用於指定「團隊類型」。
+                remark:
+                  type: string
+                  description: 隨本次操作保存的備註。
+            example:
+              team_code: ''
+              name: ''
+              state: ''
+              type: ''
+              remark: ''
+      responses:
+        '200':
+          description: 請求處理成功。響應的 `data` 不包含額外業務字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /admin-api/v2/users:
+    post:
+      operationId: CreateUserV2
+      summary: 用戶 - 創建用戶 V2
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - admin.role
+      x-lbonly: false
+      description: '創建用戶 V2。
+
+
+        用於新增後台用戶（包含團隊與經紀人頁面為經紀人開通的登錄賬號），並為其分配角色。
+
+
+        ### 請求參數
+
+
+        - 必填：`login_name`（登錄名）、`name`（姓名）、`biz_kind`（業務類型）、`role_ids`（角色 ID 列表）、`email`（郵箱）、`password`（登錄密碼）
+
+        - 可選：`mobile`（手機號）、`office_tel`（辦公電話）、`home_tel`（住宅電話）、`remark`（備註）、`two_factor_enabled`（是否啟用雙重驗證）、`wtt_password`（WTT 密碼）
+
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+
+        ### 處理結果
+
+
+        成功時創建用戶並返回結果，業務結果位於 `data`；請結合業務 `code` 判斷是否成功。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - login_name
+              - name
+              - biz_kind
+              - role_ids
+              - email
+              - password
+              properties:
+                login_name:
+                  type: string
+                  description: 登錄名，用戶唯一登錄標識。
+                name:
+                  type: string
+                  description: 用戶姓名。
+                biz_kind:
+                  type: string
+                  description: 業務類型，標識用戶所屬的業務線。
+                role_ids:
+                  type: array
+                  items:
+                    type: integer
+                  description: 分配給用戶的角色 ID 列表。
+                email:
+                  type: string
+                  description: 郵箱。
+                password:
+                  type: string
+                  description: 登錄密碼。
+                mobile:
+                  type: string
+                  description: 手機號，不傳時不設置。
+                office_tel:
+                  type: string
+                  description: 辦公電話，不傳時不設置。
+                home_tel:
+                  type: string
+                  description: 住宅電話，不傳時不設置。
+                remark:
+                  type: string
+                  description: 備註，不傳時為空。
+                two_factor_enabled:
+                  type: boolean
+                  description: 是否啟用雙重驗證（2FA）。
+                wtt_password:
+                  type: string
+                  description: WTT 密碼，不傳時不設置。
+            example:
+              login_name: broker001
+              name: 张三
+              biz_kind: broker
+              role_ids:
+              - 101
+              email: broker001@example.com
+              password: '********'
+              mobile: '13800000000'
+              two_factor_enabled: false
+      responses:
+        '200':
+          description: 請求處理成功。業務結果位於 `data`，通常包含新建用戶的信息。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    description: 新建用戶的信息。
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /admin-api/users/{id}/lock:
+    put:
+      operationId: lock_user
+      summary: 凍結用戶
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - admin.role
+      - b2b_user_manage.update_user
+      x-lbonly: false
+      description: '凍結指定用戶，使其無法登錄。
+
+
+        用於團隊與經紀人頁面對經紀人賬號的凍結操作。
+
+
+        ### 請求參數
+
+
+        - 路徑參數 `id`（用戶 ID），必填。
+
+        - 該接口無請求體。
+
+
+        ### 處理結果
+
+
+        成功時凍結目標用戶；請結合業務 `code` 判斷是否成功。'
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: 用戶 ID。
+      responses:
+        '200':
+          description: 請求處理成功。業務結果位於 `data`；請結合業務 `code` 判斷是否成功。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    description: 操作結果。該接口無文檔化的返回字段，通常為空對象。
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /account/biz_update_broker_team:
+    post:
+      operationId: update_biz_broker_team
+      summary: 編輯經紀人團隊
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_agent_manage.update_team
+      x-lbonly: false
+      description: '編輯經紀人團隊。
+
+
+        ### 請求參數
+
+
+        - 必填：`team_id`（團隊ID）
+
+        - 可選：`team_code`（AE GROUP CODE）、`name`（經紀人組名稱）、`state`（狀態）、`type`（團隊類型）、`remark`（備註）
+
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+
+        ### 處理結果
+
+
+        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - team_id
+              properties:
+                team_id:
+                  type: string
+                  description: 團隊ID，用於標識本次請求關聯的業務對象。此字段為必填項。
+                team_code:
+                  type: string
+                  description: 用於指定「AE GROUP CODE」。
+                name:
+                  type: string
+                  description: 用於指定「經紀人組名稱」。
+                state:
+                  type: string
+                  description: 本次請求要設置的目標狀態。
+                type:
+                  type: string
+                  description: 用於指定「團隊類型」。
+                remark:
+                  type: string
+                  description: 隨本次操作保存的備註。
+            example:
+              team_id: '123'
+              team_code: ''
+              name: ''
+              state: ''
+              type: ''
+              remark: ''
+      responses:
+        '200':
+          description: 請求處理成功。響應的 `data` 不包含額外業務字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /billing_tob/dcp:
+    post:
+      operationId: add_tob_dcp
+      summary: 新增分傭套餐
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_billing.dcp_binding
+      x-lbonly: false
+      description: '新增分傭套餐。
+
+
+        ### 請求參數
+
+
+        - 必填：`name`（套餐名稱）、`dcp_groups`（分傭組列表）
+
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+
+        ### 處理結果
+
+
+        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - name
+              - dcp_groups
+              properties:
+                name:
+                  type: string
+                  description: 用於指定「套餐名稱」。此字段為必填項。
+                dcp_groups:
+                  type: array
+                  description: 每項含 origin(來源) 和 dcp_rates(市場/分傭比例數組)
+                  items:
+                    type: string
+            example:
+              name: ''
+              dcp_groups:
+              - origin: ''
+                dcp_rates:
+                - market: HK
+                divide_prop: '0.5'
+      responses:
+        '200':
+          description: 請求處理成功。響應的 `data` 不包含額外業務字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+    put:
+      operationId: edit_tob_dcp
+      summary: 編輯分傭套餐
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_billing.dcp_binding
+      x-lbonly: false
+      description: '編輯分傭套餐。
+
+
+        ### 請求參數
+
+
+        - 必填：`id`（套餐ID）、`name`（套餐名稱）、`dcp_groups`（分傭組列表）
+
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+
+        ### 處理結果
+
+
+        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - id
+              - name
+              - dcp_groups
+              properties:
+                id:
+                  type: string
+                  description: 套餐ID，用於標識本次請求關聯的業務對象。此字段為必填項。
+                name:
+                  type: string
+                  description: 用於指定「套餐名稱」。此字段為必填項。
+                dcp_groups:
+                  type: array
+                  description: 分傭組列表，以 JSON 數組形式提交。此字段為必填項。
+                  items:
+                    type: string
+            example:
+              id: '123'
+              name: ''
+              dcp_groups: []
+      responses:
+        '200':
+          description: 請求處理成功。響應的 `data` 不包含額外業務字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /v1/datasets/booking_billing_dcp_packages:
+    post:
+      operationId: booking_billing_dcp_packages
+      summary: 分傭套餐管理
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_billing.dcp_binding
+      x-lbonly: false
+      description: '查詢「分傭套餐管理」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+
+
+        ### 返回結果
+
+
+        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段說明。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 組合業務過濾條件。省略某個過濾字段時，不按該字段篩選。
+                  properties:
+                    name:
+                      type: string
+                      description: 用於按「分成套餐名稱」篩選結果。
+                page:
+                  type: integer
+                  description: 要查詢的頁碼，從 `1` 開始。
+                page_size:
+                  type: integer
+                  description: 每頁返回的記錄數量。
+            example:
+              filters: {}
+              page: 1
+              page_size: 20
+      responses:
+        '200':
+          description: 成功時分頁返回「分傭套餐管理」記錄，以及頁碼、每頁數量和總記錄數等分頁信息。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                - data
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                    - list
+                    - total
+                    properties:
+                      list:
+                        type: array
+                        description: '**返回值：** 列表列表。'
+                        items:
+                          type: object
+                          properties:
+                            dcp_code:
+                              type: string
+                              description: '**返回值：** 套餐編號。'
+                            name:
+                              type: string
+                              description: '**返回值：** 分傭套餐。'
+                            non_neg:
+                              type: string
+                              description: '**返回值：** 允許虧損。'
+                            non_neg_val:
+                              type: string
+                              description: 字段 non_neg 的原始值：non_neg 返回的是經字典/關聯表映射解析後的可讀展示值，本字段返回映射前的原始編碼/ID。
+                            profit_target:
+                              type: string
+                              description: '**返回值：** 分傭對象。'
+                            profit_target_val:
+                              type: string
+                              description: 字段 profit_target 的原始值：profit_target 返回的是經字典/關聯表映射解析後的可讀展示值，本字段返回映射前的原始編碼/ID。
+                            op_user_name:
+                              type: string
+                              description: '**返回值：** 操作人。'
+                            created_at:
+                              type: string
+                              description: '**返回值：** 創建時間；時間或日期格式以接口實際返回值為準。'
+                            updated_at:
+                              type: string
+                              description: '**返回值：** 更新時間；時間或日期格式以接口實際返回值為準。'
+                      total:
+                        type: integer
+                        description: '**返回值：** 符合查詢條件的記錄總數，用於計算分頁。'
+              example:
+                code: 0
+                message: success
+                data:
+                  list:
+                  - dcp_code: JAW
+                    name: 经纪人分佣套餐20250611125055
+                    non_neg: No losses allowed
+                    non_neg_val: 'true'
+                    profit_target: AE
+                    profit_target_val: '0'
+                    op_user_name: 示例用户
+                    created_at: '1679909465'
+                    updated_at: '1749099055'
+                  total: 156
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-post-fallback: true
+      x-dataset-download:
+        method: POST
+        path: /v1/datasets/booking_billing_dcp_packages/download
+        operationId: booking_billing_dcp_packages_download
+  /v1/datasets/booking_billing_dcp_packages/download:
+    post:
+      operationId: booking_billing_dcp_packages_download
+      summary: 分傭套餐管理導出
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_billing.dcp_binding
+      x-lbonly: false
+      description: '將「分傭套餐管理」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+
+
+        ### 導出模式
+
+
+        - `mode: 0`：同步導出，成功後直接返回下載地址。
+
+        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+
+        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 字段同 booking_billing_dcp_packages.yaml（query 能力）裏的 filters
+                  properties:
+                    name:
+                      type: string
+                      description: 用於按「分成套餐名稱」篩選結果。
+                mode:
+                  type: integer
+                  default: 0
+                  description: '不傳時默認 0（同步）
+
+
+                    **可選值：**
+
+                    - `0` - 表示同步
+
+                    - `1` - 表示异步'
+                  enum:
+                  - 0
+                  - 1
+                  x-enum-details:
+                  - value: 0
+                    label: 同步
+                  - value: 1
+                    label: 异步
+                ext:
+                  type: string
+                  description: '下載文件格式。不傳時默認為 `csv`。
+
+
+                    **可選值：**
+
+                    - `csv` - 表示 CSV
+
+                    - `xlsx` - 表示 Excel'
+                  enum:
+                  - csv
+                  - xlsx
+                file_name:
+                  type: string
+                  description: 導出文件名稱。不傳時由服務端生成。
+                remark:
+                  type: string
+                  description: 與本次操作一並保存的備註。
+                down_fields:
+                  type: array
+                  description: 不傳時導出全部字段；取值範圍見 items.enum（同查詢接口 data.list.items 的字段列表）
+                  items:
+                    type: string
+                    enum:
+                    - dcp_code
+                    - name
+                    - non_neg
+                    - non_neg_val
+                    - profit_target
+                    - profit_target_val
+                    - op_user_name
+                    - created_at
+                    - updated_at
+                ticket_content:
+                  type: string
+                  description: 模板配置了下載審核工單時，供審批人查看
+                ticket_preview_url:
+                  type: string
+                  description: 導出審批詳情地址；僅在導出需要審批時使用。
+                hide:
+                  type: integer
+                  description: '是否在下載記錄列表中隱藏本次導出記錄。
+
+
+                    **可選值：**
+
+                    - `0` - 表示不隐藏
+
+                    - `1` - 表示隐藏'
+                  enum:
+                  - 0
+                  - 1
+                  x-enum-details:
+                  - value: 0
+                    label: 不隐藏
+                  - value: 1
+                    label: 隐藏
+            example:
+              filters: {}
+              mode: 0
+              ext: csv
+              file_name: ''
+              remark: ''
+              down_fields: []
+              ticket_content: ''
+              ticket_preview_url: ''
+              hide: 0
+      responses:
+        '200':
+          description: 成功時返回「分傭套餐管理導出」任務信息。同步導出直接提供下載地址；異步導出提供用於後續查詢的 `file_download_id`。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                - data
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        description: '同步模式（`mode: 0`）下返回，異步模式下為空'
+                      file_download_id:
+                        type: string
+                        description: '異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
+
+                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。'
+                      ticket_id:
+                        type: string
+                        description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
+              example:
+                code: 0
+                message: success
+                data:
+                  url: https://b-api.longbridge.xyz/download/export_result.csv
+                  file_download_id: ''
+                  ticket_id: ''
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-dataset-parent:
+        method: POST
+        path: /v1/datasets/booking_billing_dcp_packages
+        operationId: booking_billing_dcp_packages
+  /billing_tob/divide_commission_package:
+    delete:
+      operationId: del_dcp
+      summary: 刪除分傭套餐
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_billing.dcp_binding
+      - b2b_billing.dcp_manage
+      x-lbonly: false
+      description: '刪除分傭套餐。
+
+
+        ### 請求參數
+
+
+        - 必填：`id`（套餐ID）
+
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+
+        ### 處理結果
+
+
+        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - id
+              properties:
+                id:
+                  type: string
+                  description: 套餐ID，用於標識本次請求關聯的業務對象。此字段為必填項。
+            example:
+              id: '1'
+      responses:
+        '200':
+          description: 請求處理成功。響應的 `data` 不包含額外業務字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /billing_tob/account_divide_commission_batch:
+    put:
+      operationId: account_divide_commission_batch
+      summary: 批量配置計費和分傭綁定
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_billing.dcp_binding
+      x-lbonly: false
+      description: '批量配置計費和分傭綁定。
+
+
+        ### 請求參數
+
+
+        - 必填：`dcp_code`（分傭套餐編號）、`aaids`（客戶資產賬號列表）
+
+        - 可選：`org_id`（機構ID）
+
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+
+        ### 處理結果
+
+
+        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - dcp_code
+              - aaids
+              properties:
+                dcp_code:
+                  type: string
+                  description: 要批量綁定的有效分傭套餐編碼。請使用當前機構已配置且未刪除的套餐編碼。
+                aaids:
+                  type: array
+                  description: 客戶 AAID 列表（數字）
+                  items:
+                    type: string
+                org_id:
+                  type: string
+                  description: 機構 ID，不傳時默認為 '1'
+            example:
+              dcp_code: DCP001
+              aaids:
+              - 123
+              - 456
+              org_id: '1'
+      responses:
+        '200':
+          description: 請求處理成功。響應的 `data` 不包含額外業務字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /billing_tob/account_divide_commission_bo:
+    put:
+      operationId: account_divide_commission_bo
+      summary: 單個客戶配置計費和分傭綁定
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_billing.dcp_binding
+      x-lbonly: false
+      description: '單個客戶配置計費和分傭綁定。
+
+
+        ### 請求參數
+
+
+        - 必填：`aaid`（客戶資產賬號）、`dcp_code`（分傭套餐編號）、`package_id`（計費套餐ID）
+
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+
+        ### 處理結果
+
+
+        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - aaid
+              - dcp_code
+              - package_id
+              properties:
+                aaid:
+                  type: string
+                  description: 取自當前待配置客戶記錄的 `info.aaid`
+                dcp_code:
+                  type: string
+                  description: 要綁定給客戶的有效分傭套餐編碼。請使用當前機構已配置且未刪除的套餐編碼。
+                package_id:
+                  type: string
+                  description: '取值來自 org_package_ref_org 動態枚舉，非固定
+
+
+                    請調用 `GET /v1/datasets/refs/org_billing_packages` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本字段值。'
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/org_billing_packages
+            example:
+              aaid: H00000000
+              dcp_code: DCP001
+              package_id: '1'
+      responses:
+        '200':
+          description: 請求處理成功。響應的 `data` 不包含額外業務字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+  /v1/datasets/booking_billing_dcp_member_bindings:
+    post:
+      operationId: booking_billing_dcp_member_bindings
+      summary: 用戶分成套餐管理
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_billing.dcp_binding
+      x-lbonly: false
+      description: '查詢「用戶分成套餐管理」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+
+
+        ### 返回結果
+
+
+        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段說明。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 組合業務過濾條件。省略某個過濾字段時，不按該字段篩選。
+                  properties:
+                    aaid:
+                      type: string
+                      description: 用於按「客戶」篩選結果。
+                    name:
+                      type: string
+                      description: 用於按「分成套餐名稱」篩選結果。
+                    package_id:
+                      type: string
+                      description: '用於按「計費套餐」篩選結果。
+
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/billing_packages` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。'
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/billing_packages
+                    broker_code:
+                      type: string
+                      description: '用於按「經紀人」篩選結果。
+
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/broker_accounts_for_select` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。'
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/broker_accounts_for_select
+                page:
+                  type: integer
+                  description: 要查詢的頁碼，從 `1` 開始。
+                page_size:
+                  type: integer
+                  description: 每頁返回的記錄數量。
+            example:
+              filters: {}
+              page: 1
+              page_size: 20
+      responses:
+        '200':
+          description: 成功時分頁返回「用戶分成套餐管理」記錄，以及頁碼、每頁數量和總記錄數等分頁信息。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                - data
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                    - list
+                    - total
+                    properties:
+                      list:
+                        type: array
+                        description: '**返回值：** 列表列表。'
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: '**返回值：** 當前記錄的唯一標識。'
+                            member_id:
+                              type: string
+                              description: '**返回值：** 客戶編號。'
+                            real_name:
+                              type: string
+                              description: '**返回值：** 客戶姓名。'
+                            origin_id:
+                              type: string
+                              description: '**返回值：** 證券賬號。'
+                            broker_name:
+                              type: string
+                              description: '**返回值：** 經紀人。'
+                            dcp_name:
+                              type: string
+                              description: '**返回值：** 分傭套餐。'
+                            package_id:
+                              type: string
+                              description: '**返回值：** 計費套餐。'
+                            package_id_val:
+                              type: string
+                              description: 字段 package_id 的原始值：package_id 返回的是經字典/關聯表映射解析後的可讀展示值，本字段返回映射前的原始編碼/ID。
+                            op_user_name:
+                              type: string
+                              description: '**返回值：** 操作人。'
+                            created_at:
+                              type: string
+                              description: '**返回值：** 創建時間；時間或日期格式以接口實際返回值為準。'
+                            updated_at:
+                              type: string
+                              description: '**返回值：** 更新時間；時間或日期格式以接口實際返回值為準。'
+                      total:
+                        type: integer
+                        description: '**返回值：** 符合查詢條件的記錄總數，用於計算分頁。'
+              example:
+                code: 0
+                message: success
+                data:
+                  list:
+                  - id: '3901603'
+                    member_id: '1000000000000000000'
+                    real_name: 示例用户
+                    origin_id: H00000000
+                    broker_name: name6373857663
+                    dcp_name: 北包包
+                    package_id: 自动化套餐收费20260112111529
+                    package_id_val: '44703'
+                    op_user_name: ''
+                    created_at: '1784185252'
+                    updated_at: '1784185252'
+                  total: 0
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-post-fallback: true
+      x-dataset-download:
+        method: POST
+        path: /v1/datasets/booking_billing_dcp_member_bindings/download
+        operationId: booking_billing_dcp_member_bindings_download
+  /v1/datasets/booking_billing_dcp_member_bindings/download:
+    post:
+      operationId: booking_billing_dcp_member_bindings_download
+      summary: 用戶分成套餐管理導出
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_billing.dcp_binding
+      x-lbonly: false
+      description: '將「用戶分成套餐管理」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+
+
+        ### 導出模式
+
+
+        - `mode: 0`：同步導出，成功後直接返回下載地址。
+
+        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+
+        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 字段同 booking_billing_dcp_member_bindings.yaml（query 能力）裏的 filters
+                  properties:
+                    aaid:
+                      type: string
+                      description: 用於按「客戶」篩選結果。
+                    name:
+                      type: string
+                      description: 用於按「分成套餐名稱」篩選結果。
+                    package_id:
+                      type: string
+                      description: '用於按「計費套餐」篩選結果。
+
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/billing_packages` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。'
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/billing_packages
+                    broker_code:
+                      type: string
+                      description: '用於按「經紀人」篩選結果。
+
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/broker_accounts_for_select` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。'
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/broker_accounts_for_select
+                mode:
+                  type: integer
+                  default: 0
+                  description: '不傳時默認 0（同步）
+
+
+                    **可選值：**
+
+                    - `0` - 表示同步
+
+                    - `1` - 表示异步'
+                  enum:
+                  - 0
+                  - 1
+                  x-enum-details:
+                  - value: 0
+                    label: 同步
+                  - value: 1
+                    label: 异步
+                ext:
+                  type: string
+                  description: '下載文件格式。不傳時默認為 `csv`。
+
+
+                    **可選值：**
+
+                    - `csv` - 表示 CSV
+
+                    - `xlsx` - 表示 Excel'
+                  enum:
+                  - csv
+                  - xlsx
+                file_name:
+                  type: string
+                  description: 導出文件名稱。不傳時由服務端生成。
+                remark:
+                  type: string
+                  description: 與本次操作一並保存的備註。
+                down_fields:
+                  type: array
+                  description: 不傳時導出全部字段；取值範圍見 items.enum（同查詢接口 data.list.items 的字段列表）
+                  items:
+                    type: string
+                    enum:
+                    - id
+                    - member_id
+                    - real_name
+                    - origin_id
+                    - broker_name
+                    - dcp_name
+                    - package_id
+                    - package_id_val
+                    - op_user_name
+                    - created_at
+                    - updated_at
+                ticket_content:
+                  type: string
+                  description: 模板配置了下載審核工單時，供審批人查看
+                ticket_preview_url:
+                  type: string
+                  description: 導出審批詳情地址；僅在導出需要審批時使用。
+                hide:
+                  type: integer
+                  description: '是否在下載記錄列表中隱藏本次導出記錄。
+
+
+                    **可選值：**
+
+                    - `0` - 表示不隐藏
+
+                    - `1` - 表示隐藏'
+                  enum:
+                  - 0
+                  - 1
+                  x-enum-details:
+                  - value: 0
+                    label: 不隐藏
+                  - value: 1
+                    label: 隐藏
+            example:
+              filters: {}
+              mode: 0
+              ext: csv
+              file_name: ''
+              remark: ''
+              down_fields: []
+              ticket_content: ''
+              ticket_preview_url: ''
+              hide: 0
+      responses:
+        '200':
+          description: 成功時返回「用戶分成套餐管理導出」任務信息。同步導出直接提供下載地址；異步導出提供用於後續查詢的 `file_download_id`。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                - data
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        description: '同步模式（`mode: 0`）下返回，異步模式下為空'
+                      file_download_id:
+                        type: string
+                        description: '異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
+
+                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。'
+                      ticket_id:
+                        type: string
+                        description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
+              example:
+                code: 0
+                message: success
+                data:
+                  url: https://b-api.longbridge.xyz/download/export_result.csv
+                  file_download_id: ''
+                  ticket_id: ''
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-dataset-parent:
+        method: POST
+        path: /v1/datasets/booking_billing_dcp_member_bindings
+        operationId: booking_billing_dcp_member_bindings
+  /v1/datasets/booking_billing_dcp_details:
+    post:
+      operationId: booking_billing_dcp_details
+      summary: 傭金分成明細查詢
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_billing.dcp_binding
+      x-lbonly: false
+      description: '查詢「傭金分成明細查詢」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+
+
+        ### 返回結果
+
+
+        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段說明。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 組合業務過濾條件。省略某個過濾字段時，不按該字段篩選。
+                  properties:
+                    biz_date:
+                      type: object
+                      description: 用於按「賬務日期」篩選結果。
+                      properties:
+                        gte:
+                          type: string
+                          format: date
+                          description: 篩選範圍的下限，匹配值包含該值。
+                        lte:
+                          type: string
+                          format: date
+                          description: 篩選範圍的上限，匹配值包含該值。
+                    aaid:
+                      type: string
+                      description: 用於按「客戶」篩選結果。
+                    broker_code:
+                      type: string
+                      description: '用於按「經紀人」篩選結果。
+
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/broker_accounts_for_select` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。'
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/broker_accounts_for_select
+                    broker_team_code:
+                      type: string
+                      description: '用於按「經紀人組」篩選結果。
+
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/broker_teams_ref` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。'
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/broker_teams_ref
+                    market:
+                      type: string
+                      description: '用於按「市場」篩選結果。
+
+
+                        **可選值：** `US`、`HK`、`UK`、`SH`、`SZ`、`SG`、`KR`、`JP`、`AU`、`DE`、`CA`、`TH`、`ID`、`MY`、`TR`、`NA`、`OSL`、`HAS`、`EU`、`UT`、`GTMMF`'
+                      enum:
+                      - US
+                      - HK
+                      - UK
+                      - SH
+                      - SZ
+                      - SG
+                      - KR
+                      - JP
+                      - AU
+                      - DE
+                      - CA
+                      - TH
+                      - ID
+                      - MY
+                      - TR
+                      - NA
+                      - OSL
+                      - HAS
+                      - EU
+                      - UT
+                      - GTMMF
+                      x-enum-details:
+                      - value: US
+                        label: 美國市場
+                      - value: HK
+                        label: 香港市場
+                      - value: UK
+                        label: 英國市場
+                      - value: SH
+                        label: 上海市場
+                      - value: SZ
+                        label: 深圳市場
+                      - value: SG
+                        label: 新加坡市場
+                      - value: KR
+                        label: 韓國市場
+                      - value: JP
+                        label: 日本市場
+                      - value: AU
+                        label: 澳大利亞市場
+                      - value: DE
+                        label: 德國市場
+                      - value: CA
+                        label: 加拿大市場
+                      - value: TH
+                        label: 泰國市場
+                      - value: ID
+                        label: 印尼市場
+                      - value: MY
+                        label: 馬來西亞市場
+                      - value: TR
+                        label: 土耳其市場
+                      - value: NA
+                        label: 未知市場
+                      - value: OSL
+                        label: OSL
+                      - value: HAS
+                        label: HAS
+                      - value: EU
+                        label: 歐洲市場
+                      - value: UT
+                        label: UT
+                      - value: GTMMF
+                        label: GTMMF
+                    currency:
+                      type: string
+                      description: '用於按「幣種」篩選結果。
+
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/tenant_currencies_by_channel` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。'
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/tenant_currencies_by_channel
+                    biz_type:
+                      type: string
+                      description: '用於按「業務類型」篩選結果。
+
+
+                        **可選值：**
+
+                        - `-1` - 表示基金交易
+
+                        - `1` - 表示股票交易
+
+                        - `2` - 表示融資利息
+
+                        - `3` - 表示存款利息
+
+                        - `4` - 表示出金交易
+
+                        - `5` - 表示期權交易
+
+                        - `6` - 表示轉倉手續費
+
+                        - `7` - 表示證券組合費
+
+                        - `8` - 表示融券
+
+                        - `-2` - 表示 IPO
+
+                        - `14` - 表示場外交易'
+                      enum:
+                      - '-1'
+                      - '1'
+                      - '2'
+                      - '3'
+                      - '4'
+                      - '5'
+                      - '6'
+                      - '7'
+                      - '8'
+                      - '-2'
+                      - '14'
+                      x-enum-details:
+                      - value: '-1'
+                        label: 基金交易
+                      - value: '1'
+                        label: 股票交易
+                      - value: '2'
+                        label: 融資利息
+                      - value: '3'
+                        label: 存款利息
+                      - value: '4'
+                        label: 出金交易
+                      - value: '5'
+                        label: 期權交易
+                      - value: '6'
+                        label: 轉倉手續費
+                      - value: '7'
+                        label: 證券組合費
+                      - value: '8'
+                        label: 融券
+                      - value: '-2'
+                        label: IPO
+                      - value: '14'
+                        label: 場外交易
+                page:
+                  type: integer
+                  description: 要查詢的頁碼，從 `1` 開始。
+                page_size:
+                  type: integer
+                  description: 每頁返回的記錄數量。
+            example:
+              filters: {}
+              page: 1
+              page_size: 20
+      responses:
+        '200':
+          description: 成功時分頁返回「傭金分成明細查詢」記錄，以及頁碼、每頁數量和總記錄數等分頁信息。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                - data
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                    - list
+                    - total
+                    properties:
+                      list:
+                        type: array
+                        description: '**返回值：** 列表列表。'
+                        items:
+                          type: object
+                          properties:
+                            biz_date:
+                              type: string
+                              description: '**返回值：** 財務日期；時間或日期格式以接口實際返回值為準。'
+                            member_id:
+                              type: string
+                              description: '**返回值：** 客戶編號。'
+                            real_name:
+                              type: string
+                              description: '**返回值：** 客戶姓名。'
+                            origin_id:
+                              type: string
+                              description: '**返回值：** 證券賬號。'
+                            broker_code:
+                              type: string
+                              description: '**返回值：** 經紀人。'
+                            broker_team_code:
+                              type: string
+                              description: '**返回值：** 經紀人組。'
+                            market:
+                              type: string
+                              description: '**返回值：** 市場。'
+                            biz_type:
+                              type: string
+                              description: '**返回值：** 業務類型。'
+                            biz_type_val:
+                              type: string
+                              description: 字段 biz_type 的原始值：biz_type 返回的是經字典/關聯表映射解析後的可讀展示值，本字段返回映射前的原始編碼/ID。
+                            trade_amount:
+                              type: string
+                              description: '**返回值：** 交易金額。'
+                            currency:
+                              type: string
+                              description: '**返回值：** 幣種。'
+                            dcp_name:
+                              type: string
+                              description: '**返回值：** 分傭套餐。'
+                            broker_commission_amount:
+                              type: string
+                              description: '**返回值：** 經紀人佣金。'
+                            org_commission_amount:
+                              type: string
+                              description: '**返回值：** 經紀行佣金。'
+                            fee_amount:
+                              type: string
+                              description: '**返回值：** 佣金總額。'
+                      total:
+                        type: integer
+                        description: '**返回值：** 符合查詢條件的記錄總數，用於計算分頁。'
+              example:
+                code: 0
+                message: success
+                data:
+                  list:
+                  - biz_date: '20260713'
+                    member_id: '1000000000000000000'
+                    real_name: 示例用户
+                    origin_id: H00000000
+                    broker_code: LB851987964599174
+                    broker_team_code: DT0001
+                    market: US
+                    biz_type: Stock Trading
+                    biz_type_val: '1'
+                    trade_amount: '1.00'
+                    currency: USD
+                    dcp_name: 北包包
+                    broker_commission_amount: '0.03'
+                    org_commission_amount: '0.07'
+                    fee_amount: '0.10'
+                  total: 0
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-post-fallback: true
+      x-dataset-download:
+        method: POST
+        path: /v1/datasets/booking_billing_dcp_details/download
+        operationId: booking_billing_dcp_details_download
+  /v1/datasets/booking_billing_dcp_details/download:
+    post:
+      operationId: booking_billing_dcp_details_download
+      summary: 傭金分成明細查詢導出
+      tags:
+      - 经纪人管理 (Broker Management)
+      x-permission-key:
+      - b2b_billing.dcp_binding
+      x-lbonly: false
+      description: '將「傭金分成明細查詢」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+
+
+        ### 導出模式
+
+
+        - `mode: 0`：同步導出，成功後直接返回下載地址。
+
+        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+
+        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。'
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 字段同 booking_billing_dcp_details.yaml（query 能力）裏的 filters
+                  properties:
+                    biz_date:
+                      type: object
+                      description: 用於按「賬務日期」篩選結果。
+                      properties:
+                        gte:
+                          type: string
+                          format: date
+                          description: 篩選範圍的下限，匹配值包含該值。
+                        lte:
+                          type: string
+                          format: date
+                          description: 篩選範圍的上限，匹配值包含該值。
+                    aaid:
+                      type: string
+                      description: 用於按「客戶」篩選結果。
+                    broker_code:
+                      type: string
+                      description: '用於按「經紀人」篩選結果。
+
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/broker_accounts_for_select` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。'
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/broker_accounts_for_select
+                    broker_team_code:
+                      type: string
+                      description: '用於按「經紀人組」篩選結果。
+
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/broker_teams_ref` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。'
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/broker_teams_ref
+                    market:
+                      type: string
+                      description: '用於按「市場」篩選結果。
+
+
+                        **可選值：** `US`、`HK`、`UK`、`SH`、`SZ`、`SG`、`KR`、`JP`、`AU`、`DE`、`CA`、`TH`、`ID`、`MY`、`TR`、`NA`、`OSL`、`HAS`、`EU`、`UT`、`GTMMF`'
+                      enum:
+                      - US
+                      - HK
+                      - UK
+                      - SH
+                      - SZ
+                      - SG
+                      - KR
+                      - JP
+                      - AU
+                      - DE
+                      - CA
+                      - TH
+                      - ID
+                      - MY
+                      - TR
+                      - NA
+                      - OSL
+                      - HAS
+                      - EU
+                      - UT
+                      - GTMMF
+                      x-enum-details:
+                      - value: US
+                        label: 美國市場
+                      - value: HK
+                        label: 香港市場
+                      - value: UK
+                        label: 英國市場
+                      - value: SH
+                        label: 上海市場
+                      - value: SZ
+                        label: 深圳市場
+                      - value: SG
+                        label: 新加坡市場
+                      - value: KR
+                        label: 韓國市場
+                      - value: JP
+                        label: 日本市場
+                      - value: AU
+                        label: 澳大利亞市場
+                      - value: DE
+                        label: 德國市場
+                      - value: CA
+                        label: 加拿大市場
+                      - value: TH
+                        label: 泰國市場
+                      - value: ID
+                        label: 印尼市場
+                      - value: MY
+                        label: 馬來西亞市場
+                      - value: TR
+                        label: 土耳其市場
+                      - value: NA
+                        label: 未知市場
+                      - value: OSL
+                        label: OSL
+                      - value: HAS
+                        label: HAS
+                      - value: EU
+                        label: 歐洲市場
+                      - value: UT
+                        label: UT
+                      - value: GTMMF
+                        label: GTMMF
+                    currency:
+                      type: string
+                      description: '用於按「幣種」篩選結果。
+
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/tenant_currencies_by_channel` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。'
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/tenant_currencies_by_channel
+                    biz_type:
+                      type: string
+                      description: '用於按「業務類型」篩選結果。
+
+
+                        **可選值：**
+
+                        - `-1` - 表示基金交易
+
+                        - `1` - 表示股票交易
+
+                        - `2` - 表示融資利息
+
+                        - `3` - 表示存款利息
+
+                        - `4` - 表示出金交易
+
+                        - `5` - 表示期權交易
+
+                        - `6` - 表示轉倉手續費
+
+                        - `7` - 表示證券組合費
+
+                        - `8` - 表示融券
+
+                        - `-2` - 表示 IPO
+
+                        - `14` - 表示場外交易'
+                      enum:
+                      - '-1'
+                      - '1'
+                      - '2'
+                      - '3'
+                      - '4'
+                      - '5'
+                      - '6'
+                      - '7'
+                      - '8'
+                      - '-2'
+                      - '14'
+                      x-enum-details:
+                      - value: '-1'
+                        label: 基金交易
+                      - value: '1'
+                        label: 股票交易
+                      - value: '2'
+                        label: 融資利息
+                      - value: '3'
+                        label: 存款利息
+                      - value: '4'
+                        label: 出金交易
+                      - value: '5'
+                        label: 期權交易
+                      - value: '6'
+                        label: 轉倉手續費
+                      - value: '7'
+                        label: 證券組合費
+                      - value: '8'
+                        label: 融券
+                      - value: '-2'
+                        label: IPO
+                      - value: '14'
+                        label: 場外交易
+                mode:
+                  type: integer
+                  default: 0
+                  description: '不傳時默認 0（同步）
+
+
+                    **可選值：**
+
+                    - `0` - 表示同步
+
+                    - `1` - 表示异步'
+                  enum:
+                  - 0
+                  - 1
+                  x-enum-details:
+                  - value: 0
+                    label: 同步
+                  - value: 1
+                    label: 异步
+                ext:
+                  type: string
+                  description: '下載文件格式。不傳時默認為 `csv`。
+
+
+                    **可選值：**
+
+                    - `csv` - 表示 CSV
+
+                    - `xlsx` - 表示 Excel'
+                  enum:
+                  - csv
+                  - xlsx
+                file_name:
+                  type: string
+                  description: 導出文件名稱。不傳時由服務端生成。
+                remark:
+                  type: string
+                  description: 與本次操作一並保存的備註。
+                down_fields:
+                  type: array
+                  description: 不傳時導出全部字段；取值範圍見 items.enum（同查詢接口 data.list.items 的字段列表）
+                  items:
+                    type: string
+                    enum:
+                    - biz_date
+                    - member_id
+                    - real_name
+                    - origin_id
+                    - broker_code
+                    - broker_team_code
+                    - market
+                    - biz_type
+                    - biz_type_val
+                    - trade_amount
+                    - currency
+                    - dcp_name
+                    - broker_commission_amount
+                    - org_commission_amount
+                    - fee_amount
+                ticket_content:
+                  type: string
+                  description: 模板配置了下載審核工單時，供審批人查看
+                ticket_preview_url:
+                  type: string
+                  description: 導出審批詳情地址；僅在導出需要審批時使用。
+                hide:
+                  type: integer
+                  description: '是否在下載記錄列表中隱藏本次導出記錄。
+
+
+                    **可選值：**
+
+                    - `0` - 表示不隐藏
+
+                    - `1` - 表示隐藏'
+                  enum:
+                  - 0
+                  - 1
+                  x-enum-details:
+                  - value: 0
+                    label: 不隐藏
+                  - value: 1
+                    label: 隐藏
+            example:
+              filters: {}
+              mode: 0
+              ext: csv
+              file_name: ''
+              remark: ''
+              down_fields: []
+              ticket_content: ''
+              ticket_preview_url: ''
+              hide: 0
+      responses:
+        '200':
+          description: 成功時返回「傭金分成明細查詢導出」任務信息。同步導出直接提供下載地址；異步導出提供用於後續查詢的 `file_download_id`。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - code
+                - message
+                - data
+                properties:
+                  code:
+                    type: integer
+                    description: '0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code` 判斷具體結果。
+
+
+                      - `401`：未登錄。
+
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。'
+                    x-enum-details:
+                    - value: 0
+                      label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        description: '同步模式（`mode: 0`）下返回，異步模式下為空'
+                      file_download_id:
+                        type: string
+                        description: '異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
+
+                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。'
+                      ticket_id:
+                        type: string
+                        description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
+              example:
+                code: 0
+                message: success
+                data:
+                  url: https://b-api.longbridge.xyz/download/export_result.csv
+                  file_download_id: ''
+                  ticket_id: ''
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-dataset-parent:
+        method: POST
+        path: /v1/datasets/booking_billing_dcp_details
+        operationId: booking_billing_dcp_details
+components:
+  schemas:
+    BrokerGatewayErrorEnvelope:
+      type: object
+      description: Broker API Gateway 返回的错误响应结构。`code` 为业务错误码，`message` 为错误信息，`data` 通常为空。
+      x-description-hk: Broker API Gateway 返回的錯誤響應結構。`code` 為業務錯誤碼，`message` 為錯誤信息，`data` 通常為空。
+      x-description-en: Error response returned by Broker API Gateway. `code` is the business error code, `message` contains the error details, and `data` is usually empty.
+      required:
+      - code
+      - message
+      - data
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data: {}
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
