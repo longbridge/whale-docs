@@ -20,9 +20,6 @@ import clearingZhHKSource from "../../../broker-api/clearing.zh-HK.yml?raw";
 import serviceParamEnSource from "../../../broker-api/service-param.en.yml?raw";
 import serviceParamZhCNSource from "../../../broker-api/service-param.zh-CN.yml?raw";
 import serviceParamZhHKSource from "../../../broker-api/service-param.zh-HK.yml?raw";
-import tradingPanelEnSource from "../../../broker-api/trading-panel.en.yml?raw";
-import tradingPanelZhCNSource from "../../../broker-api/trading-panel.zh-CN.yml?raw";
-import tradingPanelZhHKSource from "../../../broker-api/trading-panel.zh-HK.yml?raw";
 import bookkeepingEnSource from "../../../broker-api/bookkeeping.en.yml?raw";
 import bookkeepingZhCNSource from "../../../broker-api/bookkeeping.zh-CN.yml?raw";
 import bookkeepingZhHKSource from "../../../broker-api/bookkeeping.zh-HK.yml?raw";
@@ -74,9 +71,6 @@ const clearingZhHK = parse(clearingZhHKSource) as OpenApiDocument;
 const serviceParamEn = parse(serviceParamEnSource) as OpenApiDocument;
 const serviceParamZhCN = parse(serviceParamZhCNSource) as OpenApiDocument;
 const serviceParamZhHK = parse(serviceParamZhHKSource) as OpenApiDocument;
-const tradingPanelEn = parse(tradingPanelEnSource) as OpenApiDocument;
-const tradingPanelZhCN = parse(tradingPanelZhCNSource) as OpenApiDocument;
-const tradingPanelZhHK = parse(tradingPanelZhHKSource) as OpenApiDocument;
 const bookkeepingEn = parse(bookkeepingEnSource) as OpenApiDocument;
 const bookkeepingZhCN = parse(bookkeepingZhCNSource) as OpenApiDocument;
 const bookkeepingZhHK = parse(bookkeepingZhHKSource) as OpenApiDocument;
@@ -110,9 +104,9 @@ function mergeDocuments(
 }
 
 const documents = {
-  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, clearingEn, billingEn, suspiciousEn, serviceParamEn, tradingPanelEn, bookkeepingEn, announcementEn),
-  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, clearingZhCN, billingZhCN, suspiciousZhCN, serviceParamZhCN, tradingPanelZhCN, bookkeepingZhCN, announcementZhCN),
-  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, clearingZhHK, billingZhHK, suspiciousZhHK, serviceParamZhHK, tradingPanelZhHK, bookkeepingZhHK, announcementZhHK),
+  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, clearingEn, billingEn, suspiciousEn, serviceParamEn, bookkeepingEn, announcementEn),
+  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, clearingZhCN, billingZhCN, suspiciousZhCN, serviceParamZhCN, bookkeepingZhCN, announcementZhCN),
+  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, clearingZhHK, billingZhHK, suspiciousZhHK, serviceParamZhHK, bookkeepingZhHK, announcementZhHK),
 } as const;
 
 const domainDocuments = {
@@ -124,7 +118,6 @@ const domainDocuments = {
     ["broker-api/billing.en.yml", billingEn],
     ["broker-api/suspicious.en.yml", suspiciousEn],
     ["broker-api/service-param.en.yml", serviceParamEn],
-    ["broker-api/trading-panel.en.yml", tradingPanelEn],
     ["broker-api/bookkeeping.en.yml", bookkeepingEn],
     ["broker-api/announcement.en.yml", announcementEn],
   ],
@@ -136,7 +129,6 @@ const domainDocuments = {
     ["broker-api/billing.zh-CN.yml", billingZhCN],
     ["broker-api/suspicious.zh-CN.yml", suspiciousZhCN],
     ["broker-api/service-param.zh-CN.yml", serviceParamZhCN],
-    ["broker-api/trading-panel.zh-CN.yml", tradingPanelZhCN],
     ["broker-api/bookkeeping.zh-CN.yml", bookkeepingZhCN],
     ["broker-api/announcement.zh-CN.yml", announcementZhCN],
   ],
@@ -148,7 +140,6 @@ const domainDocuments = {
     ["broker-api/billing.zh-HK.yml", billingZhHK],
     ["broker-api/suspicious.zh-HK.yml", suspiciousZhHK],
     ["broker-api/service-param.zh-HK.yml", serviceParamZhHK],
-    ["broker-api/trading-panel.zh-HK.yml", tradingPanelZhHK],
     ["broker-api/bookkeeping.zh-HK.yml", bookkeepingZhHK],
     ["broker-api/announcement.zh-HK.yml", announcementZhHK],
   ],
