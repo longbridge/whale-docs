@@ -3,7 +3,7 @@ title: TypeScript
 description: WhaleCoreSDK TypeScript installation, WebAssembly hosting, initialization, sessions, and public modules
 ---
 
-The TypeScript package runs WhaleCore in the browser. The engine is compiled to WebAssembly, and the package wraps it in typed ES modules for pass-through HTTP, real-time quotes, watchlists, and portfolios. Broker App owns every screen; the package owns the session, the connections, and the data.
+The TypeScript package runs WhaleCore in the browser. The engine is compiled to WebAssembly, and the package wraps it in typed ES modules for pass-through HTTP, quotes, watchlists, portfolios, and orders. Broker App owns every screen; the package owns the session, the connections, and the data.
 
 ## Requirements and installation {/* requirements-and-installation */}
 
@@ -11,12 +11,12 @@ The TypeScript package runs WhaleCore in the browser. The engine is compiled to 
 | --- | --- |
 | Runtime | A browser with WebAssembly, ES modules, and `WebSocket` |
 | Bundler | Any bundler that resolves `exports` subpaths and `import.meta.url`, such as Vite, esbuild, webpack 5, Rspack, or Parcel 2 |
-| TypeScript | Optional. Declarations ship with the package |
+| TypeScript | Optional. Declarations ship with the package; if `Symbol.dispose` errors appear, add `ESNext.Disposable` to `lib` |
 | Node.js | Not a runtime target. The engine requires `window`, `localStorage`, and `WebSocket`, and there is no server-side build |
 
 The package is not published to a public registry. The Whale project team delivers the archive privately, and each archive is built for one tenant, because the signing key is compiled into the WebAssembly binary. Install the file you received, and check it in or store it where the build can reach it.
 
-One runtime dependency follows: `protobufjs`, because quote payloads are Protobuf. Code that only calls `initialize` and `request` imports from the root entry, and the bundler removes the decoder.
+One runtime dependency follows: `protobufjs`, because quote payloads are Protobuf. Builds that only use `initialize` and `request` drop the decoder.
 
 Each module is a separate subpath:
 
@@ -25,25 +25,12 @@ import { initialize, request } from 'whalecore-web';
 import { quotes, SubType } from 'whalecore-web/quotes';
 import { Watchlist } from 'whalecore-web/watchlist';
 import { Portfolio } from 'whalecore-web/portfolio';
+import { Orders } from 'whalecore-web/orders';
 ```
-
-If TypeScript reports `Symbol.dispose` errors from the shipped declarations, add `ESNext.Disposable` to `lib` or enable `skipLibCheck`.
 
 ## Host the WebAssembly binary {/* host-the-wasm-binary */}
 
-`engine_bg.wasm` is fetched at runtime by URL, and no bundler inlines it. Copy it next to the built assets and serve it with `Content-Type: application/wasm`.
-
-```js
-import { copyFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
-
-const require = createRequire(import.meta.url);
-const pkg = join(dirname(require.resolve('whalecore-web/quotes')), '..', '..');
-copyFileSync(join(pkg, 'engine', 'pkg', 'engine_bg.wasm'), 'public/engine_bg.wasm');
-```
-
-Resolve the package instead of hard-coding a `node_modules` path, because `file:` links and pnpm stores are symlinks. With Vite, `publicDir` performs the same copy; with webpack, `CopyPlugin` does.
+`engine_bg.wasm` is fetched at runtime by URL, and no bundler inlines it. Copy it from `engine/pkg/engine_bg.wasm` inside the package to the built assets, and serve it with `Content-Type: application/wasm`. With Vite, `publicDir` performs the copy; with webpack, `CopyPlugin` does. Locate the package with `require.resolve` instead of hard-coding a `node_modules` path, because `file:` links and pnpm stores are symlinks.
 
 The engine looks for the file next to its own JavaScript module. When the bundler moves output, or the binary is served from a CDN, load it explicitly before `initialize`:
 
@@ -58,31 +45,7 @@ await initialize({ /* … */ });
 
 ### Compress the binary {/* compress-the-binary */}
 
-The published binary is release-built and optimized for size at 1.92 MiB. Transport is the remaining cost: Brotli quality 11 reduces it to 607 KiB, a 69% reduction, where `gzip -9` stops at 806 KiB. Compress during the build rather than per request.
-
-```js
-// vite.config.js
-import compression from 'vite-plugin-compression';
-
-export default { plugins: [compression({ algorithm: 'brotliCompress', ext: '.br', threshold: 0 })] };
-```
-
-```js
-// webpack.config.js
-const zlib = require('node:zlib');
-const CompressionPlugin = require('compression-webpack-plugin');
-
-module.exports = {
-  plugins: [
-    new CompressionPlugin({
-      filename: '[path][base].br',
-      algorithm: 'brotliCompress',
-      test: /\.wasm$/,
-      compressionOptions: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11 } },
-    }),
-  ],
-};
-```
+The published binary is already optimized for size, so transport is the remaining cost: Brotli quality 11 removes roughly 69% of it, where `gzip -9` stops near 58%. Compress during the build rather than per request, with `vite-plugin-compression`, `compression-webpack-plugin`, or whatever the bundler provides.
 
 <Warning>
   Serve the compressed file with both `Content-Encoding: br` and `Content-Type: application/wasm`. The loader uses `WebAssembly.instantiateStreaming`, which requires that MIME type; with any other value the browser buffers the whole module before compiling. Several CDNs omit `application/wasm` from their compressible types and deliver the file uncompressed.
@@ -101,7 +64,8 @@ await initialize({
   version: '1.0.0',
   binding: {
     renewToken: () => fetchCredentials(),
-    renewTradeToken: () => { throw new Error('trade auth not supported'); },
+    // '000000' is the paper channel's password; real channels take their own
+    renewTradeToken: (accountChannel) => exchangeTradeToken(accountChannel, '000000'),
   },
   logger: (message, fields) => console.debug(fields.get('level'), message),
 });
@@ -118,57 +82,25 @@ await initialize({
 | `version` / `build` | — | Reported as `x-application-version` and `x-application-build` |
 | `logger` | — | Engine logs; `fields` carries `level` and the tracing metadata |
 
-Signing credentials are not configuration fields; the key pair is compiled into the binary. The engine ignores unrecognized keys, so a misspelled field never fails; it takes no effect. Let the `EngineConfig` type check the object.
+The engine ignores unrecognized keys, so a misspelled field never fails; it takes no effect. Let the `EngineConfig` type check the object.
 
 Call `initialize` once per page load. A second call rebuilds the HTTP client, but it does not close the previous market-data connection, and `appId`, `version`, and `build` keep the values from the first call. Switching accounts requires no second call, see [Lifecycle](/en/whalesdk/whalecore/typescript#lifecycle).
 
 ### Device identifier {/* device-identifier */}
 
-`deviceID` becomes the `x-device-id` header. A browser reports no device serial, so Broker App generates the value and keeps it. The goal is one stable value for as long as the browser lives on that machine.
+`deviceID` becomes the `x-device-id` header. A browser reports no device serial, so Broker App generates the value and keeps it. The goal is one stable value for as long as the browser lives on that machine. A `crypto.randomUUID` written to both `localStorage` and a long-lived first-party cookie is enough, since the two are cleared by different actions and each restores the other; a fingerprinting library additionally recovers a similar value after both are gone.
 
-Read storage first, and generate only when every layer is empty:
-
-```ts
-import FingerprintJS from '@fingerprintjs/fingerprintjs';
-
-const KEY = 'whalecore.device-id';
-
-function stored(): string | undefined {
-  const found =
-    localStorage.getItem(KEY) ??
-    document.cookie.match(/(?:^|; )whalecore\.device-id=([^;]+)/)?.[1];
-  return found === null || found === undefined || found === '' ? undefined : found;
-}
-
-function persist(id: string): void {
-  localStorage.setItem(KEY, id);
-  document.cookie = `${KEY}=${id}; max-age=63072000; path=/; secure; samesite=lax`;
-}
-
-export async function deviceID(): Promise<string> {
-  const found = stored();
-  if (found !== undefined) {
-    persist(found);
-    return found;
-  }
-  const { visitorId } = await (await FingerprintJS.load()).get();
-  persist(visitorId);
-  return visitorId;
-}
-```
-
-A fingerprint recomputes a similar identifier after every storage layer is cleared, which `crypto.randomUUID` cannot do. `@fingerprintjs/fingerprintjs` is the maintained successor to fingerprintjs2, and its open-source build requires no account. Without that dependency, `crypto.randomUUID` with the same persistence is reasonable and loses only the recovery.
-
-- Storage wins over the fingerprint. `visitorId` changes as the browser updates, so never overwrite a stored value with a newly computed one.
-- Keep two layers. `localStorage` and a long-lived first-party cookie are cleared by different actions, so each one restores the other. Re-persist on every visit so a partial clear heals.
-- Resolve the value before `initialize`, because fingerprinting is asynchronous and the engine issues requests as soon as it starts.
+- Read storage first and generate only when every layer is empty, never overwriting a stored value with a freshly computed one. Re-persist on every visit so a partial clear heals.
+- Resolve the value before `initialize`, because the engine issues requests as soon as it starts.
 - Keep the value opaque. It reaches server logs as a header, so use a hash or a UUID and nothing that identifies a person.
 
-A private window, another browser, or another machine is a different device and receives a new identifier. Omitting `deviceID` is allowed: the header is absent, and nothing generates a substitute.
+Omitting `deviceID` is allowed: the header is absent, and nothing generates a substitute.
 
 ### Client session {/* client-session */}
 
-The access token lives in the engine session, which in the browser is `localStorage` without a prefix. Broker's login flow obtains the Client `token` and `refresh_token`. Write both before `initialize`, because the engine issues requests as soon as it starts. Never log credentials or complete tokens.
+The access token lives in the engine session, which in the browser is `localStorage` without a prefix; the configuration has no token field. Implementing [`binding.renewToken`](/en/whalesdk/whalecore/typescript#tokens-and-trade-authentication) is enough on its own: on a cold session the first authenticated request carries no token, the server rejects it, and the engine calls `renewToken`, stores the returned pair, and replays the request.
+
+Writing the `token` and `refresh_token` from Broker's login flow before `initialize` is an optional optimization that skips that first rejected round-trip. Never log credentials or complete tokens.
 
 ```ts
 const { token, refresh_token } = await fetchCredentials();
@@ -177,11 +109,11 @@ localStorage.setItem('refresh_token', refresh_token);
 await initialize({ /* … */ });
 ```
 
-The configuration has no token field. Trade tokens use the keys `trade_token:<accountChannel>` and `trade_refresh_token:<accountChannel>`.
+Trade tokens are kept separately, per account channel, and the engine writes them itself.
 
 ## Tokens and trade authentication {/* tokens-and-trade-authentication */}
 
-The engine attaches `Authorization`, uses `x-authorization` for trade endpoints, and renews an expired access token with the refresh token it holds. `binding` covers the one case it cannot resolve alone: the refresh token is also gone.
+The engine authenticates every request and renews an expired access token with the refresh token it holds. `binding` covers the one case it cannot resolve alone: the refresh token is also gone.
 
 ```ts
 const binding = {
@@ -190,9 +122,10 @@ const binding = {
     const res = await fetch('/session/login', { method: 'POST' });
     return (await res.json()).credentials; // { token, refresh_token }
   },
-  // called on 402000 when the session holds no trade refresh token
-  async renewTradeToken() {
-    throw new Error('unsupported');
+  // called on 402000 (with the account channel) when the session holds no trade refresh token
+  renewTradeToken(accountChannel) {
+    // '000000' is only lb_papertrading's password; supply the real one per channel
+    return exchangeTradeToken(accountChannel, '000000');
   },
 };
 ```
@@ -200,7 +133,7 @@ const binding = {
 Return the new pair. The engine stores both, exchanges the refresh token for a fresh access token, and replays the original request, so the `request` caller observes no round trip. Throwing, rejecting, or returning a malformed value all mean that renewal is impossible: the engine stops, and the original `ApiError` reaches the caller, which is how the Client returns to the login screen. Both callbacks can run concurrently when several requests receive `401` together; the engine collapses the renewal, so keep the callback inexpensive and add no locking.
 
 <Note>
-  Acquiring a first trade token is not implemented, because that flow requires the trade-password exchange. Until it ships, `renewTradeToken` is the only hook: return credentials obtained by Broker Server, or let `402000` reach the caller. Accounts that are already open often need no trade token for portfolio reads.
+  Acquiring a first trade token is done by `exchangeTradeToken(accountChannel, password)`: it exchanges the account's trade password for the `{ token, refresh_token }` pair, which the engine stores per channel. Pass the password as the Client typed it. Wire the call into `renewTradeToken` as shown.
 </Note>
 
 ## Lifecycle {/* lifecycle */}
@@ -216,18 +149,28 @@ Return the new pair. The engine stores both, exchanges the refresh token for a f
 
 ### Discover accounts {/* discover-accounts */}
 
-Account enumeration is not part of the SDK. Supply `accountChannel` and `aaid` from [TradingAPI](/en/trading-api/overview):
+The engine holds the account list after login, so read it from the SDK instead of calling the endpoint yourself. `user` returns the engine payload as it is, with `snake_case` fields, the same convention the portfolio view uses.
 
 ```ts
-interface AccountList {
-  status: { account_channel: string; aaid: string }[];
-}
+import { onUserChange, user } from 'whalecore-web/portfolio';
 
-const { data } = await request<AccountList>('GET', '/v3/account/list');
-const accounts = data.status.map((a) => ({ accountChannel: a.account_channel, aaid: a.aaid }));
+const off = onUserChange(() => {
+  const accounts = user()?.accounts ?? [];
+  portfolio.watch(accounts.map((a) => ({ accountChannel: a.account_channel!, aaid: a.aaid! })));
+});
 ```
 
-An incorrect `aaid` fails silently in the portfolio module, with no view and no error, so read it from the API instead of assembling it.
+`user` returns `undefined` while the member is anonymous and triggers the fetch when it is, so the first call normally still returns `undefined` and the data arrives later through `onUserChange`. Do not poll `user` from a render loop: once the payload lands it does not refetch, but every call made before the first fetch returns starts another round of member requests. Wait for the change, or cache what you read.
+
+The declarations list every field on an account entry. Two are easy to conflate: `account_open` and `deposit` are separate facts, so an opened account holding no funds is distinguishable from one never opened. `t_pwd` reports whether the account has a trade password set.
+
+The same payload feeds the orders module:
+
+```ts
+const orders = new Orders({ accountChannel: 'lb', account: () => accountFactsOf(user(), 'lb') });
+```
+
+An incorrect `aaid` fails silently in the portfolio module, with no view and no error, which is the reason to read the list rather than assemble it.
 
 ## Public modules {/* public-modules */}
 
@@ -236,9 +179,8 @@ An incorrect `aaid` fails silently in the portfolio module, with no view and no 
 | `whalecore-web` | `initialize`, `load`, `request`, `setLanguage`, `ApiError`, `ErrorCode`, `readyState`, `isOpen`, `onConnectionChange` |
 | `whalecore-web/quotes` | Quote store with subscriptions, snapshots, and push merging; `Counter`, `Decimal` helpers, derived metrics, and `greeks` |
 | `whalecore-web/watchlist` | Groups, membership, pinning, sorting, and quote-driven re-sorting |
-| `whalecore-web/portfolio` | Assets, holdings, cash, leverage, and a per-account cache |
-
-Orders and trading have no module, see [Not available yet](/en/whalesdk/whalecore/typescript#not-available-yet).
+| `whalecore-web/portfolio` | Assets, holdings, cash, leverage, a per-account cache, and `user`, `onUserChange` |
+| `whalecore-web/orders` | Orders, history, submission, replacement, cancellation, pre-submit validation, preview, and `arith` |
 
 ## Quotes {/* quotes */}
 
@@ -284,7 +226,7 @@ await watchlist.tie(['ST/HK/700']);
 
 Reads hit the local cache synchronously through `groups`, `counters`, `stockInfo`, `fundInfo`, `tied`, `sort`, and `version`. Mutations are asynchronous and reconcile with the server. Sorting runs locally against the quote store, so the host decides when to re-sort; call `resort` from a batched frame.
 
-Cross-device synchronization is enabled by default: the instance watches the `watchlist/groups` topic and refreshes itself. Pass `sync: false` to opt out, and a distinct `id` when constructing more than one instance.
+Cross-device synchronization is enabled by default: the instance refreshes itself when another device changes a group. Pass `sync: false` to opt out, and a distinct `id` when constructing more than one instance.
 
 ## Portfolio {/* portfolio */}
 
@@ -293,7 +235,7 @@ The engine computes portfolios, including exchange rates, cost basis, profit and
 ```ts
 import { Portfolio } from 'whalecore-web/portfolio';
 
-const portfolio = new Portfolio();
+const portfolio = Portfolio.shared();
 portfolio.login();
 portfolio.setUser({ currency: 'HKD', costType: 'dilute' });
 portfolio.watch([{ accountChannel: 'lb', aaid }]);
@@ -318,11 +260,99 @@ portfolio.subscribe((event) => {
 
 Three properties of the view matter:
 
-- Fields use `snake_case` while inputs use camelCase, because the payload is the engine serialization passed through unchanged.
+- Fields use `snake_case` while inputs use camelCase, because the payload passes through unchanged.
 - Values are formatted for display. Amounts are `Decimal` strings, percentages already carry `%` such as `"12.34%"` and must not be multiplied by 100, unavailable numbers are the literal `'--'`, and option greeks are JSON numbers that may also be `'--'`.
 - The first frame can be incomplete. Sections fill in over the first few frames as engine fetches land, and cash detail and the asset distribution usually arrive later. A section missing from the first frame does not mean the engine omits it.
 
 Most failures are silent by design: an incorrect `aaid`, a network error, a `5xx`, or a business code outside the mapped set produces no event, which is indistinguishable from loading. Six codes map to four kinds: `tokenRequired` for `401003`, `401004`, `401005`, and `401008`; `tradeTokenRequired` for `402000` and `402001`, carrying `accountChannel`; `tradeAccountLimited`; and `unknown`. For a failed-to-load state, add a timeout after `watch`.
+
+## Orders {/* orders */}
+
+The order module covers the day's orders, history, submission, replacement, cancellation, pre-submit validation, and preview. Every method needs trade authentication, so implement `renewTradeToken` first, see [Tokens and trade authentication](/en/whalesdk/whalecore/typescript#tokens-and-trade-authentication). Without it every call fails with business code `402000`.
+
+```ts
+import { Orders } from 'whalecore-web/orders';
+
+const orders = new Orders({ accountChannel: 'lb' });
+
+await orders.refresh();
+orders.subscribe(() => render(orders.today()));
+```
+
+`refresh` loads the day's orders and starts listening for order pushes, after which updates merge into the cache on their own. Reads are synchronous through `today`, `open`, `get`, and `version`, so `subscribe` and `version` fit `useSyncExternalStore`.
+
+| Method | Effect |
+| --- | --- |
+| `refresh(filter?)` | Reload the day's orders and start merging pushes |
+| `history(page, limit, filter?)` | Paged history, with `hasMore` |
+| `detail(orderId)` | One order with fills, charge detail, and attached legs |
+| `submit(order)` | Place an order and return `orderId` |
+| `replace(request)` | Change price, quantity, remark, or conditional fields |
+| `cancel(orderId)` / `batchCancel(request)` | Cancel one order, or by counter and side, or by identifier list |
+| `orderInfo`, `tradable`, `constraints` | Per-counter trading rules and channel capability |
+| `estimateBuyLimit`, `estimatedCost`, `tradeDetail` | Buying power, fee estimates, and per-counter cash and holdings |
+
+Statuses normalize to 15 values that `isTerminal`, `isCancellable`, and `isModifiable` read, and `rawStatus` keeps the server string. Amounts and quantities are `Decimal` strings, and the same subpath exports `arith` for fixed-point arithmetic on them.
+
+### Validate, then submit {/* order-validation */}
+
+`SubmitOrder` is a discriminated union on `orderType`, so a limit order without a price does not compile. Build an `OrderIntent` from the ticket instead and let validation produce the request:
+
+```ts
+import { newRequestId, type OrderIntent } from 'whalecore-web/orders';
+
+const intent: OrderIntent = {
+  counterId: 'ST/US/AAPL',
+  side: 'buy',
+  orderType: 'LO',
+  clientRequestId: newRequestId(),
+  price: '150.25',
+  quantity: '100',
+  validity: { tif: 'day' },
+  sessionPreference: 'rthOnly',
+};
+
+const draft = await orders.validate(intent, 'draft');
+setSubmitEnabled(draft.passed);
+
+const checked = await orders.validate(intent, 'submission');
+if (checked.passed && checked.request) {
+  await orders.submit(checked.request);
+}
+```
+
+Each issue carries a stable `code`, a `rule`, the `field` to highlight, and a localized `reason`. The `draft` scope covers what the ticket can fix while the Client types, and `submission` adds account and qualification gates and returns the materialized `request` when it passes. Call `checkTradability` before opening the ticket, and `constraints` to render the order-type picker, because the types it lists are the ones that will not be rejected as unsupported.
+
+`clientRequestId` is the idempotency key. Reuse it when retrying the same order and call `newRequestId` for a new one, because the server deduplicates on it.
+
+### Preview {/* order-preview */}
+
+`preview` collects the order, fee, cost, margin, and exchange-rate sources a ticket needs and returns computed amounts: order total, fees, financing, occupied buying power, post-trade cost, cash and margin changes, and a risk hint.
+
+```ts
+const result = await orders.preview(intent, { marketReferencePrice: quote.lastDone });
+render(result.orderTotal, result.fees.total, result.riskHint);
+```
+
+The module reads no quotes, so pass market facts through `context`: a reference price for market orders, and `optionDirection` with `optionStrikePrice` for options. A field that is `undefined` is structurally not applicable, such as financing on a sell, rather than missing.
+
+`preview` needs the account type, and cash and margin accounts differ by half a screen, so supply account facts when constructing the module. `accountFactsOf` maps the payload that [`user`](/en/whalesdk/whalecore/typescript#discover-accounts) returns:
+
+```ts
+const orders = new Orders({
+  accountChannel: 'lb',
+  account: () => accountFactsOf(user(), 'lb'),
+  language: () => 'zh-CN',
+});
+```
+
+Without account facts, `preview` throws `PreviewError` with kind `accountUnavailable`, and the three account gates in validation pass silently instead of blocking. Hosts that fetch their own data can skip the method and call the exported pure function `compute(fields)`, which performs no requests.
+
+### Boundaries {/* order-boundaries */}
+
+- Channel capability is not uniform. `orderInfo` reports the order types and attached-order types a counter accepts, and a channel can still reject a request those fields appear to permit. Verify batch cancellation and attached orders on each channel you enable before exposing them to Clients.
+- A rejected `submit` does not prove that nothing reached the server, and an attached-order failure can still leave the main order working. Re-read the day's orders before retrying, and reuse the same `clientRequestId` so a retry cannot become a second order.
+- Orders are never written to storage. The cache is in memory only, and `dispose` clears it and detaches the push listener.
 
 ## Connection state {/* connection-state */}
 
@@ -340,14 +370,12 @@ const off = onConnectionChange(({ channel, state }) => {
 });
 ```
 
-Called without a channel, `readyState` collapses the pair and reports the worse of the two: both `Open` gives `Open`, either `Closed` wins, then `Reconnecting`, then `Opening`. Both calls are synchronous and cross only the WebAssembly boundary. Nothing is cached, so a listener attached late is never out of sync; ask again whenever the current value matters. For React, `useSyncExternalStore(onConnectionChange, () => readyState('quote'))` produces a stable snapshot.
+Called without a channel, `readyState` collapses the pair and reports the worse of the two: both `Open` gives `Open`, either `Closed` wins, then `Reconnecting`, then `Opening`. Events themselves are per-channel, so call `readyState` inside the listener when the interface renders the combined state. Both calls are synchronous and cheap, and nothing is cached, so a listener attached late is never out of sync. For React, `useSyncExternalStore(onConnectionChange, () => readyState('quote'))` produces a stable snapshot.
 
 Two behaviors need handling:
 
 - Before the first connection the state is `Reconnecting` rather than `Closed`, because that is the initial value for both channels. Never connected and dropped-and-retrying share one value, so avoid wording that implies a connection was lost.
 - The same channel and state repeat. A failing handshake retries, and every attempt reports `Opening` again. Nothing is deduplicated: compare against the previous value, or let React compare snapshots.
-
-Per-channel events carry no collapsed value. Call `readyState` inside the listener when the interface renders the combined state.
 
 ## General HTTP requests {/* general-http-requests */}
 
@@ -389,14 +417,14 @@ The generic parameter is a type assertion only, and nothing is validated at runt
 
 The HTTP status is not the business code. An invalid token arrives as HTTP `400` carrying business code `401004`. Branch on `info.code` rather than `info.status`. The codes that end a session are `401003`, `401004`, `401005`, and `401008`.
 
-## Not available yet {/* not-available-yet */}
+## Scope and limits {/* scope-and-limits */}
+
+These are limits of the current package, not a delivery schedule.
 
 | Capability | Status |
 | --- | --- |
-| Orders, order history, and trading | No module |
-| First trade token through the trade-password exchange | Not implemented; `renewTradeToken` is the only hook |
+| Order submission over WebSocket | Not implemented; orders use HTTP |
+| Real-password or two-factor trade auth | Default first-token acquisition ships as `exchangeTradeToken`; the 2FA and user-entered-password sub-flow does not |
 | Foreground and background hooks | Not required; the engine reconnects on its own |
 | Explicit teardown | Reload the page |
 | Serving several tenants from one page | Not possible; the signing key is compiled into the binary |
-| Access token as a configuration field | Write the session key before `initialize` |
-| Account enumeration | Not part of the SDK; supply `accountChannel` and `aaid` |
