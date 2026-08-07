@@ -3,7 +3,7 @@ title: TypeScript
 description: WhaleCoreSDK TypeScript 安装、WebAssembly 托管、初始化、会话与公开模块
 ---
 
-TypeScript 包让 WhaleCore 在浏览器里运行。引擎编译为 WebAssembly，包在其上提供类型化的 ES 模块，涵盖 HTTP 透传、实时行情、自选股和资产。Broker App 负责全部界面，包负责会话、连接与数据。
+TypeScript 包让 WhaleCore 在浏览器里运行。引擎编译为 WebAssembly，包在其上提供类型化的 ES 模块，涵盖 HTTP 透传、行情、自选股、资产和订单。Broker App 负责全部界面，包负责会话、连接与数据。
 
 ## 系统要求与安装 {/* requirements-and-installation */}
 
@@ -11,12 +11,12 @@ TypeScript 包让 WhaleCore 在浏览器里运行。引擎编译为 WebAssembly�
 | --- | --- |
 | 运行环境 | 支持 WebAssembly、ES 模块和 `WebSocket` 的浏览器 |
 | 打包工具 | 能解析 `exports` 子路径和 `import.meta.url` 的打包工具，如 Vite、esbuild、webpack 5、Rspack 或 Parcel 2 |
-| TypeScript | 可选。类型声明随包一起分发 |
+| TypeScript | 可选。类型声明随包一起分发；若报出 `Symbol.dispose` 错误，请在 `lib` 中加入 `ESNext.Disposable` |
 | Node.js | 不是运行目标。引擎需要 `window`、`localStorage` 和 `WebSocket`，且没有服务端构建产物 |
 
 本包不发布到公开 registry。压缩包由 Whale 项目团队私下交付，并且**每份产物只对应一个租户** —— 签名密钥编译进了 WebAssembly 二进制文件。请安装收到的那份文件，并把它放在构建流程能读到的位置。
 
-包会带入一个运行时依赖 `protobufjs`，因为行情载荷是 Protobuf。只调用 `initialize` 和 `request` 的代码从根入口引入即可，打包工具会移除解码器。
+包会带入一个运行时依赖 `protobufjs`，因为行情载荷是 Protobuf。只用到 `initialize` 和 `request` 的构建产物不会包含解码器。
 
 每个模块都是独立子路径：
 
@@ -25,25 +25,12 @@ import { initialize, request } from 'whalecore-web';
 import { quotes, SubType } from 'whalecore-web/quotes';
 import { Watchlist } from 'whalecore-web/watchlist';
 import { Portfolio } from 'whalecore-web/portfolio';
+import { Orders } from 'whalecore-web/orders';
 ```
-
-如果 TypeScript 对随包分发的类型声明报出 `Symbol.dispose` 错误，请在 `lib` 中加入 `ESNext.Disposable`，或启用 `skipLibCheck`。
 
 ## 托管 WebAssembly 文件 {/* host-the-wasm-binary */}
 
-`engine_bg.wasm` 在运行时按 URL 获取，任何打包工具都不会内联它。请把它复制到构建产物旁边，并以 `Content-Type: application/wasm` 提供。
-
-```js
-import { copyFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
-
-const require = createRequire(import.meta.url);
-const pkg = join(dirname(require.resolve('whalecore-web/quotes')), '..', '..');
-copyFileSync(join(pkg, 'engine', 'pkg', 'engine_bg.wasm'), 'public/engine_bg.wasm');
-```
-
-请解析包路径，不要写死 `node_modules` 路径，因为 `file:` 链接和 pnpm 存储都是符号链接。Vite 用 `publicDir` 完成同样的复制，webpack 用 `CopyPlugin`。
+`engine_bg.wasm` 在运行时按 URL 获取，任何打包工具都不会内联它。请把包内的 `engine/pkg/engine_bg.wasm` 复制到构建产物旁边，并以 `Content-Type: application/wasm` 提供。Vite 用 `publicDir` 完成这次复制，webpack 用 `CopyPlugin`。定位包路径请用 `require.resolve`，不要写死 `node_modules` 路径，因为 `file:` 链接和 pnpm 存储都是符号链接。
 
 引擎会在自己的 JavaScript 模块旁边寻找该文件。当打包工具改变产物位置，或者二进制文件由 CDN 提供时，请在 `initialize` 之前显式加载：
 
@@ -58,31 +45,7 @@ await initialize({ /* … */ });
 
 ### 压缩文件 {/* compress-the-binary */}
 
-发布的二进制文件已经是 release 构建并做过体积优化，为 1.92 MiB。剩下的成本在传输：Brotli quality 11 可以把它压到 607 KiB，减少 69%，而 `gzip -9` 只能到 806 KiB。请在构建期压缩，而不是每次请求都压缩。
-
-```js
-// vite.config.js
-import compression from 'vite-plugin-compression';
-
-export default { plugins: [compression({ algorithm: 'brotliCompress', ext: '.br', threshold: 0 })] };
-```
-
-```js
-// webpack.config.js
-const zlib = require('node:zlib');
-const CompressionPlugin = require('compression-webpack-plugin');
-
-module.exports = {
-  plugins: [
-    new CompressionPlugin({
-      filename: '[path][base].br',
-      algorithm: 'brotliCompress',
-      test: /\.wasm$/,
-      compressionOptions: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11 } },
-    }),
-  ],
-};
-```
+发布的二进制文件已经做过体积优化，剩下的成本在传输：Brotli quality 11 大约能压掉 69%，而 `gzip -9` 只到 58% 左右。请在构建期压缩，而不是每次请求都压缩 —— 用 `vite-plugin-compression`、`compression-webpack-plugin` 或打包器自带的方案都可以。
 
 <Warning>
   压缩后的文件必须同时带上 `Content-Encoding: br` 和 `Content-Type: application/wasm`。加载器使用 `WebAssembly.instantiateStreaming`，它要求这个 MIME 类型；换成其他值，浏览器会先把整个模块缓冲完再编译。部分 CDN 的可压缩类型清单里没有 `application/wasm`，会静默地把文件按未压缩交付。
@@ -101,7 +64,8 @@ await initialize({
   version: '1.0.0',
   binding: {
     renewToken: () => fetchCredentials(),
-    renewTradeToken: () => { throw new Error('trade auth not supported'); },
+    // '000000' is the paper channel's password; real channels take their own
+    renewTradeToken: (accountChannel) => exchangeTradeToken(accountChannel, '000000'),
   },
   logger: (message, fields) => console.debug(fields.get('level'), message),
 });
@@ -118,57 +82,25 @@ await initialize({
 | `version` / `build` | — | 以 `x-application-version` 和 `x-application-build` 上报 |
 | `logger` | — | 引擎日志；`fields` 携带 `level` 与 tracing 元数据 |
 
-签名凭证不是配置字段，密钥对编译在产物内。引擎会忽略无法识别的键，所以写错字段名不会报错，只是不生效。请让 `EngineConfig` 类型来校验这个对象。
+引擎会忽略无法识别的键，所以写错字段名不会报错，只是不生效。请让 `EngineConfig` 类型来校验这个对象。
 
 `initialize` 每次页面加载只调用一次。第二次调用会重建 HTTP 客户端，但不会关闭上一条行情长连接，而 `appId`、`version` 和 `build` 仍保留首次调用的取值。切换账户不需要再次调用，见[生命周期](/zh-cn/whalesdk/whalecore/typescript#lifecycle)。
 
 ### 设备标识 {/* device-identifier */}
 
-`deviceID` 会成为 `x-device-id` 请求头。浏览器不提供设备序列号，所以这个值由 Broker App 自己生成并自己保存，目标是「同一台机器上的同一个浏览器长期保持同一个值」。
+`deviceID` 会成为 `x-device-id` 请求头。浏览器不提供设备序列号，所以这个值由 Broker App 自己生成并自己保存，目标是「同一台机器上的同一个浏览器长期保持同一个值」。用 `crypto.randomUUID` 同时写入 `localStorage` 和长期有效的第一方 cookie 就够了 —— 两者被清理的时机不同，可以互相恢复；再叠一个指纹库，还能在两层都被清空后重新算出接近相同的值。
 
-先读存储，只有每一层都为空时才生成：
-
-```ts
-import FingerprintJS from '@fingerprintjs/fingerprintjs';
-
-const KEY = 'whalecore.device-id';
-
-function stored(): string | undefined {
-  const found =
-    localStorage.getItem(KEY) ??
-    document.cookie.match(/(?:^|; )whalecore\.device-id=([^;]+)/)?.[1];
-  return found === null || found === undefined || found === '' ? undefined : found;
-}
-
-function persist(id: string): void {
-  localStorage.setItem(KEY, id);
-  document.cookie = `${KEY}=${id}; max-age=63072000; path=/; secure; samesite=lax`;
-}
-
-export async function deviceID(): Promise<string> {
-  const found = stored();
-  if (found !== undefined) {
-    persist(found);
-    return found;
-  }
-  const { visitorId } = await (await FingerprintJS.load()).get();
-  persist(visitorId);
-  return visitorId;
-}
-```
-
-在每一层存储都被清空之后，指纹能重新算出接近相同的标识，而 `crypto.randomUUID` 做不到这一点。`@fingerprintjs/fingerprintjs` 是 fingerprintjs2 的后继项目，其开源版本不需要账号。不打算引入这个依赖时，用 `crypto.randomUUID` 配合同一套持久化也是合理的，只是失去这项恢复能力。
-
-- 存储优先于指纹。`visitorId` 会随浏览器升级而变化，因此不要用新算出的值覆盖已经存下来的值。
-- 保留两层存储。`localStorage` 与长期有效的第一方 cookie 被清理的时机不同，可以互相恢复。请每次访问都重新写入，让被清掉的那一层自动补回。
-- 在 `initialize` 之前把值取到。指纹计算是异步的，而引擎一启动就会发出请求。
+- 先读存储，只有每一层都为空时才生成，且不要用新算出的值覆盖已经存下来的值。请每次访问都重新写入，让被清掉的那一层自动补回。
+- 在 `initialize` 之前把值取到，因为引擎一启动就会发出请求。
 - 保持取值不透明。它会随请求头进入服务端日志，所以请用哈希或 UUID，不要放入任何可识别到人的信息。
 
-隐身窗口、另一个浏览器或另一台机器按定义就是不同设备，会得到新的标识。不传 `deviceID` 也是允许的：请求头不出现，引擎不会替你生成替代值。
+不传 `deviceID` 也是允许的：请求头不出现，引擎不会替你生成替代值。
 
 ### 客户会话 {/* client-session */}
 
-访问令牌存放在引擎会话中，在浏览器里就是不带前缀的 `localStorage`。客户的 `token` 与 `refresh_token` 由 Broker 登录流程取得。请在 `initialize` 之前写入两者，因为引擎一启动就会发出请求。不要把凭证或完整 token 写入日志。
+访问令牌存放在引擎会话中，在浏览器里就是不带前缀的 `localStorage`；配置里没有 token 字段。只要实现 [`binding.renewToken`](/zh-cn/whalesdk/whalecore/typescript#tokens-and-trade-authentication) 就够了：冷会话下第一个鉴权请求不带 token 发出、被服务端拒绝，引擎随即调用 `renewToken`、存下返回的一对令牌并重放该请求。
+
+在 `initialize` 之前把 Broker 登录流程取得的 `token` 与 `refresh_token` 预先写入，是一项可选优化：省掉那次被拒的往返。不要把凭证或完整 token 写入日志。
 
 ```ts
 const { token, refresh_token } = await fetchCredentials();
@@ -177,11 +109,11 @@ localStorage.setItem('refresh_token', refresh_token);
 await initialize({ /* … */ });
 ```
 
-配置里没有 token 字段。交易令牌使用 `trade_token:<accountChannel>` 和 `trade_refresh_token:<accountChannel>` 两个键。
+交易令牌按账户渠道单独存放，由引擎自己写入。
 
 ## Token 与交易鉴权 {/* tokens-and-trade-authentication */}
 
-引擎自己附加 `Authorization`，交易接口使用 `x-authorization`，并用手上的 refresh token 续期已过期的访问令牌。`binding` 覆盖它唯一无法独自处理的情况：refresh token 也没有了。
+引擎会自行完成每个请求的鉴权，并用手上的 refresh token 续期已过期的访问令牌。`binding` 覆盖它唯一无法独自处理的情况：refresh token 也没有了。
 
 ```ts
 const binding = {
@@ -190,9 +122,10 @@ const binding = {
     const res = await fetch('/session/login', { method: 'POST' });
     return (await res.json()).credentials; // { token, refresh_token }
   },
-  // 会话中没有交易 refresh token 且请求返回 402000 时调用
-  async renewTradeToken() {
-    throw new Error('unsupported');
+  // 会话中没有交易 refresh token 且请求返回 402000 时带上账户渠道调用
+  renewTradeToken(accountChannel) {
+    // '000000' is only lb_papertrading's password; supply the real one per channel
+    return exchangeTradeToken(accountChannel, '000000');
   },
 };
 ```
@@ -200,7 +133,7 @@ const binding = {
 请返回新的一对凭证。引擎会保存两者，用 refresh token 换取新的访问令牌，并重放原来的请求，因此 `request` 的调用方察觉不到这一次往返。抛出异常、reject 或返回结构不符的值，都表示无法续期：引擎停止尝试，原始的 `ApiError` 抛给调用方，客户由此回到登录页。两个回调都可能在多个请求同时收到 `401` 时并发触发；引擎会把续期收敛为一次，所以请保持回调轻量，也不要自己加锁。
 
 <Note>
-  首次获取交易令牌尚未实现，因为该流程需要交易密码交换。在它交付之前，`renewTradeToken` 是宿主唯一的入口：返回由 Broker Server 取得的凭证，或者让 `402000` 抛给调用方。已开户的账户读取资产时往往不需要交易令牌。
+  首次获取交易令牌由 `exchangeTradeToken(accountChannel, password)` 完成：它用该账户的交易密码换回 `{ token, refresh_token }`，由引擎按渠道存。密码按用户输入的原文传入。按上面接进 `renewTradeToken` 即可。
 </Note>
 
 ## 生命周期 {/* lifecycle */}
@@ -216,18 +149,28 @@ const binding = {
 
 ### 发现账户 {/* discover-accounts */}
 
-枚举账户不属于本 SDK 的能力。请从 [TradingAPI](/zh-cn/trading-api/overview) 取得 `accountChannel` 与 `aaid`：
+登录后账户列表已经在引擎里，所以从 SDK 读取，而不是自己调那个接口。`user` 原样返回引擎载荷，字段是 `snake_case`，与资产视图同一套约定。
 
 ```ts
-interface AccountList {
-  status: { account_channel: string; aaid: string }[];
-}
+import { onUserChange, user } from 'whalecore-web/portfolio';
 
-const { data } = await request<AccountList>('GET', '/v3/account/list');
-const accounts = data.status.map((a) => ({ accountChannel: a.account_channel, aaid: a.aaid }));
+const off = onUserChange(() => {
+  const accounts = user()?.accounts ?? [];
+  portfolio.watch(accounts.map((a) => ({ accountChannel: a.account_channel!, aaid: a.aaid! })));
+});
 ```
 
-`aaid` 传错时资产模块会静默失败，既没有视图也没有错误，所以请从接口读取，不要自行拼装。
+用户匿名时 `user` 返回 `undefined`，并在此时触发拉取，所以第一次调用通常仍返回 `undefined`，数据随后经 `onUserChange` 到达。不要在渲染循环里轮询 `user`：载荷到手后不会重复拉取，但第一次拉取返回前的每次调用都会再发一轮用户请求。请等变更通知，或缓存已读到的值。
+
+账户条目的字段以类型声明为准。其中两个容易混淆：`account_open` 与 `deposit` 是彼此独立的事实，因此「已开户但没有资金」和「从未开户」可以区分；`t_pwd` 表示该账户是否已设置交易密码。
+
+同一份载荷也喂给订单模块：
+
+```ts
+const orders = new Orders({ accountChannel: 'lb', account: () => accountFactsOf(user(), 'lb') });
+```
+
+`aaid` 传错时资产模块会静默失败，既没有视图也没有错误，这正是应当读取列表而非自行拼装的原因。
 
 ## 公开模块 {/* public-modules */}
 
@@ -236,9 +179,8 @@ const accounts = data.status.map((a) => ({ accountChannel: a.account_channel, aa
 | `whalecore-web` | `initialize`、`load`、`request`、`setLanguage`、`ApiError`、`ErrorCode`、`readyState`、`isOpen`、`onConnectionChange` |
 | `whalecore-web/quotes` | 行情仓库，含订阅、快照与推送合并；`Counter`、`Decimal` 辅助函数、派生指标和 `greeks` |
 | `whalecore-web/watchlist` | 分组、成员、置顶、排序与随行情重排 |
-| `whalecore-web/portfolio` | 资产、持仓、现金、杠杆，以及按账户的缓存 |
-
-订单与交易没有对应模块，见[尚未提供的能力](/zh-cn/whalesdk/whalecore/typescript#not-available-yet)。
+| `whalecore-web/portfolio` | 资产、持仓、现金、杠杆、按账户的缓存，以及 `user`、`onUserChange` |
+| `whalecore-web/orders` | 订单、历史、下单、改单、撤单、下单前置校验、订单预览与 `arith` |
 
 ## 行情 {/* quotes */}
 
@@ -284,7 +226,7 @@ await watchlist.tie(['ST/HK/700']);
 
 `groups`、`counters`、`stockInfo`、`fundInfo`、`tied`、`sort` 和 `version` 都是对本地缓存的同步读取。写操作是异步的，并与服务端对账。排序在本地基于行情仓库完成，所以何时重排由宿主决定，请在批处理帧里调用 `resort`。
 
-跨设备同步默认开启：实例会监听 `watchlist/groups` 主题并自行刷新。传 `sync: false` 可以关闭；构造多个实例时请给出不同的 `id`。
+跨设备同步默认开启：其他设备改动分组时，实例会自行刷新。传 `sync: false` 可以关闭；构造多个实例时请给出不同的 `id`。
 
 ## 资产 {/* portfolio */}
 
@@ -293,7 +235,7 @@ await watchlist.tie(['ST/HK/700']);
 ```ts
 import { Portfolio } from 'whalecore-web/portfolio';
 
-const portfolio = new Portfolio();
+const portfolio = Portfolio.shared();
 portfolio.login();
 portfolio.setUser({ currency: 'HKD', costType: 'dilute' });
 portfolio.watch([{ accountChannel: 'lb', aaid }]);
@@ -318,11 +260,99 @@ portfolio.subscribe((event) => {
 
 关于视图有三点需要注意：
 
-- 字段是 `snake_case`，而入参是 camelCase，因为载荷是引擎自身的序列化结果，原样透传。
+- 字段是 `snake_case`，而入参是 camelCase，因为载荷是原样透传的。
 - 取值已按展示格式处理。金额是 `Decimal` 字符串，百分比自带 `%`，如 `"12.34%"`，不要再乘 100；取不到的数值是字面量 `'--'`；期权希腊字母是 JSON number，同样可能是 `'--'`。
 - 首帧可能不完整。随着引擎的取数陆续落地，各分区会在最初几帧内补齐，现金明细与资产分布通常晚一点到达。某个分区没有出现在首帧，并不表示引擎不提供它。
 
 多数失败按设计是静默的：`aaid` 传错、网络错误、`5xx`，或者任何未被映射的业务码，都不会产生事件，与「仍在加载」无法区分。六个业务码映射为四种类型：`401003`、`401004`、`401005` 和 `401008` 对应 `tokenRequired`；`402000` 和 `402001` 对应 `tradeTokenRequired`，并携带 `accountChannel`；另有 `tradeAccountLimited` 与 `unknown`。需要「加载失败」状态时，请在 `watch` 之后自行加超时。
+
+## 订单 {/* orders */}
+
+订单模块涵盖当日订单、历史订单、下单、改单、撤单、下单前置校验与订单预览。每个方法都要求交易鉴权，请先实现 `renewTradeToken`，见 [Token 与交易鉴权](/zh-cn/whalesdk/whalecore/typescript#tokens-and-trade-authentication)。没有它，每次调用都会以业务码 `402000` 失败。
+
+```ts
+import { Orders } from 'whalecore-web/orders';
+
+const orders = new Orders({ accountChannel: 'lb' });
+
+await orders.refresh();
+orders.subscribe(() => render(orders.today()));
+```
+
+`refresh` 拉取当日订单并开始接收订单推送，此后订单变更会自行合并进缓存。读路径通过 `today`、`open`、`get` 和 `version` 同步返回，因此 `subscribe` 与 `version` 可直接配合 `useSyncExternalStore`。
+
+| 方法 | 作用 |
+| --- | --- |
+| `refresh(filter?)` | 重新拉取当日订单并开始合并推送 |
+| `history(page, limit, filter?)` | 分页历史，带 `hasMore` |
+| `detail(orderId)` | 单笔订单，含成交流水、费用明细与附带单 |
+| `submit(order)` | 下单并返回 `orderId` |
+| `replace(request)` | 修改委托价、数量、备注或条件单字段 |
+| `cancel(orderId)` / `batchCancel(request)` | 撤单，可按单笔、按标的与方向，或按订单 ID 列表 |
+| `orderInfo`、`tradable`、`constraints` | 单个标的的交易规则与渠道能力 |
+| `estimateBuyLimit`、`estimatedCost`、`tradeDetail` | 可买力、费用预估，以及标的维度的现金与持仓 |
+
+订单状态归一为 15 个取值，用 `isTerminal`、`isCancellable`、`isModifiable` 读取，`rawStatus` 保留服务端原始字符串。金额与数量都是 `Decimal` 字符串，同一子路径导出 `arith` 用于定点运算。
+
+### 先校验，再下单 {/* order-validation */}
+
+`SubmitOrder` 按 `orderType` 做判别联合，因此「限价单不带委托价」这种组合根本编译不过。请从下单页构造 `OrderIntent`，让校验产出请求对象：
+
+```ts
+import { newRequestId, type OrderIntent } from 'whalecore-web/orders';
+
+const intent: OrderIntent = {
+  counterId: 'ST/US/AAPL',
+  side: 'buy',
+  orderType: 'LO',
+  clientRequestId: newRequestId(),
+  price: '150.25',
+  quantity: '100',
+  validity: { tif: 'day' },
+  sessionPreference: 'rthOnly',
+};
+
+const draft = await orders.validate(intent, 'draft');
+setSubmitEnabled(draft.passed);
+
+const checked = await orders.validate(intent, 'submission');
+if (checked.passed && checked.request) {
+  await orders.submit(checked.request);
+}
+```
+
+每条 issue 都带稳定的 `code`、`rule`、要高亮的 `field`，以及已本地化的 `reason`。`draft` 档覆盖 Client 边填边改就能修正的部分；`submission` 档追加账户与资格门禁，通过时返回物化好的 `request`。进入下单页前调 `checkTradability`，渲染订单类型选择器用 `constraints` —— 它列出的类型不会再因「类型不支持」被拒。
+
+`clientRequestId` 是幂等键。重试同一笔订单必须复用同一个值，新一笔订单用 `newRequestId` 换新值，服务端按它去重。
+
+### 订单预览 {/* order-preview */}
+
+`preview` 取齐下单页需要的订单、费用、成本、保证金与汇率来源，返回算好的数：订单总额、费用、融资、占用购买力、成交后成本、现金与保证金变动，以及风险提示。
+
+```ts
+const result = await orders.preview(intent, { marketReferencePrice: quote.lastDone });
+render(result.orderTotal, result.fees.total, result.riskHint);
+```
+
+模块不读行情，因此行情事实经 `context` 传入：市价单的参考价，以及期权的 `optionDirection` 与 `optionStrikePrice`。结果里的 `undefined` 表示**结构上不适用**（例如卖出没有融资），而不是数据缺失。
+
+`preview` 需要账户类型 —— 现金户与融资户的预览差半屏 —— 所以构造模块时请提供账户事实。`accountFactsOf` 映射 [`user`](/zh-cn/whalesdk/whalecore/typescript#discover-accounts) 返回的载荷：
+
+```ts
+const orders = new Orders({
+  accountChannel: 'lb',
+  account: () => accountFactsOf(user(), 'lb'),
+  language: () => 'zh-CN',
+});
+```
+
+不提供账户事实时，`preview` 抛出 kind 为 `accountUnavailable` 的 `PreviewError`，而校验里那三条账户门禁会静默放行而不是拦住。自行取数的宿主可以绕开该方法，直接调用导出的纯函数 `compute(fields)`，它一行网络都不打。
+
+### 边界 {/* order-boundaries */}
+
+- 渠道能力并不一致。`orderInfo` 会告知某个标的接受的订单类型与附带单类型，而渠道仍可能拒掉这些字段看起来允许的请求。在向 Client 开放批量撤单与附带单之前，请在你启用的每个渠道上分别验证。
+- `submit` 被拒**不能**证明请求没有触达服务端，附带单失败时主单也可能已经生效。重试前先重新拉取当日订单，并复用同一个 `clientRequestId`，避免一次重试变成第二笔订单。
+- 订单数据不落存储。缓存只在内存中，`dispose` 会清空它并摘掉推送监听。
 
 ## 连接状态 {/* connection-state */}
 
@@ -340,14 +370,12 @@ const off = onConnectionChange(({ channel, state }) => {
 });
 ```
 
-不传通道时，`readyState` 会把两条归一，取其中更差的那个：两条都是 `Open` 才得到 `Open`，任一为 `Closed` 时以 `Closed` 为准，其次是 `Reconnecting`，再次是 `Opening`。两个调用都是同步的，只跨越 WebAssembly 边界。这一层不做缓存，所以监听器挂载得晚也不会与实际状态不一致；需要当前值时随时再问一次。在 React 中，`useSyncExternalStore(onConnectionChange, () => readyState('quote'))` 得到的是稳定快照。
+不传通道时，`readyState` 会把两条归一，取其中更差的那个：两条都是 `Open` 才得到 `Open`，任一为 `Closed` 时以 `Closed` 为准，其次是 `Reconnecting`，再次是 `Opening`。事件本身是分通道的，界面渲染合并状态时，请在回调里调用 `readyState`。两个调用都是同步的，开销很小，且这一层不做缓存，所以监听器挂载得晚也不会与实际状态不一致。在 React 中，`useSyncExternalStore(onConnectionChange, () => readyState('quote'))` 得到的是稳定快照。
 
 有两种行为需要处理：
 
 - 首次建连之前状态是 `Reconnecting` 而不是 `Closed`，因为这是两条通道的初始值。「从未连接」与「断开后正在重连」共用同一个取值，所以文案不要写成连接已经丢失。
 - 同一个通道与状态会重复出现。握手失败会重试，每次尝试都会再报一次 `Opening`。这里不做去重：请与上一次的值比较，或者交给 React 比较快照。
-
-分通道事件不携带归一后的取值。界面渲染合并状态时，请在回调里调用 `readyState`。
 
 ## 通用 HTTP 请求 {/* general-http-requests */}
 
@@ -389,14 +417,14 @@ try {
 
 HTTP 状态码不等于业务码。令牌失效时返回的是 HTTP `400`，业务码为 `401004`。请按 `info.code` 分支，而不是 `info.status`。表示会话已结束的业务码是 `401003`、`401004`、`401005` 和 `401008`。
 
-## 尚未提供的能力 {/* not-available-yet */}
+## 范围与限制 {/* scope-and-limits */}
+
+这些是当前包的限制，不构成交付计划。
 
 | 能力 | 现状 |
 | --- | --- |
-| 订单、订单历史与交易 | 没有对应模块 |
-| 通过交易密码交换获取首个交易令牌 | 尚未实现；`renewTradeToken` 是唯一入口 |
+| 通过 WebSocket 下单 | 未实现，下单走 HTTP |
+| 真实密码 / 二次验证的交易鉴权 | 默认的首个令牌获取已随 `exchangeTradeToken` 提供；2FA 与用户输入真实密码的子流程未做 |
 | 前台与后台回调 | 不需要；引擎自行重连 |
 | 显式销毁 | 重新加载页面 |
 | 单页面服务多个租户 | 无法实现；签名密钥编译在产物内 |
-| 以配置字段传入访问令牌 | 请在 `initialize` 之前写入会话键 |
-| 枚举账户 | 不属于本 SDK；请自行提供 `accountChannel` 与 `aaid` |
