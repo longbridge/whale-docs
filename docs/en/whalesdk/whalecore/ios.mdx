@@ -1,97 +1,856 @@
 ---
 title: iOS
-description: WhaleCoreSDK iOS installation, initialization, sessions, and public services
+description: WhaleCoreSDK iOS system requirements, initialization, and the quotes, order, portfolio, watchlist, and pass-through request services
 ---
+
+WhaleCore is an integrated quotes, trading, and portfolio iOS SDK for the host app. It supports both Swift and Objective-C, and exposes every public API through `@objc`. Supported markets cover Hong Kong, US, and A-shares, including options, warrants, callable bull/bear contracts (CBBCs), and inline warrants.
 
 ## Requirements and installation {/* requirements-and-installation */}
 
 - iOS 13.0+
 - Swift 5.9+ and Xcode 15+
-- Swift and Objective-C
+- Callable from both Swift and Objective-C
+
+WhaleCore ships as a source folder (containing `WhaleCore.podspec`) instead of a private CocoaPods source. Place the delivered `WhaleCore` folder inside the host project directory, then point `:path` at it in the `Podfile`:
 
 ```ruby
 platform :ios, '13.0'
-use_frameworks! :linkage => :static
 
 target 'YourApp' do
-  pod 'WhaleCore'
+  # :path points to the directory that contains WhaleCore.podspec (relative to the Podfile).
+  # Adjust it to match where you placed the folder.
+  pod 'WhaleCore', :path => '../WhaleCore'
 end
 ```
 
-WhaleCore is distributed through a private CocoaPods source. Integration support supplies the source and credentials.
+Run `pod install` to complete the installation.
 
 ## Initialize {/* initialize */}
+
+Call `WhaleCoreService.initialize(config:)` once at app launch. The method validates startup parameters and **throws without performing any initialization when a parameter is invalid**, so call it with `try`:
 
 ```swift
 import WhaleCore
 
+// The example below only illustrates that deviceId must be persisted and reused long-term —
+// the host app decides the generation algorithm and storage mechanism.
+let deviceIdKey = "com.yourapp.whalecore.deviceId"
+let deviceId: String = UserDefaults.standard.string(forKey: deviceIdKey) ?? {
+    let generated = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
+    UserDefaults.standard.set(generated, forKey: deviceIdKey)
+    return generated
+}()
+
 let config = WhaleCoreConfig(
-    logLevel: .info,
     appKey: "your_app_key",
     appSecret: "your_app_secret",
     appId: "your_app_id",
-    defaultAccountChannel: "lb_hk",
     token: userAccessToken,
     refreshToken: userRefreshToken,
-    language: .en
+    defaultAccountChannel: "lb_hk",
+    deviceId: deviceId,
+    logLevel: .info,        // Optional, defaults to .info
+    language: .en           // Optional, defaults to Simplified Chinese; also accepts .zhCN / .zhHK
 )
-config.tokenDelegate = session
-WhaleCoreService.initialize(config: config)
+// The SDK holds this delegate weakly. The host must keep its own strong reference,
+// or token callbacks silently stop firing once the delegate is deallocated.
+config.tokenDelegate = self
+do {
+    try WhaleCoreService.initialize(config: config)
+} catch {
+    print("SDK startup failed: \(error.localizedDescription)")
+}
 ```
 
-Whale supplies project credentials and the default account channel. Broker's login flow obtains the Client `token` and `refreshToken`. Never log credentials or complete tokens.
+**Objective-C:**
+
+```objc
+WhaleCoreConfig *config = [[WhaleCoreConfig alloc]
+    initWithAppKey:@"your_app_key"
+    appSecret:@"your_app_secret"
+    appId:@"your_app_id"
+    token:userToken
+    refreshToken:userRefreshToken
+    defaultAccountChannel:@"lb_hk"
+    deviceId:[MyDeviceIdStore persistedDeviceId]
+    logLevel:WhaleCoreLogLevelInfo
+    language:WhaleCoreLanguageEn];
+config.tokenDelegate = self;
+
+NSError *initError = nil;
+if (![WhaleCoreService initializeWithConfig:config error:&initError]) {
+    NSLog(@"SDK startup failed: %@", initError.localizedDescription);
+}
+```
+
+<Note>
+  Whale supplies `appKey`, `appSecret`, `appId`, and `defaultAccountChannel`. Broker's login flow obtains `token` and `refreshToken`; WhaleCore automatically renews the token with `refreshToken` when it expires. `deviceId` is a device identifier that the host app generates and persists (the SDK does not provide generation logic). It must stay stable on the same device and be at least 32 characters long, or initialization throws `WhaleCoreErrorCode.invalidParameter`. After login, the SDK uses it to register the device for push notifications with the backend — changing the value on every launch registers a different device. Never log credentials or complete tokens.
+</Note>
 
 ## Tokens and trade authentication {/* tokens-and-trade-authentication */}
 
-Implement `WhaleCoreTokenDelegate` to persist renewed credentials. Optional `resolveExpiredToken` can perform silent login when the refresh token also fails. Concurrent 401 responses trigger a single recovery whose result is shared by pending requests.
+WhaleCore automatically refreshes the access token and notifies the host of the result through `tokenDelegate` (whether and how to persist the new values is up to the host):
 
 ```swift
-func didRefreshToken(_ token: String, refreshToken: String) {
-    saveSecurely(token, refreshToken)
+class AppSession: WhaleCoreTokenDelegate {
+    func didRefreshToken(_ token: String, refreshToken: String) {
+        // Handle the new token / refreshToken; persist them if you want to reuse them at next launch.
+    }
+
+    // Asynchronous fallback when the main token is completely invalid (401, and automatic
+    // refresh also failed). Optional to implement; you must call completion before the
+    // timeout — supplying a non-nil token retries the failed request automatically.
+    func resolveExpiredToken(completion: @escaping (String?, String?) -> Void) {
+        AuthCoordinator.silentLogin { token, refreshToken in
+            completion(token, refreshToken) // Pass (nil, nil) on failure to follow the refresh-failure path.
+        }
+    }
+
+    func didFailToRefreshToken(_ error: Error) {
+        // The refresh token has expired and the host fallback also failed
+        // (including a timeout or an unimplemented resolveExpiredToken). Prompt the user to sign in again.
+        AuthCoordinator.logout()
+    }
 }
 
-func resolveExpiredToken(completion: @escaping (String?, String?) -> Void) {
-    silentLogin { completion($0.token, $0.refreshToken) }
-}
+config.tokenDelegate = AppSession()
+config.tokenResolverTimeout = 30   // Timeout for resolveExpiredToken, in seconds. Defaults to 30.
 ```
 
-To let the host manage trading passwords, set `tradePasswordEnabled = true` and assign `WhaleCoreTradeAuthDelegate` before initialization. Otherwise, the SDK manages trade authentication.
+<Note>
+  All three callbacks are optional. If `resolveExpiredToken` is not implemented, a 401 fallback fails immediately and calls `didFailToRefreshToken` (if that is also not implemented, the SDK only logs the failure). The `error` passed to `didFailToRefreshToken` is only the original request error that triggered the failure and exists for logging — treat receiving this callback as the definitive signal that the session is invalid. When concurrent requests receive a 401 at the same time, the SDK calls `resolveExpiredToken` only once and shares the result with every pending request.
+</Note>
+
+**Trade authentication is fully automatic** and invisible to the host: for trade-scoped calls (submitting orders, replacing or canceling orders, trade pass-through requests, and so on), the SDK obtains and recovers trade tokens internally without any configuration. Letting the host manage trading passwords is not currently available to the public and is reserved for a future version.
 
 ## Lifecycle {/* lifecycle */}
 
 ```swift
-WhaleCoreService.onResume()
-WhaleCoreService.onPause()
+// AppDelegate / SceneDelegate
+WhaleCoreService.resume()   // Entering the foreground
+WhaleCoreService.pause()    // Entering the background
+```
+
+Sign out or destroy the SDK (for example, when the user signs out or switches accounts):
+
+```swift
 WhaleCoreService.logoutAndDestroy()
 ```
 
-Destroy clears local tokens, closes WebSockets, and releases services. After account switching, initialize again and re-register delegates and subscriptions.
+<Note>
+  `logoutAndDestroy()` returns the SDK to an uninitialized state: it clears local tokens (memory and disk), closes every WebSocket, and releases business services and underlying handles. After destruction you can call `initialize(config:)` again within the same process to sign in again (for example, to switch users); after signing in again, re-register each service's delegate and re-subscribe as you would on a cold start. Call it from the main thread and avoid concurrent calls to other business APIs while it runs. `resume()` and `pause()` were previously named `onResume()` and `onPause()`; the old names still work but are deprecated, so migrate when convenient.
+</Note>
 
 ## Public services {/* public-services */}
 
-| Service | Main APIs |
+| Module | Entry point | Capabilities |
+| --- | --- | --- |
+| Quotes | `WhaleCoreService.quoteService()` | Quote subscriptions (chained data-type selection), option chain/detail subscriptions, kline and timeshare/tick history queries, quote snapshots |
+| Orders | `WhaleCoreService.orderService()` | Submitting, querying, canceling, and replacing orders; conditional and attached orders; take-profit/stop-loss on positions; pre-trade validation; order preview; batch cancellation; and real-time push |
+| Portfolio | `WhaleCoreService.portfolioService()` | Portfolio subscriptions, cash detail and position-quote toggles, member portfolio settings, exchange-rate conversion, and profit-and-loss analysis |
+| Watchlist | `WhaleCoreService.watchlistService()` | Group and stock mutations, sorting, pinning, invalid-ticker cleanup, and real-time push |
+| Pass-through requests | `WhaleCoreService.requestService()` | Pass-through calls to any endpoint, with common parameters and authentication headers attached automatically and recovery retry on expired authentication |
+| Option calculator | `WhaleCoreOptionCalculator` (static utility) | Local Black-Scholes calculations: Greeks, theoretical price, intrinsic/time value, days to expiry, and probability of profit |
+
+<Note>
+  Except for the option calculator, accessing these services before initialization or after `logoutAndDestroy()` throws `appNotReady`. Pre-trade validation has moved into `orderService()`; the historical standalone entry point `WhaleCoreService.orderValidationService` still works but is deprecated.
+</Note>
+
+## Core concepts {/* core-concepts */}
+
+The following rules apply across several modules; understand them once and the rest of this page does not repeat them.
+
+**Counter ID encoding** always uses the format `"{type}/{market}/{code}"`: for example `"ST/US/AAPL"` or `"ST/HK/00700"` for stocks. Options additionally encode the strike price, expiry date, and direction, for example `"OP/US/AAPL240119C190000"`. Every counter-scoped API — quotes, orders, watchlist, and profit-and-loss analysis — uses this same encoding.
+
+**Account channel** `WhaleCoreConfig.defaultAccountChannel` is fixed at initialization, and the order service and portfolio subscriptions fall back to it by default. Most order methods accept an `accountChannel` override (omit it to use the default channel); portfolio subscriptions require an explicit `WhaleCoreAccountInfo`, which the host constructs from its own channel and `aaid`:
+
+```swift
+let account = WhaleCoreAccountInfo(accountChannel: "lb_hk", aaid: "your_aaid")
+```
+
+**Delegate multicast pattern** The order, portfolio, and watchlist services share the same push pattern: register with `addDelegate(_:)` and remove with `removeDelegate(_:)`. The SDK holds observers **weakly** (the caller must hold its own strong reference, or callbacks silently stop firing once the delegate is deallocated), and multiple screens can register for the same push at once. The order service additionally starts pushing automatically when the first delegate registers and stops automatically when the last one is removed, so no manual `subscribe` call is needed.
+
+**Swift and Objective-C method mapping** Every public type carries `@objc`. Three categories of Swift methods follow a fixed mapping on the Objective-C side:
+
+| Swift | Objective-C |
 | --- | --- |
-| `quotesService` | `subscribe`, `subscribeKlines`, `getKlines`, `getStock`, option chains and calculator |
-| `orderService` | `submitOrder`, `replaceOrder`, `cancelOrder`, today/history/detail, estimates, and validation |
-| `portfolioService` | Asset subscriptions, cash detail, position quotes, and member settings |
-| `watchlistService` | Group/stock mutations, sorting, pinning, refresh, and events |
-| `requestService` | Authenticated pass-through HTTP with recovery retry |
+| `throws -> T` | `- (nullable T)xxxAndReturnError:(NSError **)error` |
+| `static func initialize(config:) throws` | `+ (BOOL)initializeWithConfig:error:` |
+| `async throws -> T` | `- (void)xxx:(void (^)(T, NSError *))completionHandler` |
+
+See [Objective-C interoperability](#objective-c-interop) for concrete call patterns.
+
+## Quotes service {/* quotes-service */}
+
+The quotes service type is `WhaleCoreQuotesService`. Select the data types you need through a chained builder, then call `.start` to begin the subscription.
+
+### Quote subscription {/* quote-subscription */}
+
+```swift
+let svc = try WhaleCoreService.quoteService()
+
+let subscription = try await svc
+    .subscribe(counterIds: ["ST/US/AAPL", "ST/HK/00700"])
+    .detail        // Detail quotes (OHLC, market cap, PE/PB, 52-week high/low)
+    .depth         // Order-book depth
+    .trade         // Tick-by-tick trades
+    .preTrade      // US pre-market
+    .postTrade     // US post-market
+    .start { updates in
+        for update in updates {
+            print("\(update.counterId): \(update.stock.lastPrice ?? 0)")
+        }
+    }
+
+// Unsubscribe
+await subscription.cancel()
+```
+
+<Note>
+  `.start` throws only when the subscription itself fails to establish (the SDK is not ready or the initial fetch fails); once established, the running subscription no longer produces errors and delivers data continuously through the callback. Selectable data types: `list`, `detail`, `depth`, `trade`, `broker`, `preTrade`, `postTrade`, and `nightTrade`.
+</Note>
+
+### Query snapshots and historical data {/* quote-history-queries */}
+
+```swift
+// Query a snapshot (synchronous, read from the in-memory cache)
+if let stock = svc.getStock(counterId: "ST/US/AAPL") {
+    print(stock.lastPrice ?? 0)
+}
+
+// Fetch kline history (Swift async convenience overload; default semantics match Android)
+let klines = try await svc.getKlines(counterId: "ST/US/AAPL", klineType: .perDay, count: 100)
+klines.forEach { print("\($0.timestamp): \($0.close)") }
+```
+
+Other query capabilities: `getTimeshares(counterId:fiveDays:...)` fetches the current or the last five days of timeshare data (use this for timeshare charts instead of approximating with one-minute klines); `getTrades(counterId:count:...)` pages through historical tick-by-tick trades; `observeQuoteEvents(counterIds:onUpdate:)` and `observeKlineUpdates(counterIds:onUpdate:)` observe quote or kline events that another caller already subscribed to without creating a new subscription; `getInterestRate()` reads the SDK's built-in risk-free rate for display in the option calculator.
+
+### Option quote subscription {/* option-quote-subscription */}
+
+Option quotes support two subscription shapes; extended data (strike price, IV, direction, open interest, order book) always comes from `optionData`:
+
+```swift
+// Option-chain batch subscription: subscribes to a set of contracts as a group, replacing the whole
+// group as the user interacts (changing expiry, scrolling the visible range).
+let chainSub = try svc.subscribeOptionChain(counterIds: visibleContracts) { updates in
+    for u in updates {
+        let opt = u.stock.optionData
+    }
+}
+chainSub.updateCounterIds(newVisibleContracts)  // Replace the whole group (scrolling or changing expiry)
+await chainSub.cancel()                          // Unsubscribe when leaving the screen
+
+// Option-detail subscription: a single contract, with subtypes chosen by the host through chaining
+let detailSub = try await svc.subscribeOptionDetail(counterId: "OP/US/AAPL240119C190000")
+    .list.detail.trade
+    .start { updates in
+        let opt = updates.first?.stock.optionData
+    }
+await detailSub.cancel()
+```
+
+<Note>
+  Greeks are not delivered with quote pushes — the host subscribes to the underlying stock separately, takes its price, and feeds it into `WhaleCoreOptionCalculator` for local calculation. See [Option calculator](#option-calculator).
+</Note>
+
+**Method overview:**
+
+| Method | Description |
+| --- | --- |
+| `subscribe(counterIds:)` | Creates a quote subscription builder; chain-select data types, then call `.start` |
+| `observeQuoteEvents(counterIds:`<br />`onUpdate:)` | Listens to quote events without creating a new subscription, reusing one established by another caller |
+| `observeKlineUpdates(counterIds:`<br />`onUpdate:)` | Listens to kline update events without creating a new subscription |
+| `getStock(counterId:)` | Synchronously reads a quote snapshot from the in-memory cache |
+| `getKlines(counterId:`<br />`klineType:`<br />`count:`<br />`timestamp:`<br />`klineSession:`<br />`adjustType:`<br />`completion:)` | Fetches kline history (an async convenience overload is also available) |
+| `getTimeshares(counterId:`<br />`fiveDays:`<br />`klineSession:`<br />`completion:)` | Fetches timeshare data for the current day or the last five days (an async convenience overload is also available) |
+| `getTrades(counterId:`<br />`count:`<br />`lastSequenceID:`<br />`lastTradeSession:`<br />`tradeType:`<br />`completion:)` | Fetches historical tick-by-tick trades with pagination (an async convenience overload is also available) |
+| `subscribeOptionChain(counterIds:`<br />`onUpdate:)` | Batch option-chain subscription (whole-group replacement plus 300ms debouncing) |
+| `subscribeOptionDetail(counterId:)` | Creates an option-detail subscription builder (single contract) |
+| `getInterestRate()` | Reads the SDK's built-in risk-free rate (annualized decimal) for display in the option calculator |
+
+## Option calculator {/* option-calculator */}
+
+`WhaleCoreOptionCalculator` is a stateless, pure calculation utility (entirely static methods, not registered with `WhaleCoreService`, no network access); the caller supplies all data. It prices European options with Black-Scholes: in the quote scenario, the underlying price comes from the host's own subscription and IV, strike price, days to expiry, and dividends come from the option push (`optionData`), recalculated on every push; in the calculator scenario (hypothetical scenarios), the underlying price and remaining days are replaced with user-supplied assumptions using the same formula.
+
+```swift
+let input = WhaleCoreOptionPricingInput(
+    underlyingPrice: NSDecimalNumber(string: "190.00"),   // Current underlying price (before dividends)
+    strikePrice: NSDecimalNumber(string: "185.00"),
+    impliedVolatility: NSDecimalNumber(string: "0.25"),   // Annualized IV as a decimal (0.25 = 25%)
+    daysToExpire: 30,                                     // Calendar days to expiry (0 is valid, negative is not)
+    isCall: true,
+    dividendToExpire: nil,                                // Cumulative dividends before expiry; nil = 0
+    interestRate: nil                                     // nil reads the SDK's built-in risk-free rate
+)
+if let g = WhaleCoreOptionCalculator.greeks(input) {
+    print(g.delta, g.gamma, g.vega, g.theta, g.rho, g.theoreticalPrice)
+    // Scaling: vega per 1% volatility, theta per calendar day (usually negative), rho per 1% rate
+}
+
+// Days to expiry (uses the same convention as the daysToExpire parameter of greeks / profitProbability)
+let days = WhaleCoreOptionCalculator.daysToExpire(
+    expireDate: "20260729",                              // yyyyMMdd, matching optionData.expireDate
+    timeZone: TimeZone(identifier: "America/New_York")!)  // The exchange time zone for the expiry date
+```
+
+Also available: `intrinsicValue(underlyingPrice:strikePrice:isCall:)` (intrinsic value: call = max(0, price − strike), put is the opposite), `timeValue(optionPrice:intrinsicValue:)` (time value = premium − intrinsic value), and `profitProbability(...)` (probability of profit at expiry, using Black-Scholes risk-neutral semantics).
+
+<Note>
+  Invalid input always returns `nil` (display "--" in the UI): IV ≤ 0, days &lt; 0, underlying price after dividends ≤ 0, strike price or breakeven point ≤ 0, or an interest rate of 0 (including an unavailable built-in rate). Passing `nil` for `interestRate` reads the SDK's built-in risk-free rate (a server-side configuration that becomes available automatically after sign-in). `daysToExpire(expireDate:timeZone:)` returns 0 on the expiry date and a negative value once expired; passing a negative value into the calculation APIs returns `nil`.
+</Note>
+
+**Method overview:**
+
+| Method | Description |
+| --- | --- |
+| `greeks(_:)` | Computes the Greeks (delta / gamma / vega / theta / rho) and the theoretical price |
+| `intrinsicValue(underlyingPrice:`<br />`strikePrice:`<br />`isCall:)` | Computes intrinsic value: call = max(0, price − strike), put is the opposite |
+| `timeValue(optionPrice:`<br />`intrinsicValue:)` | Computes time value = premium − intrinsic value |
+| `daysToExpire(expireDate:`<br />`timeZone:)` | Computes the number of calendar days to expiry |
+| `profitProbability(underlyingPrice:`<br />`breakevenPoint:`<br />`impliedVolatility:`<br />`daysToExpire:`<br />`isCall:`<br />`dividendToExpire:`<br />`interestRate:)` | Computes the probability of profit at expiry (Black-Scholes risk-neutral semantics) |
+
+## Order service {/* orders */}
+
+The order service type is `WhaleCoreOrderService`.
+
+### Push subscription {/* order-push-subscription */}
+
+Order pushes are managed automatically through `addDelegate` / `removeDelegate` (see [the delegate multicast pattern](#core-concepts)):
+
+```swift
+class OrderHandler: NSObject, WhaleCoreOrderServiceDelegate {
+    func onOrderChanged(order: WhaleCoreOrder) {
+        print("Order changed: \(order.orderId ?? "")")
+    }
+}
+
+let handler = OrderHandler()
+try WhaleCoreService.orderService().addDelegate(handler)
+// The subscription stops automatically once handler is deallocated.
+```
+
+### Build and submit an order {/* submit-order */}
+
+`WhaleCoreOrderSubmitRequest` **cannot be constructed with `init` directly**. Construction has two steps: first build the common parameters as `WhaleCoreOrderCommon`, then pick a factory method for the order type. Here is the most common case, a limit order:
+
+```swift
+// Step 1: common parameters
+let common = WhaleCoreOrderCommon(
+    counterId: "ST/US/AAPL",
+    action: .buy,
+    quantity: .byCount(NSDecimalNumber(value: 100)),      // Or .byAmount(_:count:) to order by amount
+    settlementCurrency: "USD",
+    clientRequestId: myRequestId       // Idempotency key; use UUID().uuidString and retain it if you have none
+)
+common.validity = .day()               // Validity, defaults to day order; use .gtd(expireTime:) for GTD
+
+// Step 2: pick a factory method for the order type (a limit order here)
+let limitReq = WhaleCoreOrderSubmitRequest.limit(
+    common: common,
+    kind: .lo,                               // Or .slo / .alo / .elo / .odd
+    price: NSDecimalNumber(string: "180.00")
+)
+
+// Submit
+let result = try await WhaleCoreService.orderService().submitOrder(limitReq)
+print("Submitted: \(result.orderId ?? "")")
+```
+
+Common parameters and optional properties:
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `counterId` | `String` | Counter ID |
+| `action` | `WhaleCoreOrderSide` | Buy or sell: `.buy` / `.sell` |
+| `quantity` | `WhaleCoreOrderQuantity` | `.byCount(_:)` by quantity or `.byAmount(_:count:)` by amount; mutually exclusive |
+| `settlementCurrency` | `String` | Settlement currency, such as `"USD"` or `"HKD"` |
+| `clientRequestId` | `String` | Idempotency key; the server deduplicates repeated requests by this value |
+| `validity` (optional) | `WhaleCoreOrderValidity` | Validity, defaults to `.day()`; use `.gtd(expireTime:)` for GTD |
+| `forceOnlyRth` (optional) | `WhaleCoreForceOnlyRTH` | Trading-session control, defaults to `.unknown` (not sent); US markets only |
+| `remark` (optional) | `String?` | User remark |
+
+For amount-based orders, the server always expects `quantity` to be the real share count (`=0` is rejected), so the amount and the converted share count must be sent together; only limit and market order types support this, and only for buy orders — conditional orders (LIT/MIT/TSL) do not support ordering by amount. Route this through the [pre-trade validation](#order-validation) funnel where possible; the SDK performs the conversion automatically (amount ÷ price, rounded down, with 4 decimal places for fractional shares and rounding to whole lots where a market requires them).
+
+### More order types and attached orders {/* order-types-and-attached-orders */}
+
+Beyond limit orders:
+
+- **Market types (MO/MOC/AO)**: `WhaleCoreOrderSubmitRequest.market(common:kind:)`, no submitted price needed.
+- **Limit-if-touched (LIT)**: `limitIfTouched(common:price:triggerPrice:trend:marketPrice:)`. Derive `trend` automatically from "trigger price vs. current market price" (`.up` / `.down`) instead of letting the user choose it.
+- **Market-if-touched (MIT)**: `marketIfTouched(common:triggerPrice:trend:marketPrice:)`, fills at market once triggered, with no submitted price.
+- **Trailing-stop-limit (TSL)**: `trailingStopLimit(common:percent:limitOffset:limitDepthLevel:monitorPrice:)`. The limit leg is either `limitOffset` (a fixed offset from the trigger price) or `limitDepthLevel` (an order-book depth level) — the two are mutually exclusive: a positive `limitDepthLevel` means N levels on the ask side (1 = best ask) and a negative value means N levels on the bid side (-1 = best bid); pass `nil` for `limitOffset` when using a depth level. `monitorPrice` is required.
+
+```swift
+let mkt = NSDecimalNumber(string: "176.00")          // Current market price
+let trigger = NSDecimalNumber(string: "180.00")
+let litReq = WhaleCoreOrderSubmitRequest.limitIfTouched(
+    common: common,
+    price: NSDecimalNumber(string: "178.00"),
+    triggerPrice: trigger,
+    trend: trigger.compare(mkt) == .orderedDescending ? .up : .down,
+    marketPrice: mkt
+)
+```
+
+<Note>
+  The standalone trailing-stop market order (TS) has been retired — it only displays for legacy orders and has no submission factory. For the "fire a market order on trigger" case in an attached order, use `.marketIfTouched()` for activation instead.
+</Note>
+
+**Attaching an order (take-profit / stop-loss)**: any order type can chain `.attaching(_:)` to attach a take-profit or stop-loss order that activates automatically once the primary order fills. It is built from three layers of factories: the attached order as a whole (`WhaleCoreAttachedParams.takeProfit` / `.stopLoss` / `.bracket`), the activation type and submitted price (`WhaleCoreAttachedActivation.marketIfTouched()` / `.limitIfTouched(...)`), and the validity (`WhaleCoreOrderValidity`).
+
+```swift
+// Bracket (take-profit + stop-loss) — fills at limit once triggered
+let bracket = WhaleCoreOrderSubmitRequest
+    .limit(common: common, price: NSDecimalNumber(string: "180.00"))
+    .attaching(.bracket(
+        takeProfitPrice: NSDecimalNumber(string: "200.00"),  // Take-profit trigger price
+        stopLossPrice:   NSDecimalNumber(string: "170.00"),  // Stop-loss trigger price
+        validity: .gtc(),                        // The attached order is valid until canceled
+        activation: .limitIfTouched(             // Submit a limit order once triggered
+            profitTakerSubmitPrice: NSDecimalNumber(string: "199.50"),
+            stopLossSubmitPrice:    NSDecimalNumber(string: "170.50")
+        )
+    ))
+```
+
+<Note>
+  `WhaleCoreOrderValidity` and `WhaleCoreAttachedActivation` both use factory methods to rule out invalid combinations at the API layer — GTD always carries an expiry time and LIT activation always carries the matching submitted price — so no additional validation is required on the business side.
+</Note>
+
+### Query, cancel, and replace orders {/* order-query-cancel-replace */}
+
+None of these methods take an account anymore; the SDK internally uses the default account channel from `defaultAccountChannel`:
+
+```swift
+let svc = try WhaleCoreService.orderService()
+
+// Today's orders (filter status using the Int constants on WhaleCoreTodayOrderStatus)
+let todayFilter = WhaleCoreOrderFilter()
+todayFilter.status = [WhaleCoreTodayOrderStatus.withdrawable]        // Cancelable
+let todayOrders = try await svc.getTodayOrders(filter: todayFilter)
+
+// Order detail (the primary order)
+let detail = try await svc.getOrderDetail(orderId: "12345").order
+
+// Cancel
+try await svc.cancelOrder(orderId: "12345")
+
+// Regular replace (modify price, quantity, or remark; quantity is required —
+// pass the original quantity back if you are not changing it)
+let replaceReq = WhaleCoreReplaceOrderRequest(orderId: detail.orderId ?? "",
+                                              quantity: detail.quantity)
+replaceReq.price = NSDecimalNumber(string: "152.00")
+try await svc.replaceOrder(replaceReq)
+
+// Batch cancellation
+try await svc.batchCancelOrders(counterId: "ST/US/AAPL")   // Cancel by counter, regardless of side
+try await svc.batchCancelOrdersByIds(orderIds: ["1", "2", "3"])
+```
+
+Replacing an attached order uses the separate `WhaleCoreReplaceAttachedRequest` (which supports only the trigger price and the LIT activation's submitted price). Choose the `.modifyProfitTaker` / `.modifyStopLoss` / `.modifyBracket` / `.removeAll` factory that matches your intent; obtain the child order IDs by filtering `WhaleCoreOrder.attachedOrders` by type. To remove attached orders while replacing the primary order, use `WhaleCoreReplaceOrderRequest.removingAttachedOrders()` (an atomic operation). Replacing a conditional order (LIT/MIT/TSL) uses the separate `WhaleCoreReplaceOrderRequest.condition(...)` factory, which requires `triggerStatus`; the SDK routes based on whether the order has not triggered (the conditional-order replace endpoint) or has already triggered (the regular replace endpoint, where only price, quantity, and remark take effect). Replacing an option order also uses separate endpoints: use `.option(orderId:quantity:price:)` for a regular option replace, and `condition(..., isOption: true)` for an option conditional order.
+
+<Note>
+  `replaceOrder` always goes through the primary order's replace channel: when adjusting an attached order through `attaching(_:)`, leave the primary price and quantity as `nil` — the SDK fills them from the cached original order automatically. You can also modify just the attached order's trigger price or submitted price with the separate `replaceAttachedOrder`; either approach works.
+</Note>
+
+### Pre-trade validation {/* order-validation */}
+
+A black-box validation capability: the host only passes the order intent, and the SDK internally manages data fetching, caching, and freshness. Every issue means "submitting with the current intent will definitely fail" — there is no warning level. A business failure never throws; it always comes back as `issues` (`throws` is reserved for infrastructure failures).
+
+<Note>
+  Validation has moved into the order service by domain and is called directly through `WhaleCoreService.orderService()`. The historical standalone entry point `WhaleCoreService.orderValidationService` is deprecated but still works; migrate to the new entry point when convenient.
+</Note>
+
+The main flow is a one-way funnel (`WhaleCoreOrderIntent` is the only way to build it):
+
+```swift
+let svc = try WhaleCoreService.orderService()
+
+// Before entering the order screen: check tradability
+let entry = try await svc.checkTradability(counterId: "ST/US/AAPL")
+guard entry.passed else { return handle(entry.issues) }
+
+// Rendering constraints for the screen (lot size, supported order types and sessions,
+// required-field matrix, and so on), and warms the validation cache
+let constraints = try await svc.getOrderConstraints(counterId: "ST/US/AAPL")
+
+// On input change → lightweight validation drives button state (returns in microseconds on a cache hit)
+let intent = WhaleCoreOrderIntent(counterId: "ST/US/AAPL", action: .buy, orderType: WhaleCoreOrderType.LO)
+intent.price = NSDecimalNumber(string: "150.00")
+intent.quantity = NSDecimalNumber(value: 100)
+intent.validity = .day()
+intent.forceOnlyRth = .rthOnly
+let draft = try await svc.validateOrder(intent, scope: .draft)
+submitButton.isEnabled = draft.passed
+
+// On tapping submit → full validation; a pass returns a ready-to-submit request
+// (the validated object and the submitted object are the same)
+let result = try await svc.validateOrder(intent, scope: .submission)
+if let request = result.request {
+    try await svc.submitOrder(request)
+} else {
+    for issue in result.issues {
+        show(issue.reason)   // issue.reason is a localized error message, ready to display
+    }
+}
+```
+
+Validation rules are grouped by stage of the ordering flow, from 10xx (before entering the screen) to 17xx (take-profit/stop-loss on a position), across seven segments:
+
+| Segment | Coverage |
+| --- | --- |
+| 10xx before entering the screen | Empty counter, account not opened or suspended, non-tradable index products, server-side tradability determination |
+| 11xx button state | Order-type support, unsupported channel, buy/sell restrictions, required fields, and type/side restrictions for amount-based orders (a market closure or trading halt does not block placing an order — the state surfaces through the constraints snapshot) |
+| 1201 agreements | The options risk agreement has not been accepted |
+| 13xx parameter validity | An amount-based order that converts to 0 shares, or a US fractional-share amount below the channel minimum (`fractional_min_amount`, carried in `issue.referenceValue`) |
+| 14xx session and validity | The chosen session or validity is not supported for this type; an unspecified value is also blocked (an empty configuration list means every option is explicitly disallowed) |
+| 15xx qualifications and disclosures | Listed-derivative ETF awareness, short-selling/margin qualification, W-8BEN, and US overnight/option overnight/fractional-share disclosures |
+| 16xx attached orders | Take-profit/stop-loss trigger prices are required; the matching leg's submitted price is required when LIT activation is used (a reversed direction is only a soft reminder for the host to handle — the SDK does not block it) |
+| 17xx take-profit/stop-loss on a position | Produced only by `validateTPSLOrder`; see [Take-profit/stop-loss on a position](#position-tpsl) |
+
+Qualification status and the resolution path (an issue only reports "what is blocking submission" — how to resolve it depends on the qualification data):
+
+```swift
+for q in try await svc.getQualifications(counterId: "ST/US/AAPL") where !q.isSatisfied {
+    if q.type == .listedDerivEtfAssessment {
+        // Awareness assessment: the SDK can complete it, but the entry point is an answered
+        // questionnaire, not a one-tap acceptance — so check this before the acceptableViaAPI branch.
+        // The host renders a four-option questionnaire; the answer must come from the user
+        // (choosing .none counts as not satisfied).
+        try await svc.submitListedDerivAssessment(experience: .trained)
+    } else if q.acceptableViaAPI {
+        // Disclosure types (options agreement, US short selling, overnight, option overnight,
+        // fractional shares): show the disclosure, get user confirmation, then accept with one call.
+        try await svc.acceptAgreement(q.type)
+    } else {
+        // Assessment/certification types (Hong Kong margin, W-8BEN, and so on): route to a web flow.
+        // Get the URL from getOrderInfo(...) by qualification type.
+        openWeb(urlFromOrderInfo(for: q.type))
+    }
+}
+// After accepting or answering successfully, the SDK invalidates its cache automatically,
+// so revalidating returns the latest status.
+```
+
+<Note>
+  `issue.reason` and default error-code descriptions are localized (zh-Hans, zh-Hant, and en), switching with the initialization configuration or `setLanguage(_:)`.
+</Note>
+
+### Order preview {/* order-preview */}
+
+The pre-submission "order preview" calculation covers: estimated amount and fees (after discounts), margin financing interest, cross-currency exposure, option collateral, post-fill position cost, an account-impact preview (cash, buying power, maintenance and initial margin), and risk hints. Direction, discount caps, margin factors, and other math are all computed inside the SDK; the host only handles visibility toggles, label copy, and formatting.
+
+```swift
+// Shares the same Intent as validation and submission — an in-progress draft can be previewed
+// at any time (incomplete fields produce a partial result).
+let intent = WhaleCoreOrderIntent(counterId: "ST/US/AAPL", action: .buy, orderType: WhaleCoreOrderType.LO)
+intent.price = NSDecimalNumber(string: "150.00")
+intent.quantity = NSDecimalNumber(value: 100)
+
+// The SDK does not fetch quotes itself: the host supplies the option strike/direction and
+// the market-order reference price through the context.
+let context = WhaleCoreOrderPreviewContext()
+context.marketReferencePrice = lastPrice        // Needed for market-order (MO) estimates; not for limit/touch orders
+
+let result = try await svc.previewOrder(intent, context: context)
+print("Estimated amount: \(result.orderAmount ?? 0)  Total fees: \(result.fees.total)  Total: \(result.orderTotal ?? 0)")
+```
+
+Reference-price rules: limit types use `intent.price`; market-if-touched (MIT) uses `intent.triggerPrice`; market orders use `context.marketReferencePrice`, and amount-based results are `nil` when it is not supplied. `result.riskHint` reports the kind of risk hint (such as `.marginRaisedOnClose` or `.financingNeeded`); the copy is up to the host. `result.action` is for display and analytics only — every value is already computed by direction, so do not branch on it again on the host side.
+
+<Note>
+  There is also a synchronous, pure-calculation entry point, `WhaleCoreOrderPreviewCalculator.compute(_:)`, for hosts that fetch their own data (including cases that do not use SDK quotes at all). Every fee component is rounded to 2 decimal places, and `fees.total` always equals the sum of the displayed components. Discounted values carry the original amount through `WhaleCoreDiscountedAmount.original`, for showing a struck-through "original X" label.
+</Note>
+
+### Take-profit/stop-loss on a position (TPSL) {/* position-tpsl */}
+
+Places take-profit and stop-loss conditional orders in one call for a position you already hold. This is different from "attaching an order" — an attached order depends on a newly submitted primary order and activates only after it fills, while TPSL applies directly to an existing position with no primary order involved. The caller does not specify the side; the SDK derives it from the position during validation and writes it into the request.
+
+```swift
+let intent = WhaleCoreTPSLOrderIntent(counterId: "ST/US/AAPL")
+intent.quantity = NSDecimalNumber(value: 100)
+intent.wantsTakeProfit = true
+intent.takeProfitTriggerPrice = NSDecimalNumber(string: "260")
+intent.takeProfitOrderType = WhaleCoreOrderType.LIT      // Submits a limit order on trigger; requires a submitted price
+intent.takeProfitSubmitPrice = NSDecimalNumber(string: "259")
+intent.wantsStopLoss = true
+intent.stopLossTriggerPrice = NSDecimalNumber(string: "180")
+intent.stopLossOrderType = WhaleCoreOrderType.MIT        // Submits a market order on trigger; no submitted price
+
+let result = try await svc.validateTPSLOrder(intent, scope: .submission)
+if let request = result.request {
+    let submitted = try await svc.submitTPSLOrder(request)
+    print(submitted.ployId)          // The grouping key that pairs the two legs in the order list
+}
+```
+
+The take-profit and stop-loss sides are independent parameters — a side that is not enabled is not submitted at all — but at least one side must be enabled. The order type once triggered can only be `WhaleCoreOrderType.LIT` (a submitted price is required for that side) or `.MIT` (market). The SDK does not calculate a default trigger price (for example, "cost basis ± 10%") — derive it yourself from `holding.averageCost`. The two orders share the same `ployId` in the order list, with `ployType` set to `.takeProfit` (`"8"`) and `.stopLoss` (`"9"`) respectively; `ployId` is an empty string when only one leg is placed.
+
+<Note>
+  Replacing or canceling does not go through this API: the two orders TPSL places are ordinary conditional orders. Replace them with `replaceOrder` plus `WhaleCoreReplaceOrderRequest.condition(...)`, and cancel them with `cancelOrder`. Validation also covers a reversed trigger-price direction (determined from the position's long/short side); the relative position of the trigger price versus the current market price, and whether the quantity exceeds the closeable quantity, are **intentionally not blocked** here (crossing the market price is a valid intent, and the closeable quantity is only a snapshot) — both are left to the server to decide. When validation returns "unsupported product" or "no position", only that single issue is returned — take `issues.first` as the root cause.
+</Note>
+
+### Trade capacity {/* trade-capacity */}
+
+For the buying-power area before submission, call the unified trade-capacity snapshot to get everything needed for both buying and selling in one call:
+
+```swift
+let capReq = WhaleCoreTradeCapacityRequest(
+    counterId: "ST/US/AAPL", action: .sell,
+    submitPrice: NSDecimalNumber(string: "150"),      // Pass the latest quote price for market orders
+    orderType: WhaleCoreOrderType.LO, settlementCurrency: "USD")
+let capacity = try await WhaleCoreService.orderService().getTradeCapacity(capReq)
+print("Sellable: \(capacity.sellableQuantity ?? 0), short-sellable: \(capacity.shortSellableQuantity ?? 0)")
+```
+
+<Note>
+  Other estimation APIs — maximum buying power (stocks only; use `getTradeCapacity(_:)` for options), position detail, estimated fees, and order info — are listed in the method overview below. Re-query `getTradeCapacity` whenever the price, order type, side, or settlement currency changes, and debounce price input by about 200 ms.
+</Note>
+
+**Method overview:**
+
+| Method | Description |
+| --- | --- |
+| `addDelegate(_:)` | Registers an order push observer (registering the first observer automatically starts the push) |
+| `removeDelegate(_:)` | Removes an order push observer |
+| `submitOrder(_:)` | Submits an order (shared entry point for regular and conditional orders) |
+| `getTodayOrders(filter:`<br />`accountChannel:)` | Fetches today's order list |
+| `getHistoryOrders(page:`<br />`limit:`<br />`filter:`<br />`accountChannel:)` | Fetches historical orders (paginated) |
+| `getOrderDetail(orderId:`<br />`isAttached:)` | Fetches order detail (main order or attached order) |
+| `cancelOrder(orderId:)` | Cancels a single order |
+| `replaceOrder(_:)` | Replaces an order (shared entry point for regular, conditional, and option orders) |
+| `cancelAttachedOrder(attachedOrderId:)` | Cancels an attached order |
+| `replaceAttachedOrder(_:)` | Replaces an attached order (trigger price / limit price only) |
+| `batchCancelOrders(counterId:`<br />`action:)` | Batch-cancels orders by security and side |
+| `batchCancelOrdersByIds(orderIds:)` | Batch-cancels orders by a list of order IDs |
+| `getEstimateBuyLimit(_:)` | Queries the maximum buying power (stocks only; use `getTradeCapacity(_:)` for options) |
+| `getTradeDetail(counterId:`<br />`settlementCurrency:)` | Queries position detail (total quantity / sellable quantity / cost) |
+| `getEstimatedCost(_:)` | Queries estimated fees (commission / platform fees / third-party fees) |
+| `getOrderInfo(_:)` | Queries order info (price limits, board lot size, supported order types, etc.) |
+| `getTradeCapacity(_:)` | Queries the trade-capacity snapshot (the recommended entry point for the buying-power area) |
+| `checkTradability(counterId:)` | Checks tradability before entering the trade screen |
+| `getOrderConstraints(counterId:)` | Fetches the screen-rendering constraint snapshot (new-order scenario) |
+| `getOrderConstraints(counterId:`<br />`orderId:)` | Fetches the screen-rendering constraint snapshot (replace scenario; the server returns editable fields based on the existing order's context) |
+| `validateOrder(_:`<br />`scope:)` | The unified entry point for pre-trade validation (draft or full pre-submission) |
+| `getQualifications(counterId:)` | Queries the full set of the security's current qualification statuses |
+| `acceptAgreement(_:)` | Accepts a qualification or disclosure that can be accepted directly through the API |
+| `submitListedDerivAssessment(experience:)` | Submits the answer to the listed-derivative ETF knowledge assessment |
+| `previewOrder(_:`<br />`context:)` | Previews an order (estimated amount / fees / margin, etc.) |
+| `validateTPSLOrder(_:`<br />`scope:)` | Validates take-profit/stop-loss on a position |
+| `submitTPSLOrder(_:)` | Submits a take-profit/stop-loss order on a position |
+
+There's also a standalone utility, `WhaleCoreOrderPreviewCalculator.compute(_:)` (synchronous, pure calculation; see [Order preview](#order-preview)).
+
+## Portfolio service {/* portfolio-service */}
+
+The portfolio service type is `WhaleCorePortfolioService`.
+
+```swift
+class PortfolioHandler: NSObject, WhaleCorePortfolioServiceDelegate {
+    func onMessage(accountInfo: WhaleCoreAccountInfo, portfolioData: WhaleCorePortfolioData) {
+        print("Total assets: \(portfolioData.overview?.totalFortune ?? "")")
+    }
+    func onError(error: Error) {
+        // Errors tied to an account carry the channel and aaid in userInfo:
+        // (error as NSError).userInfo[WhaleCoreAccountChannelKey] / [WhaleCoreAccountAAIDKey]
+        print("Portfolio push error: \(error.localizedDescription)")
+    }
+}
+
+let svc = try WhaleCoreService.portfolioService()
+let handler = PortfolioHandler()
+svc.addDelegate(handler)
+
+// Subscribe to portfolio pushes (the host constructs the account; this replaces the whole
+// global subscription scope; an empty list cancels every subscription).
+let account = WhaleCoreAccountInfo(accountChannel: "lb_hk", aaid: "your_aaid")
+svc.setSubscribedAccounts(accountChannels: [account], currency: "HKD")
+
+// Cash-detail / position-quote toggles (convenience properties: set and read immediately, take effect on change)
+svc.cashDetailEnable = true   // Pushes will include the cashBalance field
+svc.quotesEnabled    = true   // Portfolio value recalculates in real time as position quotes change
+
+// Get the account the SDK is currently using (including account type: cash or margin);
+// the host does not need to pick one from a list.
+if let account = await svc.currentAccount() {
+    print("Account type: \(account.accountType == .margin ? "Margin" : "Cash")")
+}
+```
+
+<Note>
+  `WhaleCoreAccountInfo.accountType` is only populated on accounts obtained through `currentAccount()`; accounts the host constructs itself or receives back through a push are `.unknown`. Errors delivered through `onError(error:)` are already structured: `unauthorized` (3006, the session is invalid), `tradeAuthFailed` (1006, the trade token for that account is invalid), and `accountLimited` (3008, that account's trading is restricted). Awaitable variants that report submission results (`enableCashDetail(_:)`, `enableQuotes(_:)`, `refresh()`, and so on) are listed in the method overview below.
+</Note>
+
+### Member portfolio settings {/* portfolio-member-setting */}
+
+```swift
+let current = try await svc.getPortfolioMemberSetting()
+let updated = WhaleCorePortfolioMemberSettingInfo(
+    costType: .diluted,                     // Cost-calculation method
+    assetUsPrePostPrice: true,              // Include US pre/post-market prices in portfolio value
+    assetUsOvernightPrice: false,           // Include the US overnight price in portfolio value
+    assetUsOptionExtendPrice: true,         // Include US extended-hours option prices
+    showDelistedHoldings: false             // Whether to show delisted holdings
+)
+try await svc.updatePortfolioMemberSetting(setting: updated)
+```
+
+### Exchange rates {/* exchange-rates */}
+
+Fetch every supported currency pair at once; cache the whole table and convert synchronously as needed:
+
+```swift
+let rates = try await svc.exchangeRates()
+if let hkdToUsd = rates.first(where: { $0.fromCurrency == "HKD" && $0.toCurrency == "USD" }) {
+    let usd = hkdToUsd.convert(NSDecimalNumber(string: "100"))   // Automatically picks the side based on the amount's sign
+}
+```
+
+<Note>
+  Exchange-rate data is cached for the SDK's lifetime, so the host does not need to manage refreshing. The asynchronous `exchangeRates()` throws `WhaleCoreErrorCode.exchangeRateUnavailable` (1008) when the rate table is unavailable (the fetch failed and there is no cache); the synchronous `cachedExchangeRates()` returns an empty array when it is not ready. Integrators with their own rate source can also build `WhaleCoreExchangeRate` directly and assign it to `WhaleCoreOrderPreviewFields.exchangeRates` to participate in cross-currency conversion during order preview.
+</Note>
+
+### Profit-and-loss analysis {/* profit-loss-analysis */}
+
+A set of business-level aggregation APIs for account-level and per-stock profit-and-loss analysis, one method per UI section:
+
+| Method | UI section it serves |
+| --- | --- |
+| `getProfitLossAnalysisMeta()` | Page initialization: time-filter bounds and the list of comparison indices |
+| `getProfitOverview(currency:`<br />`period:)` | The headline profit/loss figure, the profit summary per asset tab, and the trend-chart footer card |
+| `getProfitTrend(currency:`<br />`period:`<br />`indexCounterId:)` | The profit/loss trend chart (own curve, index comparison, and outperformance) |
+| `getPLCalendar(currency:`<br />`period:`<br />`markets:)` | The profit/loss calendar (day/month/year cells and market-closure markers) |
+| `getProfitRanking(currency:`<br />`period:)` | Profit/loss ranking (profitable and losing lists together in one call) |
+| `getAssetFlow(period:)` | My assets (fund flow by currency) |
+| `getStockPLMeta(counterId:)` | Per-stock page initialization: time-filter bounds |
+| `getStockCumulativePL(counterId:`<br />`period:)` | Per-stock cumulative profit/loss, plus the underlying/derivative composition (switching tabs does not re-fetch) |
+| `getStockPLFlows(counterId:`<br />`derivative:`<br />`page:`<br />`size:`<br />`period:)` | Per-stock profit/loss transaction details (paginated) |
+| `getPLTradedMarkets()` | Market tabs on the stock profit/loss page (the host prepends an "All" tab when there is more than one market) |
+| `getMarketStocksPLMeta()` | Stock profit/loss page initialization: time-filter bounds |
+| `getMarketStocksPL(market:`<br />`currency:`<br />`order:`<br />`page:`<br />`size:`<br />`period:)` | Per-market stock profit/loss list (a large total figure plus one row per security, sorted and paginated server-side) |
+| `getLiquidatedStocksPL(market:`<br />`currency:`<br />`page:`<br />`size:`<br />`period:`<br />`underlyingCounterId:)` | Realized profit/loss on closed positions (six summary metrics plus per-counter grouped detail, paginated; the host decides section visibility) |
+
+```swift
+let overview = try await svc.getProfitOverview(currency: WhaleCoreCurrency.hkd, period: .allTime)
+print("Total profit/loss: \(overview.sumProfit ?? "-")")
+```
+
+<Note>
+  These models mirror the server response (field names only change from snake_case to lowerCamelCase, with nothing renamed or trimmed). Amounts, ratios, and unix-second timestamps are passed through as raw strings; numeric formatting and color-coding are up to the host. Statistical ranges use `WhaleCorePLPeriod`, an explicit either/or type (`.allTime` / `.range(start:end:)`). Currencies and markets take string constants (see `WhaleCoreCurrency` / `WhaleCoreMarket`). Every method is `async throws`, and throws `appNotReady` when the SDK is not initialized.
+</Note>
+
+**Core method overview** (subscription / settings / exchange rates; profit-and-loss methods are in the table above):
+
+| Method | Description |
+| --- | --- |
+| `addDelegate(_:)` | Registers a portfolio push observer |
+| `removeDelegate(_:)` | Removes a portfolio push observer |
+| `setSubscribedAccounts(accountChannels:`<br />`currency:)` | Sets the subscribed accounts and display currency, replacing the whole subscription scope (an awaitable `async throws` variant is also available) |
+| `currentAccount()` | Gets the account the SDK is currently using (including account type: cash or margin) |
+| `refresh()` | Manually refreshes portfolio data (an awaitable `async throws` variant is also available) |
+| `cashDetailEnable` (property) | The cash-detail subscription toggle (an awaitable variant, `enableCashDetail(_:)`, is also available) |
+| `quotesEnabled` (property) | The position-quote subscription toggle (an awaitable variant, `enableQuotes(_:)`, is also available) |
+| `getPortfolioMemberSetting()` | Fetches the current member portfolio settings |
+| `updatePortfolioMemberSetting(setting:)` | Updates the member portfolio settings |
+| `exchangeRates()` | Asynchronously fetches exchange rates for every currency pair (fetched on demand internally) |
+| `cachedExchangeRates()` | Synchronously reads cached exchange rates (returns an empty array if not ready) |
+
+## Watchlist service {/* watchlist-service */}
+
+The watchlist service type is `WhaleCoreWatchlistService`. Callbacks use the [multicast pattern](#core-concepts): register with `addDelegate(_:)`, and multiple screens can subscribe at once.
+
+```swift
+final class WatchlistHandler: WhaleCoreWatchlistServiceDelegate {
+    func onWatchlistUpdated(groups: [WhaleCoreWatchlistGroup],
+                            stocks: [WhaleCoreWatchlistStock],
+                            ties: [String]) {
+        // ties: the counterIds of pinned stocks, in pinned display order, always consistent
+        // with groups / stocks within the same callback.
+        print("Groups: \(groups.count), stocks: \(stocks.count), pinned: \(ties.count)")
+    }
+    // Both are optional to implement.
+    func onWatchlistFundsUpdated(funds: [WhaleCoreWatchlistFund]) {}
+    func onWatchlistNotesUpdated(notes: [String: String]) {}
+}
+
+let svc = try WhaleCoreService.watchlistService()
+let handler = WatchlistHandler()
+svc.addDelegate(handler)
+
+// Refresh the watchlist (sub defaults to false: fetch the list only; pass true to also subscribe to quotes)
+svc.refresh(sub: true)
+
+// Stocks: add/remove, and move across groups with removeGroups
+try await svc.addStocks(counters: ["ST/US/AAPL"], groups: [1], removeGroups: [], sub: true)
+try await svc.removeStocks(counters: ["ST/US/AAPL"], groups: [1], removeAll: false)
+```
+
+<Note>
+  Funds, notes, and pinned data have no read-only snapshot properties; they are all delivered only through callbacks, and the host is responsible for retaining them: funds through `onWatchlistFundsUpdated`, notes through `onWatchlistNotesUpdated`, and the pinned list through the `ties` parameter of `onWatchlistUpdated`. Pinning (`tie` / `untie` / `sortTied`), switching sort mode (`setGroup`), re-sorting (`resort`), and invalid tickers (`invalidTickers` / `removeInvalidTickers`) are listed in the method overview below.
+</Note>
+
+### Group management {/* watchlist-groups */}
+
+```swift
+let gid = try await svc.addGroup(groupName: "Tech stocks")
+try await svc.renameGroup(groupId: gid, name: "Leading tech")
+try await svc.sortGroups(groupIds: [gid, 1])
+try await svc.sortStocks(groupId: gid, counterIds: ["ST/US/AAPL", "ST/HK/00700"])
+try await svc.removeGroup(groupId: gid, deleteStocks: false)
+```
+
+### Group name and type fields {/* watchlist-group-fields */}
+
+Use these fields instead of matching on the display name, which is localized and can repeat:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `group.name` | `String` | A stable server-side identifier (system groups such as `all`, `holdings`, `funds`, or `options`) — use it for semantic checks, never for display |
+| `group.displayName` | `String` | The name to display: prefers the localized display name and falls back to `name` when empty — always use this for display |
+| `group.kind` | `WhaleCoreWatchlistGroupKind` | One of two normalized kinds: `.system` / `.custom` |
+| `group.systemGroup` | `WhaleCoreWatchlistSystemGroup` | The specific system group: `.all` / `.holdings` / `.funds` / `.options` / `.virtualAsset`, or `.none` for non-system groups |
+
+System groups (`kind == .system`) usually cannot be deleted or renamed; only `.custom` groups support full CRUD.
+
+**Method overview:**
+
+| Method | Description |
+| --- | --- |
+| `addDelegate(_:)` | Registers a watchlist data-change observer |
+| `removeDelegate(_:)` | Removes an observer |
+| `refresh(sub:)` | Refreshes watchlist data, optionally also subscribing to quotes |
+| `unsubscribe()` | Cancels the quote subscription for watchlist stocks (does not affect the watchlist data itself) |
+| `addStocks(counters:`<br />`groups:`<br />`removeGroups:`<br />`sub:)` | Adds stocks to a group, and supports moving them across groups |
+| `removeStocks(counters:`<br />`groups:`<br />`removeAll:)` | Removes stocks from a group |
+| `addGroup(groupName:)` | Creates a new group |
+| `removeGroup(groupId:`<br />`deleteStocks:)` | Deletes a group |
+| `renameGroup(groupId:`<br />`name:)` | Renames a group |
+| `sortStocks(groupId:`<br />`counterIds:)` | Reorders stocks within a group |
+| `sortGroups(groupIds:)` | Reorders groups |
+| `sortTied(counters:)` | Reorders pinned stocks |
+| `setGroup(groupId:`<br />`sortMode:`<br />`sortField:`<br />`asc:)` | Switches the current group and sort mode, returning the sorted list |
+| `resort()` | Triggers a re-sort using the current sort settings |
+| `resubscribe()` | Re-subscribes to quote pushes for the current group's stocks |
+| `tie(counters:)` | Pins a stock |
+| `untie(counters:)` | Unpins a stock |
+| `invalidTickers()` | Gets the list of invalid tickers |
+| `removeInvalidTickers()` | Removes all invalid tickers |
 
 ## General HTTP requests {/* general-http-requests */}
 
-Use `WhaleCoreService.requestService` to call [TradingAPI](/en/trading-api/overview) endpoints that do not yet have a typed WhaleCore service. Take the endpoint path, parameters, and response schema from the TradingAPI documentation. The host supplies those request values; WhaleCore adds the common parameters and headers for signing, authentication, and tracing. If login or trade authentication expires, the SDK recovers it and retries once.
+Use `WhaleCoreService.requestService()` to call [TradingAPI](/en/trading-api/overview) endpoints that do not yet have a typed WhaleCore service. Take the endpoint path, parameters, and response schema from the TradingAPI documentation; the host supplies those request values, and WhaleCore adds the common parameters and headers for signing, authentication, and tracing. If the session or trade token expires, the SDK recovers it and retries once.
 
 `WhaleCoreHTTPRequest` exposes:
 
 | Property | Type | Behavior |
 | --- | --- | --- |
 | `method` | `WhaleCoreHTTPMethod` | `.get`, `.post`, `.put`, or `.delete` |
-| `path` | `String` | Endpoint path beginning with `/` |
-| `query` | `[String: Any]?` | Used by GET and DELETE; ignored by POST and PUT |
-| `body` | `[String: Any]?` | Used by POST and PUT; ignored by GET and DELETE |
+| `path` | `String` | The endpoint path, starting with `/` |
+| `query` | `[String: Any]?` | Used for GET and DELETE; ignored for POST and PUT |
+| `body` | `[String: Any]?` | Used for POST and PUT; ignored for GET and DELETE |
 | `requiresTradeToken` | `Bool` | When `true`, obtains a valid trade token before sending; defaults to `false` |
 
-The response provides the raw JSON in `bodyString`, its UTF-8 representation in `bodyData`, and response headers in `headers`. Swift can decode the response directly into a `Decodable` model.
+The response exposes the raw JSON through `bodyString`, its UTF-8 bytes through `bodyData`, and response headers through `headers`. Swift can decode the response directly into a `Decodable` model.
 
 ```swift
 struct MemberInfo: Decodable {
@@ -99,65 +858,144 @@ struct MemberInfo: Decodable {
     let name: String
 }
 
-let request = WhaleCoreHTTPRequest(
-    method: .get,
-    path: "/v2/member/info"
-)
+let request = WhaleCoreHTTPRequest(method: .get, path: "/v2/member/info")
 request.query = ["include_accounts": true]
 
-let response = try await WhaleCoreService.requestService.send(request)
+let response = try await WhaleCoreService.requestService().send(request)
 let member: MemberInfo = try response.decode()
 print(member.name)
 ```
 
-For an endpoint that requires trade authentication:
+For an endpoint that requires trade authentication, set `requiresTradeToken = true` and the SDK handles trade authentication automatically:
 
 ```swift
-let request = WhaleCoreHTTPRequest(
-    method: .get,
-    path: "/v5/orders/today"
-)
-request.requiresTradeToken = true
+let tradeRequest = WhaleCoreHTTPRequest(method: .get, path: "/v5/orders/today")
+tradeRequest.requiresTradeToken = true
+let tradeResponse = try await WhaleCoreService.requestService().send(tradeRequest)
+```
 
-let response = try await WhaleCoreService.requestService.send(request)
-print(response.bodyString)
+Errors with a server response (`serverError`, `businessError`, `unauthorized`) carry extra data in `userInfo`: `WhaleCoreHTTPStatusCodeKey` (the HTTP status code), `WhaleCoreBusinessCodeKey` (the server business code), `WhaleCoreResponseBodyKey` (the raw error response body), and `WhaleCoreTraceIdKey` (the trace ID).
+
+<Note>
+  The first version does not support custom request headers. Do not pass signatures or authentication tokens through `query` or `body`; WhaleCore adds them automatically through its managed session. The service is stateless, and requests throw `appNotReady` after `logoutAndDestroy()`.
+</Note>
+
+## Data model reference {/* data-model-reference */}
+
+| Model category | Primary types |
+| --- | --- |
+| Quotes | `WhaleCoreStock` / `WhaleCoreStockData` / `WhaleCoreQuoteData` / `WhaleCoreQuoteDepth` / `WhaleCoreQuoteTrade` / `WhaleCoreTrade` / `WhaleCoreKline` / `WhaleCoreTimeShares` / `WhaleCoreTimeShare` / `WhaleCoreMinute` / `WhaleCoreOptionData` / `WhaleCoreWarrantData` / `WhaleCoreAhPremium` / `WhaleCoreAdrRate` / `WhaleCoreHkDual` / `WhaleCoreChannelItem` / `WhaleCoreEtfReference` / `WhaleCoreOptionChainSubscription` |
+| Quote enums | `WhaleCoreKlineType` / `WhaleCoreKlineSession` / `WhaleCoreAdjustType` / `WhaleCoreTradeStatus` / `WhaleCoreStockTemplate` / `WhaleCoreTimeshareType` / `WhaleCoreOptionDirection` |
+| Option calculation | `WhaleCoreOptionPricingInput` / `WhaleCoreOptionGreeks` |
+| Orders | `WhaleCoreOrder` / `WhaleCoreOrderDetail` / `WhaleCoreOrderSubmitRequest` / `WhaleCoreOrderSubmitResult` / `WhaleCoreReplaceOrderRequest` / `WhaleCoreTradeCapacity` / `WhaleCoreTradeCapacityRequest` / `WhaleCoreOptionOpenMargin` / `WhaleCoreEstimateBuyLimit` / `WhaleCoreEstimateBuyLimitRequest` / `WhaleCoreTradeDetail` / `WhaleCoreEstimatedCostResult` / `WhaleCoreTriggerRule` / `WhaleCoreOrderInfo` / `WhaleCoreOrderTypeConfigItem` / `WhaleCoreOptionContractModel` / `WhaleCoreTPSLOrderIntent` / `WhaleCoreSubmitTPSLOrderRequest` / `WhaleCoreTPSLValidationResult` / `WhaleCoreSubmitTPSLOrderResult` / `WhaleCoreTPSLLegOrder` / `WhaleCoreOrderPloyType` / `WhaleCoreOrderOperateDirection` |
+| Portfolio | `WhaleCorePortfolioData` / `WhaleCoreStockPosition` / `WhaleCoreCashBalance` / `WhaleCoreLeverageInfo` / `WhaleCorePortfolioOverview` / `WhaleCorePortfolioMemberSettingInfo` |
+| Account / watchlist | `WhaleCoreAccountInfo` / `WhaleCoreAccountType` / `WhaleCoreWatchlistGroup` / `WhaleCoreWatchlistStock` / `WhaleCoreWatchlistFund` / `WhaleCoreWatchlistGroupKind` / `WhaleCoreWatchlistSystemGroup` / `WhaleCoreWatchlistSortField` / `WhaleCoreWatchlistSortGroup` / `WhaleCoreWatchlistRelevantInfo` / `WhaleCoreWatchlistHoldingInfo` / `WhaleCoreWatchlistQuoteInfo` / `WhaleCoreWatchlistIndustry` / `WhaleCoreWatchlistLiveScope` |
+| Pass-through requests | `WhaleCoreHTTPRequest` / `WhaleCoreHTTPResponse` / `WhaleCoreHTTPMethod` |
+
+The full field reference is in each type's DocC documentation in Xcode. The tables below are a quick reference for the fields you look up most often.
+
+**Key `WhaleCoreStock` fields** (a quote snapshot carries both raw per-session data and summary fields — prefer the summary fields):
+
+| Field | Meaning |
+| --- | --- |
+| `lastPrice` | The current price (automatically picked from pre-market, regular, post-market, or overnight based on the active session; falls back to the last regular-session trade when the active session has none) |
+| `lastChange` / `lastChangePercent` | Change amount / percentage (aggregated across sessions, as a decimal; multiply by 100 for display) |
+| `trading` / `preTrade` / `postTrade` / `overNight` | The raw `WhaleCoreQuoteData` for each session |
+| `depths` / `nightDepths` | Order-book depth for the regular and overnight sessions |
+| `optionData` / `warrantData` | Derivative-specific extended data (options / warrants) |
+| `isOption` / `isWarrant` / `isEtf` | Instrument-type flags |
+
+**`WhaleCoreStockData` valuation fields:**
+
+| Field | Meaning |
+| --- | --- |
+| `marketCap` | Market capitalization = shares outstanding × current price |
+| `circulatingMarketCap` | Free-float market capitalization (excludes restricted shares) |
+| `perTTM` | Trailing P/E (P/E TTM) |
+| `perForecast` | Forward P/E (forecast P/E) |
+| `perLYR` | Static P/E (P/E LYR) |
+| `bpsRate` | Price-to-book ratio (P/B ratio) |
+| `turnoverRate` | Turnover rate |
+
+Also market-specific fields (populated only for the matching instrument category; `nil` / empty otherwise):
+
+| Field | Meaning |
+| --- | --- |
+| `ahPremium` | A/H premium info (dual A+H listings only) |
+| `adrRate` | ADR conversion ratio (ADR-linked instruments only) |
+| `hkDual` | Hong Kong dual-counter info (dual-counter instruments only) |
+| `channelInfo` | Tradability status of the instrument keyed by account channel |
+| `etfReference` | ETF reference valuation (premium/discount and NAV, ETFs only) |
+
+## Error handling {/* error-handling */}
+
+Every error is thrown as an `NSError` with the domain `WhaleCoreErrorDomain`; error codes are defined in `WhaleCoreErrorCode`:
+
+```swift
+do {
+    try await WhaleCoreService.orderService().submitOrder(request)
+} catch let error as NSError where error.domain == WhaleCoreErrorDomain {
+    switch WhaleCoreErrorCode(rawValue: error.code) {
+    case .orderSubmitFailed:    // 2002
+        showAlert("Order submission failed: \(error.localizedDescription)")
+    case .tradeAuthFailed:      // 1006
+        promptReauth()
+    default:
+        log(error)
+    }
+}
+```
+
+| Segment | Range | Module |
+| --- | --- | --- |
+| General / portfolio | 1001–1008 | SDK initialization, member settings, trade authentication, the quotes service, and exchange-rate conversion (1008 is an unavailable rate) |
+| Orders | 2001–2006 | Submitting, canceling, replacing, querying, and pre-trade validation |
+| General requests | 3001–3008 | Request/push failures, broken down as: unknown failure (3001), network unavailable (3002), timeout (3003), server 5xx (3004), business error (3005), session invalid (3006, covering every login-failure business code), invalid parameter (3007, such as an order preview missing `optionDirection`), and account trading restricted (3008, delivered through the portfolio push error channel with `userInfo[WhaleCoreAccountChannelKey]` carrying the affected account) |
+
+See the `WhaleCoreErrorCode` hover documentation for the complete error-code table.
+
+## Objective-C interoperability {/* objective-c-interop */}
+
+Every public type carries `@objc`, so the Objective-C side can use them directly. Common patterns:
+
+```objc
+#import <WhaleCore/WhaleCore-Swift.h>
+
+// Initialize (initializeWithConfig: is a throws method, exposed on the Objective-C side with an error: out-parameter)
+WhaleCoreConfig *config = [[WhaleCoreConfig alloc]
+    initWithAppKey:appKey appSecret:appSecret appId:appId
+    token:token refreshToken:refreshToken
+    defaultAccountChannel:@"lb_hk"
+    deviceId:[MyDeviceIdStore persistedDeviceId]
+    logLevel:WhaleCoreLogLevelInfo
+    language:WhaleCoreLanguageZhCN];
+
+NSError *initError = nil;
+if (![WhaleCoreService initializeWithConfig:config error:&initError]) {
+    NSLog(@"SDK startup failed: %@", initError.localizedDescription);
+    return;
+}
+
+// Service access (throws methods are exposed on the Objective-C side as AndReturnError:)
+NSError *svcError = nil;
+WhaleCoreOrderService *orderSvc = [WhaleCoreService orderServiceAndReturnError:&svcError];
+if (!orderSvc) { NSLog(@"%@", svcError); return; }
+[orderSvc addDelegate:self];
+
+// async methods are exposed as completionHandler
+[orderSvc submitOrder:request
+    completionHandler:^(WhaleCoreOrderSubmitResult *result, NSError *error) {
+        if (error) { NSLog(@"%@", error); return; }
+        NSLog(@"Success: %@", result.orderId);
+    }];
 ```
 
 <Note>
-  The first version does not support custom request headers. Do not add signatures or authentication tokens to `query` or `body`; WhaleCore supplies them through its managed session.
+  Swift `async throws` methods are automatically converted to `completionHandler` form on the Objective-C side.
 </Note>
 
-### Quote subscription {/* quote-subscription */}
+## Version and maintenance {/* version-and-maintenance */}
 
-```swift
-let subscription = WhaleCoreService.quotesService
-    .subscribe(counters: ["ST/US/AAPL", "ST/HK/00700"])
-    .detail.depth.trade.preTrade.postTrade
-    .start { updates, error in
-        updates?.forEach { print($0.counter, $0.stock.lastPrice ?? 0) }
-    }
-
-await subscription.cancel()
-```
-
-Selectable data includes `list`, `detail`, `depth`, `trade`, `broker`, `preTrade`, `postTrade`, and `nightTrade`.
-
-### Orders {/* orders */}
-
-Order requests use `clientRequestId` as an idempotency key. Reuse it when retrying the same order and generate a new value for a new order. Public models cover limit, market, LIT, MIT, trailing-stop-limit, and take-profit/stop-loss attached orders.
-
-```swift
-let common = WhaleCoreOrderCommon(
-    counterId: "ST/US/AAPL",
-    side: .buy,
-    quantity: .byCount(NSDecimalNumber(value: 100)),
-    settlementCurrency: "USD",
-    clientRequestId: UUID().uuidString
-)
-let request = WhaleCoreOrderSubmitRequest.limit(
-    common: common, kind: .lo, price: NSDecimalNumber(string: "180")
-)
-let result = try await WhaleCoreService.orderService.submitOrder(request)
-```
-
-Order events use `addDelegate` / `removeDelegate`: the first delegate starts the feed and removal of the final delegate stops it.
+- Get the SDK version at runtime: `WhaleCoreService.version` (formatted as `1.0.0(123)`); get the version name and build number separately with `WhaleCoreService.versionName` / `WhaleCoreService.versionCode`
+- Check the initialization state: `WhaleCoreService.isInitialized`
+- Switch the request language at runtime: `WhaleCoreService.setLanguage(_:)` (callable from both Swift and Objective-C, without reinitializing)
