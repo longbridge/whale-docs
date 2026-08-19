@@ -33,6 +33,12 @@ type Props = {
   responseTitle: string
   examples: CodeExample[]
   responses: ResponseExample[]
+  /**
+   * Per-language response examples, keyed by `CodeExample["id"]`. A language listed
+   * here shows its own payload instead of `responses` — the Web SDK unwraps the
+   * `{ code, message, data }` envelope, so its example is the `data` alone.
+   */
+  responsesById?: Record<string, ResponseExample[]>
   copyLabel: string
 }
 
@@ -40,12 +46,15 @@ function CodeCard({
   title,
   examples,
   copyLabel,
+  selectedId,
+  setSelectedId,
 }: {
   title: string
   examples: CodeExample[]
   copyLabel: string
+  selectedId: CodeExample["id"]
+  setSelectedId: (id: CodeExample["id"]) => void
 }) {
-  const [selectedId, setSelectedId] = useState<CodeExample["id"]>(examples[0]?.id ?? "")
   const [copied, setCopied] = useState(false)
   const selected = examples.find((example) => example.id === selectedId) ?? examples[0]
 
@@ -184,12 +193,21 @@ function ResponseCard({ title, responses, copyLabel }: { title: string; response
   )
 }
 
-export function ApiCodeExample({ requestTitle, responseTitle, examples, responses, copyLabel }: Props) {
+export function ApiCodeExample({ requestTitle, responseTitle, examples, responses, responsesById, copyLabel }: Props) {
+  const [selectedId, setSelectedId] = useState<CodeExample["id"]>(examples[0]?.id ?? "")
+  const shown = responsesById?.[selectedId] ?? responses
+
   return (
     <TooltipProvider>
       <div data-slot="api-code-examples" className="grid min-w-0 w-full max-w-full gap-6">
-        <CodeCard title={requestTitle} examples={examples} copyLabel={copyLabel} />
-        <ResponseCard title={responseTitle} responses={responses} copyLabel={copyLabel} />
+        <CodeCard
+          title={requestTitle}
+          examples={examples}
+          copyLabel={copyLabel}
+          selectedId={selectedId}
+          setSelectedId={setSelectedId}
+        />
+        <ResponseCard key={selectedId} title={responseTitle} responses={shown} copyLabel={copyLabel} />
       </div>
     </TooltipProvider>
   )
