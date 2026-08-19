@@ -181,9 +181,30 @@ const kotlinExample = [
   `val response = WhaleCore.getRequestService().send(request)`,
   `println(response.bodyString)`,
 ].join("\n");
+function tsLiteral(value: any, indent = 2): string {
+  const json = JSON.stringify(value, null, 2);
+  const pad = " ".repeat(indent);
+  return json
+    .split("\n")
+    // JSON quotes every key; TypeScript only needs quotes on non-identifiers.
+    .map((line: string) => line.replace(/^(\s*)"([A-Za-z_$][\w$]*)":/, "$1$2:"))
+    .map((line: string, index: number) => (index === 0 ? line : pad + line))
+    .join("\n");
+}
+const webOptions = [
+  Object.keys(queryExample).length ? `  params: ${tsLiteral(queryExample)},` : "",
+  requestBodyExample !== undefined ? `  data: ${tsLiteral(requestBodyExample)},` : "",
+].filter(Boolean);
+const webCall = webOptions.length
+  ? `const { data } = await request(Http.${method.toUpperCase()}, ${JSON.stringify(path)}, {\n${webOptions.join("\n")}\n});`
+  : `const { data } = await request(Http.${method.toUpperCase()}, ${JSON.stringify(path)});`;
 const webExample = [
-  `// The WhaleCore Web SDK request API is not publicly available yet.`,
-  `// Do not call TradingAPI with fetch; the SDK must sign each request.`,
+  `import { Http, request } from "whalecore-web";`,
+  ``,
+  ...(requiresTradeToken ? [`// Needs trade authentication, which the engine attaches on its own.`] : []),
+  webCall,
+  ``,
+  `console.log(data);`,
 ].join("\n");
 const [swiftHtml, kotlinHtml, webHtml] = await Promise.all([
   codeToHtml(swiftExample, { lang: "swift", themes: { light: "github-light", dark: "github-dark" }, defaultColor: false }),
@@ -207,6 +228,37 @@ const exampleBlocks = await Promise.all(
       }];
     }),
   ).map(async (entry) => ({ ...entry, html: await entry.html })),
+);
+// The Web SDK resolves `request()` with the envelope's `data` already unwrapped —
+// a non-zero `code` rejects with ApiError instead — so its response example shows
+// that payload rather than the raw `{ code, message, data }` body.
+function unwrapEnvelope(value: any): any {
+  const isEnvelope =
+    value !== null &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    "code" in value &&
+    "data" in value &&
+    value.data !== undefined;
+  return isEnvelope ? value.data : undefined;
+}
+const webExampleBlocks = await Promise.all(
+  exampleBlocks.map(async (entry: any) => {
+    let parsed: any;
+    try {
+      parsed = JSON.parse(entry.code);
+    } catch {
+      return entry;
+    }
+    const unwrapped = unwrapEnvelope(parsed);
+    if (unwrapped === undefined) return entry;
+    const code = JSON.stringify(unwrapped, null, 2);
+    return {
+      ...entry,
+      code,
+      html: await codeToHtml(code, { lang: "json", themes: { light: "github-light", dark: "github-dark" }, defaultColor: false }),
+    };
+  }),
 );
 ---
 
@@ -314,6 +366,7 @@ const exampleBlocks = await Promise.all(
         { id: "web", label: "Web", code: webExample, html: webHtml },
       ]}
       responses={exampleBlocks}
+      responsesById={{ web: webExampleBlocks }}
     />
   </aside>
   </div>
