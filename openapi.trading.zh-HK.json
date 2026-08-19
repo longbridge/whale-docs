@@ -1800,6 +1800,31 @@
             "description": "提示資訊"
           }
         }
+      },
+      "MemberSettingsMap": {
+        "type": "object",
+        "description": "用戶設置鍵值對集合。伺服器端儲存為通用的 key-value（均為字串）。目前僅列出業務已用到的鍵，\n其餘鍵位伺服器端可能已支援但暫未在此文件中列出，均透過 additionalProperties 相容；後續有需要再補充。\n",
+        "additionalProperties": {
+          "type": "string"
+        },
+        "properties": {
+          "wch_options_clear": {
+            "type": "string",
+            "description": "自選列表中已到期期權的自動清除規則：week 到期一週後清理，monday 每週一清理（預設值）",
+            "enum": [
+              "week",
+              "monday"
+            ]
+          },
+          "subscribe_order_stock": {
+            "type": "string",
+            "description": "下單後自動加入自選的開關",
+            "enum": [
+              "YES",
+              "NO"
+            ]
+          }
+        }
       }
     }
   },
@@ -9901,6 +9926,152 @@
                       }
                     }
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/setting": {
+      "get": {
+        "tags": [
+          "帳戶"
+        ],
+        "summary": "獲取用戶設置",
+        "description": "獲取目前登入用戶的偏好設置（主題、語言、行情/自選/持倉展示、交易提醒、通知等）及動態配置資訊。\n",
+        "operationId": "getMemberSettings",
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「獲取用戶設置」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "setting_updated_at": {
+                              "type": "string",
+                              "description": "設置最後更新時間（unix 時間戳，秒）"
+                            },
+                            "settings": {
+                              "$ref": "#/components/schemas/MemberSettingsMap"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "setting_updated_at": "1787135485",
+                    "settings": {
+                      "subscribe_order_stock": "YES",
+                      "wch_options_clear": "monday"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/settings/update": {
+      "post": {
+        "tags": [
+          "帳戶"
+        ],
+        "summary": "更新用戶設置",
+        "description": "更新目前登入用戶的單項設置，以鍵值對形式提交。\n",
+        "operationId": "updateMemberSettings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "description": "要更新的設置項鍵名，伺服器端按許可清單校驗，傳入未知鍵名會報錯（見下方業務碼）。\n參考 GET /v1/member/setting 介面返回的 settings key 值。\n",
+                    "enum": [
+                      "wch_options_clear",
+                      "subscribe_order_stock"
+                    ]
+                  },
+                  "value": {
+                    "type": "string",
+                    "description": "設置項的目標值，含義因 key 而異，詳見 MemberSettingsMap 中對應欄位的說明；\n布林類設置傳字串 \"YES\"/\"NO\"。實測伺服器端不接受空字串（會返回 400 param lost）。\n"
+                  }
+                },
+                "required": [
+                  "key",
+                  "value"
+                ]
+              },
+              "example": {
+                "key": "subscribe_order_stock",
+                "value": "YES"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「更新用戶設置」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "空物件"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {}
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "請求未通過業務規則或輸入校驗。重試前，請根據業務碼修正請求。",
+            "x-business-codes": [
+              {
+                "code": 400,
+                "description": "key 或 value 缺失/為空字串，message 為 \"param lost\"（實測：包括 value 傳空字串的情況）"
+              },
+              {
+                "code": 400,
+                "description": "key 不在伺服器端允許更新的設置項列表中，message 為 \"param key not allowed\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
                 }
               }
             }

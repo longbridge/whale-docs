@@ -1800,6 +1800,31 @@
             "description": "Message"
           }
         }
+      },
+      "MemberSettingsMap": {
+        "type": "object",
+        "description": "A collection of user setting key-value pairs. The server stores these as generic key-value pairs (all strings). Only the keys currently used by the business are listed here;\nother keys may already be supported by the server but are not yet documented here; all are handled via additionalProperties for compatibility, and more will be added as needed.\n",
+        "additionalProperties": {
+          "type": "string"
+        },
+        "properties": {
+          "wch_options_clear": {
+            "type": "string",
+            "description": "Auto-clear rule for expired options in the watchlist: week clears one week after expiry, monday clears every Monday (default)",
+            "enum": [
+              "week",
+              "monday"
+            ]
+          },
+          "subscribe_order_stock": {
+            "type": "string",
+            "description": "Switch to automatically add to the watchlist after placing an order",
+            "enum": [
+              "YES",
+              "NO"
+            ]
+          }
+        }
       }
     }
   },
@@ -9901,6 +9926,152 @@
                       }
                     }
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/setting": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Get User Settings",
+        "description": "Gets the current logged-in user's preference settings (theme, language, quote/watchlist/position display, trading alerts, notifications, etc.) and dynamic configuration information.\n",
+        "operationId": "getMemberSettings",
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get user settings” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "setting_updated_at": {
+                              "type": "string",
+                              "description": "Last updated time of the settings (Unix timestamp, in seconds)"
+                            },
+                            "settings": {
+                              "$ref": "#/components/schemas/MemberSettingsMap"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "setting_updated_at": "1787135485",
+                    "settings": {
+                      "subscribe_order_stock": "YES",
+                      "wch_options_clear": "monday"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/settings/update": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Update User Settings",
+        "description": "Updates a single setting for the current logged-in user, submitted as a key-value pair.\n",
+        "operationId": "updateMemberSettings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "description": "The key of the setting to update. The server validates it against an allowlist; passing an unknown key returns an error (see the business codes below).\nRefer to the settings keys returned by GET /v1/member/setting.\n",
+                    "enum": [
+                      "wch_options_clear",
+                      "subscribe_order_stock"
+                    ]
+                  },
+                  "value": {
+                    "type": "string",
+                    "description": "The target value of the setting; its meaning depends on key — see the description of the corresponding field in MemberSettingsMap.\nBoolean-type settings are submitted as the string \"YES\"/\"NO\". The server does not accept an empty string (returns 400 param lost).\n"
+                  }
+                },
+                "required": [
+                  "key",
+                  "value"
+                ]
+              },
+              "example": {
+                "key": "subscribe_order_stock",
+                "value": "YES"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Update user settings” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "Empty object"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {}
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The service rejected the request because a business rule or input validation failed. Review the business codes and correct the request before retrying.",
+            "x-business-codes": [
+              {
+                "code": 400,
+                "description": "key or value is missing or an empty string; message is \"param lost\" (verified: this includes the case where value is submitted as an empty string)"
+              },
+              {
+                "code": 400,
+                "description": "key is not in the list of settings the server allows updating; message is \"param key not allowed\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
                 }
               }
             }

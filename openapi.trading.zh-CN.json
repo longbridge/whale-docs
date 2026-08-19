@@ -1800,6 +1800,31 @@
             "description": "提示信息"
           }
         }
+      },
+      "MemberSettingsMap": {
+        "type": "object",
+        "description": "用户设置键值对集合。服务端存储为通用的 key-value（均为字符串）。目前仅列出业务已用到的键，\n其余键位服务端可能已支持但暂未在此文档中列出，均通过 additionalProperties 兼容；后续有需要再补充。\n",
+        "additionalProperties": {
+          "type": "string"
+        },
+        "properties": {
+          "wch_options_clear": {
+            "type": "string",
+            "description": "自选列表已到期期权的自动清除规则：week 到期一周后清理，monday 每周一清理（默认值）",
+            "enum": [
+              "week",
+              "monday"
+            ]
+          },
+          "subscribe_order_stock": {
+            "type": "string",
+            "description": "下单后自动添加自选开关",
+            "enum": [
+              "YES",
+              "NO"
+            ]
+          }
+        }
       }
     }
   },
@@ -9901,6 +9926,152 @@
                       }
                     }
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/setting": {
+      "get": {
+        "tags": [
+          "账户"
+        ],
+        "summary": "获取用户设置",
+        "description": "获取当前登录用户的偏好设置（主题、语言、行情/自选/持仓展示、交易提醒、通知等）及动态配置信息。\n",
+        "operationId": "getMemberSettings",
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“获取用户设置”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "setting_updated_at": {
+                              "type": "string",
+                              "description": "设置最后更新时间（unix 时间戳，秒）"
+                            },
+                            "settings": {
+                              "$ref": "#/components/schemas/MemberSettingsMap"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "setting_updated_at": "1787135485",
+                    "settings": {
+                      "subscribe_order_stock": "YES",
+                      "wch_options_clear": "monday"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/settings/update": {
+      "post": {
+        "tags": [
+          "账户"
+        ],
+        "summary": "更新用户设置",
+        "description": "更新当前登录用户的单项设置，以键值对形式提交。\n",
+        "operationId": "updateMemberSettings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "description": "要更新的设置项键名，服务端按白名单校验，传入未知键名会报错（见下方业务码）。\n参考 GET /v1/member/setting 接口返回的 settings key 值。\n",
+                    "enum": [
+                      "wch_options_clear",
+                      "subscribe_order_stock"
+                    ]
+                  },
+                  "value": {
+                    "type": "string",
+                    "description": "设置项的目标值，含义因 key 而异，详见 MemberSettingsMap 中对应字段的说明；\n布尔类设置传字符串 \"YES\"/\"NO\"。实测服务端不接受空字符串（会返回 400 param lost）。\n"
+                  }
+                },
+                "required": [
+                  "key",
+                  "value"
+                ]
+              },
+              "example": {
+                "key": "subscribe_order_stock",
+                "value": "YES"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“更新用户设置”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "空对象"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {}
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求未通过业务规则或输入校验。重试前，请根据业务码修正请求。",
+            "x-business-codes": [
+              {
+                "code": 400,
+                "description": "key 或 value 缺失/为空字符串，message 为 \"param lost\"（实测：包括 value 传空字符串的情况）"
+              },
+              {
+                "code": 400,
+                "description": "key 不在服务端允许更新的设置项列表中，message 为 \"param key not allowed\""
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
                 }
               }
             }
