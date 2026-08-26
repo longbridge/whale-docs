@@ -145,9 +145,9 @@ WhaleCoreService.logoutAndDestroy()
 
 | Module | Entry point | Capabilities |
 | --- | --- | --- |
-| Quotes | `WhaleCoreService.quoteService()` | Quote subscriptions (chained data-type selection), option chain/detail subscriptions, kline and timeshare/tick history queries, quote snapshots |
-| Orders | `WhaleCoreService.orderService()` | Submitting, querying, canceling, and replacing orders; conditional and attached orders; take-profit/stop-loss on positions; pre-trade validation; order preview; batch cancellation; and real-time push |
-| Portfolio | `WhaleCoreService.portfolioService()` | Portfolio subscriptions, cash detail and position-quote toggles, member portfolio settings, exchange-rate conversion, and profit-and-loss analysis |
+| Quotes | `WhaleCoreService.quoteService()` | Quote subscriptions (chained data-type selection), option chain/detail subscriptions, kline and timeshare/tick history queries, quote snapshots, quote level and device eviction |
+| Orders | `WhaleCoreService.orderService()` | Submitting, querying, canceling, and replacing orders; conditional and attached orders; take-profit/stop-loss on positions; pre-trade validation; order preview; trade card selection; batch cancellation; and real-time push |
+| Portfolio | `WhaleCoreService.portfolioService()` | Portfolio subscriptions, cash detail and position-quote toggles, member portfolio settings, and profit-and-loss analysis |
 | Watchlist | `WhaleCoreService.watchlistService()` | Group and stock mutations, sorting, pinning, invalid-ticker cleanup, and real-time push |
 | Pass-through requests | `WhaleCoreService.requestService()` | Pass-through calls to any endpoint, with common parameters and authentication headers attached automatically and recovery retry on expired authentication |
 | Option calculator | `WhaleCoreOptionCalculator` (static utility) | Local Black-Scholes calculations: Greeks, theoretical price, intrinsic/time value, days to expiry, and probability of profit |
@@ -168,7 +168,9 @@ The following rules apply across several modules; understand them once and the r
 let account = WhaleCoreAccountInfo(accountChannel: "lb_hk", aaid: "your_aaid")
 ```
 
-**Delegate multicast pattern** The order, portfolio, and watchlist services share the same push pattern: register with `addDelegate(_:)` and remove with `removeDelegate(_:)`. The SDK holds observers **weakly** (the caller must hold its own strong reference, or callbacks silently stop firing once the delegate is deallocated), and multiple screens can register for the same push at once. The order service additionally starts pushing automatically when the first delegate registers and stops automatically when the last one is removed, so no manual `subscribe` call is needed.
+**Delegate multicast pattern** The order, portfolio, and watchlist services share the same push pattern: register with `addDelegate(_:)` and remove with `removeDelegate(_:)`. The SDK holds observers **weakly** (the caller must hold its own strong reference, or callbacks silently stop firing once the delegate is deallocated), and multiple screens can register for the same push at once. The order service additionally starts pushing automatically when the first delegate registers and stops automatically when the last one is removed, so no manual `subscribe` call is needed. Quote-level notifications on the quotes service (`addQuoteLevelDelegate(_:)`, see [Quote level and device eviction](#quote-level-and-eviction)) follow the same weak-reference multicast pattern.
+
+**Callback thread** Every SDK callback — push delegates, subscription closures, token callbacks, and Objective-C `completionHandler`s — is dispatched on the main thread, so the host can update the UI directly inside a callback without switching threads.
 
 **Swift and Objective-C method mapping** Every public type carries `@objc`. Three categories of Swift methods follow a fixed mapping on the Objective-C side:
 
@@ -178,7 +180,7 @@ let account = WhaleCoreAccountInfo(accountChannel: "lb_hk", aaid: "your_aaid")
 | `static func initialize(config:) throws` | `+ (BOOL)initializeWithConfig:error:` |
 | `async throws -> T` | `- (void)xxx:(void (^)(T, NSError *))completionHandler` |
 
-See [Objective-C interoperability](#objective-c-interop) for concrete call patterns.
+`completionHandler`s always fire on the main thread and can update the UI directly; on the Swift side, an `await` resumes on the caller's own execution context. See [Objective-C interoperability](#objective-c-interop) for concrete call patterns.
 
 ## Quotes service {/* quotes-service */}
 
@@ -207,7 +209,7 @@ await subscription.cancel()
 ```
 
 <Note>
-  `.start` throws only when the subscription itself fails to establish (the SDK is not ready or the initial fetch fails); once established, the running subscription no longer produces errors and delivers data continuously through the callback. Selectable data types: `list`, `detail`, `depth`, `trade`, `broker`, `preTrade`, `postTrade`, and `nightTrade`.
+  `.start` throws only when the subscription itself fails to establish (the SDK is not ready or the initial fetch fails); once established, the running subscription no longer produces errors and delivers data continuously through the callback. Selectable data types: `list`, `detail`, `depth`, `trade`, `broker`, `preTrade`, `postTrade`, `nightTrade`, `totalView`, and `totalViewBrief`.
 </Note>
 
 ### Query snapshots and historical data {/* quote-history-queries */}
@@ -218,7 +220,7 @@ if let stock = svc.getStock(counterId: "ST/US/AAPL") {
     print(stock.lastPrice ?? 0)
 }
 
-// Fetch kline history (Swift async convenience overload; default semantics match Android)
+// Fetch kline history (Swift async convenience overload)
 let klines = try await svc.getKlines(counterId: "ST/US/AAPL", klineType: .perDay, count: 100)
 klines.forEach { print("\($0.timestamp): \($0.close)") }
 ```
@@ -253,6 +255,29 @@ await detailSub.cancel()
   Greeks are not delivered with quote pushes — the host subscribes to the underlying stock separately, takes its price, and feeds it into `WhaleCoreOptionCalculator` for local calculation. See [Option calculator](#option-calculator).
 </Note>
 
+### Quote level and device eviction {/* quote-level-and-eviction */}
+
+When the same account uses premium quotes on multiple devices, those devices evict one another. After every successful quote-session authentication the SDK refreshes a snapshot of level and eviction state (each sub-market's quote level, whether it is delayed, which capabilities are available, and whether another device has evicted this one along with the eviction message). It also responds automatically to server-side eviction and level-change notifications by re-authenticating to fetch the latest state.
+
+```swift
+let svc = try WhaleCoreService.quoteService()
+svc.addQuoteLevelDelegate(self)   // If a snapshot already exists it fires once on registration, then after every successful authentication (main thread)
+
+// Synchronously read the most recent snapshot
+if let info = svc.quoteLevelInfo, info.isEvicted(market: "US") {
+    showBanner(info.evictedDescribe)   // Show the eviction banner (text follows the SDK language)
+}
+
+// "Restart quotes": take the entitlement back to this device; the restored level arrives through the delegate
+try await svc.reclaimQuoteAccess()
+```
+
+Banner presentation and policies such as "don't show again today" are up to the host. Determine eviction with the paired `isEvicted(market:)` / `isEvicted(subMarket:)` accessors rather than parsing the `quoteLevel` string yourself. To render "N-level order book", filter the `depthLevel` array by `depthType` and take the matching entry — regular depth and deep depth are two independent entitlements.
+
+<Note>
+  While a market is evicted and downgraded to delayed quotes, its tick-by-tick trades are unavailable (pushes stop and historical tick queries return empty). Whether overnight, pre-market, and post-market data remain available depends on the `hasOvernight` and similar flags of the current level in the snapshot. After "restart quotes" restores access, **the counter's own latest quote refreshes and pushes resume, but nothing else is backfilled** — tick-by-tick records from the evicted window are missing, so call `getTrades` again after recovery when you need the complete sequence.
+</Note>
+
 **Method overview:**
 
 | Method | Description |
@@ -261,12 +286,20 @@ await detailSub.cancel()
 | `observeQuoteEvents(counterIds:`<br />`onUpdate:)` | Listens to quote events without creating a new subscription, reusing one established by another caller |
 | `observeKlineUpdates(counterIds:`<br />`onUpdate:)` | Listens to kline update events without creating a new subscription |
 | `getStock(counterId:)` | Synchronously reads a quote snapshot from the in-memory cache |
-| `getKlines(counterId:`<br />`klineType:`<br />`count:`<br />`timestamp:`<br />`klineSession:`<br />`adjustType:`<br />`completion:)` | Fetches kline history (an async convenience overload is also available) |
-| `getTimeshares(counterId:`<br />`fiveDays:`<br />`klineSession:`<br />`completion:)` | Fetches timeshare data for the current day or the last five days (an async convenience overload is also available) |
-| `getTrades(counterId:`<br />`count:`<br />`lastSequenceID:`<br />`lastTradeSession:`<br />`tradeType:`<br />`completion:)` | Fetches historical tick-by-tick trades with pagination (an async convenience overload is also available) |
+| `getKlines(counterId:`<br />`klineType:`<br />`count:`<br />`timestamp:`<br />`klineSession:`<br />`adjustType:`<br />`completion:)` | Fetches kline history |
+| `getKlines(counterId:`<br />`klineType:`<br />`count:`<br />`timestamp:`<br />`klineSession:`<br />`adjustType:)` | Swift async convenience overload of the previous method (with default arguments) |
+| `getTimeshares(counterId:`<br />`fiveDays:`<br />`klineSession:`<br />`completion:)` | Fetches timeshare data for the current day or the last five days (use this for timeshare charts instead of approximating with one-minute klines) |
+| `getTimeshares(counterId:`<br />`fiveDays:`<br />`klineSession:)` | Swift async convenience overload of the previous method (with default arguments) |
+| `getTrades(counterId:`<br />`count:`<br />`lastSequenceID:`<br />`lastTradeSession:`<br />`tradeType:`<br />`completion:)` | Fetches historical tick-by-tick trades with pagination; accounts without real-time quote entitlement receive an empty list |
+| `getTrades(counterId:`<br />`count:`<br />`lastSequenceID:`<br />`lastTradeSession:`<br />`tradeType:)` | Swift async convenience overload of the previous method (with default arguments; `tradeType` defaults to `0` for regular hours — pass `3` for pre/post-market and overnight) |
 | `subscribeOptionChain(counterIds:`<br />`onUpdate:)` | Batch option-chain subscription (whole-group replacement plus 300ms debouncing) |
 | `subscribeOptionDetail(counterId:)` | Creates an option-detail subscription builder (single contract) |
 | `getInterestRate()` | Reads the SDK's built-in risk-free rate (annualized decimal) for display in the option calculator |
+| `quoteLevelInfo` (property) | Current quote-level and eviction snapshot (synchronous read; `nil` before the first authentication) |
+| `addQuoteLevelDelegate(_:)` | Registers a quote-level observer (the latest snapshot is delivered on the main thread after every successful authentication) |
+| `removeQuoteLevelDelegate(_:)` | Removes a quote-level observer |
+| `reclaimQuoteAccess()` | Takes the quote entitlement back to this device ("restart quotes"); re-authenticates automatically on success |
+| `reclaimQuoteAccess(completion:)` | Objective-C convenience entry point for the previous method (completion fires on the main thread) |
 
 ## Option calculator {/* option-calculator */}
 
@@ -277,7 +310,7 @@ let input = WhaleCoreOptionPricingInput(
     underlyingPrice: NSDecimalNumber(string: "190.00"),   // Current underlying price (before dividends)
     strikePrice: NSDecimalNumber(string: "185.00"),
     impliedVolatility: NSDecimalNumber(string: "0.25"),   // Annualized IV as a decimal (0.25 = 25%)
-    daysToExpire: 30,                                     // Calendar days to expiry (0 is valid, negative is not)
+    daysToExpire: NSDecimalNumber(value: 30),             // Days to expiry, fractional days supported ([0,1) counts as 1 day, negative is invalid)
     isCall: true,
     dividendToExpire: nil,                                // Cumulative dividends before expiry; nil = 0
     interestRate: nil                                     // nil reads the SDK's built-in risk-free rate
@@ -287,7 +320,8 @@ if let g = WhaleCoreOptionCalculator.greeks(input) {
     // Scaling: vega per 1% volatility, theta per calendar day (usually negative), rho per 1% rate
 }
 
-// Days to expiry (uses the same convention as the daysToExpire parameter of greeks / profitProbability)
+// Whole calendar days to expiry (the daysToExpire parameter of greeks / profitProbability also accepts
+// fractional days; compute the hour-adjusted floating-point value yourself when you need it)
 let days = WhaleCoreOptionCalculator.daysToExpire(
     expireDate: "20260729",                              // yyyyMMdd, matching optionData.expireDate
     timeZone: TimeZone(identifier: "America/New_York")!)  // The exchange time zone for the expiry date
@@ -306,7 +340,8 @@ Also available: `intrinsicValue(underlyingPrice:strikePrice:isCall:)` (intrinsic
 | `greeks(_:)` | Computes the Greeks (delta / gamma / vega / theta / rho) and the theoretical price |
 | `intrinsicValue(underlyingPrice:`<br />`strikePrice:`<br />`isCall:)` | Computes intrinsic value: call = max(0, price − strike), put is the opposite |
 | `timeValue(optionPrice:`<br />`intrinsicValue:)` | Computes time value = premium − intrinsic value |
-| `daysToExpire(expireDate:`<br />`timeZone:)` | Computes the number of calendar days to expiry |
+| `daysToExpire(expireDate:`<br />`timeZone:)` | Computes the number of whole calendar days to expiry (the "N days left" display convention) |
+| `fractionalDaysToExpire(expireDate:`<br />`timeZone:`<br />`holidays:`<br />`dayOffset:)` | Computes fractional days to expiry: expiry is taken as 20:00 on the expiry date and prorated by the hour; passing a holiday table switches to trading-day semantics |
 | `profitProbability(underlyingPrice:`<br />`breakevenPoint:`<br />`impliedVolatility:`<br />`daysToExpire:`<br />`isCall:`<br />`dividendToExpire:`<br />`interestRate:)` | Computes the probability of profit at expiry (Black-Scholes risk-neutral semantics) |
 
 ## Order service {/* orders */}
@@ -368,6 +403,7 @@ Common parameters and optional properties:
 | `validity` (optional) | `WhaleCoreOrderValidity` | Validity, defaults to `.day()`; use `.gtd(expireTime:)` for GTD |
 | `forceOnlyRth` (optional) | `WhaleCoreForceOnlyRTH` | Trading-session control, defaults to `.unknown` (not sent); US markets only |
 | `remark` (optional) | `String?` | User remark |
+| `cardIds` (optional) | `[String]` | Trade card IDs used by this order. The default empty array means **this order uses no trade card** (the SDK never fills in a default card). Only needed when you build the request yourself; through the validation funnel the SDK derives it from `intent.cards` — see [Trade cards](#trade-cards) |
 
 For amount-based orders, the server always expects `quantity` to be the real share count (`=0` is rejected), so the amount and the converted share count must be sent together; only limit and market order types support this, and only for buy orders — conditional orders (LIT/MIT/TSL) do not support ordering by amount. Route this through the [pre-trade validation](#order-validation) funnel where possible; the SDK performs the conversion automatically (amount ÷ price, rounded down, with 4 decimal places for fractional shares and rounding to whole lots where a market requires them).
 
@@ -500,11 +536,11 @@ Validation rules are grouped by stage of the ordering flow, from 10xx (before en
 | Segment | Coverage |
 | --- | --- |
 | 10xx before entering the screen | Empty counter, account not opened or suspended, non-tradable index products, server-side tradability determination |
-| 11xx button state | Order-type support, unsupported channel, buy/sell restrictions, required fields, and type/side restrictions for amount-based orders (a market closure or trading halt does not block placing an order — the state surfaces through the constraints snapshot) |
+| 11xx button state | Order-type support, unsupported channel, buy/sell restrictions, required fields, type/side restrictions for amount-based orders, and **cash card on buy only** (1115, with `issue.field` set to `.cashCard`; see [Trade cards](#trade-cards)) (a market closure or trading halt does not block placing an order — the state surfaces through the constraints snapshot) |
 | 1201 agreements | The options risk agreement has not been accepted |
 | 13xx parameter validity | An amount-based order that converts to 0 shares, or a US fractional-share amount below the channel minimum (`fractional_min_amount`, carried in `issue.referenceValue`) |
-| 14xx session and validity | The chosen session or validity is not supported for this type; an unspecified value is also blocked (an empty configuration list means every option is explicitly disallowed) |
-| 15xx qualifications and disclosures | Listed-derivative ETF awareness, short-selling/margin qualification, W-8BEN, and US overnight/option overnight/fractional-share disclosures |
+| 14xx session and validity | The chosen session or validity is not supported for this type; an unspecified value is also blocked. The two rules treat an empty list differently: an empty `support_sessions` means there is no session dimension and the order passes (the host should hide the session picker and submit without a session), while an empty `support_time_in_forces` still means every option is explicitly disallowed |
+| 15xx qualifications and disclosures | Listed-derivative ETF awareness, short-selling/margin qualification, W-8BEN, US overnight/option overnight/fractional-share disclosures, over-the-counter (OTC) entitlement, warrant and CBBC disclosure, CAR/CKA certification, and virtual-asset ETF assessment and disclosure |
 | 16xx attached orders | Take-profit/stop-loss trigger prices are required; the matching leg's submitted price is required when LIT activation is used (a reversed direction is only a soft reminder for the host to handle — the SDK does not block it) |
 | 17xx take-profit/stop-loss on a position | Produced only by `validateTPSLOrder`; see [Take-profit/stop-loss on a position](#position-tpsl) |
 
@@ -520,7 +556,8 @@ for q in try await svc.getQualifications(counterId: "ST/US/AAPL") where !q.isSat
         try await svc.submitListedDerivAssessment(experience: .trained)
     } else if q.acceptableViaAPI {
         // Disclosure types (options agreement, US short selling, overnight, option overnight,
-        // fractional shares): show the disclosure, get user confirmation, then accept with one call.
+        // fractional shares, OTC trading, warrants/CBBCs, CAR-CKA, virtual-asset ETF assessment
+        // and disclosure): show the disclosure, get user confirmation, then accept with one call.
         try await svc.acceptAgreement(q.type)
     } else {
         // Assessment/certification types (Hong Kong margin, W-8BEN, and so on): route to a web flow.
@@ -534,6 +571,63 @@ for q in try await svc.getQualifications(counterId: "ST/US/AAPL") where !q.isSat
 
 <Note>
   `issue.reason` and default error-code descriptions are localized (zh-Hans, zh-Hant, and en), switching with the initialization configuration or `setLanguage(_:)`.
+</Note>
+
+### Trade cards {/* trade-cards */}
+
+Card selection for commission cards, cash cards, and platform-fee cards. **Fetching cards is the host's job; everything after selection is the SDK's**: the card list takes a single HTTP request and its fields go straight into the UI, so the SDK does not model card lists — the host queries and renders them through [general HTTP requests](#general-http-requests). Once the user's selection is placed in a `WhaleCoreTradeCards` and attached to `intent.cards`, the order preview's discounted-fee recalculation, card-currency conversion, and the card fields of the submission payload are all derived automatically.
+
+```swift
+let cards = WhaleCoreTradeCards()
+// One slot per category, holding just the four values of the selected card; title, expiry, and
+// description copy stay in the host UI — the SDK does not need them.
+cards.commissionCard = WhaleCoreTradeCard(
+    cardId: "card-1",
+    availableAmount: NSDecimalNumber(string: "50"),    // Deduction cap
+    rebateRate: NSDecimalNumber(string: "0.3"),        // 30% rebate; effective on the commission-card slot only
+    currency: WhaleCoreCurrency.hkd)                   // Card currency; converted automatically when it differs from the settlement currency
+
+intent.cards = cards        // Attach to the intent used for validation; preview and submission payload both pick it up, with no other call needed
+```
+
+The three slots (`commissionCard`, `cashCard`, `platformFeeCard`) are themselves the selection rules: one card per category, at most three, all enforced **at compile time** so an invalid combination cannot be written. The only rule that needs a runtime check is "cash card on buy only" — when a sell-side intent carries a `cashCard`, `validateOrder` returns `.cashCardNotApplicableOnSell` (1115) with `issue.field` set to `.cashCard`, which you can use to highlight the card picker.
+
+**No selection means this order uses no card.** When all three slots are empty (or `intent.cards` is unset), the payload's `card_ids` is an empty array and the server redeems nothing — do not read this as "the server will pick a default card for you". A slot whose `cardId` is an empty string counts as unselected too: it does not enter the payload, does not trigger the cash-card check, and `WhaleCoreTradeCards.isEmpty` treats it as unselected.
+
+The default card the server configures for a counter is a **suggestion**, delivered with the constraints snapshot (`WhaleCoreOrderConstraints.suggestedCommissionCard` / `suggestedCashCard` / `suggestedPlatformFeeCard`, or `suggestedCard(for:)` by category) — no separate `getOrderInfo` call is needed. Actually using it requires an explicit fill-in by the host: **the SDK never applies the default card for you**; whether and which card to use is always the host's decision.
+
+```swift
+let constraints = try await svc.getOrderConstraints(counterId: "ST/US/AAPL")
+let cards = WhaleCoreTradeCards()
+// A nil slot means the server configured no card of that category for this counter,
+// so the host should disable that card picker.
+if let suggested = constraints.suggestedCard(for: .commission) {
+    cards.setCard(suggested.asTradeCard(), for: .commission)   // Converts to nil when the amount is missing; nothing is pre-filled
+    // suggested.cardType is also the correct rebate_type argument for the card-list endpoint
+}
+intent.cards = cards
+```
+
+The three pickers behave identically apart from the category, so category accessors let them share one rendering path, exactly equivalent to reading and writing the properties directly:
+
+```swift
+cards.setCard(card, for: .commission)     // .commission / .cash / .platformFee
+let picked = cards.card(for: .cash)       // nil when nothing is selected
+if cards.isEmpty { /* No card selected in any slot */ }
+```
+
+<Note>
+  **A slot with no card exposes no card type.** When the server configures no card, the corresponding `suggested*` slot is entirely `nil` — even if the wire still sends `comm_card_type` as `"0"` (a valid card type meaning "regular rebate card"), no "empty ID plus type 0" placeholder is produced. This prevents hosts from passing `"0"` as `rebate_type` and pulling the wrong card list. The raw wire fields on `WhaleCoreOrderInfo` (`commCardId`, `commCardType`, and so on) remain available, but hosts on the validation funnel should read the constraints snapshot instead.
+</Note>
+
+**Card currency is converted automatically.** When the card currency differs from the order's settlement currency (a HKD card on a US stock order, for example), the SDK converts it before applying the discount; if the currency is missing or no rate is available, the raw amount is used. `rebateRate` is **effective on the commission-card slot only** — cash cards and platform-fee cards deduct their raw amount and ignore it. A `nil` or `0` rate is treated as `1` (full deduction within the cap, that is, straight subtraction).
+
+**Carrying cards when you build the request yourself.** When you bypass the validation funnel and construct a `WhaleCoreOrderSubmitRequest` directly, cards go through `WhaleCoreOrderCommon.cardIds` (a string array mapping one-to-one to the payload). **The SDK performs no card validation on this path** — ordering, duplicates, empty strings, and "cash card on buy only" are all left to the server's redemption result. To have the SDK enforce these constraints, use `intent.cards` with `validateOrder` instead: on the funnel, `cardIds` is derived automatically in the fixed order commission → cash → platform fee, and the host never touches it.
+
+**Replacements carry no cards.** Card bindings are fixed at submission time, and the replace path carries no card parameters at all. A replace screen can still display the original order's used cards (read `cardIds` and the matching deduction amount and status fields on `WhaleCoreOrder`), but the card picker should be disabled.
+
+<Note>
+  Remember to clear `cashCard` when switching side. Forgetting is not silently tolerated — the very first run returns 1115 instead of the amounts turning out wrong in production. `WhaleCoreOrderIntent.action` is immutable anyway, so switching side means creating a new intent, which is the natural moment to reassemble the card selection.
 </Note>
 
 ### Order preview {/* order-preview */}
@@ -557,6 +651,10 @@ print("Estimated amount: \(result.orderAmount ?? 0)  Total fees: \(result.fees.t
 ```
 
 Reference-price rules: limit types use `intent.price`; market-if-touched (MIT) uses `intent.triggerPrice`; market orders use `context.marketReferencePrice`, and amount-based results are `nil` when it is not supplied. `result.riskHint` reports the kind of risk hint (such as `.marginRaisedOnClose` or `.financingNeeded`); the copy is up to the host. `result.action` is for display and analytics only — every value is already computed by direction, so do not branch on it again on the host side.
+
+**Trade card discount semantics.** The discounted commission, platform fee, and cash-card figures recalculate automatically from [`intent.cards`](#trade-cards), and match the submission payload exactly: only a card that will actually enter `card_ids` produces a deduction, and with no card selected (or a `cardId` of empty string) all three amounts are `nil` and nothing is discounted. The preview **never** falls back to the account default card from the order info: that is only a server-side suggestion, it is not redeemed unless it reaches the payload, and discounting by it would make the estimate lower than what is actually charged. **The cards deducted in the preview are always exactly the cards carried in the payload.**
+
+When assembling `WhaleCoreOrderPreviewFields` yourself for the synchronous calculation core, the currencies of the three amounts are supplied through the fee field group `fields.fees` (`WhaleCoreOrderPreviewFeeFields`): `commCurrency` (commission card), `platformDeductionsCurrency` (platform-fee card), and `deductionsCurrency` (cash card). All three are optional; when one is `nil`, an empty string, or has no matching currency pair in the rate table, the raw amount is used as-is (the SDK neither guesses a rate nor zeroes the amount). On this path what you fill in is what is computed — to preview using the default card, supply that card's amount and rate yourself; the SDK neither fills it in nor redeems it.
 
 <Note>
   There is also a synchronous, pure-calculation entry point, `WhaleCoreOrderPreviewCalculator.compute(_:)`, for hosts that fetch their own data (including cases that do not use SDK quotes at all). Every fee component is rounded to 2 decimal places, and `fees.total` always equals the sum of the displayed components. Discounted values carry the original amount through `WhaleCoreDiscountedAmount.original`, for showing a struck-through "original X" label.
@@ -697,18 +795,16 @@ try await svc.updatePortfolioMemberSetting(setting: updated)
 
 ### Exchange rates {/* exchange-rates */}
 
-Fetch every supported currency pair at once; cache the whole table and convert synchronously as needed:
+Cross-currency conversion (the fee and allowance conversions in order preview, and trade-card currency conversion) happens inside the SDK. The host neither needs nor is able to fetch a rate table from the SDK — there is no exchange-rate query API.
+
+Integrators with their own rate source can build `WhaleCoreExchangeRate` themselves (each entry carries a rate for positive and negative amounts, and `convert(_:)` picks the side based on the amount's sign) and assign it to `WhaleCoreOrderPreviewFields.exchangeRates` to participate in cross-currency conversion during order preview:
 
 ```swift
-let rates = try await svc.exchangeRates()
-if let hkdToUsd = rates.first(where: { $0.fromCurrency == "HKD" && $0.toCurrency == "USD" }) {
-    let usd = hkdToUsd.convert(NSDecimalNumber(string: "100"))   // Automatically picks the side based on the amount's sign
-}
+let rate = WhaleCoreExchangeRate(fromCurrency: "HKD", toCurrency: "USD",
+                                 positiveRate: NSDecimalNumber(string: "0.128"),
+                                 negativeRate: NSDecimalNumber(string: "0.128"))
+fields.exchangeRates = [rate]
 ```
-
-<Note>
-  Exchange-rate data is cached for the SDK's lifetime, so the host does not need to manage refreshing. The asynchronous `exchangeRates()` throws `WhaleCoreErrorCode.exchangeRateUnavailable` (1008) when the rate table is unavailable (the fetch failed and there is no cache); the synchronous `cachedExchangeRates()` returns an empty array when it is not ready. Integrators with their own rate source can also build `WhaleCoreExchangeRate` directly and assign it to `WhaleCoreOrderPreviewFields.exchangeRates` to participate in cross-currency conversion during order preview.
-</Note>
 
 ### Profit-and-loss analysis {/* profit-loss-analysis */}
 
@@ -739,28 +835,40 @@ print("Total profit/loss: \(overview.sumProfit ?? "-")")
   These models mirror the server response (field names only change from snake_case to lowerCamelCase, with nothing renamed or trimmed). Amounts, ratios, and unix-second timestamps are passed through as raw strings; numeric formatting and color-coding are up to the host. Statistical ranges use `WhaleCorePLPeriod`, an explicit either/or type (`.allTime` / `.range(start:end:)`). Currencies and markets take string constants (see `WhaleCoreCurrency` / `WhaleCoreMarket`). Every method is `async throws`, and throws `appNotReady` when the SDK is not initialized.
 </Note>
 
-**Core method overview** (subscription / settings / exchange rates; profit-and-loss methods are in the table above):
+**Current-period and cumulative returns on trend points.** Each trend point carries both a "current period" and a "cumulative" return, whose meaning follows the granularity (daily granularity means that day, monthly granularity means that month): the current-period rates are `point.simpleEarningYield` and `point.timeEarningYield`, and the cumulative rates are `point.accumulateSimpleEarningYield` and `point.accumulateTimeEarningYield`. Their nullability differs: cumulative rates have a fallback and are never `nil`, while current-period rates have no fallback and are `nil` whenever the server does not return them (a monthly rate is not the daily rate of the month's last day). Index comparison points carry both conventions too: `indexPoint.cumulativeReturn` (cumulative) and `currentReturn` (current period). `currentReturn` is the change relative to the previous curve point; for the first point it is relative to the closing price of the last trading day before the range starts (so it equals the cumulative value), and on non-trading days the previous trading day's price carries over, making it `"0"`.
+
+**Trend and calendar share one set of statistics.** The profit/loss figures from `getProfitTrend` and `getPLCalendar` come from the same query (with the same currency and range, the two share a single request), so the identically named return fields on trend points and calendar day cells match bit for bit and can be aligned by date. The `markets` parameter of `getPLCalendar` **only decides which markets the closure markers cover and takes no part in the profit/loss statistics** — it does not turn the returns into "filtered by market" values. The calendar's "per-security return detail table" is simply `getProfitRanking` data for the same range (pass a single-day range for that day's detail), so no separate endpoint is needed — that ranking has no pagination parameters, returns both lists in full in one call, and WhaleCore never truncates the row count, so any top-N cut is entirely the host's decision.
+
+**Range boundaries and time zones.** The start and end unix seconds of `.range(start:end:)` are forwarded as-is; WhaleCore performs no midnight alignment and no open/closed-interval normalization. It also converts the boundaries into date strings using the **device's local time zone** and sends them along, and the server treats those dates as a **closed interval**. Therefore:
+
+- To query "a single day", set `end` to any moment within that day (such as `23:59:59`); **passing `00:00:00` of the next day pulls that next day in as well**.
+- Watch out across time zones: the date strings shift with the device time zone, so a UTC+8 phone and US Eastern can derive dates that differ by a day for the same instant. Whichever time zone defines "a day" for you, compute the unix boundaries in that zone yourself — WhaleCore does not choose a time zone on the host's behalf.
+- Aligning by date is safe: the calendar's `dateTime` and `dateKey` and the trend point's `dateKey` are all raw server values that never go through client-side time-zone conversion, so they can be used directly as join keys.
+
+**Core method overview** (subscription and settings; profit-and-loss methods are in the table above):
 
 | Method | Description |
 | --- | --- |
 | `addDelegate(_:)` | Registers a portfolio push observer |
 | `removeDelegate(_:)` | Removes a portfolio push observer |
-| `setSubscribedAccounts(accountChannels:`<br />`currency:)` | Sets the subscribed accounts and display currency, replacing the whole subscription scope (an awaitable `async throws` variant is also available) |
+| `setSubscribedAccounts(accountChannels:`<br />`currency:)` | Sets the subscribed accounts and display currency, replacing the whole subscription scope |
+| `setSubscribedAccounts(accountChannels:`<br />`currency:) async` | Awaitable overload of the same name: suspends until the subscription parameters are submitted, and throws on failure |
 | `currentAccount()` | Gets the account the SDK is currently using (including account type: cash or margin) |
-| `refresh()` | Manually refreshes portfolio data (an awaitable `async throws` variant is also available) |
-| `cashDetailEnable` (property) | The cash-detail subscription toggle (an awaitable variant, `enableCashDetail(_:)`, is also available) |
-| `quotesEnabled` (property) | The position-quote subscription toggle (an awaitable variant, `enableQuotes(_:)`, is also available) |
+| `refresh()` | Manually refreshes portfolio data |
+| `refresh() async` | Awaitable overload of the same name: suspends until the refresh is submitted, and throws on failure |
+| `cashDetailEnable` (property) | The cash-detail subscription toggle |
+| `enableCashDetail(_:)` | Awaitable form of the cash-detail toggle: suspends until submitted, and throws on failure |
+| `quotesEnabled` (property) | The position-quote subscription toggle |
+| `enableQuotes(_:)` | Awaitable form of the position-quote toggle: suspends until submitted, and throws on failure |
 | `getPortfolioMemberSetting()` | Fetches the current member portfolio settings |
 | `updatePortfolioMemberSetting(setting:)` | Updates the member portfolio settings |
-| `exchangeRates()` | Asynchronously fetches exchange rates for every currency pair (fetched on demand internally) |
-| `cachedExchangeRates()` | Synchronously reads cached exchange rates (returns an empty array if not ready) |
 
 ## Watchlist service {/* watchlist-service */}
 
 The watchlist service type is `WhaleCoreWatchlistService`. Callbacks use the [multicast pattern](#core-concepts): register with `addDelegate(_:)`, and multiple screens can subscribe at once.
 
 ```swift
-final class WatchlistHandler: WhaleCoreWatchlistServiceDelegate {
+final class WatchlistHandler: NSObject, WhaleCoreWatchlistServiceDelegate {
     func onWatchlistUpdated(groups: [WhaleCoreWatchlistGroup],
                             stocks: [WhaleCoreWatchlistStock],
                             ties: [String]) {
@@ -768,9 +876,11 @@ final class WatchlistHandler: WhaleCoreWatchlistServiceDelegate {
         // with groups / stocks within the same callback.
         print("Groups: \(groups.count), stocks: \(stocks.count), pinned: \(ties.count)")
     }
-    // Both are optional to implement.
+    // The following are all optional to implement.
     func onWatchlistFundsUpdated(funds: [WhaleCoreWatchlistFund]) {}
     func onWatchlistNotesUpdated(notes: [String: String]) {}
+    func onWatchlistSortUpdated(groupId: Int64, sortMode: String,
+                                sortGroups: [WhaleCoreWatchlistSortGroup]) {}
 }
 
 let svc = try WhaleCoreService.watchlistService()
@@ -778,7 +888,7 @@ let handler = WatchlistHandler()
 svc.addDelegate(handler)
 
 // Refresh the watchlist (sub defaults to false: fetch the list only; pass true to also subscribe to quotes)
-svc.refresh(sub: true)
+try await svc.refresh(sub: true)
 
 // Stocks: add/remove, and move across groups with removeGroups
 try await svc.addStocks(counters: ["ST/US/AAPL"], groups: [1], removeGroups: [], sub: true)
@@ -786,7 +896,7 @@ try await svc.removeStocks(counters: ["ST/US/AAPL"], groups: [1], removeAll: fal
 ```
 
 <Note>
-  Funds, notes, and pinned data have no read-only snapshot properties; they are all delivered only through callbacks, and the host is responsible for retaining them: funds through `onWatchlistFundsUpdated`, notes through `onWatchlistNotesUpdated`, and the pinned list through the `ties` parameter of `onWatchlistUpdated`. Pinning (`tie` / `untie` / `sortTied`), switching sort mode (`setGroup`), re-sorting (`resort`), and invalid tickers (`invalidTickers` / `removeInvalidTickers`) are listed in the method overview below.
+  Funds, notes, and pinned data have no read-only snapshot properties; they are all delivered only through callbacks, and the host is responsible for retaining them: funds through `onWatchlistFundsUpdated`, notes through `onWatchlistNotesUpdated`, and the pinned list through the `ties` parameter of `onWatchlistUpdated`. Beyond the one-off return value of `setGroup`, sort results also have a continuous channel: in price sort modes, automatic re-sorts triggered by quote changes deliver the latest result through `onWatchlistSortUpdated`. Pinning (`tie` / `untie` / `sortTied`), switching sort mode (`setGroup`), re-sorting (`resort`), and invalid tickers (`invalidTickers` / `removeInvalidTickers`) are listed in the method overview below.
 </Note>
 
 ### Group management {/* watchlist-groups */}
@@ -884,11 +994,15 @@ Errors with a server response (`serverError`, `businessError`, `unauthorized`) c
 
 | Model category | Primary types |
 | --- | --- |
-| Quotes | `WhaleCoreStock` / `WhaleCoreStockData` / `WhaleCoreQuoteData` / `WhaleCoreQuoteDepth` / `WhaleCoreQuoteTrade` / `WhaleCoreTrade` / `WhaleCoreKline` / `WhaleCoreTimeShares` / `WhaleCoreTimeShare` / `WhaleCoreMinute` / `WhaleCoreOptionData` / `WhaleCoreWarrantData` / `WhaleCoreAhPremium` / `WhaleCoreAdrRate` / `WhaleCoreHkDual` / `WhaleCoreChannelItem` / `WhaleCoreEtfReference` / `WhaleCoreOptionChainSubscription` |
+| Quotes | `WhaleCoreStock` / `WhaleCoreStockData` / `WhaleCoreQuoteData` / `WhaleCoreQuoteDepth` / `WhaleCoreQuoteTrade` / `WhaleCoreTrade` / `WhaleCoreKline` / `WhaleCoreTimeShares` / `WhaleCoreTimeShare` / `WhaleCoreMinute` / `WhaleCoreOptionData` / `WhaleCoreWarrantData` / `WhaleCoreAhPremium` / `WhaleCoreAdrRate` / `WhaleCoreHkDual` / `WhaleCoreChannelItem` / `WhaleCoreEtfReference` / `WhaleCoreOptionChainSubscription` / `WhaleCoreQuoteLevelInfo` / `WhaleCoreSubMarketQuote` / `WhaleCorePriceLevel` / `WhaleCoreDepthLevel` / `WhaleCoreEvictedLevelDetail` |
 | Quote enums | `WhaleCoreKlineType` / `WhaleCoreKlineSession` / `WhaleCoreAdjustType` / `WhaleCoreTradeStatus` / `WhaleCoreStockTemplate` / `WhaleCoreTimeshareType` / `WhaleCoreOptionDirection` |
 | Option calculation | `WhaleCoreOptionPricingInput` / `WhaleCoreOptionGreeks` |
-| Orders | `WhaleCoreOrder` / `WhaleCoreOrderDetail` / `WhaleCoreOrderSubmitRequest` / `WhaleCoreOrderSubmitResult` / `WhaleCoreReplaceOrderRequest` / `WhaleCoreTradeCapacity` / `WhaleCoreTradeCapacityRequest` / `WhaleCoreOptionOpenMargin` / `WhaleCoreEstimateBuyLimit` / `WhaleCoreEstimateBuyLimitRequest` / `WhaleCoreTradeDetail` / `WhaleCoreEstimatedCostResult` / `WhaleCoreTriggerRule` / `WhaleCoreOrderInfo` / `WhaleCoreOrderTypeConfigItem` / `WhaleCoreOptionContractModel` / `WhaleCoreTPSLOrderIntent` / `WhaleCoreSubmitTPSLOrderRequest` / `WhaleCoreTPSLValidationResult` / `WhaleCoreSubmitTPSLOrderResult` / `WhaleCoreTPSLLegOrder` / `WhaleCoreOrderPloyType` / `WhaleCoreOrderOperateDirection` |
+| Orders | `WhaleCoreOrder` / `WhaleCoreOrderDetail` / `WhaleCoreOrderSubmitRequest` / `WhaleCoreOrderSubmitResult` / `WhaleCoreReplaceOrderRequest` / `WhaleCoreTradeCapacity` / `WhaleCoreTradeCapacityRequest` / `WhaleCoreOptionOpenMargin` / `WhaleCoreEstimateBuyLimit` / `WhaleCoreEstimateBuyLimitRequest` / `WhaleCoreTradeDetail` / `WhaleCoreEstimatedCostResult` / `WhaleCoreTriggerRule` / `WhaleCoreOrderInfo` / `WhaleCoreOrderTypeConfigItem` / `WhaleCoreOptionContractModel` / `WhaleCoreTPSLOrderIntent` / `WhaleCoreSubmitTPSLOrderRequest` / `WhaleCoreTPSLValidationResult` / `WhaleCoreSubmitTPSLOrderResult` / `WhaleCoreTPSLLegOrder` / `WhaleCoreOrderPloyType` / `WhaleCoreOrderOperateDirection` / `WhaleCoreTradeCard` / `WhaleCoreTradeCards` / `WhaleCoreTradeCardCategory` / `WhaleCoreSuggestedTradeCard` |
+| Order validation | `WhaleCoreOrderIntent` / `WhaleCoreAttachedIntent` / `WhaleCoreOrderConstraints` / `WhaleCoreOrderValidationResult` / `WhaleCoreOrderValidationIssue` / `WhaleCoreOrderValidationRule` / `WhaleCoreOrderField` / `WhaleCoreValidationScope` / `WhaleCoreQualificationStatus` / `WhaleCoreQualificationType` / `WhaleCoreQualificationState` / `WhaleCoreDerivExperience` |
+| Order preview | `WhaleCoreOrderPreviewResult` / `WhaleCoreOrderPreviewContext` / `WhaleCoreOrderPreviewFields` / `WhaleCoreOrderPreviewFeeFields` / `WhaleCoreOrderPreviewFees` / `WhaleCoreDiscountedAmount` / `WhaleCoreAmountChange` / `WhaleCoreOrderPreviewFreeze` / `WhaleCoreOrderPreviewPostCost` / `WhaleCoreOrderPreviewRiskHint` / `WhaleCorePositionAction` |
 | Portfolio | `WhaleCorePortfolioData` / `WhaleCoreStockPosition` / `WhaleCoreCashBalance` / `WhaleCoreLeverageInfo` / `WhaleCorePortfolioOverview` / `WhaleCorePortfolioMemberSettingInfo` |
+| Profit-and-loss analysis | `WhaleCorePLPeriod` / `WhaleCorePLAnalysisMeta` / `WhaleCoreProfitOverview` / `WhaleCoreProfitTrend` / `WhaleCoreProfitTrendPoint` / `WhaleCoreIndexComparePoint` / `WhaleCorePLCalendar` / `WhaleCoreProfitRanking` / `WhaleCoreCurrencyAssetFlow` / `WhaleCoreStockCumulativePL` / `WhaleCoreStockPLFlows` / `WhaleCoreMarketStocksPL` / `WhaleCoreLiquidatedStocksPL` |
+| Exchange rates | `WhaleCoreExchangeRate` |
 | Account / watchlist | `WhaleCoreAccountInfo` / `WhaleCoreAccountType` / `WhaleCoreWatchlistGroup` / `WhaleCoreWatchlistStock` / `WhaleCoreWatchlistFund` / `WhaleCoreWatchlistGroupKind` / `WhaleCoreWatchlistSystemGroup` / `WhaleCoreWatchlistSortField` / `WhaleCoreWatchlistSortGroup` / `WhaleCoreWatchlistRelevantInfo` / `WhaleCoreWatchlistHoldingInfo` / `WhaleCoreWatchlistQuoteInfo` / `WhaleCoreWatchlistIndustry` / `WhaleCoreWatchlistLiveScope` |
 | Pass-through requests | `WhaleCoreHTTPRequest` / `WhaleCoreHTTPResponse` / `WhaleCoreHTTPMethod` |
 
@@ -948,9 +1062,9 @@ do {
 
 | Segment | Range | Module |
 | --- | --- | --- |
-| General / portfolio | 1001–1008 | SDK initialization, member settings, trade authentication, the quotes service, and exchange-rate conversion (1008 is an unavailable rate) |
+| General / portfolio | 1001–1008 | SDK initialization, member settings, trade authentication, the quotes service, and internal exchange-rate conversion (1008 is an unavailable rate, which hosts rarely receive directly) |
 | Orders | 2001–2006 | Submitting, canceling, replacing, querying, and pre-trade validation |
-| General requests | 3001–3008 | Request/push failures, broken down as: unknown failure (3001), network unavailable (3002), timeout (3003), server 5xx (3004), business error (3005), session invalid (3006, covering every login-failure business code), invalid parameter (3007, such as an order preview missing `optionDirection`), and account trading restricted (3008, delivered through the portfolio push error channel with `userInfo[WhaleCoreAccountChannelKey]` carrying the affected account) |
+| General requests | 3001–3008 | Request/push failures, broken down as: unknown failure (3001), network unavailable (3002), timeout (3003), server 5xx (3004), business error (3005), session invalid (3006, covering every login-failure business code), invalid parameter (3007, such as an order preview missing `optionDirection` or an invalid startup parameter like a too-short `deviceId`), and account trading restricted (3008, delivered through the portfolio push error channel with `userInfo[WhaleCoreAccountChannelKey]` carrying the affected account) |
 
 See the `WhaleCoreErrorCode` hover documentation for the complete error-code table.
 
@@ -991,7 +1105,7 @@ if (!orderSvc) { NSLog(@"%@", svcError); return; }
 ```
 
 <Note>
-  Swift `async throws` methods are automatically converted to `completionHandler` form on the Objective-C side.
+  Swift `async throws` methods are automatically converted to `completionHandler` form on the Objective-C side, and those `completionHandler`s always fire on the main thread, so they can update the UI directly.
 </Note>
 
 ## Version and maintenance {/* version-and-maintenance */}

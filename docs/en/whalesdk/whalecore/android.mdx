@@ -96,14 +96,21 @@ Key points:
 
 ## Lifecycle and teardown {/* lifecycle */}
 
-Forward lifecycle events as the host moves between foreground and background:
+`WhaleCore.resume()` and `WhaleCore.pause()` describe the **whole application** moving between foreground and background — call each once per transition. Forwarding them from `ProcessLifecycleOwner` in your Application class is the recommended approach:
 
 ```kotlin
-override fun onResume() { super.onResume(); WhaleCore.resume() }
-override fun onPause()  { super.onPause();  WhaleCore.pause()  }
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) = WhaleCore.resume()
+            override fun onStop(owner: LifecycleOwner) = WhaleCore.pause()
+        })
+    }
+}
 ```
 
-Both are safe no-ops before initialization.
+Do not hook them to a single Activity's `onResume` / `onPause` — navigating between screens fires those too, which would falsely report "went to background" to the SDK. Both are safe no-ops before initialization.
 
 Sign out, tear down, or switch accounts with:
 
@@ -115,7 +122,7 @@ withContext(Dispatchers.IO) { WhaleCore.logoutAndDestroy() }
 
 ## Session token refresh {/* token-refresh */}
 
-The SDK renews the access token automatically with `refreshToken`, so the host does not need to handle routine refresh. To keep the session usable, register a `TokenRefreshCallback` through `config.tokenRefreshCallback` (both methods are called on the main thread):
+The SDK renews the access token automatically with `refreshToken`, so the host does not need to handle routine refresh. To keep the session usable, register a `TokenRefreshCallback` through `config.tokenRefreshCallback` (every method is called on the main thread and has a default implementation):
 
 ```kotlin
 val appTokenRefreshCallback = object : TokenRefreshCallback {
@@ -125,7 +132,7 @@ val appTokenRefreshCallback = object : TokenRefreshCallback {
         credentialStore.update(token, refreshToken)
     }
 
-    override fun onTokenExpired(callback: NewTokenCallback) {
+    override fun resolveExpiredToken(callback: NewTokenCallback) {
         appScope.launch {
             val fresh = runCatching { authApi.silentLogin() }.getOrNull()
             // Supplying non-empty credentials lets the SDK retry the failed requests automatically.
@@ -133,11 +140,17 @@ val appTokenRefreshCallback = object : TokenRefreshCallback {
             callback.onResult(fresh?.token.orEmpty(), fresh?.refreshToken.orEmpty())
         }
     }
+
+    override fun onTokenRefreshFailed(exception: WhaleCoreException) {
+        // Final notification that even the fallback retrieval failed: guide the user to sign in again.
+        sessionRouter.gotoLogin()
+    }
 }
 ```
 
 - **Refresh succeeds** (`onTokenRefreshed`): the SDK notifies the host that the token and refresh token changed.
-- **Session expires** (`onTokenExpired`): the SDK gives the host one chance to fetch a fresh token; requests in flight suspend until it resolves. Multiple requests failing at once trigger this callback only once, and they share the result.
+- **Session expires** (`resolveExpiredToken`): the SDK gives the host one chance to fetch a fresh token; requests in flight suspend until it resolves. Multiple requests failing at once trigger this callback only once, and they share the result.
+- **Final failure** (`onTokenRefreshFailed`): fired when the retry also failed to supply a valid token — normally the point at which you guide the user to sign in again.
 - Call `callback.onResult(...)` within the timeout (`tokenResolverTimeout`, 30 seconds by default); not calling it in time counts as failure.
 - The SDK holds this callback for the whole session. Pass an app-level singleton to avoid leaking an Activity or Fragment.
 
@@ -188,7 +201,7 @@ Trading requires a trade token, which the SDK obtains and renews automatically b
 
 | Method | Service | Main capability |
 | --- | --- | --- |
-| `getQuoteService()` | `QuoteService` | Quote subscriptions, option chain/detail subscriptions, K-lines, snapshots, timeshares, and historical trades |
+| `getQuoteService()` | `QuoteService` | Quote subscriptions, option chain/detail subscriptions, K-lines, snapshots, timeshares, historical trades, and quote level with device eviction (multi-device eviction and reclaim) |
 | `getOrderService()` | `OrderService` | Submit, replace, cancel, attached orders, position take-profit/stop-loss, order preview, capacity estimates, pre-submit validation, and order events |
 | `getPortfoliosService()` | `PortfolioService` | Portfolio subscriptions, cash detail, member settings, and profit-and-loss analysis |
 | `getWatchlistService()` | `WatchlistService` | Watchlist groups, stocks, ordering, pinning, and events |
@@ -263,7 +276,32 @@ chainSub.updateCounterIds(newVisibleCounterIds)   // Wholesale replacement, not 
 chainSub.cancel()
 ```
 
-Options have no separate depth-subscription channel: the snapshot from `start()` carries one level of depth, but subsequent pushes still need an explicit `.depth()` in the chain — without it, only the first frame carries depth. Greeks are not delivered with quote pushes; subscribe to the underlying separately, take its price, and feed it to [`OptionCalculator`](#option-calculator) for local computation.
+Options have no separate depth-subscription channel: the snapshot from `start()` carries one level of depth, but subsequent pushes still need an explicit `.depth()` in the chain — without it, only the first frame carries depth. Greeks are not part of the quote push; subscribe to the underlying separately, take its price, and pass it to [`OptionCalculator`](#option-calculator) for local computation.
+
+### Quote level and device eviction {/* quote-level-and-eviction */}
+
+When the same account uses premium quotes on multiple devices, those devices evict one another, and the evicted market is downgraded to a lower quote level.
+
+```kotlin
+// Read the current state synchronously; returns null until the first quote-entitlement check completes
+val level = quotes.getQuoteLevelInfo()
+if (level?.isMarketEvicted("US") == true) {
+    // When evicted but the server returned no message, evictedDescribe is null or an empty string
+    level.evictedDescribe?.takeIf { it.isNotEmpty() }?.let { showBanner(it) }
+}
+
+// Observe refreshes: the current snapshot arrives on subscription, and once per new quote-entitlement
+// result thereafter (eviction, reclaim, or a language change)
+lifecycleScope.launch {
+    quotes.observeQuoteLevel().collect { info -> renderBanner(info) }
+}
+
+// "Restart quotes": take the entitlement back to this device. The state is not yet refreshed when this
+// returns — dismiss the banner based on the subsequent callback
+quotes.reclaimQuoteAccess()
+```
+
+Per-sub-market level detail lives in `QuoteLevelInfo.subMarketQuote`: the raw level identifier, the price level (`priceLevel`, with the convenience property `isDelayed`), depth levels by type (`depthLevel`, one entry per `depthType`; use `maxDepthLevel` for a coarse check), and flags for trades, broker queue, overnight, and pre/post-market. After a reclaim, the latest quotes for already-subscribed counters refresh automatically and pushes resume, but the tick-by-tick records from the evicted window are not backfilled — screens that need the complete sequence should call `getTrades` again after receiving a new, non-evicted snapshot. Banner presentation and policies such as "don't show again today" are up to the host.
 
 **Method overview:**
 
@@ -279,6 +317,9 @@ Options have no separate depth-subscription channel: the snapshot from `start()`
 | `subscribeOptionChain(counterIds, callback)` | Creates a batch option chain subscription (wholesale replacement, push types fixed and not selectable) |
 | `observeQuoteEvents(counterIds)` | Observes the quote event stream without opening an underlying subscription; pair it with a subscription entry point |
 | `observeKlineUpdates(counterIds)` | Observes the K-line update event stream |
+| `getQuoteLevelInfo()` | Reads the quote-level and device-eviction snapshot; returns `null` before the first quote-entitlement check |
+| `observeQuoteLevel()` | Observes quote level and device eviction (the current snapshot arrives on subscription) |
+| `reclaimQuoteAccess()` | Takes the quote entitlement back to this device ("restart quotes"); the refreshed level arrives through the observer callback |
 
 Chained type-selection methods on the subscription builders returned by `subscribe` / `subscribeOptionDetail`: `list()`, `detail()`, `depth()`, `trade()`, `preTrade()`, `postTrade()`; `subscribe` also offers `broker()`, `nightTrade()`, `totalView()`, and `totalViewBrief()` (the option data path does not support these four). Both builders support calling `start()` with no type selected at all, which fetches one snapshot and opens no push subscription — useful as a one-off snapshot call. The `QuoteSubscription` returned by `start()` has only `cancel()`; `OptionChainSubscription` additionally has `updateCounterIds(counterIds)` and an `isCancelled` property.
 
@@ -298,6 +339,10 @@ The request parameter `tradeType` on `getTrades` and the response field `Trade.t
 
 Option chain subscriptions use wholesale replacement: `updateCounterIds` does not unsubscribe contracts removed from the set immediately — the underlying subscription stays open, and the callback dispatch layer filters by the currently effective set, releasing everything together on `cancel()`. It debounces internally for about 300 milliseconds, but the first non-empty set takes effect immediately (no wait on first render); an unchanged set produces no request. Push types are fixed to detail, trade, pre-market, after-hours, and overnight, with no chained selection — this is by design, not an omission.
 
+**Three ways to judge quote level.** `SubMarketQuote.quoteLevel` (for example `App|USOP|Global|LV1`) is a free-form display string whose format is not guaranteed to be stable — use `isDelayed` to determine whether quotes are delayed (it derives from `priceLevel.priceLevel`, whose full value table is in its KDoc — value `3` means real-time but not pushed, so you must query actively) instead of parsing that string. Depth entitlements come in two kinds, regular depth and US deep depth, each with its own level count: to render "N-level order book", filter the `depthLevel` list by `DepthLevel.depthType` (`1` regular depth, `2` US deep depth) and take the matching entry (the same type may arrive as several entries from different quote sources; take the largest level among them). `maxDepthLevel` takes the maximum across types and is only suitable for coarse checks such as "is there any depth at all". The evicted-market detail list may repeat the same market (the server lists one entry per evicted entitlement), so de-duplicate it yourself when displaying a list. `EvictedLevelDetail.market` may be an empty string (some server entries carry no market dimension): use `isMarketEvicted(market)` for market-level checks (it already skips those entries) and `isSubMarketEvicted(subMarket)` for sub-markets. The banner text `evictedDescribe` is `null` or an empty string when the market is evicted but the server returned no message, so check for both before displaying it.
+
+**Data availability while evicted and downgraded.** Tick-by-tick trades for that market are unavailable — live pushes stop, and `getTrades` history queries are equally entitlement-limited and return an empty list. Whether overnight and pre/post-market data remain available is not a fixed consequence of the downgrade; check the `hasOvernight` and `hasPrePost` flags of the current level in the snapshot individually.
+
 </Accordion>
 
 ## Option calculator {/* option-calculator */}
@@ -308,10 +353,11 @@ Option chain subscriptions use wholesale replacement: `updateCounterIds` does no
 val optionData = stock.extraData as ExtraData.OptionData
 val underlyingPrice = underlyingStock.trading.lastDone ?: return
 
-// Do not use optionData.dayToExpire directly (it counts trading days);
-// use daysToExpire() to recompute calendar days from the expiry date
-val days = OptionCalculator.daysToExpire(optionData.expireDate, TimeZone.getTimeZone("America/New_York"))
-    ?: return  // Invalid or expired expiry date
+// Do not use optionData.dayToExpire directly (it counts trading days).
+// Use fractionalDaysToExpire() for calculation input (fractional days, matching the official
+// client's option calculator); use daysToExpire() (whole calendar days) for "N days left" displays
+val days = OptionCalculator.fractionalDaysToExpire(optionData.expireDate, TimeZone.getTimeZone("America/New_York"))
+    ?: return  // Invalid expiry date format
 
 val input = OptionPricingInput(
     underlyingPrice = underlyingPrice,
@@ -327,7 +373,7 @@ val greeks = OptionCalculator.greeks(input)  // Returns null on invalid input; s
 ```
 
 <Warning>
-  Invalid input always returns `null` (show "--" in the UI): implied volatility ≤ 0, days < 0, underlying price or strike price ≤ 0, or an unavailable interest rate. `daysToExpire(expireDate, timeZone)` returns `0` on the expiry day (valid) and a negative number once expired — but a negative value cannot be passed to `greeks` or `profitProbability`; it is treated as invalid input and returns `null`. `interestRate` is an annualized decimal (for example, `0.045` for 4.5%), not a percentage; passing the wrong unit skews Greeks by a factor of 100.
+  Invalid input always returns `null` (show "--" in the UI): implied volatility ≤ 0, days < 0, underlying price or strike price ≤ 0, or an unavailable interest rate. Both day-conversion APIs return a negative number once expired (`daysToExpire` returns `0` on the expiry day, which is valid) — a negative value cannot be passed to `greeks` or `profitProbability`; it is treated as invalid input and returns `null`. `interestRate` is an annualized decimal (for example, `0.045` for 4.5%), not a percentage; passing the wrong unit skews Greeks by a factor of 100.
 </Warning>
 
 **Method overview:**
@@ -337,7 +383,8 @@ val greeks = OptionCalculator.greeks(input)  // Returns null on invalid input; s
 | `greeks(input)` | Computes Black-Scholes Greeks (delta, gamma, vega, theta, rho) and theoretical price |
 | `intrinsicValue(underlyingPrice, strikePrice, isCall)` | Computes intrinsic value (the payoff from exercising immediately), always ≥ 0 |
 | `timeValue(optionPrice, intrinsicValue)` | Computes time value = premium − intrinsic value; can be negative and is not clamped for deep-in-the-money, near-expiry contracts |
-| `daysToExpire(expireDate, timeZone)` | Converts an expiry date (`yyyyMMdd`) to calendar days remaining |
+| `daysToExpire(expireDate, timeZone)` | Converts an expiry date (`yyyyMMdd`) to whole calendar days remaining, for "N days left" displays |
+| `fractionalDaysToExpire(expireDate,`<br />`timeZone,`<br />`holidays = emptyList(),`<br />`dayOffset = 0)` | Converts an expiry date to fractional days remaining (expiry at 20:00, prorated by the hour); use this as the input to Greeks and probability of profit to match the official client's option calculator |
 | `profitProbability(underlyingPrice,`<br />`breakevenPoint,`<br />`impliedVolatility,`<br />`daysToExpire,`<br />`isCall,`<br />`dividendToExpire = null,`<br />`interestRate = null)` | Computes the probability of profit at expiry, using the breakeven point rather than the strike price, under Black-Scholes risk-neutral assumptions |
 
 ## Orders and validation {/* orders-and-validation */}
@@ -380,15 +427,40 @@ You can also build a request directly with `SubmitOrderRequest`'s typed factory 
 
 ### Trade cards {/* trade-cards */}
 
-An order can apply a commission-free card, a stock cash card, or a platform-fee card to discount the corresponding fee, passed through `OrderIntent.cards` (`TradeCards`). Validation, preview, and submission share the same value. The host fetches the card list itself; the SDK does not wrap a query endpoint. When no card is specified, the server applies the account's default card for submission, and the preview uses the default card returned in `OrderChannelInfo`.
+An order can apply a commission-free card, a stock cash card, or a platform-fee card to discount the corresponding fee, passed through `OrderIntent.cards` (`TradeCards`). Validation, preview, and submission share the same value. The host fetches the card list itself; the SDK does not wrap a query endpoint. With no card selected, the submitted request's `card_ids` is an empty array and the server redeems nothing, and the preview likewise computes without a card — to actually use a card, the host must place it explicitly in the matching slot.
 
 ```kotlin
 intent.cards = TradeCards(
-    commissionCard = TradeCard(cardId = "1001"),   // Commission-free card: offsets commission
+    // The amount is required: the preview computes discounted fees from it, and without it the
+    // preview will not match what is actually charged
+    commissionCard = TradeCard(cardId = "1001", availableAmount = BigDecimal("50"), rebateRate = BigDecimal("0.8")),
 )
 ```
 
-A stock cash card applies only to buy orders; selecting it on a sell order is blocked by the validation rule `CASH_CARD_NOT_APPLICABLE_ON_SELL` (`1114`). Each card type's default account card ID appears in `OrderChannelInfo` as `commCardId`, `deductionsCardId`, and `platformDeductionsCardId`.
+The three slots can also be read and written by category, so three card pickers can share one piece of UI logic:
+
+```kotlin
+val cards = intent.cards ?: TradeCards().also { intent.cards = it }
+cards.setCard(TradeCardCategory.CASH, TradeCard(cardId = "2002", availableAmount = BigDecimal("100")))
+cards.card(TradeCardCategory.CASH)      // Read that category back
+cards.isEmpty                           // Whether all three slots are unselected
+```
+
+**The server-configured default card** is returned with the constraints snapshot, which is handy for marking the default selection in the card picker. The SDK does not fill it in automatically — whether to use it is the integrator's decision:
+
+```kotlin
+val constraints = orderService.getOrderConstraints(counterId)
+// A null slot means the server configured no card of that category for this counter,
+// so disable that category's card picker
+constraints.suggestedCard(TradeCardCategory.COMMISSION)?.let { suggested ->
+    suggested.cardType                                  // The card-type argument for querying that category's card list
+    cards.setCard(TradeCardCategory.COMMISSION, suggested.toTradeCard())  // null when the amount is missing; nothing is pre-filled
+}
+```
+
+<Note>
+  A stock cash card applies only to buy orders; selecting it on a sell order is blocked by the validation rule `CASH_CARD_NOT_APPLICABLE_ON_SELL` (`1115`). A `TradeCard.cardId` of empty string counts as unselected: it does not enter the submitted request, does not take part in the preview discount, and does not trigger that rule — the cards deducted in the preview are always the cards submitted. `rebateRate` is effective on the commission-card slot only.
+</Note>
 
 ### Manage, cancel, and replace orders {/* manage-orders */}
 
@@ -456,7 +528,7 @@ if (unresolved != null && unresolved.acceptableViaApi) {
 }
 ```
 
-Items with `acceptableViaApi == true` — disclosures such as US overnight trading, options overnight trading, odd lots, US short selling, and penny stocks, plus the options risk agreement and the listed-derivatives ETF assessment — can be accepted in one call with `acceptAgreement(type)`, or, for the assessment only, answered with `submitListedDerivAssessment(experience)` (choosing `DerivExperience.NONE` records a failed assessment and keeps the block in place). Items with `acceptableViaApi == false` — assessment or certification items such as PI, VA, W-8BEN, and Hong Kong margin short selling — must be handled with the broker directly; the SDK exposes no handling link, and calling `acceptAgreement` on one of these throws `IllegalArgumentException` (a programming error, not one of the `WhaleCoreException` types). Both methods invalidate the internal qualification cache on success, so re-running validation picks up the new state.
+Items with `acceptableViaApi == true` — disclosure and entitlement items such as US overnight trading, options overnight trading, odd lots, US short selling, penny stocks, OTC trading, warrants and CBBCs, CAR-CKA, and virtual-asset ETF assessment and additional risk disclosure, plus the options risk agreement and the listed-derivatives ETF assessment — can be accepted in one call with `acceptAgreement(type)`, or, for the assessment only, answered with `submitListedDerivAssessment(experience)` (choosing `DerivExperience.NONE` records a failed assessment and keeps the block in place). The virtual-asset ETF assessment and its additional risk disclosure share a single signature: accepting either one sets both server-side, so present both to the user and obtain confirmation before calling. Items with `acceptableViaApi == false` — assessment or certification items such as PI, VA, W-8BEN, and Hong Kong margin short selling — must be handled with the broker directly; the SDK exposes no handling link, and calling `acceptAgreement` on one of these throws `IllegalArgumentException` (a programming error, not one of the `WhaleCoreException` types). Both methods invalidate the internal qualification cache on success, so re-running validation picks up the new state.
 
 <Note>
   The earlier standalone entry point `WhaleCore.getOrderValidationService()` is deprecated. New code should call the same-named methods on `WhaleCore.getOrderService()` directly.
@@ -469,14 +541,14 @@ Items with `acceptableViaApi == true` — disclosures such as US overnight tradi
 | Stage | Code range | Scope | Covers |
 | --- | --- | --- | --- |
 | Before entering the order screen | `1001`–`1005` | ENTRY | Empty instrument, account not opened or suspended, index sectors not tradable, server-side tradability determination |
-| Screen button state | `1101`–`1114` | DRAFT+SUBMISSION | Channel/direction restrictions, required price/quantity/trigger price/trailing value/monitor price, order-type support, amount-based order applicability and minimum amount, stock cash card incompatible with sell |
+| Screen button state | `1101`–`1115` | DRAFT+SUBMISSION | Channel/direction restrictions, required price/quantity/trigger price/trailing value/monitor price, order-type support, amount-based order applicability and minimum amount, stock cash card incompatible with sell |
 | Agreement | `1201` | SUBMISSION | Options risk agreement not accepted |
 | Session and time-in-force | `1401`–`1403` | DRAFT+SUBMISSION | Order-type session support, time-in-force support, GTD expiry required |
-| Qualifications and disclosures | `1501`–`1507` | SUBMISSION only | ETF assessment, short-selling/margin qualification, W-8BEN, US/options overnight disclosures, odd-lot disclosure and session |
+| Qualifications and disclosures | `1501`–`1512` | SUBMISSION only | ETF assessment, short-selling/margin qualification, W-8BEN, US/options overnight disclosures, odd-lot disclosure and session, OTC trading entitlement, warrant trading entitlement, CAR/CKA certification, virtual-asset ETF trading assessment and additional risk disclosure |
 | Attached orders | `1601`–`1608` | DRAFT+SUBMISSION | Required take-profit/stop-loss trigger and submit prices, GTD expiry, whether the order type supports attached orders |
 | Position take-profit/stop-loss | `1701`–`1709` | DRAFT+SUBMISSION | See [Position take-profit/stop-loss](#tpsl) |
 
-Three pass-through conventions: when the server does not issue a given authorization item, treat it as not applicable; an empty handling link on a qualification item means the server did not issue that requirement; and when account, quote, or position data is missing, treat it as undeterminable and pass through, leaving the server to enforce it.
+Three pass-through conventions: when the server does not return a given authorization item, treat it as not applicable; an empty handling link on a `granted_info` item means the server did not return that requirement; and when account, quote, or position data is missing, treat it as undeterminable and pass through, leaving the server to enforce it. The second convention applies only to `granted_info` items — `1508`–`1510` are account-level gates, and while they are not enabled, submission is blocked for every counter.
 
 One confirmed difference from iOS: the bracket-order price-direction rules (`1606`/`1607`, which block an attached order's trigger price based on its position relative to the current price) are not implemented on Android yet. The server currently rejects such orders on its own, and the codes are reserved but unused — do not assume this validation exists.
 
@@ -511,7 +583,7 @@ In `OrderPreviewResult`, **`null` always means "structurally not applicable"**, 
 - Reference price rule: limit-type orders use the submit price, MIT uses the trigger price, and market orders use `context.marketReferencePrice` (amount fields are `null` if you don't pass it).
 - Option instruments must pass `context.optionDirection`, or the call throws `WhaleCoreException.InvalidParameter` — the SDK does not fetch quotes and cannot infer the direction.
 - Exchange rates are used only for cross-currency conversion inside the occupy calculation; the SDK maintains them internally and exposes no standalone lookup API, matching the portfolio module (see [Portfolio](#portfolio)).
-- Fee discount balances (`commRemain`, `platformDeductionsRemain`, `deductionsRemain`) reflect the account default card or the card selected via [Trade cards](#trade-cards). When the card currency differs from the settlement currency, they are converted using `commCurrency`, `platformDeductionsCurrency`, and `deductionsCurrency` respectively before entering the computation — when calling `OrderPreviewCalculator.compute(fields)` manually, fill in those three currency fields yourself; the `previewOrder(intent, context)` path handles this automatically.
+- Fee discount balances (`commRemain`, `platformDeductionsRemain`, `deductionsRemain`) reflect the card selected via [Trade cards](#trade-cards); with no card selected they stay empty and the corresponding fee is not discounted. When the card currency differs from the settlement currency, they are converted using `commCurrency`, `platformDeductionsCurrency`, and `deductionsCurrency` respectively before entering the computation — when calling `OrderPreviewCalculator.compute(fields)` manually, fill in those three currency fields yourself; the `previewOrder(intent, context)` path handles this automatically.
 
 One confirmed difference from iOS: `fees.third` (third-party fees) keeps `0` when the value is `0` rather than becoming `null` (`null` means no fee data at all) — iOS converts `0` to `nil`, so account for this when aligning copy.
 
@@ -573,7 +645,7 @@ The two orders placed share the same `ployId` in the order list, with `ployType`
 
 `OrderType.TS` (trailing stop market) is entirely unsupported — the enum constant exists, but there is no submit or replace factory for it, and pre-submit validation blocks it with `ORDER_TYPE_NOT_SUPPORTED` (`1109`).
 
-`ReplaceOrderRequest` follows the same pattern with companion-object factories: `regular` (a plain stock order), `option` (an option parent order, where price and quantity are always required), and `limitIfTouched` / `marketIfTouched` / `trailingStopLimit` (conditional orders, which take `triggerStatus` and `isOption` — only an already-triggered order routes to the plain/option parent-order endpoint, and everything else uses the conditional-order endpoint).
+`ReplaceOrderRequest` follows the same pattern with companion-object factories: `regular` (a plain stock order), `option` (an option parent order, which always carries the required price and quantity), and `limitIfTouched` / `marketIfTouched` / `trailingStopLimit` (conditional orders, which take `triggerStatus` and `isOption` — only an already-triggered order routes to the plain/option parent-order endpoint, and everything else uses the conditional-order endpoint).
 
 Attached-order (`AttachedParams`) factories: `takeProfit`, `stopLoss`, `bracket`, and `cancelAll` (used only when replacing an order, to cancel all its attached orders). Activation methods: `AttachedActivation.marketIfTouched(rth)` and `limitIfTouched(profitTakerSubmitPrice?, stopLossSubmitPrice?, rth)`. Price validity constraints: for a buy parent order, `takeProfitPrice > current price > stopLossPrice` (reversed for a sell); attached orders cannot be included when `forceOnlyRth = OVERNIGHT`.
 
@@ -602,7 +674,7 @@ service.replaceAttachedOrder(
 )
 ```
 
-Single-leg option orders reuse the same factories for submit and replace, with no option-specific parameters — the SDK routes to the option-specific endpoint automatically when `counterId` is an option contract. The option channel does not issue an attached-order allowlist, so selecting take-profit or stop-loss is blocked with `1608`.
+Single-leg option orders reuse the same factories for submit and replace, with no option-specific parameters — the SDK routes to the option-specific endpoint automatically when `counterId` is an option contract. The option channel does not return an attached-order allowlist, so selecting take-profit or stop-loss is blocked with `1608`.
 
 When you build `SubmitOrderRequest` directly through the factories, pass cards through `OrderCommon.cardIds` (submission only needs the card IDs; the balance and discount rate are needed only on the `OrderIntent.cards` path used for validation and preview). The three card slots always appear in a fixed order: commission-free card, cash card, platform-fee card.
 
@@ -655,7 +727,7 @@ portfolios.refresh()   // Refresh once when entering the screen
 Cash detail and position-quote linkage toggles: `enableCashDetail(enabled)` / `isEnableCashDetail()`, `enableQuotes(enabled)` / `isEnableQuotes()`.
 
 <Note>
-  Android currently has **no** standalone exchange-rate conversion capability, unlike iOS. The already-converted fields on the `Portfolio` model, such as `marketValueExchanged`, are display fields the server sends down — not a conversion tool the SDK provides.
+  Android currently has **no** standalone exchange-rate conversion capability, unlike iOS. The already-converted fields on the `Portfolio` model, such as `marketValueExchanged`, are display fields the server returns — not a conversion tool the SDK provides.
 </Note>
 
 ### Member asset settings {/* portfolio-member-setting */}
@@ -679,7 +751,7 @@ Business-level aggregation APIs for account-level, per-stock, and per-market pro
 | `getProfitOverview(currency, period)` | The overview headline figures + per-asset-type summary + cumulative traded amount/stock count |
 | `getProfitTrend(currency,`<br />`period,`<br />`indexCounterId)` | The trend chart: cumulative return/total-asset curve + optional index comparison + outperformance |
 | `getPLCalendar(currency, period, markets)` | The calendar view: daily/monthly/yearly grids + trading-day/holiday markers |
-| `getProfitRanking(currency, period)` | The ranking view: top gainers and top losers in one call |
+| `getProfitRanking(currency, period)` | The ranking view: top gainers and top losers in one call (up to 10,000 rows per list) |
 | `getAssetFlow(period)` | Per-currency asset flow on the "My assets" screen |
 | `getStockPLMeta(counterId)` | Per-stock P&L page init: time-filter bounds |
 | `getStockCumulativePL(counterId, period)` | Per-stock cumulative P&L + underlying/derivative composition (fetched once; no refetch on tab switch) |
@@ -712,9 +784,13 @@ Models mirror the server response: amounts, ratios, and timestamps are always ra
 
 **Open-ended enum/value references** (string-constant objects with an open value set — pass through and keep a default branch for values not listed here): `PortfolioCostType` (`AVG`/`DILUTED`), `PLSortOrder` (`DESCENDING`/`ASCENDING`), `MarketDayStatus` (`WORKINGDAY`/`HOLIDAY`/`WEEKEND`), `PLSecurityType` (`STOCK`/`FUND`/`VA`/`MMF`), `PLInvestType` (`CASH`/`STOCK`/`OTHER`), `PLFlowDirection` (`NONE = "-1"` a directionless flow placeholder / `SELL = "0"` / `BUY = "1"`).
 
+**Ranking row cap**: `getProfitRanking` returns at most 10,000 rows for the gainers list and 10,000 for the losers list, 20,000 combined. The server does not return anything beyond that, so narrow the statistical range when you need a longer list.
+
 **Degradation and failure semantics** (the primary data throws on failure; decorative supplementary data degrades to empty): if index comparison fails, `getProfitTrend` returns an empty `indexSeries` without affecting its own curve; if holiday markers fail to load, `getPLCalendar` returns an empty `marks` list; if one ranking fails to parse, `getProfitRanking` treats that ranking as an empty list without affecting the other.
 
 **Trend chart granularity**: `ProfitTrend.granularity` switches to monthly automatically once the range exceeds about one year; the daily `dateKey` is `"yyyy-MM-dd"`, and the monthly one is `"yyyy-M"`.
+
+**Cumulative and current-period returns on trend points**: `ProfitTrendPoint` provides both cumulative (`accumulateSimpleEarningYield` / `accumulateTimeEarningYield`) and current-period (`simpleEarningYield` / `timeEarningYield`, meaning that day at daily granularity and that month at monthly granularity) returns. At monthly granularity a missing cumulative value falls back to the month's last daily point, and to `"0"` if that is also missing; **current-period values have no fallback** (a monthly return is not the daily return of the month's last day) and are an empty string when the server does not return them. `IndexComparePoint` symmetrically provides `cumulativeReturn` and `currentReturn` (relative to the previous curve point; for the first point, relative to the closing price of the last trading day before the range starts).
 
 **Per-market convention**: an empty string for `market` means "all markets"; the three per-stock P&L endpoints need no `market`/`currency` parameters.
 
@@ -881,11 +957,11 @@ Java callers can use `sendAsync(request, callback)` instead of the suspending `s
 
 | Model category | Main types |
 | --- | --- |
-| Quotes | `Stock` / `StockTemplate` / `TradeStatus` / `KlineUpdate` / `Kline` / `TimeShares` |
+| Quotes | `Stock` / `StockTemplate` / `TradeStatus` / `KlineUpdate` / `Kline` / `TimeShares` / `QuoteLevelInfo` / `SubMarketQuote` / `PriceLevel` / `DepthLevel` / `EvictedLevelDetail` |
 | Option calculator | `OptionPricingInput` / `OptionGreeks` |
-| Orders | `Order` / `OrderIntent` / `SubmitOrderRequest` / `SubmitOrderResult` / `ReplaceOrderRequest` / `OrderConstraints` / `OrderInfo` / `OrderValidationResult` / `TradeCapacity` / `TradeCapacityRequest` / `QualificationStatus` / `TPSLOrderIntent` / `SubmitTPSLOrderRequest` / `TPSLValidationResult` / `HistoryOrders` / `TradeCard` / `TradeCards` |
+| Orders | `Order` / `OrderIntent` / `SubmitOrderRequest` / `SubmitOrderResult` / `ReplaceOrderRequest` / `OrderConstraints` / `OrderInfo` / `OrderValidationResult` / `TradeCapacity` / `TradeCapacityRequest` / `QualificationStatus` / `TPSLOrderIntent` / `SubmitTPSLOrderRequest` / `TPSLValidationResult` / `HistoryOrdersRequest` / `HistoryOrdersResult` / `TradeCard` / `TradeCards` / `TradeCardCategory` / `SuggestedTradeCard` |
 | Portfolio | `Portfolio` / `AccountInfo` / `PortfolioMemberSettingInfo` / `PortfolioCostType` |
-| Profit and loss | `PLAnalysisMeta` / `ProfitOverview` / `ProfitTrend` / `PLCalendar` / `ProfitRanking` / `CurrencyAssetFlow` / `StockCumulativePL` / `MarketStocksProfitLoss` / `PLPeriod` |
+| Profit and loss | `PLAnalysisMeta` / `ProfitOverview` / `ProfitTrend` / `PLCalendar` / `ProfitRanking` / `CurrencyAssetFlow` / `StockCumulativePL` / `MarketStocksPL` / `PLPeriod` |
 | Watchlist | `WatchlistGroup` / `WatchlistStock` / `WatchlistFund` / `WatchlistSortField` / `WatchlistSortGroup` / `WatchlistEvent` |
 | Pass-through requests | `HttpRequest` / `HttpResponse` / `HttpMethod` |
 
