@@ -141,9 +141,9 @@ WhaleCoreService.logoutAndDestroy()
 
 | 模組 | 入口 | 能力 |
 | --- | --- | --- |
-| 行情 | `WhaleCoreService.quoteService()` | 行情訂閱（鏈式選擇資料類型）、期權鏈 / 詳情訂閱、K 線與分時 / 逐筆歷史查詢、行情快照 |
-| 訂單 | `WhaleCoreService.orderService()` | 下單、查單、撤單、改單、條件單、附加單、持倉止盈止損、下單前置校驗、訂單預覽、批量撤單與即時推送 |
-| 資產 | `WhaleCoreService.portfolioService()` | 資產訂閱、現金明細與持倉行情開關、會員資產設定、匯率換算、盈虧分析 |
+| 行情 | `WhaleCoreService.quoteService()` | 行情訂閱（鏈式選擇資料類型）、期權鏈 / 詳情訂閱、K 線與分時 / 逐筆歷史查詢、行情快照、行情等級與裝置佔用 |
+| 訂單 | `WhaleCoreService.orderService()` | 下單、查單、撤單、改單、條件單、附加單、持倉止盈止損、下單前置校驗、訂單預覽、交易卡券選券、批量撤單與即時推送 |
+| 資產 | `WhaleCoreService.portfolioService()` | 資產訂閱、現金明細與持倉行情開關、會員資產設定、盈虧分析 |
 | 自選股 | `WhaleCoreService.watchlistService()` | 分組與股票的增刪改查、排序、置頂、失效標的清理與即時推送 |
 | 透傳請求 | `WhaleCoreService.requestService()` | 任意業務接口透傳，自動附加公共參數與鑑權頭，鑑權失效自動復原重試 |
 | 期權計算 | `WhaleCoreOptionCalculator`（靜態工具） | 本機 Black-Scholes 計算：Greeks、理論價、內在 / 時間價值、距到期天數、到期盈利概率 |
@@ -164,7 +164,9 @@ WhaleCoreService.logoutAndDestroy()
 let account = WhaleCoreAccountInfo(accountChannel: "lb_hk", aaid: "your_aaid")
 ```
 
-**Delegate 多播模式** 訂單、資產、自選三個服務的推送採用同一套模式：`addDelegate(_:)` 註冊、`removeDelegate(_:)` 移除，SDK **弱引用**持有觀察者（調用方需自行強持有，否則代理釋放後回調靜默失效），支援多個頁面同時註冊接收同一份推送。訂單服務額外具備「首個 delegate 註冊即自動開啟推送、最後一個移除即自動停止」的生命週期綁定，無需手動 subscribe。
+**Delegate 多播模式** 訂單、資產、自選三個服務的推送採用同一套模式：`addDelegate(_:)` 註冊、`removeDelegate(_:)` 移除，SDK **弱引用**持有觀察者（調用方需自行強持有，否則代理釋放後回調靜默失效），支援多個頁面同時註冊接收同一份推送。訂單服務額外具備「首個 delegate 註冊即自動開啟推送、最後一個移除即自動停止」的生命週期綁定，無需手動 subscribe。行情服務的行情等級通知（`addQuoteLevelDelegate(_:)`，見 [行情等級與裝置佔用](#quote-level-and-eviction)）遵循同一套弱引用多播模式。
+
+**回調執行緒** SDK 的全部回調（推送 delegate、訂閱閉包、token 回調、Objective-C `completionHandler`）統一在主執行緒派發，宿主可在回調內直接更新 UI，無需自行切換執行緒。
 
 **Swift 與 Objective-C 的方法映射** 所有公開類型均帶 `@objc`，三類 Swift 方法在 Objective-C 端遵循固定映射規律：
 
@@ -174,7 +176,7 @@ let account = WhaleCoreAccountInfo(accountChannel: "lb_hk", aaid: "your_aaid")
 | `static func initialize(config:) throws` | `+ (BOOL)initializeWithConfig:error:` |
 | `async throws -> T` | `- (void)xxx:(void (^)(T, NSError *))completionHandler` |
 
-具體互調寫法見 [Objective-C 互通](#objective-c-interop)。
+`completionHandler` 統一在主執行緒回調，可直接更新 UI；Swift 側 `await` 返回則回到調用方自身的執行內容。具體互調寫法見 [Objective-C 互通](#objective-c-interop)。
 
 ## 行情服務 {/* quotes-service */}
 
@@ -203,7 +205,7 @@ await subscription.cancel()
 ```
 
 <Note>
-  訂閱建立失敗（SDK 未就緒、首次拉取失敗）時 `.start` 拋出；建立成功後運行期不再產生錯誤，資料經回調持續下發。可選資料類型：`list`、`detail`、`depth`、`trade`、`broker`、`preTrade`、`postTrade`、`nightTrade`。
+  訂閱建立失敗（SDK 未就緒、首次拉取失敗）時 `.start` 拋出；建立成功後運行期不再產生錯誤，資料經回調持續下發。可選資料類型：`list`、`detail`、`depth`、`trade`、`broker`、`preTrade`、`postTrade`、`nightTrade`、`totalView`、`totalViewBrief`。
 </Note>
 
 ### 查詢快照與歷史資料 {/* quote-history-queries */}
@@ -214,7 +216,7 @@ if let stock = svc.getStock(counterId: "ST/US/AAPL") {
     print(stock.lastPrice ?? 0)
 }
 
-// 拉取歷史 K 線（Swift async 便捷重載，預設口徑與 Android 一致）
+// 拉取歷史 K 線（Swift async 便捷重載）
 let klines = try await svc.getKlines(counterId: "ST/US/AAPL", klineType: .perDay, count: 100)
 klines.forEach { print("\($0.timestamp): \($0.close)") }
 ```
@@ -248,6 +250,29 @@ await detailSub.cancel()
   Greeks 不隨行情推送下發——宿主自訂正股取正股價，餵給 `WhaleCoreOptionCalculator` 本機計算，見 [期權計算器](#option-calculator)。
 </Note>
 
+### 行情等級與裝置佔用 {/* quote-level-and-eviction */}
+
+同一帳戶在多台裝置使用進階行情時互相搶佔。SDK 在每次行情工作階段鑑權成功後刷新一份等級與佔用狀態快照（各子市場的行情等級、是否延遲、功能可用性，以及是否被其他裝置佔用及佔用文案），並自動回應伺服器的佔用 / 等級變更通知（自動重新鑑權取回最新狀態）。
+
+```swift
+let svc = try WhaleCoreService.quoteService()
+svc.addQuoteLevelDelegate(self)   // 註冊時已有快照立即回調一次，之後每次鑑權成功回調（主執行緒）
+
+// 同步查詢最近快照
+if let info = svc.quoteLevelInfo, info.isEvicted(market: "US") {
+    showBanner(info.evictedDescribe)   // 展示佔用提示（文案隨 SDK 語言）
+}
+
+// 「重啟行情」：把使用權搶回本裝置；恢復後的等級經委託回調刷新
+try await svc.reclaimQuoteAccess()
+```
+
+提示條展示、「今日不再提示」等 UI 策略由宿主自行決定；被佔用狀態請以 `isEvicted(market:)` / `isEvicted(subMarket:)` 成對維度判斷，不要自行解析 `quoteLevel` 字串。渲染「N 檔盤口」請按 `depthType` 過濾 `depthLevel` 陣列取對應類型那條（普通盤口與深度盤口是兩類獨立權限）。
+
+<Note>
+  被佔用降級為延遲行情期間，對應市場的逐筆成交不可用（推送停發、歷史逐筆查詢返回空）；夜盤、盤前盤後等能力是否可用以快照中當前等級的 `hasOvernight` 等開關為準。「重啟行情」恢復後**標的本身的最新行情自動刷新、推送恢復，除此之外的資料不會自動補回**——被佔用期間的逐筆成交記錄缺失，需要完整序列時請在恢復後重新調用 `getTrades` 拉取。
+</Note>
+
 **方法一覽：**
 
 | 方法 | 說明 |
@@ -256,12 +281,20 @@ await detailSub.cancel()
 | `observeQuoteEvents(counterIds:`<br />`onUpdate:)` | 旁聽行情事件（不建立新訂閱，重用其他呼叫方已建立的訂閱） |
 | `observeKlineUpdates(counterIds:`<br />`onUpdate:)` | 旁聽 K 線更新事件（不建立新訂閱） |
 | `getStock(counterId:)` | 同步讀取行情快照（記憶體快取） |
-| `getKlines(counterId:`<br />`klineType:`<br />`count:`<br />`timestamp:`<br />`klineSession:`<br />`adjustType:`<br />`completion:)` | 拉取 K 線歷史（另有 async 便捷重載） |
-| `getTimeshares(counterId:`<br />`fiveDays:`<br />`klineSession:`<br />`completion:)` | 拉取分時資料，當日或五日（另有 async 便捷重載） |
-| `getTrades(counterId:`<br />`count:`<br />`lastSequenceID:`<br />`lastTradeSession:`<br />`tradeType:`<br />`completion:)` | 拉取歷史逐筆成交，翻頁（另有 async 便捷重載） |
+| `getKlines(counterId:`<br />`klineType:`<br />`count:`<br />`timestamp:`<br />`klineSession:`<br />`adjustType:`<br />`completion:)` | 拉取 K 線歷史 |
+| `getKlines(counterId:`<br />`klineType:`<br />`count:`<br />`timestamp:`<br />`klineSession:`<br />`adjustType:)` | 上一方法的 Swift async 便捷重載（帶預設參數） |
+| `getTimeshares(counterId:`<br />`fiveDays:`<br />`klineSession:`<br />`completion:)` | 拉取分時資料，當日或五日（繪製分時圖請用本接口，不要用 1 分鐘 K 線近似） |
+| `getTimeshares(counterId:`<br />`fiveDays:`<br />`klineSession:)` | 上一方法的 Swift async 便捷重載（帶預設參數） |
+| `getTrades(counterId:`<br />`count:`<br />`lastSequenceID:`<br />`lastTradeSession:`<br />`tradeType:`<br />`completion:)` | 拉取歷史逐筆成交，翻頁；無即時行情權限的帳戶返回空列表 |
+| `getTrades(counterId:`<br />`count:`<br />`lastSequenceID:`<br />`lastTradeSession:`<br />`tradeType:)` | 上一方法的 Swift async 便捷重載（帶預設參數；`tradeType` 預設 `0` 僅盤中，需盤前盤後 / 夜盤傳 `3`） |
 | `subscribeOptionChain(counterIds:`<br />`onUpdate:)` | 期權鏈批量訂閱（整組替換 + 300ms 防抖） |
 | `subscribeOptionDetail(counterId:)` | 建立期權詳情訂閱建構器（單合約） |
 | `getInterestRate()` | 讀取 SDK 內建無風險利率（年化小數），供期權計算器展示使用 |
+| `quoteLevelInfo`（屬性） | 當前行情等級與佔用狀態快照（同步讀取；首次鑑權前為 `nil`） |
+| `addQuoteLevelDelegate(_:)` | 註冊行情等級觀察者（每次鑑權成功後於主執行緒回調最新快照） |
+| `removeQuoteLevelDelegate(_:)` | 移除行情等級觀察者 |
+| `reclaimQuoteAccess()` | 把行情使用權搶回本裝置（「重啟行情」）；成功後自動重新鑑權 |
+| `reclaimQuoteAccess(completion:)` | 上一方法的 Objective-C 便捷入口（completion 於主執行緒回調） |
 
 ## 期權計算器 {/* option-calculator */}
 
@@ -272,7 +305,7 @@ let input = WhaleCoreOptionPricingInput(
     underlyingPrice: NSDecimalNumber(string: "190.00"),   // 正股現價（未減分紅）
     strikePrice: NSDecimalNumber(string: "185.00"),
     impliedVolatility: NSDecimalNumber(string: "0.25"),   // 年化 IV，小數（0.25 = 25%）
-    daysToExpire: 30,                                     // 距到期自然日（0 合法，負數非法）
+    daysToExpire: NSDecimalNumber(value: 30),             // 距到期天數，支援小數天（[0,1) 按 1 天計，負數非法）
     isCall: true,
     dividendToExpire: nil,                                // 到期前累計分紅，nil = 0
     interestRate: nil                                     // nil = 讀 SDK 內建無風險利率
@@ -282,7 +315,8 @@ if let g = WhaleCoreOptionCalculator.greeks(input) {
     // 縮放口徑：vega 每 1% 波動率、theta 每自然日（通常為負）、rho 每 1% 利率
 }
 
-// 距到期天數（與 greeks / profitProbability 的 daysToExpire 同一口徑）
+// 距到期整數自然日（greeks / profitProbability 的 daysToExpire 入參也支援小數天，
+// 需要按小時折算的浮點天數時由宿主自行計算後傳入）
 let days = WhaleCoreOptionCalculator.daysToExpire(
     expireDate: "20260729",                              // yyyyMMdd，同 optionData.expireDate
     timeZone: TimeZone(identifier: "America/New_York")!)  // 到期日所屬交易所時區
@@ -301,7 +335,8 @@ let days = WhaleCoreOptionCalculator.daysToExpire(
 | `greeks(_:)` | 計算 Greeks（delta / gamma / vega / theta / rho）與理論價 |
 | `intrinsicValue(underlyingPrice:`<br />`strikePrice:`<br />`isCall:)` | 計算內在價值：Call = max(0, 現價 − 行使價)，Put 相反 |
 | `timeValue(optionPrice:`<br />`intrinsicValue:)` | 計算時間價值 = 權利金 − 內在價值 |
-| `daysToExpire(expireDate:`<br />`timeZone:)` | 計算距到期自然日數 |
+| `daysToExpire(expireDate:`<br />`timeZone:)` | 計算距到期整數自然日數（「剩 N 天」類展示口徑） |
+| `fractionalDaysToExpire(expireDate:`<br />`timeZone:`<br />`holidays:`<br />`dayOffset:)` | 計算距到期小數天：到期時刻取到期日 20:00、按小時折算；傳節假日表時為交易日口徑 |
 | `profitProbability(underlyingPrice:`<br />`breakevenPoint:`<br />`impliedVolatility:`<br />`daysToExpire:`<br />`isCall:`<br />`dividendToExpire:`<br />`interestRate:)` | 計算到期盈利概率（Black-Scholes 風險中性口徑） |
 
 ## 訂單服務 {/* orders */}
@@ -363,6 +398,7 @@ print("提交成功: \(result.orderId ?? "")")
 | `validity`（可選） | `WhaleCoreOrderValidity` | 有效期，預設 `.day()`；GTD 用 `.gtd(expireTime:)` |
 | `forceOnlyRth`（可選） | `WhaleCoreForceOnlyRTH` | 交易時段控制，預設 `.unknown`（不下發）；僅美股適用 |
 | `remark`（可選） | `String?` | 使用者備註 |
+| `cardIds`（可選） | `[String]` | 本單使用的卡券 ID，預設空陣列 = **本單不使用任何卡券**（SDK 不會自動補預設券）。僅自行建構請求時才需要填，走校驗漏斗時由 SDK 從 `intent.cards` 派生，見 [交易卡券](#trade-cards) |
 
 按金額下單時，伺服器要求 `quantity` 恆為真實股數（`=0` 必拒），金額與換算股數需同時下發；僅限價、市價類型且買入方向支援，條件單（LIT/MIT/TSL）不支援按金額。建議走 [下單前置校驗](#order-validation) 漏斗，換算由 SDK 自動完成（金額 ÷ 價格向下取整，碎股 4 位小數、整手市場按手圓整）。
 
@@ -492,11 +528,11 @@ if let request = result.request {
 | 段 | 覆蓋 |
 | --- | --- |
 | 10xx 進頁前 | 空標的、帳戶未開戶 / 已暫停、指數類不可交易、伺服器可交易性判定 |
-| 11xx 按鈕狀態 | 訂單類型支援性、渠道不支援、買賣受限、必填欄位、按金額下單的類型與方向限制（收市 / 停牌可掛單，不攔截，狀態經約束快照透出） |
+| 11xx 按鈕狀態 | 訂單類型支援性、渠道不支援、買賣受限、必填欄位、按金額下單的類型與方向限制、**現金卡僅買入**（1115，`issue.field` 為 `.cashCard`，見 [交易卡券](#trade-cards)）（收市 / 停牌可掛單，不攔截，狀態經約束快照透出） |
 | 1201 協議 | 期權風險協議未同意 |
 | 13xx 參數合理性 | 按金額下單換算股數為 0、美股碎股按金額低於渠道最低金額（`fractional_min_amount`，最低值經 `issue.referenceValue` 攜帶） |
-| 14xx 時段與有效期 | 所選時段 / 有效期不受該類型支援；未指定也攔（空配置清單 = 明確全禁） |
-| 15xx 資格與聲明 | 衍生品 ETF 認知、沽空 / 融券資格、W8BEN、美股夜盤 / 期權夜盤 / 碎股聲明 |
+| 14xx 時段與有效期 | 所選時段 / 有效期不受該類型支援；未指定也攔。空清單語義兩條規則不同：空 `support_sessions` = 無時段維度、放行（宿主應隱藏時段選擇、不指定時段提交）；空 `support_time_in_forces` 仍 = 明確全禁 |
+| 15xx 資格與聲明 | 衍生品 ETF 認知、沽空 / 融券資格、W8BEN、美股夜盤 / 期權夜盤 / 碎股聲明、場外交易（OTC）權限、渦輪牛熊證披露、CAR / CKA 認證、虛擬資產 ETF 測評與披露 |
 | 16xx 附加單 | 止盈止損觸發價必填；LIT 啟用時對應腿委託價必填（方向反了屬軟提醒，歸宿主處理，SDK 不攔截） |
 | 17xx 持倉止盈止損 | 僅 `validateTPSLOrder` 產出，見 [持倉止盈止損](#position-tpsl) |
 
@@ -509,7 +545,8 @@ for q in try await svc.getQualifications(counterId: "ST/US/AAPL") where !q.isSat
         // 宿主渲染四選項問卷，作答須來自使用者本人（選 .none 記為不通過）
         try await svc.submitListedDerivAssessment(experience: .trained)
     } else if q.acceptableViaAPI {
-        // 聲明類（期權協議 / 美股沽空 / 夜盤 / 期權夜盤 / 碎股）：展示披露 → 使用者確認 → 一鍵同意
+        // 聲明類（期權協議 / 美股沽空 / 夜盤 / 期權夜盤 / 碎股 / 場外交易 OTC / 渦輪牛熊 /
+        // CAR-CKA / 虛擬資產 ETF 測評與披露）：展示披露 → 使用者確認 → 一鍵同意
         try await svc.acceptAgreement(q.type)
     } else {
         // 測評 / 認證類（港股融券 / W8BEN 等）：跳轉 Web 流程，連結經 getOrderInfo(...) 按資格類型取用
@@ -521,6 +558,61 @@ for q in try await svc.getQualifications(counterId: "ST/US/AAPL") where !q.isSat
 
 <Note>
   `issue.reason` 與錯誤碼預設描述均為多語言（zh-Hans / zh-Hant / en），隨初始化設定或 `setLanguage(_:)` 切換。
+</Note>
+
+### 交易卡券 {/* trade-cards */}
+
+免佣卡、現金卡、平台費卡的選券能力。**查券歸宿主、選券之後歸 SDK**：卡券清單一次 HTTP 請求即可取數、欄位直接上 UI，SDK 不建模券清單，宿主經[通用 HTTP 請求](#general-http-requests)自行查詢與渲染。把使用者選中的券填進 `WhaleCoreTradeCards` 掛到 `intent.cards` 之後，訂單預覽的折後費用重算、券面幣種匯率換算、下單報文的卡券欄位派生全部自動完成。
+
+```swift
+let cards = WhaleCoreTradeCards()
+// 每類一個槽位，只需選中券的 4 個值；標題 / 有效期 / 說明文案留在宿主 UI，SDK 不需要
+cards.commissionCard = WhaleCoreTradeCard(
+    cardId: "card-1",
+    availableAmount: NSDecimalNumber(string: "50"),    // 抵扣額度上限
+    rebateRate: NSDecimalNumber(string: "0.3"),        // 返 30%；僅免佣卡槽位生效
+    currency: WhaleCoreCurrency.hkd)                   // 券面幣種；與結算幣不同時自動換算
+
+intent.cards = cards        // 掛到校驗用的 intent 上；預覽與下單報文同時生效，無需其他調用
+```
+
+三個槽位（`commissionCard` / `cashCard` / `platformFeeCard`）本身就是選券規則：同類別只能選一張、最多三張，都在**編碼期**就寫不出違規寫法。唯一需要執行期判定的是「現金卡僅買入」——賣出方向攜帶 `cashCard` 時 `validateOrder` 回傳 `.cashCardNotApplicableOnSell`（1115），`issue.field` 為 `.cashCard`，可據此把選券入口標紅。
+
+**未選券 = 本單不使用任何卡券**：三個槽位全空（或不設 `intent.cards`）時報文 `card_ids` 為空陣列，伺服器**不核銷任何券**——不要理解成「伺服器會替你挑一張預設券」。`cardId` 為空字串的槽位同樣視作未選：不進報文、不觸發「現金卡僅買入」判定，`WhaleCoreTradeCards.isEmpty` 也把它算作未選。
+
+伺服器為標的設定的預設券是**建議值**，隨約束快照一併下發（`WhaleCoreOrderConstraints` 的 `suggestedCommissionCard` / `suggestedCashCard` / `suggestedPlatformFeeCard`，或按類別取的 `suggestedCard(for:)`），無須再單獨調 `getOrderInfo`。但真實使用必須由宿主明確回填——**SDK 不會自動回填預設券**，用不用、用哪張始終是宿主的決定：
+
+```swift
+let constraints = try await svc.getOrderConstraints(counterId: "ST/US/AAPL")
+let cards = WhaleCoreTradeCards()
+// 槽位為 nil = 伺服器未給該標的配這類券（宿主據此停用該類選券入口）
+if let suggested = constraints.suggestedCard(for: .commission) {
+    cards.setCard(suggested.asTradeCard(), for: .commission)   // 額度缺失時轉出 nil，不預填
+    // suggested.cardType 同時是卡券清單接口 rebate_type 入參的正確取值
+}
+intent.cards = cards
+```
+
+三個選券入口互動同構、只有類別不同，可用類別存取器讓它們共用同一段渲染程式碼，與直接讀寫屬性完全等價：
+
+```swift
+cards.setCard(card, for: .commission)     // .commission / .cash / .platformFee
+let picked = cards.card(for: .cash)       // 未選為 nil
+if cards.isEmpty { /* 三槽均未選 */ }
+```
+
+<Note>
+  **無券槽位不透出卡型**：伺服器沒配券時，對應 `suggested*` 槽位整個為 `nil`——即使 wire 上 `comm_card_type` 仍下發 `"0"`（`"0"` 是合法卡型「普通返佣卡」），也不會給出「空 ID + 類型 0」的佔位物件，避免宿主誤拿 `"0"` 當 `rebate_type` 查券而錯誤取到返佣券清單。`WhaleCoreOrderInfo` 上的 `commCardId` / `commCardType` 等 wire 原樣欄位仍保留，但經校驗漏斗的宿主建議一律改讀約束快照。
+</Note>
+
+**券面幣種自動換算**：券面幣種與訂單結算幣種不同時（如港幣券用於美股單），SDK 按匯率換算後再參與折後計算；幣種缺失或無對應匯率時按原額度計算。`rebateRate`（折扣率）**僅免佣卡槽位生效**，現金卡與平台費卡按純額度抵扣，填了也不參與計算；`nil` 或 `0` 按 `1` 處理（額度內全額抵扣，即滿減語義）。
+
+**自行建構請求時的卡券載體**：不走校驗漏斗、自行建構 `WhaleCoreOrderSubmitRequest` 提交時，卡券經 `WhaleCoreOrderCommon.cardIds`（與報文一一對應的字串陣列）傳入。**這條路徑 SDK 不做任何卡券校驗**——順序、重複、空字串、「現金卡僅買入」一概不管，以伺服器核銷結果為準。需要這些約束由 SDK 兜底，請改走 `intent.cards` + `validateOrder`：經漏斗時 `cardIds` 由 SDK 按「免佣 → 現金 → 平台費」固定序自動派生，宿主無須接觸它。
+
+**改單不帶券**：卡券綁定關係在下單時確定並鎖死，改單鏈路不攜帶任何卡券參數。改單頁可照常展示原訂單的已用券資訊（讀 `WhaleCoreOrder` 的 `cardIds` 及對應的抵扣金額 / 狀態欄位），但選券入口應置灰不可點。
+
+<Note>
+  切換買賣方向時記得把 `cashCard` 置 `nil`。忘了清不會被靜默放過——第一次跑就會拿到 1115，而不是等到線上發現金額對不上。`WhaleCoreOrderIntent.action` 本就不可變，換方向要新建意圖，天然是重新組裝選券的時機。
 </Note>
 
 ### 訂單預覽 {/* order-preview */}
@@ -542,6 +634,10 @@ print("預估金額: \(result.orderAmount ?? 0)  費用合計: \(result.fees.tot
 ```
 
 參考價規則：限價類用 `intent.price`；觸價市價單（MIT）用 `intent.triggerPrice`；市價單用 `context.marketReferencePrice`，未提供則金額類結果為 `nil`。`result.riskHint` 給出風險提示種類（如 `.marginRaisedOnClose`、`.financingNeeded`），文案由宿主決定；`result.action` 僅供展示與埋點，各項數值已按方向算好，不應據此重新分支計算。
+
+**卡券折後口徑**：佣金、平台費、現金卡三項的折後值隨 [`intent.cards`](#trade-cards) 自動重算，口徑與下單報文嚴格一致——只有會進 `card_ids` 的券才產生抵扣，未選券（或 `cardId` 為空字串）時三項額度均為 `nil`、不打折。預覽**不會**回落到下單資訊裡的帳戶預設券：那只是伺服器的建議值，沒進報文就不會被核銷，按它打折會讓預估費用低於實付。**預覽裡減掉的券，恆等於報文裡帶走的券。**
+
+自行組 `WhaleCoreOrderPreviewFields` 調同步計算核心時，三項額度的幣種分別經費用欄位組 `fields.fees`（`WhaleCoreOrderPreviewFeeFields`）的 `commCurrency`（免佣卡）、`platformDeductionsCurrency`（平台費卡）、`deductionsCurrency`（現金卡）傳入；三者均可空，為 `nil` / 空字串或匯率表中無對應幣種對時按原額度參與計算（不猜匯率，也不把額度抹成 0）。這條路徑上填什麼算什麼——想按預設券預覽就自行填入預設券的額度與比例，SDK 不代填也不代扣。
 
 <Note>
   另有同步純計算入口 `WhaleCoreOrderPreviewCalculator.compute(_:)`，供宿主自行取數（含未使用 SDK 行情的場景）後直接計算。費用各分項已按 2 位小數取整，且 `fees.total` 恆等於各展示分項之和；折後值經 `WhaleCoreDiscountedAmount` 攜帶原值（`original`，供「原 X」劃線展示）。
@@ -680,18 +776,16 @@ try await svc.updatePortfolioMemberSetting(setting: updated)
 
 ### 匯率換算 {/* exchange-rates */}
 
-一次性取得全部支援幣種對，可整表快取後按需同步換算：
+跨幣種換算（訂單預覽的費用 / 額度換算、卡券券面幣種換算）由 SDK 內部完成，宿主**無需也不能**向 SDK 拉取匯率表——SDK 不提供匯率查詢接口。
+
+有自有匯率來源的接入方可自建 `WhaleCoreExchangeRate`（每項含正 / 負金額兩側匯率，`convert(_:)` 按金額正負自動選側），填入 `WhaleCoreOrderPreviewFields.exchangeRates` 參與訂單預覽的跨幣種換算：
 
 ```swift
-let rates = try await svc.exchangeRates()
-if let hkdToUsd = rates.first(where: { $0.fromCurrency == "HKD" && $0.toCurrency == "USD" }) {
-    let usd = hkdToUsd.convert(NSDecimalNumber(string: "100"))   // 按金額正負自動選側
-}
+let rate = WhaleCoreExchangeRate(fromCurrency: "HKD", toCurrency: "USD",
+                                 positiveRate: NSDecimalNumber(string: "0.128"),
+                                 negativeRate: NSDecimalNumber(string: "0.128"))
+fields.exchangeRates = [rate]
 ```
-
-<Note>
-  費率資料隨 SDK 生命週期快取，宿主無需管理刷新。異步 `exchangeRates()` 在費率表不可用（拉取失敗且無快取）時拋 `WhaleCoreErrorCode.exchangeRateUnavailable`（1008）；同步 `cachedExchangeRates()` 未就緒時回傳空陣列。有自有匯率來源的接入方也可自建 `WhaleCoreExchangeRate` 並填入 `WhaleCoreOrderPreviewFields.exchangeRates`，參與訂單預覽的跨幣種換算。
-</Note>
 
 ### 盈虧分析 {/* profit-loss-analysis */}
 
@@ -722,28 +816,40 @@ print("總盈虧: \(overview.sumProfit ?? "-")")
   模型鏡像伺服器回應（欄位名僅 snake_case → lowerCamelCase，不重新命名不裁剪），金額 / 比率 / unix 秒時間戳為原始字串透出，數值化與升跌配色由宿主處理。統計區間用 `WhaleCorePLPeriod` 明確二選一（`.allTime` / `.range(start:end:)`）。幣種 / 市場傳字串常數（參考 `WhaleCoreCurrency` / `WhaleCoreMarket`）。全部方法 `async throws`，SDK 未初始化拋 `appNotReady`。
 </Note>
 
-**核心方法一覽**（訂閱 / 設定 / 匯率；盈虧分析方法見上表）：
+**趨勢點的當期與累計收益率**：趨勢點同時給出「當期」與「累計」兩組收益率，隨粒度變義（日粒度 = 當日、月粒度 = 當月）——當期率為 `point.simpleEarningYield` / `point.timeEarningYield`，累計率為 `point.accumulateSimpleEarningYield` / `point.accumulateTimeEarningYield`。兩者可空性不同：累計率有兜底、不為 `nil`；當期率不做回退，伺服器未返回即為 `nil`（當月率 ≠ 當月末日的日率）。指數對比點同樣兩口徑並存：`indexPoint.cumulativeReturn`（累計）與 `currentReturn`（當期）；`currentReturn` 是相對上一個曲線點的升跌幅，首點相對區間起點前最後一個交易日收市（故與累計值同值），非交易日沿用上一交易日價故為 `"0"`。
+
+**趨勢與日曆同一份統計資料**：`getProfitTrend` 與 `getPLCalendar` 的盈虧數值取自同一次查詢（同幣種、同區間時兩者共用一次請求），因此趨勢點與日曆日格的同名收益率欄位逐位相同，可按日期直接對齊。`getPLCalendar` 的 `markets` 入參**只決定休市標記覆蓋哪些市場，不參與盈虧統計**，不會讓收益率變成「按市場過濾後」的值。日曆頁「每標的收益明細表」即同區間的 `getProfitRanking` 資料（傳單日區間即當日明細），無需獨立接口——該榜單無分頁參數、兩榜一次全量返回，WhaleCore 不做任何條數截斷，Top N 截取完全由宿主決定。
+
+**統計區間的邊界與時區**：`.range(start:end:)` 的起訖 unix 秒原樣轉發，WhaleCore 不做零點對齊、不做閉開歸一；同時按**裝置本地時區**把起訖折算成日期字串一併下發，伺服器按日期取**閉區間**。據此：
+
+- 查「某一天」，把 `end` 設為該日當天內的任一時刻（如 `23:59:59`）；**傳次日 `00:00:00` 會把次日一併帶出來**。
+- 跨時區注意：日期字串隨裝置時區變化，UTC+8 的手機與美東對同一時刻折算出的日期可能差一天。要按哪個時區切「一天」，就按該時區自行算出 unix 邊界再傳入——WhaleCore 不替宿主選擇時區。
+- 日期對齊是安全的：日曆的 `dateTime` / `dateKey` 與趨勢點的 `dateKey` 都是伺服器原值，不經用戶端時區換算，可直接用作 join 鍵。
+
+**核心方法一覽**（訂閱 / 設定；盈虧分析方法見上表）：
 
 | 方法 | 說明 |
 | --- | --- |
 | `addDelegate(_:)` | 註冊資產推送觀察者 |
 | `removeDelegate(_:)` | 移除資產推送觀察者 |
-| `setSubscribedAccounts(accountChannels:`<br />`currency:)` | 設定訂閱帳戶與展示幣種，替換全域訂閱範圍（另有 `async throws` 可等候版本） |
+| `setSubscribedAccounts(accountChannels:`<br />`currency:)` | 設定訂閱帳戶與展示幣種，替換全域訂閱範圍 |
+| `setSubscribedAccounts(accountChannels:`<br />`currency:) async` | 同名可等候重載：掛起至訂閱參數提交完成，失敗拋出 |
 | `currentAccount()` | 取得 SDK 目前生效帳戶（含帳戶類型：現金 / 融資） |
-| `refresh()` | 手動重新整理資產資料（另有 `async throws` 可等候版本） |
-| `cashDetailEnable`（屬性） | 現金明細訂閱開關（另有可等候版本 `enableCashDetail(_:)`） |
-| `quotesEnabled`（屬性） | 持倉行情訂閱開關（另有可等候版本 `enableQuotes(_:)`） |
+| `refresh()` | 手動重新整理資產資料 |
+| `refresh() async` | 同名可等候重載：掛起至重新整理提交完成，失敗拋出 |
+| `cashDetailEnable`（屬性） | 現金明細訂閱開關 |
+| `enableCashDetail(_:)` | 現金明細開關的可等候版本：掛起至提交完成，失敗拋出 |
+| `quotesEnabled`（屬性） | 持倉行情訂閱開關 |
+| `enableQuotes(_:)` | 持倉行情開關的可等候版本：掛起至提交完成，失敗拋出 |
 | `getPortfolioMemberSetting()` | 取得目前會員資產設定 |
 | `updatePortfolioMemberSetting(setting:)` | 更新會員資產設定 |
-| `exchangeRates()` | 非同步取得全部幣種對匯率（內部按需拉取） |
-| `cachedExchangeRates()` | 同步讀取已快取的匯率（未就緒時回傳空陣列） |
 
 ## 自選服務 {/* watchlist-service */}
 
 自選服務的類型為 `WhaleCoreWatchlistService`。回調採用[多播模式](#core-concepts)，用 `addDelegate(_:)` 註冊，支援多個頁面同時訂閱：
 
 ```swift
-final class WatchlistHandler: WhaleCoreWatchlistServiceDelegate {
+final class WatchlistHandler: NSObject, WhaleCoreWatchlistServiceDelegate {
     func onWatchlistUpdated(groups: [WhaleCoreWatchlistGroup],
                             stocks: [WhaleCoreWatchlistStock],
                             ties: [String]) {
@@ -753,6 +859,8 @@ final class WatchlistHandler: WhaleCoreWatchlistServiceDelegate {
     // 以下均為可選實作
     func onWatchlistFundsUpdated(funds: [WhaleCoreWatchlistFund]) {}
     func onWatchlistNotesUpdated(notes: [String: String]) {}
+    func onWatchlistSortUpdated(groupId: Int64, sortMode: String,
+                                sortGroups: [WhaleCoreWatchlistSortGroup]) {}
 }
 
 let svc = try WhaleCoreService.watchlistService()
@@ -760,7 +868,7 @@ let handler = WatchlistHandler()
 svc.addDelegate(handler)
 
 // 重新整理自選（sub 預設 false：僅拉清單；傳 true 同時訂閱行情）
-svc.refresh(sub: true)
+try await svc.refresh(sub: true)
 
 // 股票：增刪 / 跨分組移動（removeGroups）
 try await svc.addStocks(counters: ["ST/US/AAPL"], groups: [1], removeGroups: [], sub: true)
@@ -768,7 +876,7 @@ try await svc.removeStocks(counters: ["ST/US/AAPL"], groups: [1], removeAll: fal
 ```
 
 <Note>
-  基金 / 備註 / 置頂資料不提供唯讀快照屬性，統一經回調取得並由宿主自行持有：基金走 `onWatchlistFundsUpdated`、備註走 `onWatchlistNotesUpdated`、置頂清單走 `onWatchlistUpdated` 的 `ties` 參數。置頂（`tie` / `untie` / `sortTied`）、排序模式切換（`setGroup`）、重新排序（`resort`）、失效標的（`invalidTickers` / `removeInvalidTickers`）等操作見下方方法一覽表。
+  基金 / 備註 / 置頂資料不提供唯讀快照屬性，統一經回調取得並由宿主自行持有：基金走 `onWatchlistFundsUpdated`、備註走 `onWatchlistNotesUpdated`、置頂清單走 `onWatchlistUpdated` 的 `ties` 參數。排序結果除 `setGroup` 的一次性回傳值外還有持續通道——價格排序模式下行情變化觸發的自動重排經 `onWatchlistSortUpdated` 推送最新結果。置頂（`tie` / `untie` / `sortTied`）、排序模式切換（`setGroup`）、重新排序（`resort`）、失效標的（`invalidTickers` / `removeInvalidTickers`）等操作見下方方法一覽表。
 </Note>
 
 ### 分組管理 {/* watchlist-groups */}
@@ -866,11 +974,15 @@ let tradeResponse = try await WhaleCoreService.requestService().send(tradeReques
 
 | 模型分類 | 主要類型 |
 | --- | --- |
-| 行情 | `WhaleCoreStock` / `WhaleCoreStockData` / `WhaleCoreQuoteData` / `WhaleCoreQuoteDepth` / `WhaleCoreQuoteTrade` / `WhaleCoreTrade` / `WhaleCoreKline` / `WhaleCoreTimeShares` / `WhaleCoreTimeShare` / `WhaleCoreMinute` / `WhaleCoreOptionData` / `WhaleCoreWarrantData` / `WhaleCoreAhPremium` / `WhaleCoreAdrRate` / `WhaleCoreHkDual` / `WhaleCoreChannelItem` / `WhaleCoreEtfReference` / `WhaleCoreOptionChainSubscription` |
+| 行情 | `WhaleCoreStock` / `WhaleCoreStockData` / `WhaleCoreQuoteData` / `WhaleCoreQuoteDepth` / `WhaleCoreQuoteTrade` / `WhaleCoreTrade` / `WhaleCoreKline` / `WhaleCoreTimeShares` / `WhaleCoreTimeShare` / `WhaleCoreMinute` / `WhaleCoreOptionData` / `WhaleCoreWarrantData` / `WhaleCoreAhPremium` / `WhaleCoreAdrRate` / `WhaleCoreHkDual` / `WhaleCoreChannelItem` / `WhaleCoreEtfReference` / `WhaleCoreOptionChainSubscription` / `WhaleCoreQuoteLevelInfo` / `WhaleCoreSubMarketQuote` / `WhaleCorePriceLevel` / `WhaleCoreDepthLevel` / `WhaleCoreEvictedLevelDetail` |
 | 行情列舉 | `WhaleCoreKlineType` / `WhaleCoreKlineSession` / `WhaleCoreAdjustType` / `WhaleCoreTradeStatus` / `WhaleCoreStockTemplate` / `WhaleCoreTimeshareType` / `WhaleCoreOptionDirection` |
 | 期權計算 | `WhaleCoreOptionPricingInput` / `WhaleCoreOptionGreeks` |
-| 訂單 | `WhaleCoreOrder` / `WhaleCoreOrderDetail` / `WhaleCoreOrderSubmitRequest` / `WhaleCoreOrderSubmitResult` / `WhaleCoreReplaceOrderRequest` / `WhaleCoreTradeCapacity` / `WhaleCoreTradeCapacityRequest` / `WhaleCoreOptionOpenMargin` / `WhaleCoreEstimateBuyLimit` / `WhaleCoreEstimateBuyLimitRequest` / `WhaleCoreTradeDetail` / `WhaleCoreEstimatedCostResult` / `WhaleCoreTriggerRule` / `WhaleCoreOrderInfo` / `WhaleCoreOrderTypeConfigItem` / `WhaleCoreOptionContractModel` / `WhaleCoreTPSLOrderIntent` / `WhaleCoreSubmitTPSLOrderRequest` / `WhaleCoreTPSLValidationResult` / `WhaleCoreSubmitTPSLOrderResult` / `WhaleCoreTPSLLegOrder` / `WhaleCoreOrderPloyType` / `WhaleCoreOrderOperateDirection` |
+| 訂單 | `WhaleCoreOrder` / `WhaleCoreOrderDetail` / `WhaleCoreOrderSubmitRequest` / `WhaleCoreOrderSubmitResult` / `WhaleCoreReplaceOrderRequest` / `WhaleCoreTradeCapacity` / `WhaleCoreTradeCapacityRequest` / `WhaleCoreOptionOpenMargin` / `WhaleCoreEstimateBuyLimit` / `WhaleCoreEstimateBuyLimitRequest` / `WhaleCoreTradeDetail` / `WhaleCoreEstimatedCostResult` / `WhaleCoreTriggerRule` / `WhaleCoreOrderInfo` / `WhaleCoreOrderTypeConfigItem` / `WhaleCoreOptionContractModel` / `WhaleCoreTPSLOrderIntent` / `WhaleCoreSubmitTPSLOrderRequest` / `WhaleCoreTPSLValidationResult` / `WhaleCoreSubmitTPSLOrderResult` / `WhaleCoreTPSLLegOrder` / `WhaleCoreOrderPloyType` / `WhaleCoreOrderOperateDirection` / `WhaleCoreTradeCard` / `WhaleCoreTradeCards` / `WhaleCoreTradeCardCategory` / `WhaleCoreSuggestedTradeCard` |
+| 下單校驗 | `WhaleCoreOrderIntent` / `WhaleCoreAttachedIntent` / `WhaleCoreOrderConstraints` / `WhaleCoreOrderValidationResult` / `WhaleCoreOrderValidationIssue` / `WhaleCoreOrderValidationRule` / `WhaleCoreOrderField` / `WhaleCoreValidationScope` / `WhaleCoreQualificationStatus` / `WhaleCoreQualificationType` / `WhaleCoreQualificationState` / `WhaleCoreDerivExperience` |
+| 訂單預覽 | `WhaleCoreOrderPreviewResult` / `WhaleCoreOrderPreviewContext` / `WhaleCoreOrderPreviewFields` / `WhaleCoreOrderPreviewFeeFields` / `WhaleCoreOrderPreviewFees` / `WhaleCoreDiscountedAmount` / `WhaleCoreAmountChange` / `WhaleCoreOrderPreviewFreeze` / `WhaleCoreOrderPreviewPostCost` / `WhaleCoreOrderPreviewRiskHint` / `WhaleCorePositionAction` |
 | 資產 | `WhaleCorePortfolioData` / `WhaleCoreStockPosition` / `WhaleCoreCashBalance` / `WhaleCoreLeverageInfo` / `WhaleCorePortfolioOverview` / `WhaleCorePortfolioMemberSettingInfo` |
+| 盈虧分析 | `WhaleCorePLPeriod` / `WhaleCorePLAnalysisMeta` / `WhaleCoreProfitOverview` / `WhaleCoreProfitTrend` / `WhaleCoreProfitTrendPoint` / `WhaleCoreIndexComparePoint` / `WhaleCorePLCalendar` / `WhaleCoreProfitRanking` / `WhaleCoreCurrencyAssetFlow` / `WhaleCoreStockCumulativePL` / `WhaleCoreStockPLFlows` / `WhaleCoreMarketStocksPL` / `WhaleCoreLiquidatedStocksPL` |
+| 匯率 | `WhaleCoreExchangeRate` |
 | 帳戶 / 自選 | `WhaleCoreAccountInfo` / `WhaleCoreAccountType` / `WhaleCoreWatchlistGroup` / `WhaleCoreWatchlistStock` / `WhaleCoreWatchlistFund` / `WhaleCoreWatchlistGroupKind` / `WhaleCoreWatchlistSystemGroup` / `WhaleCoreWatchlistSortField` / `WhaleCoreWatchlistSortGroup` / `WhaleCoreWatchlistRelevantInfo` / `WhaleCoreWatchlistHoldingInfo` / `WhaleCoreWatchlistQuoteInfo` / `WhaleCoreWatchlistIndustry` / `WhaleCoreWatchlistLiveScope` |
 | 透傳請求 | `WhaleCoreHTTPRequest` / `WhaleCoreHTTPResponse` / `WhaleCoreHTTPMethod` |
 
@@ -930,9 +1042,9 @@ do {
 
 | 段 | 範圍 | 模組 |
 | --- | --- | --- |
-| 通用 / 資產 | 1001–1008 | SDK 初始化、會員設定、交易鑑權、行情服務、匯率換算（1008 匯率不可用） |
+| 通用 / 資產 | 1001–1008 | SDK 初始化、會員設定、交易鑑權、行情服務、內部匯率換算（1008 匯率不可用，宿主通常不會直接收到） |
 | 訂單 | 2001–2006 | 下單 / 撤單 / 改單 / 查詢 / 前置校驗 |
-| 通用請求 | 3001–3008 | 請求 / 推送失敗細分：未知失敗（3001）/ 網路不可用（3002）/ 逾時（3003）/ 伺服器 5xx（3004）/ 業務錯誤（3005）/ 會話失效（3006，覆蓋全部登入狀態失效業務碼）/ 參數錯誤（3007，如期權預覽未傳 `optionDirection`）/ 帳戶交易受限（3008，資產推送錯誤通道下發，`userInfo[WhaleCoreAccountChannelKey]` 攜帶涉及帳戶） |
+| 通用請求 | 3001–3008 | 請求 / 推送失敗細分：未知失敗（3001）/ 網路不可用（3002）/ 逾時（3003）/ 伺服器 5xx（3004）/ 業務錯誤（3005）/ 會話失效（3006，覆蓋全部登入狀態失效業務碼）/ 參數錯誤（3007，如期權預覽未傳 `optionDirection`、啟動參數非法如 `deviceId` 過短）/ 帳戶交易受限（3008，資產推送錯誤通道下發，`userInfo[WhaleCoreAccountChannelKey]` 攜帶涉及帳戶） |
 
 完整錯誤碼表請參考 `WhaleCoreErrorCode` 的懸停文檔。
 
@@ -973,7 +1085,7 @@ if (!orderSvc) { NSLog(@"%@", svcError); return; }
 ```
 
 <Note>
-  Swift `async throws` 方法在 ObjC 端自動轉為 `completionHandler` 形式。
+  Swift `async throws` 方法在 ObjC 端自動轉為 `completionHandler` 形式，`completionHandler` 統一在主執行緒回調，可直接更新 UI。
 </Note>
 
 ## 版本與維護 {/* version-and-maintenance */}

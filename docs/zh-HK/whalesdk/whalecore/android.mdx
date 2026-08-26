@@ -96,14 +96,21 @@ withContext(Dispatchers.IO) {
 
 ## 生命週期與銷毀 {/* lifecycle */}
 
-在宿主的前後台切換時轉發生命週期事件：
+`WhaleCore.resume()` / `WhaleCore.pause()` 的口徑是**整個應用程式**的前後台切換，一次切換各呼叫一次。建議在 Application 中用 `ProcessLifecycleOwner` 統一轉發：
 
 ```kotlin
-override fun onResume() { super.onResume(); WhaleCore.resume() }
-override fun onPause()  { super.onPause();  WhaleCore.pause()  }
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) = WhaleCore.resume()
+            override fun onStop(owner: LifecycleOwner) = WhaleCore.pause()
+        })
+    }
+}
 ```
 
-未初始化時兩者均為空操作，可安全呼叫。
+不要掛在單個 Activity 的 `onResume` / `onPause` 上——頁面之間跳轉也會觸發，會把「進後台」誤報給 SDK。未初始化時兩者均為空操作，可安全呼叫。
 
 登出、銷毀或切換帳號：
 
@@ -115,7 +122,7 @@ withContext(Dispatchers.IO) { WhaleCore.logoutAndDestroy() }
 
 ## 登入狀態維護 {/* token-refresh */}
 
-SDK 會用 `refreshToken` 自動續期存取權杖，接入方無需干預日常刷新。為讓登入狀態持續可用，透過 `config.tokenRefreshCallback` 註冊一個 `TokenRefreshCallback`（兩個方法均在主執行緒回呼）：
+SDK 會用 `refreshToken` 自動續期存取權杖，接入方無需干預日常刷新。為讓登入狀態持續可用，透過 `config.tokenRefreshCallback` 註冊一個 `TokenRefreshCallback`（所有方法均在主執行緒回呼、均有預設實作）：
 
 ```kotlin
 val appTokenRefreshCallback = object : TokenRefreshCallback {
@@ -125,7 +132,7 @@ val appTokenRefreshCallback = object : TokenRefreshCallback {
         credentialStore.update(token, refreshToken)
     }
 
-    override fun onTokenExpired(callback: NewTokenCallback) {
+    override fun resolveExpiredToken(callback: NewTokenCallback) {
         appScope.launch {
             val fresh = runCatching { authApi.silentLogin() }.getOrNull()
             // 回填非空憑證會讓 SDK 自動重試之前失敗的請求；
@@ -133,11 +140,17 @@ val appTokenRefreshCallback = object : TokenRefreshCallback {
             callback.onResult(fresh?.token.orEmpty(), fresh?.refreshToken.orEmpty())
         }
     }
+
+    override fun onTokenRefreshFailed(exception: WhaleCoreException) {
+        // 兜底重取也失敗的終局通知：引導用戶重新登入
+        sessionRouter.gotoLogin()
+    }
 }
 ```
 
 - **續期成功**（`onTokenRefreshed`）：SDK 通知接入方 token / refreshToken 已變更。
-- **登入狀態失效**（`onTokenExpired`）：SDK 給接入方一次重新取得 token 的機會，此期間相關請求會暫停等待回填結果；多個請求同時失效時只觸發一次，結果由這些請求共用。
+- **登入狀態失效**（`resolveExpiredToken`）：SDK 給接入方一次重新取得 token 的機會，此期間相關請求會暫停等待回填結果；多個請求同時失效時只觸發一次，結果由這些請求共用。
+- **終局失敗**（`onTokenRefreshFailed`）：重取也未能提供有效權杖時收到通知，通常在此引導用戶重新登入。
 - 必須在逾時（`tokenResolverTimeout`，預設 30 秒）內呼叫 `callback.onResult(...)`，逾時未回填等同失敗。
 - 該回呼會被長期持有，建議傳應用程式層級單例，避免 Activity/Fragment 洩漏。
 
@@ -188,7 +201,7 @@ WhaleCore.getQuoteService().getStockAsync("ST/US/AAPL", object : AsyncCallback<S
 
 | 方法 | 服務 | 主要能力 |
 | --- | --- | --- |
-| `getQuoteService()` | `QuoteService` | 行情訂閱、期權鏈/期權詳情訂閱、K 線、快照、分時數據、歷史逐筆成交 |
+| `getQuoteService()` | `QuoteService` | 行情訂閱、期權鏈/期權詳情訂閱、K 線、快照、分時數據、歷史逐筆成交、行情等級與裝置佔用（多裝置搶佔與搶回） |
 | `getOrderService()` | `OrderService` | 下單、改單、撤單、附加單、持倉止盈止損、訂單預覽、預估資訊、下單前置校驗、訂單事件 |
 | `getPortfoliosService()` | `PortfolioService` | 資產訂閱、現金明細、會員資產設定、盈虧分析 |
 | `getWatchlistService()` | `WatchlistService` | 自選分組、股票、排序、置頂、事件 |
@@ -262,7 +275,30 @@ chainSub.updateCounterIds(newVisibleCounterIds)   // 整組取代，非增量；
 chainSub.cancel()
 ```
 
-期權沒有獨立的盤口訂閱通道：`start()` 拉取的快照自帶一檔盤口，但後續推送仍需明確鏈式呼叫 `.depth()`，不選則只有首幀帶盤口。Greeks 不隨行情推送下發——宿主自訂正股取正股價，餵給 [`OptionCalculator`](#option-calculator) 本機計算。
+期權沒有獨立的盤口訂閱通道：`start()` 拉取的快照自帶一檔盤口，但後續推送仍需明確鏈式呼叫 `.depth()`，不選則只有首幀帶盤口。Greeks 不在行情推送中——宿主自訂正股取正股價，傳給 [`OptionCalculator`](#option-calculator) 本機計算。
+
+### 行情等級與裝置佔用 {/* quote-level-and-eviction */}
+
+同一帳戶在多台裝置使用進階行情會互相搶佔，被佔用的市場降級為較低等級行情。
+
+```kotlin
+// 同步查詢目前狀態：首次行情權限確認完成前傳回 null
+val level = quotes.getQuoteLevelInfo()
+if (level?.isMarketEvicted("US") == true) {
+    // 被佔用而伺服端未傳回文案時，evictedDescribe 為 null 或空字串
+    level.evictedDescribe?.takeIf { it.isNotEmpty() }?.let { showBanner(it) }
+}
+
+// 觀察刷新：訂閱即收到目前快照，之後每拿到一次新的行情權限結果各回呼一次（被搶佔、搶回、切換語言）
+lifecycleScope.launch {
+    quotes.observeQuoteLevel().collect { info -> renderBanner(info) }
+}
+
+// 「重啟行情」：把使用權搶回本裝置。傳回時狀態尚未刷新，以隨後的回呼為準收起提示
+quotes.reclaimQuoteAccess()
+```
+
+各子市場的等級明細在 `QuoteLevelInfo.subMarketQuote`：等級標識原文、價格等級（`priceLevel`，配便利屬性 `isDelayed`）、分類型的盤口檔位（`depthLevel`，按 `depthType` 分條；粗略判斷可用 `maxDepthLevel`），以及逐筆、經紀、夜盤、盤前後開關。搶回後已訂閱標的的最新行情會自動刷新、推送恢復，但被佔用期間的逐筆成交記錄不補回——需要完整序列的頁面在收到未被佔用的新快照後用 `getTrades` 重新拉取。提示條展示與「今日不再提示」等策略由宿主自行決定。
 
 **方法一覽：**
 
@@ -278,6 +314,9 @@ chainSub.cancel()
 | `subscribeOptionChain(counterIds, callback)` | 建立期權鏈批量訂閱（整組取代，推送類型固定不可選） |
 | `observeQuoteEvents(counterIds)` | 觀察行情事件流（不建立底層訂閱，需配合某個訂閱入口使用） |
 | `observeKlineUpdates(counterIds)` | 觀察 K 線更新事件流 |
+| `getQuoteLevelInfo()` | 讀取行情等級與裝置佔用狀態快照；首次行情權限確認前傳回 `null` |
+| `observeQuoteLevel()` | 觀察行情等級與裝置佔用狀態（訂閱即收到目前快照） |
+| `reclaimQuoteAccess()` | 把行情使用權搶回本裝置（「重啟行情」）；傳回後等級刷新以觀察回呼為準 |
 
 訂閱建構器（`subscribe` / `subscribeOptionDetail` 傳回）的鏈式類型選擇方法：`list()` / `detail()` / `depth()` / `trade()` / `preTrade()` / `postTrade()`；`subscribe` 額外提供 `broker()` / `nightTrade()` / `totalView()` / `totalViewBrief()`（期權數據鏈路不支援這四種）。兩個訂閱建構器都支援不選任何類型直接呼叫 `start()`，此時只拉一次快照、不建立任何推送訂閱，可當一次性 snapshot 用。`start()` 傳回的 `QuoteSubscription` 只有一個 `cancel()`；`OptionChainSubscription` 另有 `updateCounterIds(counterIds)` 與 `isCancelled` 屬性。
 
@@ -297,6 +336,10 @@ chainSub.cancel()
 
 期權鏈訂閱的整組取代機制：`updateCounterIds` 內部為整組取代語義——移出集合的合約不即時退訂，底層訂閱保留、靠回呼分派層按目前生效集合過濾遮蔽，隨 `cancel()` 整組釋放；內部約 300 毫秒防抖，但首次非空集合立即生效（首屏不等待）；新舊集合相同則不產生請求。推送類型固定包含 detail、逐筆、盤前、盤後、夜盤，不提供鏈式選擇，這是設計如此而非遺漏。
 
+**行情等級判斷的三個口徑**：`SubMarketQuote.quoteLevel`（如 `App|USOP|Global|LV1`）是自由格式的展示字串，格式不承諾穩定，判斷是否延遲行情用 `isDelayed`（它取自 `priceLevel.priceLevel`，該碼值的完整取值表見其 KDoc——其中 `3` 表示即時但不推送、需主動查詢），不要解析該字串；盤口權限分普通盤口與美股深度盤口兩類，各有獨立檔位數，渲染「N 檔盤口」要按 `DepthLevel.depthType`（`1` 普通盤口 / `2` 美股深度盤口）過濾 `depthLevel` 清單取對應那條（同一類型可能由多個行情來源分條給出，取其中最大檔位）；`maxDepthLevel` 跨類型取最大，只適合「有沒有盤口」這類粗略判斷；被佔用市場明細裡同一市場可能重複出現（伺服端按被佔用的權限項逐條列出），需要展示清單時請自行去重；被佔用市場明細裡的 `EvictedLevelDetail.market` 可能為空字串（伺服端部分條目不帶市場維度），按市場維度判斷用 `isMarketEvicted(market)`（已跳過這類條目），按子市場用 `isSubMarketEvicted(subMarket)`；提示文案 `evictedDescribe` 在被佔用而伺服端未傳回文案時為 `null` 或空字串，展示前兩者都要判。
+
+**被佔用降級期間的數據可用性**：該市場的逐筆成交不可用——即時推送停發，`getTrades` 歷史查詢同樣受權限限制傳回空清單。夜盤、盤前盤後是否可用不是降級的固定結果，以快照中目前等級的 `hasOvernight` / `hasPrePost` 等開關逐項判斷。
+
 </Accordion>
 
 ## 期權計算器 {/* option-calculator */}
@@ -307,10 +350,11 @@ chainSub.cancel()
 val optionData = stock.extraData as ExtraData.OptionData
 val underlyingPrice = underlyingStock.trading.lastDone ?: return
 
-// 不要直接用 optionData.dayToExpire（交易日口徑），
-// 必須用 daysToExpire() 按到期日重算自然日
-val days = OptionCalculator.daysToExpire(optionData.expireDate, TimeZone.getTimeZone("America/New_York"))
-    ?: return  // 到期日格式非法或已過期
+// 不要直接用 optionData.dayToExpire（交易日口徑）。
+// 計算入參用 fractionalDaysToExpire()（小數天，與官方用戶端期權計算器同口徑）；
+// 「剩 N 天」類展示另用 daysToExpire()（整數自然日）
+val days = OptionCalculator.fractionalDaysToExpire(optionData.expireDate, TimeZone.getTimeZone("America/New_York"))
+    ?: return  // 到期日格式非法
 
 val input = OptionPricingInput(
     underlyingPrice = underlyingPrice,
@@ -326,7 +370,7 @@ val greeks = OptionCalculator.greeks(input)  // 非法輸入傳回 null，UI 顯
 ```
 
 <Warning>
-  非法輸入統一傳回 `null`（UI 按 "--" 展示）：隱含波動率 ≤ 0、天數 < 0、正股價或行使價 ≤ 0、利率不可用。`daysToExpire(expireDate, timeZone)` 到期當天為 `0`（合法），已過期為負數——但負數不能再傳入 `greeks` / `profitProbability`，會被判定為非法輸入傳回 `null`。`interestRate` 是年化小數（如 `0.045` 表示 4.5%），不是百分數，單位傳錯會讓 Greeks 整體偏差 100 倍。
+  非法輸入統一傳回 `null`（UI 按 "--" 展示）：隱含波動率 ≤ 0、天數 < 0、正股價或行使價 ≤ 0、利率不可用。天數換算 API 已過期均傳回負數（`daysToExpire` 到期當天為 `0`，合法）——負數不能再傳入 `greeks` / `profitProbability`，會被判定為非法輸入傳回 `null`。`interestRate` 是年化小數（如 `0.045` 表示 4.5%），不是百分數，單位傳錯會讓 Greeks 整體偏差 100 倍。
 </Warning>
 
 **方法一覽：**
@@ -334,9 +378,10 @@ val greeks = OptionCalculator.greeks(input)  // 非法輸入傳回 null，UI 顯
 | 方法 | 說明 |
 | --- | --- |
 | `greeks(input)` | 計算 Black-Scholes Greeks（delta/gamma/vega/theta/rho）與理論價 |
-| `intrinsicValue(underlyingPrice, strikePrice, isCall)` | 計算內在價值（立即行使可得的錢），恒 ≥ 0 |
+| `intrinsicValue(underlyingPrice, strikePrice, isCall)` | 計算內在價值（立即行使可得的錢），始終 ≥ 0 |
 | `timeValue(optionPrice, intrinsicValue)` | 計算時間價值 = 權利金 − 內在價值，深度實值臨期合約可為負、不截斷 |
-| `daysToExpire(expireDate, timeZone)` | 由到期日（`yyyyMMdd`）換算距到期自然日 |
+| `daysToExpire(expireDate, timeZone)` | 由到期日（`yyyyMMdd`）換算距到期整數自然日，供「剩 N 天」類展示 |
+| `fractionalDaysToExpire(expireDate,`<br />`timeZone,`<br />`holidays = emptyList(),`<br />`dayOffset = 0)` | 由到期日換算距到期小數天（到期 20:00、按小時折算），Greeks / 盈利概率的計算入參用它才與官方用戶端期權計算器對齊 |
 | `profitProbability(underlyingPrice,`<br />`breakevenPoint,`<br />`impliedVolatility,`<br />`daysToExpire,`<br />`isCall,`<br />`dividendToExpire = null,`<br />`interestRate = null)` | 計算到期盈利機率（以盈虧平衡點而非行使價為界，Black-Scholes 風險中性口徑） |
 
 ## 訂單與校驗 {/* orders-and-validation */}
@@ -379,15 +424,38 @@ if (request != null) {
 
 ### 交易卡券 {/* trade-cards */}
 
-下單可選用免佣卡、股票現金卡或平台費卡為對應費用打折，經 `OrderIntent.cards`（`TradeCards`）傳入，校驗、預覽、下單共用同一份；卡券清單需宿主自行取得（SDK 未封裝查詢端點）。不指定時，下單由伺服端按帳戶預設卡處理，預覽按 `OrderChannelInfo` 傳回的預設卡計算。
+下單可選用免佣卡、股票現金卡或平台費卡為對應費用打折，經 `OrderIntent.cards`（`TradeCards`）傳入，校驗、預覽、下單共用同一份；卡券清單需宿主自行取得（SDK 未封裝查詢端點）。未選券時提交請求的 `card_ids` 為空陣列、伺服端不核銷任何券，預覽同樣按無券算——要用上一張券，必須由宿主把它明確填進對應槽位。
 
 ```kotlin
 intent.cards = TradeCards(
-    commissionCard = TradeCard(cardId = "1001"),   // 免佣卡：抵佣金
+    // 額度必傳：預覽按它算折後費用，缺它則預覽與實際扣費不一致
+    commissionCard = TradeCard(cardId = "1001", availableAmount = BigDecimal("50"), rebateRate = BigDecimal("0.8")),
 )
 ```
 
-股票現金卡僅買入方向可用，賣出方向選用會被校驗規則 `CASH_CARD_NOT_APPLICABLE_ON_SELL`（`1114`）攔截；三種卡各自的帳戶預設卡 ID 見 `OrderChannelInfo` 的 `commCardId` / `deductionsCardId` / `platformDeductionsCardId`。
+三個槽位也可按類別讀寫，便於三個選券入口共用一段介面邏輯：
+
+```kotlin
+val cards = intent.cards ?: TradeCards().also { intent.cards = it }
+cards.setCard(TradeCardCategory.CASH, TradeCard(cardId = "2002", availableAmount = BigDecimal("100")))
+cards.card(TradeCardCategory.CASH)      // 回讀該類別
+cards.isEmpty                           // 三個槽位是否均未選券
+```
+
+**伺服端設定的預設券**隨約束快照一併傳回，適合在選券介面標註預設選中狀態。SDK 不會自動回填——用不用由接入方決定：
+
+```kotlin
+val constraints = orderService.getOrderConstraints(counterId)
+// 槽位為 null = 伺服端未給該標的配這類券，應停用該類別的選券入口
+constraints.suggestedCard(TradeCardCategory.COMMISSION)?.let { suggested ->
+    suggested.cardType                                  // 查詢該類別卡券清單時的卡種入參取值
+    cards.setCard(TradeCardCategory.COMMISSION, suggested.toTradeCard())  // 額度缺失時為 null，不預填
+}
+```
+
+<Note>
+  股票現金卡僅買入方向可用，賣出方向選用會被校驗規則 `CASH_CARD_NOT_APPLICABLE_ON_SELL`（`1115`）攔截。`TradeCard.cardId` 為空字串等同於未選：不進提交請求、不參與預覽折扣、也不觸發該校驗——預覽減掉的券與提交的券始終是同一組。`rebateRate` 只對免佣卡槽位生效。
+</Note>
 
 ### 查單、撤單與改單 {/* manage-orders */}
 
@@ -455,7 +523,7 @@ if (unresolved != null && unresolved.acceptableViaApi) {
 }
 ```
 
-`acceptableViaApi == true` 的項目（聲明類如美股夜盤、期權夜盤、碎股、美股沽空、低價股，以及期權協議、上市衍生品 ETF 評估）可經 `acceptAgreement(type)` 一鍵同意，或（僅認知評估項目）經 `submitListedDerivAssessment(experience)` 作答，選 `DerivExperience.NONE` 記為不通過、繼續攔截。`acceptableViaApi == false` 的項目（評估/認證類如 PI、VA、W-8BEN、港股融券）須在券商方辦理，SDK 不暴露辦理連結，對這類項目呼叫 `acceptAgreement` 會拋出 `IllegalArgumentException`（程式錯誤，不佔用 `WhaleCoreException` 通道）。兩個方法成功後都會自動失效內部資格快取，宿主重走校驗即可。
+`acceptableViaApi == true` 的項目（聲明與權限類如美股夜盤、期權夜盤、碎股、美股沽空、低價股、OTC 場外交易、渦輪牛熊、CAR-CKA、虛擬資產 ETF 測評與附加風險披露，以及期權協議、上市衍生品 ETF 評估）可經 `acceptAgreement(type)` 一鍵同意，或（僅認知評估項目）經 `submitListedDerivAssessment(experience)` 作答，選 `DerivExperience.NONE` 記為不通過、繼續攔截。虛擬資產 ETF 的測評與附加風險披露共用同一次簽署：同意任一項，伺服端同時置位兩項，因此呼叫前須把兩項內容都展示給用戶並取得確認。`acceptableViaApi == false` 的項目（評估/認證類如 PI、VA、W-8BEN、港股融券）須在券商方辦理，SDK 不暴露辦理連結，對這類項目呼叫 `acceptAgreement` 會拋出 `IllegalArgumentException`（程式錯誤，不佔用 `WhaleCoreException` 通道）。兩個方法成功後都會自動失效內部資格快取，宿主重走校驗即可。
 
 <Note>
   歷史獨立入口 `WhaleCore.getOrderValidationService()` 已棄用，新程式碼請直接呼叫 `WhaleCore.getOrderService()` 上的同名方法。
@@ -468,14 +536,14 @@ if (unresolved != null && unresolved.acceptableViaApi) {
 | 階段 | 編號段 | 作用域 | 涵蓋內容 |
 | --- | --- | --- | --- |
 | 進交易頁前 | `1001`–`1005` | ENTRY | 標的為空、帳戶未開戶/暫停、指數板塊不可交易、伺服端可交易性判定 |
-| 頁面按鈕狀態 | `1101`–`1114` | DRAFT+SUBMISSION | 渠道/買賣限制、價格/數量/觸發價/跟蹤值/監控價必填、訂單類型支援性、按金額下單適用性與金額過低、股票現金卡與賣出方向不相容 |
+| 頁面按鈕狀態 | `1101`–`1115` | DRAFT+SUBMISSION | 渠道/買賣限制、價格/數量/觸發價/跟蹤值/監控價必填、訂單類型支援性、按金額下單適用性與金額過低、股票現金卡與賣出方向不相容 |
 | 協議 | `1201` | SUBMISSION | 期權風險協議未同意 |
 | 時段與有效期 | `1401`–`1403` | DRAFT+SUBMISSION | 訂單類型時段支援性、有效期支援性、GTD 到期時間必填 |
-| 權限資格與聲明 | `1501`–`1507` | 僅 SUBMISSION | ETF 認知評估、沽空/融券資格、W-8BEN、美股/期權夜盤聲明、碎股聲明與時段 |
+| 權限資格與聲明 | `1501`–`1512` | 僅 SUBMISSION | ETF 認知評估、沽空/融券資格、W-8BEN、美股/期權夜盤聲明、碎股聲明與時段、OTC 場外交易權限、權證交易權限、CAR/CKA 認證、虛擬資產 ETF 交易測評與附加風險披露 |
 | 附加單 | `1601`–`1608` | DRAFT+SUBMISSION | 止盈/止損觸發價與委託價必填、GTD 到期時間、訂單類型是否支援附加單 |
 | 持倉止盈止損 | `1701`–`1709` | DRAFT+SUBMISSION | 見[持倉止盈止損](#tpsl) |
 
-三條放行約定：伺服端未下發對應授權項目等同不適用；資格項目辦理連結為空等同伺服端未下發該要求；帳戶/行情/持倉等數據缺失時無法判定，一律放行，交伺服端兜底。
+三條放行約定：伺服端未傳回對應授權項目等同不適用；`granted_info` 項目的辦理連結為空等同伺服端未傳回該要求；帳戶/行情/持倉等數據缺失時無法判定，一律放行，交伺服端兜底。其中第二條只適用於 `granted_info` 項目——`1508`–`1510` 是帳戶層級門禁，未開通時任何標的的提交都會被攔。
 
 與 iOS 的一處明確差異：括號單價格方向規則（`1606`/`1607`，附加單觸發價相對現價高低關係的攔截）Android 尚未實作，目前完全由伺服端拒單兜底，編號已預留但未啟用，不要假設這條校驗存在。
 
@@ -501,7 +569,7 @@ preview.riskHint           // 風險提示，如 FINANCING_NEEDED（將使用融
 
 <Accordion title="預覽欄位完整口徑">
 
-`OrderPreviewResult` 裡 **`null` 恆表示「結構性不適用」**，不是取數失敗：
+`OrderPreviewResult` 裡 **`null` 始終表示「結構性不適用」**，不是取數失敗：
 
 - `financing`（融資利率與日利息）、`occupy`（佔用購買力/融資額度）——僅買入開多 + 非現金帳戶產出。
 - `optionFreeze`（期權賣出凍結）——僅賣出 + 非保證金合約模式 + 方向已知；認購凍正股、認沽凍現金。
@@ -510,7 +578,7 @@ preview.riskHint           // 風險提示，如 FINANCING_NEEDED（將使用融
 - 參考價規則：限價類用委託價、MIT 用觸發價、市價單用 `context.marketReferencePrice`（不傳則金額類結果為 `null`）。
 - 期權標的必須傳 `context.optionDirection`，否則拋出 `WhaleCoreException.InvalidParameter`（SDK 不取得行情，無從推斷方向）。
 - 匯率僅用於佔用計算裡的跨幣種換算，SDK 內部維護，不對外暴露獨立取數 API（與資產模組一致，見[資產](#portfolio)）。
-- 費用折扣額度（`commRemain` / `platformDeductionsRemain` / `deductionsRemain`）取帳戶預設卡或[交易卡券](#trade-cards)選中卡的額度；卡幣種與結算幣不同時按對應的 `commCurrency` / `platformDeductionsCurrency` / `deductionsCurrency` 換算後再參與計算——手動走 `OrderPreviewCalculator.compute(fields)` 時需要自行填好這三個幣種欄位，`previewOrder(intent, context)` 路徑由 SDK 自動處理。
+- 費用折扣額度（`commRemain` / `platformDeductionsRemain` / `deductionsRemain`）取[交易卡券](#trade-cards)選中卡的額度，未選券即留空、對應費用不打折；卡幣種與結算幣不同時按對應的 `commCurrency` / `platformDeductionsCurrency` / `deductionsCurrency` 換算後再參與計算——手動走 `OrderPreviewCalculator.compute(fields)` 時需要自行填好這三個幣種欄位，`previewOrder(intent, context)` 路徑由 SDK 自動處理。
 
 與 iOS 的一處明確差異：`fees.third`（第三方費用）為 `0` 時保留 `0`、不置 `null`（`null` 僅表示無費用數據）——iOS 側 `0` 會轉成 `nil`，對齊文案時注意區分。
 
@@ -572,7 +640,7 @@ if (tpslResult.passed) {
 
 `OrderType.TS`（跟蹤止損市價）完全不支援——只保留列舉常數，無下單/改單工廠，下單前置校驗按 `ORDER_TYPE_NOT_SUPPORTED`（`1109`）攔截。
 
-`ReplaceOrderRequest` 同理，伴生物件工廠：`regular`（正股普通單）、`option`（期權主單，價量恆帶必填）、`limitIfTouched` / `marketIfTouched` / `trailingStopLimit`（條件單，接收 `triggerStatus` + `isOption`，僅已觸發落普通/期權主單路由，其餘走條件單介面）。
+`ReplaceOrderRequest` 同理，伴生物件工廠：`regular`（正股普通單）、`option`（期權主單，價量一律帶必填）、`limitIfTouched` / `marketIfTouched` / `trailingStopLimit`（條件單，接收 `triggerStatus` + `isOption`，僅已觸發落普通/期權主單路由，其餘走條件單介面）。
 
 附加單（`AttachedParams`）工廠：`takeProfit` / `stopLoss` / `bracket` / `cancelAll`（僅用於改單場景撤銷全部附加單）。啟用方式 `AttachedActivation.marketIfTouched(rth)` / `limitIfTouched(profitTakerSubmitPrice?, stopLossSubmitPrice?, rth)`。價格合法性約束：買入主單 `takeProfitPrice > 現價 > stopLossPrice`，賣出主單相反；`forceOnlyRth = OVERNIGHT` 時不可攜帶附加單。
 
@@ -600,7 +668,7 @@ service.replaceAttachedOrder(
 )
 ```
 
-期權（單腿）下單/改單複用同一批工廠，無期權專屬入參——`counterId` 為期權合約時 SDK 自動路由到期權專用端點；期權渠道不下發附加單白名單，勾選止盈/止損會被 `1608` 攔截。
+期權（單腿）下單/改單複用同一批工廠，無期權專屬入參——`counterId` 為期權合約時 SDK 自動路由到期權專用端點；期權渠道不傳回附加單白名單，勾選止盈/止損會被 `1608` 攔截。
 
 直接走工廠方法建構 `SubmitOrderRequest` 時，卡券經 `OrderCommon.cardIds` 傳入（下單只用卡 ID，額度與折扣率僅 `OrderIntent.cards` 路徑下的校驗與預覽需要）；三張卡的順序固定為「免佣卡、現金卡、平台費卡」。
 
@@ -653,7 +721,7 @@ portfolios.refresh()   // 進入頁面時主動重新整理一次
 現金明細與持倉行情聯動開關：`enableCashDetail(enabled)` / `isEnableCashDetail()`、`enableQuotes(enabled)` / `isEnableQuotes()`。
 
 <Note>
-  Android 側目前**沒有**獨立的匯率換算能力（與 iOS 不同）；`Portfolio` 模型裡的已折算欄位（如 `marketValueExchanged`）是伺服端下發的展示欄位，不是 SDK 提供的換算工具。
+  Android 側目前**沒有**獨立的匯率換算能力（與 iOS 不同）；`Portfolio` 模型裡的已折算欄位（如 `marketValueExchanged`）是伺服端傳回的展示欄位，不是 SDK 提供的換算工具。
 </Note>
 
 ### 會員資產設定 {/* portfolio-member-setting */}
@@ -677,7 +745,7 @@ portfolios.updatePortfolioMemberSetting(
 | `getProfitOverview(currency, period)` | 總盈虧概覽大字區 + 分資產類型盈虧總結 + 累計成交金額/交易股票數 |
 | `getProfitTrend(currency,`<br />`period,`<br />`indexCounterId)` | 盈虧趨勢圖：累計收益率/總資產曲線 + 可選指數對比 + 跑贏指數 |
 | `getPLCalendar(currency, period, markets)` | 盈虧日曆：日 / 月 / 年三檔格子 + 交易日/假日標記 |
-| `getProfitRanking(currency, period)` | 盈虧排行：盈利榜與虧損榜一次給齊 |
+| `getProfitRanking(currency, period)` | 盈虧排行：盈利榜與虧損榜一次給齊（每榜最多 10000 條） |
 | `getAssetFlow(period)` | 「我的資產」分幣種資金流 |
 | `getStockPLMeta(counterId)` | 個股盈虧頁初始化：時間篩選器邊界 |
 | `getStockCumulativePL(counterId, period)` | 個股累計盈虧 + 正股/衍生品構成（一次給齊，切 Tab 不重拉） |
@@ -702,7 +770,7 @@ renderTrendChart(trend.selfSeries, trend.indexSeries)  // 兩序列等長逐位�
 
 <Accordion title="盈虧分析欄位口徑與列舉取值">
 
-**欄位口徑**：金額、比率、計數、時間戳一律為原始字串，SDK 不做數值轉換；比率為小數，展示時 ×100；時間戳為秒級字串，日期字串固定 `"yyyy-MM-dd"`。非業務可空欄位給預設值（無數據時字串為空字串、計數為 `0`、布林為 `false`），仍為可空的只有兩類：整塊可能缺失的巢狀物件（如 `ProfitOverview.profits`、`StockCumulativePL.underlyingDetails`）；SDK 計算得出、輸入不足時無結果的欄位（`ipoHitRate()`、`ProfitTrend.outperformedSimple`）。模型恆傳回全量數據，展示哪些內容由接入方決定。
+**欄位口徑**：金額、比率、計數、時間戳一律為原始字串，SDK 不做數值轉換；比率為小數，展示時 ×100；時間戳為秒級字串，日期字串固定 `"yyyy-MM-dd"`。非業務可空欄位給預設值（無數據時字串為空字串、計數為 `0`、布林為 `false`），仍為可空的只有兩類：整塊可能缺失的巢狀物件（如 `ProfitOverview.profits`、`StockCumulativePL.underlyingDetails`）；SDK 計算得出、輸入不足時無結果的欄位（`ipoHitRate()`、`ProfitTrend.outperformedSimple`）。模型始終傳回全量數據，展示哪些內容由接入方決定。
 
 **`PLPeriod` 的兩種建構方式**：`PLPeriod.allTime`（全部時間，自動取數據邊界起點）與 `PLPeriod.range(start, end)`（秒級時間戳指定區間），可選範圍見 `getProfitLossAnalysisMeta()` / `getStockPLMeta()` / `getMarketStocksPLMeta()` 傳回的日期邊界。
 
@@ -710,9 +778,13 @@ renderTrendChart(trend.selfSeries, trend.indexSeries)  // 兩序列等長逐位�
 
 **開放式列舉/取值參考**（均為字串常數物件，取值集合開放，未列出的取值應原樣透傳並保留預設分支）：`PortfolioCostType`（`AVG`/`DILUTED`）、`PLSortOrder`（`DESCENDING`/`ASCENDING`）、`MarketDayStatus`（`WORKINGDAY`/`HOLIDAY`/`WEEKEND`）、`PLSecurityType`（`STOCK`/`FUND`/`VA`/`MMF`）、`PLInvestType`（`CASH`/`STOCK`/`OTHER`）、`PLFlowDirection`（`NONE = "-1"` 無方向流水佔位 / `SELL = "0"` / `BUY = "1"`）。
 
+**排行條數上限**：`getProfitRanking` 的盈利榜與虧損榜各最多傳回 10000 條，兩榜合計最多 20000 條；超出部分伺服端不傳回，需要更長的榜單要縮小統計區間。
+
 **降級與失敗語義**（主體數據失敗即拋出，裝飾性附屬數據失敗降級為空）：`getProfitTrend` 指數對比失敗時 `indexSeries` 為空、自身曲線不受影響；`getPLCalendar` 休市標記取得失敗時 `marks` 為空清單；`getProfitRanking` 單一榜單解析失敗時該榜按空清單處理，不影響另一榜。
 
 **趨勢圖粒度切換**：`ProfitTrend.granularity` 區間超過約 1 年自動切換為月粒度，日粒度 `dateKey` 為 `"yyyy-MM-dd"`，月粒度為 `"yyyy-M"`。
+
+**趨勢點的累計與當期收益率**：`ProfitTrendPoint` 同時給出累計（`accumulateSimpleEarningYield` / `accumulateTimeEarningYield`）與當期（`simpleEarningYield` / `timeEarningYield`，日粒度為當日、月粒度為當月）兩組收益率。累計值在月粒度缺失時回退當月最後一個日點、再缺失取 `"0"`；**當期值不做回退**（當月收益率不等於當月最後一日的日收益率），伺服端未傳回即為空字串。指數對比點 `IndexComparePoint` 對稱給出 `cumulativeReturn` 與 `currentReturn`（相對上一個曲線點，首點相對區間起點前最後一個交易日收市）。
 
 **分市場約定**：`market` 傳空字串即「全部市場」；個股盈虧三個介面不需要 `market`/`currency` 參數。
 
@@ -878,11 +950,11 @@ Java 呼叫方可使用 `sendAsync(request, callback)`，無需呼叫 suspend �
 
 | 模型分類 | 主要類型 |
 | --- | --- |
-| 行情 | `Stock` / `StockTemplate` / `TradeStatus` / `KlineUpdate` / `Kline` / `TimeShares` |
+| 行情 | `Stock` / `StockTemplate` / `TradeStatus` / `KlineUpdate` / `Kline` / `TimeShares` / `QuoteLevelInfo` / `SubMarketQuote` / `PriceLevel` / `DepthLevel` / `EvictedLevelDetail` |
 | 期權計算 | `OptionPricingInput` / `OptionGreeks` |
-| 訂單 | `Order` / `OrderIntent` / `SubmitOrderRequest` / `SubmitOrderResult` / `ReplaceOrderRequest` / `OrderConstraints` / `OrderInfo` / `OrderValidationResult` / `TradeCapacity` / `TradeCapacityRequest` / `QualificationStatus` / `TPSLOrderIntent` / `SubmitTPSLOrderRequest` / `TPSLValidationResult` / `HistoryOrders` / `TradeCard` / `TradeCards` |
+| 訂單 | `Order` / `OrderIntent` / `SubmitOrderRequest` / `SubmitOrderResult` / `ReplaceOrderRequest` / `OrderConstraints` / `OrderInfo` / `OrderValidationResult` / `TradeCapacity` / `TradeCapacityRequest` / `QualificationStatus` / `TPSLOrderIntent` / `SubmitTPSLOrderRequest` / `TPSLValidationResult` / `HistoryOrdersRequest` / `HistoryOrdersResult` / `TradeCard` / `TradeCards` / `TradeCardCategory` / `SuggestedTradeCard` |
 | 資產 | `Portfolio` / `AccountInfo` / `PortfolioMemberSettingInfo` / `PortfolioCostType` |
-| 盈虧分析 | `PLAnalysisMeta` / `ProfitOverview` / `ProfitTrend` / `PLCalendar` / `ProfitRanking` / `CurrencyAssetFlow` / `StockCumulativePL` / `MarketStocksProfitLoss` / `PLPeriod` |
+| 盈虧分析 | `PLAnalysisMeta` / `ProfitOverview` / `ProfitTrend` / `PLCalendar` / `ProfitRanking` / `CurrencyAssetFlow` / `StockCumulativePL` / `MarketStocksPL` / `PLPeriod` |
 | 自選 | `WatchlistGroup` / `WatchlistStock` / `WatchlistFund` / `WatchlistSortField` / `WatchlistSortGroup` / `WatchlistEvent` |
 | 透傳請求 | `HttpRequest` / `HttpResponse` / `HttpMethod` |
 
