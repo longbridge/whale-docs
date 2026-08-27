@@ -33,6 +33,13 @@ const request = requestType ? requestContent[requestType] : undefined;
 const hasPostFallback = method === "get" && operation["x-post-fallback"] === true;
 const parameters = (operation.parameters ?? []).map((parameter: any) => parameter.$ref ? resolveSchema(document, parameter) : parameter);
 const responses = Object.entries(operation.responses ?? {}) as [string, any][];
+const permissionKeys: string[] = (operation['x-permission-key'] as string[] | undefined) ?? [];
+const isLbOnly: boolean = operation['x-lbonly'] === true;
+const permLabels = locale === "en"
+  ? { title: "Permissions", none: "No specific permissions required.", lbonly: "This API is for internal use only." }
+  : locale === "zh-CN"
+    ? { title: "权限", none: "无需特定权限。", lbonly: "此接口仅限内部使用。" }
+    : { title: "權限", none: "無需特定權限。", lbonly: "此接口僅限內部使用。" };
 const technicalLabels = {
   parameters: "Parameters",
   request: hasPostFallback ? "Query parameters" : "Request body",
@@ -176,6 +183,14 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
   <div class="api-reference-grid">
     <div class="api-reference-fields">
       <section><h2 id="authorization">Authorization</h2><div class="api-schema-fields"><div class="api-schema-field"><div class="api-schema-field-meta"><code>Authorization</code><Badge variant="secondary">string</Badge><Badge variant="outline">header</Badge><Badge variant="destructive">{labels.required}</Badge></div><p>{locale === "en" ? "Send the Broker ACCESS_TOKEN as Authorization: Bearer <token>." : "Broker 获发的 ACCESS_TOKEN，通过 Authorization: Bearer <token> 发送。"}</p></div></div></section>
+      <section>
+        <h2 id="permissions">{permLabels.title}</h2>
+        {permissionKeys.length > 0
+          ? <div class="api-permission-keys">{permissionKeys.map((permissionKey: string) => <Badge variant="secondary"><code>{permissionKey}</code></Badge>)}</div>
+          : <p>{permLabels.none}</p>
+        }
+        {isLbOnly && <p class="api-permission-lbonly">{permLabels.lbonly}</p>}
+      </section>
       {parameters.length > 0 && <section><h2 id="parameters">{labels.parameters}</h2><div class="api-fields">{parameters.map((parameter: any) => {
         const schema = resolveSchema(document, parameter.schema);
         return <div class="api-field"><div class="api-field-title"><code>{parameter.name}</code><Badge variant="secondary">{schema?.type ?? "string"}</Badge>{parameter.required && <Badge variant="destructive">{labels.required}</Badge>}</div>{parameter.description && <div class="api-field-description" set:html={renderMarkdown(parameter.description)} />}</div>;
