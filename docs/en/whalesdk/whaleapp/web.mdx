@@ -1,221 +1,446 @@
 ---
 title: Web
-description: New-tab and iframe integration, SSO, and page communication for WhaleAppSDK WebTrade
+description: Integrate WebTrade into a Broker website with the WhaleAppSDK JavaScript library for SSO, page embedding, preference sync, and page communication
 ---
 
-WebTrade is the Web form factor of WhaleAppSDK. It lets Broker connect its own sign-in system to a complete trading UI and synchronize language, theme, and price-color preferences.
+WebTrade is the Web form factor of WhaleAppSDK and provides a complete securities trading interface to a Broker website. A Broker integrates it through the WhaleAppSDK JavaScript library: the library writes the cookies SSO requires, creates the iframe used for embedding, and passes language, theme, and price-color preferences between the Broker page and WebTrade.
 
-## Integration model {/* integration-model */}
+This page is for developers who build the Broker website frontend. After reading it you can choose an integration form, complete SSO and page embedding, and handle the events and requests WebTrade sends.
 
-SSO uses cookies shared under the same registrable domain:
+<Note>
+On this page, **Broker website** refers to the Broker frontend page that hosts the WebTrade entry point or the iframe container, and **Client** refers to the Broker's end client.
+</Note>
 
-- Broker website and WebTrade use subdomains of the same root domain, such as `.example.com`.
-- After sign-in, Broker writes `token`, `refresh_token`, and `app_id` to the agreed root-domain cookies.
-- WebTrade reads those cookies and signs the Client in automatically.
-- Language, theme, and price-color preferences use separate agreed cookie keys.
+## Integration forms {/* integration-model */}
 
-Two presentation modes are supported:
+WebTrade supports two integration forms. Choose one based on your product.
 
-1. **New tab:** Broker opens WebTrade in a new browser tab. Communication is limited to shared cookies and URL parameters.
-2. **iframe:** Broker renders its own shell and embeds WebTrade. Communication uses shared cookies, URL parameters, and validated two-way `postMessage` events.
-
-## Configuration supplied to Whale {/* configuration-supplied-to-whale */}
-
-### Build-time configuration {/* build-time-configuration */}
-
-| Key | Purpose | Values / example |
+|  | New tab | iframe embedding |
 | --- | --- | --- |
-| `cookie_token_key` | Token cookie key | `broker_token` |
-| `cookie_refresh_token_key` | Refresh-token cookie key | `broker_refresh_token` |
-| `cookie_app_id_key` | App-ID cookie key | `broker_app_id` |
-| `logout_redirect_link_address` | Broker URL used after logout or when no session exists; supports `{tenant_origin}` | `https://www.example.com/login?from=webtrade` |
-| `cookie_locale_key` | Language cookie key | `en`, `zh-CN`, or `zh-HK` |
-| `cookie_theme_key` | Theme cookie key | `light` or `dark` |
-| `cookie_stock_color_preference_key` | Price-color preference cookie key | `green_up` or `red_up` |
-| `disable_language_setting` | Hide WebTrade language settings | `true` or `false` |
+| Method | `sdk.open()` | `sdk.embed()` |
+| Location | A new browser tab | A container inside the Broker page |
+| Communication | Shared cookies | Shared cookies and `postMessage` |
+| Preference changes apply immediately | No, they apply on the next open | Yes |
+| Event callbacks | Not available | `ready`, `logout` |
+| Request and response | Not available | Available |
+| Integration cost | Low | Medium |
 
-Custom cookie keys prevent collisions between Broker website cookies and WebTrade cookies.
+### Responsibility boundary {/* responsibility-boundary */}
 
-### Runtime Broker configuration {/* runtime-broker-configuration */}
-
-| Key | Purpose |
+| WebTrade and the SDK provide | The Broker website is responsible for |
 | --- | --- |
-| `hide_logout_entrance` | Hide the WebTrade logout control so Broker website owns the sign-out experience |
+| Quote, watchlist, trading, and asset interfaces | Loading the SDK and supplying the WebTrade address |
+| Cookie access, root-domain resolution, iframe creation and teardown | Signing the Client in on the Broker side and handing the Whale session credentials to the SDK |
+| Writing and passing language, theme, and price-color values | Calling the preference methods with the Broker website's current settings |
+| `postMessage` envelopes, origin validation, request matching | Implementing the business logic behind event callbacks and request handlers |
+| Token validation and renewal inside WebTrade | Writing updated Whale session credentials again |
 
-Whale recommends that Broker own logout and hide the WebTrade logout control.
+## Before you begin {/* before-integration */}
 
-## URL parameters {/* url-parameters */}
+SSO fails when any of the following conditions is unmet, and in most cases it fails without an error. Confirm each item before writing code.
 
-Both modes support these parameters:
+### A shared root domain {/* shared-root-domain */}
 
-| Parameter | Purpose | Example |
+The Broker website and WebTrade must be deployed on subdomains of the same root domain. This is what allows the shared cookies that SSO depends on.
+
+```text
+Broker website → broker.example.com
+WebTrade       → trade.example.com
+Shared root    → .example.com
+```
+
+<Warning>
+The root domain is derived from the last two labels of the domain. With a second-level suffix such as `.com.hk` or `.co.uk`, `trade.example.com.hk` resolves to `.com.hk` instead of `.example.com.hk`, the cookies cannot be shared between the two subdomains, and SSO fails silently. Confirm with the Whale project team before using such a domain.
+</Warning>
+
+Separate root domains, such as `broker-a.com` and `trade-b.com`, cannot share cookies and cannot complete SSO through this approach.
+
+### HTTPS {/* https-requirement */}
+
+WebTrade must be served over HTTPS. The cookies the SDK writes under HTTPS carry `Secure` and `SameSite=None`: the first requires HTTPS, and the second is what makes the cookies available while WebTrade is embedded as a cross-origin iframe.
+
+### Register the Broker website origin {/* register-origin */}
+
+In the iframe form, WebTrade validates the source of `postMessage` against an allowlist maintained on the Whale side. **Send the Broker website origin to the Whale project team before integrating so it can be added to that list.** Otherwise the `ready` and `logout` events and every request never arrive; cookie SSO is unaffected. The new-tab form does not use `postMessage` and needs no registration.
+
+### Project configuration agreed with Whale {/* whale-side-configuration */}
+
+Some WebTrade behavior is set per project at delivery time. Whale writes these values, and no Broker website code is involved. Confirm the following during integration.
+
+| Capability | Description |
+| --- | --- |
+| Sign-out redirect address | The Broker address WebTrade opens on sign-out or when no valid session exists, usually the Broker sign-in page. Supplied by the Broker |
+| Hide the language setting inside WebTrade | Once enabled, the language follows the value the Broker website passes in and the Client cannot change it inside WebTrade |
+| Let the Broker control price colors | Once enabled, WebTrade adopts the price-color preference the Broker writes when it loads. See [Preference sync](#preferences) |
+| Hide the WebTrade sign-out control | Once enabled, the Client can sign out only on the Broker website |
+
+The cookie names the SDK uses are fixed and managed inside the SDK. The Broker neither supplies nor agrees on them.
+
+<Tip>
+Hide the WebTrade sign-out control and let the Broker website own the session state. This avoids the Client getting different outcomes from signing out in two places.
+</Tip>
+
+## Load the SDK {/* install */}
+
+The SDK is distributed over CDN in UMD format and requires no build tooling:
+
+```html
+<script src="https://assets.lbctrl.com/sdk/webtrade/2.0.0/index.umd.js"></script>
+```
+
+The constructor is then available as `window.WhaleAppSDK`. The SDK has no third-party dependencies. Its browser support range is determined by WebTrade — ask the Whale project team for the supported versions in your target environment.
+
+<Warning>
+Pin a specific version. The CDN offers no `latest` path, so that a Broker website never receives a breaking change it did not opt into. Read the release notes for a version before upgrading to it.
+</Warning>
+
+The cookies the SDK writes use the `whale_app_` prefix. Do not use the same prefix for Broker website cookies.
+
+## Quickstart {/* quickstart */}
+
+Both examples assume the Client has signed in to the Broker website and the Broker has obtained the Whale session credentials from its Broker Server.
+
+New-tab form:
+
+```html
+<button id="trade-entry">Open trading</button>
+
+<script src="https://assets.lbctrl.com/sdk/webtrade/2.0.0/index.umd.js"></script>
+<script>
+  const sdk = new WhaleAppSDK({ baseUrl: 'https://trade.example.com' })
+
+  // Write the session credentials after the Client signs in to the Broker website
+  sdk.login({ token: 'xxx', refreshToken: 'xxx' })
+
+  document.getElementById('trade-entry').onclick = function () {
+    sdk.open({ tab: 'quote' })
+  }
+</script>
+```
+
+iframe form:
+
+```html
+<div id="webtrade" style="width: 100%; height: 80vh;"></div>
+
+<script src="https://assets.lbctrl.com/sdk/webtrade/2.0.0/index.umd.js"></script>
+<script>
+  const sdk = new WhaleAppSDK({ baseUrl: 'https://trade.example.com' })
+
+  sdk.login({ token: 'xxx', refreshToken: 'xxx' })
+
+  sdk.once('ready', function () {
+    // WebTrade has rendered; the Broker page can clear its loading state
+  })
+
+  sdk.on('logout', function () {
+    // The Client signed out inside WebTrade; run the Broker sign-out logic
+  })
+
+  sdk.embed('#webtrade', { tab: 'quote' })
+</script>
+```
+
+<Warning>
+The container element must have an explicit height. The iframe the SDK creates uses `height: 100%`, so WebTrade is invisible when the container height is 0.
+</Warning>
+
+## Initialize {/* initialize */}
+
+```typescript
+const sdk = new WhaleAppSDK({ baseUrl: 'https://trade.example.com' })
+```
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `baseUrl` | `string` | Yes | The WebTrade address. The SDK uses its origin as the `postMessage` target and as the basis for source validation |
+
+The constructor throws when `baseUrl` is not a valid URL. Initialize during application startup so configuration errors surface early.
+
+## Sign-in and sign-out {/* sign-in-and-sign-out */}
+
+WebTrade SSO relies on cookies: the Broker website writes the Whale session credentials, and WebTrade reads them and establishes the signed-in state when it loads.
+
+### Write the session credentials {/* write-session */}
+
+```typescript
+sdk.login({ token: 'xxx', refreshToken: 'xxx' })
+```
+
+| Parameter | Type | Description |
 | --- | --- | --- |
-| `tab` | Initial navigation: `quote`, `stock`, `favorite`, `portfolio`, or `stockSelect` | `tab=quote` |
-| `symbol` | Initial instrument in [`symbol` format](/en/docs/glossary#security-identifiers) | `symbol=700.HK` |
-| `tenant_origin` | Broker origin used for iframe message validation and logout redirection | `tenant_origin=https://www.example.com` |
+| `token` | `string` | The Client's Whale session token |
+| `refreshToken` | `string` | The Client's Whale refresh token |
 
-## iframe `postMessage` protocol {/* iframe-postmessage-protocol */}
+Neither parameter may be empty; the method throws otherwise. Cookie scope, lifetime, and cross-site attributes are handled inside the SDK, and the Broker does not need to manage them.
 
-This section applies only to iframe mode. WebTrade accepts messages only from the validated `tenant_origin` and sends events only to that origin.
+WebTrade sign-in requires only these two values. The Broker does not supply `app_id`; Whale manages it in the project build configuration.
 
-### Broker → WebTrade {/* broker-webtrade */}
+### Write again after credentials change {/* renew-session */}
 
-```typescript
-// Set language
-{ type: 'SET_LANG', payload: { lang: 'zh-HK' } }
-
-// Set theme
-{ type: 'SET_THEME', payload: { theme: 'dark' } }
-
-// Set price-color preference
-{ type: 'SET_STOCK_COLOR_PREFERENCE', payload: { color: 'green_up' } }
-```
-
-Allowed values:
-
-- Language: `zh-CN`, `zh-HK`, or `en`.
-- Theme: `dark` or `light`.
-- Price color: `green_up` or `red_up`.
-
-### WebTrade → Broker {/* webtrade-broker */}
+The SDK does not evaluate token expiry and never renews a token on its own; it writes only the value passed to it into a cookie. **Call `login()` again to overwrite the previous value every time the Broker side obtains new Whale session credentials, whether from renewal, a fresh sign-in, or any other reason.**
 
 ```typescript
-// WebTrade has mounted; Broker may hide its loading mask.
-{ type: 'WEBTRADE_READY' }
-
-// WebTrade has started logout; Broker must clear its own session.
-{ type: 'ON_LOGOUT' }
+function onWhaleSessionUpdated({ token, refreshToken }) {
+  sdk.login({ token, refreshToken })
+}
 ```
 
-Always check `event.origin` before handling an incoming message.
+`login()` updates only the cookie. An already loaded WebTrade does not re-read it mid-session; the new value takes effect the next time WebTrade loads — a page refresh, or a further call to `embed()` or `open()`.
 
-## `tenant_origin` validation {/* tenant-origin-validation */}
+### Clear the session credentials {/* clear-session */}
 
-`tenant_origin` has two purposes:
+```typescript
+sdk.logout()
+```
 
-1. It is the allowlisted origin for two-way iframe messages.
-2. It replaces `{tenant_origin}` in `logout_redirect_link_address`.
+The method clears the `token` and `refreshToken` cookies, keeps the language, theme, and price-color preference cookies, and sends nothing to WebTrade. For the complete flow, see [Sign-out flow](#logout-flow).
 
-The origin must:
+## Cookies written by the Broker Server {/* server-side-cookies */}
 
-- use `https`;
-- share the same root domain as WebTrade; and
-- contain no path other than `/`.
+`login()` is a convenience method for writing the session credentials into cookies. When sign-in completes on the Broker Server, the Broker Server can also write them directly with `Set-Cookie`; WebTrade reads them from JavaScript exactly the same way, and the Broker website frontend then does not call `login()` at all.
 
-WebTrade resolves the origin in this order:
+With this approach the cookies must meet every requirement below, or SSO fails silently.
 
-1. A project-specific mapping agreed and configured during delivery.
-2. The value cached in `localStorage` from a previous URL parameter.
-3. The `tenant_origin` URL parameter on first access.
+| Requirement | Description |
+| --- | --- |
+| Cookie names | The same names the SDK writes; the values are agreed during integration |
+| No `HttpOnly` | WebTrade reads the cookies from JavaScript. A Broker Server often sets `HttpOnly` on authentication cookies by default, so turn it off explicitly |
+| `SameSite=None; Secure` | WebTrade is embedded as a cross-origin iframe and the cookies must be available in that context |
+| `Domain` set to the root domain | For example `.example.com`, so both the Broker website and the WebTrade subdomain can read them |
+| `Path=/` | Matches what the SDK writes |
+| HTTPS | Required by the `Secure` attribute |
 
-For example, with `tenant_origin=https://www.example.com`, a configured redirect of `{tenant_origin}/login?from=webtrade` resolves to `https://www.example.com/login?from=webtrade`.
+<Warning>
+The session credential cookies must be readable from JavaScript. This is inherent to cookie-based SSO and holds whether the frontend or the Broker Server writes them. If Broker security policy requires every authentication cookie to be `HttpOnly`, this approach does not apply to that cookie — use the separate cookies written by `login()` on the frontend instead.
+</Warning>
+
+Refreshing the cookies from the Broker Server follows the rule in the previous section: an already loaded WebTrade must reload before it reads the new value.
+
+## Open and embed {/* open-and-embed */}
+
+### Open in a new tab {/* open */}
+
+```typescript
+sdk.open()
+sdk.open({ tab: 'stock', symbol: '700.HK' })
+```
+
+The method opens WebTrade in a new tab with `noopener,noreferrer`, building the URL from `baseUrl` and the navigation parameters. A new tab has no parent page, so event callbacks and request handling do not work in this form.
+
+### Embed in the current page {/* embed */}
+
+```typescript
+const iframe = sdk.embed('#webtrade', { tab: 'quote' })
+```
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `container` | `string \| HTMLElement` | A CSS selector or a DOM element |
+| `params` | `OpenParams` | Optional initial navigation parameters |
+
+The method returns the `HTMLIFrameElement` it created. An existing iframe is torn down first and rebuilt. The iframe uses `width: 100%`, `height: 100%`, and no border, and the method starts a message listener that accepts messages only from the `baseUrl` origin.
+
+### Tear down the iframe {/* destroy */}
+
+```typescript
+sdk.destroy()
+```
+
+The method removes the iframe from the DOM and stops the message listener. Registered event callbacks and request handlers are kept and work again after the next `embed()`. Call it when a route leaves the trading page or when the Client signs out.
+
+### Navigation parameters {/* navigation-parameters */}
+
+`open()` and `embed()` share the following parameters.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `tab` | `'quote' \| 'stock' \| 'favorite' \| 'portfolio' \| 'stockSelect'` | The initial location: quotes, instrument detail, watchlist, assets, or the screener |
+| `symbol` | `string` | The initial instrument |
+
+Pass `symbol` through unchanged from what a Whale API returns. Those values look like `700.HK` or `AAPL.US` ([`symbol` format](/en/docs/glossary#security-identifiers)); the format is documented for recognition only, so do not assemble it yourself.
+
+## Preference sync {/* preferences */}
+
+Each of the three preference methods does two things: it writes the matching cookie for WebTrade to read on its next load, and, when an iframe is present, it sends a `postMessage` telling WebTrade to switch right away. The new-tab form has no iframe, so only the cookie write applies.
+
+| Method | Values | Meaning |
+| --- | --- | --- |
+| `sdk.setLang(lang)` | `en`, `zh-CN`, `zh-HK` | English, Simplified Chinese, Traditional Chinese |
+| `sdk.setTheme(theme)` | `dark`, `light` | Dark, light |
+| `sdk.setPriceColor(color)` | `green_up`, `red_up` | Green for up, red for up |
+
+```typescript
+sdk.setTheme('dark')
+sdk.setLang('zh-CN')
+sdk.setPriceColor('red_up')
+```
+
+Given a value that is not listed, WebTrade falls back to `en`, `dark`, and `red_up` respectively.
+
+### How initial preferences are resolved {/* initial-preferences */}
+
+WebTrade resolves each preference in the following order when it loads.
+
+**Language:** a valid value in the language cookie, then a supported language matched from `navigator.language`, and finally `en`.
+
+**Theme:** the value in the theme cookie, or `dark` when it is unset.
+
+**Price colors:** WebTrade adopts the preference the Broker wrote only when the project is configured to let the Broker control price colors. Otherwise price colors follow the Client's account settings in Whale.
+
+<Note>
+That configuration affects only where the value comes from at load time. In the iframe form, a switch through `setPriceColor()` is not subject to it and always applies right away; what differs is whether the change survives a page reload.
+</Note>
+
+## Events {/* events */}
+
+WebTrade emits two events over `postMessage`, and the SDK exposes them as callbacks. **Both fire only in the iframe form.**
+
+| Event | Fires when | Typical handling |
+| --- | --- | --- |
+| `ready` | WebTrade has finished rendering | Clear the loading state on the Broker page |
+| `logout` | The Client signed out inside WebTrade | Clear the Broker session state and redirect |
+
+```typescript
+sdk.on('ready', callback)    // Register; several callbacks per event run in registration order
+sdk.once('ready', callback)  // Register once; removed automatically after it fires
+sdk.off('ready', callback)   // Remove; pass the same function reference used to register
+```
+
+Callbacks receive no arguments. Registering before or after `embed()` both work, but register before `embed()` so a fast WebTrade load cannot make you miss `ready`.
+
+```typescript
+sdk.on('logout', () => {
+  sdk.logout()      // Clear the session credential cookies the SDK wrote
+  sdk.destroy()     // Tear down the iframe
+  brokerSignOut()   // Clear the Broker's own session state
+  window.location.href = '/login?from=webtrade'
+})
+```
+
+<Warning>
+Event callbacks survive repeated `embed()` calls. Remove the previous callback with `off()` before replacing it, or the old one still runs on the new iframe's events and may redirect twice.
+</Warning>
+
+## Request and response {/* request-response */}
+
+In some business scenarios WebTrade calls the Broker website and waits for a return value. WebTrade is always the caller and the Broker website is the responder: the Broker registers a handler for an agreed method, and the SDK receives the request, invokes the handler, returns the value, and takes care of the message envelope, origin validation, and request matching. **Available in the iframe form only.**
+
+```typescript
+sdk.handle('methodName', async (payload) => {
+  const result = await yourBusinessLogic(payload)
+  return result
+})
+
+sdk.unhandle('methodName')
+```
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `method` | `string` | The method name from the agreed protocol. Registering the same name again replaces the handler |
+| `handler` | `(payload) => unknown \| Promise<unknown>` | The handler, which may be async. Its return value is the result |
+
+A handler can be registered before or after `embed()` and survives `embed()` and `destroy()`. Register before `embed()` so you do not miss requests WebTrade sends early in its load.
+
+<Note>
+Method names, arguments, and return shapes follow the integration protocol Whale provides during integration. The Broker implements the handlers that protocol defines.
+</Note>
+
+### Returning a failure {/* handler-errors */}
+
+When a handler throws an object carrying a **string `code`**, that `code` is returned to WebTrade unchanged so it can branch on it. The `code` values are agreed between the Broker and Whale in the protocol; the SDK does not restrict them.
+
+```typescript
+sdk.handle('methodName', async (payload) => {
+  const data = await query(payload)
+  if (!data.available) {
+    throw { code: 'NOT_AVAILABLE', message: 'The resource is currently unavailable' }
+  }
+  return data
+})
+```
+
+<Warning>
+WebTrade displays `message` to the Client verbatim, so it must be readable text written for the Client in the Client's current language. Omit the field when you have no suitable text and WebTrade uses its own localized copy instead; an internal error string replaces that copy and reaches the Client directly.
+</Warning>
+
+The SDK returns two built-in `code` values. Neither carries text, WebTrade supplies its own, and the SDK writes a warning prefixed with `[WhaleAppSDK]` to the browser console.
+
+| code | Meaning |
+| --- | --- |
+| `METHOD_NOT_FOUND` | No handler is registered for the method |
+| `HANDLER_ERROR` | The thrown value carries no string `code`, or the return value cannot be structured-cloned |
+
+### Timeout and source validation {/* rpc-boundaries */}
+
+WebTrade applies a timeout to every request, 5 seconds by default. A timeout only means WebTrade stopped waiting; it does not mean the work on the Broker side failed or did not finish. Agree an adjustment with the Whale project team in advance when a handler can legitimately take longer.
+
+Before responding, the SDK checks that the message origin equals the origin of `baseUrl` and that the source is the iframe the SDK created. A request failing either check is dropped without a response. The response target origin is likewise taken exactly from `baseUrl`, never a wildcard.
 
 ## Sign-in flow {/* sign-in-flow */}
 
-### New-tab mode {/* new-tab-mode */}
-
-1. Client signs in to Broker website; Broker Server returns `token`, `refresh_token`, and `app_id`.
-2. Broker frontend writes them to the agreed root-domain cookies.
-3. Client opens WebTrade in a new tab.
-4. WebTrade reads the token, preferring the cookie over its local cache.
-5. A valid token opens the trading UI; a missing or invalid token redirects to `logout_redirect_link_address`.
-
-### iframe mode {/* iframe-mode */}
-
-1. Client signs in and Broker writes the session cookies.
-2. Broker creates the iframe and passes `tenant_origin` in its URL.
-3. WebTrade reads the cookies and signs the Client in.
-4. WebTrade sends `WEBTRADE_READY` after mounting.
-5. Broker hides its loading state after validating and receiving the event.
-
-## Logout flow {/* logout-flow */}
-
-### New-tab mode {/* new-tab-mode-1 */}
-
-1. Client starts logout in WebTrade.
-2. WebTrade clears its login cookies and local storage.
-3. WebTrade redirects to `logout_redirect_link_address`; if none is configured, it falls back to the Whale sign-in page.
-
-### iframe mode {/* iframe-mode-1 */}
-
-1. Client starts logout when the control is not hidden.
-2. WebTrade clears its login cookies and local storage.
-3. WebTrade sends `ON_LOGOUT` to the validated parent origin.
-4. WebTrade waits 200 ms, then performs the configured redirect.
-5. Broker handles `ON_LOGOUT`, clears its own session, and completes server-side logout.
-
-## Broker implementation requirements {/* broker-implementation-requirements */}
-
-### Cookies {/* cookies */}
-
-| Cookie | Required | Purpose |
-| --- | --- | --- |
-| `{cookie_token_key}` | Yes | Client token |
-| `{cookie_refresh_token_key}` | Yes | Client refresh token |
-| `{cookie_app_id_key}` | Yes | App ID |
-| `{cookie_locale_key}` | Recommended | Initial language |
-| `{cookie_theme_key}` | Recommended | Initial theme; defaults to `dark` |
-| `{cookie_stock_color_preference_key}` | Recommended | Initial price-color preference |
-
-Set `domain` to the shared root domain, for example `.example.com`, and `path=/`. WebTrade must read these cookies from JavaScript, so the current integration contract requires them not to be `HttpOnly`. Use HTTPS, restrict the domain and path exactly as agreed, and coordinate the security model with the Whale project team.
-
-WebTrade resolves language in this order:
-
-1. A valid language in `{cookie_locale_key}`.
-2. A supported value derived from `navigator.language`.
-3. English (`en`).
-
-```javascript
-type SupportLocale = 'en' | 'zh-HK' | 'zh-CN'
-
-function getDefaultLocaleForWeb(): SupportLocale {
-  const fromCookie = Cookies.get(appConfig.cookieLocaleKey)
-  if (fromCookie && isSupportLocale(fromCookie)) return fromCookie
-
-  const match = navigator.language.match(/(zh-HK|zh-CN|en)/)
-  return (match?.[1] as SupportLocale | undefined) ?? 'en'
-}
+```mermaid
+sequenceDiagram
+    actor C as Client
+    participant B as Broker website
+    participant W as WebTrade
+    C->>B: Signs in to the Broker website
+    B->>B: Obtains Whale session credentials from Broker Server
+    B->>B: sdk.login(token, refreshToken)
+    Note over B: Writes root-domain cookies
+    B->>W: sdk.open() or sdk.embed()
+    W->>W: Reads the cookies and establishes the session
+    alt Session is valid
+        W->>B: ready event (iframe form only)
+        B->>C: Clears the loading state and shows the trading interface
+    else Session is missing or invalid
+        W->>W: Redirects to the agreed address
+    end
 ```
 
-### Logout {/* logout */}
+WebTrade prefers the cookies over its own local cache when reading the session credentials. When the session is missing or invalid, WebTrade redirects to the Broker address agreed during integration, or to the Whale sign-in page when none was agreed.
 
-Broker must:
+## Sign-out flow {/* logout-flow */}
 
-1. Provide `logout_redirect_link_address`, optionally with `{tenant_origin}`.
-2. Clear every WebTrade login cookie when the Client signs out.
-3. Call the Whale logout API so the server-side Client token becomes invalid.
-4. In iframe mode, validate and handle `ON_LOGOUT` immediately.
+The Client may sign out on the Broker website or inside WebTrade, when the sign-out control is not hidden. Handle both paths.
 
-### Domains {/* domains */}
+**The Client signs out on the Broker website:** call `sdk.logout()` to clear the session credential cookies, call the Whale sign-out API so the server-side token becomes invalid, and in the iframe form call `sdk.destroy()`.
 
-Broker website and WebTrade must share a root domain. For example:
+**The Client signs out inside WebTrade:**
 
-- Broker website: `broker.example.com`.
-- WebTrade: `trade.example.com`.
-- Shared cookie domain: `.example.com`.
-
-## Configuration example {/* configuration-example */}
-
-```json
-{
-  "cookie_token_key": "broker_token",
-  "cookie_refresh_token_key": "broker_refresh_token",
-  "cookie_app_id_key": "broker_app_id",
-  "cookie_locale_key": "broker_locale",
-  "cookie_theme_key": "broker_theme",
-  "cookie_stock_color_preference_key": "broker_stock_color_preference",
-  "logout_redirect_link_address": "https://www.example.com/login?from=webtrade",
-  "disable_language_setting": true
-}
+```mermaid
+sequenceDiagram
+    actor C as Client
+    participant W as WebTrade
+    participant B as Broker website
+    C->>W: Signs out inside WebTrade
+    W->>W: Clears its login cookies and local storage
+    W->>B: logout event (iframe form only)
+    B->>B: Clears the Broker session state
+    W->>W: Redirects to the agreed address after a short delay
 ```
 
-```json
-{
-  "hide_logout_entrance": true
-}
-```
+WebTrade waits briefly after emitting `logout` before performing its own redirect, which gives the Broker website time to respond. After that window WebTrade performs the redirect and an unfinished callback is interrupted, so handling inside the `logout` callback must complete immediately and must not wait for a network request before updating local state.
+
+The new-tab form has no parent page, so WebTrade clears its local state and redirects to the agreed address directly. The Broker should complete its own sign-out on the page behind that address.
+
+## Broker implementation checklist {/* broker-implementation-requirements */}
+
+Confirm each item before going live:
+
+- The Broker website and WebTrade are on subdomains of the same root domain, both over HTTPS.
+- In the iframe form, the Broker website origin is on the Whale allowlist.
+- `login()` is called after the Client signs in, and again every time new Whale session credentials are obtained.
+- The session credential cookies are not `HttpOnly`.
+- Signing out on the Broker website clears the session credential cookies and calls the Whale sign-out API so the server-side token becomes invalid.
+- In the iframe form the `logout` event is handled, and the handling completes inside the delay window.
+- The sign-out redirect address has been supplied to Whale, and that page handles a redirect coming from WebTrade.
+- Request handlers follow the agreed protocol, failures return the agreed `code`, and `message` is readable text written for the Client.
+- The SDK is loaded from a pinned version.
 
 ## Deployment {/* deployment */}
 
-- **Whale-managed deployment:** Whale builds and deploys WebTrade; Broker supplies its domain and project configuration.
-- **Broker-managed deployment:** Whale delivers a project-specific WebTrade zip for Broker to deploy, which can accommodate Broker-managed certificates or multiple domains.
+- **Whale-managed:** Whale builds and deploys WebTrade; the Broker supplies the domain and project configuration.
+- **Broker-managed:** Whale delivers a WebTrade archive built for the Broker, and the Broker deploys it. This suits a Broker that manages its own certificates or needs several domains.
+
+The integration code is identical either way.
