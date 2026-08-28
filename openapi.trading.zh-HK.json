@@ -1825,6 +1825,145 @@
             ]
           }
         }
+      },
+      "MyQuoteLevelInfoV2": {
+        "type": "object",
+        "description": "行情套餐（行情等級）資訊",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "套餐名稱"
+          },
+          "description": {
+            "type": "string",
+            "description": "套餐說明"
+          },
+          "icon": {
+            "type": "string",
+            "description": "圖標 URL"
+          },
+          "market": {
+            "type": "string",
+            "description": "所屬市場代碼"
+          },
+          "tags": {
+            "type": "array",
+            "description": "標籤",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expired_msg": {
+            "type": "string",
+            "description": "狀態提示文案，如\"推廣期免費\"（已開通）、\"暫無權限\"（未開通）"
+          },
+          "link": {
+            "type": "string",
+            "description": "詳情/購買跳轉連結；空字串表示無跳轉；含 `{web_app_host}` 佔位符的為完整跳轉連結模板；以 `#` 開頭的為跳轉 Broker App 內靜態說明頁的短標識（非真實 URL），如 `#HK_App|HKAA|Mainland|LV2`"
+          },
+          "package_key": {
+            "type": "string",
+            "description": "套餐唯一標識"
+          },
+          "button_type": {
+            "type": "integer",
+            "format": "int32",
+            "description": "按鈕類型：0 不展示按鈕（已開通/無需操作），1 展示「續期」按鈕，2 展示「開通」按鈕",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "quote_product": {
+            "type": "object",
+            "nullable": true,
+            "description": "可購買的行情套餐商品資訊；無購買入口（如已開通、或聯絡客服開通類）時為 null",
+            "properties": {
+              "skus": {
+                "type": "array",
+                "description": "可購買檔位（SKU）列表",
+                "items": {
+                  "$ref": "#/components/schemas/MyQuoteLevelSku"
+                }
+              }
+            }
+          },
+          "end_time": {
+            "type": "string",
+            "description": "到期時間戳（秒），\"0\" 表示無到期時間（長期有效）"
+          }
+        }
+      },
+      "MyQuoteLevelSku": {
+        "type": "object",
+        "description": "行情套餐可購買檔位（SKU）資訊",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "商品 id"
+          },
+          "currency": {
+            "type": "string",
+            "description": "貨幣單位"
+          },
+          "price": {
+            "type": "number",
+            "description": "原價"
+          },
+          "real_price": {
+            "type": "number",
+            "description": "實付價格"
+          },
+          "inventory": {
+            "type": "string",
+            "description": "庫存數量，\"0\" 表示售罄（禁用）"
+          },
+          "labels": {
+            "type": "array",
+            "description": "角標標籤",
+            "items": {
+              "type": "string"
+            }
+          },
+          "is_discount": {
+            "type": "boolean",
+            "description": "是否有折扣，決定是否展示 price 劃線原價"
+          },
+          "card_duration": {
+            "type": "integer",
+            "format": "int32",
+            "description": "卡時長：0 週卡，1 月卡，2 季卡，3 年卡，4 連續包週，5 連續包月，6 連續包季，7 連續包年（4-7 均為自動續費）",
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          "per_month_price": {
+            "type": "number",
+            "description": "折合每月價格"
+          },
+          "professional_category": {
+            "type": "integer",
+            "format": "int32",
+            "description": "美股行情購買的專業投資者身份限制：0 不限制（非美股場景），1 僅限非專業投資者（unpass），2 僅限專業投資者（pass）；僅 market=US 時 Broker App 會據此做購買前置的專業投資者測評校驗",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "apple_product_id": {
+            "type": "string",
+            "description": "iOS/macOS 內購（IAP）商品 id"
+          }
+        }
       }
     }
   },
@@ -2668,6 +2807,80 @@
                 "x-example-kind": "sanitized-captured",
                 "x-example-source": "mr",
                 "x-example-captured-at": "2026-07-24T03:22:50.470Z"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/billing/security_lending/fee": {
+      "get": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "獲取股票融券費率",
+        "description": "查詢單支股票的融券（沽空）參考券息費率，用於個股保證金資訊頁展示沽空參考券息。\n",
+        "operationId": "getBillingSecurityLendingFee",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "股票 id",
+            "schema": {
+              "type": "string"
+            },
+            "example": "ST/US/TSLA"
+          },
+          {
+            "name": "market",
+            "in": "query",
+            "required": true,
+            "description": "市場代碼，如 US、HK",
+            "schema": {
+              "type": "string"
+            },
+            "example": "US"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「獲取股票融券費率」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "fee_rate": {
+                              "type": "string",
+                              "description": "融券費率，小數形式（如 0.05 表示 5%）；無費率配置時返回 \"0\""
+                            },
+                            "exist": {
+                              "type": "boolean",
+                              "description": "該股票是否存在融券費率配置；為 false 時 Broker App 不展示沽空參考券息"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "fee_rate": "0",
+                    "exist": false
+                  }
+                }
               }
             }
           }
@@ -10072,6 +10285,192 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/quote/level/my_level_center": {
+      "get": {
+        "tags": [
+          "行情"
+        ],
+        "summary": "獲取我的行情列表",
+        "description": "查詢用戶在指定市場下已開通、未開通的行情套餐（行情等級/權益）列表，包含套餐說明、狀態提示、跳轉/購買入口及可購買檔位（SKU），用於\"我的行情\"頁展示與行情套餐購買。\n",
+        "operationId": "getV2QuoteLevelMyLevelCenter",
+        "parameters": [
+          {
+            "name": "market",
+            "in": "query",
+            "required": true,
+            "description": "市場代碼，如 US/HK/CN/SG 等；可通過配套介面 `/v1/quote/level/my_level_market` 獲取目前支援查詢的市場列表；省略時 activated_lists/unactivated_lists 均返回空列表",
+            "schema": {
+              "type": "string"
+            },
+            "example": "US"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「獲取我的行情列表」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "activated_lists": {
+                              "type": "array",
+                              "description": "已開通的行情套餐列表",
+                              "items": {
+                                "$ref": "#/components/schemas/MyQuoteLevelInfoV2"
+                              }
+                            },
+                            "unactivated_lists": {
+                              "type": "array",
+                              "description": "未開通的行情套餐列表",
+                              "items": {
+                                "$ref": "#/components/schemas/MyQuoteLevelInfoV2"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "activated_lists": [
+                      {
+                        "name": "LV1 實時行情（OpenAPI）",
+                        "description": "納斯達克實時成交行情及最優買賣一檔報價（含夜盤），適用於 OpenAPI",
+                        "icon": "https://assets.lbctrl.com/uploads/d541398e-3022-40ea-bc95-1fd5be474846/92-6-7-90-9-127-91.png",
+                        "market": "US",
+                        "tags": [
+                          "API"
+                        ],
+                        "expired_msg": "推廣期免費",
+                        "link": "",
+                        "package_key": "US_QBBO_OpenAPI",
+                        "button_type": 0,
+                        "quote_product": null,
+                        "end_time": "1789730569"
+                      },
+                      {
+                        "name": "納斯達克 Basic 行情",
+                        "description": "納斯達克實時成交行情及最優買賣一檔報價，適用於移動端、桌面端、網頁端",
+                        "icon": "https://assets.lbctrl.com/uploads/d541398e-3022-40ea-bc95-1fd5be474846/92-6-7-90-9-127-91.png",
+                        "market": "US",
+                        "tags": [],
+                        "expired_msg": "推廣期免費",
+                        "link": "",
+                        "package_key": "US_QBBO_EL",
+                        "button_type": 0,
+                        "quote_product": null,
+                        "end_time": "1789730569"
+                      }
+                    ],
+                    "unactivated_lists": [
+                      {
+                        "name": "OPRA 美股期權行情（OpenAPI）",
+                        "description": "OPRA 美股期權實時成交行情及最優買賣一檔報價，適用於 OpenAPI",
+                        "icon": "https://assets.lbctrl.com/uploads/d541398e-3022-40ea-bc95-1fd5be474846/92-6-7-90-9-127-91.png",
+                        "market": "US",
+                        "tags": [
+                          "API"
+                        ],
+                        "expired_msg": "暫無權限",
+                        "link": "",
+                        "package_key": "US_OPRA_LV1_OpenAPI",
+                        "button_type": 2,
+                        "quote_product": {
+                          "skus": [
+                            {
+                              "product_id": "e142fb48875611eda7e302cd8b89b3fa",
+                              "currency": "HKD",
+                              "price": 0,
+                              "real_price": 40,
+                              "inventory": "1",
+                              "labels": [],
+                              "is_discount": false,
+                              "card_duration": 1,
+                              "per_month_price": 40,
+                              "professional_category": 0,
+                              "apple_product_id": "OPRA_openapi_Month"
+                            },
+                            {
+                              "product_id": "e8126116875511edb7274a86e7056c6e",
+                              "currency": "HKD",
+                              "price": 336,
+                              "real_price": 269,
+                              "inventory": "1",
+                              "labels": [],
+                              "is_discount": false,
+                              "card_duration": 3,
+                              "per_month_price": 22,
+                              "professional_category": 0,
+                              "apple_product_id": "OPRA_openapi_Year"
+                            }
+                          ]
+                        },
+                        "end_time": "0"
+                      },
+                      {
+                        "name": "LV2 美股深度擺盤",
+                        "description": "提供 60 檔買賣盤報價，涵蓋盤前、盤中、盤後及夜盤交易時段，適用於移動端、桌面端、網頁端",
+                        "icon": "https://pub.pbkrs.com/files/202205/dCoTUebwuZ1axgxZ/tg_depth.png",
+                        "market": "US",
+                        "tags": [],
+                        "expired_msg": "暫無權限",
+                        "link": "https://{web_app_host}/spa/my-market/total-view?market=US&package_key=US_Totalview",
+                        "package_key": "US_Totalview",
+                        "button_type": 2,
+                        "quote_product": {
+                          "skus": [
+                            {
+                              "product_id": "42f26603669e11ef8047d2408af9d045",
+                              "currency": "HKD",
+                              "price": 0,
+                              "real_price": 200,
+                              "inventory": "1",
+                              "labels": [],
+                              "is_discount": false,
+                              "card_duration": 1,
+                              "per_month_price": 200,
+                              "professional_category": 1,
+                              "apple_product_id": "TotalView_Month"
+                            },
+                            {
+                              "product_id": "1fe33d814ee911efac7736d80c06ffcf",
+                              "currency": "HKD",
+                              "price": 0,
+                              "real_price": 2248,
+                              "inventory": "1",
+                              "labels": [],
+                              "is_discount": false,
+                              "card_duration": 3,
+                              "per_month_price": 187,
+                              "professional_category": 1,
+                              "apple_product_id": "TotalView_Year"
+                            }
+                          ]
+                        },
+                        "end_time": "0"
+                      }
+                    ]
+                  }
                 }
               }
             }
