@@ -1,11 +1,38 @@
 import type { APIRoute } from "astro";
 import {
   allOperations,
+  operationPermissions,
   operationRoutePath,
   resolveDatasetDownload,
   resolveSchema,
   type OperationRecord,
 } from "../../../lib/openapi";
+
+function permissionMarkdown(
+  locale: OperationRecord["locale"],
+  operation: Record<string, any>,
+  heading = "##",
+): string {
+  const { keys, lbOnly } = operationPermissions(operation);
+  if (keys.length === 0 && !lbOnly) return "";
+  return [
+    locale === "en"
+      ? `${heading} Permissions`
+      : locale === "zh-CN"
+        ? `${heading} 权限要求`
+        : `${heading} 權限要求`,
+    keys.length > 0 ? keys.map((key) => `- \`${key}\``).join("\n") : "",
+    lbOnly
+      ? locale === "en"
+        ? "Longbridge-internal only — not granted to external brokers."
+        : locale === "zh-CN"
+          ? "仅长桥内部可用，不对外部券商授权。"
+          : "僅長橋內部可用，不對外部券商授權。"
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
 
 export function getStaticPaths() {
   return allOperations().map((record) => ({
@@ -38,6 +65,7 @@ export const GET: APIRoute = ({ props }) => {
         ? "此 Dataset 查询为只读接口，默认使用 GET。如果编码后的查询参数过大，可改用 POST，并将相同参数以 JSON 请求体发送到同一路径。"
         : "此 Dataset 查詢為唯讀介面，預設使用 GET。如果編碼後的查詢參數過大，可改用 POST，並將相同參數以 JSON 請求內容傳送至同一路徑。"
     : "";
+  const permissionLines = permissionMarkdown(locale, operation);
   const download = resolveDatasetDownload(document, operation);
   const downloadContent = download?.operation.requestBody?.content ?? {};
   const downloadType = Object.keys(downloadContent)[0];
@@ -76,6 +104,7 @@ export const GET: APIRoute = ({ props }) => {
     postFallbackNote,
     "## Authorization",
     "`Authorization: Bearer <token>`",
+    permissionLines,
     requestSchema
       ? `## ${hasPostFallback ? "Query parameters" : "Request body"}\n\n\`\`\`json\n${JSON.stringify(requestSchema, null, 2)}\n\`\`\``
       : "",
@@ -92,6 +121,7 @@ export const GET: APIRoute = ({ props }) => {
               ? "导出接口使用与此 Dataset 查询相同的 `filters`。"
               : "匯出介面使用與此 Dataset 查詢相同的 `filters`。",
           `\`${download.link.method.toUpperCase()} ${download.link.path}\``,
+          permissionMarkdown(locale, download.operation, "###"),
           locale === "en"
             ? "See `GET /v1/datasets/download_records` for export records and `GET /v1/datasets/download/{id}` for asynchronous download details."
             : locale === "zh-CN"
