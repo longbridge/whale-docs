@@ -1,7 +1,7 @@
 ---
 import DocsLayout from "../../../layouts/DocsLayout.astro";
 import { getPrevNext } from "nimbus-docs";
-import { allOperations, operationRoutePath, resolveSchema, type OperationRecord } from "../../../lib/openapi";
+import { allOperations, operationPermissions, operationRoutePath, permissionLabels, resolveSchema, type OperationRecord } from "../../../lib/openapi";
 import { getWhaleSidebar } from "../../../lib/whale-navigation";
 import ApiSchemaFields from "../../../components/api/ApiSchemaFields.astro";
 import ApiResponseSchema from "../../../components/api/ApiResponseSchema.astro";
@@ -9,6 +9,7 @@ import ApiEndpointCopy from "../../../components/api/ApiEndpointCopy.astro";
 import DatasetExport from "../../../components/api/DatasetExport.astro";
 import { ApiCodeExample } from "../../../../components/ApiCodeExample";
 import { Badge } from "@components/components/ui/badge";
+import LucideIcon from "../../../components/ui/icon/LucideIcon.astro";
 import { codeToHtml } from "shiki";
 import { renderInlineMarkdown, renderMarkdown } from "../../../lib/render-markdown";
 
@@ -32,6 +33,8 @@ const requestType = Object.keys(requestContent)[0];
 const request = requestType ? requestContent[requestType] : undefined;
 const hasPostFallback = method === "get" && operation["x-post-fallback"] === true;
 const parameters = (operation.parameters ?? []).map((parameter: any) => parameter.$ref ? resolveSchema(document, parameter) : parameter);
+const { keys: permissionKeys, lbOnly: isLbOnly } = operationPermissions(operation);
+const permLabels = permissionLabels(locale);
 const responses = Object.entries(operation.responses ?? {}) as [string, any][];
 const technicalLabels = {
   parameters: "Parameters",
@@ -175,7 +178,8 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
 
   <div class="api-reference-grid">
     <div class="api-reference-fields">
-      <section><h2 id="authorization">Authorization</h2><div class="api-schema-fields"><div class="api-schema-field"><div class="api-schema-field-meta"><code>Authorization</code><Badge variant="secondary">string</Badge><Badge variant="outline">header</Badge><Badge variant="destructive">{labels.required}</Badge></div><p>{locale === "en" ? "Send the Broker ACCESS_TOKEN as Authorization: Bearer <token>." : "Broker 获发的 ACCESS_TOKEN，通过 Authorization: Bearer <token> 发送。"}</p></div></div></section>
+      <section><h2 id="authorization">Authorization</h2><div class="api-schema-fields"><div class="api-schema-field"><div class="api-schema-field-meta"><code>Authorization</code><Badge variant="secondary">string</Badge><Badge variant="outline">header</Badge>{permissionKeys.map((permissionKey: string) => <Badge variant="outline" className="api-scope-badge" data-scope-tooltip={permLabels.scopeTooltip(permissionKey)}><LucideIcon name="key-round" class="size-3" /><code>{permissionKey}</code></Badge>)}{isLbOnly && <Badge variant="outline" className="api-scope-badge api-scope-badge-lbonly" data-scope-tooltip={permLabels.lbonly}><LucideIcon name="lock" class="size-3" />{permLabels.lbonlyBadge}</Badge>}<Badge variant="destructive">{labels.required}</Badge></div><p>{locale === "en" ? "Send the Broker ACCESS_TOKEN as Authorization: Bearer <token>." : "Broker 获发的 ACCESS_TOKEN，通过 Authorization: Bearer <token> 发送。"}</p>{permissionKeys.length === 0 && !isLbOnly && <p class="api-permission-note">{permLabels.none}</p>}</div></div></section>
+
       {parameters.length > 0 && <section><h2 id="parameters">{labels.parameters}</h2><div class="api-fields">{parameters.map((parameter: any) => {
         const schema = resolveSchema(document, parameter.schema);
         return <div class="api-field"><div class="api-field-title"><code>{parameter.name}</code><Badge variant="secondary">{schema?.type ?? "string"}</Badge>{parameter.required && <Badge variant="destructive">{labels.required}</Badge>}</div>{parameter.description && <div class="api-field-description" set:html={renderMarkdown(parameter.description)} />}</div>;
@@ -208,3 +212,19 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
     baseUrl={baseUrl}
   />
 </DocsLayout>
+
+<script>
+  import { addTooltip } from "~/util/tippy";
+
+  function initScopeTooltips() {
+    document.querySelectorAll<HTMLElement>("[data-scope-tooltip]").forEach((el) => {
+      if ((el as unknown as { _tippy?: unknown })._tippy) return;
+      const content = el.dataset.scopeTooltip;
+      if (!content) return;
+      addTooltip(el, content, { maxWidth: 280, delay: [150, 0] });
+    });
+  }
+
+  initScopeTooltips();
+  document.addEventListener("astro:page-load", initScopeTooltips);
+</script>

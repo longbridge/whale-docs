@@ -225,6 +225,42 @@ export function resolveDatasetDownload(
   return download ? { link, operation: download } : undefined;
 }
 
+export function operationPermissions(operation: Record<string, any>): {
+  keys: string[];
+  lbOnly: boolean;
+} {
+  return {
+    keys: (operation["x-permission-key"] ?? []) as string[],
+    lbOnly: operation["x-lbonly"] === true,
+  };
+}
+
+export function permissionLabels(locale: string) {
+  return locale === "en"
+    ? {
+        none: "No dedicated permission key. Any authenticated Broker ACCESS_TOKEN with access to this scope can call it.",
+        lbonly: "Longbridge-internal only — not granted to external brokers.",
+        lbonlyBadge: "LB only",
+        scopeTooltip: (key: string) =>
+          `Calling this API requires the <code>${key}</code> permission. Your Broker ACCESS_TOKEN must be granted this permission, or the call will be rejected.`,
+      }
+    : locale === "zh-CN"
+      ? {
+          none: "无专属权限 Key。具备该 scope 访问权限的已鉴权 Broker ACCESS_TOKEN 即可调用。",
+          lbonly: "仅长桥内部可用，不对外部券商授权。",
+          lbonlyBadge: "内部专用",
+          scopeTooltip: (key: string) =>
+            `调用此接口需要 <code>${key}</code> 权限，Broker ACCESS_TOKEN 未被授予该权限时将无法调用。`,
+        }
+      : {
+          none: "無專屬權限 Key。具備該 scope 存取權限的已鑑權 Broker ACCESS_TOKEN 即可呼叫。",
+          lbonly: "僅長橋內部可用，不對外部券商授權。",
+          lbonlyBadge: "內部專用",
+          scopeTooltip: (key: string) =>
+            `呼叫此介面需要 <code>${key}</code> 權限，Broker ACCESS_TOKEN 未被授予該權限時將無法呼叫。`,
+        };
+}
+
 export function resolveSchema(document: OpenApiDocument, schema: any): any {
   if (!schema) return schema;
   if (schema.$ref) {

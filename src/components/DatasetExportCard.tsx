@@ -1,6 +1,7 @@
 import { useState } from "react"
-import { CheckIcon, CopyIcon, DownloadIcon } from "lucide-react"
+import { CheckIcon, CopyIcon, DownloadIcon, KeyRoundIcon, LockIcon } from "lucide-react"
 
+import { Badge } from "@components/components/ui/badge"
 import { Button } from "@components/components/ui/button"
 import { ButtonGroup } from "@components/components/ui/button-group"
 import { Frame, FrameHeader, FramePanel, FrameTitle } from "@components/reui/frame"
@@ -15,6 +16,8 @@ type Props = {
   detail: { label: string; href: string }
   records: { label: string; href: string }
   downloads: { label: string; href: string }
+  permissions?: { key: string; tooltip: string }[]
+  lbOnly?: { label: string; tooltip: string }
 }
 
 export function DatasetExportCard({
@@ -27,6 +30,8 @@ export function DatasetExportCard({
   detail,
   records,
   downloads,
+  permissions = [],
+  lbOnly,
 }: Props) {
   const [copied, setCopied] = useState(false)
 
@@ -65,6 +70,23 @@ export function DatasetExportCard({
               {copied ? <CheckIcon className="text-success" /> : <CopyIcon />}
             </Button>
           </div>
+
+          {(permissions.length > 0 || lbOnly) && (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {permissions.map(({ key, tooltip }) => (
+                <Badge key={key} variant="outline" className="api-scope-badge" title={tooltip}>
+                  <KeyRoundIcon className="size-3" />
+                  <code>{key}</code>
+                </Badge>
+              ))}
+              {lbOnly && (
+                <Badge variant="outline" className="api-scope-badge api-scope-badge-lbonly" title={lbOnly.tooltip}>
+                  <LockIcon className="size-3" />
+                  {lbOnly.label}
+                </Badge>
+              )}
+            </div>
+          )}
 
           <ButtonGroup className="mt-3" aria-label={title}>
             <Button variant="outline" size="sm" render={<a href={detail.href} />}>
