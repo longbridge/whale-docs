@@ -169,27 +169,6 @@ paths:
         - broker_api.super_manage
       x-lbonly: false
       x-source: WhaleAPI
-      description: |-
-        This interface is used to verify whether the trading password of a specified securities account is correct. By providing the account number account_no and the encrypted trading password encrypt_password, it returns the asset account unique identifier aaid and the user account member_id upon successful verification.
-
-        Password transmission requires the password to be encrypted. The encryption method is as follows:
-
-        ```javascript
-        const Crypto = require('crypto-js')
-
-        const encryptedPassword = function encodePassword(ts, password) {
-            const keyMD5 = Crypto.MD5(ts.toString())
-            const pwdMD5 = Crypto.MD5(password)
-            const iv = keyMD5.slice(0, 16)
-
-            return Crypto.AES.encrypt(pwdMD5, keyMD5, {
-                mode: Crypto.mode.CBC,
-                padding: Crypto.pad.Pkcs7
-            });
-        }
-        ```
-
-        Here `ts` is the value of `x-timestamp` in the request header, which is a Unix timestamp.
       requestBody:
         required: true
         content:
@@ -269,7 +248,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
           description: The request timed out. Check the business error code in `code` and the error details in `message`.
-      description: This interface is used to verify whether the trading password of a specified securities account is correct. By providing the account number account_no and the encrypted trading password encrypt_password, it returns the asset account unique identifier aaid and the user account member_id upon successful verification.
+      description: |-
+        This interface is used to verify whether the trading password of a specified securities account is correct. By providing the account number account_no and the encrypted trading password encrypt_password, it returns the asset account unique identifier aaid and the user account member_id upon successful verification.
+
+        Password transmission requires the password to be encrypted. The encryption method is as follows:
+
+        ```javascript
+        const Crypto = require('crypto-js')
+
+        const encryptedPassword = function encodePassword(ts, password) {
+            const keyMD5 = Crypto.MD5(ts.toString())
+            const pwdMD5 = Crypto.MD5(password)
+            const iv = keyMD5.slice(0, 16)
+
+            return Crypto.AES.encrypt(pwdMD5, keyMD5, {
+                mode: Crypto.mode.CBC,
+                padding: Crypto.pad.Pkcs7
+            });
+        }
+        ```
+
+        Here `ts` is the value of `x-timestamp` in the request header, which is a Unix timestamp.
       x-mint:
         href: /en/api-reference/account_auth
         metadata:
@@ -284,6 +283,67 @@ paths:
         - broker_api.super_manage
       x-lbonly: false
       x-source: WhaleAPI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      `0` indicates success. A non-zero value is a business error code, in which case
+                      `data` is usually empty.
+
+                      HTTP status codes use their standard semantics. A successful request normally
+                      returns `200`; errors may return `400`, `401`, `403`, `408`, or another applicable
+                      status. Interpret the HTTP status together with the business `code`.
+
+                      - `401`: The user is not authenticated.
+                      - `403`: The current account is not authorized to use this function. Grant access
+                        through User Permission.. Options: `0` = Success
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties: {}
+                    description: Data
+              example:
+                code: 0
+                message: success
+                data: {}
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+          description: Bad request. Check the business error code in `code` and the error details in `message`.
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+          description: The user is not authenticated, or the login session has expired.
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+          description: The current account is not authorized to use this feature. Grant the required permission to the account in User Permission.
+        "408":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+          description: The request timed out. Check the business error code in `code` and the error details in `message`.
       description: |-
         This interface is used to modify or reset the trading password of a specified securities account. By providing the account number account_no and the encrypted new trading password encrypt_password, it completes the update of the trading password.Unlike the trading password set interface, this interface is applicable to scenarios where the account already has a trading password but needs to be changed.
 
@@ -305,6 +365,20 @@ paths:
         ```
 
         Here `ts` is the value of `x-timestamp` in the request header, which is a Unix timestamp.
+      x-mint:
+        href: /en/api-reference/reset_trade_password
+        metadata:
+          sidebarTitle: Trade Password Reset
+  /v1/whaleapi/account/trade/set_pwd:
+    post:
+      operationId: set_trade_password
+      summary: Trade Password Set
+      tags:
+        - Trading Panel
+      x-permission-key:
+        - broker_api.super_manage
+      x-lbonly: false
+      x-source: WhaleAPI
       requestBody:
         required: true
         content:
@@ -366,21 +440,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
           description: The request timed out. Check the business error code in `code` and the error details in `message`.
-      description: This interface is used to modify or reset the trading password of a specified securities account. By providing the account number account_no and the encrypted new trading password encrypt_password, it completes the update of the trading password.Unlike the trading password set interface, this interface is applicable to scenarios where the account already has a trading password but needs to be changed.
-      x-mint:
-        href: /en/api-reference/reset_trade_password
-        metadata:
-          sidebarTitle: Trade Password Reset
-  /v1/whaleapi/account/trade/set_pwd:
-    post:
-      operationId: set_trade_password
-      summary: Trade Password Set
-      tags:
-        - Trading Panel
-      x-permission-key:
-        - broker_api.super_manage
-      x-lbonly: false
-      x-source: WhaleAPI
       description: |-
         This interface is used to set the trading password for a specified securities account for the first time. By providing the account number account_no and the encrypted trading password encrypt_password, it completes the initial setup of the trading password.
 
@@ -402,68 +461,6 @@ paths:
         ```
 
         Here `ts` is the value of `x-timestamp` in the request header, which is a Unix timestamp.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties: {}
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: integer
-                    description: |-
-                      `0` indicates success. A non-zero value is a business error code, in which case
-                      `data` is usually empty.
-
-                      HTTP status codes use their standard semantics. A successful request normally
-                      returns `200`; errors may return `400`, `401`, `403`, `408`, or another applicable
-                      status. Interpret the HTTP status together with the business `code`.
-
-                      - `401`: The user is not authenticated.
-                      - `403`: The current account is not authorized to use this function. Grant access
-                        through User Permission.. Options: `0` = Success
-                  message:
-                    type: string
-                  data:
-                    type: object
-                    properties: {}
-                    description: Data
-              example:
-                code: 0
-                message: success
-                data: {}
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
-          description: Bad request. Check the business error code in `code` and the error details in `message`.
-        "401":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
-          description: The user is not authenticated, or the login session has expired.
-        "403":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
-          description: The current account is not authorized to use this feature. Grant the required permission to the account in User Permission.
-        "408":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
-          description: The request timed out. Check the business error code in `code` and the error details in `message`.
-      description: This interface is used to set the trading password for a specified securities account for the first time. By providing the account number account_no and the encrypted trading password encrypt_password, it completes the initial setup of the trading password.
       x-mint:
         href: /en/api-reference/set_trade_password
         metadata:
@@ -478,27 +475,6 @@ paths:
         - broker_api.super_manage
       x-lbonly: false
       x-source: WhaleAPI
-      description: |-
-        This interface is used to verify whether the login password of a specified securities account is correct. By providing the account number account_no and the encrypted login password password, it returns the verification result pass (Y for passed, N for failed).
-
-        Password transmission requires the password to be encrypted. The encryption method is as follows:
-
-        ```javascript
-        const Crypto = require('crypto-js')
-
-        const encryptedPassword = function encodePassword(ts, password) {
-            const keyMD5 = Crypto.MD5(ts.toString())
-            const pwdMD5 = Crypto.MD5(password)
-            const iv = keyMD5.slice(0, 16)
-
-            return Crypto.AES.encrypt(pwdMD5, keyMD5, {
-                mode: Crypto.mode.CBC,
-                padding: Crypto.pad.Pkcs7
-            });
-        }
-        ```
-
-        Here `ts` is the value of `x-timestamp` in the request header, which is a Unix timestamp.
       requestBody:
         required: true
         content:
@@ -576,7 +552,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
           description: The request timed out. Check the business error code in `code` and the error details in `message`.
-      description: This interface is used to verify whether the login password of a specified securities account is correct. By providing the account number account_no and the encrypted login password password, it returns the verification result pass (Y for passed, N for failed).
+      description: |-
+        This interface is used to verify whether the login password of a specified securities account is correct. By providing the account number account_no and the encrypted login password password, it returns the verification result pass (Y for passed, N for failed).
+
+        Password transmission requires the password to be encrypted. The encryption method is as follows:
+
+        ```javascript
+        const Crypto = require('crypto-js')
+
+        const encryptedPassword = function encodePassword(ts, password) {
+            const keyMD5 = Crypto.MD5(ts.toString())
+            const pwdMD5 = Crypto.MD5(password)
+            const iv = keyMD5.slice(0, 16)
+
+            return Crypto.AES.encrypt(pwdMD5, keyMD5, {
+                mode: Crypto.mode.CBC,
+                padding: Crypto.pad.Pkcs7
+            });
+        }
+        ```
+
+        Here `ts` is the value of `x-timestamp` in the request header, which is a Unix timestamp.
       x-mint:
         href: /en/api-reference/whale_account_no_login_check
         metadata:
