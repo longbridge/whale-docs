@@ -26,6 +26,9 @@ import bookkeepingZhHKSource from "../../../broker-api/bookkeeping.zh-HK.yml?raw
 import announcementEnSource from "../../../broker-api/announcement.en.yml?raw";
 import announcementZhCNSource from "../../../broker-api/announcement.zh-CN.yml?raw";
 import announcementZhHKSource from "../../../broker-api/announcement.zh-HK.yml?raw";
+import corporateActionEnSource from "../../../broker-api/corporate-action.en.yml?raw";
+import corporateActionZhCNSource from "../../../broker-api/corporate-action.zh-CN.yml?raw";
+import corporateActionZhHKSource from "../../../broker-api/corporate-action.zh-HK.yml?raw";
 import reportsEnSource from "../../../broker-api/reports.en.yml?raw";
 import reportsZhCNSource from "../../../broker-api/reports.zh-CN.yml?raw";
 import reportsZhHKSource from "../../../broker-api/reports.zh-HK.yml?raw";
@@ -83,6 +86,9 @@ const bookkeepingZhHK = parse(bookkeepingZhHKSource) as OpenApiDocument;
 const announcementEn = parse(announcementEnSource) as OpenApiDocument;
 const announcementZhCN = parse(announcementZhCNSource) as OpenApiDocument;
 const announcementZhHK = parse(announcementZhHKSource) as OpenApiDocument;
+const corporateActionEn = parse(corporateActionEnSource) as OpenApiDocument;
+const corporateActionZhCN = parse(corporateActionZhCNSource) as OpenApiDocument;
+const corporateActionZhHK = parse(corporateActionZhHKSource) as OpenApiDocument;
 const reportsEn = parse(reportsEnSource) as OpenApiDocument;
 const reportsZhCN = parse(reportsZhCNSource) as OpenApiDocument;
 const reportsZhHK = parse(reportsZhHKSource) as OpenApiDocument;
@@ -116,9 +122,9 @@ function mergeDocuments(
 }
 
 const documents = {
-  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, clearingEn, billingEn, suspiciousEn, serviceParamEn, bookkeepingEn, announcementEn, reportsEn, riskControlEn),
-  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, clearingZhCN, billingZhCN, suspiciousZhCN, serviceParamZhCN, bookkeepingZhCN, announcementZhCN, reportsZhCN, riskControlZhCN),
-  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, clearingZhHK, billingZhHK, suspiciousZhHK, serviceParamZhHK, bookkeepingZhHK, announcementZhHK, reportsZhHK, riskControlZhHK),
+  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, clearingEn, billingEn, suspiciousEn, serviceParamEn, bookkeepingEn, announcementEn, corporateActionEn, reportsEn, riskControlEn),
+  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, clearingZhCN, billingZhCN, suspiciousZhCN, serviceParamZhCN, bookkeepingZhCN, announcementZhCN, corporateActionZhCN, reportsZhCN, riskControlZhCN),
+  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, clearingZhHK, billingZhHK, suspiciousZhHK, serviceParamZhHK, bookkeepingZhHK, announcementZhHK, corporateActionZhHK, reportsZhHK, riskControlZhHK),
 } as const;
 
 const domainDocuments = {
@@ -132,6 +138,7 @@ const domainDocuments = {
     ["broker-api/service-param.en.yml", serviceParamEn],
     ["broker-api/bookkeeping.en.yml", bookkeepingEn],
     ["broker-api/announcement.en.yml", announcementEn],
+    ["broker-api/corporate-action.en.yml", corporateActionEn],
     ["broker-api/reports.en.yml", reportsEn],
     ["broker-api/risk-control.en.yml", riskControlEn],
   ],
@@ -145,6 +152,7 @@ const domainDocuments = {
     ["broker-api/service-param.zh-CN.yml", serviceParamZhCN],
     ["broker-api/bookkeeping.zh-CN.yml", bookkeepingZhCN],
     ["broker-api/announcement.zh-CN.yml", announcementZhCN],
+    ["broker-api/corporate-action.zh-CN.yml", corporateActionZhCN],
     ["broker-api/reports.zh-CN.yml", reportsZhCN],
     ["broker-api/risk-control.zh-CN.yml", riskControlZhCN],
   ],
@@ -158,6 +166,7 @@ const domainDocuments = {
     ["broker-api/service-param.zh-HK.yml", serviceParamZhHK],
     ["broker-api/bookkeeping.zh-HK.yml", bookkeepingZhHK],
     ["broker-api/announcement.zh-HK.yml", announcementZhHK],
+    ["broker-api/corporate-action.zh-HK.yml", corporateActionZhHK],
     ["broker-api/reports.zh-HK.yml", reportsZhHK],
     ["broker-api/risk-control.zh-HK.yml", riskControlZhHK],
   ],

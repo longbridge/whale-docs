@@ -13451,6 +13451,7 @@ paths:
       summary: 查詢匯出記錄
       x-summary-hk: 查詢匯出記錄
       x-summary-en: Query Export Records
+      x-verified: verified
       tags:
         - 其他
       x-lbonly: false
@@ -13668,6 +13669,7 @@ paths:
       summary: 通用獲取文件下載信息
       x-summary-hk: 通用獲取文件下載信息
       x-summary-en: Get Dataset Download Info
+      x-verified: verified
       tags:
         - 其他
       x-lbonly: false
@@ -13848,6 +13850,94 @@ paths:
         href: /zh-hk/api-reference/get_dataset_download
         metadata:
           sidebarTitle: 通用獲取文件下載信息
+    delete:
+      operationId: delete_dataset_download
+      summary: 通用刪除文件下載信息
+      x-verified: verified
+      tags:
+        - Misc
+      x-lbonly: false
+      description: |-
+        刪除指定的異步數據集導出記錄。
+
+        ### 注意事項
+
+        - `id` 必須是異步導出返回的 `data.file_download_id`。
+        - 本操作用於清理導出任務記錄；調用前應確認該記錄不再需要。
+        - 接口當前標記為 `inferred`，使用前應在目標環境確認路由可用。
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: |-
+            要刪除的異步導出任務編號，即導出接口返回的 `data.file_download_id`。
+      responses:
+        "200":
+          description: |-
+            成功時分頁返回「通用刪除文件下載信息」記錄，以及頁碼、每頁數量和總記錄數等分頁信息。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code`
+                      判斷具體結果。
+
+                      - `401`：未登錄。
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。
+                    x-enum-details:
+                      - value: 0
+                        label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+
+        "400":
+          description: |-
+            請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "401":
+          description: |-
+            未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "403":
+          description: |-
+            當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "408":
+          description: |-
+            請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+      x-mint:
+        href: /zh-hk/api-reference/delete_dataset_download
+        metadata:
+          sidebarTitle: 通用刪除文件下載信息
   /admin-api/v2/tickets/component:
     post:
       operationId: get_flow_tickets_with_biz
@@ -13984,6 +14074,1084 @@ paths:
         href: /zh-HK/api-reference/get_flow_tickets_with_biz
         metadata:
           sidebarTitle: 獲取審批流（按業務對象）
+  /admin-api/flow_ticket_steps/{stepId}:
+    put:
+      operationId: approve_flow_ticket_step
+      summary: 審批工單步驟（同意/拒絕）
+      x-verified: verified
+      tags:
+        - Misc
+      x-lbonly: false
+      description: |-
+        通用工單審批（同意/拒絕）。為歷史遺留接口，已由新的工單審批接口取代，新業務不應再調用。
+
+        ### 請求參數
+
+        - 必填：`action`（動作）、`comment`（審批意見）、`stepId`（stepId）
+        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段說明。
+
+        ### 處理結果
+
+        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: stepId
+          in: path
+          required: true
+          schema:
+            type: number
+          description: |-
+            路徑參數：審批步驟 ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+                - comment
+              properties:
+                action:
+                  type: number
+                  description: |-
+                    操作類型，取值 3/4/5
+
+                    **可選值：**
+                    - `3` - 表示同意
+                    - `4` - 表示拒絕
+                    - `5` - 表示保留值（控制檯未使用）
+                  enum: ["3", "4", "5"]
+                  x-enum-details:
+                    - value: "3"
+                      label: 同意
+                    - value: "4"
+                      label: 拒絕
+                    - value: "5"
+                      label: 保留值（控制檯未使用）
+                comment:
+                  type: string
+                  description: |-
+                    用於指定「審批意見」。此字段為必填項。
+            example:
+              action: 3
+              comment: 同意
+      responses:
+        "200":
+          description: |-
+            請求處理成功。響應的 `data` 不包含額外業務字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code`
+                      判斷具體結果。
+
+                      - `401`：未登錄。
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。
+                    x-enum-details:
+                      - value: 0
+                        label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+
+        "400":
+          description: |-
+            請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "401":
+          description: |-
+            未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "403":
+          description: |-
+            當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "408":
+          description: |-
+            請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+      x-mint:
+        href: /zh-hk/api-reference/approve_flow_ticket_step
+        metadata:
+          sidebarTitle: 審批工單步驟（同意/拒絕）
+  /admin-api/comments:
+    post:
+      operationId: create_comment
+      summary: 創建評論
+      x-verified: verified
+      tags:
+        - Misc
+      x-lbonly: false
+      description: |-
+        通用工單審批系統共享接口，為工單/審批步驟添加評論。
+
+        ### 請求參數
+
+        - 必填：`target_type`（關聯對象類型）、`target_id`（關聯對象ID）、`text`（評論內容）
+        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段說明。
+
+        ### 處理結果
+
+        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - target_type
+                - target_id
+                - text
+              properties:
+                target_type:
+                  type: string
+                  description: |-
+                    用於指定「關聯對象類型」。此字段為必填項。
+                target_id:
+                  type: number
+                  description: |-
+                    關聯對象ID，用於標識本次請求關聯的業務對象。此字段為必填項。
+                text:
+                  type: string
+                  description: |-
+                    用於指定「評論內容」。此字段為必填項。
+            example:
+              target_type: flow_ticket
+              target_id: 123
+              text: 备注内容
+      responses:
+        "200":
+          description: |-
+            請求處理成功。響應的 `data` 不包含額外業務字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code`
+                      判斷具體結果。
+
+                      - `401`：未登錄。
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。
+                    x-enum-details:
+                      - value: 0
+                        label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+
+        "400":
+          description: |-
+            請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "401":
+          description: |-
+            未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "403":
+          description: |-
+            當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "408":
+          description: |-
+            請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+      x-mint:
+        href: /zh-hk/api-reference/create_comment
+        metadata:
+          sidebarTitle: 創建評論
+  /admin-api/comments/{id}:
+    delete:
+      operationId: delete_comment
+      summary: 刪除評論
+      x-verified: verified
+      tags:
+        - Misc
+      x-lbonly: false
+      description: |-
+        刪除評論。
+
+        ### 請求參數
+
+        - 必填：`id`（id）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 處理結果
+
+        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: |-
+            路徑參數
+      responses:
+        "200":
+          description: |-
+            請求處理成功。響應的 `data` 不包含額外業務字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code`
+                      判斷具體結果。
+
+                      - `401`：未登錄。
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。
+                    x-enum-details:
+                      - value: 0
+                        label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+
+        "400":
+          description: |-
+            請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "401":
+          description: |-
+            未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "403":
+          description: |-
+            當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "408":
+          description: |-
+            請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+      x-mint:
+        href: /zh-hk/api-reference/delete_comment
+        metadata:
+          sidebarTitle: 刪除評論
+  /admin-api/v2/tickets/export:
+    post:
+      operationId: export_tickets
+      summary: 導出工單
+      x-verified: verified
+      tags:
+        - Misc
+      x-lbonly: false
+      description: |-
+        導出工單。
+
+        ### 請求參數
+
+        - 可選：`tab`（工單分類）、`categories`（分類）、`actor_id`（處理人ID）、`last_handler_id`（最後處理人ID）、`applied_time_range`（申請時間範圍）、`file_type`（導出文件類型）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 處理結果
+
+        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tab:
+                  type: string
+                  description: |-
+                    用於指定「工單分類」。
+
+                    **可選值：**
+                    - `pending` - 表示待審批
+                    - `created` - 表示我發起
+                    - `done` - 表示已審批
+                    - `cc` - 表示抄送我
+                    - `all` - 表示全部
+                  enum: [pending, created, done, cc, all]
+                  x-enum-details:
+                    - value: pending
+                      label: 待審批
+                    - value: created
+                      label: 我發起
+                    - value: done
+                      label: 已審批
+                    - value: cc
+                      label: 抄送我
+                    - value: all
+                      label: 全部
+                categories:
+                  type: string
+                  description: |-
+                    用於指定「分類」。
+                actor_id:
+                  type: string
+                  description: |-
+                    處理人ID，用於標識本次請求關聯的業務對象。
+                last_handler_id:
+                  type: string
+                  description: |-
+                    最後處理人ID，用於標識本次請求關聯的業務對象。
+                applied_time_range:
+                  type: string
+                  description: |-
+                    用於指定「申請時間範圍」。
+                file_type:
+                  type: string
+                  description: |-
+                    用於指定「導出文件類型」。
+            example:
+              tab: all
+              file_type: xlsx
+      responses:
+        "200":
+          description: |-
+            請求處理成功。響應的 `data` 不包含額外業務字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code`
+                      判斷具體結果。
+
+                      - `401`：未登錄。
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。
+                    x-enum-details:
+                      - value: 0
+                        label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+
+        "400":
+          description: |-
+            請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "401":
+          description: |-
+            未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "403":
+          description: |-
+            當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "408":
+          description: |-
+            請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+      x-mint:
+        href: /zh-hk/api-reference/export_tickets
+        metadata:
+          sidebarTitle: 導出工單
+  /admin-api/flow_tickets/{id}/comments:
+    get:
+      operationId: get_flow_ticket_step_comments
+      summary: 獲取審批步驟評論
+      x-verified: verified
+      tags:
+        - Misc
+      x-lbonly: false
+      description: |-
+        通用工單審批系統共享接口，查詢某個工單下的全部評論。
+
+        ### 請求參數
+
+        - 必填：`id`（id）
+        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段說明。
+
+        ### 處理結果
+
+        成功時返回查詢結果，具體結構見 `200` 響應定義。
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+          description: |-
+            路徑參數
+      responses:
+        "200":
+          description: |-
+            請求處理成功。響應的 `data` 不包含額外業務字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code`
+                      判斷具體結果。
+
+                      - `401`：未登錄。
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。
+                    x-enum-details:
+                      - value: 0
+                        label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+
+        "400":
+          description: |-
+            請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "401":
+          description: |-
+            未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "403":
+          description: |-
+            當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "408":
+          description: |-
+            請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+      x-mint:
+        href: /zh-hk/api-reference/get_flow_ticket_step_comments
+        metadata:
+          sidebarTitle: 獲取審批步驟評論
+  /admin-api/v2/tickets:
+    post:
+      operationId: get_ticket_list_v2
+      summary: 查詢工單列表
+      x-verified: verified
+      tags:
+        - Misc
+      x-lbonly: false
+      description: |-
+        查詢工單列表。
+
+        ### 請求參數
+
+        - 可選：`tab`（工單分類）、`id`（工單ID）、`flow_key`（流程Key）、`actor_id`（處理人ID）、`all`（是否全部）、`last_handler_id`（最後處理人ID）、`applied_time_range`（申請時間範圍）、`page`（頁碼）、`page_size`（每頁數量）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 處理結果
+
+        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tab:
+                  type: string
+                  description: |-
+                    要查詢的工單分類。
+
+                    **可選值：**
+                    - `pending` - 表示待審批
+                    - `created` - 表示我發起的工單
+                    - `done` - 表示已審批
+                    - `cc` - 表示抄送給我的工單
+                  enum: [pending, created, done, cc]
+                id:
+                  type: string
+                  description: |-
+                    工單ID，用於標識本次請求關聯的業務對象。
+                flow_key:
+                  type: string
+                  description: |-
+                    用於指定「流程Key」。
+                actor_id:
+                  type: string
+                  description: |-
+                    處理人ID，用於標識本次請求關聯的業務對象。
+                all:
+                  type: boolean
+                  description: |-
+                    是否全部。
+
+                    **布爾值：**
+                    - `true` - 表示條件成立
+                    - `false` - 表示條件不成立
+                last_handler_id:
+                  type: string
+                  description: |-
+                    最後處理人ID，用於標識本次請求關聯的業務對象。
+                applied_time_range:
+                  type: string
+                  description: |-
+                    用於指定「申請時間範圍」。
+                page:
+                  type: number
+                  description: |-
+                    要查詢的頁碼，從 `1` 開始。
+                page_size:
+                  type: number
+                  description: |-
+                    每頁返回的最大記錄數，應為正整數。
+            example:
+              tab: pending
+              page: 1
+              page_size: 20
+      responses:
+        "200":
+          description: |-
+            請求處理成功。響應的 `data` 不包含額外業務字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code`
+                      判斷具體結果。
+
+                      - `401`：未登錄。
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。
+                    x-enum-details:
+                      - value: 0
+                        label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+
+        "400":
+          description: |-
+            請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "401":
+          description: |-
+            未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "403":
+          description: |-
+            當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "408":
+          description: |-
+            請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+      x-mint:
+        href: /zh-hk/api-reference/get_ticket_list_v2
+        metadata:
+          sidebarTitle: 查詢工單列表
+  /admin-api/v2/tickets/{id}:
+    post:
+      operationId: handle_ticket
+      summary: 處理工單（同意/拒絕/評論/轉交/抄送/加簽/關閉/回退）
+      x-verified: verified
+      tags:
+        - Misc
+      x-lbonly: false
+      description: |-
+        通用工單審批系統的核心接口，是目前實際生效的審批操作入口（取代了已廢棄的 approve_flow_ticket_step）。comment=評論，transfer=轉交，cc=抄送，sign=加簽，close=關閉，另支持 reject/rollback。
+
+        ### 請求參數
+
+        - 必填：`action`（動作）、`id`（id）
+        - 可選：`comment`（評論）、`user_ids`（用戶ID列表）、`role_ids`（角色ID列表）、`payload`（業務數據）、`data`（擴展數據）
+        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段說明。
+
+        ### 處理結果
+
+        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: |-
+            路徑參數
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  description: |-
+                    用於指定「動作」。此字段為必填項。
+
+                    **可選值：**
+                    - `approve` - 表示通過
+                    - `reject` - 表示拒絕
+                    - `close` - 表示關閉
+                    - `comment` - 表示評論
+                    - `transfer` - 表示轉交
+                    - `cc` - 表示抄送
+                    - `sign` - 表示加簽
+                    - `rollback` - 表示回退
+                  enum: [approve, reject, close, comment, transfer, cc, sign, rollback]
+                  x-enum-details:
+                    - value: approve
+                      label: 通過
+                    - value: reject
+                      label: 拒絕
+                    - value: close
+                      label: 關閉
+                    - value: comment
+                      label: 評論
+                    - value: transfer
+                      label: 轉交
+                    - value: cc
+                      label: 抄送
+                    - value: sign
+                      label: 加簽
+                    - value: rollback
+                      label: 回退
+                comment:
+                  type: string
+                  description: |-
+                    根據 action 選填
+                user_ids:
+                  type: array
+                  description: |-
+                    根據 action 選填，如轉交/抄送/加簽
+                  items:
+                    type: string
+                role_ids:
+                  type: array
+                  description: |-
+                    根據 action 選填
+                  items:
+                    type: string
+                payload:
+                  type: object
+                  description: |-
+                    用於指定「業務數據」。
+                data:
+                  type: object
+                  description: |-
+                    用於指定「擴展數據」。
+            example:
+              action: approve
+              comment: 同意
+      responses:
+        "200":
+          description: |-
+            請求處理成功。響應的 `data` 不包含額外業務字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code`
+                      判斷具體結果。
+
+                      - `401`：未登錄。
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。
+                    x-enum-details:
+                      - value: 0
+                        label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+
+        "400":
+          description: |-
+            請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "401":
+          description: |-
+            未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "403":
+          description: |-
+            當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "408":
+          description: |-
+            請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+      x-mint:
+        href: /zh-hk/api-reference/handle_ticket
+        metadata:
+          sidebarTitle: 處理工單（同意/拒絕/評論/轉交/抄送/加簽/關閉/回退）
+  /admin-api/flow_tickets/{id}:
+    put:
+      operationId: update_flow_ticket_payload
+      summary: 更新審批工單 payload
+      x-verified: verified
+      tags:
+        - Misc
+      x-lbonly: false
+      description: |-
+        通用工單審批系統共享接口，用於在審批中途修改工單掛載的業務數據（payload），常見於審批人在通過前對提交內容做微調的場景。
+
+        ### 請求參數
+
+        - 必填：`payload`（工單業務數據）、`id`（id）
+        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段說明。
+
+        ### 處理結果
+
+        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: |-
+            工單ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - payload
+              properties:
+                payload:
+                  type: object
+                  description: |-
+                    結構由具體業務方決定，未在共享代碼中找到統一定義
+            example:
+              payload: {}
+      responses:
+        "200":
+          description: |-
+            請求處理成功。響應的 `data` 不包含額外業務字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code`
+                      判斷具體結果。
+
+                      - `401`：未登錄。
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。
+                    x-enum-details:
+                      - value: 0
+                        label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+
+        "400":
+          description: |-
+            請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "401":
+          description: |-
+            未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "403":
+          description: |-
+            當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "408":
+          description: |-
+            請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+      x-mint:
+        href: /zh-hk/api-reference/update_flow_ticket_payload
+        metadata:
+          sidebarTitle: 更新審批工單 payload
+  /admin-api/v2/tickets/{ticketId}/update_policies:
+    post:
+      operationId: update_policies_with_ticket
+      summary: 更新工單權限策略
+      x-verified: verified
+      tags:
+        - Misc
+      x-lbonly: false
+      description: |-
+        更新工單權限策略。
+
+        ### 請求參數
+
+        - 必填：`keys`（策略Key列表）、`ticketId`（ticketId）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 處理結果
+
+        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: |-
+            路徑參數
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - keys
+              properties:
+                keys:
+                  type: array
+                  description: |-
+                    策略Key列表，以 JSON 數組形式提交。此字段為必填項。
+                  items:
+                    type: string
+            example:
+              keys:
+                - policy_key_1
+      responses:
+        "200":
+          description: |-
+            請求處理成功。響應的 `data` 不包含額外業務字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 為業務錯誤碼，此時 `data` 通常為空。
+
+                      HTTP status 使用標準語義：成功時通常為 `200`，異常時可能為 `400`、`401`、`403`、`408` 等，需結合業務 `code`
+                      判斷具體結果。
+
+                      - `401`：未登錄。
+                      - `403`：當前賬號未獲得該功能授權，需通過 User Permission 授權。
+                    x-enum-details:
+                      - value: 0
+                        label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+
+        "400":
+          description: |-
+            請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "401":
+          description: |-
+            未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "403":
+          description: |-
+            當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+        "408":
+          description: |-
+            請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerGatewayErrorEnvelope"
+      x-mint:
+        href: /zh-hk/api-reference/update_policies_with_ticket
+        metadata:
+          sidebarTitle: 更新工單權限策略
 components:
   schemas:
     BrokerGatewayErrorEnvelope:
