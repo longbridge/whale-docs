@@ -1,21 +1,60 @@
 ---
 title: Android
-description: WhaleCoreSDK Android 安装、初始化、生命周期与公开服务
+description: WhaleCoreSDK Android 的安装、初始化、核心概念与行情、交易、资产、自选等业务服务
 ---
 
 ## 接入要求 {/* integrate */}
 
-交付包包含 WhaleCore 与 Engine AAR，以及用于注入本地和远程依赖的 `whalecore.gradle`：
+| 项 | 要求 |
+| --- | --- |
+| `minSdk` | ≥ 24 |
+| JVM target | 11 |
+| Kotlin | 需启用 Kotlin 插件（SDK 基于 Kotlin 2.0.x 构建） |
+
+在目标 module 的 `build.gradle[.kts]` 中引入交付包提供的 `whalecore.gradle`：
 
 ```kotlin
+// Kotlin DSL
 apply(from = "<path-to>/whalecore/whalecore.gradle")
 ```
 
-宿主需要配置 Android `minSdk`、JVM target 11 或更高版本及 Kotlin 插件；`minSdk < 26` 时接入脚本会配置 core library desugaring。最终支持矩阵以交付版本为准。
+```groovy
+// Groovy DSL
+apply from: "<path-to>/whalecore/whalecore.gradle"
+```
+
+`whalecore.gradle` 会自动为当前 module 注入：
+
+- `whalecore/libs/` 下的所有本地 AAR（SDK 本体及其依赖）
+- SDK 运行所需的远程传递依赖（`lifecycle-runtime`、`datastore-preferences`、`jackson-kotlin`、`protobuf-kotlin-lite`、`moshi-kotlin`、`jna`）
+- `minSdk < 26` 时必需的 `coreLibraryDesugaring` 配置
+
+接入方仍需自行配置 `minSdk`、JVM target 与 Kotlin 插件。完整接入示例见 `example/app/build.gradle.kts`。
+
+交付物目录结构：
+
+```txt
+WhaleCore-Android-<version>/
+├── README.md                          说明文档
+├── CHANGELOG.md                       对外接口变更记录
+├── whalecore/
+│   ├── libs/                          SDK 及其依赖的本地 AAR
+│   └── whalecore.gradle               一键接入脚本
+└── example/                           已接入 whalecore.gradle 的自包含示例工程
+```
+
+`example/` 演示了完整接入流程，建议先跑通它再接入自己的工程：
+
+```bash
+cd example
+./gradlew :app:installDebug
+```
+
+也可以用 Android Studio 直接打开 `example/` 目录。
 
 ## 初始化 {/* initialize */}
 
-`initialize` 会执行网络预热，是阻塞方法，应在 IO 线程调用。重复和并发调用安全，仅首次生效。
+使用任何服务前必须先调用 `WhaleCore.initialize`。该方法为**阻塞式**（含网络请求），请在 IO 线程执行；建议在 `Application.onCreate` 或首个受保护页面之前完成。
 
 ```kotlin
 val config = WhaleCoreConfig(
@@ -25,8 +64,10 @@ val config = WhaleCoreConfig(
     token = accessToken,
     refreshToken = refreshToken,
     defaultAccountChannel = "lb_hk",
+    deviceId = deviceId,
     language = WhaleCoreLanguage.ZH_HANS,
-    logLevel = WhaleCoreLogLevel.INFO
+    logLevel = WhaleCoreLogLevel.INFO,
+    tokenRefreshCallback = appTokenRefreshCallback,
 )
 
 withContext(Dispatchers.IO) {
@@ -34,34 +75,826 @@ withContext(Dispatchers.IO) {
 }
 ```
 
-不要把项目凭证或完整 token 写入日志。
+`WhaleCoreConfig` 常用字段：
+
+| 字段 | 默认值 | 说明 |
+| --- | --- | --- |
+| `token` / `refreshToken` | 必填 | 用户访问令牌与配套刷新令牌，由接入方后端换取 |
+| `defaultAccountChannel` | 必填 | 默认账户渠道；命中则设为当前账户，未命中回退列表首个 |
+| `deviceId` | 必填 | 设备唯一标识，长度不少于 32 位，由接入方生成并保证同一设备上稳定不变，用于标识请求来源设备与消息推送投递 |
+| `logLevel` | `INFO` | 日志级别：`TRACE` > `DEBUG` > `INFO` > `WARN` > `ERROR`，生产环境建议 `ERROR` |
+| `language` | `ZH_HANS` | 语言偏好：`EN` / `ZH_HK` / `ZH_HANS`，影响服务端返回文本 |
+| `tokenRefreshCallback` | `null` | 登录 token 刷新与失效兜底回调，见[登录态维护](#token-refresh) |
+| `tokenResolverTimeout` | `30` | 兜底获取 token 的超时（秒），非正值回落默认值 |
+
+要点：
+
+- 重复调用安全，仅首次生效；并发调用会阻塞至首次初始化完成后返回。
+- 初始化会先校验必填字段，缺失（或 `deviceId` 短于 32 位）时抛出 `WhaleCoreException.InvalidParameter`，可由 `parameterName` 定位具体字段。
+- 可用 `WhaleCore.isInitialized()` 查询状态。
+- 不要打印整个 `config`：其中含 `appSecret` / `token` 等敏感凭证。
 
 ## 生命周期与销毁 {/* lifecycle */}
 
-```kotlin
-WhaleCore.resume()
-WhaleCore.pause()
+`WhaleCore.resume()` / `WhaleCore.pause()` 的口径是**整个应用**的前后台切换，一次切换各调一次。推荐在 Application 中用 `ProcessLifecycleOwner` 统一转发：
 
-withContext(Dispatchers.IO) {
-    WhaleCore.destroy()
+```kotlin
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) = WhaleCore.resume()
+            override fun onStop(owner: LifecycleOwner) = WhaleCore.pause()
+        })
+    }
 }
 ```
 
-`destroy()` 释放协程、WebSocket、缓存和 native 句柄。销毁后可使用新账号配置重新 `initialize`。
+不要挂在单个 Activity 的 `onResume` / `onPause` 上——页面之间跳转也会触发，会把「进后台」误报给 SDK。未初始化时二者均为空操作，可安全调用。
+
+登出、销毁或切换账号：
+
+```kotlin
+withContext(Dispatchers.IO) { WhaleCore.logoutAndDestroy() }
+```
+
+`logoutAndDestroy()` 先通知服务端当前登录态失效，再释放本次会话占用的全部资源（网络连接、缓存及底层句柄）。该方法为**阻塞式**，返回时登出与释放均已结束（登出限时等待，失败不影响资源释放，因此不返回登出结果）。销毁后 SDK 回到未初始化状态；传入新账号的 `config` 再次调用 `initialize` 即可完成**切换账号**。
+
+## 登录态维护 {/* token-refresh */}
+
+SDK 会用 `refreshToken` 自动续期访问令牌，接入方无需干预日常刷新。为让登录态持续可用，通过 `config.tokenRefreshCallback` 注册一个 `TokenRefreshCallback`（所有方法均在主线程回调、均有默认实现）：
+
+```kotlin
+val appTokenRefreshCallback = object : TokenRefreshCallback {
+
+    override fun onTokenRefreshed(token: String, refreshToken: String) {
+        // 新的 token / refreshToken；是否持久化、如何持久化由接入方自行决定
+        credentialStore.update(token, refreshToken)
+    }
+
+    override fun resolveExpiredToken(callback: NewTokenCallback) {
+        appScope.launch {
+            val fresh = runCatching { authApi.silentLogin() }.getOrNull()
+            // 回填非空凭证会让 SDK 自动重试之前失败的请求；
+            // 回填空值或超时未回填会让相关请求失败，接入方据此引导用户重新登录
+            callback.onResult(fresh?.token.orEmpty(), fresh?.refreshToken.orEmpty())
+        }
+    }
+
+    override fun onTokenRefreshFailed(exception: WhaleCoreException) {
+        // 兜底重取也失败的终局通知：引导用户重新登录
+        sessionRouter.gotoLogin()
+    }
+}
+```
+
+- **续期成功**（`onTokenRefreshed`）：SDK 通知接入方 token / refreshToken 已变更。
+- **登录态失效**（`resolveExpiredToken`）：SDK 给接入方一次重新取 token 的机会，此期间相关请求挂起等待回填结果；多个请求同时失效时只触发一次，结果由这些请求共享。
+- **终局失败**（`onTokenRefreshFailed`）：重取也未能提供有效令牌时收到通知，通常在此引导用户重新登录。
+- 必须在超时（`tokenResolverTimeout`，默认 30 秒）内调用 `callback.onResult(...)`，超时未回填等同失败。
+- 该回调会被长期持有，建议传应用级单例，避免 Activity/Fragment 泄漏。
+
+## 核心概念 {/* core-concepts */}
+
+以下规则贯穿多个业务服务，建立一次即可，后文不再重复解释。
+
+### 标的编码 {/* counter-id */}
+
+三段式格式 `ST/MARKET/CODE`，如 `"ST/US/AAPL"`、`"ST/HK/00700"`；期权额外编码行权价、到期日与方向。行情、订单、自选、盈亏分析等所有按标的定位的接口均使用这一套编码。
+
+### 协程与回调 {/* coroutines-and-callbacks */}
+
+每个能力都提供协程版 `suspend fun` 与回调版 `*Async(..., AsyncCallback<T>?)`，按调用场景任选（Java 调用方或不便使用协程的场景用回调版）。本文档的方法一览只列协程版签名，回调版方法名加 `Async` 后缀、其余参数一致。
+
+```kotlin
+// 协程版
+val stock = WhaleCore.getQuoteService().getStock("ST/US/AAPL")
+
+// 回调版
+WhaleCore.getQuoteService().getStockAsync("ST/US/AAPL", object : AsyncCallback<Stock> {
+    override fun onSuccess(result: Stock?) { /* ... */ }
+    override fun onError(error: Throwable) { /* ... */ }
+})
+```
+
+`*Async` 与各类观察回调均在**非主线程**触发，更新 UI 需自行切回主线程；协程任务被取消（如会话已销毁）时不触发任何回调，也不会调用 `onError`。`OptionCalculator` 是例外——纯同步计算，不涉及协程，也没有 `*Async` 版本。
+
+### 事件流订阅方式 {/* event-stream-subscription */}
+
+订单、资产、自选、行情的实时推送都提供同一组三种消费形式，按场景选择：
+
+| 形式 | 适用场景 | 释放方式 |
+| --- | --- | --- |
+| `observeXxxEvents(): Flow<T>` | Kotlin 协程场景，推荐首选 | 随协程作用域结束自动释放 |
+| `observeXxxEvents(lifecycleOwner, callback)` | 需要绑定 Activity/Fragment 生命周期 | `DESTROYED` 时自动取消 |
+| `observeXxxEvents(callback)` | 不便绑定生命周期的场景 | **必须**手动调用返回的 `Subscription.cancel()`，否则内存泄漏 |
+
+`SharedFlow` 默认 `replay = 0`：注册监听前发生的事件不会补发，务必遵循"先监听、后触发刷新/订阅"的调用顺序。
+
+### 服务与鉴权边界 {/* service-lifecycle-and-auth */}
+
+不要长期缓存 `getXxxService()` 返回的实例——`logoutAndDestroy()` 后旧实例即失效，每次使用时重新获取；未初始化或已销毁时 `getXxxService()` 抛出 `WhaleCoreException.NotReady`。
+
+交易需要交易令牌（Trade Token），默认由 SDK 自动获取与续期，宿主无需参与、无需任何配置。请求交易作用域的接口（下单、改撤单等）失败时如收到 `WhaleCoreException.TradeAuthFailed`，属于罕见的服务端侧鉴权失败，按[错误处理](#error-handling)统一处理即可。
 
 ## 服务入口 {/* public-services */}
 
 | 方法 | 服务 | 主要能力 |
 | --- | --- | --- |
-| `getQuoteService()` | `QuoteService` | 行情事件、快照、K 线、期权链 |
-| `getOrderService()` | `OrderService` | 订单、预估、改单、撤单和推送 |
-| `getOrderValidationService()` | `OrderValidationService` | 可交易性、约束与提交前校验 |
-| `getPortfoliosService()` | `PortfolioService` | 资产、持仓、现金和设置 |
-| `getWatchlistService()` | `WatchlistService` | 自选分组、股票和排序 |
-| `getTradeAuthService()` | `TradeAuthService` | trade token 与鉴权状态 |
-| `getRequestService()` | `RequestService` | 通用鉴权 HTTP 请求 |
+| `getQuoteService()` | `QuoteService` | 行情订阅、期权链/期权详情订阅、K 线、快照、分时数据、历史逐笔成交、行情等级与设备占用（多设备抢占与抢回） |
+| `getOrderService()` | `OrderService` | 下单、改单、撤单、附加单、持仓止盈止损、订单预览、预估信息、下单前置校验、订单事件 |
+| `getPortfoliosService()` | `PortfolioService` | 资产订阅、现金明细、会员资产设置、盈亏分析 |
+| `getWatchlistService()` | `WatchlistService` | 自选分组、股票、排序、置顶、事件 |
+| `getRequestService()` | `RequestService` | 透传鉴权 HTTP 请求 |
 
-未初始化时获取服务会抛出 `IllegalStateException`。业务接口通常同时提供协程方法与 `*Async` 回调方法。
+未初始化时获取服务会抛出 `WhaleCoreException.NotReady`。`OptionCalculator` 是无状态纯计算工具类，不通过 `WhaleCore` 获取，直接调用即可，详见[期权计算器](#option-calculator)。
+
+<Note>
+  历史独立入口 `WhaleCore.getOrderValidationService()` 已弃用，下单前置校验请直接调用 `WhaleCore.getOrderService()` 上的同名方法。
+</Note>
+
+## 行情 {/* quotes */}
+
+拉取快照，或用 `subscribe` 建立实时订阅持续接收更新：
+
+```kotlin
+val quotes = WhaleCore.getQuoteService()
+
+// 快照：一次性获取
+val stock = quotes.getStock("ST/US/AAPL")
+
+// 实时订阅：subscribe 建立订阅，链式选择行情通道后 start()，onChange 持续回调最新行情
+val subscription = quotes.subscribe(
+    counterIds = listOf("ST/US/AAPL", "ST/HK/00700"),
+    callback = object : QuoteEventCallback {
+        override fun onChange(stock: Stock) { updateRow(stock) }
+    },
+).detail().depth().trade().start()
+
+subscription.cancel()   // 页面销毁时取消
+```
+
+若行情已由其他途径（如自选 `WatchlistService`）订阅，用 `observeQuoteEvents(...)` 仅观察行情流、不重复建立订阅。
+
+### K 线 {/* klines */}
+
+```kotlin
+val klines = quotes.getKlines("ST/US/AAPL", KlineType.PER_DAY, count = 200)
+
+// K 线更新事件依赖该标的已有的行情订阅（哪怕只是 .list()）才会触发；事件只标识发生更新的标的，
+// 最新序列仍需调 getKlines 拉取
+lifecycleScope.launch {
+    quotes.observeKlineUpdates(listOf("ST/US/AAPL")).collect { update ->
+        val latest = quotes.getKlines(update.counterId, KlineType.PER_DAY, count = 200)
+        // 刷新 K 线图
+    }
+}
+```
+
+### 分时数据 {/* timeshares */}
+
+绘制分时走势图请使用本接口，不要用 1 分钟 K 线近似——分时按交易日分组、自带昨收与逐点均价，而 K 线是"从锚点往前 N 根"的连续序列，港股、A 股这类单日根数少的市场用 K 线凑分时会跨交易日混入前一日数据。
+
+```kotlin
+val today = quotes.getTimeshares("ST/US/AAPL").timeshares.lastOrNull()
+today?.minutes?.forEach { minute -> /* 价格 minute.price、均价 minute.avgPrice */ }
+```
+
+### 期权订阅 {/* option-quotes */}
+
+单合约详情订阅与多合约批量订阅二选一：
+
+```kotlin
+// 期权详情订阅：单合约快照 + 订阅，链式选择数据类型
+val optionSub = quotes.subscribeOptionDetail("OP/US/AAPL240119C190000", callback)
+    .detail().depth().trade().start()
+
+// 期权链批量订阅：整组合约，随交互整组替换（切到期日 / 滚动可见区），无需链式选类型
+val chainSub = quotes.subscribeOptionChain(visibleCounterIds, callback)
+chainSub.updateCounterIds(newVisibleCounterIds)   // 整组替换，非增量；句柄需强引用保活
+chainSub.cancel()
+```
+
+期权没有独立的盘口订阅通道：`start()` 拉取的快照自带一档盘口，但后续推送仍需显式链式调用 `.depth()`，不选则只有首帧带盘口。Greeks 不在行情推送中——宿主自订正股取正股价，传给 [`OptionCalculator`](#option-calculator) 本地计算。
+
+### 行情等级与设备占用 {/* quote-level-and-eviction */}
+
+同一账户在多台设备使用高级行情会互相抢占，被占用的市场降级为较低等级行情。
+
+```kotlin
+// 同步查当前状态：首次行情权限确认完成前返回 null
+val level = quotes.getQuoteLevelInfo()
+if (level?.isMarketEvicted("US") == true) {
+    // 被占用而服务端未返回文案时，evictedDescribe 为 null 或空串
+    level.evictedDescribe?.takeIf { it.isNotEmpty() }?.let { showBanner(it) }
+}
+
+// 观察刷新：订阅即收到当前快照，之后每拿到一次新的行情权限结果各回调一次（被抢占、抢回、切换语言）
+lifecycleScope.launch {
+    quotes.observeQuoteLevel().collect { info -> renderBanner(info) }
+}
+
+// 「重启行情」：把使用权抢回本设备。返回时状态尚未刷新，以随后的回调为准收起提示
+quotes.reclaimQuoteAccess()
+```
+
+各子市场的等级明细在 `QuoteLevelInfo.subMarketQuote`：等级标识原文、价格等级（`priceLevel`，配便利属性 `isDelayed`）、分类型的盘口档位（`depthLevel`，按 `depthType` 分条；粗判断可用 `maxDepthLevel`），以及逐笔、经纪、夜盘、盘前后开关。抢回后已订阅标的的最新行情会自动刷新、推送恢复，但被占用期间的逐笔成交记录不补回——需要完整序列的页面在收到未被占用的新快照后用 `getTrades` 重新拉取。提示条展示与「今日不再提示」等策略由宿主自行决定。
+
+**方法一览：**
+
+| 方法 | 说明 |
+| --- | --- |
+| `getInterestRate()` | 读取 SDK 内置无风险利率（年化小数），供期权计算器展示用；不可用时返回 `null` |
+| `getStock(counterId)` | 获取指定标的当前行情快照；未订阅或数据未到达时返回 `null` |
+| `getTrades(counterId,`<br />`count = 100,`<br />`lastSequenceId = 0,`<br />`lastTradeSession = 0,`<br />`tradeType = 0)` | 拉取历史逐笔成交（分页，纯查询不建订阅），实时增量需配合 `subscribe(...).trade()` 叠加 |
+| `getKlines(counterId,`<br />`klineType,`<br />`count,`<br />`timestamp = 0,`<br />`adjustType = FORWARD_ADJUST,`<br />`klineSession = ALL)` | 获取 K 线数据，按时间升序排列 |
+| `getTimeshares(counterId,`<br />`fiveDays = false,`<br />`klineSession = ALL)` | 获取分时数据（按交易日分组） |
+| `subscribe(counterIds, callback)` | 创建普通行情订阅构建器，链式选择订阅类型后 `start()` |
+| `subscribeOptionDetail(counterId, callback)` | 创建期权详情订阅构建器（单合约） |
+| `subscribeOptionChain(counterIds, callback)` | 创建期权链批量订阅（整组替换，推送类型固定不可选） |
+| `observeQuoteEvents(counterIds)` | 观察行情事件流（不建立底层订阅，需配合某个订阅入口使用） |
+| `observeKlineUpdates(counterIds)` | 观察 K 线更新事件流 |
+| `getQuoteLevelInfo()` | 读取行情等级与设备占用状态快照；首次行情权限确认前返回 `null` |
+| `observeQuoteLevel()` | 观察行情等级与设备占用状态（订阅即收到当前快照） |
+| `reclaimQuoteAccess()` | 把行情使用权抢回本设备（「重启行情」）；返回后等级刷新以观察回调为准 |
+
+订阅构建器（`subscribe` / `subscribeOptionDetail` 返回）的链式类型选择方法：`list()` / `detail()` / `depth()` / `trade()` / `preTrade()` / `postTrade()`；`subscribe` 额外提供 `broker()` / `nightTrade()` / `totalView()` / `totalViewBrief()`（期权数据链路不支持这四种）。两个订阅构建器都支持不选任何类型直接调用 `start()`，此时只拉一次快照、不建立任何推送订阅，可当一次性 snapshot 用。`start()` 返回的 `QuoteSubscription` 只有一个 `cancel()`；`OptionChainSubscription` 另有 `updateCounterIds(counterIds)` 与 `isCancelled` 属性。
+
+<Accordion title="行情与期权计算进阶细节">
+
+`getTrades` 的请求参数 `tradeType` 与响应字段 `Trade.tradeSession` 的编码不一致（两者都不是位掩码），非交易时段需要盘前 / 盘后 / 夜盘成交时须显式传 `3`（默认的 `0` 只返回盘中数据）：
+
+| 请求 `tradeType` | 含义 | 响应 `Trade.tradeSession` |
+| --- | --- | --- |
+| `0`（默认） | 盘中 | `0` |
+| `1` | 盘前 | `1` |
+| `2` | 盘后 | `2` |
+| `3` | 全部时段合并 | 无对应单值（合并结果） |
+| `4` | 夜盘 | `4` |
+
+`KlineSession` 四档取值：`TRADING`（仅正式时段）、`ALL`（含盘前盘后夜盘，默认）、`NORMAL_AND_PRE_POST`、`NORMAL_AND_OVER_NIGHT`。`AdjustType` 只有 `NO_ADJUST` / `FORWARD_ADJUST`（默认，不提供后复权）。
+
+期权链订阅的整组替换机制：`updateCounterIds` 内部为整组替换语义——移出集合的合约不即时退订，底层订阅保留、靠回调分发层按当前生效集合过滤屏蔽，随 `cancel()` 整组释放；内部约 300 毫秒防抖，但首次非空集合立即生效（首屏不等待）；新旧集合相同则不产生请求。推送类型固定包含 detail、逐笔、盘前、盘后、夜盘，不提供链式选择，这是设计如此而非遗漏。
+
+**行情等级判断的三个口径**：`SubMarketQuote.quoteLevel`（如 `App|USOP|Global|LV1`）是自由格式的展示字符串，格式不承诺稳定，判断是否延迟行情用 `isDelayed`（它取自 `priceLevel.priceLevel`，该码值的完整取值表见其 KDoc——其中 `3` 表示实时但不推送、需主动查询），不要解析该字符串；盘口权限分普通盘口与美股深度盘口两类，各有独立档位数，渲染「N 档盘口」要按 `DepthLevel.depthType`（`1` 普通盘口 / `2` 美股深度盘口）过滤 `depthLevel` 列表取对应那条（同一类型可能由多个行情源分条给出，取其中最大档位）；`maxDepthLevel` 跨类型取最大，只适合「有没有盘口」这类粗判断；被占用市场明细里同一市场可能重复出现（服务端按被占用的权限项逐条列出），需要展示列表时请自行去重；被占用市场明细里的 `EvictedLevelDetail.market` 可能为空串（服务端部分条目不带市场维度），按市场维度判断用 `isMarketEvicted(market)`（已跳过这类条目），按子市场用 `isSubMarketEvicted(subMarket)`；提示文案 `evictedDescribe` 在被占用而服务端未返回文案时为 `null` 或空串，展示前两者都要判。
+
+**被占用降级期间的数据可用性**：该市场的逐笔成交不可用——实时推送停发，`getTrades` 历史查询同样受权限限制返回空列表。夜盘、盘前盘后是否可用不是降级的固定结果，以快照中当前等级的 `hasOvernight` / `hasPrePost` 等开关逐项判断。
+
+</Accordion>
+
+## 期权计算器 {/* option-calculator */}
+
+`OptionCalculator` 是无状态纯计算工具（不注册进任何 Service，无网络，无 `*Async` 版本），数据全部由调用方传入，基于 Black-Scholes 欧式期权定价。行情场景下正股价来自宿主自订的正股行情，隐含波动率、行权价、到期天数、分红来自期权推送。
+
+```kotlin
+val optionData = stock.extraData as ExtraData.OptionData
+val underlyingPrice = underlyingStock.trading.lastDone ?: return
+
+// 不要直接用 optionData.dayToExpire（交易日口径）。
+// 计算入参用 fractionalDaysToExpire()（小数天，与官方客户端期权计算器同口径）；
+// 「剩 N 天」类展示另用 daysToExpire()（整数自然日）
+val days = OptionCalculator.fractionalDaysToExpire(optionData.expireDate, TimeZone.getTimeZone("America/New_York"))
+    ?: return  // 到期日格式非法
+
+val input = OptionPricingInput(
+    underlyingPrice = underlyingPrice,
+    strikePrice = optionData.strikePrice ?: return,
+    impliedVolatility = optionData.impliedVolatility ?: return,
+    daysToExpire = days,
+    isCall = OptionDirection.fromQuoteDirection(optionData.direction) == OptionDirection.CALL,
+    dividendToExpire = optionData.dividendToExpire,
+    // interestRate 留空则使用 SDK 内置利率（QuoteService.getInterestRate() 同源）
+)
+
+val greeks = OptionCalculator.greeks(input)  // 非法输入返回 null，UI 显示占位符
+```
+
+<Warning>
+  非法输入统一返回 `null`（UI 按 "--" 展示）：隐含波动率 ≤ 0、天数 < 0、正股价或行权价 ≤ 0、利率不可用。天数换算 API 已过期均返回负数（`daysToExpire` 到期当天为 `0`，合法）——负数不能再传入 `greeks` / `profitProbability`，会被判定为非法输入返回 `null`。`interestRate` 是年化小数（如 `0.045` 表示 4.5%），不是百分数，单位传错会让 Greeks 整体偏差 100 倍。
+</Warning>
+
+**方法一览：**
+
+| 方法 | 说明 |
+| --- | --- |
+| `greeks(input)` | 计算 Black-Scholes Greeks（delta/gamma/vega/theta/rho）与理论价 |
+| `intrinsicValue(underlyingPrice, strikePrice, isCall)` | 计算内在价值（立即行权可得的钱），始终 ≥ 0 |
+| `timeValue(optionPrice, intrinsicValue)` | 计算时间价值 = 权利金 − 内在价值，深度实值临期合约可为负、不截断 |
+| `daysToExpire(expireDate, timeZone)` | 由到期日（`yyyyMMdd`）换算距到期整数自然日，供「剩 N 天」类展示 |
+| `fractionalDaysToExpire(expireDate,`<br />`timeZone,`<br />`holidays = emptyList(),`<br />`dayOffset = 0)` | 由到期日换算距到期小数天（到期 20:00、按小时折算），Greeks / 盈利概率的计算入参用它才与官方客户端期权计算器对齐 |
+| `profitProbability(underlyingPrice,`<br />`breakevenPoint,`<br />`impliedVolatility,`<br />`daysToExpire,`<br />`isCall,`<br />`dividendToExpire = null,`<br />`interestRate = null)` | 计算到期盈利概率（以盈亏平衡点而非行权价为界，Black-Scholes 风险中性口径） |
+
+## 订单与校验 {/* orders-and-validation */}
+
+```kotlin
+val orders = WhaleCore.getOrderService()
+
+orders.observeOrderEvents(this, object : OrderEventCallback {
+    override fun onChange(order: Order) { updateOrder(order) }   // 每次变化推送该订单的最新快照
+})
+```
+
+### 构造并提交订单 {/* submit-order */}
+
+推荐走「下单前校验」流程：用 `OrderIntent` 表达订单意图，交 `validateOrder` 做提交前全量校验，通过后由 SDK 生成补齐字段的请求直接提交，无需手工拼装 `SubmitOrderRequest`。
+
+```kotlin
+// 1. 构建订单意图：限价买入 100 股 AAPL @ 180.00
+val intent = OrderIntent(
+    counterId = "ST/US/AAPL",
+    action = OrderAction.BUY,
+    orderType = OrderType.LO,
+).apply {
+    price = "180.00"
+    quantity = "100"
+}
+
+// 2. 提交前全量校验
+val result = orders.validateOrder(intent, ValidationScope.Submission)
+val request = result.request
+if (request != null) {
+    // 3. 校验通过，提交 SDK 已补齐字段的请求
+    val submit = orders.submitOrder(request)   // submit.orderId 为订单号
+} else {
+    showIssues(result.issues)                  // 校验不通过，逐条给出原因
+}
+```
+
+直接用 `SubmitOrderRequest` 的类型工厂方法构造请求（市价、触价、跟踪止损等）也可行，跳过校验漏斗，完整工厂矩阵见[订单类型与附加单](#order-types-and-attached-orders)。
+
+### 交易卡券 {/* trade-cards */}
+
+下单可选用免佣卡、股票现金卡或平台费卡为对应费用打折，经 `OrderIntent.cards`（`TradeCards`）传入，校验、预览、下单共用同一份；卡券列表需宿主自行获取（SDK 未封装查询端点）。未选券时提交请求的 `card_ids` 为空数组、服务端不核销任何券，预览同样按无券算——要用上一张券，必须由宿主把它显式填进对应槽位。
+
+```kotlin
+intent.cards = TradeCards(
+    // 额度必传：预览按它算折后费用，缺它则预览与实际扣费不一致
+    commissionCard = TradeCard(cardId = "1001", availableAmount = BigDecimal("50"), rebateRate = BigDecimal("0.8")),
+)
+```
+
+三个槽位也可按类别读写，便于三个选券入口共用一段界面逻辑：
+
+```kotlin
+val cards = intent.cards ?: TradeCards().also { intent.cards = it }
+cards.setCard(TradeCardCategory.CASH, TradeCard(cardId = "2002", availableAmount = BigDecimal("100")))
+cards.card(TradeCardCategory.CASH)      // 回读该类别
+cards.isEmpty                           // 三个槽位是否均未选券
+```
+
+**服务端配置的默认券**随约束快照一并返回，适合在选券界面标注默认选中态。SDK 不会自动回填——用不用由接入方决定：
+
+```kotlin
+val constraints = orderService.getOrderConstraints(counterId)
+// 槽位为 null = 服务端未给该标的配这类券，应禁用该类别的选券入口
+constraints.suggestedCard(TradeCardCategory.COMMISSION)?.let { suggested ->
+    suggested.cardType                                  // 查询该类别卡券列表时的卡种入参取值
+    cards.setCard(TradeCardCategory.COMMISSION, suggested.toTradeCard())  // 额度缺失时为 null，不预填
+}
+```
+
+<Note>
+  股票现金卡仅买入方向可用，卖出方向选用会被校验规则 `CASH_CARD_NOT_APPLICABLE_ON_SELL`（`1115`）拦截。`TradeCard.cardId` 为空串等同于未选：不进提交请求、不参与预览折扣、也不触发该校验——预览减掉的券与提交的券始终是同一组。`rebateRate` 只对免佣卡槽位生效。
+</Note>
+
+### 查单、撤单与改单 {/* manage-orders */}
+
+```kotlin
+val today = orders.getTodayOrders()
+val history = orders.getHistoryOrders(HistoryOrdersRequest(page = 1, limit = 20))
+val detail = orders.getOrderDetail(orderId)
+
+orders.cancelOrder(orderId)
+
+// 改单：仅改价格（quantity 必填——不修改数量时也需回传原委托数量）
+orders.replaceOrder(ReplaceOrderRequest.regular(orderId = orderId, quantity = "100", price = "182.00"))
+```
+
+条件单（LIT/MIT/TSL）与期权单改单走各自的工厂方法，见[订单类型与附加单](#order-types-and-attached-orders)。
+
+批量撤单：
+
+```kotlin
+orders.batchCancelOrders(counterId = "ST/US/AAPL")   // 按标的撤单（不传 action 即不限方向）
+orders.batchCancelOrdersByIds(listOf("1", "2", "3"))
+```
+
+### 预估信息 {/* trade-capacity */}
+
+```kotlin
+// 推荐：交易额度快照，一次调用返回下单页所需的全部数据
+val capacity = orders.getTradeCapacity(
+    TradeCapacityRequest(counterId = "ST/US/AAPL", action = OrderAction.SELL,
+        submitPrice = "180.5", orderType = OrderType.LO, settlementCurrency = "USD")
+)
+val sellable = capacity.sellableQuantity        // 持仓可卖
+val shortable = capacity.shortSellableQuantity  // 可卖空
+```
+
+最大可买额度（仅股票，`getEstimateBuyLimit`）、持仓明细（`getTradeDetail`）、下单信息（`getOrderInfo`）见下方方法一览表。
+
+### 下单前置校验 {/* order-validation */}
+
+黑盒校验能力：宿主只传订单意图，取数与缓存由 SDK 内部管理。每条 issue 都意味着按当前意图提交必然失败，无警告级别；业务不通过不抛错，一律以 `issues` 返回。
+
+```kotlin
+// 1. 进入交易页前
+val entry = orders.checkTradability("ST/HK/00700")
+if (!entry.passed) { showBlocked(entry.issues.first().reason); return }
+
+// 2. 进入交易页时渲染约束快照
+val constraints = orders.getOrderConstraints("ST/HK/00700")
+renderOrderTypes(constraints.supportedOrderTypes)
+
+// 3. 编辑中：逐键轻量校验，驱动按钮置灰 / 输入框标红
+val draft = orders.validateOrder(intent, ValidationScope.Draft)
+submitButton.isEnabled = draft.passed
+
+// 4. 提交前全量校验，通过即拿产物直接下单（见「构造并提交订单」）
+```
+
+资格状态（如美股夜盘声明、W-8BEN）的查询与解决：`getQualifications(counterId)` 返回全集，每项含 `type` / `state` / `expired` / `acceptableViaApi`；先查 `acceptableViaApi` 分流：
+
+```kotlin
+val qualifications = orders.getQualifications("ST/US/AAPL")
+val unresolved = qualifications.firstOrNull { !it.isSatisfied }
+if (unresolved != null && unresolved.acceptableViaApi) {
+    orders.acceptAgreement(unresolved.type)   // 同意后 SDK 自动失效缓存，重走校验即拿到最新状态
+}
+```
+
+`acceptableViaApi == true` 的项（声明与权限类如美股夜盘、期权夜盘、碎股、美股做空、低价股、OTC 场外交易、权证、CAR-CKA、虚拟资产 ETF 测评与附加风险披露，以及期权协议、上市衍生品 ETF 评估）可经 `acceptAgreement(type)` 一键同意，或（仅认知评估项）经 `submitListedDerivAssessment(experience)` 作答，选 `DerivExperience.NONE` 记为不通过、继续拦截。虚拟资产 ETF 的测评与附加风险披露共用同一次签署：同意任一项，服务端同时置位两项，因此调用前须把两项内容都展示给用户并取得确认。`acceptableViaApi == false` 的项（测评/认证类如 PI、VA、W-8BEN、港股融券）须在券商侧办理，SDK 不暴露办理链接，对这类项调用 `acceptAgreement` 会抛 `IllegalArgumentException`（编程错误，不占用 `WhaleCoreException` 通道）。两个方法成功后都会自动失效内部资格缓存，宿主重走校验即可。
+
+<Note>
+  历史独立入口 `WhaleCore.getOrderValidationService()` 已弃用，新代码请直接调用 `WhaleCore.getOrderService()` 上的同名方法。
+</Note>
+
+<Accordion title="校验规则完整列表">
+
+`OrderValidationRule.code` 按阶段分段（阶段号 × 100），跨版本只追加不重排，遇到未识别 code 应"拦截 + 通用提示"兜底：
+
+| 阶段 | 编号段 | 作用域 | 覆盖内容 |
+| --- | --- | --- | --- |
+| 进交易页前 | `1001`–`1005` | ENTRY | 标的为空、账户未开户/暂停、指数板块不可交易、服务端可交易性判定 |
+| 页面按钮态 | `1101`–`1115` | DRAFT+SUBMISSION | 渠道/买卖限制、价格/数量/触发价/跟踪值/监控价必填、订单类型支持性、按金额下单适用性与金额过低、股票现金卡与卖出方向不兼容 |
+| 协议 | `1201` | SUBMISSION | 期权风险协议未同意 |
+| 时段与有效期 | `1401`–`1403` | DRAFT+SUBMISSION | 订单类型时段支持性、有效期支持性、GTD 到期时间必填 |
+| 权限资格与声明 | `1501`–`1512` | 仅 SUBMISSION | ETF 认知评估、卖空/融券资格、W-8BEN、美股/期权夜盘声明、碎股声明与时段、OTC 场外交易权限、权证交易权限、CAR/CKA 认证、虚拟资产 ETF 交易测评与附加风险披露 |
+| 附加单 | `1601`–`1608` | DRAFT+SUBMISSION | 止盈/止损触发价与委托价必填、GTD 到期时间、订单类型是否支持附加单 |
+| 持仓止盈止损 | `1701`–`1709` | DRAFT+SUBMISSION | 见[持仓止盈止损](#tpsl) |
+
+三条放行约定：服务端未返回对应授权项等同不适用；`granted_info` 项的办理链接为空等同服务端未返回该要求；账户/行情/持仓等数据缺失时无法判定，一律放行，交服务端兜底。其中第二条只适用于 `granted_info` 项——`1508`–`1510` 是账户级门禁，未开通时任何标的的提交都会被拦。
+
+与 iOS 的一处明确差异：括号单价格方向规则（`1606`/`1607`，附加单触发价相对现价高低关系的拦截）Android 尚未实现，当前完全由服务端拒单兜底，编号已预留但未启用，不要假设这条校验存在。
+
+</Accordion>
+
+### 订单预览 {/* order-preview */}
+
+```kotlin
+// 与校验 / 下单共享同一 OrderIntent，编辑中随时可预览
+val context = OrderPreviewContext().apply {
+    marketReferencePrice = BigDecimal("180.00")   // 市价单/无委托价时必传，否则金额类结果为 null
+    // 期权标的必须传 optionDirection，否则抛 WhaleCoreException.InvalidParameter
+}
+val preview = orders.previewOrder(intent, context)
+
+preview.orderAmount        // 预估订单金额
+preview.fees.total         // 预估费用合计（折后）
+preview.orderTotal         // 预估订单总额
+preview.riskHint           // 风险提示，如 FINANCING_NEEDED（将使用融资）
+```
+
+另有同步纯计算入口 `OrderPreviewCalculator.compute(fields)`，供宿主自行取数后直接计算，与 `previewOrder` 共享同一计算实现。
+
+<Accordion title="预览字段完整口径">
+
+`OrderPreviewResult` 里 **`null` 始终表示"结构性不适用"**，不是取数失败：
+
+- `financing`（融资利率与日利息）、`occupy`（占用购买力/融资额度）——仅买入开多 + 非现金账户产出。
+- `optionFreeze`（期权卖出冻结）——仅卖出 + 非保证金合约模式 + 方向已知；认购冻正股、认沽冻现金。
+- `initialMargin` / `maintenanceMargin`——平仓试算值优先，其次股票走保证金率因子路径；期权平仓不产出 `initialMargin`。
+- `riskHint` 优先级：平仓导致保证金升高 > 买入超现金购买力需要融资 > 无提示。
+- 参考价规则：限价类用委托价、MIT 用触发价、市价单用 `context.marketReferencePrice`（不传则金额类结果为 `null`）。
+- 期权标的必须传 `context.optionDirection`，否则抛 `WhaleCoreException.InvalidParameter`（SDK 不获取行情，无从推断方向）。
+- 汇率仅用于占用计算里的跨币种换算，SDK 内部维护，不对外暴露独立取数 API（与资产模块一致，见[资产](#portfolio)）。
+- 费用折扣额度（`commRemain` / `platformDeductionsRemain` / `deductionsRemain`）取[交易卡券](#trade-cards)选中卡的额度，未选券即留空、对应费用不打折；卡币种与结算币不同时按对应的 `commCurrency` / `platformDeductionsCurrency` / `deductionsCurrency` 换算后再参与计算——手动走 `OrderPreviewCalculator.compute(fields)` 时需要自行填好这三个币种字段，`previewOrder(intent, context)` 路径由 SDK 自动处理。
+
+与 iOS 的一处明确差异：`fees.third`（第三方费用）为 `0` 时保留 `0`、不置 `null`（`null` 仅表示无费用数据）——iOS 侧 `0` 会转成 `nil`，对齐文案时注意区分。
+
+</Accordion>
+
+### 持仓止盈止损 {/* tpsl */}
+
+为**已持有的仓位**一次挂出止盈、止损两条条件单。与「挂载附加单」是两回事——附加单依附于一笔新下的主单、主单成交后才激活；TPSL 直接作用于已有持仓，不需要主单。买卖方向不由调用方指定，SDK 按持仓多空推导后写入请求。
+
+```kotlin
+val tpslIntent = TPSLOrderIntent("ST/US/AAPL").apply {
+    quantity = "100"
+    wantsTakeProfit = true
+    takeProfitTriggerPrice = "200.00"
+    wantsStopLoss = true
+    stopLossTriggerPrice = "160.00"
+}
+submitBtn.isEnabled = orders.validateTPSLOrder(tpslIntent, ValidationScope.Draft).passed
+
+val tpslResult = orders.validateTPSLOrder(tpslIntent, ValidationScope.Submission)
+if (tpslResult.passed) {
+    val placed = orders.submitTPSLOrder(tpslResult.request!!)
+    // placed.ployId 两条订单共享；placed.orders 各腿的 ployType（TAKE_PROFIT/STOP_LOSS）与 orderId
+}
+```
+
+改单撤单不走本接口：TPSL 挂出的就是普通条件单，改单用 `replaceOrder`，撤单用 `cancelOrder`。
+
+<Accordion title="TPSL 完整规则">
+
+`validateTPSLOrder` 独立判定，有两点特别提醒：不保证返回全量 issues（`1708` 无持仓、`1709` 品种不支持命中后直接早退返回，不再报字段类问题）；数量必填（`1106`）、订单类型非 LIT/MIT（`1109`）、GTD 未选到期日（`1403`）三类问题复用主单编号，不另起编号。
+
+| code | 规则 | 触发条件 |
+| --- | --- | --- |
+| `1701` | 止盈止损均未开启 | 两侧都没开启，无单可挂 |
+| `1702`/`1703` | 触发价必填 | 已开启但触发价未填/非正 |
+| `1704`/`1705` | 委托价必填 | 该侧为 LIT 且已开启，但委托价未填/非正 |
+| `1706` | 触发价方向颠倒 | 多头持仓止损触发价 ≥ 止盈触发价（空头相反） |
+| `1708` | 无持仓 | 该标的没有持仓 |
+| `1709` | 品种不支持 | 港股限股票/ETF/涡轮牛熊，新加坡/A 股限股票，美股不限 |
+
+两处有意不做的判定：触发价与现价的相对位置不拦截（触发价被现价穿过即"现在就平仓"，合法意图）；委托数量超出可平数量不拦截（可平数量是快照，交服务端裁决）。
+
+挂出的两条订单在订单列表中 `ployId` 相同、`ployType` 分别为 `TAKE_PROFIT`/`STOP_LOSS`，据此配对展示。
+
+</Accordion>
+
+### 订单类型与附加单 {/* order-types-and-attached-orders */}
+
+`SubmitOrderRequest` 只能经伴生对象工厂构造：
+
+| 工厂方法 | 适用订单类型 | 类型专属参数 |
+| --- | --- | --- |
+| `limit(common, price, orderType = LO)` | LO/SLO/ELO/ALO/SpecialLO/ODD | `price` |
+| `market(common, orderType = MO)` | MO/AO/MOO/MOC | — |
+| `limitIfTouched(common, triggerPrice, submitPrice, trend, triggerCount = 1)` | LIT | 触发价 + 委托价 + 触发方向 + 防误触次数 |
+| `marketIfTouched(common, triggerPrice, trend, triggerCount = 1)` | MIT | 触发价 + 触发方向 + 防误触次数 |
+| `trailingStopLimit(common, trigger, leg, monitorPrice, triggerCount = 1)` | TSL | 跟踪幅度（金额/百分比二选一）+ 限价腿（价差/挂单档位二选一）+ 监控价 |
+
+`OrderType.TS`（跟踪止损市价）完全不支持——只保留枚举常量，无下单/改单工厂，下单前置校验按 `ORDER_TYPE_NOT_SUPPORTED`（`1109`）拦截。
+
+`ReplaceOrderRequest` 同理，伴生对象工厂：`regular`（正股普通单）、`option`（期权主单，价量一律带必填）、`limitIfTouched` / `marketIfTouched` / `trailingStopLimit`（条件单，接收 `triggerStatus` + `isOption`，仅已触发落普通/期权主单路由，其余走条件单接口）。
+
+附加单（`AttachedParams`）工厂：`takeProfit` / `stopLoss` / `bracket` / `cancelAll`（仅用于改单场景撤销全部附加单）。激活方式 `AttachedActivation.marketIfTouched(rth)` / `limitIfTouched(profitTakerSubmitPrice?, stopLossSubmitPrice?, rth)`。价格合法性约束：买入主单 `takeProfitPrice > 现价 > stopLossPrice`，卖出主单相反；`forceOnlyRth = OVERNIGHT` 时不可携带附加单。
+
+```kotlin
+// 括号单
+val withAttached = SubmitOrderRequest.limit(common, price = "350.00").attaching(
+    AttachedParams.bracket(
+        takeProfitPrice = "360", stopLossPrice = "340",
+        activation = AttachedActivation.marketIfTouched(),
+    )
+)
+
+// 改主单并撤掉所有附加单
+service.replaceOrder(
+    ReplaceOrderRequest.regular(orderId = "123", quantity = "50")
+        .attaching(AttachedParams.cancelAll())
+)
+
+// 单独改一张附加单触发价（不动主单）；LIT 激活的附加单委托价即使不改也须回传原值
+service.replaceAttachedOrder(
+    ReplaceAttachedOrderRequest.modifyProfitTaker(
+        mainId = "123", mainQuantity = "100", marketPrice = "355",
+        profitTakerId = "999", newPrice = "365",
+    ),
+)
+```
+
+期权（单腿）下单/改单复用同一批工厂，无期权专属入参——`counterId` 为期权合约时 SDK 自动路由到期权专用端点；期权渠道不返回附加单白名单，勾选止盈/止损会被 `1608` 拦截。
+
+直接走工厂方法构造 `SubmitOrderRequest` 时，卡券经 `OrderCommon.cardIds` 传入（下单只用卡 ID，额度与折扣率仅 `OrderIntent.cards` 路径下的校验与预览需要）；三张卡的顺序固定为「免佣卡、现金卡、平台费卡」。
+
+**方法一览：**
+
+| 方法 | 说明 |
+| --- | --- |
+| `getOrderInfo(counterId, orderId = null)` | 下单前的标的基础信息与账户渠道权限配置；改单场景传 `orderId` 获取允许修改的字段约束 |
+| `getEstimateBuyLimit(request)` | 查询最大可买额度（仅股票；期权见 `getTradeCapacity`） |
+| `getTradeDetail(counterId, settlementCurrency)` | 查询持仓明细（总量 / 可卖数量 / 成本 / 现金） |
+| `getTradeCapacity(request)` | 查询交易额度快照（推荐的额度区取数入口） |
+| `submitOrder(request)` | 提交订单 |
+| `replaceOrder(request)` | 改单（普通单 / 条件单 / 期权主单共用入口，按类型自动路由） |
+| `cancelOrder(orderId)` | 撤销单笔订单 |
+| `batchCancelOrders(counterId = null, action = null)` | 按标的与方向批量撤单 |
+| `batchCancelOrdersByIds(orderIds)` | 按订单 ID 批量撤单 |
+| `cancelAttachedOrder(attachedOrderId)` | 撤销单笔附加单 |
+| `replaceAttachedOrder(request)` | 修改附加单，或撤销主单下全部附加单 |
+| `previewOrder(intent, context)` | 订单预览 |
+| `validateTPSLOrder(intent, scope)` | 持仓止盈止损校验 |
+| `submitTPSLOrder(request)` | 提交持仓止盈止损单 |
+| `observeOrderEvents()` | 观察订单变更事件流 |
+| `checkTradability(counterId)` | 进交易页前的可交易性检查 |
+| `getOrderConstraints(counterId, orderId = null)` | 页面渲染约束快照（新单 / 改单场景） |
+| `validateOrder(intent, scope)` | 下单前置校验统一入口 |
+| `getQualifications(counterId)` | 查询标的当前资格 / 声明状态全集 |
+| `acceptAgreement(type)` | 同意一项可 API 直接同意的资格 / 声明 |
+| `submitListedDerivAssessment(experience)` | 提交上市衍生品 ETF 认知评估作答 |
+| `getTodayOrders(filter)` | 查询今日订单列表 |
+| `getHistoryOrders(filter)` | 查询历史订单列表（分页） |
+| `getOrderDetail(orderId, isAttached)` | 查询订单详情，含状态变更历史；查附加单时同时返回所属主单 |
+
+另有独立工具 `OrderPreviewCalculator.compute(fields)`（同步纯计算，见[订单预览](#order-preview)）。
+
+## 资产 {/* portfolio */}
+
+```kotlin
+val portfolios = WhaleCore.getPortfoliosService()
+
+// 先注册监听，再订阅账户（避免错过第一帧数据）
+portfolios.observePortfolioEvents(this, object : PortfolioEventCallback {
+    override fun onMessage(accountInfo: AccountInfo, portfolio: Portfolio) { render(portfolio) }
+    override fun onFailure(accountInfo: AccountInfo?, error: Throwable) { showError(accountInfo, error) }
+})
+
+portfolios.setSubscribedAccounts(listOf("lb"), "HKD")  // 通道下已开户账户（含子账户）全部订阅
+portfolios.refresh()   // 进入页面时主动刷新一次
+```
+
+现金明细与持仓行情联动开关：`enableCashDetail(enabled)` / `isEnableCashDetail()`、`enableQuotes(enabled)` / `isEnableQuotes()`。
+
+<Note>
+  Android 侧目前**没有**独立的汇率换算能力（与 iOS 不同）；`Portfolio` 模型里的已折算字段（如 `marketValueExchanged`）是服务端返回的展示字段，不是 SDK 提供的换算工具。
+</Note>
+
+### 会员资产设置 {/* portfolio-member-setting */}
+
+读取、修改、提交，成功后自动触发一次刷新：
+
+```kotlin
+val setting = portfolios.getPortfolioMemberSetting()
+portfolios.updatePortfolioMemberSetting(
+    setting.copy(costType = PortfolioCostType.AVG, showDelistedHoldings = true)
+)
+```
+
+### 盈亏分析 {/* profit-loss-analysis */}
+
+账户、个股与分市场盈亏分析的业务级聚合 API，每个 UI 板块对应一个方法：
+
+| 方法 | 服务的 UI 板块 |
+| --- | --- |
+| `getProfitLossAnalysisMeta()` | 页面初始化：时间筛选器边界 + 对比指数全量列表 |
+| `getProfitOverview(currency, period)` | 总盈亏概览大字区 + 分资产类型盈亏总结 + 累计成交金额/交易股票数 |
+| `getProfitTrend(currency,`<br />`period,`<br />`indexCounterId)` | 盈亏趋势图：累计收益率/总资产曲线 + 可选指数对比 + 跑赢指数 |
+| `getPLCalendar(currency, period, markets)` | 盈亏日历：日 / 月 / 年三档格子 + 交易日/节假日标记 |
+| `getProfitRanking(currency, period)` | 盈亏排行：盈利榜与亏损榜一次给齐（每榜最多 10000 条） |
+| `getAssetFlow(period)` | 「我的资产」分币种资金流 |
+| `getStockPLMeta(counterId)` | 个股盈亏页初始化：时间筛选器边界 |
+| `getStockCumulativePL(counterId, period)` | 个股累计盈亏 + 正股/衍生品构成（一次给齐，切 Tab 不重拉） |
+| `getStockPLFlows(counterId,`<br />`derivative,`<br />`page,`<br />`size,`<br />`period)` | 个股盈亏流水明细（分页，正股/衍生品分开查询） |
+| `getPLTradedMarkets()` | 「股票盈亏」页市场 Tab 数据源 |
+| `getMarketStocksPLMeta()` | 「股票盈亏」页初始化：时间筛选器边界（含全部市场） |
+| `getMarketStocksPL(market,`<br />`currency,`<br />`order,`<br />`page,`<br />`size,`<br />`period)` | 分市场股票盈亏列表（盈亏合计 + 逐标的行，服务端已排序分页） |
+| `getLiquidatedStocksPL(market,`<br />`currency,`<br />`page,`<br />`size,`<br />`period,`<br />`underlyingCounterId = null)` | 清仓盈亏：汇总六指标 + 按标的分组明细，分页 |
+
+```kotlin
+val meta = portfolios.getProfitLossAnalysisMeta()      // 时间筛选器边界 + 可选对比指数列表
+val overview = portfolios.getProfitOverview("HKD", PLPeriod.allTime)
+val trend = portfolios.getProfitTrend(
+    currency = "HKD",
+    period = PLPeriod.allTime,
+    indexCounterId = meta.indexes.firstOrNull()?.counterId,  // 传 null 即不做指数对比
+)
+renderTrendChart(trend.selfSeries, trend.indexSeries)  // 两序列等长逐位对齐，可直接双线绘制
+```
+
+模型镜像服务端响应：金额、比率、时间戳一律原始字符串，非业务可空字段给默认值（空串/`0`/`false`）。
+
+<Accordion title="盈亏分析字段口径与枚举取值">
+
+**字段口径**：金额、比率、计数、时间戳一律为原始字符串，SDK 不做数值转换；比率为小数，展示时 ×100；时间戳为秒级字符串，日期串固定 `"yyyy-MM-dd"`。非业务可空字段给默认值（无数据时字符串为空串、计数为 `0`、布尔为 `false`），仍为可空的只有两类：整块可能缺失的嵌套对象（如 `ProfitOverview.profits`、`StockCumulativePL.underlyingDetails`）；SDK 计算得出、输入不足时无结果的字段（`ipoHitRate()`、`ProfitTrend.outperformedSimple`）。模型始终返回全量数据，展示哪些内容由接入方决定。
+
+**`PLPeriod` 的两种构造**：`PLPeriod.allTime`（全部时间，自动取数据边界起点）与 `PLPeriod.range(start, end)`（秒级时间戳指定区间），可选范围见 `getProfitLossAnalysisMeta()` / `getStockPLMeta()` / `getMarketStocksPLMeta()` 返回的日期边界。
+
+**模型自带的派生便捷方法**：`ProfitOverview.stockSummary()` / `fundSummary()` / `cryptoSummary()`（按资产类型取盈利最高/亏损最大标的）、`ProfitOverview.ipoHitRate()`（新股中签率，认购数为 0 或数据缺失时为 `null`）、`StockCumulativePL.isDerivativeFocused()`（决定默认展示衍生品 Tab 还是正股 Tab）。
+
+**开放式枚举/取值参考**（均为字符串常量对象，取值集合开放，未列出的取值应原样透传并保留默认分支）：`PortfolioCostType`（`AVG`/`DILUTED`）、`PLSortOrder`（`DESCENDING`/`ASCENDING`）、`MarketDayStatus`（`WORKINGDAY`/`HOLIDAY`/`WEEKEND`）、`PLSecurityType`（`STOCK`/`FUND`/`VA`/`MMF`）、`PLInvestType`（`CASH`/`STOCK`/`OTHER`）、`PLFlowDirection`（`NONE = "-1"` 无方向流水占位 / `SELL = "0"` / `BUY = "1"`）。
+
+**排行条数上限**：`getProfitRanking` 的盈利榜与亏损榜各最多返回 10000 条，两榜合计最多 20000 条；超出部分服务端不返回，需要更长的榜单要缩小统计区间。
+
+**降级与失败语义**（主体数据失败即抛出，装饰性附属数据失败降级为空）：`getProfitTrend` 指数对比失败时 `indexSeries` 为空、自身曲线不受影响；`getPLCalendar` 休市标记获取失败时 `marks` 为空列表；`getProfitRanking` 单个榜单解析失败时该榜按空列表处理，不影响另一榜。
+
+**趋势图粒度切换**：`ProfitTrend.granularity` 区间超过约 1 年自动切换为月粒度，日粒度 `dateKey` 为 `"yyyy-MM-dd"`，月粒度为 `"yyyy-M"`。
+
+**趋势点的累计与当期收益率**：`ProfitTrendPoint` 同时给出累计（`accumulateSimpleEarningYield` / `accumulateTimeEarningYield`）与当期（`simpleEarningYield` / `timeEarningYield`，日粒度为当日、月粒度为当月）两组收益率。累计值在月粒度缺失时回退当月最后一个日点、再缺失取 `"0"`；**当期值不做回退**（当月收益率不等于当月最后一日的日收益率），服务端未返回即为空串。指数对比点 `IndexComparePoint` 对称给出 `cumulativeReturn` 与 `currentReturn`（相对上一个曲线点，首点相对区间起点前最后一个交易日收盘）。
+
+**分市场约定**：`market` 传空串即"全部市场"；个股盈亏三个接口不需要 `market`/`currency` 参数。
+
+</Accordion>
+
+**核心方法一览**（订阅 / 设置；盈亏分析方法见上表）：
+
+| 方法 | 说明 |
+| --- | --- |
+| `setSubscribedAccounts(accountChannels, currency)` | 设置订阅的账户通道与展示货币，整体替换当前订阅范围；传空列表即取消全部订阅 |
+| `observePortfolioEvents()` | 观察资产事件流 |
+| `refresh()` | 手动刷新当前订阅的资产数据 |
+| `enableCashDetail(enabled)` / `isEnableCashDetail()` | 现金明细展示开关 |
+| `enableQuotes(enabled)` / `isEnableQuotes()` | 持仓行情变化时重算资产的开关 |
+| `getPortfolioMemberSetting()` | 获取当前会员资产设置 |
+| `updatePortfolioMemberSetting(setting)` | 更新会员资产设置（仅提交变化字段） |
+
+## 自选 {/* watchlist */}
+
+```kotlin
+val watchlist = WhaleCore.getWatchlistService()
+
+// 先注册监听，再触发数据变化——SharedFlow 默认 replay=0，不会补发订阅前的事件
+lifecycleScope.launch {
+    watchlist.observeWatchlistEvents().collect { event ->
+        when (event) {
+            is WatchlistEvent.Groups -> renderGroups(event.groups, event.stockInfo, event.ties)
+            is WatchlistEvent.SortGroups -> applySort(event.sortGroups)
+            else -> Unit
+        }
+    }
+}
+watchlist.refresh(sub = true)
+
+// 添加、跨分组移动、移除
+watchlist.addStocks(counters = listOf("ST/US/AAPL"), groups = listOf(groupId), removeGroups = emptyList())
+watchlist.removeStocks(counters = listOf("ST/US/NVDA"), groups = listOf(groupId), removeAll = false)
+```
+
+基金与备注数据不挂在 `WatchlistStock` 上，统一经独立事件获取：基金走 `WatchlistEvent.Funds`、备注走 `WatchlistEvent.Notes`（`Map<counterId, note>`）。
+
+### 分组管理 {/* watchlist-groups */}
+
+```kotlin
+val groupId = watchlist.addGroup("科技股")
+watchlist.renameGroup(groupId, "美股科技")
+watchlist.sortGroups(listOf(groupId, otherGroupId))   // 按目标顺序传入全部分组 ID
+```
+
+### 置顶与排序 {/* watchlist-pin-and-sort */}
+
+```kotlin
+watchlist.tie(listOf("ST/US/AAPL"))
+watchlist.sortTied(listOf("ST/US/AAPL", "ST/HK/00700"))
+
+// 按市场开盘时间智能排序当前分组
+watchlist.setGroup(groupId = groupId, sortMode = "US|HK,SG,CN", asc = true)
+```
+
+<Accordion title="自选分组字段判定与排序参考">
+
+**系统分组判定**（请使用以下字段，不要匹配显示名称——显示名会本地化、可重名）：
+
+| 字段 | 说明 |
+| --- | --- |
+| `kind` | `1` 系统默认、`2` 自定义（唯一可增删改/拖拽排序的类型）；`isCustom()` 扩展函数即 `kind == 2` |
+| `name` | 服务端稳定标识（`all`/`holdings`/`funds`/`options`/`va`），供语义判定，不可用于界面展示 |
+| `showName` / `displayName()` | `showName` 为本地化展示名可能为空；界面一律用 `displayName()` 扩展（为空回退 `name`） |
+| `id` | 系统预设分组为负数（持仓 `-6`、基金 `-12`），但语义判定仍应依赖 `name` 而非 `id` |
+
+系统分组的判定标准是「`kind == 1` 且 `name` 命中稳定值（不区分大小写）」。扩展函数全集：`isCustom()` / `isSystem()` / `isHolding()` / `isFund()` / `isOption()` / `isAll()` / `isVirtualAsset()`。
+
+**`WatchlistStock` 附加信息**：`holdingInfo` 仅持仓时非空（成本/数量）；`quoteInfo` 是加入自选时缓存的非实时行情，仅作占位展示，实时行情需另经 `QuoteService` 订阅；`industry` / `liveScope` / `icons` 均可能为 `null`。
+
+**`WatchlistSortField`** 共 56 个枚举值，按用途分三类：通用行情类（`SYMBOL`/`LAST_PRICE`/`CHANGE_PERCENT`/`VOLUME` 等）、期权专属（`DELTA`/`GAMMA`/`THETA`/`VEGA`/`RHO` 等）、基金专属或支持基金的通用字段（`ASSET`/`NAV`/`YEAR_TO_DATE` 等），完整清单见枚举源码 KDoc。
+
+**`sortMode` 取值参考**：
+
+| `sortMode` | 含义 | `SortGroup.id` |
+| --- | --- | --- |
+| `"natural"` | 用户自定义顺序，不做更改 | 空字符串 |
+| `"port_ai"` | PortAI 智能排序 | 行业标的 counterId |
+| `"US\|HK,SG,CN"` 形式 | 按开盘时间智能排序，`\|` 分隔美/亚市场，`,` 分隔市场内顺序 | 市场代码 |
+
+仅 `sortMode="natural"` 且 `sortField=NONE` 时，排序不考虑停牌等特殊交易状态。
+
+</Accordion>
+
+**方法一览：**
+
+| 方法 | 说明 |
+| --- | --- |
+| `observeWatchlistEvents()` | 观察自选事件流 |
+| `addGroup(groupName)` | 新建自选分组，返回新分组 ID |
+| `removeGroup(groupId, deleteStocks)` | 删除分组，`deleteStocks` 控制是否同时删除仅属于该分组的股票 |
+| `renameGroup(groupId, name)` | 重命名分组 |
+| `sortGroups(groupIds)` | 调整分组顺序 |
+| `addStocks(counters,`<br />`groups,`<br />`removeGroups,`<br />`sub = true)` | 添加股票到分组（也可用于分组间移动） |
+| `removeStocks(counters, groups, removeAll)` | 从分组移除股票；`removeAll=true` 时忽略 `groups` |
+| `sortStocks(groupId, counterIds)` | 调整分组内标的顺序 |
+| `tie(counters)` | 置顶股票 |
+| `untie(counters)` | 取消置顶 |
+| `sortTied(counters)` | 调整置顶标的的顺序 |
+| `setGroup(groupId,`<br />`sortMode = "natural",`<br />`sortField = NONE,`<br />`asc = true)` | 切换当前分组及排序方式，返回排序后的列表 |
+| `resort()` | 用当前排序规则触发一次重排序 |
+| `refresh(sub = false)` | 刷新自选数据，`sub` 控制是否同时订阅行情 |
+| `resubscribe()` | 重新订阅当前分组标的的行情推送 |
+| `unsubscribe()` | 取消行情订阅（不影响自选列表数据） |
+| `invalidTickers()` | 获取失效标的的 counterId 列表 |
+| `removeInvalidTickers()` | 移除所有失效标的 |
 
 ## 通用 HTTP 请求 {/* general-http-requests */}
 
@@ -113,39 +946,49 @@ Java 调用方可使用 `sendAsync(request, callback)`，无需调用 suspend �
   首个版本不支持自定义请求头。请勿通过 `query` 或 `body` 传入签名或鉴权 token；WhaleCore 会通过受管会话自动添加。
 </Note>
 
-## 行情 {/* quotes */}
+## 数据模型速查 {/* data-models */}
+
+| 模型分类 | 主要类型 |
+| --- | --- |
+| 行情 | `Stock` / `StockTemplate` / `TradeStatus` / `KlineUpdate` / `Kline` / `TimeShares` / `QuoteLevelInfo` / `SubMarketQuote` / `PriceLevel` / `DepthLevel` / `EvictedLevelDetail` |
+| 期权计算 | `OptionPricingInput` / `OptionGreeks` |
+| 订单 | `Order` / `OrderIntent` / `SubmitOrderRequest` / `SubmitOrderResult` / `ReplaceOrderRequest` / `OrderConstraints` / `OrderInfo` / `OrderValidationResult` / `TradeCapacity` / `TradeCapacityRequest` / `QualificationStatus` / `TPSLOrderIntent` / `SubmitTPSLOrderRequest` / `TPSLValidationResult` / `HistoryOrdersRequest` / `HistoryOrdersResult` / `TradeCard` / `TradeCards` / `TradeCardCategory` / `SuggestedTradeCard` |
+| 资产 | `Portfolio` / `AccountInfo` / `PortfolioMemberSettingInfo` / `PortfolioCostType` |
+| 盈亏分析 | `PLAnalysisMeta` / `ProfitOverview` / `ProfitTrend` / `PLCalendar` / `ProfitRanking` / `CurrencyAssetFlow` / `StockCumulativePL` / `MarketStocksPL` / `PLPeriod` |
+| 自选 | `WatchlistGroup` / `WatchlistStock` / `WatchlistFund` / `WatchlistSortField` / `WatchlistSortGroup` / `WatchlistEvent` |
+| 透传请求 | `HttpRequest` / `HttpResponse` / `HttpMethod` |
+
+完整字段说明见 IDE 中各类型的 KDoc 悬停文档。
+
+## 错误处理 {/* error-handling */}
+
+对外接口的失败原因统一为 `WhaleCoreException` 的子类型，接入方可据此分支处理：
+
+| 类型 | 含义 |
+| --- | --- |
+| `NotReady` | SDK 尚未初始化或已销毁 |
+| `InvalidParameter` | 调用方入参缺失或非法（开发期问题，应在联调阶段修正，不宜按运行时可恢复错误处理） |
+| `NetworkUnavailable` | 网络不可用 |
+| `RequestTimeout` | 请求超时 |
+| `Unauthorized` | 鉴权失败（含业务错误码 `businessCode`） |
+| `TradeAuthFailed` | 交易令牌无效或缺失（罕见，交易鉴权默认由 SDK 自动处理） |
+| `ServerError` | 服务端返回错误 |
+| `SerializationFailed` | 请求参数（`query` / `body`）无法序列化为 JSON |
+| `ValidationDataUnavailable` | 下单前置校验依赖的基础数据未就绪或获取失败（不代表业务未通过——业务不通过一律走 `OrderValidationResult.issues`） |
+| `Unknown` | 其他未归类错误 |
 
 ```kotlin
-val quoteService = WhaleCore.getQuoteService()
-val stock = quoteService.getStock("ST/US/AAPL")
-
-val subscription = quoteService.subscribe(
-    listOf("ST/US/AAPL"),
-    quoteCallback
-).detail().depth().trade().start()
+try {
+    val stock = WhaleCore.getQuoteService().getStock("ST/US/AAPL")
+} catch (e: WhaleCoreException.NetworkUnavailable) {
+    // 网络提示与重试
+} catch (e: WhaleCoreException) {
+    showToast(e.message)   // message 已按 language 本地化，可直接展示
+}
 ```
 
-事件既可作为 `SharedFlow` 观察，也可使用生命周期感知回调；不再需要时调用返回的 `Subscription.cancel()`。
+## 版本与维护 {/* version-and-maintenance */}
 
-## 订单与校验 {/* orders-and-validation */}
-
-`OrderService` 提供当日/历史订单、详情、购买力、持仓明细、下单、改单、撤单、批量撤单、费用预估和订单事件。下单前可通过校验服务完成：
-
-- `checkTradability`
-- `getOrderConstraints`
-- `validateOrder`
-- `getQualifications`
-- `acceptAgreement`
-- `submitListedDerivAssessment`
-
-```kotlin
-val result = WhaleCore.getOrderService().submitOrder(request)
-WhaleCore.getOrderService().observeOrderEvents()
-    .collect { order -> render(order) }
-```
-
-## 资产、自选与透传 {/* portfolio-watchlist-and-pass-through-requests */}
-
-`PortfolioService` 支持订阅/取消订阅、刷新、现金明细、持仓行情和会员资产设置。`WatchlistService` 支持分组与股票增删改、跨组移动、置顶、排序、无效标的清理和实时事件。
-
-需要调用尚未封装的业务接口时，可通过 `RequestService.send(HttpRequest)` 发起透传请求；SDK 负责公共参数、鉴权头和鉴权恢复，调用方负责解析响应业务数据。
+- 运行时获取 SDK 版本：`WhaleCore.version`（格式 `1.0.0(123)`）；版本名与构建号可分别取 `WhaleCore.versionName` / `WhaleCore.versionCode`。
+- 判断初始化状态：`WhaleCore.isInitialized()`。
+- 运行期切换语言：`WhaleCore.setLanguage(...)`（无须重新初始化）。

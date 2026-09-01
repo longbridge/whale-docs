@@ -29,6 +29,9 @@ import announcementZhHKSource from "../../../broker-api/announcement.zh-HK.yml?r
 import corporateActionEnSource from "../../../broker-api/corporate-action.en.yml?raw";
 import corporateActionZhCNSource from "../../../broker-api/corporate-action.zh-CN.yml?raw";
 import corporateActionZhHKSource from "../../../broker-api/corporate-action.zh-HK.yml?raw";
+import reportsEnSource from "../../../broker-api/reports.en.yml?raw";
+import reportsZhCNSource from "../../../broker-api/reports.zh-CN.yml?raw";
+import reportsZhHKSource from "../../../broker-api/reports.zh-HK.yml?raw";
 
 export type OpenApiDocument = {
   paths: Record<string, Record<string, unknown>>;
@@ -83,6 +86,9 @@ const announcementZhHK = parse(announcementZhHKSource) as OpenApiDocument;
 const corporateActionEn = parse(corporateActionEnSource) as OpenApiDocument;
 const corporateActionZhCN = parse(corporateActionZhCNSource) as OpenApiDocument;
 const corporateActionZhHK = parse(corporateActionZhHKSource) as OpenApiDocument;
+const reportsEn = parse(reportsEnSource) as OpenApiDocument;
+const reportsZhCN = parse(reportsZhCNSource) as OpenApiDocument;
+const reportsZhHK = parse(reportsZhHKSource) as OpenApiDocument;
 
 function mergeDocuments(
   base: OpenApiDocument,
@@ -110,9 +116,9 @@ function mergeDocuments(
 }
 
 const documents = {
-  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, clearingEn, billingEn, suspiciousEn, serviceParamEn, bookkeepingEn, announcementEn, corporateActionEn),
-  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, clearingZhCN, billingZhCN, suspiciousZhCN, serviceParamZhCN, bookkeepingZhCN, announcementZhCN, corporateActionZhCN),
-  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, clearingZhHK, billingZhHK, suspiciousZhHK, serviceParamZhHK, bookkeepingZhHK, announcementZhHK, corporateActionZhHK),
+  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, clearingEn, billingEn, suspiciousEn, serviceParamEn, bookkeepingEn, announcementEn, corporateActionEn, reportsEn),
+  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, clearingZhCN, billingZhCN, suspiciousZhCN, serviceParamZhCN, bookkeepingZhCN, announcementZhCN, corporateActionZhCN, reportsZhCN),
+  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, clearingZhHK, billingZhHK, suspiciousZhHK, serviceParamZhHK, bookkeepingZhHK, announcementZhHK, corporateActionZhHK, reportsZhHK),
 } as const;
 
 const domainDocuments = {
@@ -127,6 +133,7 @@ const domainDocuments = {
     ["broker-api/bookkeeping.en.yml", bookkeepingEn],
     ["broker-api/announcement.en.yml", announcementEn],
     ["broker-api/corporate-action.en.yml", corporateActionEn],
+    ["broker-api/reports.en.yml", reportsEn],
   ],
   "zh-CN": [
     ["broker-api/account-assets.zh-CN.yml", accountAssetsZhCN],
@@ -139,6 +146,7 @@ const domainDocuments = {
     ["broker-api/bookkeeping.zh-CN.yml", bookkeepingZhCN],
     ["broker-api/announcement.zh-CN.yml", announcementZhCN],
     ["broker-api/corporate-action.zh-CN.yml", corporateActionZhCN],
+    ["broker-api/reports.zh-CN.yml", reportsZhCN],
   ],
   "zh-HK": [
     ["broker-api/account-assets.zh-HK.yml", accountAssetsZhHK],
@@ -151,6 +159,7 @@ const domainDocuments = {
     ["broker-api/bookkeeping.zh-HK.yml", bookkeepingZhHK],
     ["broker-api/announcement.zh-HK.yml", announcementZhHK],
     ["broker-api/corporate-action.zh-HK.yml", corporateActionZhHK],
+    ["broker-api/reports.zh-HK.yml", reportsZhHK],
   ],
 } satisfies Record<
   OperationRecord["locale"],
@@ -223,6 +232,42 @@ export function resolveDatasetDownload(
   const download = document.paths?.[link.path]?.[link.method.toLowerCase()] as
     Record<string, any> | undefined;
   return download ? { link, operation: download } : undefined;
+}
+
+export function operationPermissions(operation: Record<string, any>): {
+  keys: string[];
+  lbOnly: boolean;
+} {
+  return {
+    keys: (operation["x-permission-key"] ?? []) as string[],
+    lbOnly: operation["x-lbonly"] === true,
+  };
+}
+
+export function permissionLabels(locale: string) {
+  return locale === "en"
+    ? {
+        none: "No dedicated permission key. Any authenticated Broker ACCESS_TOKEN with access to this scope can call it.",
+        lbonly: "Longbridge-internal only — not granted to external brokers.",
+        lbonlyBadge: "LB only",
+        scopeTooltip: (key: string) =>
+          `Calling this API requires the <code>${key}</code> permission. Your Broker ACCESS_TOKEN must be granted this permission, or the call will be rejected.`,
+      }
+    : locale === "zh-CN"
+      ? {
+          none: "无专属权限 Key。具备该 scope 访问权限的已鉴权 Broker ACCESS_TOKEN 即可调用。",
+          lbonly: "仅长桥内部可用，不对外部券商授权。",
+          lbonlyBadge: "内部专用",
+          scopeTooltip: (key: string) =>
+            `调用此接口需要 <code>${key}</code> 权限，Broker ACCESS_TOKEN 未被授予该权限时将无法调用。`,
+        }
+      : {
+          none: "無專屬權限 Key。具備該 scope 存取權限的已鑑權 Broker ACCESS_TOKEN 即可呼叫。",
+          lbonly: "僅長橋內部可用，不對外部券商授權。",
+          lbonlyBadge: "內部專用",
+          scopeTooltip: (key: string) =>
+            `呼叫此介面需要 <code>${key}</code> 權限，Broker ACCESS_TOKEN 未被授予該權限時將無法呼叫。`,
+        };
 }
 
 export function resolveSchema(document: OpenApiDocument, schema: any): any {
