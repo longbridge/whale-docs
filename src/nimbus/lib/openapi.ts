@@ -35,6 +35,9 @@ import reportsZhHKSource from "../../../broker-api/reports.zh-HK.yml?raw";
 import riskControlEnSource from "../../../broker-api/risk-control.en.yml?raw";
 import riskControlZhCNSource from "../../../broker-api/risk-control.zh-CN.yml?raw";
 import riskControlZhHKSource from "../../../broker-api/risk-control.zh-HK.yml?raw";
+import virtualAssetsEnSource from "../../../broker-api/virtual-assets.en.yml?raw";
+import virtualAssetsZhCNSource from "../../../broker-api/virtual-assets.zh-CN.yml?raw";
+import virtualAssetsZhHKSource from "../../../broker-api/virtual-assets.zh-HK.yml?raw";
 import fundEnSource from "../../../broker-api/fund.en.yml?raw";
 import fundZhCNSource from "../../../broker-api/fund.zh-CN.yml?raw";
 import fundZhHKSource from "../../../broker-api/fund.zh-HK.yml?raw";
@@ -98,6 +101,9 @@ const reportsZhHK = parse(reportsZhHKSource) as OpenApiDocument;
 const riskControlEn = parse(riskControlEnSource) as OpenApiDocument;
 const riskControlZhCN = parse(riskControlZhCNSource) as OpenApiDocument;
 const riskControlZhHK = parse(riskControlZhHKSource) as OpenApiDocument;
+const virtualAssetsEn = parse(virtualAssetsEnSource) as OpenApiDocument;
+const virtualAssetsZhCN = parse(virtualAssetsZhCNSource) as OpenApiDocument;
+const virtualAssetsZhHK = parse(virtualAssetsZhHKSource) as OpenApiDocument;
 const fundEn = parse(fundEnSource) as OpenApiDocument;
 const fundZhCN = parse(fundZhCNSource) as OpenApiDocument;
 const fundZhHK = parse(fundZhHKSource) as OpenApiDocument;
@@ -128,9 +134,9 @@ function mergeDocuments(
 }
 
 const documents = {
-  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, clearingEn, billingEn, suspiciousEn, serviceParamEn, bookkeepingEn, announcementEn, corporateActionEn, reportsEn, riskControlEn, fundEn),
-  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, clearingZhCN, billingZhCN, suspiciousZhCN, serviceParamZhCN, bookkeepingZhCN, announcementZhCN, corporateActionZhCN, reportsZhCN, riskControlZhCN, fundZhCN),
-  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, clearingZhHK, billingZhHK, suspiciousZhHK, serviceParamZhHK, bookkeepingZhHK, announcementZhHK, corporateActionZhHK, reportsZhHK, riskControlZhHK, fundZhHK),
+  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, clearingEn, billingEn, suspiciousEn, serviceParamEn, bookkeepingEn, announcementEn, corporateActionEn, reportsEn, riskControlEn, virtualAssetsEn, fundEn),
+  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, clearingZhCN, billingZhCN, suspiciousZhCN, serviceParamZhCN, bookkeepingZhCN, announcementZhCN, corporateActionZhCN, reportsZhCN, riskControlZhCN, virtualAssetsZhCN, fundZhCN),
+  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, clearingZhHK, billingZhHK, suspiciousZhHK, serviceParamZhHK, bookkeepingZhHK, announcementZhHK, corporateActionZhHK, reportsZhHK, riskControlZhHK, virtualAssetsZhHK, fundZhHK),
 } as const;
 
 const domainDocuments = {
@@ -147,6 +153,7 @@ const domainDocuments = {
     ["broker-api/corporate-action.en.yml", corporateActionEn],
     ["broker-api/reports.en.yml", reportsEn],
     ["broker-api/risk-control.en.yml", riskControlEn],
+    ["broker-api/virtual-assets.en.yml", virtualAssetsEn],
     ["broker-api/fund.en.yml", fundEn],
   ],
   "zh-CN": [
@@ -162,6 +169,7 @@ const domainDocuments = {
     ["broker-api/corporate-action.zh-CN.yml", corporateActionZhCN],
     ["broker-api/reports.zh-CN.yml", reportsZhCN],
     ["broker-api/risk-control.zh-CN.yml", riskControlZhCN],
+    ["broker-api/virtual-assets.zh-CN.yml", virtualAssetsZhCN],
     ["broker-api/fund.zh-CN.yml", fundZhCN],
   ],
   "zh-HK": [
@@ -177,6 +185,7 @@ const domainDocuments = {
     ["broker-api/corporate-action.zh-HK.yml", corporateActionZhHK],
     ["broker-api/reports.zh-HK.yml", reportsZhHK],
     ["broker-api/risk-control.zh-HK.yml", riskControlZhHK],
+    ["broker-api/virtual-assets.zh-HK.yml", virtualAssetsZhHK],
     ["broker-api/fund.zh-HK.yml", fundZhHK],
   ],
 } satisfies Record<
