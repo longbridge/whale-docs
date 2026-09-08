@@ -3890,6 +3890,1239 @@ paths:
         metadata:
           sidebarTitle: 行情维护
       x-post-fallback: true
+  /admin/transfer/out/apply:
+    post:
+      operationId: transfer_out_apply
+      summary: 手工出仓申请
+      tags:
+        - 证券管理
+      x-permission-key:
+        - atm.admin_transfer_out_apply
+        - b2b_atm.admin_transfer_out_apply
+      x-lbonly: false
+      description: |-
+        手工出仓申请。
+
+        ### 请求参数
+
+        - 必填：`aaid`（资产账户ID）、`member_id`（会员/客户ID）、`from`（来源标识）、`params.name_en`（接收券商名称）、`params.code`（CCASS / DTC 代号）、`params.name`（账户姓名）、`params.account_channel`（账户渠道）、`params.stocks`（证券取出 (Transfer Out) 明细列表）、`params.stocks[].counter_id`（标的（柜台ID））、`params.stocks[].is_reality`（是否为实物股票）、`params.stocks[].custodian`（托管商编号）、`params.stocks[].sub_position_no`（子仓编号）、`params.stocks[].amount`（持仓数量（合计））
+        - 可选：`params.broker_id`（转入券商）、`params.account`（账户号码）、`params.broker`（券商名称（提交用））、`params.stocks[].street_amount`（Street 数量）、`params.stocks[].nominee_amount`（Nominee 数量）、`params.stocks[].own_amount`（Own 数量）、`params.stocks[].market`（市场）、`params.stocks[].name_en`（标的名称（英文））、`params.stocks[].code`（标的代码）
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 风险提示
+
+        > 此操作可能引起真实资金、持仓或交易状态变化。调用前请确认目标记录和参数无误。
+
+        ### 处理结果
+
+        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - member_id
+                - from
+                - params.name_en
+                - params.code
+                - params.name
+                - params.account_channel
+                - params.stocks
+                - params.stocks[].counter_id
+                - params.stocks[].is_reality
+                - params.stocks[].custodian
+                - params.stocks[].sub_position_no
+                - params.stocks[].amount
+              properties:
+                aaid:
+                  type: string
+                  description: 资产账户ID. 资产账户ID，用于标识本次请求关联的业务对象。此字段为必填项。
+                member_id:
+                  type: string
+                  description: 会员/客户ID. 会员/客户ID，用于标识本次请求关联的业务对象。此字段为必填项。
+                from:
+                  type: string
+                  description: 来源标识. 固定传 'bo'（后台）
+                params.broker_id:
+                  type: string
+                  description: 转入券商. 下拉选择，数据源为券商列表查询，附加一项 id='0' 表示「其他券商」
+                params.name_en:
+                  type: string
+                  description: 接收券商名称. broker_id='0'（其他券商）时需手工填写；否则应从所选券商记录填入
+                params.code:
+                  type: string
+                  description: CCASS / DTC 代号. broker_id='0'（其他券商）时需手工填写；否则应从所选券商记录填入
+                params.name:
+                  type: string
+                  description: 账户姓名. 下拉选择，数据源为客户姓名列表
+                params.account:
+                  type: string
+                  description: 账户号码. 用于指定「账户号码」。
+                params.broker:
+                  type: string
+                  description: 券商名称（提交用）. 计算字段：broker_id≠'0' 时取选中券商的名称，否则取 name_en
+                params.account_channel:
+                  type: string
+                  description: 账户渠道. 当前登录渠道，自动获取，非用户手工输入
+                params.stocks:
+                  type: array
+                  description: 证券取出 (Transfer Out) 明细列表. 可动态增删多组，每组结构见下方各 stocks[] 字段
+                  items:
+                    type: string
+                params.stocks[].counter_id:
+                  type: string
+                  description: 标的（柜台ID）. 选择标的，选中后联动带出 market/name_en/code 及托管持仓信息
+                params.stocks[].is_reality:
+                  type: integer
+                  description: |-
+                    是否为实物股票. 用于指定「是否为实物股票」。此字段为必填项。
+
+                    **可选值：**
+                    - `1` - 表示是
+                    - `0` - 表示否
+                  enum:
+                    - '1'
+                    - '0'
+                params.stocks[].custodian:
+                  type: string
+                  description: |-
+                    托管商编号. 下拉选择，选中标的后由持仓查询结果或 clear_custodian_no_all 动态枚举提供选项
+
+                    请调用 `GET /v1/datasets/refs/clearing_custodians` 获取当前可用的数据字典，并使用返回项的 `key` 作为本字段值。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/clearing_custodians
+                params.stocks[].sub_position_no:
+                  type: string
+                  description: |-
+                    子仓编号. 下拉选择，来源于持仓信息或 clear_sub_position_no_all 动态枚举
+
+                    请调用 `GET /v1/datasets/refs/custodian_sub_positions` 获取当前可用的数据字典，并使用返回项的 `key` 作为本字段值。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/custodian_sub_positions
+                params.stocks[].street_amount:
+                  type: integer
+                  description: Street 数量. 非负整数，默认 0，由持仓查询自动带出，可编辑
+                params.stocks[].nominee_amount:
+                  type: integer
+                  description: Nominee 数量. 非负整数，默认 0，由持仓查询自动带出，可编辑
+                params.stocks[].own_amount:
+                  type: integer
+                  description: Own 数量. 非负整数，默认 0，由持仓查询自动带出，可编辑
+                params.stocks[].amount:
+                  type: string
+                  description: 持仓数量（合计）. 自动计算 = street_amount + nominee_amount + own_amount，必须为正整数，提交时转为字符串
+                params.stocks[].market:
+                  type: string
+                  description: 市场. 由选中的 counter_id 自动带出
+                params.stocks[].name_en:
+                  type: string
+                  description: 标的名称（英文）. 由选中的 counter_id 自动带出
+                params.stocks[].code:
+                  type: string
+                  description: 标的代码. 由选中的 counter_id 自动带出
+            example:
+              aaid: H00000000
+              member_id: '1000000000000000000'
+              from: bo
+              params:
+                broker_id: '0'
+                name_en: Sample Broker
+                code: '12345'
+                name: test_user
+                account: ACC0001
+                broker: Sample Broker
+                account_channel: web
+                stocks:
+                  - counter_id: HK/700/700
+                    is_reality: 1
+                    custodian: CUST01
+                    sub_position_no: SUB01
+                    street_amount: 100
+                    nominee_amount: 0
+                    own_amount: 0
+                    amount: '100'
+                    market: HK
+                    name_en: TENCENT
+                    code: '700'
+      responses:
+        '200':
+          description: 请求处理成功。响应的 `data` 不包含额外业务字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code`
+                      判断具体结果。
+
+                      - `401`：未登录。
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-mint:
+        href: /zh-CN/api-reference/transfer_out_apply
+        metadata:
+          sidebarTitle: 手工出仓申请
+  /atm/transfer/out/update:
+    post:
+      operationId: transfer_out_update
+      summary: 审核证券取出申请
+      tags:
+        - 证券管理
+      x-permission-key:
+        - atm.transfer_out_update
+      x-lbonly: false
+      description: |-
+        审核证券取出申请。
+
+        ### 请求参数
+
+        - 必填：`ids`（取出申请ID列表）、`state`（审核后状态）
+        - 可选：`remark`（备注）、`is_show`（备注是否对用户可见）、`audit_frontend_resource`（调用方提交的审计追踪信息）
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 处理结果
+
+        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ids
+                - state
+              properties:
+                ids:
+                  type: array
+                  description: 取出申请ID列表. 取出申请ID列表，以 JSON 数组形式提交。此字段为必填项。
+                  items:
+                    type: string
+                remark:
+                  type: string
+                  description: 备注. approve/submit_channel 场景对应「备注」TextArea；reject 场景额外还有默认备注下拉可回填此字段
+                state:
+                  type: number
+                  description: 审核后状态. 由 action 决定：approve→1(处理中/PROCESSING_STATE)，reject→3(已驳回/REJECTED_STATE)，submit_channel→2(已处理/PROCESSED_STATE)
+                is_show:
+                  type: number
+                  description: |-
+                    备注是否对用户可见. 仅 reject 场景传值：1=可见，0=不可见；approve/submit_channel 场景传 null
+
+                    **可选值：**
+                    - `1` - 表示可见
+                    - `0` - 表示不可见
+                  enum:
+                    - '1'
+                    - '0'
+                audit_frontend_resource:
+                  type: object
+                  description: 审计上下文. 调用方提交的审计信息对象，含 $action(approve/reject/add) 与 $behavior(操作行为文案)，非业务字段
+            example:
+              ids:
+                - '100086'
+              remark: 审核通过
+              state: 1
+              is_show: null
+              audit_frontend_resource:
+                $action: approve
+                $behavior: Approve
+      responses:
+        '200':
+          description: 请求处理成功。响应的 `data` 不包含额外业务字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code`
+                      判断具体结果。
+
+                      - `401`：未登录。
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-mint:
+        href: /zh-CN/api-reference/transfer_out_update
+        metadata:
+          sidebarTitle: 审核证券取出申请
+  /transfer/fee/update:
+    post:
+      operationId: transfer_fee_update
+      summary: 编辑转仓手续费
+      tags:
+        - 证券管理
+      x-permission-key:
+        - finance.update_transfer_out_stock
+      x-lbonly: false
+      description: |-
+        编辑转仓手续费。
+
+        ### 请求参数
+
+        - 必填：`id`（取出申请ID）、`is_show`（备注是否对用户可见）、`fee`（转出手续费）
+        - 可选：`remarkType`（默认备注类型）、`remark`（修改原因/备注）
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 处理结果
+
+        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - is_show
+                - fee
+              properties:
+                id:
+                  type: string
+                  description: 取出申请ID. 目标记录 ID。调用方必须从待更新记录的 `id` 取值并随提交请求
+                is_show:
+                  type: number
+                  description: |-
+                    备注是否对用户可见. 可见性标记；传 `1` 表示可见。
+
+                    **可选值：**
+                    - `1` - 表示可见
+                    - `0` - 表示不可见
+                  enum:
+                    - '1'
+                    - '0'
+                remarkType:
+                  type: number
+                  description: 默认备注类型. 当前已确认的取值为 `0`（自定义）；使用该值时，由调用方通过 `remark` 提交自定义说明
+                remark:
+                  type: string
+                  description: 修改原因/备注. 自定义说明文本。
+                fee:
+                  type: number
+                  description: 转出手续费. 修改后的费用不得超过实时可提金额；调用前应先查询当前可提金额并完成校验
+            example:
+              id: '100086'
+              is_show: 1
+              remarkType: 0
+              remark: 手动调整转出手续费
+              fee: 15.5
+      responses:
+        '200':
+          description: 请求处理成功。响应的 `data` 不包含额外业务字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code`
+                      判断具体结果。
+
+                      - `401`：未登录。
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-mint:
+        href: /zh-CN/api-reference/transfer_fee_update
+        metadata:
+          sidebarTitle: 编辑转仓手续费
+  /v1/atm/batch/transfer/out/stock/update:
+    post:
+      operationId: batch_transfer_out_stock_update
+      summary: 批量更新取出明细状态
+      tags:
+        - 证券管理
+      x-permission-key:
+        - finance.update_transfer_out_stock
+      x-lbonly: false
+      description: |-
+        批量更新取出明细状态。
+
+        ### 请求参数
+
+        - 必填：`ids`（取出明细ID列表）、`state`（更新后状态）
+        - 可选：`remark`（备注）、`remark_config_type`（备注类型配置）
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 处理结果
+
+        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ids
+                - state
+              properties:
+                ids:
+                  type: array
+                  description: 取出明细ID列表. 批量勾选的行 id 数组
+                  items:
+                    type: string
+                state:
+                  type: number
+                  description: |-
+                    更新后状态. 批量更新后的目标状态。
+
+                    **可选值：**
+                    - `1` - 表示成功
+                    - `2` - 表示失败
+                  enum:
+                    - '1'
+                    - '2'
+                remark:
+                  type: string
+                  description: 备注. 仅在标记失败时传入，标记失败时填写的失败原因
+                remark_config_type:
+                  type: string
+                  description: 备注类型配置. 可选的备注类型配置字段，通常不传
+            example:
+              ids:
+                - '100086'
+                - '100087'
+              state: 1
+      responses:
+        '200':
+          description: 请求处理成功。响应的 `data` 不包含额外业务字段。
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code`
+                      判断具体结果。
+
+                      - `401`：未登录。
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。
+                  message:
+                    type: string
+                  data:
+                    type: object
+              example:
+                code: 0
+                message: success
+                data: {}
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-mint:
+        href: /zh-CN/api-reference/batch_transfer_out_stock_update
+        metadata:
+          sidebarTitle: 批量更新取出明细状态
+  /v1/datasets/atm_transfer_out_records:
+    get:
+      operationId: atm_transfer_out_records
+      summary: 取出申请
+      tags:
+        - 证券管理
+      x-permission-key:
+        - finance.transfer_out_record
+      x-lbonly: false
+      description: |-
+        查询「取出申请」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 和 `orderBy` 控制分页与排序。
+
+        ### 返回结果
+
+        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 过滤条件. 组合业务过滤条件。省略某个过滤字段时，不按该字段筛选。
+                  properties:
+                    aaid:
+                      type: string
+                      description: 客户. 用于按「客户」筛选结果。
+                    id:
+                      type: string
+                      description: 转出申请编号. 用于按「转出申请编号」筛选结果。
+                    created_at:
+                      type: object
+                      description: 创建时间. 用于按「创建时间」筛选结果。
+                      properties:
+                        gte:
+                          type: string
+                          description: 大于等于. 筛选范围的下限，匹配值包含该值。
+                          format: date
+                        lte:
+                          type: string
+                          description: 小于等于. 筛选范围的上限，匹配值包含该值。
+                          format: date
+                    counter_id:
+                      type: string
+                      description: 股票. 用于按「股票」筛选结果。
+                    from:
+                      type: string
+                      description: |-
+                        来源. 用于按「来源」筛选结果。
+
+                        **可选值：**
+                        - `app` - 表示客户
+                        - `bo` - 表示后台人工
+                        - `was` - 表示 WAS
+                      enum:
+                        - app
+                        - bo
+                        - was
+                page:
+                  type: integer
+                  description: 页码. 要查询的页码，从 `1` 开始。
+                page_size:
+                  type: integer
+                  description: 每页数量. 每页返回的记录数量。
+                orderBy:
+                  type: array
+                  description: 排序参数. 排序规则数组；每一项定义一个排序字段及排序方向。
+                  items:
+                    type: object
+            example:
+              filters: {}
+              page: 1
+              page_size: 20
+              orderBy: []
+      responses:
+        '200':
+          description: 成功时分页返回「取出申请」记录，以及页码、每页数量和总记录数等分页信息。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - message
+                  - data
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code`
+                      判断具体结果。
+
+                      - `401`：未登录。
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                      - list
+                      - total
+                    properties:
+                      list:
+                        type: array
+                        description: 列表. **返回值：** 列表列表。
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: 申请编号. **返回值：** 当前记录的唯一标识。
+                            id_val:
+                              type: string
+                              description: 申请编号（原始值）. 字段 id 的原始值：id 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            support_manager_name:
+                              type: string
+                              description: 客服经理. **返回值：** 客服经理。
+                            origin_id:
+                              type: string
+                              description: 证券账号. **返回值：** 证券账号。
+                            real_name:
+                              type: string
+                              description: 客户姓名. **返回值：** 客户姓名。
+                            member_region:
+                              type: string
+                              description: 客户所属地区. **返回值：** 客户所属地区。
+                            member_region_val:
+                              type: string
+                              description: 客户所属地区（原始值）. 字段 member_region 的原始值：member_region 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            broker_id:
+                              type: string
+                              description: 转入券商. **返回值：** 转入券商。
+                            broker_id_val:
+                              type: string
+                              description: 转入券商（原始值）. 字段 broker_id 的原始值：broker_id 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            state:
+                              type: string
+                              description: 申请单状态. **返回值：** 申请单状态。
+                            state_val:
+                              type: string
+                              description: 申请单状态（原始值）. 字段 state 的原始值：state 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            app_state:
+                              type: string
+                              description: 通知券商. **返回值：** 通知券商。
+                            app_state_val:
+                              type: string
+                              description: 通知券商（原始值）. 字段 app_state 的原始值：app_state 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            custom_remark:
+                              type: string
+                              description: 备注. **返回值：** 备注。
+                            from:
+                              type: string
+                              description: 来源. **返回值：** 来源。
+                            from_val:
+                              type: string
+                              description: 来源（原始值）. 字段 from 的原始值：from 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            member_id:
+                              type: string
+                              description: 客户编号. **返回值：** 客户编号。
+                            member_id_val:
+                              type: string
+                              description: 客户编号（原始值）. 字段 member_id 的原始值：member_id 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            app_task_id:
+                              type: string
+                              description: App 推送 ID. **返回值：** App 推送 ID。
+                            email_task_id:
+                              type: string
+                              description: Email 推送 ID. **返回值：** Email 推送 ID。
+                            updated_at:
+                              type: string
+                              description: 更新时间. **返回值：** 更新时间；时间或日期格式以接口实际返回值为准。
+                            operator:
+                              type: string
+                              description: 操作人. **返回值：** 操作人。
+                            created_at:
+                              type: string
+                              description: 提交时间. **返回值：** 提交时间；时间或日期格式以接口实际返回值为准。
+                            process_day_count:
+                              type: string
+                              description: 处理天数. **返回值：** 处理天数。
+                      total:
+                        type: integer
+                        description: 总条数. **返回值：** 符合查询条件的记录总数，用于计算分页。
+              example:
+                code: 0
+                message: success
+                data:
+                  list:
+                    - id: '68971'
+                      id_val: ''
+                      support_manager_name: 楚然(高勇)
+                      origin_id: H00000000
+                      real_name: 示例用户
+                      member_region: Hong Kong China
+                      member_region_val: HK
+                      broker_id: ' BOCI Securities Limited'
+                      broker_id_val: '1'
+                      state: To Be Submitted
+                      state_val: '0'
+                      app_state: Uninformed
+                      app_state_val: '0'
+                      custom_remark: ''
+                      from: Client
+                      from_val: app
+                      member_id: '1000000000000000000'
+                      member_id_val: ''
+                      app_task_id: '0'
+                      email_task_id: user@example.com
+                      updated_at: '1783968846'
+                      operator: ''
+                      created_at: '1783968846'
+                      process_day_count: '2'
+                  total: 134
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-dataset-download:
+        method: POST
+        path: /v1/datasets/atm_transfer_out_records/download
+        operationId: atm_transfer_out_records_download
+      x-mint:
+        href: /zh-CN/api-reference/atm_transfer_out_records
+        metadata:
+          sidebarTitle: 取出申请
+      x-post-fallback: true
+  /v1/datasets/atm_transfer_out_stocks:
+    get:
+      operationId: atm_transfer_out_stocks
+      summary: 取出明细
+      tags:
+        - 证券管理
+      x-permission-key:
+        - finance.transfer_out_record
+      x-lbonly: false
+      description: |-
+        查询「取出明细」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 和 `orderBy` 控制分页与排序。
+
+        ### 返回结果
+
+        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 过滤条件. 组合业务过滤条件。省略某个过滤字段时，不按该字段筛选。
+                  properties:
+                    transfer_id:
+                      type: string
+                      description: 申请编号. 用于按「申请编号」筛选结果。
+                    id:
+                      type: string
+                      description: 取出证券明细编号. 用于按「取出证券明细编号」筛选结果。
+                    is_reality:
+                      type: string
+                      description: |-
+                        是否实物转仓. 用于按「是否实物转仓」筛选结果。
+
+                        **可选值：**
+                        - `0` - 表示否
+                        - `1` - 表示是
+                      enum:
+                        - '0'
+                        - '1'
+                    state:
+                      type: string
+                      description: |-
+                        转出状态. 用于按「转出状态」筛选结果。
+
+                        支持多选；提交时使用英文逗号（`,`）拼接多个值。不传时不按此字段筛选。
+
+                        **可选值：**
+                        - `0` - 表示初始化
+                        - `1` - 表示成功
+                        - `2` - 表示失败
+                        - `3` - 表示已删除
+                      example: 0,1
+                      enum:
+                        - '0'
+                        - '1'
+                        - '2'
+                        - '3'
+                    created_at:
+                      type: object
+                      description: 提交时间. 用于按「提交时间」筛选结果。
+                      properties:
+                        gte:
+                          type: string
+                          description: 大于等于. 筛选范围的下限，匹配值包含该值。
+                          format: date
+                        lte:
+                          type: string
+                          description: 小于等于. 筛选范围的上限，匹配值包含该值。
+                          format: date
+                    apply_state:
+                      type: string
+                      description: |-
+                        审核状态. 用于按「审核状态」筛选结果。
+
+                        支持多选；提交时使用英文逗号（`,`）拼接多个值。不传时不按此字段筛选。
+
+                        **可选值：**
+                        - `0` - 表示初始
+                        - `1` - 表示成功提交待审核
+                        - `2` - 表示失败提交待审核
+                        - `3` - 表示修改待审核
+                        - `6` - 表示删除待审批
+                      example: 0,1
+                      enum:
+                        - '0'
+                        - '1'
+                        - '2'
+                        - '3'
+                        - '6'
+                    member_id:
+                      type: string
+                      description: 客户编号. 用于按「客户编号」筛选结果。
+                    market:
+                      type: string
+                      description: |-
+                        市场. 用于按「市场」筛选结果。
+
+                        **可选值：** `US`、`HK`、`UK`、`SH`、`SZ`、`SG`、`KR`、`JP`、`AU`、`DE`、`CA`、`TH`、`ID`、`MY`、`TR`、`NA`、`OSL`、`HAS`、`EU`、`UT`、`GTMMF`
+                      enum:
+                        - US
+                        - HK
+                        - UK
+                        - SH
+                        - SZ
+                        - SG
+                        - KR
+                        - JP
+                        - AU
+                        - DE
+                        - CA
+                        - TH
+                        - ID
+                        - MY
+                        - TR
+                        - NA
+                        - OSL
+                        - HAS
+                        - EU
+                        - UT
+                        - GTMMF
+                    counter_id:
+                      type: string
+                      description: 股票. 用于按「股票」筛选结果。
+                    settled_at:
+                      type: object
+                      description: 出账时间. 用于按「出账时间」筛选结果。
+                      properties:
+                        gte:
+                          type: string
+                          description: 大于等于. 筛选范围的下限，匹配值包含该值。
+                          format: date
+                        lte:
+                          type: string
+                          description: 小于等于. 筛选范围的上限，匹配值包含该值。
+                          format: date
+                    cheat_state:
+                      type: string
+                      description: |-
+                        风控状态. 用于按「风控状态」筛选结果。
+
+                        **可选值：**
+                        - `0` - 表示风控处理中
+                        - `1` - 表示未命中
+                        - `2` - 表示命中
+                      enum:
+                        - '0'
+                        - '1'
+                        - '2'
+                    hit_rules:
+                      type: string
+                      description: |-
+                        命中规则. 用于按「命中规则」筛选结果。
+
+                        候选值会动态变化。请调用 `GET /v1/datasets/refs/risk_rule_indicators_transfer_out` 获取当前可用的数据字典，并使用返回项的 `key` 作为本参数值。
+                      x-value-source:
+                        endpoint: GET /v1/datasets/refs/risk_rule_indicators_transfer_out
+                page:
+                  type: integer
+                  description: 页码. 要查询的页码，从 `1` 开始。
+                page_size:
+                  type: integer
+                  description: 每页数量. 每页返回的记录数量。
+                orderBy:
+                  type: array
+                  description: 排序参数. 排序规则数组；每一项定义一个排序字段及排序方向。
+                  items:
+                    type: object
+            example:
+              filters: {}
+              page: 1
+              page_size: 20
+              orderBy: []
+      responses:
+        '200':
+          description: 成功时分页返回「取出明细」记录，以及页码、每页数量和总记录数等分页信息。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - message
+                  - data
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code`
+                      判断具体结果。
+
+                      - `401`：未登录。
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                      - list
+                      - total
+                    properties:
+                      list:
+                        type: array
+                        description: 列表. **返回值：** 列表列表。
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: 取出证券明细编号. **返回值：** 当前记录的唯一标识。
+                            transfer_id:
+                              type: string
+                              description: 申请编号. **返回值：** 申请编号。
+                            code:
+                              type: string
+                              description: 证券代码. **返回值：** 证券代码。
+                            real_name:
+                              type: string
+                              description: 客户姓名. **返回值：** 客户姓名。
+                            origin_id:
+                              type: string
+                              description: 证券账号. **返回值：** 证券账号。
+                            name_locales:
+                              type: string
+                              description: 转出证券. **返回值：** 转出证券。
+                            amount:
+                              type: string
+                              description: 转出持仓. **返回值：** 转出持仓。
+                            transfer_order_fee:
+                              type: string
+                              description: 手续费. **返回值：** 手续费。
+                            custom_transfer_area_fee:
+                              type: string
+                              description: 消费税. **返回值：** 消费税。
+                            margin_call_value:
+                              type: string
+                              description: margin call 参考值. **返回值：** margin call 参考值。
+                            apply_state:
+                              type: string
+                              description: 审核状态. **返回值：** 审核状态。
+                            apply_state_val:
+                              type: string
+                              description: 审核状态（原始值）. 字段 apply_state 的原始值：apply_state 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            auditor:
+                              type: string
+                              description: 审核人. **返回值：** 审核人。
+                            updated_at:
+                              type: string
+                              description: 更新时间. **返回值：** 更新时间；时间或日期格式以接口实际返回值为准。
+                            state:
+                              type: string
+                              description: 转出状态. **返回值：** 转出状态。
+                            state_val:
+                              type: string
+                              description: 转出状态（原始值）. 字段 state 的原始值：state 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            cheat_state:
+                              type: string
+                              description: 风控状态. **返回值：** 风控状态。
+                            cheat_state_val:
+                              type: string
+                              description: 风控状态（原始值）. 字段 cheat_state 的原始值：cheat_state 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            custom_hit_rules:
+                              type: string
+                              description: 命中规则. **返回值：** 命中规则。
+                            si_file_name:
+                              type: string
+                              description: SI 报表名称. **返回值：** SI 报表名称。
+                            si_purpose:
+                              type: string
+                              description: SI 交收方式. **返回值：** SI 交收方式。
+                            si_account_name:
+                              type: string
+                              description: SI 交收姓名. **返回值：** SI 交收姓名。
+                            si_account:
+                              type: string
+                              description: SI 交收账号. **返回值：** SI 交收账号。
+                            broker_id:
+                              type: string
+                              description: 转入券商. **返回值：** 转入券商。
+                            broker_id_val:
+                              type: string
+                              description: 转入券商（原始值）. 字段 broker_id 的原始值：broker_id 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            si_broker_code:
+                              type: string
+                              description: 对方券商编码. **返回值：** 对方券商编码。
+                            unit_amount:
+                              type: string
+                              description: 转出手数. **返回值：** 转出手数。
+                            close_price:
+                              type: string
+                              description: 收盘价. **返回值：** 收盘价。
+                            market_value:
+                              type: string
+                              description: 转出市场价值. **返回值：** 转出市场价值。
+                            statement_remark:
+                              type: string
+                              description: 结单备注. **返回值：** 结单备注。
+                            custodian_before:
+                              type: string
+                              description: 托管商. **返回值：** 托管商。
+                            custodian_before_val:
+                              type: string
+                              description: 托管商（原始值）. 字段 custodian_before 的原始值：custodian_before 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            sub_position_no_before:
+                              type: string
+                              description: 子仓. **返回值：** 子仓。
+                            sub_position_no_before_val:
+                              type: string
+                              description: 子仓（原始值）. 字段 sub_position_no_before 的原始值：sub_position_no_before 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
+                            street_amount_before:
+                              type: string
+                              description: Street Amount. **返回值：** Street Amount。
+                            nominee_amount_before:
+                              type: string
+                              description: Nominee Amount. **返回值：** Nominee Amount。
+                            own_amount_before:
+                              type: string
+                              description: Own Amount. **返回值：** Own Amount。
+                            creator:
+                              type: string
+                              description: 操作人. **返回值：** 操作人。
+                            created_at:
+                              type: string
+                              description: 提交时间. **返回值：** 提交时间；时间或日期格式以接口实际返回值为准。
+                            settled_at:
+                              type: string
+                              description: 出账时间. **返回值：** 出账时间；时间或日期格式以接口实际返回值为准。
+                      total:
+                        type: integer
+                        description: 总条数. **返回值：** 符合查询条件的记录总数，用于计算分页。
+              example:
+                code: 0
+                message: success
+                data:
+                  list:
+                    - id: '89760'
+                      transfer_id: '68971'
+                      code: '45934'
+                      real_name: 示例用户
+                      origin_id: H00000000
+                      name_locales: ST/HK/45934
+                      amount: ' 1'
+                      transfer_order_fee: ' 0 HKD'
+                      custom_transfer_area_fee: ' 0.00 HKD'
+                      margin_call_value: '0.00'
+                      apply_state: Init
+                      apply_state_val: '0'
+                      auditor: ''
+                      updated_at: '1783968922'
+                      state: Initialize
+                      state_val: '0'
+                      cheat_state: Targeted
+                      cheat_state_val: '2'
+                      custom_hit_rules: Loan amount4HKD
+                      si_file_name: ''
+                      si_purpose: C
+                      si_account_name: LI BAI
+                      si_account: '123123'
+                      broker_id: ' BOCI Securities Limited'
+                      broker_id_val: '1'
+                      si_broker_code: B01130
+                      unit_amount: '0'
+                      close_price: 0HKD
+                      market_value: 0.00HKD
+                      statement_remark: ''
+                      custodian_before: CCASS
+                      custodian_before_val: ''
+                      sub_position_no_before: 4 | margin
+                      sub_position_no_before_val: ''
+                      street_amount_before: '1.00000'
+                      nominee_amount_before: '0.00000'
+                      own_amount_before: '0.00000'
+                      creator: 示例用户
+                      created_at: '1783968846'
+                      settled_at: ''
+                  total: 9315
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-dataset-download:
+        method: POST
+        path: /v1/datasets/atm_transfer_out_stocks/download
+        operationId: atm_transfer_out_stocks_download
+      x-mint:
+        href: /zh-CN/api-reference/atm_transfer_out_stocks
+        metadata:
+          sidebarTitle: 取出明细
+      x-post-fallback: true
 components:
   schemas:
     BrokerGatewayErrorEnvelope:
