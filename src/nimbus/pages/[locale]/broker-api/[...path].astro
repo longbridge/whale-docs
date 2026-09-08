@@ -53,8 +53,24 @@ const labels = {
 };
 const example = request?.example ?? request?.examples?.default?.value;
 const requestSchema = resolveSchema(document, request?.schema);
-const baseUrl = "https://b-api.longbridge.xyz";
+const servers = (document.servers ?? []) as { url: string; description?: string }[];
+const prodUrl = servers.find((s) => /lbkrs\.com/.test(s.url))?.url ?? servers[0]?.url ?? "https://b-api.lbkrs.com";
+const testUrl = servers.find((s) => /longbridge\.xyz/.test(s.url))?.url ?? "https://b-api.longbridge.xyz";
+const isDatasetPath = path.startsWith("/v1/datasets/");
+// Dataset endpoints are deployed on Test only (prod 404s); everything else is canonically Production.
+const baseUrl = isDatasetPath ? testUrl : prodUrl;
 const endpointUrl = `${baseUrl}${path}`;
+const environmentNote = isDatasetPath
+  ? locale === "en"
+    ? `Dataset endpoints are available on the Test host only (${testUrl}); the Production host returns 404.`
+    : locale === "zh-CN"
+      ? `Dataset 接口仅在测试环境（${testUrl}）提供，生产环境返回 404。`
+      : `Dataset 介面僅在測試環境（${testUrl}）提供，生產環境返回 404。`
+  : locale === "en"
+    ? `Production: ${prodUrl} · Test: ${testUrl}`
+    : locale === "zh-CN"
+      ? `生产环境：${prodUrl} · 测试环境：${testUrl}`
+      : `生產環境：${prodUrl} · 測試環境：${testUrl}`;
 const postFallbackNote = hasPostFallback
   ? locale === "en"
     ? "This Dataset query is read-only. Use GET by default. If the encoded query parameters are too large, send the same parameters as a JSON body with POST to the same path."
@@ -174,6 +190,7 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
     <code>{endpointUrl}</code>
     <ApiEndpointCopy text={endpointUrl} label={copyEndpointLabel} copiedLabel={copiedEndpointLabel} />
   </div>
+  <p class="api-operation-note">{environmentNote}</p>
   {postFallbackNote && <p class="api-operation-note">{postFallbackNote}</p>}
 
   <div class="api-reference-grid">
