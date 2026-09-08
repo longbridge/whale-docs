@@ -283,6 +283,8 @@ export function operationPermissions(operation: Record<string, any>): {
 export function permissionLabels(locale: string) {
   return locale === "en"
     ? {
+        title: "Permission",
+        requiredDesc: "The Broker ACCESS_TOKEN must be granted the permission below, or the call will be rejected.",
         none: "No dedicated permission key. Any authenticated Broker ACCESS_TOKEN with access to this scope can call it.",
         lbonly: "Longbridge-internal only — not granted to external brokers.",
         lbonlyBadge: "LB only",
@@ -291,6 +293,8 @@ export function permissionLabels(locale: string) {
       }
     : locale === "zh-CN"
       ? {
+          title: "权限",
+          requiredDesc: "Broker ACCESS_TOKEN 需被授予以下权限，否则调用将被拒绝。",
           none: "无专属权限 Key。具备该 scope 访问权限的已鉴权 Broker ACCESS_TOKEN 即可调用。",
           lbonly: "仅长桥内部可用，不对外部券商授权。",
           lbonlyBadge: "内部专用",
@@ -298,6 +302,8 @@ export function permissionLabels(locale: string) {
             `调用此接口需要 <code>${key}</code> 权限，Broker ACCESS_TOKEN 未被授予该权限时将无法调用。`,
         }
       : {
+          title: "權限",
+          requiredDesc: "Broker ACCESS_TOKEN 需被授予以下權限，否則呼叫將被拒絕。",
           none: "無專屬權限 Key。具備該 scope 存取權限的已鑑權 Broker ACCESS_TOKEN 即可呼叫。",
           lbonly: "僅長橋內部可用，不對外部券商授權。",
           lbonlyBadge: "內部專用",
