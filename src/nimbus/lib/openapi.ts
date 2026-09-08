@@ -44,6 +44,12 @@ import fundZhHKSource from "../../../broker-api/fund.zh-HK.yml?raw";
 import ipoEnSource from "../../../broker-api/ipo.en.yml?raw";
 import ipoZhCNSource from "../../../broker-api/ipo.zh-CN.yml?raw";
 import ipoZhHKSource from "../../../broker-api/ipo.zh-HK.yml?raw";
+import cashMgmtEnSource from "../../../broker-api/cash-management.en.yml?raw";
+import cashMgmtZhCNSource from "../../../broker-api/cash-management.zh-CN.yml?raw";
+import cashMgmtZhHKSource from "../../../broker-api/cash-management.zh-HK.yml?raw";
+import securitiesEnSource from "../../../broker-api/securities.en.yml?raw";
+import securitiesZhCNSource from "../../../broker-api/securities.zh-CN.yml?raw";
+import securitiesZhHKSource from "../../../broker-api/securities.zh-HK.yml?raw";
 
 export type OpenApiDocument = {
   paths: Record<string, Record<string, unknown>>;
@@ -113,6 +119,12 @@ const fundZhHK = parse(fundZhHKSource) as OpenApiDocument;
 const ipoEn = parse(ipoEnSource) as OpenApiDocument;
 const ipoZhCN = parse(ipoZhCNSource) as OpenApiDocument;
 const ipoZhHK = parse(ipoZhHKSource) as OpenApiDocument;
+const cashMgmtEn = parse(cashMgmtEnSource) as OpenApiDocument;
+const cashMgmtZhCN = parse(cashMgmtZhCNSource) as OpenApiDocument;
+const cashMgmtZhHK = parse(cashMgmtZhHKSource) as OpenApiDocument;
+const securitiesEn = parse(securitiesEnSource) as OpenApiDocument;
+const securitiesZhCN = parse(securitiesZhCNSource) as OpenApiDocument;
+const securitiesZhHK = parse(securitiesZhHKSource) as OpenApiDocument;
 
 function mergeDocuments(
   base: OpenApiDocument,
@@ -140,9 +152,9 @@ function mergeDocuments(
 }
 
 const documents = {
-  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, clearingEn, billingEn, suspiciousEn, serviceParamEn, bookkeepingEn, announcementEn, corporateActionEn, reportsEn, riskControlEn, virtualAssetsEn, fundEn, ipoEn),
-  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, clearingZhCN, billingZhCN, suspiciousZhCN, serviceParamZhCN, bookkeepingZhCN, announcementZhCN, corporateActionZhCN, reportsZhCN, riskControlZhCN, virtualAssetsZhCN, fundZhCN, ipoZhCN),
-  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, clearingZhHK, billingZhHK, suspiciousZhHK, serviceParamZhHK, bookkeepingZhHK, announcementZhHK, corporateActionZhHK, reportsZhHK, riskControlZhHK, virtualAssetsZhHK, fundZhHK, ipoZhHK),
+  en: mergeDocuments(whaleApiEn, accountAssetsEn, miscEn, clearingEn, billingEn, suspiciousEn, serviceParamEn, bookkeepingEn, announcementEn, corporateActionEn, reportsEn, riskControlEn, virtualAssetsEn, fundEn, ipoEn, cashMgmtEn, securitiesEn),
+  "zh-CN": mergeDocuments(whaleApiZhCN, accountAssetsZhCN, miscZhCN, clearingZhCN, billingZhCN, suspiciousZhCN, serviceParamZhCN, bookkeepingZhCN, announcementZhCN, corporateActionZhCN, reportsZhCN, riskControlZhCN, virtualAssetsZhCN, fundZhCN, ipoZhCN, cashMgmtZhCN, securitiesZhCN),
+  "zh-HK": mergeDocuments(whaleApiZhHK, accountAssetsZhHK, miscZhHK, clearingZhHK, billingZhHK, suspiciousZhHK, serviceParamZhHK, bookkeepingZhHK, announcementZhHK, corporateActionZhHK, reportsZhHK, riskControlZhHK, virtualAssetsZhHK, fundZhHK, ipoZhHK, cashMgmtZhHK, securitiesZhHK),
 } as const;
 
 const domainDocuments = {
@@ -162,6 +174,8 @@ const domainDocuments = {
     ["broker-api/virtual-assets.en.yml", virtualAssetsEn],
     ["broker-api/fund.en.yml", fundEn],
     ["broker-api/ipo.en.yml", ipoEn],
+    ["broker-api/cash-management.en.yml", cashMgmtEn],
+    ["broker-api/securities.en.yml", securitiesEn],
   ],
   "zh-CN": [
     ["broker-api/account-assets.zh-CN.yml", accountAssetsZhCN],
@@ -179,6 +193,8 @@ const domainDocuments = {
     ["broker-api/virtual-assets.zh-CN.yml", virtualAssetsZhCN],
     ["broker-api/fund.zh-CN.yml", fundZhCN],
     ["broker-api/ipo.zh-CN.yml", ipoZhCN],
+    ["broker-api/cash-management.zh-CN.yml", cashMgmtZhCN],
+    ["broker-api/securities.zh-CN.yml", securitiesZhCN],
   ],
   "zh-HK": [
     ["broker-api/account-assets.zh-HK.yml", accountAssetsZhHK],
@@ -196,6 +212,8 @@ const domainDocuments = {
     ["broker-api/virtual-assets.zh-HK.yml", virtualAssetsZhHK],
     ["broker-api/fund.zh-HK.yml", fundZhHK],
     ["broker-api/ipo.zh-HK.yml", ipoZhHK],
+    ["broker-api/cash-management.zh-HK.yml", cashMgmtZhHK],
+    ["broker-api/securities.zh-HK.yml", securitiesZhHK],
   ],
 } satisfies Record<
   OperationRecord["locale"],
