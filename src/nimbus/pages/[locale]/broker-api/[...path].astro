@@ -53,8 +53,28 @@ const labels = {
 };
 const example = request?.example ?? request?.examples?.default?.value;
 const requestSchema = resolveSchema(document, request?.schema);
-const baseUrl = "https://b-api.longbridge.xyz";
+const servers = (document.servers ?? []) as { url: string; description?: string }[];
+const prodUrl = servers.find((s) => /lbkrs\.com/.test(s.url))?.url ?? servers[0]?.url ?? "https://b-api.lbkrs.com";
+const testUrl = servers.find((s) => /longbridge\.xyz/.test(s.url))?.url ?? "https://b-api.longbridge.xyz";
+const isDatasetPath = path.startsWith("/v1/datasets/");
+// Dataset endpoints are deployed on Test only (prod 404s); everything else is canonically Production.
+const baseUrl = isDatasetPath ? testUrl : prodUrl;
 const endpointUrl = `${baseUrl}${path}`;
+const defaultEnv = isDatasetPath ? "test" : "prod";
+const envLabels =
+  locale === "en"
+    ? { prod: "Production", test: "Test" }
+    : locale === "zh-CN"
+      ? { prod: "生产", test: "测试" }
+      : { prod: "生產", test: "測試" };
+// Only datasets get a note (they are Test-only); other ops use the host switcher.
+const datasetNote = !isDatasetPath
+  ? ""
+  : locale === "en"
+    ? "Dataset endpoints are available on the Test host only; the Production host returns 404."
+    : locale === "zh-CN"
+      ? "Dataset 接口仅在测试环境提供，生产环境返回 404。"
+      : "Dataset 介面僅在測試環境提供，生產環境返回 404。";
 const postFallbackNote = hasPostFallback
   ? locale === "en"
     ? "This Dataset query is read-only. Use GET by default. If the encoded query parameters are too large, send the same parameters as a JSON body with POST to the same path."
@@ -171,14 +191,21 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
 >
   <div class="api-operation-heading">
     <Badge className={`api-method api-method-${method.toLowerCase()}`}>{method.toUpperCase()}</Badge>
-    <code>{endpointUrl}</code>
+    <code class="api-endpoint-url" data-path={path}>{endpointUrl}</code>
     <ApiEndpointCopy text={endpointUrl} label={copyEndpointLabel} copiedLabel={copiedEndpointLabel} />
+    <div class="api-host-switch" role="group" aria-label="Server" data-prod-host={prodUrl} data-test-host={testUrl} data-active={defaultEnv}>
+      <button type="button" class="api-host-opt" data-host="prod" title={prodUrl}>{envLabels.prod}</button>
+      <button type="button" class="api-host-opt" data-host="test" title={testUrl}>{envLabels.test}</button>
+    </div>
   </div>
+  {datasetNote && <p class="api-operation-note">{datasetNote}</p>}
   {postFallbackNote && <p class="api-operation-note">{postFallbackNote}</p>}
 
   <div class="api-reference-grid">
     <div class="api-reference-fields">
-      <section><h2 id="authorization">Authorization</h2><div class="api-schema-fields"><div class="api-schema-field"><div class="api-schema-field-meta"><code>Authorization</code><Badge variant="secondary">string</Badge><Badge variant="outline">header</Badge>{permissionKeys.map((permissionKey: string) => <Badge variant="outline" className="api-scope-badge" data-scope-tooltip={permLabels.scopeTooltip(permissionKey)}><LucideIcon name="key-round" class="size-3" /><code>{permissionKey}</code></Badge>)}{isLbOnly && <Badge variant="outline" className="api-scope-badge api-scope-badge-lbonly" data-scope-tooltip={permLabels.lbonly}><LucideIcon name="lock" class="size-3" />{permLabels.lbonlyBadge}</Badge>}<Badge variant="destructive">{labels.required}</Badge></div><p>{locale === "en" ? "Send the Broker ACCESS_TOKEN as Authorization: Bearer <token>." : "Broker 获发的 ACCESS_TOKEN，通过 Authorization: Bearer <token> 发送。"}</p>{permissionKeys.length === 0 && !isLbOnly && <p class="api-permission-note">{permLabels.none}</p>}</div></div></section>
+      <section><h2 id="authorization">Authorization</h2><div class="api-schema-fields"><div class="api-schema-field"><div class="api-schema-field-meta"><code>Authorization</code><Badge variant="secondary">string</Badge><Badge variant="outline">header</Badge><Badge variant="destructive">{labels.required}</Badge></div><p>{locale === "en" ? "Send the Broker ACCESS_TOKEN as Authorization: Bearer <token>." : "Broker 获发的 ACCESS_TOKEN，通过 Authorization: Bearer <token> 发送。"}</p></div></div></section>
+
+      <section><h2 id="permission">{permLabels.title}</h2><div class="api-schema-fields"><div class="api-schema-field">{(permissionKeys.length > 0 || isLbOnly) && <div class="api-schema-field-meta">{permissionKeys.map((permissionKey: string) => <Badge variant="outline" className="api-scope-badge" data-scope-tooltip={permLabels.scopeTooltip(permissionKey)}><LucideIcon name="key-round" class="size-3" /><code>{permissionKey}</code></Badge>)}{isLbOnly && <Badge variant="outline" className="api-scope-badge api-scope-badge-lbonly" data-scope-tooltip={permLabels.lbonly}><LucideIcon name="lock" class="size-3" />{permLabels.lbonlyBadge}</Badge>}</div>}{permissionKeys.length > 0 && <p>{permLabels.requiredDesc}</p>}{permissionKeys.length === 0 && !isLbOnly && <p class="api-permission-note">{permLabels.none}</p>}{permissionKeys.length === 0 && isLbOnly && <p class="api-permission-note">{permLabels.lbonly}</p>}</div></div></section>
 
       {parameters.length > 0 && <section><h2 id="parameters">{labels.parameters}</h2><div class="api-fields">{parameters.map((parameter: any) => {
         const schema = resolveSchema(document, parameter.schema);
@@ -201,6 +228,10 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
           { id: "fetch", label: "Fetch", code: fetchExample, html: fetchHtml },
         ]}
         responses={highlightedResponses}
+        baseHost={baseUrl}
+        prodHost={prodUrl}
+        testHost={testUrl}
+        defaultEnv={defaultEnv}
       />
     </aside>
   </div>
@@ -227,4 +258,38 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
 
   initScopeTooltips();
   document.addEventListener("astro:page-load", initScopeTooltips);
+
+  // Host switcher: toggles the endpoint URL (heading + copy) between Production and
+  // Test, and broadcasts the choice so the code-example panel swaps its host too.
+  function initHostSwitch() {
+    document.querySelectorAll<HTMLElement>(".api-host-switch").forEach((sw) => {
+      if (sw.dataset.bound === "true") return;
+      sw.dataset.bound = "true";
+      const prod = sw.dataset.prodHost ?? "";
+      const test = sw.dataset.testHost ?? "";
+      const heading = sw.closest(".api-operation-heading");
+      const codeEl = heading?.querySelector<HTMLElement>(".api-endpoint-url");
+      const copyEl = heading?.querySelector<HTMLElement>("api-endpoint-copy");
+      const path = codeEl?.dataset.path ?? "";
+      const apply = (env: string) => {
+        const host = env === "test" ? test : prod;
+        sw.dataset.active = env;
+        sw.querySelectorAll<HTMLButtonElement>(".api-host-opt").forEach((b) =>
+          b.setAttribute("aria-pressed", b.dataset.host === env ? "true" : "false"),
+        );
+        if (codeEl) codeEl.textContent = `${host}${path}`;
+        if (copyEl) copyEl.dataset.text = `${host}${path}`;
+        window.dispatchEvent(new CustomEvent("api-host-change", { detail: { host, env, prod, test } }));
+        try { localStorage.setItem("api-host-env", env); } catch {}
+      };
+      sw.querySelectorAll<HTMLButtonElement>(".api-host-opt").forEach((b) =>
+        b.addEventListener("click", () => apply(b.dataset.host ?? "prod")),
+      );
+      let init = sw.dataset.active ?? "prod";
+      try { const saved = localStorage.getItem("api-host-env"); if (saved) init = saved; } catch {}
+      apply(init);
+    });
+  }
+  initHostSwitch();
+  document.addEventListener("astro:page-load", initHostSwitch);
 </script>

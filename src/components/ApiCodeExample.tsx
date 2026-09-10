@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { CheckIcon, ChevronDownIcon, CopyIcon } from "lucide-react"
 
 import { Button } from "@components/components/ui/button"
@@ -40,6 +40,16 @@ type Props = {
    */
   responsesById?: Record<string, ResponseExample[]>
   copyLabel: string
+  /**
+   * Host that the example `code`/`html` were rendered with. When provided together
+   * with `prodHost`/`testHost`, the panel swaps this host for the one chosen by the
+   * page's server switcher (synced via the `api-host-change` event + localStorage),
+   * so both the displayed and copied code follow the toggle.
+   */
+  baseHost?: string
+  prodHost?: string
+  testHost?: string
+  defaultEnv?: string
 }
 
 function CodeCard({
@@ -193,8 +203,29 @@ function ResponseCard({ title, responses, copyLabel }: { title: string; response
   )
 }
 
-export function ApiCodeExample({ requestTitle, responseTitle, examples, responses, responsesById, copyLabel }: Props) {
+export function ApiCodeExample({ requestTitle, responseTitle, examples, responses, responsesById, copyLabel, baseHost, prodHost, testHost, defaultEnv }: Props) {
   const [selectedId, setSelectedId] = useState<CodeExample["id"]>(examples[0]?.id ?? "")
+  const [host, setHost] = useState<string>(baseHost ?? "")
+  useEffect(() => {
+    if (!baseHost || !prodHost || !testHost) return
+    const resolve = () => {
+      let env = defaultEnv ?? "prod"
+      try {
+        const saved = localStorage.getItem("api-host-env")
+        if (saved) env = saved
+      } catch {}
+      return env === "test" ? testHost : prodHost
+    }
+    setHost(resolve())
+    const onChange = (event: Event) => {
+      const detail = (event as CustomEvent).detail
+      if (detail?.host) setHost(detail.host)
+    }
+    window.addEventListener("api-host-change", onChange)
+    return () => window.removeEventListener("api-host-change", onChange)
+  }, [baseHost, prodHost, testHost, defaultEnv])
+  const swap = (value: string) => (baseHost && host && host !== baseHost ? value.split(baseHost).join(host) : value)
+  const shownExamples = baseHost ? examples.map((example) => ({ ...example, code: swap(example.code), html: swap(example.html) })) : examples
   const shown = responsesById?.[selectedId] ?? responses
 
   return (
@@ -202,7 +233,7 @@ export function ApiCodeExample({ requestTitle, responseTitle, examples, response
       <div data-slot="api-code-examples" className="grid min-w-0 w-full max-w-full gap-6">
         <CodeCard
           title={requestTitle}
-          examples={examples}
+          examples={shownExamples}
           copyLabel={copyLabel}
           selectedId={selectedId}
           setSelectedId={setSelectedId}
