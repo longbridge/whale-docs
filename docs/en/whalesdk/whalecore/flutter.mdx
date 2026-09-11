@@ -1,0 +1,158 @@
+---
+title: Flutter
+description: WhaleCoreSDK Flutter installation, initialization, lifecycle, and public services
+---
+
+## Integrate {/* integrate */}
+
+- Flutter 3.35.3+ (Dart 3.9.2+)
+- Android and iOS
+
+The delivery is a directory rather than a pub.dev package. Add it as a path dependency:
+
+```yaml
+dependencies:
+  whalecore:
+    path: ../whalecore-<version>/whalecore
+```
+
+Native binaries are prebuilt inside that directory, so the host needs no extra native toolchain and never names the binding package itself.
+
+## Initialize {/* initialize */}
+
+```dart
+await WhaleCore.initialize(
+  WhaleCoreConfig(
+    appId: '<assigned>',
+    appKey: '<assigned>',
+    appSecret: '<assigned>',
+    token: accessToken,
+    refreshToken: refreshToken,
+    defaultAccountChannel: 'lb_hk',
+    deviceId: deviceId,
+    language: WhaleCoreLanguage.en,
+    logLevel: WhaleCoreLogLevel.info,
+  ),
+);
+```
+
+`deviceId` must be stable for the installation and at least 32 characters. An incomplete configuration throws `WhaleCoreInvalidParameter` from `initialize`, not from the first business call. Calling `initialize` again while initialized does nothing. Never log project credentials or complete tokens.
+
+## Tokens and trade authentication {/* tokens-and-trade-authentication */}
+
+Assign a `TokenRefreshCallback` to `WhaleCoreConfig.tokenRefreshCallback`:
+
+- `onTokenRefreshed(token, refreshToken)` — the SDK renewed the session; persist the new pair.
+- `onTokenRefreshFailed(error)` — the session is finished. The SDK will not try again, every protected request fails from here, and concurrent failures collapse into a single notification. Sign the member out here rather than in each call site. `error.code` is the business code that ended it: `401003`, `401004`, `401005`, or `401008`.
+
+Unlike iOS, this SDK never asks the host for a replacement session. The only way back is a fresh login.
+
+Trade tokens are separate and automatic: the SDK obtains and renews them, and reports each new pair through `WhaleCoreConfig.onTradeTokenRefreshed`. Set `tradePasswordEnabled = true` to collect trading passwords in the host instead. Trade calls then throw `WhaleCoreTradeAuthFailed` carrying the account; obtain a token, pass it to `TradeAuthService.setTradeToken()`, and resend the call yourself. Check `isTradeTokenReady()` in advance to avoid failing mid-order.
+
+## Lifecycle {/* lifecycle */}
+
+```dart
+WhaleCore.resume();            // app returned to the foreground
+WhaleCore.pause();             // app entered the background
+WhaleCore.onNetworkChanged();  // network switched
+
+await WhaleCore.logoutAndDestroy();
+```
+
+`logoutAndDestroy` closes WebSockets, clears local tokens, and invalidates every service instance. Switching members requires it before the next `initialize`. Read `WhaleCore.<service>` each time instead of holding an instance; a held one throws `WhaleCoreNotReady` after destruction.
+
+## Public services {/* public-services */}
+
+| Property | Service | Main capability |
+| --- | --- | --- |
+| `quoteService` | `QuoteService` | Quote events, snapshots, K-lines, and option chains |
+| `orderService` | `OrderService` | Orders, estimates, replacements, cancellation, and events |
+| `orderValidationService` | `OrderValidationService` | Tradability, constraints, and pre-submit validation |
+| `portfolioService` | `PortfolioService` | Assets, positions, cash, and settings |
+| `watchlistService` | `WatchlistService` | Groups, stocks, ordering, and events |
+| `tradeAuthService` | `TradeAuthService` | Trade tokens and auth state |
+| `connectionService` | `ConnectionService` | Read-only state of the quote, trade, and text sockets |
+| `settingsService` | `SettingsService` | Member display preferences |
+| `requestService` | `RequestService` | General authenticated HTTP requests |
+
+Getting a service before initialization throws `WhaleCoreNotReady`. Prices, quantities, and amounts are `Decimal` from `package:decimal`, never `double`; times are integer second-precision timestamps.
+
+## General HTTP requests {/* general-http-requests */}
+
+Use `WhaleCore.requestService` to call [TradingAPI](/en/trading-api/overview) endpoints that do not yet have a typed WhaleCore service. Take the endpoint path, parameters, and response schema from the TradingAPI documentation. The host supplies those request values; WhaleCore adds the common parameters and headers for signing, authentication, and tracing. If login or trade authentication expires, the SDK recovers it and retries once.
+
+`RawRequest` is immutable and accepts:
+
+| Constructor argument | Type | Behavior |
+| --- | --- | --- |
+| `method` | `RequestMethod` | `get`, `post`, `put`, or `delete` |
+| `path` | `String` | Endpoint path beginning with `/` |
+| `parameters` | `Map<String, dynamic>?` | Query string for GET, request body for the other verbs |
+| `accountChannel` | `String?` | Routes to another account; defaults to the current one |
+
+One `parameters` map rather than separate query and body, so a caller cannot fill in the one the verb ignores. There is no trade-token flag either: the SDK resolves that from the path.
+
+`send` returns a `RawResponse`. Its `body` is the response text with the `{ code, message, data }` envelope already removed — a non-zero `code` is raised as an exception instead — and `json` decodes that text when it is a JSON object. `headers` holds the response headers.
+
+```dart
+final response = await WhaleCore.requestService.send(
+  const RawRequest(
+    method: RequestMethod.get,
+    path: '/v2/member/info',
+    parameters: {'include_accounts': true},
+  ),
+);
+
+print(response.json?['name']);
+```
+
+## Quotes {/* quotes */}
+
+`subscribe` returns the subscription handle and its stream together, so no frame is lost between subscribing and listening.
+
+```dart
+final (subscription, stream) = await WhaleCore.quoteService.subscribe(
+  ['ST/US/AAPL'],
+  subTypes: {QuoteSubType.detail},
+);
+final listener = stream.listen((stock) => print(stock.lastPrice));
+
+await listener.cancel();
+await subscription.cancel();
+```
+
+Every SDK event stream is a broadcast stream and does not replay. Listen before triggering a subscription, or the first frame — often the only one while the market is closed — is lost.
+
+## Orders and validation {/* orders-and-validation */}
+
+The main path is intent, validate, submit. `OrderIntent` carries what the member typed; a passing `submission` validation yields a request object ready to send.
+
+```dart
+final intent = OrderIntent(
+  counterId: 'ST/US/AAPL',
+  action: OrderAction.buy,
+  orderType: OrderType.lo,
+)
+  ..price = Decimal.parse('180.5')
+  ..quantity = Decimal.fromInt(100);
+
+final result = await WhaleCore.orderValidationService
+    .validateOrder(intent, scope: ValidationScope.submission);
+if (result.passed) {
+  await WhaleCore.orderService.submitOrder(result.request!);
+}
+```
+
+`OrderValidationService` also covers `checkTradability`, `getOrderConstraints`, `validateTPSLOrder`, `getQualifications`, `acceptAgreement`, and `submitListedDerivAssessment`. Validation lets missing data through: a rule with no basis to judge does not block, and the server decides.
+
+`submitOrder` carries an idempotency key. Reuse the same key when retrying a submission; a new key on each retry turns one timed-out order into two fills.
+
+<Note>
+  `cancelAllOrders` with no filter cancels every open order on the account. There is no confirmation step and no undo.
+</Note>
+
+## Portfolio, watchlist, and connection {/* portfolio-watchlist-and-connection */}
+
+`PortfolioService` covers asset subscriptions, refresh, cash detail, position quotes, and the asset settings that feed calculations. `WatchlistService` covers group and stock mutations, cross-group moves, pinning, ordering, invalid-ticker cleanup, and events.
+
+`ConnectionService` is read-only; the SDK connects and reconnects on its own. Take a snapshot with `state(kind)` before listening to `stateChanges()`, which is a broadcast stream that does not replay. The three channels do not fail alike: losing `quote` silently stops price updates, losing `text` stops order pushes and notifications while queries still work, and losing `trade` is not a fault at all — order submission falls back to HTTP.
