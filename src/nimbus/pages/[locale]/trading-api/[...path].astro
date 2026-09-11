@@ -206,10 +206,69 @@ const webExample = [
   ``,
   `console.log(data);`,
 ].join("\n");
-const [swiftHtml, kotlinHtml, webHtml] = await Promise.all([
+// `RawRequest` carries one `parameters` map and the verb decides where it lands —
+// the query string for GET, the body otherwise (`RequestMethod.usesQuery`). iOS and
+// Android take the two separately, so only this builder has to choose. No TradingAPI
+// operation carries both today; `flutterDropped` says so out loud if one ever does,
+// rather than letting the snippet quietly send half a request.
+const flutterUsesQuery = method.toLowerCase() === "get";
+const flutterParameters = flutterUsesQuery
+  ? (Object.keys(queryExample).length ? queryExample : undefined)
+  : requestBodyExample;
+const flutterDropped = flutterUsesQuery
+  ? requestBodyExample !== undefined
+  : Object.keys(queryExample).length > 0;
+function dartLiteral(value: any, depth = 0): string {
+  if (value === null) return "null";
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (typeof value === "string") {
+    // `prefer_single_quotes` from flutter_lints; `$` would open an interpolation.
+    const escaped = value
+      .replace(/\\/g, "\\\\")
+      .replace(/'/g, "\\'")
+      .replace(/\$/g, "\\$")
+      .replace(/\n/g, "\\n");
+    return `'${escaped}'`;
+  }
+  const indent = "  ".repeat(depth);
+  const childIndent = "  ".repeat(depth + 1);
+  // Trailing commas, as Dart writes collections — though under the tall style
+  // whalecore-flutter is on they no longer force the split: `dart format` inlines
+  // a collection that fits either way, so it would put a one-entry `parameters`
+  // map on a single line. Expanded regardless, to read like the tabs above.
+  if (Array.isArray(value)) {
+    if (!value.length) return "[]";
+    const values = value.map((child: any) => `${childIndent}${dartLiteral(child, depth + 1)},`);
+    return `[\n${values.join("\n")}\n${indent}]`;
+  }
+  const entries = Object.entries(value ?? {}).map(
+    ([key, child]) => `${childIndent}${dartLiteral(key, depth + 1)}: ${dartLiteral(child, depth + 1)},`,
+  );
+  if (!entries.length) return "{}";
+  return `{\n${entries.join("\n")}\n${indent}}`;
+}
+const flutterExample = [
+  `import 'package:whalecore/whalecore.dart';`,
+  ``,
+  ...(requiresTradeToken ? [`// Needs trade authentication, which the SDK attaches on its own.`] : []),
+  ...(flutterDropped
+    ? [`// This operation's ${flutterUsesQuery ? "body" : "query"} has nowhere to go: one parameters map, routed by the verb.`]
+    : []),
+  `final response = await WhaleCore.requestService.send(`,
+  `  const RawRequest(`,
+  `    method: RequestMethod.${method.toLowerCase()},`,
+  `    path: ${dartLiteral(path)},`,
+  ...(flutterParameters !== undefined ? [`    parameters: ${dartLiteral(flutterParameters, 2)},`] : []),
+  `  ),`,
+  `);`,
+  ``,
+  `print(response.body);`,
+].join("\n");
+const [swiftHtml, kotlinHtml, webHtml, dartHtml] = await Promise.all([
   codeToHtml(swiftExample, { lang: "swift", themes: { light: "github-light", dark: "github-dark" }, defaultColor: false }),
   codeToHtml(kotlinExample, { lang: "kotlin", themes: { light: "github-light", dark: "github-dark" }, defaultColor: false }),
   codeToHtml(webExample, { lang: "typescript", themes: { light: "github-light", dark: "github-dark" }, defaultColor: false }),
+  codeToHtml(flutterExample, { lang: "dart", themes: { light: "github-light", dark: "github-dark" }, defaultColor: false }),
 ]);
 const exampleBlocks = await Promise.all(
   responses.flatMap(([status, response]) =>
@@ -229,9 +288,11 @@ const exampleBlocks = await Promise.all(
     }),
   ).map(async (entry) => ({ ...entry, html: await entry.html })),
 );
-// The Web SDK resolves `request()` with the envelope's `data` already unwrapped —
-// a non-zero `code` rejects with ApiError instead — so its response example shows
-// that payload rather than the raw `{ code, message, data }` body.
+// Two of the SDKs hand back the envelope's `data` already unwrapped — a non-zero
+// `code` is raised instead. The Web SDK's `request()` resolves with it and rejects
+// with ApiError; whalecore-flutter's `RawResponse.body` is the same payload as text,
+// because the engine unwraps `{ code, message, data }` in `ServiceResult` before the
+// binding ever sees it. iOS and Android print the whole body, so they keep `responses`.
 function unwrapEnvelope(value: any): any {
   const isEnvelope =
     value !== null &&
@@ -242,7 +303,7 @@ function unwrapEnvelope(value: any): any {
     value.data !== undefined;
   return isEnvelope ? value.data : undefined;
 }
-const webExampleBlocks = await Promise.all(
+const unwrappedExampleBlocks = await Promise.all(
   exampleBlocks.map(async (entry: any) => {
     let parsed: any;
     try {
@@ -364,9 +425,10 @@ const webExampleBlocks = await Promise.all(
         { id: "ios", label: "iOS", code: swiftExample, html: swiftHtml },
         { id: "android", label: "Android", code: kotlinExample, html: kotlinHtml },
         { id: "web", label: "Web", code: webExample, html: webHtml },
+        { id: "flutter", label: "Flutter", code: flutterExample, html: dartHtml },
       ]}
       responses={exampleBlocks}
-      responsesById={{ web: webExampleBlocks }}
+      responsesById={{ web: unwrappedExampleBlocks, flutter: unwrappedExampleBlocks }}
     />
   </aside>
   </div>

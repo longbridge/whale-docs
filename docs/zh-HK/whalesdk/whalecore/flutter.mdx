@@ -1,0 +1,158 @@
+---
+title: Flutter
+description: WhaleCoreSDK Flutter 安裝、初始化、生命週期與公開服務
+---
+
+## 接入 {/* integrate */}
+
+- Flutter 3.35.3 及以上（Dart 3.9.2 及以上）
+- Android、iOS
+
+SDK 以目錄形式交付，不經由 pub.dev，按路徑依賴引入：
+
+```yaml
+dependencies:
+  whalecore:
+    path: ../whalecore-<version>/whalecore
+```
+
+原生二進位已預編譯在該目錄內部，宿主無需配置額外的原生建構工具鏈，`pubspec.yaml` 裡也不出現綁定套件的名字。
+
+## 初始化 {/* initialize */}
+
+```dart
+await WhaleCore.initialize(
+  WhaleCoreConfig(
+    appId: '<平台分配>',
+    appKey: '<平台分配>',
+    appSecret: '<平台分配>',
+    token: accessToken,
+    refreshToken: refreshToken,
+    defaultAccountChannel: 'lb_hk',
+    deviceId: deviceId,
+    language: WhaleCoreLanguage.zhHK,
+    logLevel: WhaleCoreLogLevel.info,
+  ),
+);
+```
+
+`deviceId` 請確保安裝後穩定不變，且不少於 32 位。配置不完整會在 `initialize` 階段拋出 `WhaleCoreInvalidParameter`，而不是等到第一次業務調用。已初始化時再次調用 `initialize` 是空操作。不要把項目憑證或完整 token 寫入日誌。
+
+## 登入狀態與交易鑑權 {/* tokens-and-trade-authentication */}
+
+把 `TokenRefreshCallback` 掛到 `WhaleCoreConfig.tokenRefreshCallback`：
+
+- `onTokenRefreshed(token, refreshToken)`：SDK 已完成續期，宿主持久化新的一對即可。
+- `onTokenRefreshFailed(error)`：登入狀態終局失效。SDK 不會再嘗試復原，此後每個受保護請求都會失敗；並發失敗合併為一次通知，因此登出與跳登入頁放在這裡，而不是每個調用點。`error.code` 是觸發失效的業務碼：`401003`、`401004`、`401005` 或 `401008`。
+
+與 iOS 不同，本端不會向宿主索取新會話，復原的唯一方式是宿主重新登入。
+
+交易令牌是另一回事，由 SDK 自動取得與續期，每次續期透過 `WhaleCoreConfig.onTradeTokenRefreshed` 通知宿主。開啟 `tradePasswordEnabled` 後改由宿主收集交易密碼：交易調用拋出 `WhaleCoreTradeAuthFailed` 並帶上出錯帳戶，宿主換取令牌後用 `TradeAuthService.setTradeToken()` 送入，並**自行重發**該次調用。用 `isTradeTokenReady()` 預檢，避免下單中途才失敗。
+
+## 生命週期與銷毀 {/* lifecycle */}
+
+```dart
+WhaleCore.resume();            // App 回到前台
+WhaleCore.pause();             // App 進入後台
+WhaleCore.onNetworkChanged();  // 網絡切換
+
+await WhaleCore.logoutAndDestroy();
+```
+
+`logoutAndDestroy` 關閉 WebSocket、清理本地 token，並使全部服務實例失效。切換會員必須先調用它，再 `initialize`。服務用 `WhaleCore.<service>` 每次取用，不要長期持有——銷毀後舊實例會拋 `WhaleCoreNotReady`。
+
+## 公開服務 {/* public-services */}
+
+| 屬性 | 服務 | 主要能力 |
+| --- | --- | --- |
+| `quoteService` | `QuoteService` | 行情事件、快照、K 線、期權鏈 |
+| `orderService` | `OrderService` | 訂單、預估、改單、撤單和推送 |
+| `orderValidationService` | `OrderValidationService` | 可交易性、約束與提交前校驗 |
+| `portfolioService` | `PortfolioService` | 資產、持倉、現金和設定 |
+| `watchlistService` | `WatchlistService` | 自選分組、股票、排序和事件 |
+| `tradeAuthService` | `TradeAuthService` | 交易令牌與鑑權狀態 |
+| `connectionService` | `ConnectionService` | 行情 / 交易 / 通知三條連接的唯讀狀態 |
+| `settingsService` | `SettingsService` | 會員展示偏好 |
+| `requestService` | `RequestService` | 通用鑑權 HTTP 請求 |
+
+未初始化時獲取服務會拋出 `WhaleCoreNotReady`。價格、數量、金額統一使用 `package:decimal` 的 `Decimal`，不用 `double`；時間統一為秒級整數時間戳。
+
+## 通用 HTTP 請求 {/* general-http-requests */}
+
+需要調用尚未由 WhaleCore 類型化 Service 封裝的 [TradingAPI](/zh-hk/trading-api/overview) 時，可以使用 `WhaleCore.requestService`。接口路徑、參數和響應結構以 TradingAPI 文檔為準；宿主提供這些請求資訊，WhaleCore 自動補充簽名、鑑權、trace 等公共參數與請求頭。登入狀態或交易令牌失效時，SDK 會復原鑑權並自動重試一次。
+
+`RawRequest` 是不可變對象，構造參數如下：
+
+| 構造參數 | 類型 | 行為 |
+| --- | --- | --- |
+| `method` | `RequestMethod` | `get`、`post`、`put` 或 `delete` |
+| `path` | `String` | 以 `/` 開頭的接口路徑 |
+| `parameters` | `Map<String, dynamic>?` | GET 走查詢串，其餘動詞走請求體 |
+| `accountChannel` | `String?` | 指定帳戶渠道，預設當前帳戶 |
+
+只有一個 `parameters`，而不是分開的 query 與 body——這樣調用方不會填進一個當前動詞會忽略的欄位。也沒有交易令牌開關：SDK 按路徑自行判定。
+
+`send` 返回 `RawResponse`。`body` 是已去掉 `{ code, message, data }` 外層信封的響應文本（`code` 非零時改為拋出異常），`json` 在文本是 JSON 對象時解碼它，`headers` 是響應頭。
+
+```dart
+final response = await WhaleCore.requestService.send(
+  const RawRequest(
+    method: RequestMethod.get,
+    path: '/v2/member/info',
+    parameters: {'include_accounts': true},
+  ),
+);
+
+print(response.json?['name']);
+```
+
+## 行情 {/* quotes */}
+
+`subscribe` 一次返回訂閱句柄與數據流，兩者已經接好，不會在「訂閱成功」與「開始監聽」之間丟幀。
+
+```dart
+final (subscription, stream) = await WhaleCore.quoteService.subscribe(
+  ['ST/US/AAPL'],
+  subTypes: {QuoteSubType.detail},
+);
+final listener = stream.listen((stock) => print(stock.lastPrice));
+
+await listener.cancel();
+await subscription.cancel();
+```
+
+SDK 內的事件流均為廣播流且不重放，先 listen 再觸發訂閱，否則首幀（休市時往往是唯一一幀）會丟失。
+
+## 訂單與校驗 {/* orders-and-validation */}
+
+主線是「意圖 → 校驗 → 提交」：`OrderIntent` 承載會員在下單頁的輸入，`submission` 檔校驗通過後即可拿到可直接提交的請求對象。
+
+```dart
+final intent = OrderIntent(
+  counterId: 'ST/US/AAPL',
+  action: OrderAction.buy,
+  orderType: OrderType.lo,
+)
+  ..price = Decimal.parse('180.5')
+  ..quantity = Decimal.fromInt(100);
+
+final result = await WhaleCore.orderValidationService
+    .validateOrder(intent, scope: ValidationScope.submission);
+if (result.passed) {
+  await WhaleCore.orderService.submitOrder(result.request!);
+}
+```
+
+`OrderValidationService` 還提供 `checkTradability`、`getOrderConstraints`、`validateTPSLOrder`、`getQualifications`、`acceptAgreement` 和 `submitListedDerivAssessment`。校驗對缺失數據是放行的：某條規則拿不到判斷依據時不攔，最終以服務端為準。
+
+`submitOrder` 的請求帶冪等鍵，重試同一筆提交必須複用同一個鍵——每次重試都換新鍵，會把一筆超時的委託變成兩筆成交。
+
+<Note>
+  `cancelAllOrders` 不帶任何篩選條件時會撤掉該帳戶下全部在途委託，沒有二次確認，也沒有撤銷機會。
+</Note>
+
+## 資產、自選與連接狀態 {/* portfolio-watchlist-and-connection */}
+
+`PortfolioService` 覆蓋資產訂閱、刷新、現金明細、持倉行情，以及參與計算的資產口徑設定。`WatchlistService` 覆蓋分組與股票的增刪改、跨組移動、置頂、排序、失效標的清理和事件。
+
+`ConnectionService` 是唯讀的，三條 socket 由 SDK 自行建連與重連。先用 `state(kind)` 取快照再 listen `stateChanges()`，後者是廣播流且不重放。三條通道斷開的後果不同，不要一視同仁地報警：`quote` 斷開時價格停止更新且不報錯，`text` 斷開時訂單推送與系統通知不再到達但主動查詢不受影響，而 `trade` 斷開不是故障——下單會自動改走 HTTP，只是更慢。
