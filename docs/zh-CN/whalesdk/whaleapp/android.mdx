@@ -317,6 +317,16 @@ LBWhaleApp.callback = object : LBWhaleAppCallback {
     override fun onLBWhaleAppRefreshTokenExpired(resolver: LBWhaleAppRefreshTokenResolver) {
         resolver.resolve("", "")
     }
+
+    //SDK 内的 H5 请求调用 Broker App 原生能力，仅在需要向 H5 开放自有原生能力时实现。
+    //不实现视为未接入该能力，H5 侧收到桥接层失败；契约与错误码见「SDK 内 H5 调用 Broker App 原生能力」
+    override fun onLBWhaleAppSourceAppAPIRequested(
+        request: LBWhaleAppSourceAppRequest,
+        resolver: LBWhaleAppSourceAppResolver,
+    ) {
+        //code 取值由 Broker App 与 H5 约定，SDK 不解析
+        resolver.resolve(LBWhaleAppSourceAppResult(code = successCode, data = doSomething(request)))
+    }
 }
 ```
 
@@ -399,6 +409,55 @@ LBWhaleApp.logoutAndDestroy()
 ```
 
 在用户登出、切换账号，或 SDK 报告不可恢复的鉴权失败时调用。该方法会关闭 SDK 页面、停止 SDK 活动并清除当前启动配置。
+
+### 8.6 SDK 内 H5 调用 Broker App 原生能力 {/* h5-source-app-bridge */}
+
+SDK 内的 H5 页面可以调用 Broker App 提供的原生能力，例如 Broker App 自有的分享短链。链路为：H5 调用 SDK 的 `lbCallSourceApp`，SDK 补上当前页面 URL 后回调 `onLBWhaleAppSourceAppAPIRequested`，Broker App 执行对应原生能力并经 `resolver` 回传，SDK 再把结果原样透传给 H5。
+
+SDK 只做透传：不解析 `methodName` 与 `params`，也不做白名单过滤，能否调用完全由 Broker App 判断和控制。
+
+```kotlin
+LBWhaleApp.callback = object : LBWhaleAppCallback {
+    // ... 其它回调
+
+    override fun onLBWhaleAppSourceAppAPIRequested(
+        request: LBWhaleAppSourceAppRequest,
+        resolver: LBWhaleAppSourceAppResolver,
+    ) {
+        // request.sourceURL 是发起调用的 H5 页面 URL，可据此做安全校验
+        when (request.methodName) {
+            "easyShare" -> {
+                val url = request.params?.optString("url").orEmpty()
+                shortenUrl(url) { shortUrl ->            // Broker App 自己的原生实现，可异步
+                    resolver.resolve(
+                        LBWhaleAppSourceAppResult(
+                            code = successCode,     // 成功时的 code 由 Broker App 与 H5 约定，SDK 不解析
+                            data = JSONObject().apply { put("shortUrl", shortUrl) },
+                        )
+                    )
+                }
+            }
+            // 不支持的方法回 code=1
+            else -> resolver.resolve(LBWhaleAppSourceAppResult(code = 1, message = "invalid api"))
+        }
+    }
+}
+```
+
+约定：
+
+- 该回调固定在主线程触发，Broker App 应快速返回、不要阻塞；`resolver` 必须调用且仅调用一次，任意线程均可，SDK 内部切回主线程后透传给 H5。重复回调会被丢弃。
+- SDK 不做超时兜底，超时由 H5 自行控制。Broker App 的流程无法给出结果时也要回调一次（`code` 用 3 表示未知错误），否则 H5 会一直等到自己超时。
+- 未实现该方法或未给 `LBWhaleApp.callback` 赋值，都视为未接入该能力，H5 侧统一收到桥接层失败（`status=false`、`code=-1`、`error="客户端未实现"`），与 iOS 未实现对应 delegate 方法时一致。
+- `code`、`message`、`data` 的语义完全由 Broker App 与 H5 约定，SDK 原样透传。下表是 Broker App 侧的错误码，成功时的取值由 Broker App 与 H5 自行约定；它与 SDK 回给 H5 的桥接层错误码是两套独立编码空间，互不复用。
+
+|code|含义|触发场景|
+|---|---|---|
+|1|无效的 API 接口|方法不在 Broker App 白名单中或未注册，含该 `methodName` 不受支持|
+|2|无效的 API 入参|必填参数缺失或类型错误|
+|3|未知错误|Broker App 执行过程中发生未捕获异常|
+|4|无权调用该接口|Broker App 侧权限校验不通过|
+|11|用户取消操作|Broker App 执行过程中用户主动取消|
 
 ## 9. 错误处理 {/* error-handling */}
 
@@ -772,10 +831,42 @@ interface LBWhaleAppCallback {
     fun onLBWhaleAppRefreshTokenExpired(resolver: LBWhaleAppRefreshTokenResolver) {
         resolver.resolve("", "")
     }
+
+    /**
+     * SDK 内的 H5 请求调用 Broker App 原生能力，契约见「SDK 内 H5 调用 Broker App 原生能力」。
+     * 不实现视为未接入该能力，H5 侧收到桥接层失败（status=false、code=-1、error="客户端未实现"）。
+     */
+    fun onLBWhaleAppSourceAppAPIRequested(
+        request: LBWhaleAppSourceAppRequest,
+        resolver: LBWhaleAppSourceAppResolver,
+    )
 }
 ```
 
-### 11.13 LBWhalePushCallback - 推送事件回调 {/* push-event-callback */}
+### 11.13 LBWhaleAppSourceAppRequest / Result - H5 调用 Broker App 原生能力的数据模型 {/* source-app-bridge-models */}
+
+```kotlin
+//H5 -> Broker App 请求
+data class LBWhaleAppSourceAppRequest(
+    val methodName: String,   //H5 请求调用的原生方法名，由 Broker App 决定是否支持
+    val params: JSONObject?,  //H5 传入的业务参数，SDK 透传不校验；H5 未传或传了非对象值时为 null
+    val sourceURL: String,    //发起调用的 H5 页面 URL，由 SDK 自动填充，供 Broker App 做安全校验和埋点
+)
+
+//Broker App -> H5 结果，三个字段 SDK 均不解析、原样透传给 H5
+data class LBWhaleAppSourceAppResult(
+    val code: Int,            //Broker App 的 JSBridge 错误码，取值见 8.6 的错误码表
+    val message: String? = null,
+    val data: Any? = null,    //建议 JSONObject / JSONArray；Map / List / POJO 亦可
+)
+
+//Broker App 回传结果的入口，必须调用且仅一次，任意线程均可
+fun interface LBWhaleAppSourceAppResolver {
+    fun resolve(result: LBWhaleAppSourceAppResult)
+}
+```
+
+### 11.14 LBWhalePushCallback - 推送事件回调 {/* push-event-callback */}
 ```kotlin
 interface LBWhalePushCallback {
     /**
@@ -795,7 +886,7 @@ interface LBWhalePushCallback {
 }
 ```
 
-### 11.14 LBWhaleAppUICallback - SDK 页面进入 / 退出回调 {/* sdk-page-lifecycle-callback */}
+### 11.15 LBWhaleAppUICallback - SDK 页面进入 / 退出回调 {/* sdk-page-lifecycle-callback */}
 
 按页面"是否存在"（onCreate / onDestroy）判定进出，而非前后台可见性。两个方法均有默认空实现，可只实现关心的方法，且都在主线程回调。
 

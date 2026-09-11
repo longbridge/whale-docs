@@ -1,9 +1,9 @@
 ---
 title: Overview
-description: WhaleCoreSDK 的能力、架構邊界與平台支援
+description: WhaleCore 的能力、架構邊界與平台支援
 ---
 
-WhaleCoreSDK 是無 UI 的證券業務數據 SDK。Broker App 自行實作介面，透過 WhaleCore 管理客戶端工作階段、即時數據和業務服務，並以 TradingAPI 補充客戶級 HTTP 能力。
+WhaleCore 是無 UI 的證券業務數據 SDK。Broker App 自行實作介面，透過 WhaleCore 管理客戶端工作階段、即時數據和業務服務；尚未由類型化 Service 封裝的能力，透過 WhaleCore 的 `requestService()` 呼叫 [TradingAPI](/zh-hk/trading-api/overview) 補充。TradingAPI 只能經 WhaleCore 呼叫，Broker App 或 Broker Server 繞開 WhaleCore 直接請求會失敗。
 
 <Note>本文件根據 WhaleCore iOS 與 Android 原始碼中的公開介面整理。具體套件位置、版本相容矩陣、專案憑證和環境由 Whale 專案團隊提供。</Note>
 
@@ -23,7 +23,8 @@ WhaleCoreSDK 是無 UI 的證券業務數據 SDK。Broker App 自行實作介面
 | 訂單 | `orderService()` | `getOrderService()` | 下單、改單、撤單、附加單、持倉止盈止損、訂單預覽、預估資訊、下單前置校驗、交易卡券選券、訂單事件推送 |
 | 資產 | `portfolioService()` | `getPortfoliosService()` | 資產訂閱、現金明細、會員資產設定、盈虧分析（跨幣種換算由 SDK 內部完成，兩端均不提供匯率查詢介面） |
 | 自選 | `watchlistService()` | `getWatchlistService()` | 分組與股票增刪改、排序、置頂、失效標的清理與事件 |
-| 透傳請求 | `requestService()` | `getRequestService()` | 自動加入公共參數與鑑權標頭的 HTTP 請求，鑑權失效自動復原重試 |
+| 透傳請求 | `requestService()` | `getRequestService()` | 呼叫 TradingAPI 的唯一通道，自動加入公共參數與鑑權標頭，鑑權失效自動復原重試 |
+| 交易權杖 | `updateTradeToken(_:...)` / `hasTradeToken()` | `updateTradeToken()` / `hasTradeToken()` | 僅交易密碼驗證模式（初始化傳 `tradePasswordEnabled`）需要：由 Broker App 驗證交易密碼後送入交易權杖；預設模式下 SDK 自動取得與續期 |
 
 <Note>
   歷史獨立入口 `WhaleCoreService.orderValidationService`（iOS）與 `WhaleCore.getOrderValidationService()`（Android）已棄用，下單前置校驗請直接使用 `orderService()` / `getOrderService()` 上的同名方法。
@@ -35,12 +36,12 @@ WhaleCoreSDK 是無 UI 的證券業務數據 SDK。Broker App 自行實作介面
 
 ```mermaid
 flowchart LR
-    A[Broker App UI] --> B[WhaleCoreSDK]
-    B --> C[行情與 WebSocket]
-    B --> D[訂單 / 資產 / 自選]
+    A[Broker App UI] --> B[WhaleCore]
+    B --> C[WebSocket 連線]
+    B --> D[行情 / 訂單 / 資產 / 自選]
     B --> E[Token 自動更新]
-    A --> F[TradingAPI]
-    F --> G[客戶級 HTTP 能力]
+    B --> F[requestService]
+    F --> G[TradingAPI HTTP]
 ```
 
 ## 平台 {/* platforms */}

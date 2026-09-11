@@ -1,9 +1,9 @@
 ---
 title: Overview
-description: WhaleCoreSDK 的能力、架构边界与平台支持
+description: WhaleCore 的能力、架构边界与平台支持
 ---
 
-WhaleCoreSDK 是无 UI 的证券业务数据 SDK。Broker App 自行实现界面，通过 WhaleCore 管理客户端会话、实时数据和业务服务，并通过 TradingAPI 补充客户级 HTTP 能力。
+WhaleCore 是无 UI 的证券业务数据 SDK。Broker App 自行实现界面，通过 WhaleCore 管理客户端会话、实时数据和业务服务；尚未由类型化 Service 封装的能力，通过 WhaleCore 的 `requestService()` 调用 [TradingAPI](/zh-cn/trading-api/overview) 补充。TradingAPI 只能经 WhaleCore 调用，Broker App 或 Broker Server 绕开 WhaleCore 直接请求会失败。
 
 <Note>本文档根据 WhaleCore iOS 与 Android 源码中的公开接口整理。具体制品地址、版本兼容矩阵、项目凭证和环境由 Whale 项目团队提供。</Note>
 
@@ -23,7 +23,8 @@ WhaleCoreSDK 是无 UI 的证券业务数据 SDK。Broker App 自行实现界面
 | 订单 | `orderService()` | `getOrderService()` | 下单、改单、撤单、附加单、持仓止盈止损、订单预览、预估信息、下单前置校验、交易卡券选券、订单事件推送 |
 | 资产 | `portfolioService()` | `getPortfoliosService()` | 资产订阅、现金明细、会员资产设置、盈亏分析（跨币种换算由 SDK 内部完成，两端均不提供汇率查询接口） |
 | 自选 | `watchlistService()` | `getWatchlistService()` | 分组与股票增删改、排序、置顶、失效标的清理与事件 |
-| 透传请求 | `requestService()` | `getRequestService()` | 自动附加公共参数与鉴权头的 HTTP 请求，鉴权失效自动恢复重试 |
+| 透传请求 | `requestService()` | `getRequestService()` | 调用 TradingAPI 的唯一通道，自动附加公共参数与鉴权头，鉴权失效自动恢复重试 |
+| 交易令牌 | `updateTradeToken(_:...)` / `hasTradeToken()` | `updateTradeToken()` / `hasTradeToken()` | 仅交易密码验证模式（初始化传 `tradePasswordEnabled`）需要：由 Broker App 验证交易密码后送入交易令牌；默认模式下 SDK 自动获取与续期 |
 
 <Note>
   历史独立入口 `WhaleCoreService.orderValidationService`（iOS）与 `WhaleCore.getOrderValidationService()`（Android）已弃用，下单前置校验请直接使用 `orderService()` / `getOrderService()` 上的同名方法。
@@ -35,12 +36,12 @@ WhaleCoreSDK 是无 UI 的证券业务数据 SDK。Broker App 自行实现界面
 
 ```mermaid
 flowchart LR
-    A[Broker App UI] --> B[WhaleCoreSDK]
-    B --> C[行情与 WebSocket]
-    B --> D[订单 / 资产 / 自选]
+    A[Broker App UI] --> B[WhaleCore]
+    B --> C[WebSocket 连接]
+    B --> D[行情 / 订单 / 资产 / 自选]
     B --> E[Token 自动续期]
-    A --> F[TradingAPI]
-    F --> G[客户级 HTTP 业务]
+    B --> F[requestService]
+    F --> G[TradingAPI HTTP]
 ```
 
 ## 平台 {/* platforms */}
