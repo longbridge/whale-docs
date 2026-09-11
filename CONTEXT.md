@@ -17,13 +17,13 @@ _Avoid_: Whale API、Whale API Docs
 _Avoid_: Documentation（作为导航中的英文名称除外）、通用 API 文档
 
 **Whale SDK**:
-Whale 的客户端 SDK 产品族总称，包含图形界面 SDK WhaleApp SDK，以及无 UI 的数据 SDK WhaleCore SDK。
+Whale 的客户端 SDK 产品族总称，包含图形界面 SDK WhaleApp SDK，以及无 UI 的数据 SDK WhaleCore。
 
 **WhaleApp SDK**:
 Whale SDK 产品族中的图形界面 SDK。供 Broker App 直接集成完整证券业务 UI，包含 iOS、Android 与 WebTrade 三种形态。
 _Avoid_: Whale SDK、Trading SDK、Client SDK
 
-**WhaleCore SDK**:
+**WhaleCore**:
 Whale SDK 产品族中的无 UI 数据 SDK。供 Broker App 完全自行实现证券功能 UI 时使用，提供行情订阅、WebSocket 连接、认证签名和 token 续期等基础机制。面向 iOS、Android、Web 三个平台；iOS、Android 已可用，Web 的 WebAssembly 版本开发中。
 _Avoid_: Whale SDK、WhaleCore（当明确指该数据 SDK 时）、TradingAPI
 
@@ -42,7 +42,7 @@ _Avoid_: Web TradingAPI、独立文档产品
 _Avoid_: b-api、Whale API、OpenAPI
 
 **TradingAPI**:
-供 Broker App 使用的客户级 HTTP API，以单个客户身份授权，通常与 WhaleCore SDK 配合，用于完全自行实现证券功能 UI。
+供 Broker App 使用的客户级 HTTP API，以单个客户身份授权，通常与 WhaleCore 配合，用于完全自行实现证券功能 UI。
 _Avoid_: Client API、App API、Mobile API
 
 **OpenAPI**:
@@ -64,7 +64,7 @@ _Avoid_: Customer、User、Investor（作为统一身份概念时）
 _Avoid_: Developer（单独使用时特指终端客户侧的 Developer）
 
 **Broker App Developer**:
-代表 Broker 集成 WhaleApp SDK（iOS、Android 或 WebTrade）或 WhaleCore SDK 的 Broker App 开发人员。
+代表 Broker 集成 WhaleApp SDK（iOS、Android 或 WebTrade）或 WhaleCore 的 Broker App 开发人员。
 _Avoid_: Developer（单独使用时特指终端客户侧的 Developer）、Broker Operator
 
 **Broker Operator**:
