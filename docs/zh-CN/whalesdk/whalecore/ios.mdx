@@ -72,7 +72,8 @@ WhaleCoreConfig *config = [[WhaleCoreConfig alloc]
     defaultAccountChannel:@"lb_hk"
     deviceId:[MyDeviceIdStore persistedDeviceId]
     logLevel:WhaleCoreLogLevelInfo
-    language:WhaleCoreLanguageZhCN];
+    language:WhaleCoreLanguageZhCN
+    tradePasswordEnabled:NO];
 config.tokenDelegate = self;
 
 NSError *initError = nil;
@@ -117,7 +118,50 @@ config.tokenResolverTimeout = 30   // resolveExpiredToken 超时（秒），默�
   三个回调均为可选实现。未实现 `resolveExpiredToken` 时，401 兜底直接判失败并回调 `didFailToRefreshToken`（也未实现该回调则仅记日志）。`didFailToRefreshToken` 的 `error` 只是触发本次失效的原始请求错误，仅供日志排查，收到该回调即代表登录态彻底失效。并发请求同时收到 401 时，SDK 只调用一次 `resolveExpiredToken`，结果共享给所有挂起请求。
 </Note>
 
-**交易鉴权由 SDK 全自动处理**，宿主无感知：交易作用域的调用（下单、改撤单、交易透传请求等）由 SDK 内部完成交易 token 的获取与失效恢复，无需任何配置。「宿主自行管理交易密码」模式当前未对外开放，为后续版本预留。
+**交易鉴权默认由 SDK 全自动处理**，宿主无感知：交易作用域的调用（下单、改撤单、交易透传请求等）由 SDK 内部完成交易 token 的获取与失效恢复，无需任何配置。
+
+若接入方案要求由宿主验证交易密码（初始化时传 `tradePasswordEnabled: true`，Swift 侧可省略，默认为 `false`），SDK 不再自行取得交易令牌：没有有效令牌的交易类调用直接抛 `tradeAuthFailed`（1006）。宿主据此引导用户验证交易密码、用自有接口换取令牌后送入，再自行重新发起原操作，SDK 不会自动重放。
+
+```swift
+// 宿主弹出交易密码界面 → 自行调用交易鉴权接口 → 取得两个令牌值
+try WhaleCoreService.updateTradeToken(
+    tradeToken,
+    tradeRefreshToken: tradeRefreshToken,
+    accountChannel: accountChannel   // 省略则使用初始化时的 defaultAccountChannel
+)
+```
+
+**Objective-C：**
+
+```objc
+NSError *error = nil;
+[WhaleCoreService updateTradeToken:tradeToken
+                tradeRefreshToken:tradeRefreshToken
+                   accountChannel:accountChannel   // 不指定账户传 nil
+                            error:&error];
+```
+
+捕获 1006 时从错误里取出出错账户，确保令牌送给正确的账户；进入交易页前也可以先查本地是否已持有令牌，避免用户填完单子才被打断：
+
+```swift
+if error.whaleCoreErrorCode == .tradeAuthFailed {
+    let channel = error.whaleCoreAccountChannel   // 出错账户，据此调 updateTradeToken
+}
+
+if !WhaleCoreService.hasTradeToken() {           // 省略参数即查默认账户
+    presentTradePasswordFlow()                   // 引导验证 → updateTradeToken
+}
+```
+
+```objc
+if (![WhaleCoreService hasTradeTokenWithAccountChannel:nil]) { /* 引导验证 */ }
+```
+
+<Note>
+  `hasTradeToken` 返回 `true` 只表示本地持有令牌，不代表服务端仍认可：令牌可能已在服务端过期，交易接口照样抛 `tradeAuthFailed`。它是少一次失败往返的优化，不能替代 1006 的错误分支；SDK 未初始化或账户渠道解析不出时一律返回 `false`。默认接入方式（`tradePasswordEnabled` 为 `false`）下不要用它判断是否需要验证：SDK 不预热交易令牌，进页时本来就没有，会在首个交易请求时自动补上。
+
+  `updateTradeToken` 写入即覆盖该账户已有令牌，不做新旧比较；写入后已在展示的数据不会自动重取，需要宿主主动刷新对应业务（如资产数据调用 `refresh()`）。两个令牌任一为空串、或未指定账户渠道且默认账户渠道也为空串，抛 `invalidParameter`（3007）。令牌只保存在内存，SDK 每次初始化后都需重新送入；SDK 用 `tradeRefreshToken` 自动续期期间宿主无感、不必再次验证交易密码，续期后的新令牌不会回传给宿主，宿主无需自行持有或持久化令牌，需要时用 `hasTradeToken` 判断，不足则重新验证后覆盖写入。
+</Note>
 
 ## 生命周期 {/* lifecycle */}
 
@@ -732,8 +776,11 @@ class PortfolioHandler: NSObject, WhaleCorePortfolioServiceDelegate {
         print("总资产: \(portfolioData.overview?.totalFortune ?? "")")
     }
     func onError(error: Error) {
-        // 有账户归属的错误经 userInfo 携带渠道与 aaid：
-        // (error as NSError).userInfo[WhaleCoreAccountChannelKey] / [WhaleCoreAccountAAIDKey]
+        // 错误码一步解析比较；有账户归属的错误用类型化取值定位渠道与 aaid
+        if error.whaleCoreErrorCode == .tradeAuthFailed {
+            print("交易令牌失效: \(error.whaleCoreAccountChannel ?? "")/\(error.whaleCoreAccountAAID ?? "")")
+            return
+        }
         print("资产推送错误: \(error.localizedDescription)")
     }
 }
@@ -757,7 +804,7 @@ if let account = await svc.currentAccount() {
 ```
 
 <Note>
-  账户类型 `WhaleCoreAccountInfo.accountType` 仅经 `currentAccount()` 获取的账户携带；宿主自建或推送回填的实例为 `.unknown`。`onError(error:)` 下发的推送通道错误已结构化：`unauthorized`（3006，登录态失效）/ `tradeAuthFailed`（1006，该账户交易令牌失效）/ `accountLimited`（3008，该账户交易受限）。需要感知提交结果的可等待版本（`enableCashDetail(_:)` / `enableQuotes(_:)` / `refresh()` 等）见下方方法一览表。
+  账户类型 `WhaleCoreAccountInfo.accountType` 仅经 `currentAccount()` 获取的账户携带；宿主自建或推送回填的实例为 `.unknown`。`onError(error:)` 下发的推送通道错误已结构化：`unauthorized`（3006，登录态失效）/ `tradeAuthFailed`（1006，该账户交易令牌失效且 SDK 内部恢复未成功）/ `accountLimited`（3008，该账户交易受限）。需要感知提交结果的可等待版本（`enableCashDetail(_:)` / `enableQuotes(_:)` / `refresh()` 等）见下方方法一览表。
 </Note>
 
 ### 会员资产设置 {/* portfolio-member-setting */}
@@ -834,9 +881,11 @@ print("总盈亏: \(overview.sumProfit ?? "-")")
 | `removeDelegate(_:)` | 移除资产推送观察者 |
 | `setSubscribedAccounts(accountChannels:`<br />`currency:)` | 设置订阅账户与展示币种，替换全局订阅范围 |
 | `setSubscribedAccounts(accountChannels:`<br />`currency:) async` | 同名可等待重载：挂起至订阅参数提交完成，失败抛出 |
+| `setSubscribedAccounts(accountChannels:`<br />`currency:completion:)` | 同名 Objective-C 可感知失败版本：结果经 completion 主线程回调，失败不重复派发 onError |
 | `currentAccount()` | 获取 SDK 当前生效账户（含账户类型：现金 / 融资） |
 | `refresh()` | 手动刷新资产数据 |
 | `refresh() async` | 同名可等待重载：挂起至刷新提交完成，失败抛出 |
+| `refresh(completion:)` | 同名 Objective-C 可感知失败版本：提交结果经 completion 主线程回调 |
 | `cashDetailEnable`（属性） | 现金明细订阅开关 |
 | `enableCashDetail(_:)` | 现金明细开关的可等待版本：挂起至提交完成，失败抛出 |
 | `quotesEnabled`（属性） | 持仓行情订阅开关 |
@@ -1023,26 +1072,40 @@ let tradeResponse = try await WhaleCoreService.requestService().send(tradeReques
 
 ## 错误处理 {/* error-handling */}
 
-所有错误以 `NSError` 形式抛出，统一域为 `WhaleCoreErrorDomain`，错误码在 `WhaleCoreErrorCode` 中定义：
+所有错误以 `NSError` 形式抛出，统一域为 `WhaleCoreErrorDomain`，错误码在 `WhaleCoreErrorCode` 中定义。任意 `Error` 都可以直接解析：`error.whaleCoreErrorCode` 返回对应错误码，非 WhaleCore 错误返回 `nil`。
 
 ```swift
 do {
     try await WhaleCoreService.orderService().submitOrder(request)
-} catch let error as NSError where error.domain == WhaleCoreErrorDomain {
-    switch WhaleCoreErrorCode(rawValue: error.code) {
+} catch {
+    switch error.whaleCoreErrorCode {
     case .orderSubmitFailed:    // 2002
         showAlert("下单失败：\(error.localizedDescription)")
     case .tradeAuthFailed:      // 1006
         promptReauth()
-    default:
+    default:                    // nil 表示非 WhaleCore 错误
         log(error)
     }
 }
 ```
 
+Objective-C 用 `NSError` 扩展判定，无需手写域名字面量：
+
+```objc
+if ([error isWhaleCoreError:WhaleCoreErrorCodeTradeAuthFailed]) {
+    [self promptReauth];
+} else if (error.isWhaleCoreError) {      // 仅判域，再按 code 多分支
+    switch (error.code) { /* ... */ }
+}
+```
+
+服务端有响应的错误携带 HTTP 状态码、业务 code、响应体与 trace id，账户类推送错误携带渠道与 aaid，两类都提供同名类型化属性（Swift 侧如 `error.whaleCoreHTTPStatusCode`（`Int?`）、`error.whaleCoreAccountChannel`；Objective-C 侧数值键为可空 `NSNumber`），无需手写字符串键。`whaleCoreBusinessCode` 是服务端业务编号，与 `NSError.code`（WhaleCore 错误码）是两个字段。
+
+任务取消（`CancellationError`）原样传播，不落入统一域：取消是调用方自己发起的控制流，不是业务错误。
+
 | 段 | 范围 | 模块 |
 | --- | --- | --- |
-| 通用 / 资产 | 1001–1008 | SDK 初始化、会员设置、交易鉴权、行情服务、内部汇率换算（1008 汇率不可用，宿主通常不会直接收到） |
+| 通用 / 资产 | 1001–1009 | SDK 初始化、会员设置、交易鉴权、行情服务、内部汇率换算（1008 汇率不可用，宿主通常不会直接收到）、自选服务未初始化（1009） |
 | 订单 | 2001–2006 | 下单 / 撤单 / 改单 / 查询 / 前置校验 |
 | 通用请求 | 3001–3008 | 请求 / 推送失败细分：未知失败（3001）/ 网络不可用（3002）/ 超时（3003）/ 服务端 5xx（3004）/ 业务错误（3005）/ 会话失效（3006，覆盖全部登录态失效业务码）/ 参数错误（3007，如期权预览未传 `optionDirection`、启动参数非法如 `deviceId` 过短）/ 账户交易受限（3008，资产推送错误通道下发，`userInfo[WhaleCoreAccountChannelKey]` 携带涉及账户） |
 
@@ -1062,7 +1125,8 @@ WhaleCoreConfig *config = [[WhaleCoreConfig alloc]
     defaultAccountChannel:@"lb_hk"
     deviceId:[MyDeviceIdStore persistedDeviceId]
     logLevel:WhaleCoreLogLevelInfo
-    language:WhaleCoreLanguageZhCN];
+    language:WhaleCoreLanguageZhCN
+    tradePasswordEnabled:NO];
 
 NSError *initError = nil;
 if (![WhaleCoreService initializeWithConfig:config error:&initError]) {
@@ -1092,4 +1156,4 @@ if (!orderSvc) { NSLog(@"%@", svcError); return; }
 
 - 运行时获取 SDK 版本：`WhaleCoreService.version`（格式 `1.0.0(123)`）；版本名与构建号可分别取 `WhaleCoreService.versionName` / `WhaleCoreService.versionCode`
 - 判断初始化状态：`WhaleCoreService.isInitialized`
-- 运行期切换语言：`WhaleCoreService.setLanguage(_:)`（Swift / ObjC 均可调用，无须重新初始化）
+- 运行期切换语言：`WhaleCoreService.setLanguage(_:)`（Swift / ObjC 均可调用，无须重新初始化），这是运行期变更语言的唯一入口。调用后新发起的请求按新语言下发，已在途请求不受影响；切入同一语言不产生任何动作。启动语言在 `WhaleCoreConfig` 构造时用 `language:` 参数给定，`WhaleCoreConfig.language` 为只读属性，读到的总是当前生效的语言。SDK 未初始化时调用无效

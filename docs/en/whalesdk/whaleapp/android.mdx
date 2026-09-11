@@ -322,6 +322,17 @@ LBWhaleApp.callback = object : LBWhaleAppCallback {
     override fun onLBWhaleAppRefreshTokenExpired(resolver: LBWhaleAppRefreshTokenResolver) {
         resolver.resolve("", "")
     }
+
+    //An H5 page inside the SDK calls a Broker App native capability. Implement it only when you expose
+    //your own native capabilities to H5. Leaving it out means the capability is not integrated and H5
+    //receives a bridge-layer failure. See "H5 calls into Broker App native capabilities" for the contract.
+    override fun onLBWhaleAppSourceAppAPIRequested(
+        request: LBWhaleAppSourceAppRequest,
+        resolver: LBWhaleAppSourceAppResolver,
+    ) {
+        //Broker App and H5 agree on the code values; the SDK does not parse them
+        resolver.resolve(LBWhaleAppSourceAppResult(code = successCode, data = doSomething(request)))
+    }
 }
 ```
 
@@ -404,6 +415,55 @@ LBWhaleApp.logoutAndDestroy()
 ```
 
 Call this when the Client signs out, switches accounts, or the SDK reports an unrecoverable authentication failure. It closes SDK pages, stops SDK activity, and clears the current startup configuration.
+
+### 8.6 H5 calls into Broker App native capabilities {/* h5-source-app-bridge */}
+
+An H5 page inside the SDK can call a native capability that Broker App provides, such as your own share short-link service. The path is: H5 calls the SDK's `lbCallSourceApp`, the SDK fills in the current page URL and invokes `onLBWhaleAppSourceAppAPIRequested`, Broker App runs the native capability and returns through `resolver`, and the SDK forwards the result to H5 unchanged.
+
+The SDK only forwards: it does not parse `methodName` or `params` and applies no allowlist. Whether a call is allowed is entirely Broker App's decision.
+
+```kotlin
+LBWhaleApp.callback = object : LBWhaleAppCallback {
+    // ... other callbacks
+
+    override fun onLBWhaleAppSourceAppAPIRequested(
+        request: LBWhaleAppSourceAppRequest,
+        resolver: LBWhaleAppSourceAppResolver,
+    ) {
+        // request.sourceURL is the URL of the calling H5 page; use it for validation
+        when (request.methodName) {
+            "easyShare" -> {
+                val url = request.params?.optString("url").orEmpty()
+                shortenUrl(url) { shortUrl ->            // your own native implementation, may be async
+                    resolver.resolve(
+                        LBWhaleAppSourceAppResult(
+                            code = successCode,     // Broker App and H5 agree on the success code; the SDK does not parse it
+                            data = JSONObject().apply { put("shortUrl", shortUrl) },
+                        )
+                    )
+                }
+            }
+            // unsupported methods return code=1
+            else -> resolver.resolve(LBWhaleAppSourceAppResult(code = 1, message = "invalid api"))
+        }
+    }
+}
+```
+
+Rules:
+
+- The callback always fires on the main thread, so return quickly and do not block. `resolver` must be called exactly once, from any thread; the SDK switches back to the main thread before forwarding to H5. Repeated calls are discarded.
+- The SDK applies no timeout; H5 controls that itself. Call `resolver` even when your flow cannot produce a result (use `code` 3 for an unknown error), otherwise H5 waits until its own timeout.
+- Leaving the method unimplemented, or never assigning `LBWhaleApp.callback`, both count as not integrating the capability: H5 receives a bridge-layer failure (`status=false`, `code=-1`, `error="客户端未实现"`), matching iOS when the corresponding delegate method is missing.
+- Broker App and H5 agree on the meaning of `code`, `message`, and `data`; the SDK forwards them unchanged. The table below lists the Broker App-side error codes, while the success value is yours to agree with H5. These codes are a separate space from the bridge-layer codes the SDK returns to H5.
+
+|code|Meaning|When it applies|
+|---|---|---|
+|1|Invalid API|The method is not on the Broker App allowlist or is not registered, including an unsupported `methodName`|
+|2|Invalid API parameters|A required parameter is missing or has the wrong type|
+|3|Unknown error|An uncaught exception occurred while Broker App was executing|
+|4|Not allowed to call this API|Broker App permission checks failed|
+|11|Client cancelled the operation|The Client cancelled while Broker App was executing|
 
 ## 9. Error handling {/* error-handling */}
 
@@ -786,10 +846,43 @@ interface LBWhaleAppCallback {
     fun onLBWhaleAppRefreshTokenExpired(resolver: LBWhaleAppRefreshTokenResolver) {
         resolver.resolve("", "")
     }
+
+    /**
+     * An H5 page inside the SDK calls a Broker App native capability. See "H5 calls into Broker App
+     * native capabilities" for the contract. Leaving it out means the capability is not integrated and
+     * H5 receives a bridge-layer failure (status=false, code=-1, error="客户端未实现").
+     */
+    fun onLBWhaleAppSourceAppAPIRequested(
+        request: LBWhaleAppSourceAppRequest,
+        resolver: LBWhaleAppSourceAppResolver,
+    )
 }
 ```
 
-### 11.13 LBWhalePushCallback - push event callback {/* push-event-callback */}
+### 11.13 LBWhaleAppSourceAppRequest / Result - data models for H5 calls into Broker App {/* source-app-bridge-models */}
+
+```kotlin
+//H5 -> Broker App request
+data class LBWhaleAppSourceAppRequest(
+    val methodName: String,   //the native method H5 asks for; Broker App decides whether it is supported
+    val params: JSONObject?,  //business parameters from H5, forwarded unvalidated; null when H5 sends nothing or a non-object
+    val sourceURL: String,    //URL of the calling H5 page, filled in by the SDK, for validation and analytics
+)
+
+//Broker App -> H5 result; the SDK parses none of the three fields and forwards them unchanged
+data class LBWhaleAppSourceAppResult(
+    val code: Int,            //Broker App JSBridge error code; see the table in 8.6
+    val message: String? = null,
+    val data: Any? = null,    //JSONObject / JSONArray recommended; Map / List / POJO also work
+)
+
+//entry point for Broker App to return the result; call it exactly once, from any thread
+fun interface LBWhaleAppSourceAppResolver {
+    fun resolve(result: LBWhaleAppSourceAppResult)
+}
+```
+
+### 11.14 LBWhalePushCallback - push event callback {/* push-event-callback */}
 ```kotlin
 interface LBWhalePushCallback {
     /**
@@ -812,7 +905,7 @@ interface LBWhalePushCallback {
 }
 ```
 
-### 11.14 LBWhaleAppUICallback - SDK page enter / exit callback {/* sdk-page-lifecycle-callback */}
+### 11.15 LBWhaleAppUICallback - SDK page enter / exit callback {/* sdk-page-lifecycle-callback */}
 
 Enter and exit are determined by whether a page exists (`onCreate` / `onDestroy`), not by foreground/background visibility. Both methods have a default empty implementation, so override only the ones needed; both are called on the main thread.
 

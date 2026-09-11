@@ -10477,6 +10477,256 @@
           }
         }
       }
+    },
+    "/v4/portfolio/withdraw/pre": {
+      "get": {
+        "tags": [
+          "资产"
+        ],
+        "summary": "获取提现前置信息",
+        "description": "进入提取资金页时查询指定币种、指定银行卡下的可提现额度与提现配置，返回最大可提金额、现金可提金额、余额通金额、各币种可提明细、预计到账时间、不同金额区间的手续费档位与出金方式等，用于提现表单的额度展示、金额校验与费用提示。\n",
+        "operationId": "getV4PortfolioWithdrawPre",
+        "parameters": [
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "description": "提现币种，如 HKD、USD、CNH",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "HKD"
+          },
+          {
+            "name": "card_id",
+            "in": "query",
+            "required": false,
+            "description": "提现银行卡 id，取自提现银行卡列表接口；不传时仅返回额度信息，不返回与银行卡相关的到账时间与手续费档位",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": false,
+            "description": "租户渠道",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from_app_page",
+            "in": "query",
+            "required": false,
+            "description": "出金场景来源，用于区分普通出金与南向 / 北向出金；仅部分租户渠道使用",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "withdraw",
+                "north_withdraw",
+                "south_withdraw"
+              ]
+            }
+          },
+          {
+            "name": "sm3_code",
+            "in": "query",
+            "required": false,
+            "description": "校验码，仅部分租户渠道使用",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“获取提现前置信息”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "list": {
+                              "type": "array",
+                              "description": "各币种可提金额明细，用于展示「最大可提预估」的构成",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "currency": {
+                                    "type": "string",
+                                    "description": "币种"
+                                  },
+                                  "amount": {
+                                    "type": "string",
+                                    "description": "该币种可提金额"
+                                  }
+                                }
+                              }
+                            },
+                            "cash_amount": {
+                              "type": "string",
+                              "description": "现金可提金额，提现金额不超过该值时走普通出金流程"
+                            },
+                            "max_amount": {
+                              "type": "string",
+                              "description": "最大可提金额（「最大可提预估」展示值），包含余额通部分；提现金额超过该值时不允许提现"
+                            },
+                            "mmf_amount": {
+                              "type": "string",
+                              "description": "余额通可提金额，提现金额介于 cash_amount 与 max_amount 之间时走余额通自动赎回出金"
+                            },
+                            "tip_time": {
+                              "type": "string",
+                              "description": "预计到账时间，单位为工作日，如 \"1-2\"；无银行卡或无配置时为空字符串"
+                            },
+                            "mmf_time": {
+                              "type": "string",
+                              "description": "使用余额通赎回出金时的预计到账时间，单位为工作日，如 \"2-3\"；无配置时为空字符串"
+                            },
+                            "is_pad_funded": {
+                              "type": "integer",
+                              "format": "int32",
+                              "description": "余额通垫资状态，仅在 mmf_amount 大于 0 时有效：\n- 1: 无需赎回，平台垫资出金\n- 2: 需要赎回余额通后出金\n",
+                              "enum": [
+                                1,
+                                2
+                              ]
+                            },
+                            "currency_tip": {
+                              "type": "boolean",
+                              "description": "是否需要展示币种相关提示"
+                            },
+                            "need_payee_address": {
+                              "type": "boolean",
+                              "description": "是否需要填写收款人地址"
+                            },
+                            "bank_operation_type": {
+                              "type": "array",
+                              "description": "可选的出金方式列表，仅部分租户渠道下发",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "description": "出金方式 id"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "description": "出金方式名称"
+                                  },
+                                  "multi_name": {
+                                    "type": "string",
+                                    "description": "出金方式多语言名称"
+                                  },
+                                  "direction": {
+                                    "type": "integer",
+                                    "format": "int32",
+                                    "description": "资金方向：\n- 0: 可入可出\n- 1: 出金\n- 2: 入金\n",
+                                    "enum": [
+                                      0,
+                                      1,
+                                      2
+                                    ]
+                                  }
+                                }
+                              }
+                            },
+                            "prompts": {
+                              "type": "array",
+                              "description": "按提现金额区间划分的手续费与到账时间档位，Broker App 按输入金额匹配对应档位展示费用提示",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "min_amount": {
+                                    "type": "string",
+                                    "description": "该档位适用的最小提现金额，同时作为提现金额输入下限"
+                                  },
+                                  "max_amount": {
+                                    "type": "string",
+                                    "description": "该档位适用的最大提现金额"
+                                  },
+                                  "bank_fee": {
+                                    "type": "string",
+                                    "description": "银行手续费"
+                                  },
+                                  "plat_fee": {
+                                    "type": "string",
+                                    "description": "平台手续费"
+                                  },
+                                  "arrive_time": {
+                                    "type": "string",
+                                    "description": "该档位的预计到账时间"
+                                  },
+                                  "mmf_time": {
+                                    "type": "string",
+                                    "description": "该档位使用余额通赎回出金时的预计到账时间"
+                                  },
+                                  "fee_description": {
+                                    "type": "string",
+                                    "description": "银行手续费说明文案"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "list": [
+                      {
+                        "currency": "HKD",
+                        "amount": "0.00"
+                      }
+                    ],
+                    "cash_amount": "0.00",
+                    "max_amount": "100476.96",
+                    "mmf_amount": "100476.96",
+                    "tip_time": "1-2",
+                    "is_pad_funded": 2,
+                    "mmf_time": "2-3",
+                    "currency_tip": false,
+                    "bank_operation_type": [],
+                    "prompts": [],
+                    "need_payee_address": false
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求未通过业务规则或输入校验。重试前，请根据业务码修正请求。",
+            "x-business-codes": [
+              {
+                "code": 2031017,
+                "description": "参数校验失败（如缺少 currency 必填查询参数），Broker App 据此提示联系客服"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

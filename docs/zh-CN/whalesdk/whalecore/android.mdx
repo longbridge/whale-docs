@@ -31,6 +31,8 @@ apply from: "<path-to>/whalecore/whalecore.gradle"
 
 接入方仍需自行配置 `minSdk`、JVM target 与 Kotlin 插件。完整接入示例见 `example/app/build.gradle.kts`。
 
+SDK 所需的 R8 / ProGuard 规则随 AAR 分发，开启 minify 的构建会自动应用，接入方无需自行编写 keep 规则。
+
 交付物目录结构：
 
 ```txt
@@ -51,6 +53,10 @@ cd example
 ```
 
 也可以用 Android Studio 直接打开 `example/` 目录。
+
+示例工程开箱即可运行：租户与演示账户都已固定，无需任何配置；交易密码验证模式默认开启，下单等交易操作会先弹出交易密码框（`TradeAuthenticator`）。
+
+接入自己的租户时改 `LaunchConfigSection`：把其中的 `TENANT` 换成平台分配的 `appId` / `appKey` / `appSecret` 与账户渠道，把 `tokenFetcher` 换成向自家后端换取凭证的实现——真实接入方的账户来自自己的登录态，而不是示例用的固定演示账户。
 
 ## 初始化 {/* initialize */}
 
@@ -86,6 +92,7 @@ withContext(Dispatchers.IO) {
 | `language` | `ZH_HANS` | 语言偏好：`EN` / `ZH_HK` / `ZH_HANS`，影响服务端返回文本 |
 | `tokenRefreshCallback` | `null` | 登录 token 刷新与失效兜底回调，见[登录态维护](#token-refresh) |
 | `tokenResolverTimeout` | `30` | 兜底获取 token 的超时（秒），非正值回落默认值 |
+| `tradePasswordEnabled` | `false` | 交易密码验证模式：开启后交易令牌改由接入方提供，见[交易令牌](#trade-token) |
 
 要点：
 
@@ -195,7 +202,9 @@ WhaleCore.getQuoteService().getStockAsync("ST/US/AAPL", object : AsyncCallback<S
 
 不要长期缓存 `getXxxService()` 返回的实例——`logoutAndDestroy()` 后旧实例即失效，每次使用时重新获取；未初始化或已销毁时 `getXxxService()` 抛出 `WhaleCoreException.NotReady`。
 
-交易需要交易令牌（Trade Token），默认由 SDK 自动获取与续期，宿主无需参与、无需任何配置。请求交易作用域的接口（下单、改撤单等）失败时如收到 `WhaleCoreException.TradeAuthFailed`，属于罕见的服务端侧鉴权失败，按[错误处理](#error-handling)统一处理即可。
+交易需要交易令牌（Trade Token），默认由 SDK 自动获取与续期，接入方无需参与、无需任何配置。交易类接口（下单、改撤单等）失败时如收到 `WhaleCoreException.TradeAuthFailed`，属于罕见的服务端侧鉴权失败，按[错误处理](#error-handling)统一处理即可。
+
+开启交易密码验证模式（初始化时 `tradePasswordEnabled = true`）后，令牌改由接入方验证交易密码后提供，`TradeAuthFailed` 成为常规流程的一环，见[交易令牌](#trade-token)。
 
 ## 服务入口 {/* public-services */}
 
@@ -206,6 +215,7 @@ WhaleCore.getQuoteService().getStockAsync("ST/US/AAPL", object : AsyncCallback<S
 | `getPortfoliosService()` | `PortfolioService` | 资产订阅、现金明细、会员资产设置、盈亏分析 |
 | `getWatchlistService()` | `WatchlistService` | 自选分组、股票、排序、置顶、事件 |
 | `getRequestService()` | `RequestService` | 透传鉴权 HTTP 请求 |
+| `WhaleCore.updateTradeToken()` / `hasTradeToken()` | — | 交易令牌的送入与判有无，仅交易密码验证模式需要，见[交易令牌](#trade-token) |
 
 未初始化时获取服务会抛出 `WhaleCoreException.NotReady`。`OptionCalculator` 是无状态纯计算工具类，不通过 `WhaleCore` 获取，直接调用即可，详见[期权计算器](#option-calculator)。
 
@@ -711,7 +721,7 @@ val portfolios = WhaleCore.getPortfoliosService()
 // 先注册监听，再订阅账户（避免错过第一帧数据）
 portfolios.observePortfolioEvents(this, object : PortfolioEventCallback {
     override fun onMessage(accountInfo: AccountInfo, portfolio: Portfolio) { render(portfolio) }
-    override fun onFailure(accountInfo: AccountInfo?, error: Throwable) { showError(accountInfo, error) }
+    override fun onFailure(accountInfo: AccountInfo?, error: WhaleCoreException) { showError(accountInfo, error) }
 })
 
 portfolios.setSubscribedAccounts(listOf("lb"), "HKD")  // 通道下已开户账户（含子账户）全部订阅
@@ -946,6 +956,58 @@ Java 调用方可使用 `sendAsync(request, callback)`，无需调用 suspend �
   首个版本不支持自定义请求头。请勿通过 `query` 或 `body` 传入签名或鉴权 token；WhaleCore 会通过受管会话自动添加。
 </Note>
 
+## 交易令牌 {/* trade-token */}
+
+交易令牌默认由 SDK 自动取得，**接入方无需调用本节的方法**。只有初始化时设了 `tradePasswordEnabled = true` 才需要：此时 SDK 不代为取得令牌，缺令牌的交易类接口会立即抛 `TradeAuthFailed`，由接入方引导用户验证交易密码、用自有接口换取令牌后经 `WhaleCore.updateTradeToken` 送入。
+
+**把恢复挂在统一入口，不要逐个调用点写。** 哪些接口需要交易令牌由 SDK 内部维护，接入方无从判断该包哪些调用；而不需要令牌的接口不会抛 `TradeAuthFailed`，所以在一个所有 SDK 调用都会经过的位置无差别处理即可，效果与逐个挑选相同。那个位置通常是 ViewModel 的协程封装或 Repository 包装：
+
+```kotlin
+fun ViewModel.launchSafe(onError: (Throwable) -> Unit, block: suspend () -> Unit) =
+    viewModelScope.launch {
+        val failure = runCatching { block() }.exceptionOrNull() ?: return@launch
+        if (failure is WhaleCoreException.TradeAuthFailed && verifyTradePassword(failure.accountChannel)) {
+            return@launch          // 令牌已补上，本次不重发，由用户重新发起操作
+        }
+        onError(failure)
+    }
+
+/** 弹密码框 → 用自有接口换取令牌 → 送入 SDK。同一账户串行，避免并发失败弹出多个密码框。 */
+suspend fun verifyTradePassword(accountChannel: String): Boolean = lockOf(accountChannel).withLock {
+    if (WhaleCore.hasTradeToken(accountChannel)) return true          // 排队期间已被补齐
+    val password = showPasswordSheet() ?: return false
+    val (token, refreshToken) = myBackend.exchangeTradeToken(password)
+    WhaleCore.updateTradeToken(token, refreshToken, accountChannel)
+    return true
+}
+```
+
+要点：
+
+- **不要在验证成功后自动重发原请求。** 从点击到验证完成可能过去几十秒，自动重发写操作等于跳过用户对下单的再次确认，而统一入口看不出这次调用是读还是写。补上令牌后让用户重新发起。
+- **同一账户的并发失败要串行。** 五个并发交易请求会各自抛出一次 `TradeAuthFailed`，不加锁就会弹五个密码框；持锁后先用 `hasTradeToken()` 判一次，命中直接放行。
+- **内层自己消化异常的调用传不到统一入口**（`runCatching { … }.onFailure { … }` 这类写法），这些地方要在 SDK 调用外单独包一层。不必每个都包——入口守卫已覆盖进页时的缺失，单独包的价值在于用户的最终提交动作（下单、改单）遇到令牌中途失效时能给出明确引导。
+- **换取令牌的进度放在密码弹窗里**，不要显示在背后的页面上：用户输密码期间页面转圈是错的，换取的网络请求发生在他点确认之后。
+- **在交易域的入口先确保令牌**，别只靠事后补救：加载失败后不重发，等用户输完密码，页面已经停在空态且没有再次加载的时机。用 `hasTradeToken()` 判一次，没有就先验证再加载。
+- **守在页面进入前台时，不是页面构造时**：构造时页面往往还没进前台，弹不出密码框，守卫会直接判为未通过。
+- **给页面一个占位态，进页不要直接弹密码框**：需要验证时把占位层盖上，说明数据为何缺失并给一个「验证交易密码」的按钮，由用户自己发起。占位层同时拦住页内通往下游交易功能的按钮，否则用户不验证也能点进下游，绕过校验。不加占位层的页面（本身不属于交易域的，如行情详情），其交易按钮要在点击时各守一次。
+- **判断要不要验证，别只看 `hasTradeToken()`**：SDK 不预热交易令牌，默认模式下进页时它本来就没有、会在首个交易请求时自动补上。判据是「开了 `tradePasswordEnabled` 且当前无令牌」，而该配置初始化后不可查，需要接入方自己记住启动时传入的值。
+- **占位层的验证按钮别被自己的节流拦住**：防重复弹框的冷却只该拦自动触发的重试，用户主动点的验证按钮是明确意图，拦住会让页面再也验证不了。
+- **守卫被拒时复位当次操作的界面状态**：下拉刷新的动画、按钮的加载态，用户取消验证后要停下来，否则会一直转。跳转类操作则把跳转放在验证通过的分支里，取消自然不跳。
+- **重放交给页面自己**，别放在统一层。页面知道自己是读是写，也知道合适的重来时机——回到本页时重新走一次守卫、下拉刷新时重新加载，都比统一层盲目重发安全。
+- **令牌只在内存中**，SDK 每次初始化后都需重新送入。
+- **令牌送入失败不静默**：令牌为空、或未指定渠道且当前账户尚未就绪时抛 `InvalidParameter`。
+- 账户未开户抛的是 `AccountNotOpened` 而非 `TradeAuthFailed`，验证交易密码解决不了，应引导开户。
+
+**方法一览：**
+
+| 方法 | 说明 |
+| --- | --- |
+| `WhaleCore.updateTradeToken(`<br />`tradeToken,`<br />`tradeRefreshToken,`<br />`accountChannel)` | 送入一套交易令牌供后续交易类操作使用；`tradeRefreshToken` 用于令牌到期时自动续期，续期期间无需再次验证 |
+| `WhaleCore.hasTradeToken(accountChannel)` | 目标账户当前是否持有交易令牌；只反映本地是否持有，不代表服务端仍认可 |
+
+两个方法都是纯内存读写，无网络、无挂起，故不设 `*Async` 重载；`accountChannel` 省略时使用当前账户。令牌只存在于内存，会话结束即消失，SDK 不提供主动清除的接口。
+
 ## 数据模型速查 {/* data-models */}
 
 | 模型分类 | 主要类型 |
@@ -971,7 +1033,8 @@ Java 调用方可使用 `sendAsync(request, callback)`，无需调用 suspend �
 | `NetworkUnavailable` | 网络不可用 |
 | `RequestTimeout` | 请求超时 |
 | `Unauthorized` | 鉴权失败（含业务错误码 `businessCode`） |
-| `TradeAuthFailed` | 交易令牌无效或缺失（罕见，交易鉴权默认由 SDK 自动处理） |
+| `TradeAuthFailed` | 交易令牌无效或缺失，携带 `accountChannel`（默认由 SDK 自动处理；交易密码验证模式下据此引导验证，见[交易令牌](#trade-token)） |
+| `AccountNotOpened` | 账户尚未开户，不能进行交易类操作，携带 `accountChannel`（验证交易密码解决不了，应引导开户） |
 | `ServerError` | 服务端返回错误 |
 | `SerializationFailed` | 请求参数（`query` / `body`）无法序列化为 JSON |
 | `ValidationDataUnavailable` | 下单前置校验依赖的基础数据未就绪或获取失败（不代表业务未通过——业务不通过一律走 `OrderValidationResult.issues`） |

@@ -74,7 +74,8 @@ WhaleCoreConfig *config = [[WhaleCoreConfig alloc]
     defaultAccountChannel:@"lb_hk"
     deviceId:[MyDeviceIdStore persistedDeviceId]
     logLevel:WhaleCoreLogLevelInfo
-    language:WhaleCoreLanguageEn];
+    language:WhaleCoreLanguageEn
+    tradePasswordEnabled:NO];
 config.tokenDelegate = self;
 
 NSError *initError = nil;
@@ -121,7 +122,50 @@ config.tokenResolverTimeout = 30   // Timeout for resolveExpiredToken, in second
   All three callbacks are optional. If `resolveExpiredToken` is not implemented, a 401 fallback fails immediately and calls `didFailToRefreshToken` (if that is also not implemented, the SDK only logs the failure). The `error` passed to `didFailToRefreshToken` is only the original request error that triggered the failure and exists for logging — treat receiving this callback as the definitive signal that the session is invalid. When concurrent requests receive a 401 at the same time, the SDK calls `resolveExpiredToken` only once and shares the result with every pending request.
 </Note>
 
-**Trade authentication is fully automatic** and invisible to the host: for trade-scoped calls (submitting orders, replacing or canceling orders, trade pass-through requests, and so on), the SDK obtains and recovers trade tokens internally without any configuration. Letting the host manage trading passwords is not currently available to the public and is reserved for a future version.
+**Trade authentication is fully automatic by default** and invisible to the host: for trade-scoped calls (submitting orders, replacing or canceling orders, trade pass-through requests, and so on), the SDK obtains and recovers trade tokens internally without any configuration.
+
+When the integration requires the host to verify the trading password (pass `tradePasswordEnabled: true` at initialization; the Swift parameter can be omitted and defaults to `false`), the SDK no longer obtains trade tokens itself: a trade-scoped call without a valid token throws `tradeAuthFailed` (1006). The host then prompts the Client for the trading password, exchanges it for tokens through its own API, hands them to the SDK, and reissues the original operation itself — the SDK does not replay it.
+
+```swift
+// Host presents the trading-password UI, calls its own trade-auth API, and receives both token values
+try WhaleCoreService.updateTradeToken(
+    tradeToken,
+    tradeRefreshToken: tradeRefreshToken,
+    accountChannel: accountChannel   // omit to use the defaultAccountChannel from initialization
+)
+```
+
+**Objective-C:**
+
+```objc
+NSError *error = nil;
+[WhaleCoreService updateTradeToken:tradeToken
+                tradeRefreshToken:tradeRefreshToken
+                   accountChannel:accountChannel   // pass nil for the default account
+                            error:&error];
+```
+
+When catching 1006, read the affected account from the error so the tokens go to the right account. Before opening a trading screen you can also check whether a token is already held locally, so the Client is not interrupted after filling in an order:
+
+```swift
+if error.whaleCoreErrorCode == .tradeAuthFailed {
+    let channel = error.whaleCoreAccountChannel   // affected account; pass it to updateTradeToken
+}
+
+if !WhaleCoreService.hasTradeToken() {           // omit the parameter to check the default account
+    presentTradePasswordFlow()                   // verify, then updateTradeToken
+}
+```
+
+```objc
+if (![WhaleCoreService hasTradeTokenWithAccountChannel:nil]) { /* prompt for verification */ }
+```
+
+<Note>
+  `hasTradeToken` returning `true` only means a token is held locally, not that the server still accepts it: the token may already have expired server-side and the trading API still throws `tradeAuthFailed`. It saves one failed round trip and does not replace the 1006 error branch; it returns `false` whenever the SDK is not initialized or the account channel cannot be resolved. Under the default integration (`tradePasswordEnabled` is `false`), do not use it to decide whether verification is needed: the SDK does not pre-warm trade tokens, so none exists when the screen opens and one is obtained automatically on the first trade request.
+
+  `updateTradeToken` overwrites the account's existing tokens without comparing them, and data already on screen is not refetched — the host refreshes the affected business itself (for example, calling `refresh()` for portfolio data). It throws `invalidParameter` (3007) when either token is an empty string, or when no account channel is given and the default account channel is also an empty string. Tokens live in memory only and must be supplied again after every SDK initialization. While the SDK renews them with `tradeRefreshToken`, the host notices nothing and does not verify the password again; renewed tokens are not handed back, so the host never needs to hold or persist them — check with `hasTradeToken` and re-verify to overwrite when one is missing.
+</Note>
 
 ## Lifecycle {/* lifecycle */}
 
@@ -749,8 +793,11 @@ class PortfolioHandler: NSObject, WhaleCorePortfolioServiceDelegate {
         print("Total assets: \(portfolioData.overview?.totalFortune ?? "")")
     }
     func onError(error: Error) {
-        // Errors tied to an account carry the channel and aaid in userInfo:
-        // (error as NSError).userInfo[WhaleCoreAccountChannelKey] / [WhaleCoreAccountAAIDKey]
+        // Resolve the error code in one step; typed accessors locate the channel and aaid
+        if error.whaleCoreErrorCode == .tradeAuthFailed {
+            print("Trade token invalid: \(error.whaleCoreAccountChannel ?? "")/\(error.whaleCoreAccountAAID ?? "")")
+            return
+        }
         print("Portfolio push error: \(error.localizedDescription)")
     }
 }
@@ -776,7 +823,7 @@ if let account = await svc.currentAccount() {
 ```
 
 <Note>
-  `WhaleCoreAccountInfo.accountType` is only populated on accounts obtained through `currentAccount()`; accounts the host constructs itself or receives back through a push are `.unknown`. Errors delivered through `onError(error:)` are already structured: `unauthorized` (3006, the session is invalid), `tradeAuthFailed` (1006, the trade token for that account is invalid), and `accountLimited` (3008, that account's trading is restricted). Awaitable variants that report submission results (`enableCashDetail(_:)`, `enableQuotes(_:)`, `refresh()`, and so on) are listed in the method overview below.
+  `WhaleCoreAccountInfo.accountType` is only populated on accounts obtained through `currentAccount()`; accounts the host constructs itself or receives back through a push are `.unknown`. Errors delivered through `onError(error:)` are already structured: `unauthorized` (3006, the session is invalid), `tradeAuthFailed` (1006, the trade token for that account is invalid and internal recovery did not succeed), and `accountLimited` (3008, that account's trading is restricted). Awaitable variants that report submission results (`enableCashDetail(_:)`, `enableQuotes(_:)`, `refresh()`, and so on) are listed in the method overview below.
 </Note>
 
 ### Member portfolio settings {/* portfolio-member-setting */}
@@ -853,9 +900,11 @@ print("Total profit/loss: \(overview.sumProfit ?? "-")")
 | `removeDelegate(_:)` | Removes a portfolio push observer |
 | `setSubscribedAccounts(accountChannels:`<br />`currency:)` | Sets the subscribed accounts and display currency, replacing the whole subscription scope |
 | `setSubscribedAccounts(accountChannels:`<br />`currency:) async` | Awaitable overload of the same name: suspends until the subscription parameters are submitted, and throws on failure |
+| `setSubscribedAccounts(accountChannels:`<br />`currency:completion:)` | Objective-C variant of the same name that reports failure: the result arrives on the main thread through completion, and failures are not dispatched again through onError |
 | `currentAccount()` | Gets the account the SDK is currently using (including account type: cash or margin) |
 | `refresh()` | Manually refreshes portfolio data |
 | `refresh() async` | Awaitable overload of the same name: suspends until the refresh is submitted, and throws on failure |
+| `refresh(completion:)` | Objective-C variant of the same name that reports failure: the submission result arrives on the main thread through completion |
 | `cashDetailEnable` (property) | The cash-detail subscription toggle |
 | `enableCashDetail(_:)` | Awaitable form of the cash-detail toggle: suspends until submitted, and throws on failure |
 | `quotesEnabled` (property) | The position-quote subscription toggle |
@@ -1043,26 +1092,40 @@ Also market-specific fields (populated only for the matching instrument category
 
 ## Error handling {/* error-handling */}
 
-Every error is thrown as an `NSError` with the domain `WhaleCoreErrorDomain`; error codes are defined in `WhaleCoreErrorCode`:
+Every error is thrown as an `NSError` with the domain `WhaleCoreErrorDomain`; error codes are defined in `WhaleCoreErrorCode`. Any `Error` resolves directly: `error.whaleCoreErrorCode` returns the matching code and `nil` for errors that do not come from WhaleCore.
 
 ```swift
 do {
     try await WhaleCoreService.orderService().submitOrder(request)
-} catch let error as NSError where error.domain == WhaleCoreErrorDomain {
-    switch WhaleCoreErrorCode(rawValue: error.code) {
+} catch {
+    switch error.whaleCoreErrorCode {
     case .orderSubmitFailed:    // 2002
         showAlert("Order submission failed: \(error.localizedDescription)")
     case .tradeAuthFailed:      // 1006
         promptReauth()
-    default:
+    default:                    // nil means the error is not from WhaleCore
         log(error)
     }
 }
 ```
 
+Objective-C uses the `NSError` extensions instead of a hand-written domain literal:
+
+```objc
+if ([error isWhaleCoreError:WhaleCoreErrorCodeTradeAuthFailed]) {
+    [self promptReauth];
+} else if (error.isWhaleCoreError) {      // domain only, then branch on code
+    switch (error.code) { /* ... */ }
+}
+```
+
+Errors that carry a server response include the HTTP status code, business code, response body, and trace id, and account-scoped push errors carry the channel and aaid. Both groups expose typed properties of the same names (in Swift, `error.whaleCoreHTTPStatusCode` (`Int?`), `error.whaleCoreAccountChannel`, and so on; in Objective-C the numeric keys are nullable `NSNumber`), so no string keys are needed. `whaleCoreBusinessCode` is the server-side business number and is a different field from `NSError.code`, the WhaleCore error code.
+
+Task cancellation (`CancellationError`) propagates unchanged and stays outside the unified domain: cancellation is control flow the caller started, not a business error.
+
 | Segment | Range | Module |
 | --- | --- | --- |
-| General / portfolio | 1001–1008 | SDK initialization, member settings, trade authentication, the quotes service, and internal exchange-rate conversion (1008 is an unavailable rate, which hosts rarely receive directly) |
+| General / portfolio | 1001–1009 | SDK initialization, member settings, trade authentication, the quotes service, internal exchange-rate conversion (1008 is an unavailable rate, which hosts rarely receive directly), and the watchlist service not being initialized (1009) |
 | Orders | 2001–2006 | Submitting, canceling, replacing, querying, and pre-trade validation |
 | General requests | 3001–3008 | Request/push failures, broken down as: unknown failure (3001), network unavailable (3002), timeout (3003), server 5xx (3004), business error (3005), session invalid (3006, covering every login-failure business code), invalid parameter (3007, such as an order preview missing `optionDirection` or an invalid startup parameter like a too-short `deviceId`), and account trading restricted (3008, delivered through the portfolio push error channel with `userInfo[WhaleCoreAccountChannelKey]` carrying the affected account) |
 
@@ -1082,7 +1145,8 @@ WhaleCoreConfig *config = [[WhaleCoreConfig alloc]
     defaultAccountChannel:@"lb_hk"
     deviceId:[MyDeviceIdStore persistedDeviceId]
     logLevel:WhaleCoreLogLevelInfo
-    language:WhaleCoreLanguageZhCN];
+    language:WhaleCoreLanguageZhCN
+    tradePasswordEnabled:NO];
 
 NSError *initError = nil;
 if (![WhaleCoreService initializeWithConfig:config error:&initError]) {
@@ -1112,4 +1176,4 @@ if (!orderSvc) { NSLog(@"%@", svcError); return; }
 
 - Get the SDK version at runtime: `WhaleCoreService.version` (formatted as `1.0.0(123)`); get the version name and build number separately with `WhaleCoreService.versionName` / `WhaleCoreService.versionCode`
 - Check the initialization state: `WhaleCoreService.isInitialized`
-- Switch the request language at runtime: `WhaleCoreService.setLanguage(_:)` (callable from both Swift and Objective-C, without reinitializing)
+- Switch the request language at runtime: `WhaleCoreService.setLanguage(_:)` (callable from both Swift and Objective-C, without reinitializing). This is the only runtime entry point for changing the language: requests issued after the call use the new language, in-flight requests are unaffected, and switching to the current language does nothing. The startup language comes from the `language:` parameter of the `WhaleCoreConfig` initializer; `WhaleCoreConfig.language` is read-only and always reports the language in effect. The call has no effect before the SDK is initialized
