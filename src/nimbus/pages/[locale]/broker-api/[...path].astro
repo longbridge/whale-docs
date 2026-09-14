@@ -84,25 +84,56 @@ const postFallbackNote = hasPostFallback
   : "";
 const copyEndpointLabel = locale === "en" ? "Copy endpoint" : locale === "zh-CN" ? "复制接口地址" : "複製介面位址";
 const copiedEndpointLabel = locale === "en" ? "Endpoint copied" : locale === "zh-CN" ? "接口地址已复制" : "介面位址已複製";
-function schemaExample(schema: any): any {
+// Realistic, non-PII example value chosen from the field name + type. Identifiers
+// use obviously-fake synthetic values (never real account/member data).
+function leafValue(name: string, type: string): any {
+  const n = String(name || "").toLowerCase();
+  const num = type === "integer" || type === "number";
+  const v = (s: string, x: number) => (num ? x : s);
+  if (type === "boolean") return true;
+  if (/aaid/.test(n)) return "H00000001";
+  if (/(account_no|acc_no|accountno|bank_account|card_no|cardno)/.test(n)) return "8600000001";
+  if (/(member_id|customer|client_id)/.test(n)) return v("60000001", 60000001);
+  if (/(^|_)id$|_id$/.test(n) || n === "id") return v("1000000001", 1000000001);
+  if (/currency|ccy/.test(n)) return "USD";
+  if (/market|exchange$/.test(n) && !/market_value/.test(n)) return "US";
+  if (/underlying_symbol$|(^|_)symbol$|counter_id$/.test(n)) return "AAPL.US";
+  if (/(symbol_name|stock_name|underlying_symbol_name|fund_name|company)/.test(n)) return "Apple Inc.";
+  if (/(quantity|qty|units|holding_units|shares|volume|(^|_)num$|count$|_count$)/.test(n)) return v("100", 100);
+  if (/(ratio|percent|_pct$|haircut)/.test(n)) return v("0.15", 0.15);
+  if (/(amount|balance|asset|cash|_mv$|market_value|net_value|_value$|price|last_done|_fee$|outstanding|frozen|withdraw|margin|equity|profit|pnl)/.test(n)) return v("1234.56", 1234.56);
+  if (/(_date$|^date$|biz_date)/.test(n)) return v("20250101", 20250101);
+  if (/(_time$|_at$|timestamp|_ts$)/.test(n)) return v("1700000000000", 1700000000000);
+  if (/email/.test(n)) return "user@example.com";
+  if (/(phone|mobile)/.test(n)) return "+85290000000";
+  if (/(url|link|href)$/.test(n)) return "https://example.com/doc";
+  if (num && /(status|state|type$|_type$|mode|kind|category|level|dimension)/.test(n)) return 1;
+  if (/(^|_)(name|title)$/.test(n)) return "Example Name";
+  if (/(remark|comment|reason|desc|message|note)/.test(n)) return "Example note";
+  return num ? 0 : "string";
+}
+function schemaExample(schema: any, name = ""): any {
   const resolved = resolveSchema(document, schema) ?? schema;
-  if (resolved?.example !== undefined) return resolved.example;
+  // Ignore junk placeholder examples ("string"/"<string>") so a realistic value is generated.
+  if (resolved?.example !== undefined && resolved.example !== "string" && resolved.example !== "<string>") return resolved.example;
   if (resolved?.enum?.length) return resolved.enum[0];
   if (resolved?.type === "object" || resolved?.properties) {
     const properties = resolved.properties ?? {};
     if (["code", "message", "data"].every((key) => key in properties)) {
       return {
         code: properties.code?.example ?? 0,
-        message: properties.message?.example ?? null,
-        data: schemaExample(properties.data),
+        message: properties.message?.example ?? "success",
+        data: schemaExample(properties.data, "data"),
       };
     }
-    return Object.fromEntries(Object.entries(properties).map(([key, value]) => [key, schemaExample(value)]));
+    if (Object.keys(properties).length === 0) {
+      // object with no declared shape — fall back to a name-based scalar guess
+      return leafValue(name, "string");
+    }
+    return Object.fromEntries(Object.entries(properties).map(([key, value]) => [key, schemaExample(value, key)]));
   }
-  if (resolved?.type === "array") return [schemaExample(resolved.items ?? {})];
-  if (resolved?.type === "integer" || resolved?.type === "number") return 0;
-  if (resolved?.type === "boolean") return true;
-  return "<string>";
+  if (resolved?.type === "array") return [schemaExample(resolved.items ?? {}, name)];
+  return leafValue(name, resolved?.type ?? "string");
 }
 const requestValue = example ?? schemaExample(requestSchema);
 const queryEntries = hasPostFallback && requestValue && typeof requestValue === "object"
@@ -374,7 +405,7 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
     <div class="api-reference-fields">
       <section><h2 id="authorization">Authorization</h2><div class="api-schema-fields"><div class="api-schema-field"><div class="api-schema-field-meta"><code>Authorization</code><Badge variant="secondary">string</Badge><Badge variant="outline">header</Badge><Badge variant="destructive">{labels.required}</Badge></div><p>{locale === "en" ? "Send the Broker ACCESS_TOKEN as Authorization: Bearer <token>." : "Broker 获发的 ACCESS_TOKEN，通过 Authorization: Bearer <token> 发送。"}</p></div></div></section>
 
-      <section><h2 id="permission">{permLabels.title}</h2><div class="api-schema-fields"><div class="api-schema-field">{(permissionKeys.length > 0 || isLbOnly) && <div class="api-schema-field-meta">{permissionKeys.map((permissionKey: string) => <Badge variant="outline" className="api-scope-badge" data-scope-tooltip={permLabels.scopeTooltip(permissionKey)}><LucideIcon name="key-round" class="size-3" /><code>{permissionKey}</code></Badge>)}{isLbOnly && <Badge variant="outline" className="api-scope-badge api-scope-badge-lbonly" data-scope-tooltip={permLabels.lbonly}><LucideIcon name="lock" class="size-3" />{permLabels.lbonlyBadge}</Badge>}</div>}{permissionKeys.length > 0 && <p>{permLabels.requiredDesc}</p>}{permissionKeys.length === 0 && !isLbOnly && <p class="api-permission-note">{permLabels.none}</p>}{permissionKeys.length === 0 && isLbOnly && <p class="api-permission-note">{permLabels.lbonly}</p>}</div></div></section>
+      <section><h2 id="permission">{permLabels.title}</h2><div class="api-schema-fields"><div class="api-schema-field">{(permissionKeys.length > 0 || isLbOnly) && <div class="api-schema-field-meta">{permissionKeys.map((permissionKey: string) => <code>{permissionKey}</code>)}{isLbOnly && <Badge variant="outline" className="api-scope-badge api-scope-badge-lbonly" data-scope-tooltip={permLabels.lbonly}><LucideIcon name="lock" class="size-3" />{permLabels.lbonlyBadge}</Badge>}</div>}{permissionKeys.length > 0 && <p>{permLabels.requiredDesc}</p>}{permissionKeys.length === 0 && !isLbOnly && <p class="api-permission-note">{permLabels.none}</p>}{permissionKeys.length === 0 && isLbOnly && <p class="api-permission-note">{permLabels.lbonly}</p>}</div></div></section>
 
       {parameters.length > 0 && <section><h2 id="parameters">{labels.parameters}</h2><div class="api-fields">{parameters.map((parameter: any) => {
         const schema = resolveSchema(document, parameter.schema);
