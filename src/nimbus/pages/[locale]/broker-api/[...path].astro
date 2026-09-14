@@ -157,6 +157,175 @@ const fetchExample = hasPostFallback
       `const data = await response.json();`,
     ].join("\n");
 const fetchHtml = await codeToHtml(fetchExample, { lang: "javascript", themes: { light: "github-light", dark: "github-dark" }, defaultColor: false });
+
+// Extra request examples: Python, Python (async), Node.js, Java, Rust, C++, Go.
+const M = method.toUpperCase();
+const bodyStr = request ? JSON.stringify(requestValue, null, 2) : "";
+const reindent = (s: string, pad: string) => s.split("\n").join("\n" + pad);
+const goStr = (s: string) => "`" + s + "`";
+const pyExample = hasPostFallback
+  ? [
+      `import requests`,
+      ``,
+      `params = {`,
+      ...queryEntries.map(([name, value]) => `    ${JSON.stringify(name)}: ${typeof value === "object" && value !== null ? JSON.stringify(JSON.stringify(value)) : JSON.stringify(String(value))},`),
+      `}`,
+      `response = requests.get(`,
+      `    "${endpointUrl}",`,
+      `    headers={"Authorization": "Bearer <token>"},`,
+      `    params=params,`,
+      `)`,
+      `print(response.json())`,
+    ].join("\n")
+  : [
+      `import json`,
+      `import requests`,
+      ``,
+      ...(request ? [`payload = json.loads(r"""${bodyStr}""")`, ``] : []),
+      `response = requests.${method.toLowerCase()}(`,
+      `    "${endpointUrl}",`,
+      `    headers={"Authorization": "Bearer <token>", "Content-Type": "application/json"},`,
+      ...(request ? [`    json=payload,`] : []),
+      `)`,
+      `print(response.json())`,
+    ].join("\n");
+const pyParams = hasPostFallback
+  ? "{" + queryEntries.map(([n, v]) => `${JSON.stringify(n)}: ${typeof v === "object" && v !== null ? JSON.stringify(JSON.stringify(v)) : JSON.stringify(String(v))}`).join(", ") + "}"
+  : "{}";
+const pyAsyncExample = hasPostFallback
+  ? [
+      `import asyncio`,
+      `import httpx`,
+      ``,
+      `async def main():`,
+      `    async with httpx.AsyncClient() as client:`,
+      `        response = await client.get(`,
+      `            "${endpointUrl}",`,
+      `            headers={"Authorization": "Bearer <token>"},`,
+      `            params=${pyParams},`,
+      `        )`,
+      `        print(response.json())`,
+      ``,
+      `asyncio.run(main())`,
+    ].join("\n")
+  : [
+      `import asyncio`,
+      `import json`,
+      `import httpx`,
+      ``,
+      ...(request ? [`payload = json.loads(r"""${bodyStr}""")`, ``] : []),
+      `async def main():`,
+      `    async with httpx.AsyncClient() as client:`,
+      `        response = await client.${method.toLowerCase()}(`,
+      `            "${endpointUrl}",`,
+      `            headers={"Authorization": "Bearer <token>"${request ? ', "Content-Type": "application/json"' : ""}},`,
+      ...(request ? [`            json=payload,`] : []),
+      `        )`,
+      `        print(response.json())`,
+      ``,
+      `asyncio.run(main())`,
+    ].join("\n");
+const nodeUrl = hasPostFallback && queryEntries.length
+  ? `${endpointUrl}?` + queryEntries.map(([n, v]) => `${encodeURIComponent(n)}=${encodeURIComponent(typeof v === "object" && v !== null ? JSON.stringify(v) : String(v))}`).join("&")
+  : endpointUrl;
+const nodeExample = [
+  `const https = require("node:https");`,
+  ``,
+  `const options = {`,
+  `  method: "${M}",`,
+  `  headers: {`,
+  `    Authorization: "Bearer <token>",`,
+  ...(request ? [`    "Content-Type": "application/json",`] : []),
+  `  },`,
+  `};`,
+  ``,
+  `const req = https.request("${nodeUrl}", options, (res) => {`,
+  `  let body = "";`,
+  `  res.on("data", (chunk) => (body += chunk));`,
+  `  res.on("end", () => console.log(JSON.parse(body)));`,
+  `});`,
+  ...(request ? [`req.write(JSON.stringify(${reindent(bodyStr, "")}));`] : []),
+  `req.end();`,
+].join("\n");
+const javaExample = [
+  `import java.net.URI;`,
+  `import java.net.http.*;`,
+  ``,
+  `HttpClient client = HttpClient.newHttpClient();`,
+  `HttpRequest request = HttpRequest.newBuilder()`,
+  `    .uri(URI.create("${endpointUrl}"))`,
+  `    .header("Authorization", "Bearer <token>")`,
+  ...(request ? [`    .header("Content-Type", "application/json")`] : []),
+  request
+    ? `    .method("${M}", HttpRequest.BodyPublishers.ofString(${JSON.stringify(bodyStr)}))`
+    : `    .method("${M}", HttpRequest.BodyPublishers.noBody())`,
+  `    .build();`,
+  `HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());`,
+  `System.out.println(response.body());`,
+].join("\n");
+const rustExample = [
+  `use reqwest::Client;`,
+  ``,
+  `#[tokio::main]`,
+  `async fn main() -> Result<(), Box<dyn std::error::Error>> {`,
+  `    let client = Client::new();`,
+  `    let response = client`,
+  `        .${method.toLowerCase()}("${endpointUrl}")`,
+  `        .header("Authorization", "Bearer <token>")`,
+  ...(request ? [`        .header("Content-Type", "application/json")`, `        .body(r#"${bodyStr}"#)`] : []),
+  `        .send()`,
+  `        .await?;`,
+  `    println!("{}", response.text().await?);`,
+  `    Ok(())`,
+  `}`,
+].join("\n");
+const cppExample = [
+  `#include <curl/curl.h>`,
+  ``,
+  `int main() {`,
+  `    CURL* curl = curl_easy_init();`,
+  `    struct curl_slist* headers = NULL;`,
+  `    headers = curl_slist_append(headers, "Authorization: Bearer <token>");`,
+  ...(request ? [`    headers = curl_slist_append(headers, "Content-Type: application/json");`] : []),
+  `    curl_easy_setopt(curl, CURLOPT_URL, "${endpointUrl}");`,
+  `    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);`,
+  `    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "${M}");`,
+  ...(request ? [`    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, R"(${bodyStr})");`] : []),
+  `    curl_easy_perform(curl);`,
+  `    curl_easy_cleanup(curl);`,
+  `    return 0;`,
+  `}`,
+].join("\n");
+const goExample = [
+  `package main`,
+  ``,
+  `import (`,
+  `    "bytes"`,
+  `    "io"`,
+  `    "fmt"`,
+  `    "net/http"`,
+  `)`,
+  ``,
+  `func main() {`,
+  ...(request ? [`    body := []byte(${goStr(bodyStr)})`, `    req, _ := http.NewRequest("${M}", "${endpointUrl}", bytes.NewBuffer(body))`] : [`    req, _ := http.NewRequest("${M}", "${endpointUrl}", nil)`]),
+  `    req.Header.Set("Authorization", "Bearer <token>")`,
+  ...(request ? [`    req.Header.Set("Content-Type", "application/json")`] : []),
+  `    resp, _ := http.DefaultClient.Do(req)`,
+  `    defer resp.Body.Close()`,
+  `    data, _ := io.ReadAll(resp.Body)`,
+  `    fmt.Println(string(data))`,
+  `}`,
+].join("\n");
+const th = { light: "github-light", dark: "github-dark" } as const;
+const [pyHtml, pyAsyncHtml, nodeHtml, javaHtml, rustHtml, cppHtml, goHtml] = await Promise.all([
+  codeToHtml(pyExample, { lang: "python", themes: th, defaultColor: false }),
+  codeToHtml(pyAsyncExample, { lang: "python", themes: th, defaultColor: false }),
+  codeToHtml(nodeExample, { lang: "javascript", themes: th, defaultColor: false }),
+  codeToHtml(javaExample, { lang: "java", themes: th, defaultColor: false }),
+  codeToHtml(rustExample, { lang: "rust", themes: th, defaultColor: false }),
+  codeToHtml(cppExample, { lang: "cpp", themes: th, defaultColor: false }),
+  codeToHtml(goExample, { lang: "go", themes: th, defaultColor: false }),
+]);
 const responseExamples = responses.map(([status, response]) => {
   const contentType = Object.keys(response.content ?? {})[0];
   const body = contentType ? response.content[contentType] : undefined;
@@ -226,6 +395,13 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
         examples={[
           { id: "curl", label: "cURL", code: curlExample, html: curlHtml },
           { id: "fetch", label: "Fetch", code: fetchExample, html: fetchHtml },
+          { id: "python", label: "Python", code: pyExample, html: pyHtml },
+          { id: "python-async", label: "Python (async)", code: pyAsyncExample, html: pyAsyncHtml },
+          { id: "node", label: "Node.js", code: nodeExample, html: nodeHtml },
+          { id: "java", label: "Java", code: javaExample, html: javaHtml },
+          { id: "rust", label: "Rust", code: rustExample, html: rustHtml },
+          { id: "cpp", label: "C++", code: cppExample, html: cppHtml },
+          { id: "go", label: "Go", code: goExample, html: goHtml },
         ]}
         responses={highlightedResponses}
         baseHost={baseUrl}
