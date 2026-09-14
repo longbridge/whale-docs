@@ -1,6 +1,6 @@
 ---
 title: Android
-description: WhaleCoreSDK Android installation, initialization, core concepts, and the quote, trading, portfolio, and watchlist services
+description: WhaleCore Android installation, initialization, core concepts, and the quote, trading, portfolio, and watchlist services
 ---
 
 ## Integrate {/* integrate */}
@@ -31,6 +31,8 @@ apply from: "<path-to>/whalecore/whalecore.gradle"
 
 The host still configures `minSdk`, JVM target, and the Kotlin plugin itself. See `example/app/build.gradle.kts` for a complete integration example.
 
+The R8 / ProGuard rules the SDK needs ship with the AAR and apply automatically to minified builds, so you write no keep rules yourself.
+
 Delivery directory layout:
 
 ```txt
@@ -51,6 +53,10 @@ cd example
 ```
 
 You can also open `example/` directly in Android Studio.
+
+The sample project runs as shipped: the tenant and demo account are fixed and need no configuration, and trade-password verification is on by default, so trading actions such as submitting an order first present the trading-password sheet (`TradeAuthenticator`).
+
+To point it at your own tenant, edit `LaunchConfigSection`: replace `TENANT` with the `appId`, `appKey`, `appSecret`, and account channel assigned to you, and replace `tokenFetcher` with an implementation that obtains credentials from your own backend — a real integration takes accounts from its own sign-in state, not from the fixed demo account.
 
 ## Initialize {/* initialize */}
 
@@ -86,6 +92,7 @@ Common `WhaleCoreConfig` fields:
 | `language` | `ZH_HANS` | Language preference: `EN` / `ZH_HK` / `ZH_HANS`, which affects server-returned text |
 | `tokenRefreshCallback` | `null` | Token refresh and expiry fallback callback; see [Session token refresh](#token-refresh) |
 | `tokenResolverTimeout` | `30` | Timeout in seconds for the fallback token fetch; non-positive values fall back to the default |
+| `tradePasswordEnabled` | `false` | Trade-password verification mode: when enabled, you supply the trade tokens — see [trade tokens](#trade-token) |
 
 Key points:
 
@@ -195,7 +202,9 @@ Order, portfolio, watchlist, and quote push events all expose the same three con
 
 Do not cache the instance returned by `getXxxService()` for long — it becomes invalid after `logoutAndDestroy()`, so fetch it again each time you need it. `getXxxService()` throws `WhaleCoreException.NotReady` before initialization or after teardown.
 
-Trading requires a trade token, which the SDK obtains and renews automatically by default; the host does not participate and needs no configuration. If a trading-scoped call (submit, replace, cancel, and similar) fails with `WhaleCoreException.TradeAuthFailed`, that is a rare server-side auth failure — handle it through the common [error handling](#error-handling) path.
+Trading requires a trade token, which the SDK obtains and renews automatically by default; you do not participate and need no configuration. If a trading call (submit, replace, cancel, and similar) fails with `WhaleCoreException.TradeAuthFailed`, that is a rare server-side auth failure — handle it through the common [error handling](#error-handling) path.
+
+With trade-password verification enabled (`tradePasswordEnabled = true` at initialization), you supply the token after verifying the trading password, and `TradeAuthFailed` becomes part of the normal flow — see [trade tokens](#trade-token).
 
 ## Public services {/* public-services */}
 
@@ -206,6 +215,7 @@ Trading requires a trade token, which the SDK obtains and renews automatically b
 | `getPortfoliosService()` | `PortfolioService` | Portfolio subscriptions, cash detail, member settings, and profit-and-loss analysis |
 | `getWatchlistService()` | `WatchlistService` | Watchlist groups, stocks, ordering, pinning, and events |
 | `getRequestService()` | `RequestService` | Pass-through authenticated HTTP requests |
+| `WhaleCore.updateTradeToken()` / `hasTradeToken()` | — | Supplying a trade token and checking whether one is held; needed only in trade-password verification mode — see [trade tokens](#trade-token) |
 
 Getting a service before initialization throws `WhaleCoreException.NotReady`. `OptionCalculator` is a stateless utility class you call directly, not through `WhaleCore`; see [Option calculator](#option-calculator).
 
@@ -717,7 +727,7 @@ val portfolios = WhaleCore.getPortfoliosService()
 // Register the listener before subscribing to accounts, so you don't miss the first frame
 portfolios.observePortfolioEvents(this, object : PortfolioEventCallback {
     override fun onMessage(accountInfo: AccountInfo, portfolio: Portfolio) { render(portfolio) }
-    override fun onFailure(accountInfo: AccountInfo?, error: Throwable) { showError(accountInfo, error) }
+    override fun onFailure(accountInfo: AccountInfo?, error: WhaleCoreException) { showError(accountInfo, error) }
 })
 
 portfolios.setSubscribedAccounts(listOf("lb"), "HKD")  // Subscribes every opened account (including sub-accounts) under the channel
@@ -953,6 +963,59 @@ Java callers can use `sendAsync(request, callback)` instead of the suspending `s
   The first version does not support custom request headers. Do not add signatures or authentication tokens to `query` or `body`; WhaleCore supplies them through its managed session.
 </Note>
 
+## Trade tokens {/* trade-token */}
+
+The SDK obtains trade tokens automatically by default, so **you do not call the methods in this section**. They are needed only when initialization set `tradePasswordEnabled = true`: the SDK then obtains no token itself, a trading call without one throws `TradeAuthFailed` immediately, and you prompt the Client for the trading password, exchange it for tokens through your own API, and hand them over with `WhaleCore.updateTradeToken`.
+
+**Put the recovery on one shared entry point rather than at each call site.** Which APIs need a trade token is maintained inside the SDK, so you cannot tell which calls to wrap; APIs that do not need one never throw `TradeAuthFailed`, so handling it indiscriminately at a place every SDK call passes through has the same effect as picking call sites. That place is usually your ViewModel coroutine wrapper or repository wrapper:
+
+```kotlin
+fun ViewModel.launchSafe(onError: (Throwable) -> Unit, block: suspend () -> Unit) =
+    viewModelScope.launch {
+        val failure = runCatching { block() }.exceptionOrNull() ?: return@launch
+        if (failure is WhaleCoreException.TradeAuthFailed && verifyTradePassword(failure.accountChannel)) {
+            return@launch          // token restored; do not resend, let the Client start the action again
+        }
+        onError(failure)
+    }
+
+/** Prompt for the password, exchange it for tokens through your own API, hand them to the SDK.
+ *  Serialize per account so concurrent failures do not open several password sheets. */
+suspend fun verifyTradePassword(accountChannel: String): Boolean = lockOf(accountChannel).withLock {
+    if (WhaleCore.hasTradeToken(accountChannel)) return true          // filled in while queuing
+    val password = showPasswordSheet() ?: return false
+    val (token, refreshToken) = myBackend.exchangeTradeToken(password)
+    WhaleCore.updateTradeToken(token, refreshToken, accountChannel)
+    return true
+}
+```
+
+Key points:
+
+- **Do not resend the original request after a successful verification.** Tens of seconds can pass between the tap and the verification, and resending a write silently skips the Client's confirmation of the order, which the shared entry point cannot distinguish from a read. Restore the token and let the Client start the action again.
+- **Serialize concurrent failures for the same account.** Five concurrent trading requests each throw `TradeAuthFailed`; without a lock that opens five password sheets. Hold the lock, check `hasTradeToken()` first, and pass straight through when it is already there.
+- **Calls that swallow their own exceptions never reach the shared entry point** (`runCatching { … }.onFailure { … }` and similar), so wrap the SDK call separately there. Not every one needs it — the entry guard already covers a token missing on page open, and the separate wrapper earns its place on the Client's final submit action (place or replace an order) when the token expires midway.
+- **Show the token-exchange progress inside the password sheet**, not on the page behind it: a spinner while the Client types is wrong, and the network request happens only after they confirm.
+- **Ensure the token when entering a trading screen** instead of relying on recovery alone: a failed load is not resent, so by the time the password is entered the page sits empty with no trigger to load again. Check `hasTradeToken()` once and verify before loading when it is missing.
+- **Guard when the page enters the foreground, not when it is constructed**: at construction the page often is not in the foreground yet, the password sheet cannot appear, and the guard simply fails.
+- **Give the page a placeholder state instead of opening the password sheet on entry**: cover the page with a placeholder explaining why the data is missing and offering a "verify trading password" button the Client presses themselves. The placeholder also blocks in-page buttons that lead to downstream trading features, otherwise the Client reaches them without verifying. Pages without a placeholder — those outside the trading domain, such as quote detail — guard on each trading button tap instead.
+- **Do not decide by `hasTradeToken()` alone**: the SDK does not pre-warm trade tokens, so in default mode none exists on page open and one is obtained on the first trading request. The condition is "`tradePasswordEnabled` is on and no token is held", and that setting cannot be read back after initialization, so remember the value you passed at startup.
+- **Do not let your own throttle block the placeholder's verify button**: the cooldown that prevents repeated sheets should only stop automatic retries; a button the Client presses is explicit intent, and blocking it leaves the page unable to verify at all.
+- **Reset the UI state of the action when the guard rejects it**: pull-to-refresh animations and button loading states must stop when the Client cancels verification, otherwise they spin forever. For navigation, put the transition in the verified branch so cancelling simply does not navigate.
+- **Leave the replay to the page**, not to the shared layer. The page knows whether it reads or writes and when it is safe to try again — re-running the guard on return and reloading on pull-to-refresh are both safer than a blind resend.
+- **Tokens live in memory only** and must be supplied again after every SDK initialization.
+- **A failed hand-off is never silent**: an empty token, or no channel given while the current account is not ready yet, throws `InvalidParameter`.
+- An account without a trading account throws `AccountNotOpened` rather than `TradeAuthFailed`; verifying the trading password does not help, so guide the Client through account opening.
+
+**Method overview:**
+
+| Method | Description |
+| --- | --- |
+| `WhaleCore.updateTradeToken(`<br />`tradeToken,`<br />`tradeRefreshToken,`<br />`accountChannel)` | Supplies one set of trade tokens for subsequent trading operations; `tradeRefreshToken` renews the token when it expires, with no further verification during renewal |
+| `WhaleCore.hasTradeToken(accountChannel)` | Whether the target account currently holds a trade token; it reflects local state only, not whether the server still accepts it |
+
+Both methods are pure in-memory reads and writes — no network, no suspension — so they have no `*Async` overloads; omitting `accountChannel` uses the current account. Tokens exist only in memory, disappear when the session ends, and the SDK offers no API to clear them.
+
 ## Data model reference {/* data-models */}
 
 | Model category | Main types |
@@ -978,7 +1041,8 @@ Every public API fails through a subtype of `WhaleCoreException`, so the host ca
 | `NetworkUnavailable` | The network is unavailable |
 | `RequestTimeout` | The request timed out |
 | `Unauthorized` | Authentication failed (includes a business error code, `businessCode`) |
-| `TradeAuthFailed` | The trade token is invalid or missing (rare; the SDK handles trade auth automatically by default) |
+| `TradeAuthFailed` | The trade token is invalid or missing, carrying `accountChannel` (handled automatically by default; in trade-password verification mode it drives the verification flow — see [trade tokens](#trade-token)) |
+| `AccountNotOpened` | The account has not been opened for trading, carrying `accountChannel` (verifying the trading password does not help; guide the Client through account opening) |
 | `ServerError` | The server returned an error |
 | `SerializationFailed` | The request parameters (`query` / `body`) could not be serialized to JSON |
 | `ValidationDataUnavailable` | Data required by pre-submit validation is not ready or failed to load (this does not mean the order failed validation — a business failure always goes through `OrderValidationResult.issues`) |

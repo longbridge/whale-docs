@@ -10477,6 +10477,256 @@
           }
         }
       }
+    },
+    "/v4/portfolio/withdraw/pre": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Get withdrawal pre-check information",
+        "description": "Queries the withdrawable limits and withdrawal configuration for a given currency and bank card when the Client opens the withdrawal page. It returns the maximum withdrawable amount, the cash amount, the money-market fund amount, the per-currency breakdown, estimated arrival times, fee tiers by amount range, and the available payout methods, for the amount display, validation, and fee notices on the withdrawal form.\n",
+        "operationId": "getV4PortfolioWithdrawPre",
+        "parameters": [
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "description": "Withdrawal currency, such as HKD, USD, or CNH",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "HKD"
+          },
+          {
+            "name": "card_id",
+            "in": "query",
+            "required": false,
+            "description": "Withdrawal bank card id, taken from the withdrawal bank card list operation. When omitted, only the amount information is returned, without the card-specific arrival times and fee tiers",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": false,
+            "description": "Tenant channel",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from_app_page",
+            "in": "query",
+            "required": false,
+            "description": "Payout scenario source, distinguishing a standard payout from a southbound or northbound payout; used only by some tenant channels",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "withdraw",
+                "north_withdraw",
+                "south_withdraw"
+              ]
+            }
+          },
+          {
+            "name": "sm3_code",
+            "in": "query",
+            "required": false,
+            "description": "Verification code; used only by some tenant channels",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get withdrawal pre-check information” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "list": {
+                              "type": "array",
+                              "description": "Per-currency breakdown of the withdrawable amount, used to show how the estimated maximum is composed",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "currency": {
+                                    "type": "string",
+                                    "description": "Currency"
+                                  },
+                                  "amount": {
+                                    "type": "string",
+                                    "description": "Withdrawable amount in that currency"
+                                  }
+                                }
+                              }
+                            },
+                            "cash_amount": {
+                              "type": "string",
+                              "description": "Withdrawable cash amount; a withdrawal at or below this value follows the standard payout flow"
+                            },
+                            "max_amount": {
+                              "type": "string",
+                              "description": "Maximum withdrawable amount (the estimated maximum shown to the Client), including the money-market fund portion; a withdrawal above this value is not allowed"
+                            },
+                            "mmf_amount": {
+                              "type": "string",
+                              "description": "Withdrawable amount held in the money-market fund; a withdrawal between cash_amount and max_amount is paid out by redeeming it automatically"
+                            },
+                            "tip_time": {
+                              "type": "string",
+                              "description": "Estimated arrival time in business days, such as \"1-2\"; an empty string when there is no bank card or no configuration"
+                            },
+                            "mmf_time": {
+                              "type": "string",
+                              "description": "Estimated arrival time when the payout redeems the money-market fund, in business days, such as \"2-3\"; an empty string when there is no configuration"
+                            },
+                            "is_pad_funded": {
+                              "type": "integer",
+                              "format": "int32",
+                              "description": "Money-market fund advance status, meaningful only when mmf_amount is greater than 0:\n- 1: no redemption needed; the platform advances the payout\n- 2: the money-market fund must be redeemed before the payout\n",
+                              "enum": [
+                                1,
+                                2
+                              ]
+                            },
+                            "currency_tip": {
+                              "type": "boolean",
+                              "description": "Whether a currency-related notice must be shown"
+                            },
+                            "need_payee_address": {
+                              "type": "boolean",
+                              "description": "Whether the payee address must be provided"
+                            },
+                            "bank_operation_type": {
+                              "type": "array",
+                              "description": "Available payout methods; delivered only for some tenant channels",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "description": "Payout method id"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "description": "Payout method name"
+                                  },
+                                  "multi_name": {
+                                    "type": "string",
+                                    "description": "Localized payout method name"
+                                  },
+                                  "direction": {
+                                    "type": "integer",
+                                    "format": "int32",
+                                    "description": "Fund direction:\n- 0: both deposits and withdrawals\n- 1: withdrawal\n- 2: deposit\n",
+                                    "enum": [
+                                      0,
+                                      1,
+                                      2
+                                    ]
+                                  }
+                                }
+                              }
+                            },
+                            "prompts": {
+                              "type": "array",
+                              "description": "Fee and arrival-time tiers by withdrawal amount range; Broker App matches the entered amount to a tier and shows the corresponding fee notice",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "min_amount": {
+                                    "type": "string",
+                                    "description": "Lowest withdrawal amount this tier covers, which is also the minimum amount the Client can enter"
+                                  },
+                                  "max_amount": {
+                                    "type": "string",
+                                    "description": "Highest withdrawal amount this tier covers"
+                                  },
+                                  "bank_fee": {
+                                    "type": "string",
+                                    "description": "Bank fee"
+                                  },
+                                  "plat_fee": {
+                                    "type": "string",
+                                    "description": "Platform fee"
+                                  },
+                                  "arrive_time": {
+                                    "type": "string",
+                                    "description": "Estimated arrival time for this tier"
+                                  },
+                                  "mmf_time": {
+                                    "type": "string",
+                                    "description": "Estimated arrival time for this tier when the payout redeems the money-market fund"
+                                  },
+                                  "fee_description": {
+                                    "type": "string",
+                                    "description": "Explanatory text for the bank fee"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "list": [
+                      {
+                        "currency": "HKD",
+                        "amount": "0.00"
+                      }
+                    ],
+                    "cash_amount": "0.00",
+                    "max_amount": "100476.96",
+                    "mmf_amount": "100476.96",
+                    "tip_time": "1-2",
+                    "is_pad_funded": 2,
+                    "mmf_time": "2-3",
+                    "currency_tip": false,
+                    "bank_operation_type": [],
+                    "prompts": [],
+                    "need_payee_address": false
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The service rejected the request because a business rule or input validation failed. Review the business codes and correct the request before retrying.",
+            "x-business-codes": [
+              {
+                "code": 2031017,
+                "description": "Parameter validation failed, for example the required currency query parameter is missing; Broker App prompts the Client to contact support"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

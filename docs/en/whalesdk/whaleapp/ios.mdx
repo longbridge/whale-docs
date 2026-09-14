@@ -270,9 +270,40 @@ The `domain` of `NSError` in SDK callbacks is always `@"LBWhaleApp"`. Common err
 - (void)lbWhaleAppRefreshTokenExpiredWithResolver:(void(^)(NSString *token, NSString *refreshToken))resolveCompleted {
     resolveCompleted(nil, nil);
 }
+
+/// 9. Respond to an H5 call into Broker App native capabilities
+///
+/// When it fires: an H5 page inside the SDK calls a Broker App native method (for example, generating a share short link)
+///                through the `lbCallSourceApp` JSBridge. The SDK dispatches on the main thread and only forwards the call:
+///                it does not check methodName against an allowlist, parse the returned business code, or apply a timeout.
+/// Parameters:
+///   - request.methodName : the native method name requested by H5; Broker App decides whether it is supported
+///   - request.params     : the business parameters from H5, forwarded unchanged
+///   - request.sourceURL  : the URL of the calling H5 page, filled in by the SDK, usable for validation and analytics
+///   - completion         : Broker App must call it exactly once, from any thread; the SDK switches to the main thread
+///                          before forwarding to H5. Broker App and H5 agree on the meaning of result.code / message / data,
+///                          and result.data must be a JSON-serializable NSArray or NSDictionary
+/// Suggested handling:
+///   - dispatch by methodName to the JSBridge capabilities Broker App already has; report an unsupported methodName
+///     to H5 through result.code (for example, code=1 for an invalid API)
+///   - when this method is not implemented, the SDK replies to H5 directly with status=NO, code=-1, error="客户端未实现"
+- (void)lbWhaleAppRequestSourceAppAPI:(LBWhaleAppSourceAppRequest *)request
+                           completion:(void (^)(LBWhaleAppSourceAppResult *result))completion {
+    if ([request.methodName isEqualToString:@"easyShare"]) {
+        [MyShareService shortURLForParams:request.params completion:^(NSString *shortURL, NSError *error) {
+            if (error) {
+                completion([LBWhaleAppSourceAppResult resultWithCode:3 message:error.localizedDescription data:nil]);
+            } else {
+                completion([LBWhaleAppSourceAppResult resultWithCode:0 message:nil data:@{@"shortUrl": shortURL}]);
+            }
+        }];
+        return;
+    }
+    completion([LBWhaleAppSourceAppResult resultWithCode:1 message:@"invalid api" data:nil]);
+}
 ```
 
-Validate the scheme, domain, and route allowlist for any URL forwarded through `lbWhaleAppSDKDidRequestOpenURL:` before opening it.
+Validate the scheme, domain, and route allowlist for any URL forwarded through `lbWhaleAppSDKDidRequestOpenURL:` before opening it. Calls forwarded through `lbWhaleAppRequestSourceAppAPI:` are equally unchecked by the SDK: validate `request.sourceURL` and keep `request.methodName` on an allowlist before dispatching.
 
 <Note>
 `lbWhaleAppRefreshTokenExpiredWithResolver:` is a fallback extension point for a very rare failure case, not Broker App's regular token-refresh entry point. It waits 30 seconds by default, which can be adjusted with `LBAPPSDKConfigKeyRefreshTokenResolverTimeout`.
@@ -986,6 +1017,16 @@ The SDK event-callback delegate.
 
 /// Fallback callback after the SDK's built-in token refresh fails; resolveCompleted must be called before the timeout
 - (void)lbWhaleAppRefreshTokenExpiredWithResolver:(void(^)(NSString *token, NSString *refreshToken))resolveCompleted;
+
+/// SDK analytics event callback; Broker App can feed it into its own analytics system
+- (void)lbWhaleAppAnalyticsEventWithName:(NSString *)name properties:(NSDictionary *)properties;
+
+/// H5 requests a Broker App native capability through the SDK (H5-side JSBridge: lbCallSourceApp)
+/// The SDK dispatches on the main thread; completion may be called from any thread but exactly once,
+/// and the SDK switches to the main thread before forwarding the result to H5
+/// When this method is not implemented, the SDK replies to H5 directly with status=NO, code=-1, error="客户端未实现"
+- (void)lbWhaleAppRequestSourceAppAPI:(LBWhaleAppSourceAppRequest *)request
+                           completion:(void (^)(LBWhaleAppSourceAppResult *result))completion;
 
 @end
 ```

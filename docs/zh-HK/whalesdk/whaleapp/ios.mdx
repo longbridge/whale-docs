@@ -270,9 +270,38 @@ SDK 回調中 `NSError` 的 `domain` 統一為 `@"LBWhaleApp"`，常見錯誤碼
 - (void)lbWhaleAppRefreshTokenExpiredWithResolver:(void(^)(NSString *token, NSString *refreshToken))resolveCompleted {
     resolveCompleted(nil, nil);
 }
+
+/// 9. 回應 H5 呼叫 Broker App 原生能力
+///
+/// 觸發時機：SDK 內的 H5 頁面透過 JSBridge `lbCallSourceApp` 請求呼叫 Broker App 原生方法（如分享產生短連結）時觸發，
+///          SDK 在主執行緒發起。SDK 只做透傳：不校驗 methodName 白名單、不解析回傳的業務碼、不做超時兜底。
+/// 參數說明：
+///   - request.methodName : H5 請求的原生方法名，由 Broker App 決定是否支援
+///   - request.params     : H5 傳入的業務參數，SDK 原樣透傳
+///   - request.sourceURL  : 發起呼叫的 H5 頁面 URL，由 SDK 自動填入，可用於安全校驗與埋點
+///   - completion         : Broker App 執行完成後必須呼叫且僅呼叫一次，可在任意執行緒呼叫，SDK 內部切主執行緒後透傳給 H5
+///                          result.code / message / data 的語義由 Broker App 與 H5 約定，
+///                          result.data 須為可 JSON 序列化的 NSArray / NSDictionary
+/// 建議處理：
+///   - 按 methodName 分發到 Broker App 既有的 JSBridge 能力；不支援的 methodName 透過 result.code 告知 H5（如 code=1 表示無效介面）
+///   - 未實作本方法時，SDK 直接回 H5：status=NO, code=-1, error="客户端未实现"
+- (void)lbWhaleAppRequestSourceAppAPI:(LBWhaleAppSourceAppRequest *)request
+                           completion:(void (^)(LBWhaleAppSourceAppResult *result))completion {
+    if ([request.methodName isEqualToString:@"easyShare"]) {
+        [MyShareService shortURLForParams:request.params completion:^(NSString *shortURL, NSError *error) {
+            if (error) {
+                completion([LBWhaleAppSourceAppResult resultWithCode:3 message:error.localizedDescription data:nil]);
+            } else {
+                completion([LBWhaleAppSourceAppResult resultWithCode:0 message:nil data:@{@"shortUrl": shortURL}]);
+            }
+        }];
+        return;
+    }
+    completion([LBWhaleAppSourceAppResult resultWithCode:1 message:@"invalid api" data:nil]);
+}
 ```
 
-`lbWhaleAppSDKDidRequestOpenURL:` 透傳過來的 URL，在開啟前請先校驗 scheme、網域和路由白名單。
+`lbWhaleAppSDKDidRequestOpenURL:` 透傳過來的 URL，在開啟前請先校驗 scheme、網域和路由白名單。`lbWhaleAppRequestSourceAppAPI:` 轉發的呼叫同樣不經 SDK 校驗，分發前請用 `request.sourceURL` 校驗來源，並對 `request.methodName` 做白名單控制。
 
 <Note>
 `lbWhaleAppRefreshTokenExpiredWithResolver:` 是極低機率異常的兜底擴充套件點，不是 Broker App 的常規 token 重新整理入口。等待時間預設 30 秒，可透過 `LBAPPSDKConfigKeyRefreshTokenResolverTimeout` 調整。
@@ -986,6 +1015,15 @@ SDK 事件回調代理。
 
 /// SDK 內建 token 重新整理失敗後的兜底回調；必須在超時前呼叫 resolveCompleted
 - (void)lbWhaleAppRefreshTokenExpiredWithResolver:(void(^)(NSString *token, NSString *refreshToken))resolveCompleted;
+
+/// SDK 埋點事件回調，Broker App 可據此接入自有埋點體系
+- (void)lbWhaleAppAnalyticsEventWithName:(NSString *)name properties:(NSDictionary *)properties;
+
+/// H5 透過 SDK 請求呼叫 Broker App 原生能力（H5 側 JSBridge：lbCallSourceApp）
+/// SDK 在主執行緒發起；completion 可在任意執行緒呼叫，但必須且僅呼叫一次，SDK 內部切主執行緒後透傳給 H5
+/// 未實作本方法時 SDK 直接回 H5：status=NO, code=-1, error="客户端未实现"
+- (void)lbWhaleAppRequestSourceAppAPI:(LBWhaleAppSourceAppRequest *)request
+                           completion:(void (^)(LBWhaleAppSourceAppResult *result))completion;
 
 @end
 ```

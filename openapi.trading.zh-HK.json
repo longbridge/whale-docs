@@ -10477,6 +10477,256 @@
           }
         }
       }
+    },
+    "/v4/portfolio/withdraw/pre": {
+      "get": {
+        "tags": [
+          "資產"
+        ],
+        "summary": "取得提現前置資訊",
+        "description": "進入提取資金頁時查詢指定幣種、指定銀行卡下的可提現額度與提現設定，回傳最大可提金額、現金可提金額、餘額通金額、各幣種可提明細、預計到賬時間、不同金額區間的手續費檔位與出金方式等，用於提現表單的額度展示、金額校驗與費用提示。\n",
+        "operationId": "getV4PortfolioWithdrawPre",
+        "parameters": [
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "description": "提現幣種，如 HKD、USD、CNH",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "HKD"
+          },
+          {
+            "name": "card_id",
+            "in": "query",
+            "required": false,
+            "description": "提現銀行卡 id，取自提現銀行卡列表介面；不傳時僅回傳額度資訊，不回傳與銀行卡相關的到賬時間與手續費檔位",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": false,
+            "description": "租戶渠道",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from_app_page",
+            "in": "query",
+            "required": false,
+            "description": "出金場景來源，用於區分普通出金與南向 / 北向出金；僅部分租戶渠道使用",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "withdraw",
+                "north_withdraw",
+                "south_withdraw"
+              ]
+            }
+          },
+          {
+            "name": "sm3_code",
+            "in": "query",
+            "required": false,
+            "description": "校驗碼，僅部分租戶渠道使用",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「取得提現前置資訊」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "list": {
+                              "type": "array",
+                              "description": "各幣種可提金額明細，用於展示「最大可提預估」的構成",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "currency": {
+                                    "type": "string",
+                                    "description": "幣種"
+                                  },
+                                  "amount": {
+                                    "type": "string",
+                                    "description": "該幣種可提金額"
+                                  }
+                                }
+                              }
+                            },
+                            "cash_amount": {
+                              "type": "string",
+                              "description": "現金可提金額，提現金額不超過該值時走普通出金流程"
+                            },
+                            "max_amount": {
+                              "type": "string",
+                              "description": "最大可提金額（「最大可提預估」展示值），包含餘額通部分；提現金額超過該值時不允許提現"
+                            },
+                            "mmf_amount": {
+                              "type": "string",
+                              "description": "餘額通可提金額，提現金額介於 cash_amount 與 max_amount 之間時走餘額通自動贖回出金"
+                            },
+                            "tip_time": {
+                              "type": "string",
+                              "description": "預計到賬時間，單位為工作日，如 \"1-2\"；無銀行卡或無設定時為空字串"
+                            },
+                            "mmf_time": {
+                              "type": "string",
+                              "description": "使用餘額通贖回出金時的預計到賬時間，單位為工作日，如 \"2-3\"；無設定時為空字串"
+                            },
+                            "is_pad_funded": {
+                              "type": "integer",
+                              "format": "int32",
+                              "description": "餘額通墊資狀態，僅在 mmf_amount 大於 0 時有效：\n- 1: 無需贖回，平台墊資出金\n- 2: 需要贖回餘額通後出金\n",
+                              "enum": [
+                                1,
+                                2
+                              ]
+                            },
+                            "currency_tip": {
+                              "type": "boolean",
+                              "description": "是否需要展示幣種相關提示"
+                            },
+                            "need_payee_address": {
+                              "type": "boolean",
+                              "description": "是否需要填寫收款人地址"
+                            },
+                            "bank_operation_type": {
+                              "type": "array",
+                              "description": "可選的出金方式列表，僅部分租戶渠道下發",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "description": "出金方式 id"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "description": "出金方式名稱"
+                                  },
+                                  "multi_name": {
+                                    "type": "string",
+                                    "description": "出金方式多語言名稱"
+                                  },
+                                  "direction": {
+                                    "type": "integer",
+                                    "format": "int32",
+                                    "description": "資金方向：\n- 0: 可入可出\n- 1: 出金\n- 2: 入金\n",
+                                    "enum": [
+                                      0,
+                                      1,
+                                      2
+                                    ]
+                                  }
+                                }
+                              }
+                            },
+                            "prompts": {
+                              "type": "array",
+                              "description": "按提現金額區間劃分的手續費與到賬時間檔位，Broker App 按輸入金額匹配對應檔位展示費用提示",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "min_amount": {
+                                    "type": "string",
+                                    "description": "該檔位適用的最小提現金額，同時作為提現金額輸入下限"
+                                  },
+                                  "max_amount": {
+                                    "type": "string",
+                                    "description": "該檔位適用的最大提現金額"
+                                  },
+                                  "bank_fee": {
+                                    "type": "string",
+                                    "description": "銀行手續費"
+                                  },
+                                  "plat_fee": {
+                                    "type": "string",
+                                    "description": "平台手續費"
+                                  },
+                                  "arrive_time": {
+                                    "type": "string",
+                                    "description": "該檔位的預計到賬時間"
+                                  },
+                                  "mmf_time": {
+                                    "type": "string",
+                                    "description": "該檔位使用餘額通贖回出金時的預計到賬時間"
+                                  },
+                                  "fee_description": {
+                                    "type": "string",
+                                    "description": "銀行手續費說明文案"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "list": [
+                      {
+                        "currency": "HKD",
+                        "amount": "0.00"
+                      }
+                    ],
+                    "cash_amount": "0.00",
+                    "max_amount": "100476.96",
+                    "mmf_amount": "100476.96",
+                    "tip_time": "1-2",
+                    "is_pad_funded": 2,
+                    "mmf_time": "2-3",
+                    "currency_tip": false,
+                    "bank_operation_type": [],
+                    "prompts": [],
+                    "need_payee_address": false
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "請求未通過業務規則或輸入校驗。重試前，請根據業務碼修正請求。",
+            "x-business-codes": [
+              {
+                "code": 2031017,
+                "description": "參數校驗失敗（如缺少 currency 必填查詢參數），Broker App 據此提示聯絡客服"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
