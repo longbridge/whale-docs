@@ -53,8 +53,28 @@ const labels = {
 };
 const example = request?.example ?? request?.examples?.default?.value;
 const requestSchema = resolveSchema(document, request?.schema);
-const baseUrl = "https://b-api.longbridge.xyz";
+const servers = (document.servers ?? []) as { url: string; description?: string }[];
+const prodUrl = servers.find((s) => /lbkrs\.com/.test(s.url))?.url ?? servers[0]?.url ?? "https://b-api.lbkrs.com";
+const testUrl = servers.find((s) => /longbridge\.xyz/.test(s.url))?.url ?? "https://b-api.longbridge.xyz";
+const isDatasetPath = path.startsWith("/v1/datasets/");
+// Dataset endpoints are deployed on Test only (prod 404s); everything else is canonically Production.
+const baseUrl = isDatasetPath ? testUrl : prodUrl;
 const endpointUrl = `${baseUrl}${path}`;
+const defaultEnv = isDatasetPath ? "test" : "prod";
+const envLabels =
+  locale === "en"
+    ? { prod: "Production", test: "Test" }
+    : locale === "zh-CN"
+      ? { prod: "生产", test: "测试" }
+      : { prod: "生產", test: "測試" };
+// Only datasets get a note (they are Test-only); other ops use the host switcher.
+const datasetNote = !isDatasetPath
+  ? ""
+  : locale === "en"
+    ? "Dataset endpoints are available on the Test host only; the Production host returns 404."
+    : locale === "zh-CN"
+      ? "Dataset 接口仅在测试环境提供，生产环境返回 404。"
+      : "Dataset 介面僅在測試環境提供，生產環境返回 404。";
 const postFallbackNote = hasPostFallback
   ? locale === "en"
     ? "This Dataset query is read-only. Use GET by default. If the encoded query parameters are too large, send the same parameters as a JSON body with POST to the same path."
@@ -64,25 +84,73 @@ const postFallbackNote = hasPostFallback
   : "";
 const copyEndpointLabel = locale === "en" ? "Copy endpoint" : locale === "zh-CN" ? "复制接口地址" : "複製介面位址";
 const copiedEndpointLabel = locale === "en" ? "Endpoint copied" : locale === "zh-CN" ? "接口地址已复制" : "介面位址已複製";
-function schemaExample(schema: any): any {
+// Realistic, non-PII example value chosen from the field name + type. Identifiers
+// use obviously-fake synthetic values (never real account/member data).
+function leafValue(name: string, type: string): any {
+  const n = String(name || "").toLowerCase();
+  const num = type === "integer" || type === "number";
+  const v = (s: string, x: number) => (num ? x : s);
+  if (type === "boolean") return true;
+  if (/aaid/.test(n)) return "H00000001";
+  if (/(account_no|acc_no|accountno|bank_account|card_no|cardno)/.test(n)) return "8600000001";
+  if (/(member_id|customer|client_id)/.test(n)) return v("60000001", 60000001);
+  if (/(^|_)id$|_id$/.test(n) || n === "id") return v("1000000001", 1000000001);
+  if (/currency|ccy/.test(n)) return "USD";
+  if (/market|exchange$/.test(n) && !/market_value/.test(n)) return "US";
+  if (/underlying_symbol$|(^|_)symbol$|counter_id$/.test(n)) return "AAPL.US";
+  if (/(symbol_name|stock_name|underlying_symbol_name|fund_name|company)/.test(n)) return "Apple Inc.";
+  if (/(quantity|qty|units|holding_units|shares|volume|(^|_)num$|count$|_count$)/.test(n)) return v("100", 100);
+  if (/(ratio|percent|_pct$|haircut)/.test(n)) return v("0.15", 0.15);
+  if (/(amount|balance|asset|cash|_mv$|market_value|net_value|_value$|price|last_done|_fee$|outstanding|frozen|withdraw|margin|equity|profit|pnl)/.test(n)) return v("1234.56", 1234.56);
+  if (/(_date$|^date$|biz_date|^dt$|_dt$)/.test(n)) return v("20250101", 20250101);
+  if (/(_time$|_at$|timestamp|_ts$)/.test(n)) return v("1700000000000", 1700000000000);
+  if (/email/.test(n)) return "user@example.com";
+  if (/(phone|mobile)/.test(n)) return "+85290000000";
+  if (/(url|link|href)$/.test(n)) return "https://example.com/doc";
+  if (/(icon|logo|avatar|image$|img$|_pic$)/.test(n)) return "https://example.com/icon.png";
+  if (/color/.test(n)) return "#1E88E5";
+  if (n === "gte" || n === "lte" || n === "gt" || n === "lt" || /(_min$|_max$)/.test(n)) return v("100", 100);
+  if (/quota/.test(n)) return v("1000000", 1000000);
+  if (/operator/.test(n)) return "admin";
+  if (/(serial_no$|serial$|_no$)/.test(n)) return "SN20250101000001";
+  if (/bank_code/.test(n)) return "001";
+  if (/region/.test(n)) return "HK";
+  if (/(account_channel|settlement_channel|(^|_)channel$)/.test(n)) return "lb";
+  if (/ticket_content/.test(n)) return "Example content";
+  if (n === "pkey") return "";
+  if (n === "key") return "example_key";
+  if (n === "value") return v("Example value", 1);
+  if (/(name_en|_en$|^en$)/.test(n)) return "Example";
+  if (/(zh_cn|zh_hk|name_cn|name_hk|_cn$|_hk$)/.test(n)) return "示例";
+  if (num && /(status|state|type$|_type$|mode|kind|category|level|dimension)/.test(n)) return 1;
+  if (/(^|_)(name|title)$/.test(n)) return "Example Name";
+  if (/(remark|comment|reason|desc|message|msg|note)/.test(n)) return "Example note";
+  // categorical / coded string fields (status_val, biz_code, account_type, direction, …)
+  if (/(status|state|_type$|^type$|kind|category|mode|biz_code|biz_type|account_type|business_type|direction|_val$|(^|_)code$|ca_code)/.test(n)) return v("1", 1);
+  return num ? 0 : "string";
+}
+function schemaExample(schema: any, name = ""): any {
   const resolved = resolveSchema(document, schema) ?? schema;
-  if (resolved?.example !== undefined) return resolved.example;
+  // Ignore junk placeholder examples ("string"/"<string>") so a realistic value is generated.
+  if (resolved?.example !== undefined && resolved.example !== "string" && resolved.example !== "<string>") return resolved.example;
   if (resolved?.enum?.length) return resolved.enum[0];
   if (resolved?.type === "object" || resolved?.properties) {
     const properties = resolved.properties ?? {};
     if (["code", "message", "data"].every((key) => key in properties)) {
       return {
         code: properties.code?.example ?? 0,
-        message: properties.message?.example ?? null,
-        data: schemaExample(properties.data),
+        message: properties.message?.example ?? "success",
+        data: schemaExample(properties.data, "data"),
       };
     }
-    return Object.fromEntries(Object.entries(properties).map(([key, value]) => [key, schemaExample(value)]));
+    if (Object.keys(properties).length === 0) {
+      // object with no declared shape — fall back to a name-based scalar guess
+      return leafValue(name, "string");
+    }
+    return Object.fromEntries(Object.entries(properties).map(([key, value]) => [key, schemaExample(value, key)]));
   }
-  if (resolved?.type === "array") return [schemaExample(resolved.items ?? {})];
-  if (resolved?.type === "integer" || resolved?.type === "number") return 0;
-  if (resolved?.type === "boolean") return true;
-  return "<string>";
+  if (resolved?.type === "array") return [schemaExample(resolved.items ?? {}, name)];
+  return leafValue(name, resolved?.type ?? "string");
 }
 const requestValue = example ?? schemaExample(requestSchema);
 const queryEntries = hasPostFallback && requestValue && typeof requestValue === "object"
@@ -137,6 +205,175 @@ const fetchExample = hasPostFallback
       `const data = await response.json();`,
     ].join("\n");
 const fetchHtml = await codeToHtml(fetchExample, { lang: "javascript", themes: { light: "github-light", dark: "github-dark" }, defaultColor: false });
+
+// Extra request examples: Python, Python (async), Node.js, Java, Rust, C++, Go.
+const M = method.toUpperCase();
+const bodyStr = request ? JSON.stringify(requestValue, null, 2) : "";
+const reindent = (s: string, pad: string) => s.split("\n").join("\n" + pad);
+const goStr = (s: string) => "`" + s + "`";
+const pyExample = hasPostFallback
+  ? [
+      `import requests`,
+      ``,
+      `params = {`,
+      ...queryEntries.map(([name, value]) => `    ${JSON.stringify(name)}: ${typeof value === "object" && value !== null ? JSON.stringify(JSON.stringify(value)) : JSON.stringify(String(value))},`),
+      `}`,
+      `response = requests.get(`,
+      `    "${endpointUrl}",`,
+      `    headers={"Authorization": "Bearer <token>"},`,
+      `    params=params,`,
+      `)`,
+      `print(response.json())`,
+    ].join("\n")
+  : [
+      `import json`,
+      `import requests`,
+      ``,
+      ...(request ? [`payload = json.loads(r"""${bodyStr}""")`, ``] : []),
+      `response = requests.${method.toLowerCase()}(`,
+      `    "${endpointUrl}",`,
+      `    headers={"Authorization": "Bearer <token>", "Content-Type": "application/json"},`,
+      ...(request ? [`    json=payload,`] : []),
+      `)`,
+      `print(response.json())`,
+    ].join("\n");
+const pyParams = hasPostFallback
+  ? "{" + queryEntries.map(([n, v]) => `${JSON.stringify(n)}: ${typeof v === "object" && v !== null ? JSON.stringify(JSON.stringify(v)) : JSON.stringify(String(v))}`).join(", ") + "}"
+  : "{}";
+const pyAsyncExample = hasPostFallback
+  ? [
+      `import asyncio`,
+      `import httpx`,
+      ``,
+      `async def main():`,
+      `    async with httpx.AsyncClient() as client:`,
+      `        response = await client.get(`,
+      `            "${endpointUrl}",`,
+      `            headers={"Authorization": "Bearer <token>"},`,
+      `            params=${pyParams},`,
+      `        )`,
+      `        print(response.json())`,
+      ``,
+      `asyncio.run(main())`,
+    ].join("\n")
+  : [
+      `import asyncio`,
+      `import json`,
+      `import httpx`,
+      ``,
+      ...(request ? [`payload = json.loads(r"""${bodyStr}""")`, ``] : []),
+      `async def main():`,
+      `    async with httpx.AsyncClient() as client:`,
+      `        response = await client.${method.toLowerCase()}(`,
+      `            "${endpointUrl}",`,
+      `            headers={"Authorization": "Bearer <token>"${request ? ', "Content-Type": "application/json"' : ""}},`,
+      ...(request ? [`            json=payload,`] : []),
+      `        )`,
+      `        print(response.json())`,
+      ``,
+      `asyncio.run(main())`,
+    ].join("\n");
+const nodeUrl = hasPostFallback && queryEntries.length
+  ? `${endpointUrl}?` + queryEntries.map(([n, v]) => `${encodeURIComponent(n)}=${encodeURIComponent(typeof v === "object" && v !== null ? JSON.stringify(v) : String(v))}`).join("&")
+  : endpointUrl;
+const nodeExample = [
+  `const https = require("node:https");`,
+  ``,
+  `const options = {`,
+  `  method: "${M}",`,
+  `  headers: {`,
+  `    Authorization: "Bearer <token>",`,
+  ...(request ? [`    "Content-Type": "application/json",`] : []),
+  `  },`,
+  `};`,
+  ``,
+  `const req = https.request("${nodeUrl}", options, (res) => {`,
+  `  let body = "";`,
+  `  res.on("data", (chunk) => (body += chunk));`,
+  `  res.on("end", () => console.log(JSON.parse(body)));`,
+  `});`,
+  ...(request ? [`req.write(JSON.stringify(${reindent(bodyStr, "")}));`] : []),
+  `req.end();`,
+].join("\n");
+const javaExample = [
+  `import java.net.URI;`,
+  `import java.net.http.*;`,
+  ``,
+  `HttpClient client = HttpClient.newHttpClient();`,
+  `HttpRequest request = HttpRequest.newBuilder()`,
+  `    .uri(URI.create("${endpointUrl}"))`,
+  `    .header("Authorization", "Bearer <token>")`,
+  ...(request ? [`    .header("Content-Type", "application/json")`] : []),
+  request
+    ? `    .method("${M}", HttpRequest.BodyPublishers.ofString(${JSON.stringify(bodyStr)}))`
+    : `    .method("${M}", HttpRequest.BodyPublishers.noBody())`,
+  `    .build();`,
+  `HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());`,
+  `System.out.println(response.body());`,
+].join("\n");
+const rustExample = [
+  `use reqwest::Client;`,
+  ``,
+  `#[tokio::main]`,
+  `async fn main() -> Result<(), Box<dyn std::error::Error>> {`,
+  `    let client = Client::new();`,
+  `    let response = client`,
+  `        .${method.toLowerCase()}("${endpointUrl}")`,
+  `        .header("Authorization", "Bearer <token>")`,
+  ...(request ? [`        .header("Content-Type", "application/json")`, `        .body(r#"${bodyStr}"#)`] : []),
+  `        .send()`,
+  `        .await?;`,
+  `    println!("{}", response.text().await?);`,
+  `    Ok(())`,
+  `}`,
+].join("\n");
+const cppExample = [
+  `#include <curl/curl.h>`,
+  ``,
+  `int main() {`,
+  `    CURL* curl = curl_easy_init();`,
+  `    struct curl_slist* headers = NULL;`,
+  `    headers = curl_slist_append(headers, "Authorization: Bearer <token>");`,
+  ...(request ? [`    headers = curl_slist_append(headers, "Content-Type: application/json");`] : []),
+  `    curl_easy_setopt(curl, CURLOPT_URL, "${endpointUrl}");`,
+  `    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);`,
+  `    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "${M}");`,
+  ...(request ? [`    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, R"(${bodyStr})");`] : []),
+  `    curl_easy_perform(curl);`,
+  `    curl_easy_cleanup(curl);`,
+  `    return 0;`,
+  `}`,
+].join("\n");
+const goExample = [
+  `package main`,
+  ``,
+  `import (`,
+  `    "bytes"`,
+  `    "io"`,
+  `    "fmt"`,
+  `    "net/http"`,
+  `)`,
+  ``,
+  `func main() {`,
+  ...(request ? [`    body := []byte(${goStr(bodyStr)})`, `    req, _ := http.NewRequest("${M}", "${endpointUrl}", bytes.NewBuffer(body))`] : [`    req, _ := http.NewRequest("${M}", "${endpointUrl}", nil)`]),
+  `    req.Header.Set("Authorization", "Bearer <token>")`,
+  ...(request ? [`    req.Header.Set("Content-Type", "application/json")`] : []),
+  `    resp, _ := http.DefaultClient.Do(req)`,
+  `    defer resp.Body.Close()`,
+  `    data, _ := io.ReadAll(resp.Body)`,
+  `    fmt.Println(string(data))`,
+  `}`,
+].join("\n");
+const th = { light: "github-light", dark: "github-dark" } as const;
+const [pyHtml, pyAsyncHtml, nodeHtml, javaHtml, rustHtml, cppHtml, goHtml] = await Promise.all([
+  codeToHtml(pyExample, { lang: "python", themes: th, defaultColor: false }),
+  codeToHtml(pyAsyncExample, { lang: "python", themes: th, defaultColor: false }),
+  codeToHtml(nodeExample, { lang: "javascript", themes: th, defaultColor: false }),
+  codeToHtml(javaExample, { lang: "java", themes: th, defaultColor: false }),
+  codeToHtml(rustExample, { lang: "rust", themes: th, defaultColor: false }),
+  codeToHtml(cppExample, { lang: "cpp", themes: th, defaultColor: false }),
+  codeToHtml(goExample, { lang: "go", themes: th, defaultColor: false }),
+]);
 const responseExamples = responses.map(([status, response]) => {
   const contentType = Object.keys(response.content ?? {})[0];
   const body = contentType ? response.content[contentType] : undefined;
@@ -171,14 +408,21 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
 >
   <div class="api-operation-heading">
     <Badge className={`api-method api-method-${method.toLowerCase()}`}>{method.toUpperCase()}</Badge>
-    <code>{endpointUrl}</code>
+    <code class="api-endpoint-url" data-path={path}>{endpointUrl}</code>
     <ApiEndpointCopy text={endpointUrl} label={copyEndpointLabel} copiedLabel={copiedEndpointLabel} />
+    <div class="api-host-switch" role="group" aria-label="Server" data-prod-host={prodUrl} data-test-host={testUrl} data-active={defaultEnv}>
+      <button type="button" class="api-host-opt" data-host="prod" title={prodUrl}>{envLabels.prod}</button>
+      <button type="button" class="api-host-opt" data-host="test" title={testUrl}>{envLabels.test}</button>
+    </div>
   </div>
+  {datasetNote && <p class="api-operation-note">{datasetNote}</p>}
   {postFallbackNote && <p class="api-operation-note">{postFallbackNote}</p>}
 
   <div class="api-reference-grid">
     <div class="api-reference-fields">
-      <section><h2 id="authorization">Authorization</h2><div class="api-schema-fields"><div class="api-schema-field"><div class="api-schema-field-meta"><code>Authorization</code><Badge variant="secondary">string</Badge><Badge variant="outline">header</Badge>{permissionKeys.map((permissionKey: string) => <Badge variant="outline" className="api-scope-badge" data-scope-tooltip={permLabels.scopeTooltip(permissionKey)}><LucideIcon name="key-round" class="size-3" /><code>{permissionKey}</code></Badge>)}{isLbOnly && <Badge variant="outline" className="api-scope-badge api-scope-badge-lbonly" data-scope-tooltip={permLabels.lbonly}><LucideIcon name="lock" class="size-3" />{permLabels.lbonlyBadge}</Badge>}<Badge variant="destructive">{labels.required}</Badge></div><p>{locale === "en" ? "Send the Broker ACCESS_TOKEN as Authorization: Bearer <token>." : "Broker 获发的 ACCESS_TOKEN，通过 Authorization: Bearer <token> 发送。"}</p>{permissionKeys.length === 0 && !isLbOnly && <p class="api-permission-note">{permLabels.none}</p>}</div></div></section>
+      <section><h2 id="authorization">Authorization</h2><div class="api-schema-fields"><div class="api-schema-field"><div class="api-schema-field-meta"><code>Authorization</code><Badge variant="secondary">string</Badge><Badge variant="outline">header</Badge><Badge variant="destructive">{labels.required}</Badge></div><p>{locale === "en" ? "Send the Broker ACCESS_TOKEN as Authorization: Bearer <token>." : "Broker 获发的 ACCESS_TOKEN，通过 Authorization: Bearer <token> 发送。"}</p></div></div></section>
+
+      <section><h2 id="permission">{permLabels.title}</h2><div class="api-schema-fields"><div class="api-schema-field">{(permissionKeys.length > 0 || isLbOnly) && <div class="api-schema-field-meta">{permissionKeys.map((permissionKey: string) => <code>{permissionKey}</code>)}{isLbOnly && <Badge variant="outline" className="api-scope-badge api-scope-badge-lbonly" data-scope-tooltip={permLabels.lbonly}><LucideIcon name="lock" class="size-3" />{permLabels.lbonlyBadge}</Badge>}</div>}{permissionKeys.length > 0 && <p>{permLabels.requiredDesc}</p>}{permissionKeys.length === 0 && !isLbOnly && <p class="api-permission-note">{permLabels.none}</p>}{permissionKeys.length === 0 && isLbOnly && <p class="api-permission-note">{permLabels.lbonly}</p>}</div></div></section>
 
       {parameters.length > 0 && <section><h2 id="parameters">{labels.parameters}</h2><div class="api-fields">{parameters.map((parameter: any) => {
         const schema = resolveSchema(document, parameter.schema);
@@ -199,8 +443,19 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
         examples={[
           { id: "curl", label: "cURL", code: curlExample, html: curlHtml },
           { id: "fetch", label: "Fetch", code: fetchExample, html: fetchHtml },
+          { id: "python", label: "Python", code: pyExample, html: pyHtml },
+          { id: "python-async", label: "Python (async)", code: pyAsyncExample, html: pyAsyncHtml },
+          { id: "node", label: "Node.js", code: nodeExample, html: nodeHtml },
+          { id: "java", label: "Java", code: javaExample, html: javaHtml },
+          { id: "rust", label: "Rust", code: rustExample, html: rustHtml },
+          { id: "cpp", label: "C++", code: cppExample, html: cppHtml },
+          { id: "go", label: "Go", code: goExample, html: goHtml },
         ]}
         responses={highlightedResponses}
+        baseHost={baseUrl}
+        prodHost={prodUrl}
+        testHost={testUrl}
+        defaultEnv={defaultEnv}
       />
     </aside>
   </div>
@@ -227,4 +482,38 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
 
   initScopeTooltips();
   document.addEventListener("astro:page-load", initScopeTooltips);
+
+  // Host switcher: toggles the endpoint URL (heading + copy) between Production and
+  // Test, and broadcasts the choice so the code-example panel swaps its host too.
+  function initHostSwitch() {
+    document.querySelectorAll<HTMLElement>(".api-host-switch").forEach((sw) => {
+      if (sw.dataset.bound === "true") return;
+      sw.dataset.bound = "true";
+      const prod = sw.dataset.prodHost ?? "";
+      const test = sw.dataset.testHost ?? "";
+      const heading = sw.closest(".api-operation-heading");
+      const codeEl = heading?.querySelector<HTMLElement>(".api-endpoint-url");
+      const copyEl = heading?.querySelector<HTMLElement>("api-endpoint-copy");
+      const path = codeEl?.dataset.path ?? "";
+      const apply = (env: string) => {
+        const host = env === "test" ? test : prod;
+        sw.dataset.active = env;
+        sw.querySelectorAll<HTMLButtonElement>(".api-host-opt").forEach((b) =>
+          b.setAttribute("aria-pressed", b.dataset.host === env ? "true" : "false"),
+        );
+        if (codeEl) codeEl.textContent = `${host}${path}`;
+        if (copyEl) copyEl.dataset.text = `${host}${path}`;
+        window.dispatchEvent(new CustomEvent("api-host-change", { detail: { host, env, prod, test } }));
+        try { localStorage.setItem("api-host-env", env); } catch {}
+      };
+      sw.querySelectorAll<HTMLButtonElement>(".api-host-opt").forEach((b) =>
+        b.addEventListener("click", () => apply(b.dataset.host ?? "prod")),
+      );
+      let init = sw.dataset.active ?? "prod";
+      try { const saved = localStorage.getItem("api-host-env"); if (saved) init = saved; } catch {}
+      apply(init);
+    });
+  }
+  initHostSwitch();
+  document.addEventListener("astro:page-load", initHostSwitch);
 </script>
