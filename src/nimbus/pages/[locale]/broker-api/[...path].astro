@@ -130,7 +130,13 @@ function sanitizeExample(val: any, name = ""): any {
   if (val === "string" || val === "<string>") return leafValue(name, "string");
   if (Array.isArray(val)) return val.map((v) => sanitizeExample(v, name));
   if (val && typeof val === "object") {
-    if (Object.keys(val).length === 0) return leafValue(name, "string");
+    if (Object.keys(val).length === 0) {
+      // A baked empty object on a container-like field means "no filters / empty" —
+      // keep it as {} instead of guessing a scalar (which yielded "filters": "string").
+      return /^(filters?|ext|extra|params?|order_?by|options?|config|meta|payload|down_fields|tags?|labels?)$/i.test(name)
+        ? {}
+        : leafValue(name, "string");
+    }
     return Object.fromEntries(Object.entries(val).map(([key, v]) => [key, sanitizeExample(v, key)]));
   }
   return val;
