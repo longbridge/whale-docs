@@ -304,7 +304,7 @@ export function permissionLabels(locale: string) {
         title: "Permission",
         requiredDesc: "The Broker ACCESS_TOKEN must be granted the permission above, or the call will be rejected.",
         none: "No dedicated permission key. Any authenticated Broker ACCESS_TOKEN with access to this scope can call it.",
-        lbonly: "Longbridge-internal only — not granted to external brokers.",
+        lbonly: "The permission above is Longbridge-internal only; external brokers cannot be granted it, so this call is rejected for external Broker ACCESS_TOKENs.",
         lbonlyBadge: "LB only",
         scopeTooltip: (key: string) =>
           `Calling this API requires the <code>${key}</code> permission. Your Broker ACCESS_TOKEN must be granted this permission, or the call will be rejected.`,
@@ -314,7 +314,7 @@ export function permissionLabels(locale: string) {
           title: "权限",
           requiredDesc: "Broker ACCESS_TOKEN 需被授予上述权限，否则调用将被拒绝。",
           none: "无专属权限 Key。具备该 scope 访问权限的已鉴权 Broker ACCESS_TOKEN 即可调用。",
-          lbonly: "仅长桥内部可用，不对外部券商授权。",
+          lbonly: "上述权限为长桥内部专用，外部券商无法获得授权，因此外部 Broker ACCESS_TOKEN 调用将被拒绝。",
           lbonlyBadge: "内部专用",
           scopeTooltip: (key: string) =>
             `调用此接口需要 <code>${key}</code> 权限，Broker ACCESS_TOKEN 未被授予该权限时将无法调用。`,
@@ -323,7 +323,7 @@ export function permissionLabels(locale: string) {
           title: "權限",
           requiredDesc: "Broker ACCESS_TOKEN 需被授予上述權限，否則呼叫將被拒絕。",
           none: "無專屬權限 Key。具備該 scope 存取權限的已鑑權 Broker ACCESS_TOKEN 即可呼叫。",
-          lbonly: "僅長橋內部可用，不對外部券商授權。",
+          lbonly: "上述權限為長橋內部專用，外部券商無法獲得授權，因此外部 Broker ACCESS_TOKEN 呼叫將被拒絕。",
           lbonlyBadge: "內部專用",
           scopeTooltip: (key: string) =>
             `呼叫此介面需要 <code>${key}</code> 權限，Broker ACCESS_TOKEN 未被授予該權限時將無法呼叫。`,
