@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react"
-import { CheckIcon, ChevronDownIcon, CopyIcon } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { CheckIcon, ChevronDownIcon, CopyIcon, EyeIcon, EyeOffIcon, KeyRoundIcon } from "lucide-react"
 
 import { Button } from "@components/components/ui/button"
+import { Input } from "@components/components/ui/input"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@components/components/ui/collapsible"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@components/components/ui/tabs"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@components/components/ui/tooltip"
@@ -19,6 +20,29 @@ type CodeExample = {
   label: string
   code: string
   html: string
+}
+
+type TokenLabels = {
+  button: string
+  set: string
+  title: string
+  placeholder: string
+  save: string
+  clear: string
+  show: string
+  hide: string
+  hint: string
+}
+
+const TOKEN_PLACEHOLDER = "<token>"
+const TOKEN_PLACEHOLDER_HTML = "&lt;token&gt;"
+
+function maskToken(token: string): string {
+  return token.length > 18 ? `${token.slice(0, 8)}…${token.slice(-6)}` : token
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 }
 
 type ResponseExample = {
@@ -50,6 +74,73 @@ type Props = {
   prodHost?: string
   testHost?: string
   defaultEnv?: string
+  /** Localized strings for the Bearer-token control. When omitted the control is hidden. */
+  tokenLabels?: TokenLabels
+}
+
+function TokenControl({ token, setToken, labels }: { token: string; setToken: (t: string) => void; labels: TokenLabels }) {
+  const [open, setOpen] = useState(false)
+  const [reveal, setReveal] = useState(false)
+  const [draft, setDraft] = useState(token)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => setDraft(token), [token])
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false)
+    }
+    document.addEventListener("mousedown", onDoc)
+    return () => document.removeEventListener("mousedown", onDoc)
+  }, [open])
+  return (
+    <div ref={ref} className="relative">
+      <Button
+        type="button"
+        variant="ghost"
+        size="xs"
+        className="gap-1 font-mono text-muted-foreground"
+        onClick={() => setOpen((value) => !value)}
+        title={labels.button}
+      >
+        <KeyRoundIcon className="size-3" />
+        {token ? maskToken(token) : labels.set}
+      </Button>
+      {open ? (
+        <div className="absolute right-0 top-full z-50 mt-1 w-72 rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-md">
+          <div className="mb-1.5 text-xs font-medium">{labels.title}</div>
+          <div className="flex items-center gap-1">
+            <Input
+              type={reveal ? "text" : "password"}
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder={labels.placeholder}
+              className="h-7 font-mono text-xs"
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              aria-label={reveal ? labels.hide : labels.show}
+              onClick={() => setReveal((value) => !value)}
+            >
+              {reveal ? <EyeOffIcon className="size-3.5" /> : <EyeIcon className="size-3.5" />}
+            </Button>
+          </div>
+          <p className="mt-1.5 text-[0.6875rem] leading-tight text-muted-foreground">{labels.hint}</p>
+          <div className="mt-2 flex justify-end gap-1.5">
+            <Button type="button" variant="ghost" size="xs" onClick={() => { setToken(""); setDraft(""); setOpen(false) }}>
+              {labels.clear}
+            </Button>
+            <Button type="button" size="xs" onClick={() => { setToken(draft.trim()); setOpen(false) }}>
+              {labels.save}
+            </Button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
 }
 
 function CodeCard({
@@ -58,12 +149,18 @@ function CodeCard({
   copyLabel,
   selectedId,
   setSelectedId,
+  token,
+  setToken,
+  tokenLabels,
 }: {
   title: string
   examples: CodeExample[]
   copyLabel: string
   selectedId: CodeExample["id"]
   setSelectedId: (id: CodeExample["id"]) => void
+  token: string
+  setToken: (t: string) => void
+  tokenLabels?: TokenLabels
 }) {
   const [copied, setCopied] = useState(false)
   const selected = examples.find((example) => example.id === selectedId) ?? examples[0]
@@ -83,6 +180,7 @@ function CodeCard({
         <FrameHeader className="min-h-8 flex-row items-center justify-between gap-3">
           <FrameTitle>{title}</FrameTitle>
           <div className="flex items-center gap-1">
+            {tokenLabels ? <TokenControl token={token} setToken={setToken} labels={tokenLabels} /> : null}
             {examples.length > 1 ? (
               <DropdownMenu>
                 <DropdownMenuTrigger
@@ -203,9 +301,10 @@ function ResponseCard({ title, responses, copyLabel }: { title: string; response
   )
 }
 
-export function ApiCodeExample({ requestTitle, responseTitle, examples, responses, responsesById, copyLabel, baseHost, prodHost, testHost, defaultEnv }: Props) {
+export function ApiCodeExample({ requestTitle, responseTitle, examples, responses, responsesById, copyLabel, baseHost, prodHost, testHost, defaultEnv, tokenLabels }: Props) {
   const [selectedId, setSelectedId] = useState<CodeExample["id"]>(examples[0]?.id ?? "")
   const [host, setHost] = useState<string>(baseHost ?? "")
+  const [token, setTokenState] = useState("")
   useEffect(() => {
     if (!baseHost || !prodHost || !testHost) return
     const resolve = () => {
@@ -224,8 +323,32 @@ export function ApiCodeExample({ requestTitle, responseTitle, examples, response
     window.addEventListener("api-host-change", onChange)
     return () => window.removeEventListener("api-host-change", onChange)
   }, [baseHost, prodHost, testHost, defaultEnv])
-  const swap = (value: string) => (baseHost && host && host !== baseHost ? value.split(baseHost).join(host) : value)
-  const shownExamples = baseHost ? examples.map((example) => ({ ...example, code: swap(example.code), html: swap(example.html) })) : examples
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("api-bearer-token")
+      if (saved) setTokenState(saved)
+    } catch {}
+    const onChange = (event: Event) => {
+      const detail = (event as CustomEvent).detail
+      if (typeof detail?.token === "string") setTokenState(detail.token)
+    }
+    window.addEventListener("api-token-change", onChange)
+    return () => window.removeEventListener("api-token-change", onChange)
+  }, [])
+  const setToken = (value: string) => {
+    setTokenState(value)
+    try {
+      if (value) localStorage.setItem("api-bearer-token", value)
+      else localStorage.removeItem("api-bearer-token")
+    } catch {}
+    window.dispatchEvent(new CustomEvent("api-token-change", { detail: { token: value } }))
+  }
+  const swapHost = (value: string) => (baseHost && host && host !== baseHost ? value.split(baseHost).join(host) : value)
+  const trimmed = token.trim()
+  // Displayed code (html) shows the masked token; copied code (code) carries the full token.
+  const swapCode = (value: string) => (trimmed ? swapHost(value).split(TOKEN_PLACEHOLDER).join(trimmed) : swapHost(value))
+  const swapHtml = (value: string) => (trimmed ? swapHost(value).split(TOKEN_PLACEHOLDER_HTML).join(escapeHtml(maskToken(trimmed))) : swapHost(value))
+  const shownExamples = examples.map((example) => ({ ...example, code: swapCode(example.code), html: swapHtml(example.html) }))
   const shown = responsesById?.[selectedId] ?? responses
 
   return (
@@ -237,6 +360,9 @@ export function ApiCodeExample({ requestTitle, responseTitle, examples, response
           copyLabel={copyLabel}
           selectedId={selectedId}
           setSelectedId={setSelectedId}
+          token={token}
+          setToken={setToken}
+          tokenLabels={tokenLabels}
         />
         <ResponseCard key={selectedId} title={responseTitle} responses={shown} copyLabel={copyLabel} />
       </div>
