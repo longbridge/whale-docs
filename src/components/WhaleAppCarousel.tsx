@@ -13,6 +13,7 @@ import {
 interface Props {
   marketLabel?: string;
   watchlistLabel?: string;
+  stockLabel?: string;
   assetsLabel?: string;
   newsLabel?: string;
   ariaLabel?: string;
@@ -23,6 +24,7 @@ interface Props {
 export default function WhaleAppCarousel({
   marketLabel = "Market",
   watchlistLabel = "Watchlist",
+  stockLabel = "Stock",
   assetsLabel = "Assets",
   newsLabel = "News",
   ariaLabel = "WhaleAppSDK screen examples",
@@ -30,10 +32,11 @@ export default function WhaleAppCarousel({
   nextLabel = "Next screen",
 }: Props) {
   const screens = [
-    { label: marketLabel, src: "/images/whalesdk/screenshot-market.png" },
-    { label: watchlistLabel, src: "/images/whalesdk/screenshot-watchlist.png" },
-    { label: assetsLabel, src: "/images/whalesdk/screenshot-assets.png" },
-    { label: newsLabel, src: "/images/whalesdk/screenshot-news.png" },
+    { label: watchlistLabel, src: "/images/whaleappsdk/screenshot-watchlist.png" },
+    { label: marketLabel, src: "/images/whaleappsdk/screenshot-market.png" },
+    { label: stockLabel, src: "/images/whaleappsdk/screenshot-stock.png" },
+    { label: assetsLabel, src: "/images/whaleappsdk/screenshot-assets.png" },
+    { label: newsLabel, src: "/images/whaleappsdk/screenshot-news.png" },
   ];
   const [api, setApi] = React.useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
@@ -67,10 +70,10 @@ export default function WhaleAppCarousel({
                   <img
                     src={screen.src}
                     alt={`${screen.label} — WhaleAppSDK`}
-                    width={1170}
-                    height={2532}
+                    width={1242}
+                    height={2688}
                     loading={index === 0 ? "eager" : "lazy"}
-                    className="block aspect-[1170/2532] w-full object-cover object-top"
+                    className="block aspect-[1242/2688] w-full object-cover object-top"
                   />
                 </CarouselItem>
               ))}
