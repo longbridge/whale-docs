@@ -24,7 +24,7 @@ export function getStaticPaths() {
 const { locale, method, path, sourceFile, operation, document } = Astro.props as OperationRecord;
 const localePath = locale.toLowerCase();
 const title = operation.summary || operation.operationId || `${method.toUpperCase()} ${path}`;
-const descriptionHtml = renderMarkdown(operation.description);
+const descriptionHtml = renderMarkdown(operation.description, locale);
 const sidebar = await getWhaleSidebar(Astro.url.pathname);
 const currentSlug = Astro.url.pathname.replace(/\/$/, "");
 const prevNext = await getPrevNext(currentSlug, { sidebarTree: sidebar });
@@ -129,10 +129,25 @@ function leafValue(name: string, type: string): any {
   if (/(status|state|_type$|^type$|kind|category|mode|biz_code|biz_type|account_type|business_type|direction|_val$|(^|_)code$|ca_code)/.test(n)) return v("1", 1);
   return num ? 0 : "string";
 }
+// Recursively replace placeholder leaves ("string"/"<string>"/empty {}) inside a
+// hand-authored example object with realistic name-based values, so a baked example
+// whose leaves are all "string" still renders as data.
+function sanitizeExample(val: any, name = ""): any {
+  if (val === "string" || val === "<string>") return leafValue(name, "string");
+  if (Array.isArray(val)) return val.map((v) => sanitizeExample(v, name));
+  if (val && typeof val === "object") {
+    if (Object.keys(val).length === 0) return leafValue(name, "string");
+    return Object.fromEntries(Object.entries(val).map(([key, v]) => [key, sanitizeExample(v, key)]));
+  }
+  return val;
+}
 function schemaExample(schema: any, name = ""): any {
   const resolved = resolveSchema(document, schema) ?? schema;
   // Ignore junk placeholder examples ("string"/"<string>") so a realistic value is generated.
-  if (resolved?.example !== undefined && resolved.example !== "string" && resolved.example !== "<string>") return resolved.example;
+  // A non-empty example object is kept but its placeholder leaves are sanitized to data.
+  const ex = resolved?.example;
+  const emptyObj = ex && typeof ex === "object" && !Array.isArray(ex) && Object.keys(ex).length === 0;
+  if (ex !== undefined && ex !== "string" && ex !== "<string>" && !emptyObj) return sanitizeExample(ex, name);
   if (resolved?.enum?.length) return resolved.enum[0];
   if (resolved?.type === "object" || resolved?.properties) {
     const properties = resolved.properties ?? {};
@@ -152,7 +167,7 @@ function schemaExample(schema: any, name = ""): any {
   if (resolved?.type === "array") return [schemaExample(resolved.items ?? {}, name)];
   return leafValue(name, resolved?.type ?? "string");
 }
-const requestValue = example ?? schemaExample(requestSchema);
+const requestValue = example !== undefined ? sanitizeExample(example) : schemaExample(requestSchema);
 const queryEntries = hasPostFallback && requestValue && typeof requestValue === "object"
   ? Object.entries(requestValue)
   : [];
@@ -380,7 +395,7 @@ const responseExamples = responses.map(([status, response]) => {
   return { status, contentType, response, body, example: body?.example ?? body?.examples?.default?.value };
 });
 const highlightedResponses = await Promise.all(responseExamples.filter(({ body }) => body).map(async ({ status, contentType, body, example: responseExample }) => {
-  const value = responseExample ?? schemaExample(body.schema);
+  const value = responseExample !== undefined ? sanitizeExample(responseExample) : schemaExample(body.schema);
   const code = JSON.stringify(value, null, 2);
   return {
     status,
@@ -426,7 +441,7 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
 
       {parameters.length > 0 && <section><h2 id="parameters">{labels.parameters}</h2><div class="api-fields">{parameters.map((parameter: any) => {
         const schema = resolveSchema(document, parameter.schema);
-        return <div class="api-field"><div class="api-field-title"><code>{parameter.name}</code><Badge variant="secondary">{schema?.type ?? "string"}</Badge>{parameter.required && <Badge variant="destructive">{labels.required}</Badge>}</div>{parameter.description && <div class="api-field-description" set:html={renderMarkdown(parameter.description)} />}</div>;
+        return <div class="api-field"><div class="api-field-title"><code>{parameter.name}</code><Badge variant="secondary">{schema?.type ?? "string"}</Badge>{parameter.required && <Badge variant="destructive">{labels.required}</Badge>}</div>{parameter.description && <div class="api-field-description" set:html={renderMarkdown(parameter.description, locale)} />}</div>;
       })}</div></section>}
 
       {request && <section><h2 id={hasPostFallback ? "query-parameters" : "request-body"}>{labels.request} {!hasPostFallback && <small>{requestType}</small>}</h2><ApiSchemaFields schema={requestSchema} document={document} locale={locale} childrenOpen={false} /></section>}
