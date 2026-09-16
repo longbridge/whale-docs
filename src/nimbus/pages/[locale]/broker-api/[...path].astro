@@ -72,6 +72,12 @@ const datasetNote = "";
 const postFallbackNote = "";
 const copyEndpointLabel = locale === "en" ? "Copy endpoint" : locale === "zh-CN" ? "复制接口地址" : "複製介面位址";
 const copiedEndpointLabel = locale === "en" ? "Endpoint copied" : locale === "zh-CN" ? "接口地址已复制" : "介面位址已複製";
+// Container-like fields (data envelope, filter/param objects, list wrappers). When
+// such a field has no declared shape, render {} rather than guessing a scalar —
+// avoids "data": "string" / "filters": "string".
+function isContainerName(name: string): boolean {
+  return /^(data|filters?|ext|extra|params?|order_?by|options?|config|meta|payload|down_fields|tags?|labels?|list|rows|items|result|results|records|detail|details|content|body)$/i.test(String(name || ""));
+}
 // Realistic, non-PII example value chosen from the field name + type. Identifiers
 // use obviously-fake synthetic values (never real account/member data).
 function leafValue(name: string, type: string): any {
@@ -133,9 +139,7 @@ function sanitizeExample(val: any, name = ""): any {
     if (Object.keys(val).length === 0) {
       // A baked empty object on a container-like field means "no filters / empty" —
       // keep it as {} instead of guessing a scalar (which yielded "filters": "string").
-      return /^(filters?|ext|extra|params?|order_?by|options?|config|meta|payload|down_fields|tags?|labels?)$/i.test(name)
-        ? {}
-        : leafValue(name, "string");
+      return isContainerName(name) ? {} : leafValue(name, "string");
     }
     return Object.fromEntries(Object.entries(val).map(([key, v]) => [key, sanitizeExample(v, key)]));
   }
@@ -159,8 +163,9 @@ function schemaExample(schema: any, name = ""): any {
       };
     }
     if (Object.keys(properties).length === 0) {
-      // object with no declared shape — fall back to a name-based scalar guess
-      return leafValue(name, "string");
+      // object with no declared shape — {} for container-like fields (data, filters,
+      // list…), otherwise a name-based scalar guess.
+      return isContainerName(name) ? {} : leafValue(name, "string");
     }
     return Object.fromEntries(Object.entries(properties).map(([key, value]) => [key, schemaExample(value, key)]));
   }
