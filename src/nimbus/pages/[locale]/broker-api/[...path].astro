@@ -57,31 +57,19 @@ const servers = (document.servers ?? []) as { url: string; description?: string 
 const prodUrl = servers.find((s) => /lbkrs\.com/.test(s.url))?.url ?? servers[0]?.url ?? "https://b-api.lbkrs.com";
 const testUrl = servers.find((s) => /longbridge\.xyz/.test(s.url))?.url ?? "https://b-api.longbridge.xyz";
 const isDatasetPath = path.startsWith("/v1/datasets/");
-// Dataset endpoints are deployed on Test only (prod 404s); everything else is canonically Production.
-const baseUrl = isDatasetPath ? testUrl : prodUrl;
+// All operations, datasets included, are canonically served from Production; the host
+// switcher still exposes Test. (Verified: dataset queries respond 200 on Production.)
+const baseUrl = prodUrl;
 const endpointUrl = `${baseUrl}${path}`;
-const defaultEnv = isDatasetPath ? "test" : "prod";
+const defaultEnv = "prod";
 const envLabels =
   locale === "en"
     ? { prod: "Production", test: "Test" }
     : locale === "zh-CN"
       ? { prod: "生产", test: "测试" }
       : { prod: "生產", test: "測試" };
-// Only datasets get a note (they are Test-only); other ops use the host switcher.
-const datasetNote = !isDatasetPath
-  ? ""
-  : locale === "en"
-    ? "Dataset endpoints are available on the Test host only; the Production host returns 404."
-    : locale === "zh-CN"
-      ? "Dataset 接口仅在测试环境提供，生产环境返回 404。"
-      : "Dataset 介面僅在測試環境提供，生產環境返回 404。";
-const postFallbackNote = hasPostFallback
-  ? locale === "en"
-    ? "This Dataset query is read-only. Use GET by default. If the encoded query parameters are too large, send the same parameters as a JSON body with POST to the same path."
-    : locale === "zh-CN"
-      ? "此 Dataset 查询为只读接口，默认使用 GET。如果编码后的查询参数过大，可改用 POST，并将相同参数以 JSON 请求体发送到同一路径。"
-      : "此 Dataset 查詢為唯讀介面，預設使用 GET。如果編碼後的查詢參數過大，可改用 POST，並將相同參數以 JSON 請求內容傳送至同一路徑。"
-  : "";
+const datasetNote = "";
+const postFallbackNote = "";
 const copyEndpointLabel = locale === "en" ? "Copy endpoint" : locale === "zh-CN" ? "复制接口地址" : "複製介面位址";
 const copiedEndpointLabel = locale === "en" ? "Endpoint copied" : locale === "zh-CN" ? "接口地址已复制" : "介面位址已複製";
 // Realistic, non-PII example value chosen from the field name + type. Identifiers
@@ -437,7 +425,7 @@ const highlightedResponses = await Promise.all(responseExamples.filter(({ body }
     <div class="api-reference-fields">
       <section><h2 id="authorization">Authorization</h2><div class="api-schema-fields"><div class="api-schema-field"><div class="api-schema-field-meta"><code>Authorization</code><Badge variant="secondary">string</Badge><Badge variant="outline">header</Badge><Badge variant="destructive">{labels.required}</Badge></div><p>{locale === "en" ? "Send the Broker ACCESS_TOKEN as Authorization: Bearer <token>." : "Broker 获发的 ACCESS_TOKEN，通过 Authorization: Bearer <token> 发送。"}</p></div></div></section>
 
-      <section><h2 id="permission">{permLabels.title}</h2><div class="api-schema-fields"><div class="api-schema-field">{(permissionKeys.length > 0 || isLbOnly) && <div class="api-schema-field-meta">{permissionKeys.map((permissionKey: string) => <code>{permissionKey}</code>)}{isLbOnly && <Badge variant="outline" className="api-scope-badge api-scope-badge-lbonly" data-scope-tooltip={permLabels.lbonly}><LucideIcon name="lock" class="size-3" />{permLabels.lbonlyBadge}</Badge>}</div>}{permissionKeys.length > 0 && <p>{permLabels.requiredDesc}</p>}{permissionKeys.length === 0 && !isLbOnly && <p class="api-permission-note">{permLabels.none}</p>}{permissionKeys.length === 0 && isLbOnly && <p class="api-permission-note">{permLabels.lbonly}</p>}</div></div></section>
+      {(permissionKeys.length > 0 || isLbOnly) && <section><h2 id="permission">{permLabels.title}</h2><div class="api-schema-fields"><div class="api-schema-field"><div class="api-permission-keys">{permissionKeys.map((permissionKey: string) => <code class="api-permission-key">{permissionKey}</code>)}{isLbOnly && <Badge variant="outline" className="api-scope-badge api-scope-badge-lbonly" data-scope-tooltip={permLabels.lbonly}><LucideIcon name="lock" class="size-3" />{permLabels.lbonlyBadge}</Badge>}</div>{permissionKeys.length > 0 && <p>{permLabels.requiredDesc}</p>}{permissionKeys.length === 0 && isLbOnly && <p class="api-permission-note">{permLabels.lbonly}</p>}</div></div></section>}
 
       {parameters.length > 0 && <section><h2 id="parameters">{labels.parameters}</h2><div class="api-fields">{parameters.map((parameter: any) => {
         const schema = resolveSchema(document, parameter.schema);
