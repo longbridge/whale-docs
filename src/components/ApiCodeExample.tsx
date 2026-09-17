@@ -106,7 +106,7 @@ function TokenControl({ token, setToken, labels }: { token: string; setToken: (t
         {token ? maskToken(token) : labels.set}
       </Button>
       {open ? (
-        <div className="absolute right-0 top-full z-50 mt-1 w-72 rounded-lg border border-border bg-popover p-3 text-popover-foreground shadow-md">
+        <div className="absolute right-0 top-full z-50 mt-1 w-72 rounded-xl bg-card p-3 text-foreground shadow-lg ring-1 ring-border">
           <div className="mb-1.5 text-xs font-medium">{labels.title}</div>
           <div className="flex items-center gap-1">
             <Input
