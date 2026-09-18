@@ -1,21 +1,38 @@
 ---
 title: Overview
-description: Shared integration flow for WhaleAppSDK on iOS and Android
+description: WhaleAppSDK's product capabilities, customization boundary, and collaboration model
 ---
 
-WhaleAppSDK for iOS and Android provides a complete graphical securities experience. Broker App integrates the SDK, supplies the Client session, connects operating-system capabilities, and manages the App and SDK lifecycle.
+WhaleAppSDK embeds a securities experience in Broker App that is ready to launch — market-data, asset, trading, watchlist, and news pages work out of the box. Broker still keeps its own account system and app shell, and only needs to handle sign-in handoff and lifecycle management.
 
-```mermaid
-flowchart LR
-    A[Client signs in to Broker App] --> B[Broker Server obtains Whale credentials]
-    B --> C[Broker App initializes WhaleAppSDK]
-    C --> D[WhaleAppSDK validates credentials and loads the account]
-    D --> E[Broker App opens a WhaleAppSDK page]
-    E --> F[Client uses market-data and trading UI]
-    F --> G{Logout or unrecoverable session failure?}
-    G -- No --> F
-    G -- Yes --> H[Destroy WhaleAppSDK and clear the session]
-```
+## Included modules {/* included-modules */}
+
+| Module | Typical capabilities |
+| --- | --- |
+| Markets | Overview, search, quotes, charts, order book, and instrument details |
+| Assets | Real-time total-asset and P&L calculations, multi-currency conversion, historical P&L, and more |
+| Trading | HK and US orders, order status, positions, assets, and transaction history |
+| Watchlists | Groups, symbol synchronization, and instrument navigation |
+| News | Market and instrument news, discovery, and optional community experiences |
+
+## Example screens {/* example-screens */}
+
+<WhaleAppShowcase
+  watchlistLabel="Watchlist"
+  marketLabel="Market"
+  stockLabel="Stock"
+  assetsLabel="Assets"
+  newsLabel="News"
+  ariaLabel="WhaleAppSDK example screens"
+  previousLabel="Previous screen"
+  nextLabel="Next screen"
+/>
+
+Screens are representative. Available modules and appearance depend on project configuration and SDK version.
+
+## Customization boundary {/* customization-boundary */}
+
+Project-level customization includes icons, colors, skins, light/dark/system themes, English/Simplified Chinese/Traditional Chinese, price-color conventions, custom fonts, and notification delivery. Some options require a project build rather than runtime configuration; the exact scope follows the delivery checklist confirmed with the Whale project team.
 
 ## Responsibility boundary {/* responsibility-boundary */}
 
@@ -28,98 +45,59 @@ flowchart LR
 | Display and routing for recognized messages | System-notification permission, device tokens, and non-Whale messages |
 | Lifecycle and error callbacks | Monitoring errors and handling reauthentication or fallback behavior |
 
-## Before integration {/* before-integration */}
+<Note>
+In this document, **Broker App** refers to the Broker iOS or Android App that integrates WhaleAppSDK.
+</Note>
 
-Obtain the SDK package and environment-matched configuration from the Whale project team:
+## Push channel choice {/* push-channel-choice */}
 
-- `appKey`, `appSecret`, and `appId`.
-- Default account channel and Web-domain prefix.
-- The Server-to-Server flow used to obtain the Client's initial `token` and `refreshToken`.
-- UAT and production environments and allowed App identifiers.
-- Push key, secret, and cloud-channel configuration when Whale-managed push is enabled.
+WhaleAppSDK supports two message-push integration schemes. Broker picks one scheme for both platforms (iOS and Android cannot use different schemes):
 
-Never mix UAT and production configuration. Do not place credentials in public repositories, example logs, or screenshots.
+| Scheme | Best for | Broker needs to prepare |
+| --- | --- | --- |
+| Scheme 1: WhaleAppSDK's built-in push channel | Lowest integration cost; no server-side push work | Push-channel credentials per platform (iOS: an APNs certificate; Android: the appId/secret for each vendor push channel needed) |
+| Scheme 2: Broker's own push channel | Broker already has its own push infrastructure and wants to control whether a message is delivered | A server-side endpoint that receives messages, provided to the Whale project team for configuration |
 
-## Shared lifecycle {/* shared-lifecycle */}
+See [iOS message push](/en/whalesdk/whaleapp/ios#message-push) and [Android message push](/en/whalesdk/whaleapp/android#configure-push) for how to integrate each scheme.
 
-1. **Install the SDK:** integrate the delivered version and resolve build dependencies.
-2. **Initialize the process:** call the platform initialization entry point at the documented App lifecycle location.
-3. **Sign in the Client:** after Broker sign-in, obtain the Whale session from Broker Server.
-4. **Start the SDK:** provide identity, App name, theme, language, and project configuration.
+## Startup flow {/* startup-flow */}
 
-   ```mermaid
-   sequenceDiagram
-       participant A as Broker App
-       participant B as WhaleAppSDK
-       participant C as Broker Server
-       participant D as Whale Server
+Before starting WhaleAppSDK, Broker App exchanges for a Whale user credential with Broker Server, then calls the SDK's start method:
 
-       activate A
-       A->>C: Request a Whale member token
-       activate C
-       C->>D: POST /v1/whaleapi/auth/open_id/login
-       activate D
-       D-->>C: member token/refreshToken
-       deactivate D
-       C-->>A: member token/refreshToken
-       deactivate C
+```mermaid
+sequenceDiagram
+    participant A as Broker App
+    participant B as WhaleAppSDK
+    participant C as Broker Server
+    participant D as Whale Server
 
-       A->>B: startWithConfig(config)
-       activate B
-       B->>D: Validate token
-       activate D
-       D-->>B: Valid/invalid
-       deactivate D
-       B-->>A: Start succeeds/fails
-       deactivate B
-       deactivate A
-   ```
+    activate A
+    A->>C: Request a Whale member token
+    activate C
+    C->>D: POST /v1/whaleapi/auth/open_id/login
+    activate D
+    D-->>C: member token/refreshToken
+    deactivate D
+    C-->>A: member token/refreshToken
+    deactivate C
 
-5. **Wait until ready:** call page routes and state-dependent APIs only after the success callback.
-6. **Handle changes:** respond to unrecoverable authentication failure, theme and language changes, external URLs, and notifications.
-7. **Destroy the SDK:** on logout, account switch, or unrecoverable failure, destroy the SDK before clearing the Broker App session.
+    A->>B: startWithConfig(config)
+    activate B
+    B->>D: Validate token
+    activate D
+    D-->>B: Valid/invalid
+    deactivate D
+    B-->>A: Start succeeds/fails
+    deactivate B
+    deactivate A
+```
 
-## Configuration model {/* configuration-model */}
+## Platforms {/* platforms */}
 
-| Configuration | Purpose |
-| --- | --- |
-| Multilingual App name | Name displayed inside WhaleAppSDK |
-| `appKey` / `appSecret` / `appId` | Identify the project and environment |
-| `token` / `refreshToken` | Current Client's Whale session |
-| Default account channel | Select the project's default account channel |
-| Web-domain prefix | Broker-domain configuration used by Web content in the SDK |
-| Theme | Follow system, light, or dark |
-| Language | English, Simplified Chinese, or Traditional Chinese |
-| Price color | Follow SDK setting, red-up/green-down, or green-up/red-down |
-| Advanced configuration | Fonts, colors, device identifier, and project-specific options |
+| Platform | Positioning | Guide |
+| --- | --- | --- |
+| iOS | Native SDK package embedded in Broker's iOS App | [iOS](/en/whalesdk/whaleapp/ios) |
+| Android | Native SDK package embedded in Broker's Android App | [Android](/en/whalesdk/whaleapp/android) |
+| WebTrade | Deployed on a standalone domain, or embedded via iframe on Broker's website; supports PWA installation | [WebTrade](/en/whalesdk/whaleapp/web) |
 
-## Callback handling {/* callback-handling */}
-
-| Event | Handling |
-| --- | --- |
-| Start succeeds | End the loading state and enable WhaleAppSDK entry points |
-| Start fails | Log a sanitized error; fix configuration errors or require a new sign-in for authentication errors |
-| Runtime error | Destroy the SDK and reestablish the Client session after unrecoverable authentication failure |
-| Token renews | WhaleAppSDK manages validity and subsequent renewal; Broker App does not call check-token or refresh-token APIs |
-| Token cannot renew | Destroy the SDK session and return Broker App to its logged-out state |
-| SDK requests a URL | Validate schemes, domains, and route allowlists before handing the URL to Broker App routing |
-| SDK is about to be destroyed | Persist only necessary non-sensitive state and close related UI |
-| First SDK page opens / last page closes | Update Broker App navigation or chrome when the optional UI lifecycle callback is needed |
-
-<Warning>
-Never log `appSecret`, complete tokens, refresh tokens, or Client-sensitive data. Never execute an external URL without validating it.
-</Warning>
-
-## Message push {/* message-push */}
-
-Both platforms support Whale-managed and Broker-managed push. See [Message-push integration](/en/docs/message-push) for server-channel selection, cloud-service setup, and the standard message shape. Platform methods are documented in [iOS integration](/en/whalesdk/whaleapp/ios) and [Android integration](/en/whalesdk/whaleapp/android).
-
-## Acceptance checklist {/* acceptance-checklist */}
-
-- Cold start, warm start, and repeated entry into SDK pages work correctly.
-- No state-dependent API is called before SDK startup succeeds.
-- Automatic token renewal requires no Broker App intervention; unrecoverable failure, remote login, and Client switching have explicit handling.
-- Theme, language, price color, and Broker App routing meet product requirements.
-- Foreground, background, cold-start, and notification-click paths are tested.
-- Logout releases SDK pages, network activity, and sensitive session state.
-- UAT and production use separate packages, configuration, and push channels.
+See the [FAQ](/en/whalesdk/whaleapp/faq) for technical FAQs and reference performance data.

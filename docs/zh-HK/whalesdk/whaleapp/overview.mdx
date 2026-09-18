@@ -1,21 +1,38 @@
 ---
 title: Overview
-description: Broker App 整合 iOS 或 Android WhaleAppSDK 的共同流程
+description: WhaleAppSDK 的產品能力、客製邊界與合作模式
 ---
 
-WhaleAppSDK for iOS 和 WhaleAppSDK for Android 向 Broker App 提供完整的證券業務圖形介面。Broker App 不需要重新實現行情、資產和交易頁面，主要負責整合 SDK、傳入客戶會話、承接系統能力及管理 App 生命週期。
+WhaleAppSDK 為 Broker App 內嵌一套可直接上線的證券業務體驗——行情、資產、交易、自選和資訊頁面開箱即用。Broker 仍然保留自己的帳戶體系和 App 外殼，只需要負責登入銜接和生命週期管理。
 
-```mermaid
-flowchart LR
-    A[客戶登入 Broker App] --> B[Broker 服務端獲取 Whale 使用者憑證]
-    B --> C[Broker App 初始化 WhaleAppSDK]
-    C --> D[WhaleAppSDK 校驗憑證並載入帳戶]
-    D --> E[Broker App 開啟 WhaleAppSDK 頁面]
-    E --> F[客戶使用行情與交易介面]
-    F --> G{退出或會話失效?}
-    G -- 否 --> F
-    G -- 是 --> H[銷燬 WhaleAppSDK 並清理會話]
-```
+## 產品模組 {/* included-modules */}
+
+| 模組 | 典型能力 |
+| --- | --- |
+| 行情 | 市場概覽、搜尋、報價、圖表、盤口和標的詳情 |
+| 資產 | 即時計算總資產、盈虧等數據，多幣種折算，歷史盈虧等等 |
+| 交易 | 港美股下單、訂單狀態、持倉、資產和成交記錄 |
+| 自選 | 自選分組、標的同步和詳情導覽 |
+| 資訊 | 市場與個股資訊、內容發現和可選社群體驗 |
+
+## 頁面範例 {/* example-screens */}
+
+<WhaleAppShowcase
+  watchlistLabel="自選"
+  marketLabel="行情"
+  stockLabel="個股"
+  assetsLabel="資產"
+  newsLabel="資訊"
+  ariaLabel="WhaleAppSDK 頁面範例"
+  previousLabel="上一頁"
+  nextLabel="下一頁"
+/>
+
+截圖僅供參考，最終可用模組和視覺效果取決於專案配置與 SDK 版本。
+
+## 客製邊界 {/* customization-boundary */}
+
+專案級可客製：圖示、顏色、外觀、淺色/深色/跟隨系統主題、英文/簡體中文/繁體中文、漲跌顏色模式、自訂字型和訊息推送方式。部分能力需要專案建置而非執行階段配置，具體範圍以 Whale 專案團隊確認的交付清單為準。
 
 ## 責任邊界 {/* responsibility-boundary */}
 
@@ -32,101 +49,55 @@ flowchart LR
 文件中的 **Broker App** 指整合 WhaleAppSDK 的 Broker iOS 或 Android App。
 </Note>
 
-## 接入前準備 {/* before-integration */}
+## 訊息推送方案選擇 {/* push-channel-choice */}
 
-從 Whale 專案團隊獲取與目標環境匹配的 SDK 交付包和配置：
+WhaleAppSDK 支援兩種訊息推送整合方案，需要 Broker 統一選定一種（iOS 與 Android 保持一致，不支援兩端各選一種）：
 
-- `appKey`、`appSecret`、`appId`。
-- 預設帳戶渠道和 Web 域名字首等 Broker 配置。
-- 客戶的 `token` 和 `refreshToken` 獲取方式。
-- UAT、生產環境及允許的 App 標識。
-- 如啟用 Whale 託管推送，對應平臺的推送 key、secret 和雲渠道配置。
+| 方案 | 適合 | Broker 需要準備 |
+| --- | --- | --- |
+| 方案一:使用 WhaleAppSDK 內建推送通道 | 希望整合成本最低，不想自建推送服務端 | 提供各平臺推送渠道憑證（iOS：APNs 憑證；Android：所需廠商推送渠道的 appId/secret） |
+| 方案二:使用 Broker 自己的推送通道 | 已有自建推送體系，希望自行決定訊息是否推送給客戶 | 自行開發接收訊息的服務端介面，並提供給 Whale 專案團隊完成配置 |
 
-測試與生產配置不得混用。任何憑證都不應出現在公開倉庫、示例日誌或截圖中。
+兩種方案的具體整合方法見 [iOS 訊息推送](/zh-hk/whalesdk/whaleapp/ios#message-push) 和 [Android 訊息推送](/zh-hk/whalesdk/whaleapp/android#configure-push)。
 
-## 通用生命週期 {/* shared-lifecycle */}
+## 啟動流程 {/* startup-flow */}
 
-1. **安裝 SDK**：將專案團隊交付的版本整合到 Broker App，並解決依賴及構建配置。
-2. **程序初始化**：在平臺規定的應用生命週期位置完成 SDK 基礎初始化。
-3. **客戶登入**：Broker 完成自身登入後，從服務端取得 Whale 會話憑證。
-4. **啟動 SDK**：傳入身份、App 名稱、主題、語言和 Broker 配置。
+Broker App 啟動 WhaleAppSDK 前，需要先從 Broker 服務端換取 Whale 使用者憑證，再呼叫 SDK 的啟動方法：
 
-   ```mermaid
-   sequenceDiagram
-       participant A as Broker App
-       participant B as WhaleAppSDK
-       participant C as Broker 服務端
-       participant D as Whale 服務端
+```mermaid
+sequenceDiagram
+    participant A as Broker App
+    participant B as WhaleAppSDK
+    participant C as Broker 服務端
+    participant D as Whale 服務端
 
-       activate A
-       A->>C: 獲取 Whale member token
-       activate C
-       C->>D: POST /v1/whaleapi/auth/open_id/login
-       activate D
-       D-->>C: member token/refreshToken
-       deactivate D
-       C-->>A: member token/refreshToken
-       deactivate C
+    activate A
+    A->>C: 獲取 Whale member token
+    activate C
+    C->>D: POST /v1/whaleapi/auth/open_id/login
+    activate D
+    D-->>C: member token/refreshToken
+    deactivate D
+    C-->>A: member token/refreshToken
+    deactivate C
 
-       A->>B: startWithConfig(config)
-       activate B
-       B->>D: 驗證 token 合法性
-       activate D
-       D-->>B: 合法/非法
-       deactivate D
-       B-->>A: 啟動成功或失敗
-       deactivate B
-       deactivate A
-   ```
+    A->>B: startWithConfig(config)
+    activate B
+    B->>D: 驗證 token 合法性
+    activate D
+    D-->>B: 合法/非法
+    deactivate D
+    B-->>A: 啟動成功或失敗
+    deactivate B
+    deactivate A
+```
 
-5. **等待就緒**：只有收到啟動成功回調後，才能呼叫頁面路由或依賴 SDK 狀態的能力。
-6. **處理狀態變化**：響應不可恢復的 token 失效、主題和語言變化、外部 URL 以及訊息通知。
-7. **退出與銷燬**：客戶登出、切換賬號或鑑權失效時銷燬 SDK，再清理 Broker App 會話。
+## 平臺 {/* platforms */}
 
-## 配置模型 {/* configuration-model */}
+| 平臺 | 定位 | 指南 |
+| --- | --- | --- |
+| iOS | 嵌入 Broker iOS App 的原生 SDK 包 | [iOS](/zh-hk/whalesdk/whaleapp/ios) |
+| Android | 嵌入 Broker Android App 的原生 SDK 包 | [Android](/zh-hk/whalesdk/whaleapp/android) |
+| WebTrade | 獨立網域部署，或以 iframe 嵌入 Broker 官網，支援 PWA 安裝 | [WebTrade](/zh-hk/whalesdk/whaleapp/web) |
 
-兩端名稱略有差異，但核心配置一致：
-
-| 配置 | 用途 |
-| --- | --- |
-| App 多語言名稱 | SDK 介面內展示 Broker App 名稱 |
-| `appKey` / `appSecret` / `appId` | 標識專案與環境 |
-| `token` / `refreshToken` | 當前客戶的 Whale 會話 |
-| 預設帳戶渠道 | 指定專案配置的預設帳戶渠道 |
-| Web 域名字首 | SDK 內 Web 內容使用的 Broker 域名配置 |
-| 主題 | 跟隨系統、淺色或深色 |
-| 語言 | 英文、簡體中文或繁體中文 |
-| 漲跌色 | 跟隨 SDK 設定、紅漲綠跌或綠漲紅跌 |
-| 高階配置 | 字型、顏色、裝置標識等專案級定製 |
-
-## 回調處理 {/* callback-handling */}
-
-Broker App 至少需要處理以下事件：
-
-| 事件 | 建議處理 |
-| --- | --- |
-| SDK 啟動成功 | 關閉載入狀態並開放 WhaleAppSDK 頁面入口 |
-| SDK 啟動失敗 | 記錄脫敏錯誤；配置錯誤由開發修復，鑑權錯誤引導重新登入 |
-| SDK 執行時錯誤 | 對鑑權失效銷燬 SDK 並重新建立客戶會話 |
-| token 自動續期 | 由 WhaleAppSDK 內部管理；Broker App 不自行呼叫 check token 或 refresh token 介面 |
-| token 無法續期 | 銷燬 WhaleAppSDK 會話，並將 Broker App 退回登出狀態後重新登入 |
-| SDK 請求開啟 URL | 先進行 scheme、域名和路由允許列表校驗，再交給 Broker App 路由 |
-| SDK 即將銷燬 | 儲存必要狀態並關閉相關頁面 |
-
-<Warning>
-日誌不得輸出 `appSecret`、完整 token、refresh token 或客戶敏感資料。外部 URL 不能未經校驗直接執行。
-</Warning>
-
-## 訊息推送 {/* message-push */}
-
-移動端均支援 Whale 託管推送和 Broker 自有推送兩種路徑。服務端渠道選擇、雲服務開通及訊息格式見 [訊息推送接入](/zh-hk/docs/message-push)；平臺方法見 [iOS 接入](/zh-hk/whalesdk/whaleapp/ios) 和 [Android 接入](/zh-hk/whalesdk/whaleapp/android)。
-
-## 驗收清單 {/* acceptance-checklist */}
-
-- 冷啟動、熱啟動和重複進入 WhaleAppSDK 頁面均正常。
-- 啟動完成前不會呼叫依賴 SDK 就緒狀態的 API。
-- WhaleAppSDK 自動續期無需 Broker App 介入；不可恢復的 token 失效、異地登入和客戶切換均有明確處理。
-- 主題、語言、漲跌色和 Broker App 導航行為符合產品要求。
-- 前臺、後臺、冷啟動和通知點擊路徑均已驗證。
-- 登出後 SDK 頁面、網路活動和敏感狀態已被釋放。
-- UAT 與生產使用各自的包、配置和推送渠道。
+技術 FAQ 與參考效能數據見 [FAQ](/zh-hk/whalesdk/whaleapp/faq)。
