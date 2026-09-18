@@ -138,7 +138,10 @@ export const GET: APIRoute = ({ props }) => {
   ]
     .filter(Boolean)
     .join("\n\n");
-  return new Response(markdown, {
+  // Prepend a UTF-8 BOM: the prerendered static .md files are served as
+  // `text/markdown` without a charset by most static hosts, so browsers would
+  // guess (GBK for CJK) and mojibake. The BOM forces UTF-8 detection everywhere.
+  return new Response((`\uFEFF` + markdown), {
     headers: { "Content-Type": "text/markdown; charset=utf-8" },
   });
 };
