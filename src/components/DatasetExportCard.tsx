@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { CheckIcon, CopyIcon, DownloadIcon, KeyRoundIcon, LockIcon } from "lucide-react"
+import { CheckIcon, CopyIcon, DownloadIcon, LockIcon } from "lucide-react"
 
 import { Badge } from "@components/components/ui/badge"
 import { Button } from "@components/components/ui/button"
@@ -72,12 +72,9 @@ export function DatasetExportCard({
           </div>
 
           {(permissions.length > 0 || lbOnly) && (
-            <div className="mt-2 flex flex-wrap items-center gap-2">
+            <div className="api-permission-keys mt-2">
               {permissions.map(({ key, tooltip }) => (
-                <Badge key={key} variant="outline" className="api-scope-badge" title={tooltip}>
-                  <KeyRoundIcon className="size-3" />
-                  <code>{key}</code>
-                </Badge>
+                <code key={key} className="api-permission-key" title={tooltip}>{key}</code>
               ))}
               {lbOnly && (
                 <Badge variant="outline" className="api-scope-badge api-scope-badge-lbonly" title={lbOnly.tooltip}>
