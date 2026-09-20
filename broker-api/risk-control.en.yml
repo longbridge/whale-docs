@@ -23,9 +23,24 @@ paths:
         - credit_limit.credit_clients_add
       x-lbonly: false
       description: |-
-        Manually creates a credit-customer record for a specified securities account and sets its credit line.
+        Manually creates a credit-customer record for a given securities account and sets its credit limit.
 
-        This is a write operation that directly applies a real change to the account's credit line.
+        ### Request parameters
+
+        - Required: `aaid` (securities account), `credit_limit` (credit limit)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        After the call, the account becomes a credit customer and the credit limit takes effect immediately.
+
+        ### Risk warning
+
+        This operation directly changes a real credit limit. Confirm the target securities account and the limit amount before calling.
+
+        ### Result
+
+        On success the credit customer is created; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -110,9 +125,24 @@ paths:
         - lb_hk_credit_limit.client_credit_limit_apply
       x-lbonly: false
       description: |-
-        Submits a customer credit-line adjustment application from the admin side, which enters the review workflow.
+        Submits a customer credit-limit adjustment request from the back office, entering the review workflow.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `aaid` (securities account), `member_id` (user ID), `credit_currency` (credit currency), `before_credit_amount` (limit before adjustment), `after_credit_amount` (limit after adjustment), `applicant`
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        This endpoint only submits the request; the limit does not change immediately and takes effect only after the review is approved.
+
+        ### Risk warning
+
+        Once approved, the change alters a real credit limit. Confirm the before/after amounts, currency, and applicant before calling.
+
+        ### Result
+
+        On success a pending credit-limit adjustment request is created; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -197,16 +227,24 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Delete Canceled Account Credit.
+        Deletes customer credit-limit records that are in the canceled state.
 
         ### Request parameters
 
-        - Required: `aaid_list` (A/C No. List), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `aaid_list` (list of securities accounts), `audit_frontend_resource` (caller audit context)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        Only credit-limit records already in the canceled state can be deleted; multiple accounts can be deleted in one call.
+
+        ### Risk warning
+
+        This operation deletes real credit-limit records and cannot be undone. Confirm the list of securities accounts before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the specified canceled credit-limit records are deleted; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -301,9 +339,23 @@ paths:
         - lb_hk_credit_limit.client_credit_limit_approve
       x-lbonly: false
       description: |-
-        Submits a review ticket for a customer credit-line adjustment application from the admin side, either approving or rejecting it.
+        Submits a review ticket for a customer credit-limit adjustment request, approving or rejecting it.
 
-        This is a write operation.
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field definitions below for the request fields.
+
+        ### Business notes
+
+        Processes the approval of a submitted limit-adjustment request. The adjustment takes effect only after approval; a rejection voids the request.
+
+        ### Risk warning
+
+        Approval triggers a real credit-limit change. Confirm the target request and the review decision before calling.
+
+        ### Result
+
+        On success the review is processed and the request state advances; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       responses:
@@ -342,7 +394,17 @@ paths:
       tags:
         - Risk Control Compliance
       x-lbonly: false
-      description: Queries the FPS (Faster Payment System) risk-control rule configurations that the specified securities account has matched.
+      description: |-
+        Returns the FPS (Faster Payment System) risk-control rule configurations that a given securities account has hit.
+
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field definitions for optional ones.
+        - Pass `aaid` to filter the hit FPS rules by that securities account.
+
+        ### Returns
+
+        On success, returns the list of FPS risk-control rule configurations the account has hit. See the response definition for field meanings.
       security:
         - bearerAuth: []
       parameters:
@@ -404,17 +466,21 @@ paths:
         - lb_hk_credit_limit.client_fps_manage
       x-lbonly: false
       description: |-
-        Save FPS Configs.
+        Saves a set of customer FPS (Faster Payment System) hit-rule configurations.
 
         ### Request parameters
 
-        - Required: `fps_config_records` (FPS Config Records)
-        - Optional: `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `fps_config_records` (list of FPS rule configurations)
+        - Optional: `audit_frontend_resource` (caller audit context)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        Saves customer FPS hit-configuration entries in bulk, defining how the related risk-control rules are handled when hit.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the submitted FPS configurations are saved; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -528,7 +594,21 @@ paths:
       description: |-
         Creates a new credit group and submits it for review.
 
-        This is a write operation.
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field definitions below for the request fields.
+
+        ### Business notes
+
+        The create-group request enters the review workflow; the credit group takes effect only after approval.
+
+        ### Risk warning
+
+        Once approved, it affects credit management for the associated accounts. Confirm the credit-group configuration before calling.
+
+        ### Result
+
+        On success a pending create-credit-group request is generated; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       responses:
@@ -568,9 +648,24 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Edits a credit group's limit configuration and submits it for review.
+        Edits the credit-limit configuration of a given credit group and submits it for review.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `group_id` (credit group ID)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        Changes to a credit group's limit configuration require review; the new configuration takes effect only after approval.
+
+        ### Risk warning
+
+        Approval changes a real credit-group limit and affects the credit available to accounts in the group. Confirm the group ID and limit configuration before calling.
+
+        ### Result
+
+        On success a pending credit-group limit modification request is generated; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -628,9 +723,24 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Adjusts the credit limit of an account within a credit group and submits the change for review.
+        Adjusts the limit of a specific account within a credit group and submits it for review.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `group_id` (credit group ID), `aaid` (account), `account_credit` (limit after adjustment)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        Adjusts the allocated limit for a single account within the group; it takes effect only after approval.
+
+        ### Risk warning
+
+        Approval changes the account's real credit limit. Confirm the group ID, account, and new limit before calling.
+
+        ### Result
+
+        On success a pending in-group account limit adjustment request is generated; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -693,9 +803,25 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Adds member accounts to a credit group and submits the change for review.
+        Adds a batch of member accounts to a credit group and submits it for review.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `group_id` (credit group ID)
+        - Optional: `account_credits` (accounts to add and their limits), `audit_frontend_resource` (caller audit context)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        Adding accounts to a credit group requires review; accounts are brought under the group's credit management only after approval.
+
+        ### Risk warning
+
+        Approval changes the credit membership and limits of the affected accounts. Confirm the group ID and the list of accounts before calling.
+
+        ### Result
+
+        On success a pending add-accounts request is generated; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -766,9 +892,24 @@ paths:
         - lb_hk_credit_limit.credit_group
       x-lbonly: false
       description: |-
-        Removes a specified member account from a credit group.
+        Removes a member account from a given credit group.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `group_id` (credit group ID), `aaid` (securities account)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        Removes the account from the credit group; it is no longer managed under that group's limit.
+
+        ### Risk warning
+
+        This operation changes the account's credit membership and may affect its available credit. Confirm the group ID and securities account before calling.
+
+        ### Result
+
+        On success the account is removed from the credit group; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -825,17 +966,24 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Uploads a CSV or Excel file and submits bulk client credit-limit changes. This is a high-risk live
-        operation.
+        Submits an imported file to adjust customer credit limits in bulk.
 
         ### Request parameters
 
-        - Required: `s3_key` (File S3 Key), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `s3_key` (object-storage key of the file), `audit_frontend_resource` (caller audit context)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        Upload the CSV/Excel file to object storage first, then submit the batch credit-adjustment task with its `s3_key`; the back office processes the file entries in bulk.
+
+        ### Risk warning
+
+        This operation triggers real, wide-reaching bulk credit-limit changes. Confirm the file contents and `s3_key` before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the batch credit-adjustment task is submitted; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -926,21 +1074,25 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Creates or updates a client's trading-limit configuration. This changes live trading limits.
+        Creates or modifies a customer's trading-credit configuration.
 
         ### Request parameters
 
-        - Required: `aaid` (Account AAID), `trade_credit_type` (Trade Credit Type), `trade_credit_map` (Trade Credit Map), `expired_at` (Expired At), `action` (Action)
-        - Optional: `remark` (Remark), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `aaid` (customer funding account ID), `trade_credit_type` (credit type), `trade_credit_map` (per-currency limit map), `expired_at` (expiry time), `action` (operation type)
+        - Optional: `remark`, `audit_frontend_resource` (caller audit context)
+        - See the field definitions for each field's format, allowed values, and business meaning.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may affect live business data or asset state. Verify the target records, amounts, quantities, and operation type before calling it.
+        Depending on `action`, creates or modifies the account's trading credit. Limits are set per currency via the map and are bounded by the `expired_at` expiry time.
+
+        ### Risk warning
+
+        This operation changes a real trading credit. Verify the account, credit type, per-currency amounts, and expiry time before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the trading credit is created or modified; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -1099,7 +1251,17 @@ paths:
       x-permission-key:
         - margin_call.risk_debt_info
       x-lbonly: false
-      description: Queries the FX conversion (currency exchange) details for a specified user.
+      description: |-
+        Returns the currency-exchange details for a given user.
+
+        ### Request parameters
+
+        - Required: `aaid` (securities account)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Returns
+
+        On success, returns the user's currency-exchange details. See the response definition for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -1158,7 +1320,17 @@ paths:
       x-permission-key:
         - margin_call.risk_debt_info
       x-lbonly: false
-      description: Retrieves current exchange rates for multiple currencies in a single request.
+      description: |-
+        Retrieves the current exchange rates for the specified currencies in bulk.
+
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field definitions for optional ones.
+        - Pass `currencies` to return rates for the specified currencies.
+
+        ### Returns
+
+        On success, returns the current exchange rates for the requested currencies. See the response definition for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -1216,17 +1388,21 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Update Exchange Rule.
+        Edits the currency-exchange rules used for borrow-reminder scenarios.
 
         ### Request parameters
 
-        - Required: `main` (Main Currency Rule), `other` (Other Currency Rules), `is_display` (Is Display)
-        - Optional: `front_payload` (Front Payload), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `main` (main-currency exchange rule), `other` (other-currency exchange rule), `is_display` (whether the rule is shown/enabled)
+        - Optional: `front_payload` (caller-supplied change diff), `audit_frontend_resource` (caller audit context)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        Configures the exchange rules for the main and other currencies in the borrow-reminder scenario; `is_display` controls whether the rule is shown/enabled.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the exchange-rule configuration is saved; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -1368,17 +1544,25 @@ paths:
         - margin_call.risk_debt_info
       x-lbonly: false
       description: |-
-        Exchanges V2.
+        Manually performs currency exchange for a customer to repay borrowed funds.
 
         ### Request parameters
 
-        - Required: `aaid` (Account ID), `exchange_books` (Exchange Books), `exchange_books.from_currency` (From Currency), `exchange_books.to_currency` (To Currency)
-        - Optional: `exchange_books.from_amount` (From Amount), `exchange_books.to_amount` (To Amount)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `aaid` (account ID), `exchange_books` (list of exchange entries), `exchange_books.from_currency` (currency to convert from), `exchange_books.to_currency` (currency to convert to)
+        - Optional: `exchange_books.from_amount` (amount converted from), `exchange_books.to_amount` (amount converted to)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        Executes currency conversion entry by entry to repay the customer's borrowing; each entry specifies the from/to currencies and amounts.
+
+        ### Risk warning
+
+        This operation directly moves real funds through exchange and repayment and cannot be reversed. Verify the account, currencies, and amounts before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the manual exchange repayment is completed; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -1490,7 +1674,17 @@ paths:
       x-permission-key:
         - margin_call.risk_debt_history_info_query
       x-lbonly: false
-      description: Queries the history of push notifications related to FX conversion.
+      description: |-
+        Returns the history of exchange-related push notifications.
+
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field definitions for optional ones.
+        - Pass `aaid` to filter the push history by a given securities account.
+
+        ### Returns
+
+        On success, returns the exchange push-notification history. See the response definition for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -1544,7 +1738,16 @@ paths:
       tags:
         - Risk Control Compliance
       x-lbonly: false
-      description: Queries or sends the details of a risk-control message.
+      description: |-
+        Returns the details of a risk-control message.
+
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field definitions below for the request fields.
+
+        ### Returns
+
+        On success, returns the risk-control message details. See the response definition for field meanings.
       security:
         - bearerAuth: []
       responses:
@@ -1589,7 +1792,17 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.margin_call_detailed
       x-lbonly: false
-      description: Queries the order information for the user associated with a margin-call alert record.
+      description: |-
+        Returns the order information for the user associated with a margin-call alert record.
+
+        ### Request parameters
+
+        - Required: `risk_monitoring_log_id` (risk-alert record ID), `aaid` (securities account)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Returns
+
+        On success, returns the user's order information for the alert record. See the response definition for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -1680,7 +1893,17 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.margin_call_detailed
       x-lbonly: false
-      description: Queries the holding details for the user associated with a margin-call alert record.
+      description: |-
+        Returns the position details for the user associated with a margin-call alert record.
+
+        ### Request parameters
+
+        - Required: `risk_monitoring_log_id` (risk-alert record ID), `aaid` (securities account)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Returns
+
+        On success, returns the user's position details for the alert record. See the response definition for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -1794,7 +2017,17 @@ paths:
       tags:
         - Risk Control Compliance
       x-lbonly: false
-      description: Queries the fund base data for the user associated with a margin-call alert record.
+      description: |-
+        Returns the fund reference data for the user associated with a margin-call alert record.
+
+        ### Request parameters
+
+        - Required: `aaid` (securities account), `risk_monitoring_log_id` (risk-alert record ID)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Returns
+
+        On success, returns the user's fund reference data for the alert record. See the response definition for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -1856,7 +2089,17 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.margin_call_detailed
       x-lbonly: false
-      description: Queries a user's cash details.
+      description: |-
+        Returns the cash-book details for a given user.
+
+        ### Request parameters
+
+        - Required: `aaid` (securities account)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Returns
+
+        On success, returns the user's cash-book detail records. See the response definition for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -1926,7 +2169,17 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.margin_call_detailed
       x-lbonly: false
-      description: Queries the basic information of the user associated with a margin-call alert record.
+      description: |-
+        Returns the basic information for the user associated with a margin-call alert record.
+
+        ### Request parameters
+
+        - Required: `risk_monitoring_log_id` (risk-alert record ID), `aaid` (securities account)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Returns
+
+        On success, returns the user's basic information for the alert record. See the response definition for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -2039,7 +2292,17 @@ paths:
       tags:
         - Risk Control Compliance
       x-lbonly: false
-      description: Runs a pre-check on margin-call details and returns whether a rule was matched.
+      description: |-
+        Runs a pre-check on the margin-call detail and returns whether the given account is in a margin-call state.
+
+        ### Request parameters
+
+        - Required: `aaid` (securities account)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Returns
+
+        On success, returns the pre-check result indicating whether the account is in a margin call, which can be used to decide whether to load the full detail. See the response definition for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -2092,7 +2355,17 @@ paths:
       tags:
         - Risk Control Compliance
       x-lbonly: false
-      description: Queries the asset information of a specified user from the admin side.
+      description: |-
+        Queries a given user's asset information from the back office.
+
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field definitions for optional ones.
+        - Use `account_channel`, `member_id`, or `aaid` (securities account) to locate the target user.
+
+        ### Returns
+
+        On success, returns the user's asset information. See the response definition for field meanings.
       security:
         - bearerAuth: []
       parameters:
@@ -2150,7 +2423,18 @@ paths:
       tags:
         - Risk Control Compliance
       x-lbonly: false
-      description: Queries the message-push history associated with a margin-call alert record.
+      description: |-
+        Returns the message-push history for a margin-call alert record.
+
+        ### Request parameters
+
+        - Required: `risk_monitoring_log_id` (alert record ID)
+        - Optional: `limit`, `offset` (pagination)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Returns
+
+        On success, returns the message-push history for the alert record. See the response definition for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -2238,16 +2522,24 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Batch Push Message.
+        Pushes risk-control alert messages in bulk to a list of securities accounts.
 
         ### Request parameters
 
-        - Required: `aaid_list` (A/C No. List), `push_msg_type` (Push Msg Type), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `aaid_list` (list of securities accounts), `push_msg_type` (message type), `audit_frontend_resource` (caller audit context)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        Pushes a risk-control alert notification of the specified type to each securities account in the list.
+
+        ### Risk warning
+
+        This operation sends notifications to real customers in bulk and cannot be recalled. Confirm the account list and message type before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the bulk message push is completed; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -2356,22 +2648,25 @@ paths:
         - lb_hk_margin_call.margin_call_batch_forc
       x-lbonly: false
       description: |-
-        Force-liquidates the selected positions in bulk. This affects live positions and is a high-risk
-        operation.
+        Initiates forced liquidation of selected positions in bulk.
 
         ### Request parameters
 
-        - Required: `logid_list` (Log ID List), `op_user` (Op User), `is_intraday_credit` (Is Intraday Credit), `audit_frontend_resource` (Audit Context)
-        - Optional: `counter_id` (Counter ID)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `logid_list` (list of alert record IDs), `op_user` (operator), `is_intraday_credit` (whether intraday financing), `audit_frontend_resource` (caller audit context)
+        - Optional: `counter_id` (instrument code)
+        - See the field definitions for each field's format, allowed values, and business meaning.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may affect live business data or asset state. Verify the target records, amounts, quantities, and operation type before calling it.
+        Forcibly liquidates the positions tied to the alert records in bulk; pass `counter_id` to limit liquidation to a specific instrument.
+
+        ### Risk warning
+
+        This operation force-liquidates real customer positions in bulk, producing actual trades. It is extremely high-risk and irreversible. Carefully verify the alert records, instrument, and operator before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the bulk forced liquidation is submitted; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -2491,16 +2786,20 @@ paths:
         - wtt_margin_call.manage
       x-lbonly: false
       description: |-
-        Add Follow Record.
+        Adds a follow-up record to a risk-control alert record.
 
         ### Request parameters
 
-        - Required: `risk_monitoring_log_id` (Risk Monitoring Log ID), `content` (Content)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `risk_monitoring_log_id` (alert record ID), `content` (follow-up content)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        Appends follow-up content under the specified alert record to document the handling process.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the follow-up record is added; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -2588,17 +2887,21 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Update the status of a risk-control real-time alert record (e.g. mark as followed-up or handled).
+        Updates the handling status of a real-time risk-control alert record.
 
         ### Request parameters
 
-        - Required: `risk_monitoring_log_id` (Risk Monitoring Log ID), `status` (Status), `reason` (Reason)
-        - Optional: `comment` (Comment)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `risk_monitoring_log_id` (alert record ID), `status` (handling status), `reason` (handling reason)
+        - Optional: `comment`
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        Sets the alert record to the specified status (e.g., followed up, handled) and records the reason.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the alert record status is updated; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -2717,9 +3020,23 @@ paths:
         - margin_call.short_sell_stock_force_close
       x-lbonly: false
       description: |-
-        Initiates a forced liquidation of a short-sell position.
+        Initiates forced liquidation of a short-sell (securities-borrowing) position.
 
-        This is a write operation.
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field definitions below for the request fields.
+
+        ### Business notes
+
+        Force-closes (buys back) short-sell positions that have triggered a recall, covering the short exposure.
+
+        ### Risk warning
+
+        This operation force-liquidates a real short-sell position and produces actual trades. It is irreversible. Verify the target position and parameters before calling.
+
+        ### Result
+
+        On success the short-sell forced liquidation is submitted; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       responses:
@@ -2758,9 +3075,23 @@ paths:
         - margin_call.short_sell_msg
       x-lbonly: false
       description: |-
-        Confirms and sends the push message for a short-sell position liquidation.
+        Confirms and sends the push notification for short-sell position liquidation.
 
-        This is a write operation.
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field definitions below for the request fields.
+
+        ### Business notes
+
+        Sends the short-sell liquidation notification to the customer after the content is confirmed.
+
+        ### Risk warning
+
+        This operation sends a notification to a real customer and cannot be recalled. Confirm the message content and recipients before calling.
+
+        ### Result
+
+        On success the short-sell liquidation push notification is sent; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       responses:
@@ -2798,7 +3129,20 @@ paths:
       x-permission-key:
         - margin_call.short_sell_msg
       x-lbonly: false
-      description: Previews the content of the push message for a short-sell position liquidation.
+      description: |-
+        Previews the content of the short-sell position liquidation push notification.
+
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field definitions below for the request fields.
+
+        ### Business notes
+
+        Generates a preview of the short-sell liquidation notification before it is actually sent, so it can be confirmed first.
+
+        ### Returns
+
+        On success, returns the preview content of the short-sell liquidation push notification. See the response definition for field meanings.
       security:
         - bearerAuth: []
       responses:
@@ -2837,17 +3181,25 @@ paths:
         - margin_call.modify_short_sell_stock_holding_status
       x-lbonly: false
       description: |-
-        Pass parameters in the query string using `application/x-www-form-urlencoded`. This changes live
-        short-position status.
+        Modifies the status of a short-sell position for a given security.
 
         ### Request parameters
 
-        - Required: `counter_id` (Counter ID), `status` (Status), `remark` (Remark)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `counter_id` (security code), `status`, `remark`
+        - Parameters are passed as a query string (`Content-Type: application/x-www-form-urlencoded`).
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        Updates the handling status of the short-sell position for the given security code and records a remark.
+
+        ### Risk warning
+
+        This operation changes a real short-sell position status. Verify the security code and target status before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the short-sell position status is updated; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -2951,19 +3303,23 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Triggers overnight risk-monitoring calculations without request parameters. Poll the status endpoint for the result.
+        Triggers the overnight risk-monitoring computation.
 
         ### Request parameters
 
-        This endpoint does not accept business parameters.
+        - This endpoint takes no business parameters.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may affect live business data or asset state. Verify the target records, amounts, quantities, and operation type before calling it.
+        Starts a batch overnight risk-monitoring computation; poll the status endpoint separately for the result once the computation finishes.
+
+        ### Risk warning
+
+        This operation triggers a full risk recomputation that affects subsequent risk-control decisions. Do not trigger it repeatedly when unnecessary.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the overnight risk-monitoring computation is started; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       responses:
@@ -3030,7 +3386,17 @@ paths:
       tags:
         - Risk Control Compliance
       x-lbonly: false
-      description: Queries the margin-call details for the stock associated with an option covered-call recovery.
+      description: |-
+        Returns the margin-call detail for the stock underlying an option covered-call recall.
+
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field definitions for optional ones.
+        - Pass `aaid` to filter by a given securities account.
+
+        ### Returns
+
+        On success, returns the option-recall stock margin-call detail. See the response definition for field meanings.
       security:
         - bearerAuth: []
       parameters:
@@ -3098,17 +3464,21 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Update Option Stock MC Status.
+        Updates the handling status of an option-recall stock record.
 
         ### Request parameters
 
-        - Required: `record_id` (Record ID), `status` (Status)
-        - Optional: `comment` (Comment), `reason` (Reason), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `record_id` (record ID), `status`
+        - Optional: `comment`, `reason`, `audit_frontend_resource` (caller audit context)
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        Sets the specified option-recall stock record to the target status, optionally recording a reason and remark.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the option-recall stock record status is updated; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -3206,7 +3576,17 @@ paths:
       tags:
         - Risk Control Compliance
       x-lbonly: false
-      description: Queries the holding records for short-stock recovery.
+      description: |-
+        Returns the position records for short-stock recall.
+
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field definitions for optional ones.
+        - Pass `aaid` to filter by a given securities account.
+
+        ### Returns
+
+        On success, returns the short-stock recall position records. See the response definition for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -3272,7 +3652,17 @@ paths:
       tags:
         - Risk Control Compliance
       x-lbonly: false
-      description: Queries the details of in-progress orders for short-stock recovery.
+      description: |-
+        Returns the details of in-progress orders for short-stock recall.
+
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field definitions for optional ones.
+        - Pass `aaid` to filter by a given securities account.
+
+        ### Returns
+
+        On success, returns the in-progress order details for short-stock recall. See the response definition for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -3347,7 +3737,17 @@ paths:
         - lb_hk_margin_call.margin_call_query
         - us_margin_call.short_margin_call_query
       x-lbonly: false
-      description: Queries the message-push history for short-stock recovery.
+      description: |-
+        Query the notification push history for short-stock margin recalls.
+
+        ### Request parameters
+
+        - This endpoint has no required parameters; use `aaid` (account ID) to target a specific account.
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Returns
+
+        On success, returns the account's historical short-stock margin-recall push records. See the response definition for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -3395,7 +3795,17 @@ paths:
       tags:
         - Risk Control Compliance
       x-lbonly: false
-      description: Queries the details of a short-stock recovery.
+      description: |-
+        Query the short-stock margin-recall details for a given account.
+
+        ### Request parameters
+
+        - This endpoint has no required parameters; use `aaid` (account ID) to target a specific account.
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Returns
+
+        On success, returns the account's short-stock margin-recall details. See the response definition for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -3466,20 +3876,20 @@ paths:
         - lb_hk_margin_call.margin_call_cancel_order
       x-lbonly: false
       description: |-
-        Cancels an order from a risk-alert workflow. Multiple alert views share this endpoint.
+        Cancel an order in a risk-alert scenario (such as a Margin Call); several risk-alert views share this endpoint.
 
         ### Request parameters
 
-        - Required: `order_id` (Order ID)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `order_id` (order ID)
+        - See the field descriptions for the format, value range, and business meaning of each field.
 
-        ### Risk notice
+        ### Risk warning
 
-        > This operation may affect live business data or asset state. Verify the target records, amounts, quantities, and operation type before calling it.
+        This operation cancels a real order and may affect the customer's positions and the risk-control outcome. Confirm the target order before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the order is cancelled. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -3561,9 +3971,24 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Creates a stock margin-ratio adjustment task and submits it to the review workflow.
+        Create a stock margin-ratio adjustment task and submit it for review.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `counter_id` (security code), `im_factor` (initial margin ratio), `mm_factor` (maintenance margin ratio), `fm_factor` (forced-close margin ratio), `mcm_factor` (Margin Call ratio), `trigger_at` (effective date)
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        Once submitted, the task enters the review flow. After approval and once the `trigger_at` date is reached, the security's margin ratios are updated.
+
+        ### Risk warning
+
+        This operation changes real margin ratios and carries very high risk. Confirm the security code, each margin ratio, and the effective date before calling.
+
+        ### Result
+
+        On success, the margin-ratio adjustment task is created and enters review. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -3650,17 +4075,21 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Delete Stock Margin Ratio Review.
+        Delete a stock margin-ratio approval record.
 
         ### Request parameters
 
-        - Required: `counter_id` (Counter ID)
-        - Optional: `operator` (Operator), `source` (Source), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `counter_id` (counter / instrument ID)
+        - Optional: `operator` (operator), `source` (source), `audit_frontend_resource` (audit context)
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Risk warning
+
+        This operation deletes a margin approval record and cannot be undone. Confirm the target record before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the approval record is deleted. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -3767,21 +4196,20 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Pass the `batch_id` returned by the previous step and always use `file_type = 0`. This changes
-        live margin ratios and is a high-risk operation.
+        Submit an account-level stock margin-ratio adjustment for approval, carrying the `batch_id` returned by the preceding upload step (`file_type` is fixed to `0`).
 
         ### Request parameters
 
-        - Required: `batch_id` (Batch ID), `audit_frontend_resource` (Audit Context), `file_type` (File Type)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `batch_id` (batch ID), `file_type` (file type), `audit_frontend_resource` (audit context)
+        - See the field descriptions for the format, value range, and business meaning of each field.
 
-        ### Risk notice
+        ### Risk warning
 
-        > This operation may affect live business data or asset state. Verify the target records, amounts, quantities, and operation type before calling it.
+        This operation changes real margin ratios and carries very high risk. Confirm the batch contents before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the approval is submitted. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -3883,20 +4311,20 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Processes Trigger Stock Margin Sync Task.
+        Proactively trigger a margin-adjustment task to take effect immediately, without waiting for its scheduled effective time.
 
         ### Request parameters
 
-        - Required: `id` (Task ID), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (task ID), `audit_frontend_resource` (audit context)
+        - See the field descriptions for the format, value range, and business meaning of each field.
 
-        ### Risk notice
+        ### Risk warning
 
-        > This operation may change real cash balances, positions, or transaction state. Verify the target records and parameters before calling it.
+        This operation changes real margin ratios and carries very high risk. Confirm the target task before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the task takes effect immediately. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -3984,16 +4412,20 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Cancel Stock Margin Sync Task.
+        Cancel a margin-adjustment task that has not yet taken effect.
 
         ### Request parameters
 
-        - Required: `id` (Task ID), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (task ID), `audit_frontend_resource` (audit context)
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Risk warning
+
+        This operation cancels the margin-adjustment task, after which it will not take effect. Confirm the target task before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the task is cancelled. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -4081,22 +4513,20 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Triggers all pending margin-ratio tasks and is a high-risk bulk change. `ids` contains task IDs
-        returned by the `waitting_stock_margin_ratio_task_count` query; no paging or date filters are
-        submitted.
+        Batch-trigger all pending margin-adjustment tasks to take effect immediately. The list of pending task IDs comes from the pending-task query result; the endpoint semantics are to trigger all pending tasks.
 
         ### Request parameters
 
-        - Optional: `audit_frontend_resource` (Audit Context), `audit_frontend_resource.$behavior` (Behavior Description), `audit_frontend_resource.ids` (Task ID List)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Optional: `audit_frontend_resource` (audit context, including `$behavior` for the action description and `ids` for the task ID list)
+        - See the field descriptions for the format, value range, and business meaning of each field.
 
-        ### Risk notice
+        ### Risk warning
 
-        > This operation may affect live business data or asset state. Verify the target records, amounts, quantities, and operation type before calling it.
+        This operation changes real margin ratios in bulk and carries very high risk. Confirm the scope of pending tasks before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, all pending tasks are triggered to take effect. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -4195,21 +4625,21 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Submit Short Sell Margin Ratio Review.
+        Submit a short-sell stock margin-ratio adjustment for approval, carrying the batch number and file information returned by the upload step.
 
         ### Request parameters
 
-        - Required: `batch_id` (Batch ID), `file_infos` (Uploaded File Info List)
-        - Optional: `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `batch_id` (batch number), `file_infos` (list of uploaded file information)
+        - Optional: `audit_frontend_resource` (audit context)
+        - See the field descriptions for the format, value range, and business meaning of each field.
 
-        ### Risk notice
+        ### Risk warning
 
-        > This operation may change real cash balances, positions, or transaction state. Verify the target records and parameters before calling it.
+        This operation changes real short-sell margin ratios and carries very high risk. Confirm the batch contents before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the approval is submitted. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -4311,9 +4741,21 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Edits the margin ratio for short-sell (short) stocks and submits it to the review workflow.
+        Modify a short-sell stock's margin ratios and submit them for review.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `counter_id` (security code), `im_factor` (initial margin ratio), `mm_factor` (maintenance margin ratio), `fm_factor` (forced-close margin ratio), `mcm_factor` (Margin Call ratio)
+        - Optional: `short_sell_status` (short-sell status), `short_sellable` (whether short-selling is allowed), `short_selling_close_qty` (short-sell close quantity), `short_selling_open_qty` (short-sell open quantity), `audit_frontend_resource` (audit context)
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Risk warning
+
+        This operation changes real short-sell margin ratios and carries very high risk. Confirm the security code and each margin ratio before calling.
+
+        ### Result
+
+        On success, the modification is submitted for review. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -4398,11 +4840,11 @@ paths:
         - lb_hk_credit_limit.client_credit_limit_query
       x-lbonly: false
       description: |-
-        Queries Credit Line Limit Query data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query customer credit-line records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -4679,11 +5121,11 @@ paths:
         - lb_hk_credit_limit.account_credit_apply_query
       x-lbonly: false
       description: |-
-        Queries Credit Limit Request Record data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query credit-line application records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -4964,7 +5406,12 @@ paths:
       tags:
         - Risk Control Compliance
       x-lbonly: false
-      description: Query the Manual Credit Limit Review Ticket Preview list.
+      description: |-
+        Query manual credit-review work-order previews. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -5119,11 +5566,11 @@ paths:
         - lb_hk_credit_limit.credit_group_query
       x-lbonly: false
       description: |-
-        Queries Credit Group List data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query credit-group records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -5277,7 +5724,12 @@ paths:
       x-permission-key:
         - lb_hk_credit_limit.credit_group_query
       x-lbonly: false
-      description: Query the Credit Group Details list.
+      description: |-
+        Query credit-group details. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -5466,11 +5918,11 @@ paths:
         - lb_hk_credit_limit.credit_snapshot
       x-lbonly: false
       description: |-
-        Queries Credit Limit Changes Query data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query credit-line change records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -5763,11 +6215,11 @@ paths:
         - credit_management.reset_credit_task_batch_query
       x-lbonly: false
       description: |-
-        Queries Credit Limit Batch Change data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query credit-line batch adjustments. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -5943,7 +6395,12 @@ paths:
       x-permission-key:
         - credit_management.reset_credit_task_item_query
       x-lbonly: false
-      description: Query the Credit Limit Batch Change Details list.
+      description: |-
+        Query credit-line batch adjustment items. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -6144,11 +6601,11 @@ paths:
         - lb_hk_credit_limit.account_finance_used_query
       x-lbonly: false
       description: |-
-        Queries Used Margin Limit Query data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query used financing-quota records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -6348,11 +6805,11 @@ paths:
         - lb_hk_credit_limit.client_credit_limit_query
       x-lbonly: false
       description: |-
-        Queries Excess Margin Usage Report data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query over-limit financing-usage records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -6595,11 +7052,11 @@ paths:
         - credit_quota.trader_limit_list
       x-lbonly: false
       description: |-
-        Queries Trade Limit Query data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query customer trading-limit records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -6833,11 +7290,11 @@ paths:
         - credit_quota.invalidate_trader_audit_list
       x-lbonly: false
       description: |-
-        Queries Trade Limit Review data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query trading-limit review records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -7070,11 +7527,11 @@ paths:
         - margin_call.risk_debt_info
       x-lbonly: false
       description: |-
-        Queries FX Reminder Query data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query currency-exchange (FX) reminders. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -7287,7 +7744,12 @@ paths:
       x-permission-key:
         - margin_call.risk_debt_info
       x-lbonly: false
-      description: Query the Exchange Record.
+      description: |-
+        Query currency-exchange records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -7421,11 +7883,11 @@ paths:
         - margin_call.risk_debt_history_info_query
       x-lbonly: false
       description: |-
-        Queries FX Reminder History Record data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query currency-exchange reminder history. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -7627,11 +8089,11 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Queries Stock Borrow Reminder Snapshot data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query borrowing-reminder snapshots. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -7827,7 +8289,12 @@ paths:
       tags:
         - Risk Control Compliance
       x-lbonly: false
-      description: Query the Cash/balance Connect Details list.
+      description: |-
+        Query cash and Cash Plus (money-market fund) details. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -7946,11 +8413,11 @@ paths:
         - margin_call.auto_convert_query
       x-lbonly: false
       description: |-
-        Queries Auto Repayment Enablement Query data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query auto-repayment activation records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -8120,7 +8587,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.margin_call_query
       x-lbonly: false
-      description: Query the Risk Alert Record Summary.
+      description: |-
+        Query risk-alert record statistics. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -8300,11 +8772,11 @@ paths:
         - lb_hk_margin_call.margin_call_query
       x-lbonly: false
       description: |-
-        Queries Risk Alert Record data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query risk-alert records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -8787,7 +9259,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.margin_call_query
       x-lbonly: false
-      description: Query the History Close Position Record.
+      description: |-
+        Query historical forced-liquidation records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -8950,7 +9427,12 @@ paths:
       tags:
         - Risk Control Compliance
       x-lbonly: false
-      description: Query the Risk Follow - Up Record.
+      description: |-
+        Query risk follow-up records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -9061,7 +9543,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.risk_monitoring_alert_logs_abnormal_query
       x-lbonly: false
-      description: Query the Risk Alert Record Exception Ticket.
+      description: |-
+        Query abnormal risk-alert records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -9311,11 +9798,11 @@ paths:
         - lb_hk_margin_call.margin_call_query
       x-lbonly: false
       description: |-
-        Queries Intraday Margin Risk Alert Record data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query intraday-financing risk-alert records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -9712,11 +10199,11 @@ paths:
         - lb_hk_margin_call.margin_call_history_query
       x-lbonly: false
       description: |-
-        Queries Risk History Record - List data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query risk-alert history records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -10001,11 +10488,11 @@ paths:
         - lb_hk_margin_call.margin_call_history_query
       x-lbonly: false
       description: |-
-        Queries Margin Alert Record Snapshot data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query margin-alert record snapshots. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -10288,11 +10775,11 @@ paths:
         - margin_call.short_sell_stock_holding_summary
       x-lbonly: false
       description: |-
-        Queries Short Sell Position Overview data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query securities-lending (short-sell) position summaries. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -10475,7 +10962,12 @@ paths:
       x-permission-key:
         - margin_call.short_sell_stock_holding_detail
       x-lbonly: false
-      description: Query the Short Sell Position Details list.
+      description: |-
+        Query securities-lending (short-sell) position details. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -10591,11 +11083,11 @@ paths:
         - lb_hk_margin_call.margin_call_query
       x-lbonly: false
       description: |-
-        Queries Bad Credit Record data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query bad-debt (non-performing credit) records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data sources of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -10813,7 +11305,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.margin_call_query
       x-lbonly: false
-      description: Query the History Details list.
+      description: |-
+        Queries risk-alert history detail records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -10952,11 +11449,11 @@ paths:
         - margin_call.overnight_risk_monitoring
       x-lbonly: false
       description: |-
-        Queries Overnight Session Risk Monitoring data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries overnight (night-session) risk monitoring records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -11132,7 +11629,12 @@ paths:
       tags:
         - Risk Control Compliance
       x-lbonly: false
-      description: Query the Overnight Session Risk Report Calculation Status list.
+      description: |-
+        Queries overnight risk-report computation status records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -11228,11 +11730,11 @@ paths:
         - lb_hk_margin_call.opt_stock_margin_call_records_query
       x-lbonly: false
       description: |-
-        Queries Options Stock Collection Alert Record data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries option/stock margin-call (collection) alert records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -11465,7 +11967,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.opt_stock_margin_call_records_query
       x-lbonly: false
-      description: Query the Options Close Position Actions in List.
+      description: |-
+        Queries in-progress option force-close orders records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -11603,11 +12110,11 @@ paths:
         - lb_hk_margin_call.margin_call_query
       x-lbonly: false
       description: |-
-        Queries Short Stock Collection data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries short-position stock margin-call (collection) records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -11844,11 +12351,11 @@ paths:
         - lb_hk_margin_call.margin_call_batch_forcorder
       x-lbonly: false
       description: |-
-        Queries Batch and Auto Close Position Record data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries batch and automatic force-close records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -12135,11 +12642,11 @@ paths:
         - lb_hk_margin_ratio.margin_ratio_query
       x-lbonly: false
       description: |-
-        Queries Stock Margin Rate data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries instrument stock financing margin ratio records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -12339,7 +12846,12 @@ paths:
       tags:
         - Risk Control Compliance
       x-lbonly: false
-      description: Query the Stock Margin Batch Upload Parse Result list.
+      description: |-
+        Queries stock margin-ratio bulk-upload parse result records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -12473,11 +12985,11 @@ paths:
         - lb_hk_margin_ratio.margin_ratio_log
       x-lbonly: false
       description: |-
-        Queries Adjust Stock Margin Rate Task data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries stock financing margin-ratio adjustment task records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -12753,11 +13265,11 @@ paths:
         - lb_hk_margin_ratio.short_sell_margin_ratio_query
       x-lbonly: false
       description: |-
-        Queries Short Margin data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries short-sell stock margin ratio records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -12977,7 +13489,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_ratio.short_sell_margin_ratio_query
       x-lbonly: false
-      description: Query the Short Margin Record.
+      description: |-
+        Queries short-sell stock margin-ratio change records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -13170,9 +13687,24 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_trader_update
       x-lbonly: false
       description: |-
-        Creates a trading-limit configuration for a specified trader.
+        Creates a trading-limit configuration for a specified trader, covering the warn (`condition_warn`), audit (`condition_audit`), and reject (`condition_reject`) thresholds.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `trader` (trader), `code` (limit type), `currency` (currency)
+        - See the field notes for each field's format, value range, and business meaning.
+
+        ### Business notes
+
+        Limits are keyed by currency (`currency`) and limit type (`code`). When a trade reaches a threshold, it respectively raises a warning, enters audit, or is rejected outright.
+
+        ### Risk warning
+
+        This operation changes a live risk-control limit configuration and directly affects whether subsequent trades pass risk checks. Verify the target subject, currency, limit type, and each threshold before calling.
+
+        ### Result
+
+        On success, the limit configuration is written; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -13324,9 +13856,24 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_trader_update
       x-lbonly: false
       description: |-
-        Updates the trading-limit configuration for a specified trader.
+        Updates a trading-limit configuration for a specified trader, covering the warn (`condition_warn`), audit (`condition_audit`), and reject (`condition_reject`) thresholds.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `trader` (trader), `code` (limit type), `currency` (currency)
+        - See the field notes for each field's format, value range, and business meaning.
+
+        ### Business notes
+
+        Limits are keyed by currency (`currency`) and limit type (`code`). When a trade reaches a threshold, it respectively raises a warning, enters audit, or is rejected outright.
+
+        ### Risk warning
+
+        This operation changes a live risk-control limit configuration and directly affects whether subsequent trades pass risk checks. Verify the target subject, currency, limit type, and each threshold before calling.
+
+        ### Result
+
+        On success, the limit configuration is written; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -13481,11 +14028,11 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_trader_query
       x-lbonly: false
       description: |-
-        Queries Trader Limit data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries trader trading limit records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -13694,21 +14241,25 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_trader_update
       x-lbonly: false
       description: |-
-        Applies Batch Apply Trade Limit.
+        Batch-applies the effective state of a set of trader trading limits, using `is_apply` to enable or disable the target records.
 
         ### Request parameters
 
-        - Required: `list` (Trader Limit Record List), `is_apply` (Is Apply)
-        - Optional: `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `list` (trader-limit record list), `is_apply` (whether to take effect)
+        - Optional: `audit_frontend_resource` (caller-provided audit context)
+        - See the field notes for each field's format, value range, and business meaning.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may change real cash balances, positions, or transaction state. Verify the target records and parameters before calling it.
+        Each entry in `list` identifies an existing limit configuration. This endpoint only toggles the effective state in bulk; it does not change the limits' thresholds.
+
+        ### Risk warning
+
+        This operation changes the effective state of live trading limits and directly affects whether subsequent trades pass risk checks. Verify the target record list and the `is_apply` value before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the bulk effective-state change is completed; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -13829,22 +14380,25 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_global_update
       x-lbonly: false
       description: |-
-        Called by an action item, with fields assembled directly by its `onClick` callback. This changes
-        the global live trading-limit status and is a high-risk operation.
+        Enables or disables a single global trading-limit configuration, toggling its effective state via `enable`.
 
         ### Request parameters
 
-        - Required: `code` (Limit config code), `enable` (Enable flag)
-        - Optional: `audit_frontend_resource` (Frontend audit log metadata)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `code` (limit configuration code), `enable` (whether to enable)
+        - Optional: `audit_frontend_resource` (caller-provided audit context)
+        - See the field notes for each field's format, value range, and business meaning.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may affect live business data or asset state. Verify the target records, amounts, quantities, and operation type before calling it.
+        A global limit applies to all trading, so toggling it immediately changes its constraint on subsequent trades. This endpoint only switches the effective state; it does not change the limit thresholds.
+
+        ### Risk warning
+
+        This operation changes the live effective state of a global trading limit, affecting all trading; the risk is very high. Re-confirm the target `code` and `enable` value before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the global limit is enabled or disabled; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -13953,11 +14507,11 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_global_query
       x-lbonly: false
       description: |-
-        Queries Global Trade Limit data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries global trading limit records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -14182,9 +14736,24 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_global_update
       x-lbonly: false
       description: |-
-        Updates a global trading-limit configuration, including its warning, review, and rejection thresholds.
+        Updates a trading-limit configuration for a global scope (by limit type and currency), covering the warn (`condition_warn`), audit (`condition_audit`), and reject (`condition_reject`) thresholds.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `type` (limit type), `code` (limit type), `currency` (currency)
+        - See the field notes for each field's format, value range, and business meaning.
+
+        ### Business notes
+
+        Limits are keyed by currency (`currency`) and limit type (`code`). When a trade reaches a threshold, it respectively raises a warning, enters audit, or is rejected outright.
+
+        ### Risk warning
+
+        This operation changes a live risk-control limit configuration and directly affects whether subsequent trades pass risk checks. Verify the target subject, currency, limit type, and each threshold before calling.
+
+        ### Result
+
+        On success, the limit configuration is written; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -14334,21 +14903,25 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Applies Dimensions Apply Trade Limit.
+        Batch-applies the effective state of a set of multi-dimension trading limits, using `is_apply` to enable or disable the target records.
 
         ### Request parameters
 
-        - Required: `list` (Multi-dimension Limit Record List), `is_apply` (Is Apply)
-        - Optional: `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `list` (multi-dimension limit record list), `is_apply` (whether to take effect)
+        - Optional: `audit_frontend_resource` (caller-provided audit context)
+        - See the field notes for each field's format, value range, and business meaning.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may change real cash balances, positions, or transaction state. Verify the target records and parameters before calling it.
+        Each entry in `list` identifies an existing limit configuration. This endpoint only toggles the effective state in bulk; it does not change the limits' thresholds.
+
+        ### Risk warning
+
+        This operation changes the effective state of live trading limits and directly affects whether subsequent trades pass risk checks. Verify the target record list and the `is_apply` value before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the bulk effective-state change is completed; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -14465,9 +15038,24 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Batch-creates trading-limit configurations across multiple dimensions such as customer, security, and stock group.
+        Creates trading-limit configurations across multiple dimensions (client `aaid`, security `counter_id`, stock group `stock_group`, etc.), allowing a combined-dimension limit to be submitted in one call.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `counter_id` (security code), `code` (limit type), `currency` (currency)
+        - See the field notes for each field's format, value range, and business meaning.
+
+        ### Business notes
+
+        A limit carries warn (`condition_warn`), audit (`condition_audit`), and reject (`condition_reject`) thresholds and can be toggled through `enable`. The dimension combination determines the limit's matching scope.
+
+        ### Risk warning
+
+        This operation changes a live risk-control limit configuration and directly affects whether subsequent trades pass risk checks. Verify every dimension value, the currency, limit type, and thresholds before calling.
+
+        ### Result
+
+        On success, the limit configuration is written; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -14634,9 +15222,24 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Updates trading-limit configurations across multiple dimensions.
+        Updates trading-limit configurations across multiple dimensions (client `aaid`, security `counter_id`, stock group `stock_group`, etc.), allowing a combined-dimension limit to be submitted in one call.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `counter_id` (security code), `code` (limit type), `currency` (currency)
+        - See the field notes for each field's format, value range, and business meaning.
+
+        ### Business notes
+
+        A limit carries warn (`condition_warn`), audit (`condition_audit`), and reject (`condition_reject`) thresholds and can be toggled through `enable`. The dimension combination determines the limit's matching scope.
+
+        ### Risk warning
+
+        This operation changes a live risk-control limit configuration and directly affects whether subsequent trades pass risk checks. Verify every dimension value, the currency, limit type, and thresholds before calling.
+
+        ### Result
+
+        On success, the limit configuration is written; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -14799,11 +15402,11 @@ paths:
         - risk_limit_config.risk_limit_dimension_query
       x-lbonly: false
       description: |-
-        Queries Multi - Dimensional Limit data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries multi-dimension trading limit records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -15075,22 +15678,25 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_client_update
       x-lbonly: false
       description: |-
-        Called from a row action or the floating bulk-action bar; only the supplied values differ. This
-        activates or deactivates live trading limits and is a high-risk operation.
+        Batch-applies the effective state of a set of client-group trading limits, using `is_apply` to enable or disable the target records.
 
         ### Request parameters
 
-        - Required: `list` (Batch target limit config list), `is_apply` (Apply flag)
-        - Optional: `audit_frontend_resource` (Frontend audit log metadata)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `list` (limit-configuration record list for the batch operation), `is_apply` (whether to take effect)
+        - Optional: `audit_frontend_resource` (caller-provided audit context)
+        - See the field notes for each field's format, value range, and business meaning.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may affect live business data or asset state. Verify the target records, amounts, quantities, and operation type before calling it.
+        Each entry in `list` identifies an existing limit configuration. This endpoint only toggles the effective state in bulk; it does not change the limits' thresholds.
+
+        ### Risk warning
+
+        This operation changes the effective state of live trading limits and directly affects whether subsequent trades pass risk checks. Verify the target record list and the `is_apply` value before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the bulk effective-state change is completed; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -15213,11 +15819,11 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_client_query
       x-lbonly: false
       description: |-
-        Queries Account Type Limit data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries client-group trading limit records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -15418,9 +16024,24 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_client_update
       x-lbonly: false
       description: |-
-        Creates a trading-limit configuration for a specified client category.
+        Creates a trading-limit configuration for a specified client group, covering the warn (`condition_warn`), audit (`condition_audit`), and reject (`condition_reject`) thresholds.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `client_group` (client group), `code` (limit type), `currency` (currency)
+        - See the field notes for each field's format, value range, and business meaning.
+
+        ### Business notes
+
+        Limits are keyed by currency (`currency`) and limit type (`code`). When a trade reaches a threshold, it respectively raises a warning, enters audit, or is rejected outright.
+
+        ### Risk warning
+
+        This operation changes a live risk-control limit configuration and directly affects whether subsequent trades pass risk checks. Verify the target subject, currency, limit type, and each threshold before calling.
+
+        ### Result
+
+        On success, the limit configuration is written; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -15572,9 +16193,24 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_client_update
       x-lbonly: false
       description: |-
-        Updates the trading-limit configuration for a specified client category.
+        Updates a trading-limit configuration for a specified client group, covering the warn (`condition_warn`), audit (`condition_audit`), and reject (`condition_reject`) thresholds.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `client_group` (client group), `code` (limit type), `currency` (currency)
+        - See the field notes for each field's format, value range, and business meaning.
+
+        ### Business notes
+
+        Limits are keyed by currency (`currency`) and limit type (`code`). When a trade reaches a threshold, it respectively raises a warning, enters audit, or is rejected outright.
+
+        ### Risk warning
+
+        This operation changes a live risk-control limit configuration and directly affects whether subsequent trades pass risk checks. Verify the target subject, currency, limit type, and each threshold before calling.
+
+        ### Result
+
+        On success, the limit configuration is written; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -15726,22 +16362,25 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_client_update
       x-lbonly: false
       description: |-
-        Called from a row action or the floating bulk-action bar; only the supplied values differ. This
-        activates or deactivates live trading limits and is a high-risk operation.
+        Batch-applies the effective state of a set of client trading limits, using `is_apply` to enable or disable the target records.
 
         ### Request parameters
 
-        - Required: `list` (Batch target limit config list), `is_apply` (Apply flag)
-        - Optional: `audit_frontend_resource` (Frontend audit log metadata)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `list` (limit-configuration record list for the batch operation), `is_apply` (whether to take effect)
+        - Optional: `audit_frontend_resource` (caller-provided audit context)
+        - See the field notes for each field's format, value range, and business meaning.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may affect live business data or asset state. Verify the target records, amounts, quantities, and operation type before calling it.
+        Each entry in `list` identifies an existing limit configuration. This endpoint only toggles the effective state in bulk; it does not change the limits' thresholds.
+
+        ### Risk warning
+
+        This operation changes the effective state of live trading limits and directly affects whether subsequent trades pass risk checks. Verify the target record list and the `is_apply` value before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the bulk effective-state change is completed; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -15864,11 +16503,11 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_client_query
       x-lbonly: false
       description: |-
-        Queries Client Limit data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries client trading limit records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -16076,9 +16715,24 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_client_update
       x-lbonly: false
       description: |-
-        Creates a trading-limit configuration for a specified client.
+        Creates a trading-limit configuration for a specified client (securities account), covering the warn (`condition_warn`), audit (`condition_audit`), and reject (`condition_reject`) thresholds.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `aaid` (securities account), `code` (limit type), `currency` (currency)
+        - See the field notes for each field's format, value range, and business meaning.
+
+        ### Business notes
+
+        Limits are keyed by currency (`currency`) and limit type (`code`). When a trade reaches a threshold, it respectively raises a warning, enters audit, or is rejected outright.
+
+        ### Risk warning
+
+        This operation changes a live risk-control limit configuration and directly affects whether subsequent trades pass risk checks. Verify the target subject, currency, limit type, and each threshold before calling.
+
+        ### Result
+
+        On success, the limit configuration is written; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -16233,9 +16887,24 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_client_update
       x-lbonly: false
       description: |-
-        Updates the trading-limit configuration for a specified client.
+        Updates a trading-limit configuration for a specified client (securities account), covering the warn (`condition_warn`), audit (`condition_audit`), and reject (`condition_reject`) thresholds.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `aaid` (securities account), `code` (limit type), `currency` (currency)
+        - See the field notes for each field's format, value range, and business meaning.
+
+        ### Business notes
+
+        Limits are keyed by currency (`currency`) and limit type (`code`). When a trade reaches a threshold, it respectively raises a warning, enters audit, or is rejected outright.
+
+        ### Risk warning
+
+        This operation changes a live risk-control limit configuration and directly affects whether subsequent trades pass risk checks. Verify the target subject, currency, limit type, and each threshold before calling.
+
+        ### Result
+
+        On success, the limit configuration is written; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -16390,9 +17059,24 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_stock_update
       x-lbonly: false
       description: |-
-        Creates a trading-limit configuration for a specified security.
+        Creates a trading-limit configuration for a specified security, covering the warn (`condition_warn`), audit (`condition_audit`), and reject (`condition_reject`) thresholds.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `counter_id` (security code), `code` (limit type), `currency` (currency)
+        - See the field notes for each field's format, value range, and business meaning.
+
+        ### Business notes
+
+        Limits are keyed by currency (`currency`) and limit type (`code`). When a trade reaches a threshold, it respectively raises a warning, enters audit, or is rejected outright.
+
+        ### Risk warning
+
+        This operation changes a live risk-control limit configuration and directly affects whether subsequent trades pass risk checks. Verify the target subject, currency, limit type, and each threshold before calling.
+
+        ### Result
+
+        On success, the limit configuration is written; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -16547,9 +17231,24 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_stock_update
       x-lbonly: false
       description: |-
-        Updates the trading-limit configuration for a specified security.
+        Updates a trading-limit configuration for a specified security, covering the warn (`condition_warn`), audit (`condition_audit`), and reject (`condition_reject`) thresholds.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `counter_id` (security code), `code` (limit type), `currency` (currency)
+        - See the field notes for each field's format, value range, and business meaning.
+
+        ### Business notes
+
+        Limits are keyed by currency (`currency`) and limit type (`code`). When a trade reaches a threshold, it respectively raises a warning, enters audit, or is rejected outright.
+
+        ### Risk warning
+
+        This operation changes a live risk-control limit configuration and directly affects whether subsequent trades pass risk checks. Verify the target subject, currency, limit type, and each threshold before calling.
+
+        ### Result
+
+        On success, the limit configuration is written; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -16701,11 +17400,11 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_stock_query
       x-lbonly: false
       description: |-
-        Queries Securities Limit data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries security (stock) trading limit records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -16955,22 +17654,25 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_stock_update
       x-lbonly: false
       description: |-
-        Called from a row action or the floating bulk-action bar; only the supplied values differ. This
-        activates or deactivates live trading limits and is a high-risk operation.
+        Batch-applies the effective state of a set of security trading limits, using `is_apply` to enable or disable the target records.
 
         ### Request parameters
 
-        - Required: `list` (Batch target limit config list), `is_apply` (Apply flag)
-        - Optional: `audit_frontend_resource` (Frontend audit log metadata)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `list` (limit-configuration record list for the batch operation), `is_apply` (whether to take effect)
+        - Optional: `audit_frontend_resource` (caller-provided audit context)
+        - See the field notes for each field's format, value range, and business meaning.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may affect live business data or asset state. Verify the target records, amounts, quantities, and operation type before calling it.
+        Each entry in `list` identifies an existing limit configuration. This endpoint only toggles the effective state in bulk; it does not change the limits' thresholds.
+
+        ### Risk warning
+
+        This operation changes the effective state of live trading limits and directly affects whether subsequent trades pass risk checks. Verify the target record list and the `is_apply` value before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the bulk effective-state change is completed; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -17092,7 +17794,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_ratio.account_margin_ratio_query
       x-lbonly: false
-      description: Query the Client Margin Change Record Query.
+      description: |-
+        Queries client stock margin-ratio change records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -17333,9 +18040,24 @@ paths:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
       description: |-
-        Creates a long-position stock margin-ratio record for a specified client.
+        Creates a long-position stock margin-ratio record for a specified client, defining the client's margin ratios for a given security.
 
-        This is a write operation that directly applies a real change to the margin configuration.
+        ### Request parameters
+
+        - This endpoint has no strictly required parameters; see the field notes for the available fields.
+        - See the field notes for each field's format, value range, and business meaning.
+
+        ### Business notes
+
+        The margin ratios include the initial (`im_factor`), maintenance (`mm_factor`), force-liquidation (`fm_factor`), and margin-call (`mcm_factor`) tiers, with an optional expiry date (`expire_at`). Once created, the record becomes the client's effective margin configuration for that security.
+
+        ### Risk warning
+
+        This operation directly produces a live margin-configuration change, affecting the client's financing capacity, maintenance margin, and force-liquidation determination. Verify the target client, security, and every margin ratio before calling.
+
+        ### Result
+
+        On success, the margin record is created; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       responses:
@@ -17377,9 +18099,24 @@ paths:
         - lb_hk_margin_ratio.account_margin_ratio_query
       x-lbonly: false
       description: |-
-        Expires a specified client's long-position stock margin-ratio record.
+        Expires (deactivates) a client's long-position stock margin-ratio record with immediate effect.
 
-        This is a write operation.
+        ### Request parameters
+
+        - This endpoint has no strictly required parameters; see the field notes for the available fields.
+        - See the field notes for each field's format, value range, and business meaning.
+
+        ### Business notes
+
+        Once expired, the record no longer serves as the client's effective margin configuration for that security, and risk control falls back to the default or higher-level margin rules.
+
+        ### Risk warning
+
+        This operation terminates a live margin configuration and directly affects the client's financing and force-liquidation determination. Verify the target record before calling.
+
+        ### Result
+
+        On success, the record is expired; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       responses:
@@ -17421,9 +18158,25 @@ paths:
         - lb_hk_margin_ratio.account_margin_ratio_query
       x-lbonly: false
       description: |-
-        Updates a specified client's long-position stock margin-ratio record.
+        Updates a client's long-position stock margin-ratio record, including its margin-ratio tiers and expiry date.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `counter_id` (security code), `aaid` (securities account), `im_factor` (initial margin ratio), `mm_factor` (maintenance margin ratio), `fm_factor` (force-liquidation margin ratio), `mcm_factor` (margin-call margin ratio), `expire_at` (expiry date)
+        - Optional: `position_side` (position side), `short_sell_status` (short-sell status), `short_selling_open_qty` (short-open quantity), `short_selling_close_qty` (short-close quantity), `audit_frontend_resource` (caller-provided audit context), and others
+        - See the field notes for each field's format, value range, and business meaning.
+
+        ### Business notes
+
+        The updated ratios immediately become the client's effective configuration for that security, affecting financing capacity, maintenance margin, and force-liquidation determination.
+
+        ### Risk warning
+
+        This operation directly changes a live margin configuration. Verify the target client, security, and every margin-ratio value before calling.
+
+        ### Result
+
+        On success, the margin record is updated; the resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -17519,11 +18272,11 @@ paths:
         - lb_hk_margin_ratio.account_margin_ratio_query
       x-lbonly: false
       description: |-
-        Queries User Stock Margin Margin Rate data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries per-account stock financing margin ratio records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field notes for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -17811,9 +18564,24 @@ paths:
         - margin_ratio.account_short_query
       x-lbonly: false
       description: |-
-        Creates a short-position stock margin-ratio record for a specified client.
+        Create a short-selling stock margin-ratio record for a specific client, defining the client's short margin requirements for a given security.
 
-        This is a write operation.
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field descriptions for optional parameters.
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        A record typically carries the securities account, security code, and the initial, maintenance, forced-liquidation, and Margin Call margin ratios plus an expiry date, used in risk calculations for the client's short positions.
+
+        ### Risk warning
+
+        This operation adds a client-level short margin configuration and directly affects margin and forced-liquidation decisions on the client's short positions. Confirm the target client and parameters before calling.
+
+        ### Result
+
+        On success, the record is created; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       responses:
@@ -17855,9 +18623,24 @@ paths:
         - margin_ratio.account_short_query
       x-lbonly: false
       description: |-
-        Expires a specified client's short-position stock margin-ratio record.
+        Expire a client's short-selling stock margin-ratio record so that the client's short margin configuration for a given security stops taking effect.
 
-        This is a write operation.
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field descriptions for optional parameters.
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        Once expired, the record no longer participates in margin calculations for the client's short positions, and the client falls back to the default or higher-level margin rules.
+
+        ### Risk warning
+
+        This operation expires a client-level short margin configuration and directly affects margin and forced-liquidation decisions on the client's short positions. Confirm the target record before calling.
+
+        ### Result
+
+        On success, the record is expired; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       responses:
@@ -17899,9 +18682,24 @@ paths:
         - margin_ratio.account_short_query
       x-lbonly: false
       description: |-
-        Updates a specified client's short-position stock margin-ratio record.
+        Update a client's short-selling stock margin-ratio record, adjusting the short margin factors and expiry date for a given security.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `counter_id` (security code), `aaid` (securities account), `im_factor` (initial margin ratio), `mm_factor` (maintenance margin ratio), `fm_factor` (forced-liquidation margin ratio), `mcm_factor` (Margin Call margin ratio), `expire_at` (expiry date).
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        The initial, maintenance, forced-liquidation, and Margin Call ratios together determine the margin requirement and the warning and forced-liquidation trigger thresholds for the client's short positions. The configuration stops taking effect after `expire_at`.
+
+        ### Risk warning
+
+        This operation modifies a client-level short margin configuration and directly affects margin and forced-liquidation decisions on the client's short positions. Confirm the target record and parameters before calling.
+
+        ### Result
+
+        On success, the record is updated; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -17996,7 +18794,12 @@ paths:
       x-permission-key:
         - margin_ratio.account_short_query
       x-lbonly: false
-      description: Query the Client Short Margin Change Record.
+      description: |-
+        Query client short-selling margin change records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -18257,11 +19060,11 @@ paths:
         - margin_ratio.account_short_query
       x-lbonly: false
       description: |-
-        Queries Client Short Stock Margin data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query client short-selling stock margin records. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -18577,9 +19380,24 @@ paths:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
       description: |-
-        Creates a stock-option margin-coefficient record for a specified client.
+        Create a stock-option margin-factor record for a specific client, defining the upper and lower option margin bounds for a given underlying.
 
-        This is a write operation.
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field descriptions for optional parameters.
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        A record typically carries the client, stock code, and the upper and lower bounds of the initial, maintenance, and forced-liquidation margin factors, used in margin calculations for the client's option positions.
+
+        ### Risk warning
+
+        This operation adds a client-level stock-option margin configuration and directly affects the margin requirements on the client's option positions. Confirm the target client and parameters before calling.
+
+        ### Result
+
+        On success, the record is created; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       responses:
@@ -18621,9 +19439,24 @@ paths:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
       description: |-
-        Deletes a specified client's stock-option margin-coefficient record.
+        Delete a client's stock-option margin-factor record, removing the client's option margin configuration for a given underlying.
 
-        This is a write operation.
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field descriptions for optional parameters.
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        Once deleted, the record no longer participates in margin calculations for the client's option positions, and the client falls back to the default or higher-level margin rules.
+
+        ### Risk warning
+
+        This operation deletes a client-level stock-option margin configuration and directly affects the margin requirements on the client's option positions. Confirm the target record before calling.
+
+        ### Result
+
+        On success, the record is deleted; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       responses:
@@ -18665,9 +19498,24 @@ paths:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
       description: |-
-        Updates a specified client's stock-option margin-coefficient record.
+        Update a client's stock-option margin-factor record, adjusting the upper and lower option margin bounds for a given underlying.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `aaid` (client), `counter_id` (stock code).
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        The upper (`max_*_factor`) and lower (`min_*_factor`) bounds of the initial, maintenance, and forced-liquidation margin factors together define the allowed range of margin for the client's option positions, used in risk calculations.
+
+        ### Risk warning
+
+        This operation modifies a client-level stock-option margin configuration and directly affects the margin requirements on the client's option positions. Confirm the target record and parameters before calling.
+
+        ### Result
+
+        On success, the record is updated; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -18749,11 +19597,11 @@ paths:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
       description: |-
-        Queries User Options Margin Factor data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query client-level option margin factors. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -18958,11 +19806,11 @@ paths:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
       description: |-
-        Queries Options Margin Factor data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query option margin factor configurations. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -19156,9 +20004,24 @@ paths:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
       description: |-
-        Creates a stock-option margin-coefficient record.
+        Create a stock-option margin-factor record that sets the global (non-client-level) option margin factors for an underlying.
 
-        This is a write operation.
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field descriptions for optional parameters.
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        A record typically carries the stock code, the upper and lower bounds of the initial, maintenance, and forced-liquidation margin factors, and the uncovered minimum factor, serving as the default rule for option margin calculations on that underlying.
+
+        ### Risk warning
+
+        This operation adds a global stock-option margin configuration and affects margin calculations for all client option positions on the matched underlying. Confirm the target underlying and parameters before calling.
+
+        ### Result
+
+        On success, the record is created; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       responses:
@@ -19200,9 +20063,24 @@ paths:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
       description: |-
-        Deletes a stock-option margin-coefficient record.
+        Delete a stock-option margin-factor record, removing the global option margin factor configuration for an underlying.
 
-        This is a write operation.
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field descriptions for optional parameters.
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        Once deleted, this global option margin rule no longer applies to the underlying, which falls back to the system default calculation.
+
+        ### Risk warning
+
+        This operation deletes a global stock-option margin configuration and affects margin calculations for all client option positions on the matched underlying. Confirm the target record before calling.
+
+        ### Result
+
+        On success, the record is deleted; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       responses:
@@ -19244,9 +20122,24 @@ paths:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
       description: |-
-        Updates a stock-option margin-coefficient record.
+        Update a stock-option margin-factor record, adjusting the upper and lower global option margin factor bounds for an underlying.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `counter_id` (stock code).
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        The upper and lower bounds of the initial, maintenance, and forced-liquidation margin factors, together with the uncovered minimum factor (`un_covered_min`), determine the allowed range of the underlying's global option margin.
+
+        ### Risk warning
+
+        This operation modifies a global stock-option margin configuration and affects margin calculations for all client option positions on the matched underlying. Confirm the target record and parameters before calling.
+
+        ### Result
+
+        On success, the record is updated; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -19327,11 +20220,11 @@ paths:
         - lb_hk_report.haircut_change_log
       x-lbonly: false
       description: |-
-        Queries Haircut Change Record List data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query Haircut configuration change history. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -19503,17 +20396,25 @@ paths:
         - lb_hk_report.haircut_indexes
       x-lbonly: false
       description: |-
-        Add Index Haircut.
+        Create an index Haircut configuration, setting the risk-control haircut for constituent securities of matching indices.
 
         ### Request parameters
 
-        - Required: `counter_id` (Counter ID), `haircut` (Haircut)
-        - Optional: `include_indexes` (Include Indexes), `exclude_indexes` (Exclude Indexes), `include_exchanges` (Include Exchanges), `exclude_exchanges` (Exclude Exchanges), `priority` (Priority)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `counter_id` (security code), `haircut` (haircut rate).
+        - Optional: `include_indexes`, `exclude_indexes`, `include_exchanges`, `exclude_exchanges`, `priority`.
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        The include/exclude index and exchange lists scope where the configuration applies; `priority` decides precedence when multiple configurations match. The `haircut` is used to compute the collateral value of a security.
+
+        ### Risk warning
+
+        This operation adds a risk-control haircut configuration and directly affects the collateral value and margin calculation of the affected securities. Confirm the parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the configuration is created; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -19635,11 +20536,11 @@ paths:
         - lb_hk_report.haircut_indexes
       x-lbonly: false
       description: |-
-        Queries Index Haircut List data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query index Haircut configurations. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -19841,17 +20742,24 @@ paths:
         - lb_hk_report.haircut_indexes
       x-lbonly: false
       description: |-
-        Uses the same fields as Create Index Haircut, with an additional `id`. This changes live risk
-        haircuts.
+        Edit an existing index Haircut configuration. The field structure matches "Create index Haircut", with `id` additionally identifying the target record.
 
         ### Request parameters
 
-        - Required: `id` (Config ID), `counter_id` (Counter ID), `haircut` (Haircut)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `id` (configuration ID), `counter_id` (security code), `haircut` (haircut rate).
+        - See the field descriptions for the format, value range, default behavior, and business meaning of each field.
+
+        ### Business notes
+
+        Overwrites the index Haircut configuration identified by `id`. The `haircut` is used to compute the collateral value of a security.
+
+        ### Risk warning
+
+        This operation modifies a risk-control haircut configuration and directly affects the collateral value and margin calculation of the affected securities. Confirm the target record and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the configuration is updated; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -19945,16 +20853,24 @@ paths:
         - lb_hk_report.haircut_securities
       x-lbonly: false
       description: |-
-        Add Stock Haircut.
+        Bulk-create stock Haircut configurations, setting the risk-control haircut for a batch of securities.
 
         ### Request parameters
 
-        - Required: `data` (Data)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `data` (list of Haircut entries).
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        Each entry in `data` sets the Haircut for one security, used to compute that security's collateral value.
+
+        ### Risk warning
+
+        This operation adds risk-control haircut configurations and directly affects the collateral value and margin calculation of the affected securities. Confirm the entry list before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the configurations are created; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -20045,11 +20961,11 @@ paths:
         - lb_hk_report.haircut_securities
       x-lbonly: false
       description: |-
-        Queries Stock Haircut List data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query stock Haircut configurations. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -20213,16 +21129,24 @@ paths:
         - lb_hk_report.haircut_securities
       x-lbonly: false
       description: |-
-        Creates or updates Stock Haircut.
+        Bulk-edit stock Haircut configurations, updating the risk-control haircut for a batch of securities.
 
         ### Request parameters
 
-        - Required: `data` (Data)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `data` (list of Haircut entries).
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        Each entry in `data` sets the Haircut for one security, overwriting that security's collateral-value calculation parameters.
+
+        ### Risk warning
+
+        This operation modifies risk-control haircut configurations and directly affects the collateral value and margin calculation of the affected securities. Confirm the entry list before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the configurations are updated; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -20312,7 +21236,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.simulation_margin_query_detail_query
       x-lbonly: false
-      description: Query the Margin Call Pre - Calculation Details list.
+      description: |-
+        Query Margin Call pre-calculation details. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -20479,11 +21408,11 @@ paths:
         - lb_hk_margin_call.simulation_margin_query_list_query
       x-lbonly: false
       description: |-
-        Queries Margin Call Pre - Calculation List data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query Margin Call pre-calculation runs. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -20683,17 +21612,25 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Simulates Margin Call Calculation.
+        Launch a Margin Call stress-test calculation with the given assumptions, assessing the Margin Call risk of a client or portfolio under a defined market shock.
 
         ### Request parameters
 
-        - Required: `simulate_cal_type` (Simulate Cal Type), `cal_type` (Calculation Type), `is_filter` (Is Filter), `remark` (Remark)
-        - Optional: `task_id` (Task ID), `market` (Market), `stock_group_id` (Stock Group ID), `counter_id` (Counter ID), `price_limit` (Price Limit), `index_price_limit_info` (Index Price Limit Info)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `simulate_cal_type` (calculation dimension), `cal_type` (calculation type), `is_filter` (whether to apply exemption rules), `remark` (custom data title).
+        - Optional: `task_id` (batch number), `market`, `stock_group_id`, `counter_id`, `price_limit` (price change), `index_price_limit_info` (index-level drop settings).
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        `simulate_cal_type` and `cal_type` set the calculation dimension and basis; `price_limit` and `index_price_limit_info` define the price-shock assumptions; `is_filter` controls whether exemption rules apply. The calculation runs as an asynchronous task, with results retrieved through the corresponding pre-calculation list/detail queries.
+
+        ### Risk warning
+
+        This operation triggers a risk-control stress-test calculation task and generates result data. Confirm that the assumption parameters are reasonable before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the stress-test task is submitted; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -20868,16 +21805,20 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Update Simulate Margin Call Remark.
+        Change the remark title of a simulation task to make stress-test results easier to identify and manage.
 
         ### Request parameters
 
-        - Required: `task_id` (Task ID), `remark` (Remark)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `task_id` (task ID), `remark` (title).
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        Updates only the task's title remark; it does not change the already-generated calculation results.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the remark is updated; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -20968,7 +21909,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.risk_monitoring_simulation_list_query
       x-lbonly: false
-      description: Query the Simulate_file_details list.
+      description: |-
+        Query custom simulation file details. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -21151,11 +22097,11 @@ paths:
         - lb_hk_margin_call.risk_monitoring_simulation_list_query
       x-lbonly: false
       description: |-
-        Queries Simulate_file data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query custom simulation file previews. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -21301,19 +22247,25 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Index Level uses one endpoint for four operations: create (`operation = 0`), edit (`1`, with `id`
-        ), delete (`2`, using the legacy field name `stock_level` ), and initialize (`3`, with only
-        `operation` ).
+        Unified maintenance endpoint for Index Levels, using `operation` to distinguish create, edit, delete, and data-initialization actions.
 
         ### Request parameters
 
-        - Required: `index_code` (Index Code), `index_name` (Index Name), `index_type` (Index Type), `operator` (Operator), `operation` (Operation)
-        - Optional: `remark` (Remark), `id` (ID)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `index_code`, `index_name`, `index_type` (index level type), `operator`, `operation` (operation type).
+        - Optional: `remark`, `id` (record ID).
+        - See the field descriptions for the format, value range, default behavior, and business meaning of each field.
+
+        ### Business notes
+
+        `operation` selects the action: create (`0`) submits index code/name/level type/remark; edit (`1`) additionally carries `id`; delete (`2`) reuses the stock_level field naming (a legacy carry-over); data initialization (`3`) sends only `operation`.
+
+        ### Risk warning
+
+        This operation changes the index-level configuration used by stress tests and affects the related risk calculations. Confirm the operation type and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the described operation is completed; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -21450,11 +22402,11 @@ paths:
         - lb_hk_margin_call.risk_monitoring_index_list_query
       x-lbonly: false
       description: |-
-        Queries Index Level data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query stress-test index levels. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -21610,11 +22562,11 @@ paths:
         - lb_hk_margin_call.risk_monitoring_stock_index_query
       x-lbonly: false
       description: |-
-        Queries Stock Index data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query stock-index mappings. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -21771,17 +22723,25 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Updates Stock Index.
+        Maintain the mapping between stocks and indices, using `operation` to distinguish actions; used to classify a stock's index level in stress tests.
 
         ### Request parameters
 
-        - Required: `operation` (Operation), `id` (ID)
-        - Optional: `stock_code` (Stock Code), `index_code` (Index Code), `operator` (Operator)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `operation` (operation type), `id` (record ID).
+        - Optional: `stock_code`, `index_code`, `operator`.
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        `operation` selects the create, edit, or delete action, `id` identifies the target record, and `stock_code` and `index_code` establish the stock-to-index mapping.
+
+        ### Risk warning
+
+        This operation changes the stock-index mapping used by stress tests and affects the related risk calculations. Confirm the operation type and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the described operation is completed; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -21898,7 +22858,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.risk_monitoring_stock_level_query
       x-lbonly: false
-      description: Query the ELC Top N Stock Drop by X list.
+      description: |-
+        Query ELC TopN stock DropByX data. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -22001,7 +22966,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.risk_monitoring_stock_level_query
       x-lbonly: false
-      description: Query the ELC Position Details list.
+      description: |-
+        Query ELC holding details. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -22126,7 +23096,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.risk_monitoring_stock_level_query
       x-lbonly: false
-      description: Query the ELC Top N Stock LC Data list.
+      description: |-
+        Query ELC TopN stock LC data. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -22245,7 +23220,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.risk_monitoring_stock_level_query
       x-lbonly: false
-      description: Query the ELC Short Fall Details list.
+      description: |-
+        Query ELC shortfall details. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -22375,7 +23355,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.risk_monitoring_stock_level_query
       x-lbonly: false
-      description: Query the ELC Top N Stock list.
+      description: |-
+        Query ELC TopN stocks. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -22507,11 +23492,11 @@ paths:
         - lb_hk_margin_call.risk_monitoring_stock_level_query
       x-lbonly: false
       description: |-
-        Queries ELC Stress Test data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Query ELC stress tests. Combine business filters through `filters`, and control pagination and sorting with `page`, `page_size`, and `orderBy`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -22695,16 +23680,24 @@ paths:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Add Short Fall Message.
+        Create or edit a concentration-risk test task, setting the LC and RLC parameters to trigger the corresponding concentration-risk calculation.
 
         ### Request parameters
 
-        - Required: `lc` (LC), `rlc` (RLC)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `lc` (LC parameter), `rlc` (RLC parameter).
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        `lc` and `rlc` set the threshold parameters of the concentration-risk test, used to assess the potential shortfall arising from position concentration.
+
+        ### Risk warning
+
+        This operation creates or modifies a concentration-risk test task and affects the related risk calculation results. Confirm the parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the described operation is completed; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -22796,16 +23789,24 @@ paths:
         - credit_limit.client_group_operation
       x-lbonly: false
       description: |-
-        Delete Client Group.
+        Delete a specified client group.
 
         ### Request parameters
 
-        - Required: `business_type` (Business Type), `name` (Client Group Name)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `business_type`, `name` (client group name).
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        Locates and deletes the client group by `business_type` and `name`; after deletion, the group and its member assignments no longer take effect.
+
+        ### Risk warning
+
+        This operation deletes a client group and may affect risk-control rules and strategies that depend on it. Confirm the target client group before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the client group is deleted; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -22895,9 +23896,24 @@ paths:
         - credit_limit.client_group_operation
       x-lbonly: false
       description: |-
-        Batch-removes client accounts from a client group.
+        Remove client accounts from a client group in bulk.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `aaids` (list of securities accounts).
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        Removes the clients identified by the securities accounts in `aaids` from their client group; once removed, those accounts no longer inherit the group's risk-control rules.
+
+        ### Risk warning
+
+        This operation changes client-group membership and may affect the risk-control classification of the accounts. Confirm the account list before calling.
+
+        ### Result
+
+        On success, the accounts are removed; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -22954,9 +23970,24 @@ paths:
         - credit_limit.client_group_operation
       x-lbonly: false
       description: |-
-        Adds a client account to a client group.
+        Add a client account to a client group.
 
-        This is a write operation.
+        ### Request parameters
+
+        - Required: `aaid` (securities account).
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        Adds the client account identified by `aaid` to the target client group; once added, the account inherits the group's risk-control rules.
+
+        ### Risk warning
+
+        This operation changes client-group membership and may affect the risk-control classification of the account. Confirm the securities account before calling.
+
+        ### Result
+
+        On success, the account is added; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:

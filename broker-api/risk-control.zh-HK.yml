@@ -22,7 +22,25 @@ paths:
       x-permission-key:
         - credit_limit.credit_clients_add
       x-lbonly: false
-      description: 人工為指定證券賬號新增一條授信客戶記錄，設置其授信額度。寫操作，直接產生真實授信額度變更。
+      description: |-
+        人工為指定證券賬號新增一條授信客戶記錄，並設置其授信額度。
+
+        ### 請求參數
+
+        - 必填：`aaid`（證券賬號）、`credit_limit`（授信額度）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        調用後該賬號即成為授信客戶，授信額度立即生效。
+
+        ### 風險提示
+
+        此操作直接產生真實授信額度變更。調用前請確認目標證券賬號與額度金額無誤。
+
+        ### 處理結果
+
+        成功時完成新增授信客戶操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -107,7 +125,25 @@ paths:
       x-permission-key:
         - lb_hk_credit_limit.client_credit_limit_apply
       x-lbonly: false
-      description: 後台提交一條客戶授信額度調整申請，進入審核流程。寫操作。
+      description: |-
+        後台提交一條客戶授信額度調整申請，進入審核流程。
+
+        ### 請求參數
+
+        - 必填：`aaid`（證券賬號）、`member_id`（用戶 ID）、`credit_currency`（授信幣種）、`before_credit_amount`（調整前額度）、`after_credit_amount`（調整後額度）、`applicant`（申請人）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        本接口僅提交申請，額度不會立即變更；須經審核通過後才實際生效。
+
+        ### 風險提示
+
+        審核通過後將產生真實授信額度變更。請確認調整前後額度、幣種與申請人信息無誤。
+
+        ### 處理結果
+
+        成功時生成一條待審核的額度調整申請；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -193,16 +229,24 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        刪除已取消的客戶授信額度。
+        刪除已取消狀態的客戶授信額度記錄。
 
         ### 請求參數
 
-        - 必填：`aaid_list`（證券賬號列表）、`audit_frontend_resource`（審計上下文）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`aaid_list`（證券賬號列表）、`audit_frontend_resource`（調用方審計上下文）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        僅可刪除處於已取消狀態的授信額度記錄，支持按賬號列表批量刪除。
+
+        ### 風險提示
+
+        此操作刪除真實授信額度記錄，不可恢復。調用前請確認待刪除的證券賬號列表無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時刪除指定的已取消授信額度記錄；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -293,7 +337,24 @@ paths:
       x-permission-key:
         - lb_hk_credit_limit.client_credit_limit_approve
       x-lbonly: false
-      description: 後台就客戶授信額度調整申請提交審核工單（審批通過 / 駁回）。寫操作，請求字段以真實接口為準。
+      description: |-
+        後台就客戶授信額度調整申請提交審核工單，做出審批通過或駁回的處理。
+
+        ### 請求參數
+
+        - 本接口無必填參數，具體請求字段見下方字段說明。
+
+        ### 業務說明
+
+        對已提交的額度調整申請執行審批。審批通過後額度調整才實際生效；駁回則申請作廢。
+
+        ### 風險提示
+
+        審批通過將觸發真實授信額度變更。請確認對應申請與審批結論無誤。
+
+        ### 處理結果
+
+        成功時完成審核處理並推進申請狀態；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       responses:
@@ -333,7 +394,17 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 查詢指定證券賬號已命中的 FPS（快速支付系統）風控規則配置。
+      description: |-
+        查詢指定證券賬號已命中的 FPS（快速支付系統）風控規則配置。
+
+        ### 請求參數
+
+        - 本接口無必填參數，可選參數見下方字段說明。
+        - 傳入 `aaid` 時按該證券賬號過濾命中的 FPS 規則。
+
+        ### 返回結果
+
+        成功時返回該賬號已命中的 FPS 風控規則配置列表。字段含義見下方響應定義。
       security:
         - bearerAuth: []
       parameters:
@@ -396,17 +467,21 @@ paths:
         - lb_hk_credit_limit.client_fps_manage
       x-lbonly: false
       description: |-
-        保存客戶 FPS 命中配置。
+        保存一組客戶 FPS（快速支付系統）命中規則配置。
 
         ### 請求參數
 
         - 必填：`fps_config_records`（FPS 規則配置列表）
-        - 可選：`audit_frontend_resource`（調用方審計信息）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 可選：`audit_frontend_resource`（調用方審計上下文）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        批量保存客戶 FPS 命中配置項，用於設定相關風控規則的命中處理策略。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時保存所提交的 FPS 配置；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -511,7 +586,24 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 新建一個授信組並提交審核。寫操作，請求字段以真實接口為準（前端為動態字段）。
+      description: |-
+        新建一個授信組並提交審核。
+
+        ### 請求參數
+
+        - 本接口無必填參數，具體請求字段見下方字段說明。
+
+        ### 業務說明
+
+        創建授信組的申請進入審核流程，審核通過後授信組才正式生效。
+
+        ### 風險提示
+
+        審核通過後將影響相關賬戶的授信管理。調用前請確認授信組配置無誤。
+
+        ### 處理結果
+
+        成功時生成待審核的新建授信組申請；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       responses:
@@ -551,7 +643,25 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 編輯授信組的額度配置並提交審核。寫操作，請求字段以真實接口為準。
+      description: |-
+        編輯指定授信組的額度配置並提交審核。
+
+        ### 請求參數
+
+        - 必填：`group_id`（授信組 ID）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        修改授信組的額度配置須經審核，審核通過後新配置才生效。
+
+        ### 風險提示
+
+        審核通過將變更真實授信組額度，影響組內賬戶可用授信。調用前請確認組 ID 與額度配置無誤。
+
+        ### 處理結果
+
+        成功時生成待審核的授信組額度修改申請；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -609,7 +719,25 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 調整授信組內某賬戶的額度並提交審核。寫操作，請求字段以真實接口為準。
+      description: |-
+        調整授信組內某個賬戶的額度並提交審核。
+
+        ### 請求參數
+
+        - 必填：`group_id`（授信組 ID）、`aaid`（賬戶）、`account_credit`（調整後額度）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        針對授信組內單個賬戶調整其分配額度，須經審核通過後生效。
+
+        ### 風險提示
+
+        審核通過將變更該賬戶的真實授信額度。調用前請確認組 ID、賬戶與調整後額度無誤。
+
+        ### 處理結果
+
+        成功時生成待審核的組內賬戶額度調整申請；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -672,7 +800,26 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 向授信組新增成員賬戶並提交審核。寫操作，請求字段以真實接口為準。
+      description: |-
+        向授信組新增一批成員賬戶並提交審核。
+
+        ### 請求參數
+
+        - 必填：`group_id`（授信組 ID）
+        - 可選：`account_credits`（新增賬戶及其額度）、`audit_frontend_resource`（調用方審計上下文）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        將賬戶加入授信組的申請須經審核，審核通過後賬戶才納入該組授信管理。
+
+        ### 風險提示
+
+        審核通過將變更相關賬戶的授信歸屬與額度。調用前請確認組 ID 與新增賬戶列表無誤。
+
+        ### 處理結果
+
+        成功時生成待審核的新增組內賬戶申請；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -743,7 +890,25 @@ paths:
       x-permission-key:
         - lb_hk_credit_limit.credit_group
       x-lbonly: false
-      description: 從授信組移除指定成員賬戶。寫操作。
+      description: |-
+        從指定授信組移除某個成員賬戶。
+
+        ### 請求參數
+
+        - 必填：`group_id`（授信組 ID）、`aaid`（證券賬號）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        將賬戶從授信組中移出，該賬戶不再受此授信組的額度管理。
+
+        ### 風險提示
+
+        此操作變更賬戶的授信歸屬，可能影響其可用授信。調用前請確認組 ID 與證券賬號無誤。
+
+        ### 處理結果
+
+        成功時將賬戶移出授信組；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -801,16 +966,24 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        上傳 CSV/Excel 文件後提交，批量調整客戶授信額度。涉及真實批量授信額度變更，請謹慎操作。
+        導入文件後提交，批量調整客戶授信額度。
 
         ### 請求參數
 
-        - 必填：`s3_key`（文件對象存儲Key）、`audit_frontend_resource`（審計調用方附加信息）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 必填：`s3_key`（文件對象存儲 Key）、`audit_frontend_resource`（調用方審計上下文）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        先將 CSV/Excel 文件上傳至對象存儲，再以其 `s3_key` 提交批量授信調整任務，由後台按文件內容批量處理。
+
+        ### 風險提示
+
+        此操作觸發真實批量授信額度變更，影響範圍大。調用前請確認文件內容與 `s3_key` 無誤。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時提交批量調整授信任務；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -896,21 +1069,25 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        新增或修改客戶的交易額度配置。涉及真實交易額度變更。
+        新增或修改客戶的交易額度配置。
 
         ### 請求參數
 
-        - 必填：`aaid`（客戶資金賬戶ID(AAID)）、`trade_credit_type`（額度類型）、`trade_credit_map`（幣種額度映射）、`expired_at`（到期時間）、`action`（操作類型）
+        - 必填：`aaid`（客戶資金賬戶 ID）、`trade_credit_type`（額度類型）、`trade_credit_map`（幣種額度映射）、`expired_at`（到期時間）、`action`（操作類型）
         - 可選：`remark`（備註）、`audit_frontend_resource`（調用方審計上下文）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        按 `action` 指定的操作類型對指定賬戶的交易額度進行新增或修改，額度按幣種映射設定，並受 `expired_at` 到期時間約束。
 
         ### 風險提示
 
-        > 此操作可能影響真實業務數據或資產狀態。調用前請核對目標記錄、金額、數量和操作類型。
+        此操作變更真實交易額度。調用前請核對賬戶、額度類型、各幣種金額與到期時間。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時完成交易額度的新增或修改；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -1058,7 +1235,17 @@ paths:
       x-permission-key:
         - margin_call.risk_debt_info
       x-lbonly: false
-      description: 查詢指定用戶的換匯（貨幣兌換）明細信息。
+      description: |-
+        查詢指定用戶的換匯（貨幣兌換）明細信息。
+
+        ### 請求參數
+
+        - 必填：`aaid`（證券賬號）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 返回結果
+
+        成功時返回該用戶的換匯明細信息。字段含義見下方響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -1118,7 +1305,17 @@ paths:
       x-permission-key:
         - margin_call.risk_debt_info
       x-lbonly: false
-      description: 批量獲取當前幣種匯率。
+      description: |-
+        批量獲取指定幣種的當前匯率。
+
+        ### 請求參數
+
+        - 本接口無必填參數，可選參數見下方字段說明。
+        - 傳入 `currencies` 時按指定幣種批量返回匯率。
+
+        ### 返回結果
+
+        成功時返回所請求幣種的當前匯率列表。字段含義見下方響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -1177,17 +1374,21 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        編輯借幣提醒換匯規則。
+        編輯借幣提醒的換匯規則。
 
         ### 請求參數
 
-        - 必填：`main`（主幣種換匯規則）、`other`（其他幣種換匯規則）、`is_display`（是否展示/啓用）
+        - 必填：`main`（主幣種換匯規則）、`other`（其他幣種換匯規則）、`is_display`（是否展示/啟用）
         - 可選：`front_payload`（調用方變更差異）、`audit_frontend_resource`（調用方審計上下文）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        配置借幣提醒場景下主幣種與其他幣種的換匯規則，並通過 `is_display` 控制規則是否展示/啟用。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時保存換匯規則配置；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -1319,17 +1520,25 @@ paths:
         - margin_call.risk_debt_info
       x-lbonly: false
       description: |-
-        手動換匯（借幣還款）。
+        為客戶手動執行換匯，用於借幣還款。
 
         ### 請求參數
 
-        - 必填：`aaid`（賬戶ID）、`exchange_books`（換匯明細列表）、`exchange_books.from_currency`（兌換幣種）、`exchange_books.to_currency`（被兌換幣種）
-        - 可選：`exchange_books.from_amount`（兌換金額）、`exchange_books.to_amount`（被兌換金額）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`aaid`（賬戶 ID）、`exchange_books`（換匯明細列表）、`exchange_books.from_currency`（兌出幣種）、`exchange_books.to_currency`（兌入幣種）
+        - 可選：`exchange_books.from_amount`（兌出金額）、`exchange_books.to_amount`（兌入金額）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        按換匯明細列表逐筆為客戶執行貨幣兌換，用於歸還借幣；每筆需指定兌出與兌入幣種及金額。
+
+        ### 風險提示
+
+        此操作直接產生真實資金換匯與還款，不可撤銷。調用前請核對賬戶、幣種與金額。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成手動換匯還款；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -1434,7 +1643,17 @@ paths:
       x-permission-key:
         - margin_call.risk_debt_history_info_query
       x-lbonly: false
-      description: 查詢換匯相關的推送通知歷史記錄。
+      description: |-
+        查詢換匯相關的推送通知歷史記錄。
+
+        ### 請求參數
+
+        - 本接口無必填參數，可選參數見下方字段說明。
+        - 傳入 `aaid` 時按指定證券賬號過濾推送歷史。
+
+        ### 返回結果
+
+        成功時返回換匯推送通知的歷史記錄。字段含義見下方響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -1489,7 +1708,16 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 查詢 / 發送風控消息詳情。請求字段以真實接口為準。
+      description: |-
+        查詢風控消息的詳情內容。
+
+        ### 請求參數
+
+        - 本接口無必填參數，具體請求字段見下方字段說明。
+
+        ### 返回結果
+
+        成功時返回風控消息的詳細內容。字段含義見下方響應定義。
       security:
         - bearerAuth: []
       responses:
@@ -1535,7 +1763,17 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.margin_call_detailed
       x-lbonly: false
-      description: 查詢 margin call 預警記錄對應用戶的訂單信息。
+      description: |-
+        查詢 margin call 預警記錄對應用戶的訂單信息。
+
+        ### 請求參數
+
+        - 必填：`risk_monitoring_log_id`（風控預警記錄 ID）、`aaid`（證券賬號）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 返回結果
+
+        成功時返回該預警記錄對應用戶的訂單信息。字段含義見下方響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -1627,7 +1865,17 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.margin_call_detailed
       x-lbonly: false
-      description: 查詢 margin call 預警記錄對應用戶的持倉詳情。
+      description: |-
+        查詢 margin call 預警記錄對應用戶的持倉詳情。
+
+        ### 請求參數
+
+        - 必填：`risk_monitoring_log_id`（風控預警記錄 ID）、`aaid`（證券賬號）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 返回結果
+
+        成功時返回該預警記錄對應用戶的持倉詳情。字段含義見下方響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -1742,7 +1990,17 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 查詢 margin call 預警記錄對應用戶的基金基礎數據。
+      description: |-
+        查詢 margin call 預警記錄對應用戶的基金基礎數據。
+
+        ### 請求參數
+
+        - 必填：`aaid`（證券賬號）、`risk_monitoring_log_id`（風控預警記錄 ID）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 返回結果
+
+        成功時返回該預警記錄對應用戶的基金基礎數據。字段含義見下方響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -1805,7 +2063,17 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.margin_call_detailed
       x-lbonly: false
-      description: 查詢用戶的現金明細。
+      description: |-
+        查詢指定用戶的現金明細。
+
+        ### 請求參數
+
+        - 必填：`aaid`（證券賬號）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 返回結果
+
+        成功時返回該用戶的現金明細記錄。字段含義見下方響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -1876,7 +2144,17 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.margin_call_detailed
       x-lbonly: false
-      description: 查詢 margin call 預警記錄對應用戶的基本信息。
+      description: |-
+        查詢 margin call 預警記錄對應用戶的基本信息。
+
+        ### 請求參數
+
+        - 必填：`risk_monitoring_log_id`（風控預警記錄 ID）、`aaid`（證券賬號）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 返回結果
+
+        成功時返回該預警記錄對應用戶的基本信息。字段含義見下方響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -1990,7 +2268,17 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 對 margin call 詳情做預檢查，返回是否命中。
+      description: |-
+        對 margin call 詳情做預檢查，返回指定賬戶是否命中 margin call。
+
+        ### 請求參數
+
+        - 必填：`aaid`（證券賬號）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 返回結果
+
+        成功時返回該賬戶是否命中 margin call 的預檢查結果，可用於決定是否繼續加載詳情。字段含義見下方響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -2044,7 +2332,17 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 後台查詢指定用戶的資產信息。
+      description: |-
+        後台查詢指定用戶的資產信息。
+
+        ### 請求參數
+
+        - 本接口無必填參數，可選參數見下方字段說明。
+        - 可通過 `account_channel`（賬戶渠道）、`member_id`（用戶 ID）、`aaid`（證券賬號）定位目標用戶。
+
+        ### 返回結果
+
+        成功時返回該用戶的資產信息。字段含義見下方響應定義。
       security:
         - bearerAuth: []
       parameters:
@@ -2103,7 +2401,18 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 查詢 margin call 預警記錄對應的消息推送歷史。
+      description: |-
+        查詢 margin call 預警記錄對應的消息推送歷史。
+
+        ### 請求參數
+
+        - 必填：`risk_monitoring_log_id`（預警記錄 ID）
+        - 可選：`limit`、`offset`（分頁控制）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 返回結果
+
+        成功時返回該預警記錄的消息推送歷史。字段含義見下方響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -2192,16 +2501,24 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        批量推送風控預警消息。
+        按證券賬號列表批量推送風控預警消息。
 
         ### 請求參數
 
-        - 必填：`aaid_list`（證券賬號列表）、`push_msg_type`（推送消息類型）、`audit_frontend_resource`（審計上下文）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`aaid_list`（證券賬號列表）、`push_msg_type`（推送消息類型）、`audit_frontend_resource`（調用方審計上下文）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        對列表中的每個證券賬號按指定消息類型推送風控預警通知。
+
+        ### 風險提示
+
+        此操作向真實客戶批量發送通知，無法撤回。調用前請確認賬號列表與消息類型無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成批量消息推送；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -2307,21 +2624,25 @@ paths:
         - lb_hk_margin_call.margin_call_batch_forc
       x-lbonly: false
       description: |-
-        對勾選的持倉批量強制平倉。涉及批量真實持倉強制平倉，風險極高。
+        對所選持倉批量發起強制平倉。
 
         ### 請求參數
 
-        - 必填：`logid_list`（預警記錄ID列表）、`op_user`（操作員）、`is_intraday_credit`（是否日內融）、`audit_frontend_resource`（審計上下文）
+        - 必填：`logid_list`（預警記錄 ID 列表）、`op_user`（操作員）、`is_intraday_credit`（是否日內融）、`audit_frontend_resource`（調用方審計上下文）
         - 可選：`counter_id`（標的代碼）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        針對預警記錄列表對應的持倉批量執行強制平倉；傳入 `counter_id` 時可限定平倉的標的。
 
         ### 風險提示
 
-        > 此操作可能影響真實業務數據或資產狀態。調用前請核對目標記錄、金額、數量和操作類型。
+        此操作對真實客戶持倉批量強制平倉，將直接產生實際成交，風險極高且不可逆。調用前務必核對預警記錄、標的與操作員。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時提交批量強平；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -2438,16 +2759,20 @@ paths:
         - wtt_margin_call.manage
       x-lbonly: false
       description: |-
-        新增跟進記錄。
+        為風控預警記錄新增一條跟進記錄。
 
         ### 請求參數
 
-        - 必填：`risk_monitoring_log_id`（預警記錄ID）、`content`（跟進內容）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`risk_monitoring_log_id`（預警記錄 ID）、`content`（跟進內容）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        在指定預警記錄下追加處置跟進內容，用於記錄處理過程。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時新增跟進記錄；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -2532,17 +2857,21 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        更新風控實時預警記錄的狀態（如標記已跟進、已處理等）。
+        更新風控實時預警記錄的處理狀態。
 
         ### 請求參數
 
-        - 必填：`risk_monitoring_log_id`（預警記錄ID）、`status`（處理狀態）、`reason`（處理原因）
+        - 必填：`risk_monitoring_log_id`（預警記錄 ID）、`status`（處理狀態）、`reason`（處理原因）
         - 可選：`comment`（備註）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        將預警記錄更新為指定處理狀態（如已跟進、已處理等），並記錄處理原因。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時更新預警記錄狀態；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -2657,7 +2986,24 @@ paths:
       x-permission-key:
         - margin_call.short_sell_stock_force_close
       x-lbonly: false
-      description: 對融券持倉發起強制平倉。寫操作，請求字段以真實接口為準。
+      description: |-
+        對融券持倉發起強制平倉。
+
+        ### 請求參數
+
+        - 本接口無必填參數，具體請求字段見下方字段說明。
+
+        ### 業務說明
+
+        對觸發追收的融券持倉執行強制平倉（買回），以覆蓋融券敞口。
+
+        ### 風險提示
+
+        此操作對真實融券持倉強制平倉，將直接產生實際成交，不可逆。調用前請核對目標持倉與參數。
+
+        ### 處理結果
+
+        成功時提交融券強平；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       responses:
@@ -2696,7 +3042,24 @@ paths:
       x-permission-key:
         - margin_call.short_sell_msg
       x-lbonly: false
-      description: 確認併發送融券持倉平倉推送消息。寫操作，請求字段以真實接口為準。
+      description: |-
+        確認並發送融券持倉平倉的推送消息。
+
+        ### 請求參數
+
+        - 本接口無必填參數，具體請求字段見下方字段說明。
+
+        ### 業務說明
+
+        對融券平倉相關的通知內容進行確認後向客戶發送推送消息。
+
+        ### 風險提示
+
+        此操作向真實客戶發送通知，無法撤回。調用前請確認消息內容與目標對象無誤。
+
+        ### 處理結果
+
+        成功時完成融券平倉推送消息發送；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       responses:
@@ -2735,7 +3098,20 @@ paths:
       x-permission-key:
         - margin_call.short_sell_msg
       x-lbonly: false
-      description: 預覽融券持倉平倉推送消息內容。請求字段以真實接口為準。
+      description: |-
+        預覽融券持倉平倉推送消息的內容。
+
+        ### 請求參數
+
+        - 本接口無必填參數，具體請求字段見下方字段說明。
+
+        ### 業務說明
+
+        在正式推送前生成融券平倉通知的預覽內容，供確認後再發送。
+
+        ### 返回結果
+
+        成功時返回融券平倉推送消息的預覽內容。字段含義見下方響應定義。
       security:
         - bearerAuth: []
       responses:
@@ -2775,16 +3151,25 @@ paths:
         - margin_call.modify_short_sell_stock_holding_status
       x-lbonly: false
       description: |-
-        參數以 query string 形式傳遞（Content-Type: application/x-www-form-urlencoded）。涉及真實融券持倉狀態變更。
+        修改指定證券的融券持倉狀態。
 
         ### 請求參數
 
         - 必填：`counter_id`（證券代碼）、`status`（狀態）、`remark`（備註）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 參數以 query string 形式傳遞（`Content-Type: application/x-www-form-urlencoded`）。
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        按證券代碼更新其融券持倉的處理狀態，並記錄備註。
+
+        ### 風險提示
+
+        此操作變更真實融券持倉狀態。調用前請核對證券代碼與目標狀態。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時更新融券持倉狀態；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -2885,19 +3270,23 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        觸發夜盤風險監控計算；無請求參數。計算完成後另通過狀態輪詢接口查詢結果。
+        觸發夜盤風險監控計算。
 
         ### 請求參數
 
-        該接口不接收業務參數。
+        - 本接口不接收業務參數。
+
+        ### 業務說明
+
+        發起一次夜盤風險監控的批量計算任務；計算完成後需另行通過狀態輪詢接口查詢結果。
 
         ### 風險提示
 
-        > 此操作可能影響真實業務數據或資產狀態。調用前請核對目標記錄、金額、數量和操作類型。
+        此操作觸發全量風險重算，影響後續風控判定結果。請勿在不必要時重複觸發。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時啟動夜盤風險監控計算；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       responses:
@@ -2961,7 +3350,17 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 查詢期權備兌追收對應股票的 margin call 詳情。
+      description: |-
+        查詢期權備兌追收對應股票的 margin call 詳情。
+
+        ### 請求參數
+
+        - 本接口無必填參數，可選參數見下方字段說明。
+        - 傳入 `aaid` 時按指定證券賬號過濾。
+
+        ### 返回結果
+
+        成功時返回期權追繳股票的 margin call 詳情。字段含義見下方響應定義。
       security:
         - bearerAuth: []
       parameters:
@@ -3030,17 +3429,21 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        更新期權追繳股票記錄狀態。
+        更新期權追繳股票記錄的處理狀態。
 
         ### 請求參數
 
-        - 必填：`record_id`（記錄ID）、`status`（狀態）
-        - 可選：`comment`（備註）、`reason`（原因）、`audit_frontend_resource`（審計上下文）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`record_id`（記錄 ID）、`status`（狀態）
+        - 可選：`comment`（備註）、`reason`（原因）、`audit_frontend_resource`（調用方審計上下文）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        將指定期權追繳股票記錄更新為目標處理狀態，並可記錄原因與備註。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時更新期權追繳股票記錄狀態；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -3135,7 +3538,17 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 查詢空頭股票追收的持倉記錄。
+      description: |-
+        查詢空頭股票追收的持倉記錄。
+
+        ### 請求參數
+
+        - 本接口無必填參數，可選參數見下方字段說明。
+        - 傳入 `aaid` 時按指定證券賬號過濾。
+
+        ### 返回結果
+
+        成功時返回空頭股票追收的持倉記錄。字段含義見下方響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -3202,7 +3615,17 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 查詢空頭股票追收處理中的訂單詳情。
+      description: |-
+        查詢空頭股票追收處理中的訂單詳情。
+
+        ### 請求參數
+
+        - 本接口無必填參數，可選參數見下方字段說明。
+        - 傳入 `aaid` 時按指定證券賬號過濾。
+
+        ### 返回結果
+
+        成功時返回空頭股票追收處理中的訂單詳情。字段含義見下方響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -3278,7 +3701,17 @@ paths:
         - lb_hk_margin_call.margin_call_query
         - us_margin_call.short_margin_call_query
       x-lbonly: false
-      description: 查詢空頭股票追收的消息推送歷史。
+      description: |-
+        查詢空頭股票追收（保證金追繳）的訊息推送歷史記錄。
+
+        ### 請求參數
+
+        - 本接口無必填參數；透過 `aaid`（賬戶 ID）定位目標賬戶。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 返回結果
+
+        成功時返回該賬戶空頭股票追收的歷史推送記錄，欄位含義見下方回應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -3327,7 +3760,17 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 查詢空頭股票追收詳情。
+      description: |-
+        查詢指定賬戶的空頭股票追收（保證金追繳）詳情。
+
+        ### 請求參數
+
+        - 本接口無必填參數；透過 `aaid`（賬戶 ID）定位目標賬戶。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 返回結果
+
+        成功時返回該賬戶空頭股票追收的明細數據，欄位含義見下方回應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -3399,20 +3842,20 @@ paths:
         - lb_hk_margin_call.margin_call_cancel_order
       x-lbonly: false
       description: |-
-        撤銷風險預警場景中的訂單；多個預警視圖共用該接口。
+        撤銷風險預警（Margin Call 等）場景下的委託訂單；多個風控預警檢視共用該接口。
 
         ### 請求參數
 
-        - 必填：`order_id`（訂單ID）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 必填：`order_id`（訂單 ID）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 風險提示
 
-        > 此操作可能影響真實業務數據或資產狀態。調用前請核對目標記錄、金額、數量和操作類型。
+        此操作會撤銷真實委託訂單，可能影響客戶持倉與風控處置結果。調用前請確認目標訂單無誤。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時完成撤單操作；後續狀態和返回數據以 `200` 回應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -3490,7 +3933,25 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 新增一個股票保證金比例調整任務並接入審核。寫操作，請求字段以真實接口為準。
+      description: |-
+        新增一個股票保證金比例調整任務，並提交進入審核流程。
+
+        ### 請求參數
+
+        - 必填：`counter_id`（證券代碼）、`im_factor`（初始保證金率）、`mm_factor`（維持保證金率）、`fm_factor`（平倉保證金率）、`mcm_factor`（Margin Call 保證金率）、`trigger_at`（生效日期）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        任務提交後進入審核，審核通過並在 `trigger_at` 指定日期生效後，將變更該證券的保證金比例。
+
+        ### 風險提示
+
+        此操作涉及真實保證金比例變更，風險極高。調用前請確認證券代碼、各項保證金率和生效日期無誤。
+
+        ### 處理結果
+
+        成功時建立保證金比例調整任務並進入審核；後續狀態和返回數據以 `200` 回應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -3578,17 +4039,21 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        刪除股票保證金審批記錄。
+        刪除一條股票保證金比例審批記錄。
 
         ### 請求參數
 
-        - 必填：`counter_id`（櫃檯/標的ID）
-        - 可選：`operator`（操作人）、`source`（來源）、`audit_frontend_resource`（審計調用方資源）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`counter_id`（櫃檯/標的 ID）
+        - 可選：`operator`（操作人）、`source`（來源）、`audit_frontend_resource`（審計上下文）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 風險提示
+
+        此操作會刪除保證金審批記錄，刪除後不可恢復。調用前請確認目標記錄無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時刪除對應審批記錄；後續狀態和返回數據以 `200` 回應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -3687,20 +4152,20 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        攜帶上一步返回的 batch_id（file_type 固定傳 0）。涉及真實保證金比例變更，風險極高。
+        提交賬戶維度的股票保證金比例調整審批，攜帶上一步上傳返回的 `batch_id`（`file_type` 固定傳 `0`）。
 
         ### 請求參數
 
-        - 必填：`batch_id`（批次ID）、`audit_frontend_resource`（審計上下文）、`file_type`（文件類型）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 必填：`batch_id`（批次 ID）、`file_type`（檔案類型）、`audit_frontend_resource`（審計上下文）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 風險提示
 
-        > 此操作可能影響真實業務數據或資產狀態。調用前請核對目標記錄、金額、數量和操作類型。
+        此操作涉及真實保證金比例變更，風險極高。調用前請確認批次內容無誤。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時提交審批；後續狀態和返回數據以 `200` 回應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -3799,20 +4264,20 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        主動生效保證金調整任務。
+        主動觸發一個保證金調整任務立即生效，無需等待其原定生效時間。
 
         ### 請求參數
 
-        - 必填：`id`（任務ID）、`audit_frontend_resource`（審計上下文）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`id`（任務 ID）、`audit_frontend_resource`（審計上下文）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 風險提示
 
-        > 此操作可能引起真實資金、持倉或交易狀態變化。調用前請確認目標記錄和參數無誤。
+        此操作涉及真實保證金比例變更，風險極高。調用前請確認目標任務無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時使該任務立即生效；後續狀態和返回數據以 `200` 回應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -3897,16 +4362,20 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        取消保證金調整任務。
+        取消一個尚未生效的保證金調整任務。
 
         ### 請求參數
 
-        - 必填：`id`（任務ID）、`audit_frontend_resource`（審計上下文）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`id`（任務 ID）、`audit_frontend_resource`（審計上下文）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 風險提示
+
+        此操作會取消保證金調整任務，取消後該任務不再生效。調用前請確認目標任務無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時取消該任務；後續狀態和返回數據以 `200` 回應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -3991,20 +4460,20 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        涉及批量真實保證金比例變更，風險極高。其中 ids 為待處理任務ID列表（來自 template_id: waitting_stock_margin_ratio_task_count 查詢結果），不顯式傳遞分頁/日期等參數，語義為觸發全部待處理任務。
+        批量觸發全部待處理的保證金調整任務立即生效。待處理任務 ID 列表由風控待辦任務查詢結果提供，接口語義為觸發全部待處理任務。
 
         ### 請求參數
 
-        - 可選：`audit_frontend_resource`（審計調用方資源）、`audit_frontend_resource.$behavior`（操作行為描述）、`audit_frontend_resource.ids`（任務ID列表）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 可選：`audit_frontend_resource`（審計上下文，含 `$behavior` 操作行為描述、`ids` 任務 ID 列表）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 風險提示
 
-        > 此操作可能影響真實業務數據或資產狀態。調用前請核對目標記錄、金額、數量和操作類型。
+        此操作涉及批量真實保證金比例變更，風險極高。調用前請確認待處理任務範圍無誤。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時批量觸發全部待處理任務生效；後續狀態和返回數據以 `200` 回應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -4095,21 +4564,21 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        提交賣空保證金比例審批。
+        提交賣空（空頭）股票保證金比例調整審批，攜帶上傳返回的批次號與檔案資訊。
 
         ### 請求參數
 
-        - 必填：`batch_id`（批次號）、`file_infos`（已上傳文件信息列表）
-        - 可選：`audit_frontend_resource`（審計調用方資源）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`batch_id`（批次號）、`file_infos`（已上傳檔案資訊列表）
+        - 可選：`audit_frontend_resource`（審計上下文）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 風險提示
 
-        > 此操作可能引起真實資金、持倉或交易狀態變化。調用前請確認目標記錄和參數無誤。
+        此操作涉及真實賣空保證金比例變更，風險極高。調用前請確認批次內容無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時提交審批；後續狀態和返回數據以 `200` 回應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -4207,7 +4676,22 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 修改賣空（空頭）股票保證金比例並接入審核。寫操作，請求字段以真實接口為準。
+      description: |-
+        修改賣空（空頭）股票的保證金比例，並提交進入審核流程。
+
+        ### 請求參數
+
+        - 必填：`counter_id`（證券代碼）、`im_factor`（初始保證金率）、`mm_factor`（維持保證金率）、`fm_factor`（強平保證金率）、`mcm_factor`（Margin Call 保證金率）
+        - 可選：`short_sell_status`（可賣空狀態）、`short_sellable`（是否可賣空）、`short_selling_close_qty`（賣空平倉數量）、`short_selling_open_qty`（賣空開倉數量）、`audit_frontend_resource`（審計上下文）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 風險提示
+
+        此操作涉及真實賣空保證金比例變更，風險極高。調用前請確認證券代碼與各項保證金率無誤。
+
+        ### 處理結果
+
+        成功時提交修改並進入審核；後續狀態和返回數據以 `200` 回應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -4293,11 +4777,11 @@ paths:
         - lb_hk_credit_limit.client_credit_limit_query
       x-lbonly: false
       description: |-
-        查詢「授信額度查詢」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「授信額度查詢」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -4571,11 +5055,11 @@ paths:
         - lb_hk_credit_limit.account_credit_apply_query
       x-lbonly: false
       description: |-
-        查詢「授信額度申請記錄」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「授信額度申請記錄」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -4853,7 +5337,12 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 查詢人工授信審核工單預覽列表。
+      description: |-
+        查詢「人工授信審核工單預覽」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -5008,11 +5497,11 @@ paths:
         - lb_hk_credit_limit.credit_group_query
       x-lbonly: false
       description: |-
-        查詢「分組授信記錄」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「分組授信記錄」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -5163,7 +5652,12 @@ paths:
       x-permission-key:
         - lb_hk_credit_limit.credit_group_query
       x-lbonly: false
-      description: 查詢授信組詳情列表。
+      description: |-
+        查詢「授信組詳情」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -5352,11 +5846,11 @@ paths:
         - lb_hk_credit_limit.credit_snapshot
       x-lbonly: false
       description: |-
-        查詢「授信額度變動查詢」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「授信額度變動查詢」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -5646,11 +6140,11 @@ paths:
         - credit_management.reset_credit_task_batch_query
       x-lbonly: false
       description: |-
-        查詢「授信額度批量變更」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「授信額度批量變更」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -5823,7 +6317,12 @@ paths:
       x-permission-key:
         - credit_management.reset_credit_task_item_query
       x-lbonly: false
-      description: 查詢授信額度批量變更詳情列表。
+      description: |-
+        查詢「授信額度批量變更詳情」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -6024,11 +6523,11 @@ paths:
         - lb_hk_credit_limit.account_finance_used_query
       x-lbonly: false
       description: |-
-        查詢「已用融資額度查詢」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「已用融資額度查詢」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -6225,11 +6724,11 @@ paths:
         - lb_hk_credit_limit.client_credit_limit_query
       x-lbonly: false
       description: |-
-        查詢「超額使用融資報表」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「超額使用融資報表」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -6469,11 +6968,11 @@ paths:
         - credit_quota.trader_limit_list
       x-lbonly: false
       description: |-
-        查詢「交易額度查詢」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「交易額度查詢」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -6704,11 +7203,11 @@ paths:
         - credit_quota.invalidate_trader_audit_list
       x-lbonly: false
       description: |-
-        查詢「交易額度審核」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「交易額度審核」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -6938,11 +7437,11 @@ paths:
         - margin_call.risk_debt_info
       x-lbonly: false
       description: |-
-        查詢「換彙提醒查詢」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「換匯提醒查詢」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -7152,7 +7651,12 @@ paths:
       x-permission-key:
         - margin_call.risk_debt_info
       x-lbonly: false
-      description: 查詢兌換記錄。
+      description: |-
+        查詢「兌換記錄」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -7286,11 +7790,11 @@ paths:
         - margin_call.risk_debt_history_info_query
       x-lbonly: false
       description: |-
-        查詢「換彙提醒曆史記錄」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「換匯提醒歷史記錄」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -7489,11 +7993,11 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        查詢「借幣提醒快照」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「借幣提醒快照」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -7686,7 +8190,12 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 查詢現金/餘額通詳情列表。
+      description: |-
+        查詢「現金/餘額通詳情」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -7805,11 +8314,11 @@ paths:
         - margin_call.auto_convert_query
       x-lbonly: false
       description: |-
-        查詢「自動還款開通查詢」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「自動還款開通查詢」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -7976,7 +8485,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.margin_call_query
       x-lbonly: false
-      description: 查詢風控預警記錄統計。
+      description: |-
+        查詢「風控預警記錄統計」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -8156,11 +8670,11 @@ paths:
         - lb_hk_margin_call.margin_call_query
       x-lbonly: false
       description: |-
-        查詢「風控預警記錄」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「風控預警記錄」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -8640,7 +9154,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.margin_call_query
       x-lbonly: false
-      description: 查詢曆史平倉記錄。
+      description: |-
+        查詢「歷史平倉記錄」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -8803,7 +9322,12 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 查詢風控跟進記錄。
+      description: |-
+        查詢「風控跟進記錄」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -8914,7 +9438,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.risk_monitoring_alert_logs_abnormal_query
       x-lbonly: false
-      description: 查詢風控預警記錄異常單。
+      description: |-
+        查詢「風控預警記錄異常單」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -9164,11 +9693,11 @@ paths:
         - lb_hk_margin_call.margin_call_query
       x-lbonly: false
       description: |-
-        查詢「日內融風控預警記錄」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「日內融風控預警記錄」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -9562,11 +10091,11 @@ paths:
         - lb_hk_margin_call.margin_call_history_query
       x-lbonly: false
       description: |-
-        查詢「風控曆史記錄 - 列表」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「風控歷史記錄」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -9848,11 +10377,11 @@ paths:
         - lb_hk_margin_call.margin_call_history_query
       x-lbonly: false
       description: |-
-        查詢「保證金預警記錄快照」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「保證金預警記錄快照」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -10132,11 +10661,11 @@ paths:
         - margin_call.short_sell_stock_holding_summary
       x-lbonly: false
       description: |-
-        查詢「融券持倉概覽」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「融券持倉概覽」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -10327,7 +10856,12 @@ paths:
       x-permission-key:
         - margin_call.short_sell_stock_holding_detail
       x-lbonly: false
-      description: 查詢融券持倉詳情列表。
+      description: |-
+        查詢「融券持倉詳情」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -10443,11 +10977,11 @@ paths:
         - lb_hk_margin_call.margin_call_query
       x-lbonly: false
       description: |-
-        查詢「不良信貸記錄」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「不良信貸記錄」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各篩選欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -10656,7 +11190,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.margin_call_query
       x-lbonly: false
-      description: 查詢曆史詳情列表。
+      description: |-
+        查詢「風險預警歷史詳情」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -10795,11 +11334,11 @@ paths:
         - margin_call.overnight_risk_monitoring
       x-lbonly: false
       description: |-
-        查詢「夜盤風險監控」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「夜盤風險監控」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -10972,7 +11511,12 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 查詢夜盤風控報表計算狀態列表。
+      description: |-
+        查詢「夜盤風控報表計算狀態」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -11068,11 +11612,11 @@ paths:
         - lb_hk_margin_call.opt_stock_margin_call_records_query
       x-lbonly: false
       description: |-
-        查詢「期權股票追收預警記錄」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「期權股票追收預警記錄」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -11302,7 +11846,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.opt_stock_margin_call_records_query
       x-lbonly: false
-      description: 查詢期權平倉處理中列表。
+      description: |-
+        查詢「期權平倉處理中」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -11440,11 +11989,11 @@ paths:
         - lb_hk_margin_call.margin_call_query
       x-lbonly: false
       description: |-
-        查詢「空頭股票追收」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「空頭股票追收」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -11678,11 +12227,11 @@ paths:
         - lb_hk_margin_call.margin_call_batch_forcorder
       x-lbonly: false
       description: |-
-        查詢「批量和自動平倉記錄」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「批量和自動平倉記錄」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -11966,11 +12515,11 @@ paths:
         - lb_hk_margin_ratio.margin_ratio_query
       x-lbonly: false
       description: |-
-        查詢「股票融資保證金率」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「股票融資保證金率」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -12167,7 +12716,12 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 查詢股票保證金批量上傳解析結果列表。
+      description: |-
+        查詢「股票保證金批量上傳解析結果」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -12301,11 +12855,11 @@ paths:
         - lb_hk_margin_ratio.margin_ratio_log
       x-lbonly: false
       description: |-
-        查詢「調整股票融資保證金率任務」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「調整股票融資保證金率任務」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -12578,11 +13132,11 @@ paths:
         - lb_hk_margin_ratio.short_sell_margin_ratio_query
       x-lbonly: false
       description: |-
-        查詢「空頭保證金」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「空頭保證金」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -12799,7 +13353,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_ratio.short_sell_margin_ratio_query
       x-lbonly: false
-      description: 查詢空頭保證金記錄。
+      description: |-
+        查詢「空頭保證金變更記錄」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -12991,7 +13550,25 @@ paths:
       x-permission-key:
         - lb_hk_risk_limit_config.risk_limit_config_trader_update
       x-lbonly: false
-      description: 為指定交易員創建一條交易限額配置。寫操作。
+      description: |-
+        為指定交易員的一條交易限額設定，設定項包括預警（`condition_warn`）、審核（`condition_audit`）和拒絕（`condition_reject`）閾值。
+
+        ### 請求參數
+
+        - 必填：`trader`（交易員）、`code`（限額類型）、`currency`（幣種）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        限額按幣種（`currency`）與限額類型（`code`）區分。當交易觸及對應閾值時，會分別觸發預警、進入審核或被直接拒絕。
+
+        ### 風險提示
+
+        此操作會變更真實的風控限額設定，直接影響後續交易能否通過風控校驗。調用前請確認目標對象、幣種、限額類型和各閾值無誤。
+
+        ### 處理結果
+
+        成功時完成限額設定的寫入；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -13143,7 +13720,25 @@ paths:
       x-permission-key:
         - lb_hk_risk_limit_config.risk_limit_config_trader_update
       x-lbonly: false
-      description: 更新指定交易員的交易限額配置。寫操作。
+      description: |-
+        更新指定交易員的一條交易限額設定，設定項包括預警（`condition_warn`）、審核（`condition_audit`）和拒絕（`condition_reject`）閾值。
+
+        ### 請求參數
+
+        - 必填：`trader`（交易員）、`code`（限額類型）、`currency`（幣種）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        限額按幣種（`currency`）與限額類型（`code`）區分。當交易觸及對應閾值時，會分別觸發預警、進入審核或被直接拒絕。
+
+        ### 風險提示
+
+        此操作會變更真實的風控限額設定，直接影響後續交易能否通過風控校驗。調用前請確認目標對象、幣種、限額類型和各閾值無誤。
+
+        ### 處理結果
+
+        成功時完成限額設定的寫入；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -13299,11 +13894,11 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_trader_query
       x-lbonly: false
       description: |-
-        查詢「交易員限額」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「交易員限額」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -13509,21 +14104,25 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_trader_update
       x-lbonly: false
       description: |-
-        批量申請交易員交易限額。
+        批量申請一組交易員交易限額的生效狀態，透過 `is_apply` 控制目標記錄是啟用還是停用。
 
         ### 請求參數
 
         - 必填：`list`（交易員限額記錄列表）、`is_apply`（是否生效）
-        - 可選：`audit_frontend_resource`（審計調用方資源）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 可選：`audit_frontend_resource`（調用方審計上下文）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        `list` 中的每條記錄標識一條已存在的限額設定。此接口只批量切換生效狀態，不修改各限額的閾值。
 
         ### 風險提示
 
-        > 此操作可能引起真實資金、持倉或交易狀態變化。調用前請確認目標記錄和參數無誤。
+        此操作會更改真實交易限額的生效狀態，直接影響後續交易能否通過風控校驗。調用前請核對目標記錄列表和 `is_apply` 取值。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成批量生效狀態變更；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -13637,21 +14236,25 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_global_update
       x-lbonly: false
       description: |-
-        點擊操作項時調用，請求字段由 `actionItems` 的 `onClick` 回調構造。此操作會更改全局交易限額的實際生效狀態，風險極高。
+        啟用或停用一條全域交易限額設定，透過 `enable` 切換其生效狀態。
 
         ### 請求參數
 
-        - 必填：`code`（限額配置代碼）、`enable`（是否啓用）
-        - 可選：`audit_frontend_resource`（調用方審計日誌信息）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 必填：`code`（限額設定代碼）、`enable`（是否啟用）
+        - 可選：`audit_frontend_resource`（調用方審計上下文）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        全域限額作用於全體交易，啟停會立即改變其對後續交易的約束效果。此接口只切換生效狀態，不修改限額閾值。
 
         ### 風險提示
 
-        > 此操作可能影響真實業務數據或資產狀態。調用前請核對目標記錄、金額、數量和操作類型。
+        此操作會更改全域交易限額的實際生效狀態，影響範圍為全體交易，風險極高。調用前請再次確認目標 `code` 與 `enable` 取值。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時完成全域限額的啟停；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -13753,11 +14356,11 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_global_query
       x-lbonly: false
       description: |-
-        查詢「全局交易限額」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「全域交易限額」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -13978,7 +14581,25 @@ paths:
       x-permission-key:
         - lb_hk_risk_limit_config.risk_limit_config_global_update
       x-lbonly: false
-      description: 更新一條全局交易限額配置（預警/審核/拒絕閾值）。寫操作。
+      description: |-
+        更新全域（按限額類型與幣種）的一條交易限額設定，設定項包括預警（`condition_warn`）、審核（`condition_audit`）和拒絕（`condition_reject`）閾值。
+
+        ### 請求參數
+
+        - 必填：`type`（限額類型）、`code`（限額類型）、`currency`（幣種）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        限額按幣種（`currency`）與限額類型（`code`）區分。當交易觸及對應閾值時，會分別觸發預警、進入審核或被直接拒絕。
+
+        ### 風險提示
+
+        此操作會變更真實的風控限額設定，直接影響後續交易能否通過風控校驗。調用前請確認目標對象、幣種、限額類型和各閾值無誤。
+
+        ### 處理結果
+
+        成功時完成限額設定的寫入；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -14129,21 +14750,25 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        批量申請多維度交易限額。
+        批量申請一組多維度交易限額的生效狀態，透過 `is_apply` 控制目標記錄是啟用還是停用。
 
         ### 請求參數
 
         - 必填：`list`（多維度限額記錄列表）、`is_apply`（是否生效）
-        - 可選：`audit_frontend_resource`（審計調用方資源）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 可選：`audit_frontend_resource`（調用方審計上下文）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        `list` 中的每條記錄標識一條已存在的限額設定。此接口只批量切換生效狀態，不修改各限額的閾值。
 
         ### 風險提示
 
-        > 此操作可能引起真實資金、持倉或交易狀態變化。調用前請確認目標記錄和參數無誤。
+        此操作會更改真實交易限額的生效狀態，直接影響後續交易能否通過風控校驗。調用前請核對目標記錄列表和 `is_apply` 取值。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成批量生效狀態變更；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -14254,7 +14879,25 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 按多個維度（客戶/證券/股票組等）批量創建交易限額配置。寫操作。
+      description: |-
+        按多個維度（客戶 `aaid`、證券 `counter_id`、股票組 `stock_group` 等）建立交易限額設定，可一次提交組合維度的限額。
+
+        ### 請求參數
+
+        - 必填：`counter_id`（證券代碼）、`code`（限額類型）、`currency`（幣種）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        限額包含預警（`condition_warn`）、審核（`condition_audit`）、拒絕（`condition_reject`）三檔閾值，並可透過 `enable` 控制啟停。維度組合決定該限額的匹配範圍。
+
+        ### 風險提示
+
+        此操作會變更真實的風控限額設定，直接影響後續交易能否通過風控校驗。調用前請確認各維度取值、幣種、限額類型和閾值無誤。
+
+        ### 處理結果
+
+        成功時完成限額設定的寫入；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -14421,7 +15064,25 @@ paths:
       tags:
         - 風控管理
       x-lbonly: false
-      description: 按多個維度更新交易限額配置。寫操作。
+      description: |-
+        按多個維度（客戶 `aaid`、證券 `counter_id`、股票組 `stock_group` 等）更新交易限額設定，可一次提交組合維度的限額。
+
+        ### 請求參數
+
+        - 必填：`counter_id`（證券代碼）、`code`（限額類型）、`currency`（幣種）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        限額包含預警（`condition_warn`）、審核（`condition_audit`）、拒絕（`condition_reject`）三檔閾值，並可透過 `enable` 控制啟停。維度組合決定該限額的匹配範圍。
+
+        ### 風險提示
+
+        此操作會變更真實的風控限額設定，直接影響後續交易能否通過風控校驗。調用前請確認各維度取值、幣種、限額類型和閾值無誤。
+
+        ### 處理結果
+
+        成功時完成限額設定的寫入；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -14585,11 +15246,11 @@ paths:
         - risk_limit_config.risk_limit_dimension_query
       x-lbonly: false
       description: |-
-        查詢「多維度限額」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「多維度限額」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -14858,21 +15519,25 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_client_update
       x-lbonly: false
       description: |-
-        由行內操作項或懸浮批量操作欄調用，兩種場景僅傳入值不同。此操作會更改真實交易限額的生效狀態，風險較高。
+        批量申請一組客戶類別（組）交易限額的生效狀態，透過 `is_apply` 控制目標記錄是啟用還是停用。
 
         ### 請求參數
 
-        - 必填：`list`（批量操作的限額配置記錄列表）、`is_apply`（是否生效）
-        - 可選：`audit_frontend_resource`（調用方審計日誌信息）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 必填：`list`（批量操作的限額設定記錄列表）、`is_apply`（是否生效）
+        - 可選：`audit_frontend_resource`（調用方審計上下文）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        `list` 中的每條記錄標識一條已存在的限額設定。此接口只批量切換生效狀態，不修改各限額的閾值。
 
         ### 風險提示
 
-        > 此操作可能影響真實業務數據或資產狀態。調用前請核對目標記錄、金額、數量和操作類型。
+        此操作會更改真實交易限額的生效狀態，直接影響後續交易能否通過風控校驗。調用前請核對目標記錄列表和 `is_apply` 取值。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時完成批量生效狀態變更；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -14986,11 +15651,11 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_client_query
       x-lbonly: false
       description: |-
-        查詢「客戶類別限額」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「客戶類別限額」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -15187,7 +15852,25 @@ paths:
       x-permission-key:
         - lb_hk_risk_limit_config.risk_limit_config_client_update
       x-lbonly: false
-      description: 為指定客戶類別創建一條交易限額配置。寫操作。
+      description: |-
+        為指定客戶類別的一條交易限額設定，設定項包括預警（`condition_warn`）、審核（`condition_audit`）和拒絕（`condition_reject`）閾值。
+
+        ### 請求參數
+
+        - 必填：`client_group`（客戶類別）、`code`（限額類型）、`currency`（幣種）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        限額按幣種（`currency`）與限額類型（`code`）區分。當交易觸及對應閾值時，會分別觸發預警、進入審核或被直接拒絕。
+
+        ### 風險提示
+
+        此操作會變更真實的風控限額設定，直接影響後續交易能否通過風控校驗。調用前請確認目標對象、幣種、限額類型和各閾值無誤。
+
+        ### 處理結果
+
+        成功時完成限額設定的寫入；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -15339,7 +16022,25 @@ paths:
       x-permission-key:
         - lb_hk_risk_limit_config.risk_limit_config_client_update
       x-lbonly: false
-      description: 更新指定客戶類別的交易限額配置。寫操作。
+      description: |-
+        更新指定客戶類別的一條交易限額設定，設定項包括預警（`condition_warn`）、審核（`condition_audit`）和拒絕（`condition_reject`）閾值。
+
+        ### 請求參數
+
+        - 必填：`client_group`（客戶類別）、`code`（限額類型）、`currency`（幣種）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        限額按幣種（`currency`）與限額類型（`code`）區分。當交易觸及對應閾值時，會分別觸發預警、進入審核或被直接拒絕。
+
+        ### 風險提示
+
+        此操作會變更真實的風控限額設定，直接影響後續交易能否通過風控校驗。調用前請確認目標對象、幣種、限額類型和各閾值無誤。
+
+        ### 處理結果
+
+        成功時完成限額設定的寫入；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -15492,21 +16193,25 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_client_update
       x-lbonly: false
       description: |-
-        由行內操作項或懸浮批量操作欄調用，兩種場景僅傳入值不同。此操作會更改真實交易限額的生效狀態，風險較高。
+        批量申請一組客戶交易限額的生效狀態，透過 `is_apply` 控制目標記錄是啟用還是停用。
 
         ### 請求參數
 
-        - 必填：`list`（批量操作的限額配置記錄列表）、`is_apply`（是否生效）
-        - 可選：`audit_frontend_resource`（調用方審計日誌信息）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 必填：`list`（批量操作的限額設定記錄列表）、`is_apply`（是否生效）
+        - 可選：`audit_frontend_resource`（調用方審計上下文）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        `list` 中的每條記錄標識一條已存在的限額設定。此接口只批量切換生效狀態，不修改各限額的閾值。
 
         ### 風險提示
 
-        > 此操作可能影響真實業務數據或資產狀態。調用前請核對目標記錄、金額、數量和操作類型。
+        此操作會更改真實交易限額的生效狀態，直接影響後續交易能否通過風控校驗。調用前請核對目標記錄列表和 `is_apply` 取值。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時完成批量生效狀態變更；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -15620,11 +16325,11 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_client_query
       x-lbonly: false
       description: |-
-        查詢「客戶限額」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「客戶限額」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -15828,7 +16533,25 @@ paths:
       x-permission-key:
         - lb_hk_risk_limit_config.risk_limit_config_client_update
       x-lbonly: false
-      description: 為指定客戶創建一條交易限額配置。寫操作。
+      description: |-
+        為指定客戶（證券賬號）的一條交易限額設定，設定項包括預警（`condition_warn`）、審核（`condition_audit`）和拒絕（`condition_reject`）閾值。
+
+        ### 請求參數
+
+        - 必填：`aaid`（證券賬號）、`code`（限額類型）、`currency`（幣種）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        限額按幣種（`currency`）與限額類型（`code`）區分。當交易觸及對應閾值時，會分別觸發預警、進入審核或被直接拒絕。
+
+        ### 風險提示
+
+        此操作會變更真實的風控限額設定，直接影響後續交易能否通過風控校驗。調用前請確認目標對象、幣種、限額類型和各閾值無誤。
+
+        ### 處理結果
+
+        成功時完成限額設定的寫入；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -15983,7 +16706,25 @@ paths:
       x-permission-key:
         - lb_hk_risk_limit_config.risk_limit_config_client_update
       x-lbonly: false
-      description: 更新指定客戶的交易限額配置。寫操作。
+      description: |-
+        更新指定客戶（證券賬號）的一條交易限額設定，設定項包括預警（`condition_warn`）、審核（`condition_audit`）和拒絕（`condition_reject`）閾值。
+
+        ### 請求參數
+
+        - 必填：`aaid`（證券賬號）、`code`（限額類型）、`currency`（幣種）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        限額按幣種（`currency`）與限額類型（`code`）區分。當交易觸及對應閾值時，會分別觸發預警、進入審核或被直接拒絕。
+
+        ### 風險提示
+
+        此操作會變更真實的風控限額設定，直接影響後續交易能否通過風控校驗。調用前請確認目標對象、幣種、限額類型和各閾值無誤。
+
+        ### 處理結果
+
+        成功時完成限額設定的寫入；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -16138,7 +16879,25 @@ paths:
       x-permission-key:
         - lb_hk_risk_limit_config.risk_limit_config_stock_update
       x-lbonly: false
-      description: 為指定證券創建一條交易限額配置。寫操作。
+      description: |-
+        為指定證券的一條交易限額設定，設定項包括預警（`condition_warn`）、審核（`condition_audit`）和拒絕（`condition_reject`）閾值。
+
+        ### 請求參數
+
+        - 必填：`counter_id`（證券代碼）、`code`（限額類型）、`currency`（幣種）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        限額按幣種（`currency`）與限額類型（`code`）區分。當交易觸及對應閾值時，會分別觸發預警、進入審核或被直接拒絕。
+
+        ### 風險提示
+
+        此操作會變更真實的風控限額設定，直接影響後續交易能否通過風控校驗。調用前請確認目標對象、幣種、限額類型和各閾值無誤。
+
+        ### 處理結果
+
+        成功時完成限額設定的寫入；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -16293,7 +17052,25 @@ paths:
       x-permission-key:
         - lb_hk_risk_limit_config.risk_limit_config_stock_update
       x-lbonly: false
-      description: 更新指定證券的交易限額配置。寫操作。
+      description: |-
+        更新指定證券的一條交易限額設定，設定項包括預警（`condition_warn`）、審核（`condition_audit`）和拒絕（`condition_reject`）閾值。
+
+        ### 請求參數
+
+        - 必填：`counter_id`（證券代碼）、`code`（限額類型）、`currency`（幣種）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        限額按幣種（`currency`）與限額類型（`code`）區分。當交易觸及對應閾值時，會分別觸發預警、進入審核或被直接拒絕。
+
+        ### 風險提示
+
+        此操作會變更真實的風控限額設定，直接影響後續交易能否通過風控校驗。調用前請確認目標對象、幣種、限額類型和各閾值無誤。
+
+        ### 處理結果
+
+        成功時完成限額設定的寫入；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -16446,11 +17223,11 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_stock_query
       x-lbonly: false
       description: |-
-        查詢「證券限額」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「證券限額」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -16697,21 +17474,25 @@ paths:
         - lb_hk_risk_limit_config.risk_limit_config_stock_update
       x-lbonly: false
       description: |-
-        由行內操作項或懸浮批量操作欄調用，兩種場景僅傳入值不同。此操作會更改真實交易限額的生效狀態，風險較高。
+        批量申請一組證券交易限額的生效狀態，透過 `is_apply` 控制目標記錄是啟用還是停用。
 
         ### 請求參數
 
-        - 必填：`list`（批量操作的限額配置記錄列表）、`is_apply`（是否生效）
-        - 可選：`audit_frontend_resource`（調用方審計日誌信息）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 必填：`list`（批量操作的限額設定記錄列表）、`is_apply`（是否生效）
+        - 可選：`audit_frontend_resource`（調用方審計上下文）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        `list` 中的每條記錄標識一條已存在的限額設定。此接口只批量切換生效狀態，不修改各限額的閾值。
 
         ### 風險提示
 
-        > 此操作可能影響真實業務數據或資產狀態。調用前請核對目標記錄、金額、數量和操作類型。
+        此操作會更改真實交易限額的生效狀態，直接影響後續交易能否通過風控校驗。調用前請核對目標記錄列表和 `is_apply` 取值。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時完成批量生效狀態變更；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -16824,7 +17605,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_ratio.account_margin_ratio_query
       x-lbonly: false
-      description: 查詢客戶保證金變更記錄查詢。
+      description: |-
+        查詢「客戶保證金變更記錄」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -17064,7 +17850,25 @@ paths:
       x-permission-key:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
-      description: 為指定客戶新建一條多頭股票保證金比例記錄。寫操作，直接產生真實保證金配置變更；請求字段以真實接口為準。
+      description: |-
+        為指定客戶新建一條多頭股票保證金比例記錄，覆蓋該客戶在某證券上的保證金率設定。
+
+        ### 請求參數
+
+        - 本接口無必填參數約束，可選參數見下方欄位說明。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        保證金比例包括初始（`im_factor`）、維持（`mm_factor`）、強平（`fm_factor`）及 Margin Call（`mcm_factor`）等檔位，可設定失效日期（`expire_at`）。新建後即成為該客戶對應證券的生效保證金設定。
+
+        ### 風險提示
+
+        此操作直接產生真實的保證金設定變更，影響該客戶的融資額度、維持保證金和強平判定。調用前請確認目標客戶、證券及各保證金率無誤。
+
+        ### 處理結果
+
+        成功時完成保證金記錄的新建；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       responses:
@@ -17106,7 +17910,25 @@ paths:
       x-permission-key:
         - lb_hk_margin_ratio.account_margin_ratio_query
       x-lbonly: false
-      description: 使指定客戶的多頭股票保證金比例記錄失效。寫操作；請求字段以真實接口為準。
+      description: |-
+        使指定客戶的一條多頭股票保證金比例記錄立即失效。
+
+        ### 請求參數
+
+        - 本接口無必填參數約束，可選參數見下方欄位說明。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        失效後該記錄不再作為客戶對應證券的生效保證金設定，風控將回退至預設或上層保證金規則。
+
+        ### 風險提示
+
+        此操作會終止一條真實生效的保證金設定，直接影響該客戶的融資與強平判定。調用前請確認目標記錄無誤。
+
+        ### 處理結果
+
+        成功時完成記錄失效；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       responses:
@@ -17148,7 +17970,26 @@ paths:
       x-permission-key:
         - lb_hk_margin_ratio.account_margin_ratio_query
       x-lbonly: false
-      description: 更新指定客戶的多頭股票保證金比例記錄。寫操作；請求字段以真實接口為準。
+      description: |-
+        更新指定客戶的一條多頭股票保證金比例記錄，包括各檔保證金率和失效日期。
+
+        ### 請求參數
+
+        - 必填：`counter_id`（證券代碼）、`aaid`（證券賬號）、`im_factor`（初始保證金率）、`mm_factor`（維持保證金率）、`fm_factor`（強平保證金率）、`mcm_factor`（Margin Call 保證金率）、`expire_at`（失效日期）
+        - 可選：`position_side`（持倉方向）、`short_sell_status`（空頭狀態）、`short_selling_open_qty`（可開空數量）、`short_selling_close_qty`（可平空數量）、`audit_frontend_resource`（調用方審計上下文）等
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        更新後的保證金率立即作為該客戶對應證券的生效設定，影響融資額度、維持保證金和強平判定。
+
+        ### 風險提示
+
+        此操作直接變更真實生效的保證金設定。調用前請確認目標客戶、證券及各保證金率取值無誤。
+
+        ### 處理結果
+
+        成功時完成保證金記錄的更新；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -17245,11 +18086,11 @@ paths:
         - lb_hk_margin_ratio.account_margin_ratio_query
       x-lbonly: false
       description: |-
-        查詢「用戶股票融資保證金率」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「用戶股票融資保證金率」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -17533,7 +18374,25 @@ paths:
       x-permission-key:
         - margin_ratio.account_short_query
       x-lbonly: false
-      description: 為指定客戶新建一條空頭股票保證金比例記錄。寫操作；請求字段以真實接口為準。
+      description: |-
+        為指定客戶新建一條空頭股票保證金比例記錄，用於設定該客戶特定證券的空頭保證金要求。
+
+        ### 請求參數
+
+        - 本接口無必填參數，可選參數見下方欄位說明。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        記錄通常包含證券賬號、證券代碼，以及初始、維持、強平、Margin Call 保證金率和失效日期等，用於該客戶空頭持倉的風控計算。
+
+        ### 風險提示
+
+        此操作會新增客戶級空頭保證金配置，直接影響該客戶空頭持倉的保證金與強平判定。調用前請確認目標客戶和參數無誤。
+
+        ### 處理結果
+
+        成功時完成新建操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       responses:
@@ -17575,7 +18434,25 @@ paths:
       x-permission-key:
         - margin_ratio.account_short_query
       x-lbonly: false
-      description: 使指定客戶的空頭股票保證金比例記錄失效。寫操作；請求字段以真實接口為準。
+      description: |-
+        使指定客戶的空頭股票保證金比例記錄失效，令該客戶特定證券的空頭保證金配置停止生效。
+
+        ### 請求參數
+
+        - 本接口無必填參數，可選參數見下方欄位說明。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        失效後該記錄不再參與客戶空頭持倉的保證金計算，客戶將回退到預設或上層保證金規則。
+
+        ### 風險提示
+
+        此操作會使客戶級空頭保證金配置失效，直接影響該客戶空頭持倉的保證金與強平判定。調用前請確認目標記錄無誤。
+
+        ### 處理結果
+
+        成功時完成失效操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       responses:
@@ -17617,7 +18494,25 @@ paths:
       x-permission-key:
         - margin_ratio.account_short_query
       x-lbonly: false
-      description: 更新指定客戶的空頭股票保證金比例記錄。寫操作；請求字段以真實接口為準。
+      description: |-
+        更新指定客戶的空頭股票保證金比例記錄，調整該客戶特定證券的空頭保證金系數與失效日期。
+
+        ### 請求參數
+
+        - 必填：`counter_id`（證券代碼）、`aaid`（證券賬號）、`im_factor`（初始保證金率）、`mm_factor`（維持保證金率）、`fm_factor`（強平保證金率）、`mcm_factor`（Margin Call 保證金率）、`expire_at`（失效日期）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        初始、維持、強平、Margin Call 各級保證金率共同決定該客戶空頭持倉的保證金要求與預警、強平觸發閾值；`expire_at` 之後配置不再生效。
+
+        ### 風險提示
+
+        此操作會修改客戶級空頭保證金配置，直接影響該客戶空頭持倉的保證金與強平判定。調用前請確認目標記錄和參數無誤。
+
+        ### 處理結果
+
+        成功時完成更新操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -17713,7 +18608,12 @@ paths:
       x-permission-key:
         - margin_ratio.account_short_query
       x-lbonly: false
-      description: 查詢客戶空頭保證金變更記錄。
+      description: |-
+        查詢「客戶空頭保證金變更記錄」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -17974,11 +18874,11 @@ paths:
         - margin_ratio.account_short_query
       x-lbonly: false
       description: |-
-        查詢「客戶空頭股票保證金」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「客戶空頭股票保證金」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -18290,7 +19190,25 @@ paths:
       x-permission-key:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
-      description: 為指定客戶新建一條股票期權保證金係數記錄。寫操作；請求字段以真實接口為準。
+      description: |-
+        為指定客戶新建一條股票期權保證金系數記錄，用於設定該客戶特定標的的期權保證金上下限。
+
+        ### 請求參數
+
+        - 本接口無必填參數，可選參數見下方欄位說明。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        記錄通常包含客戶、股票代碼，以及初始、維持、強平保證金系數的上限與下限，用於該客戶期權持倉的保證金計算。
+
+        ### 風險提示
+
+        此操作會新增客戶級股票期權保證金配置，直接影響該客戶期權持倉的保證金要求。調用前請確認目標客戶和參數無誤。
+
+        ### 處理結果
+
+        成功時完成新建操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       responses:
@@ -18332,7 +19250,25 @@ paths:
       x-permission-key:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
-      description: 刪除指定客戶的股票期權保證金係數記錄。寫操作；請求字段以真實接口為準。
+      description: |-
+        刪除指定客戶的股票期權保證金系數記錄，移除該客戶特定標的的期權保證金配置。
+
+        ### 請求參數
+
+        - 本接口無必填參數，可選參數見下方欄位說明。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        刪除後該記錄不再參與客戶期權持倉的保證金計算，客戶將回退到預設或上層保證金規則。
+
+        ### 風險提示
+
+        此操作會刪除客戶級股票期權保證金配置，直接影響該客戶期權持倉的保證金要求。調用前請確認目標記錄無誤。
+
+        ### 處理結果
+
+        成功時完成刪除操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       responses:
@@ -18374,7 +19310,25 @@ paths:
       x-permission-key:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
-      description: 更新指定客戶的股票期權保證金係數記錄。寫操作；請求字段以真實接口為準。
+      description: |-
+        更新指定客戶的股票期權保證金系數記錄，調整該客戶特定標的的期權保證金上下限。
+
+        ### 請求參數
+
+        - 必填：`aaid`（客戶）、`counter_id`（股票代碼）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        初始、維持、強平保證金系數的上限（`max_*_factor`）與下限（`min_*_factor`）共同界定該客戶期權持倉保證金的取值區間，用於風控計算。
+
+        ### 風險提示
+
+        此操作會修改客戶級股票期權保證金配置，直接影響該客戶期權持倉的保證金要求。調用前請確認目標記錄和參數無誤。
+
+        ### 處理結果
+
+        成功時完成更新操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -18457,11 +19411,11 @@ paths:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
       description: |-
-        查詢「用戶期權保證金系數」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「用戶期權保證金系數」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -18663,11 +19617,11 @@ paths:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
       description: |-
-        查詢「期權保證金系數」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「期權保證金系數」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -18857,7 +19811,25 @@ paths:
       x-permission-key:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
-      description: 新建一條股票期權保證金係數記錄。寫操作；請求字段以真實接口為準。
+      description: |-
+        新建一條股票期權保證金系數記錄，用於設定某標的在全局（非客戶級）層面的期權保證金系數。
+
+        ### 請求參數
+
+        - 本接口無必填參數，可選參數見下方欄位說明。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        記錄通常包含股票代碼，以及初始、維持、強平保證金系數的上下限和未備兌最低系數，作為該標的期權保證金計算的預設規則。
+
+        ### 風險提示
+
+        此操作會新增全局股票期權保證金配置，影響命中該標的的所有客戶期權持倉保證金計算。調用前請確認目標標的和參數無誤。
+
+        ### 處理結果
+
+        成功時完成新建操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       responses:
@@ -18899,7 +19871,25 @@ paths:
       x-permission-key:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
-      description: 刪除股票期權保證金係數記錄。寫操作；請求字段以真實接口為準。
+      description: |-
+        刪除股票期權保證金系數記錄，移除某標的全局層面的期權保證金系數配置。
+
+        ### 請求參數
+
+        - 本接口無必填參數，可選參數見下方欄位說明。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        刪除後該標的將不再適用此全局期權保證金規則，回退到系統預設計算方式。
+
+        ### 風險提示
+
+        此操作會刪除全局股票期權保證金配置，影響命中該標的的所有客戶期權持倉保證金計算。調用前請確認目標記錄無誤。
+
+        ### 處理結果
+
+        成功時完成刪除操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       responses:
@@ -18941,7 +19931,25 @@ paths:
       x-permission-key:
         - credit_management.option_stock_margin_ratio_query
       x-lbonly: false
-      description: 更新股票期權保證金係數記錄。寫操作；請求字段以真實接口為準。
+      description: |-
+        更新股票期權保證金系數記錄，調整某標的全局層面的期權保證金系數上下限。
+
+        ### 請求參數
+
+        - 必填：`counter_id`（股票代碼）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        初始、維持、強平保證金系數的上下限及未備兌最低系數（`un_covered_min`）共同決定該標的全局期權保證金的取值區間。
+
+        ### 風險提示
+
+        此操作會修改全局股票期權保證金配置，影響命中該標的的所有客戶期權持倉保證金計算。調用前請確認目標記錄和參數無誤。
+
+        ### 處理結果
+
+        成功時完成更新操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -19023,11 +20031,11 @@ paths:
         - lb_hk_report.haircut_change_log
       x-lbonly: false
       description: |-
-        查詢「Haircut 修改記錄列表」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「Haircut 修改記錄列表」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -19196,17 +20204,25 @@ paths:
         - lb_hk_report.haircut_indexes
       x-lbonly: false
       description: |-
-        新增指數 Haircut。
+        新增一條指數 Haircut 配置，為符合條件的指數成分標的設定風控折扣率（Haircut）。
 
         ### 請求參數
 
         - 必填：`counter_id`（標的代碼）、`haircut`（折扣率）
         - 可選：`include_indexes`（包含指數）、`exclude_indexes`（排除指數）、`include_exchanges`（包含交易所）、`exclude_exchanges`（排除交易所）、`priority`（優先級）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        透過包含/排除指數與交易所限定生效範圍，`priority` 決定多條配置命中時的優先級；`haircut` 用於計算標的的可抵押價值。
+
+        ### 風險提示
+
+        此操作會新增風控折扣率配置，直接影響相關標的的抵押價值與保證金計算。調用前請確認參數無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成新增操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -19325,11 +20341,11 @@ paths:
         - lb_hk_report.haircut_indexes
       x-lbonly: false
       description: |-
-        查詢「指數 Haircut 列表」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「指數 Haircut 列表」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -19528,16 +20544,24 @@ paths:
         - lb_hk_report.haircut_indexes
       x-lbonly: false
       description: |-
-        字段結構與「新增指數 Haircut」一致，額外帶 id。涉及真實風控折扣率變更。
+        編輯已有的指數 Haircut 配置。欄位結構與「新增指數 Haircut」一致，額外以 `id` 定位目標記錄。
 
         ### 請求參數
 
-        - 必填：`id`（配置ID）、`counter_id`（標的代碼）、`haircut`（折扣率）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 必填：`id`（配置 ID）、`counter_id`（標的代碼）、`haircut`（折扣率）
+        - 各欄位的格式、取值範圍、預設行為和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        按 `id` 覆蓋更新對應的指數 Haircut 配置，`haircut` 用於計算標的的可抵押價值。
+
+        ### 風險提示
+
+        此操作會修改風控折扣率配置，直接影響相關標的的抵押價值與保證金計算。調用前請確認目標記錄和參數無誤。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時完成編輯操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -19628,16 +20652,24 @@ paths:
         - lb_hk_report.haircut_securities
       x-lbonly: false
       description: |-
-        新增股票 Haircut。
+        批量新增股票 Haircut 配置，為一批標的分別設定風控折扣率（Haircut）。
 
         ### 請求參數
 
         - 必填：`data`（Haircut 明細列表）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        `data` 中每條明細對應一個標的的 Haircut 設置，用於計算該標的的可抵押價值。
+
+        ### 風險提示
+
+        此操作會新增風控折扣率配置，直接影響相關標的的抵押價值與保證金計算。調用前請確認明細列表無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成新增操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -19725,11 +20757,11 @@ paths:
         - lb_hk_report.haircut_securities
       x-lbonly: false
       description: |-
-        查詢「股票 Haircut 列表」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「股票 Haircut 列表」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -19890,16 +20922,24 @@ paths:
         - lb_hk_report.haircut_securities
       x-lbonly: false
       description: |-
-        編輯股票 Haircut。
+        批量編輯股票 Haircut 配置，更新一批標的的風控折扣率（Haircut）。
 
         ### 請求參數
 
         - 必填：`data`（Haircut 明細列表）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        `data` 中每條明細對應一個標的的 Haircut 設置，按標的覆蓋更新其可抵押價值計算參數。
+
+        ### 風險提示
+
+        此操作會修改風控折扣率配置，直接影響相關標的的抵押價值與保證金計算。調用前請確認明細列表無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成編輯操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -19986,7 +21026,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.simulation_margin_query_detail_query
       x-lbonly: false
-      description: 查詢margin call 預計算詳情列表。
+      description: |-
+        查詢「Margin Call 預計算詳情」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -20153,11 +21198,11 @@ paths:
         - lb_hk_margin_call.simulation_margin_query_list_query
       x-lbonly: false
       description: |-
-        查詢「margin call 預計算列表」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「Margin Call 預計算列表」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -20354,17 +21399,25 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        Margin Call 壓力測試計算。
+        按給定的假設參數發起一次 Margin Call 壓力測試計算，評估在設定行情衝擊下客戶或組合的 Margin Call 風險。
 
         ### 請求參數
 
         - 必填：`simulate_cal_type`（計算維度）、`cal_type`（計算類型）、`is_filter`（是否使用豁免規則）、`remark`（自定義數據標題）
-        - 可選：`task_id`（批次號）、`market`（市場）、`stock_group_id`（股票組ID）、`counter_id`（股票代碼）、`price_limit`（漲跌幅）、`index_price_limit_info`（指數級別跌幅設置）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 可選：`task_id`（批次號）、`market`（市場）、`stock_group_id`（股票組 ID）、`counter_id`（股票代碼）、`price_limit`（漲跌幅）、`index_price_limit_info`（指數級別跌幅設置）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        `simulate_cal_type` 與 `cal_type` 決定計算維度與口徑；`price_limit` 與 `index_price_limit_info` 設定價格衝擊假設；`is_filter` 控制是否套用豁免規則。計算為非同步任務，結果透過對應預計算列表/詳情查詢。
+
+        ### 風險提示
+
+        此操作會觸發風控壓力測試計算任務並生成結果數據。調用前請確認假設參數設置合理。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時提交壓力測試計算任務；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -20531,16 +21584,20 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        修改模擬計算備註。
+        修改一次模擬計算任務的備註標題，便於識別和管理壓力測試結果。
 
         ### 請求參數
 
-        - 必填：`task_id`（任務ID）、`remark`（標題）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`task_id`（任務 ID）、`remark`（標題）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        僅更新任務的標題備註，不改變已生成的計算結果數據。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成備註修改；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -20628,7 +21685,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.risk_monitoring_simulation_list_query
       x-lbonly: false
-      description: 查詢simulate_file_details列表。
+      description: |-
+        查詢「自定義數據明細」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -20811,11 +21873,11 @@ paths:
         - lb_hk_margin_call.risk_monitoring_simulation_list_query
       x-lbonly: false
       description: |-
-        查詢「simulate_file」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「自定義數據預覽」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -20958,17 +22020,25 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        指數級別 (Index Level) 場景共用一個接口處理四種動作：新增（operation=0，提交 index_code/index_name/index_type/remark）、編輯（operation=1，額外帶 id）、刪除（operation=2，字段沿用 stock_level 而非 index_type，屬歷史命名遺留）、初始化數據（operation=3，僅傳 operation）。
+        指數級別 (Index Level) 的統一維護接口，透過 `operation` 區分新增、編輯、刪除和初始化數據四種動作。
 
         ### 請求參數
 
         - 必填：`index_code`（指數編碼）、`index_name`（指數名）、`index_type`（指數級別類型）、`operator`（操作人）、`operation`（操作類型）
-        - 可選：`remark`（備註）、`id`（記錄ID）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 可選：`remark`（備註）、`id`（記錄 ID）
+        - 各欄位的格式、取值範圍、預設行為和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        `operation` 控制具體動作：新增（`0`）提交指數編碼/名稱/級別類型/備註；編輯（`1`）額外帶 `id`；刪除（`2`）欄位沿用 stock_level 命名（歷史遺留）；初始化數據（`3`）僅傳 `operation`。
+
+        ### 風險提示
+
+        此操作會變更壓力測試所用的指數級別配置，影響相關風控計算。調用前請確認操作類型和參數無誤。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時完成所述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -21097,11 +22167,11 @@ paths:
         - lb_hk_margin_call.risk_monitoring_index_list_query
       x-lbonly: false
       description: |-
-        查詢「指數級別」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「指數級別」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -21254,11 +22324,11 @@ paths:
         - lb_hk_margin_call.risk_monitoring_stock_index_query
       x-lbonly: false
       description: |-
-        查詢「股票指數」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「股票指數」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -21412,17 +22482,25 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        修改股票指數操作。
+        維護股票與指數的對應關係，透過 `operation` 區分具體動作，用於壓力測試中股票所屬指數級別的歸類。
 
         ### 請求參數
 
-        - 必填：`operation`（操作類型）、`id`（記錄ID）
+        - 必填：`operation`（操作類型）、`id`（記錄 ID）
         - 可選：`stock_code`（股票代碼）、`index_code`（指數代碼）、`operator`（操作人）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        `operation` 決定新增、編輯或刪除等具體動作，`id` 定位目標記錄，`stock_code` 與 `index_code` 建立股票到指數的映射關係。
+
+        ### 風險提示
+
+        此操作會變更壓力測試所用的股票指數映射，影響相關風控計算。調用前請確認操作類型和參數無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成所述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -21534,7 +22612,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.risk_monitoring_stock_level_query
       x-lbonly: false
-      description: 查詢ELC TopN 股票 DropByX列表。
+      description: |-
+        查詢「ELC TopN 股票 DropByX」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -21637,7 +22720,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.risk_monitoring_stock_level_query
       x-lbonly: false
-      description: 查詢ELC 持倉明細列表。
+      description: |-
+        查詢「ELC 持倉明細」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -21762,7 +22850,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.risk_monitoring_stock_level_query
       x-lbonly: false
-      description: 查詢ELC TopN 股票 LC 數據列表。
+      description: |-
+        查詢「ELC TopN 股票 LC 數據」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -21881,7 +22974,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.risk_monitoring_stock_level_query
       x-lbonly: false
-      description: 查詢ELC Short Fall 明細列表。
+      description: |-
+        查詢「ELC Short Fall 明細」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -22011,7 +23109,12 @@ paths:
       x-permission-key:
         - lb_hk_margin_call.risk_monitoring_stock_level_query
       x-lbonly: false
-      description: 查詢ELC TopN 股票列表。
+      description: |-
+        查詢「ELC TopN 股票」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 返回結果
+
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -22143,11 +23246,11 @@ paths:
         - lb_hk_margin_call.risk_monitoring_stock_level_query
       x-lbonly: false
       description: |-
-        查詢「ELC 壓力測試」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 和 `orderBy` 控制分頁與排序。
+        查詢「ELC 壓力測試」資料，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態資料來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -22328,16 +23431,24 @@ paths:
         - 風控管理
       x-lbonly: false
       description: |-
-        新增/編輯集中度風險測試任務。
+        新增或編輯集中度風險測試任務，設定 LC 與 RLC 參數以觸發相應的集中度風險測算。
 
         ### 請求參數
 
         - 必填：`lc`（LC 參數）、`rlc`（RLC 參數）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        `lc` 與 `rlc` 分別設定集中度風險測試的相關閾值參數，用於評估持倉集中度帶來的潛在缺口（Short Fall）。
+
+        ### 風險提示
+
+        此操作會創建或修改集中度風險測試任務並影響相關風控計算結果。調用前請確認參數設置合理。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成所述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -22426,16 +23537,24 @@ paths:
         - credit_limit.client_group_operation
       x-lbonly: false
       description: |-
-        刪除客戶組。
+        刪除指定的客戶組。
 
         ### 請求參數
 
         - 必填：`business_type`（業務類型）、`name`（客戶組名稱）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        按 `business_type` 與 `name` 定位並刪除對應客戶組；刪除後該客戶組及其成員歸屬關係不再生效。
+
+        ### 風險提示
+
+        此操作會刪除客戶組，可能影響依賴該客戶組的風控規則和策略。調用前請確認目標客戶組無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成刪除操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -22521,7 +23640,25 @@ paths:
       x-permission-key:
         - credit_limit.client_group_operation
       x-lbonly: false
-      description: 從客戶組中批量移除客戶賬戶。寫操作。
+      description: |-
+        從客戶組中批量移除客戶賬戶。
+
+        ### 請求參數
+
+        - 必填：`aaids`（證券賬號列表）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        按 `aaids` 中的證券賬號將對應客戶從所屬客戶組移除；移除後這些賬戶不再隨該客戶組適用相關風控規則。
+
+        ### 風險提示
+
+        此操作會調整客戶組成員，可能影響相關賬戶的風控歸類。調用前請確認賬號列表無誤。
+
+        ### 處理結果
+
+        成功時完成移除操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -22578,7 +23715,25 @@ paths:
       x-permission-key:
         - credit_limit.client_group_operation
       x-lbonly: false
-      description: 向客戶組中新增一個客戶賬戶。寫操作。
+      description: |-
+        向客戶組中新增一個客戶賬戶。
+
+        ### 請求參數
+
+        - 必填：`aaid`（證券賬號）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        將 `aaid` 對應的客戶賬戶加入目標客戶組；加入後該賬戶隨該客戶組適用相關風控規則。
+
+        ### 風險提示
+
+        此操作會調整客戶組成員，可能影響相關賬戶的風控歸類。調用前請確認證券賬號無誤。
+
+        ### 處理結果
+
+        成功時完成新增操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:

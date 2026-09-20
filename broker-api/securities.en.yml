@@ -23,16 +23,24 @@ paths:
         - atm.rollover_stock_limit_update
       x-lbonly: false
       description: |-
-        Creates a securities-transfer-in restriction using only `counter_id`.
+        Adds a security to the transfer-in restriction list; a restricted security cannot be deposited via transfer.
 
         ### Request parameters
 
-        - Required: `counter_id` (Stock Code)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `counter_id` (security code)
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        The restriction is maintained per security as a deposit blocklist. A matched security is blocked at the deposit-application stage.
+
+        ### Risk warning
+
+        This operation changes the live deposit-restriction configuration and directly affects whether customers can transfer the security in. Confirm the security code before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the deposit-restriction entry is created. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -116,18 +124,25 @@ paths:
         - cmbc.broker_my
       x-lbonly: false
       description: |-
-        Uses the V3 endpoint. Includes `id` when editing and omits it when creating. This changes live
-        broker configuration.
+        Creates or edits an own-side broker record (currently V3). Passing `id` performs an edit; otherwise a new record is created.
 
         ### Request parameters
 
-        - Required: `market` (Market), `code` (Code), `name` (Name of channel broker), `company_name` (Name of Counter Company), `contact` (Contact), `contact_email` (Contact Email), `contact_phones` (Contact Phone)
-        - Optional: `id` (Broker Record ID), `account` (Broker Account), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `market` (market), `code` (broker code), `name` (channel broker name), `company_name` (counter company name), `contact` (contact person), `contact_email` (contact email), `contact_phones` (contact phones)
+        - Optional: `id` (broker record ID), `account` (broker account), `audit_frontend_resource` (caller-provided audit context)
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        Own-side brokers identify this firm's broker and counter contact information per market for use in transfer and related business.
+
+        ### Risk warning
+
+        This operation changes live broker configuration data. Confirm the target record and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the broker record is created or edited. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -274,17 +289,25 @@ paths:
         - cmbc.broker_my
       x-lbonly: false
       description: |-
-        Called after confirmation. This changes the broker's live listing status.
+        Lists an own-side broker up or takes it down, controlling whether it is enabled for business use.
 
         ### Request parameters
 
-        - Required: `brokers_my_id` (My Broker Record ID), `is_valid` (Is Valid/Enabled)
-        - Optional: `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `brokers_my_id` (own-side broker record ID), `is_valid` (whether to list up)
+        - Optional: `audit_frontend_resource` (caller-provided audit context)
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        When taken down, the broker is no longer available externally; listing it up restores availability.
+
+        ### Risk warning
+
+        This operation changes the live listed/unlisted state of the broker and affects its availability in transfer and related business. Confirm the target record before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the broker's listed/unlisted state is updated. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -385,19 +408,25 @@ paths:
         - cmbc.broker_rival
       x-lbonly: false
       description: |-
-        Cross-check with the audit template. `name` and `app_name` are localized fields split into `_en`,
-        `_cn`, and `_hk` before submission. `is_has_attachment` uses `atm_brokers_attachment` reference
-        data. Include `id` only when editing. This changes live broker configuration.
+        Creates or edits a counterparty broker record (currently V2). Pass `id` only when editing. `name` and `app_name` are multilingual fields, submitted separately as `_en`, `_cn`, and `_hk`.
 
         ### Request parameters
 
-        - Required: `market` (Market), `name_en` (Channel Broker (English)), `name_cn` (Channel Broker (Simplified Chinese)), `name_hk` (Channel Broker (Traditional Chinese)), `app_name_en` (Broker App Name (English)), `app_name_cn` (Broker App Name (Simplified Chinese)), `app_name_hk` (Broker App Name (Traditional Chinese)), `stock_limit` (Stock Number Limited), `code` (Code), `contact` (Contact), `is_has_attachment` (Any Attachment), `tpl_email` (Template Key for Transfer Email), `show_name` (Display Name of Our Broker), `priority` (Priority), `state` (State)
-        - Optional: `id` (Rival Broker Record ID), `contact_phone` (Contact Phone), `contact_email` (Contact Email), `icon` (Broker Logo), `website` (Website Address), `file_list` (Attachment File List), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `market` (market), `name_en`/`name_cn`/`name_hk` (multilingual channel broker name), `app_name_en`/`app_name_cn`/`app_name_hk` (multilingual broker app name), `stock_limit` (transfer stock-count limit), `code` (broker code), `contact` (contact person), `is_has_attachment` (whether attachments exist), `tpl_email` (transfer email template key), `show_name` (own-side broker display name), `priority` (priority), `state` (status)
+        - Optional: `id` (counterparty broker record ID), `contact_phone`, `contact_email`, `icon` (broker logo), `website`, `file_list` (attachment file list), `audit_frontend_resource` (caller-provided audit context)
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        Counterparty brokers identify the connecting broker for customer transfer-in/transfer-out. `is_has_attachment` uses the `atm_brokers_attachment` dynamic enum.
+
+        ### Risk warning
+
+        This operation changes live counterparty broker configuration. Verify the audit context and confirm the parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the counterparty broker record is created or edited. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -627,17 +656,20 @@ paths:
         - cmbc.broker_rival
       x-lbonly: false
       description: |-
-        Called after confirmation in the delete pop-up. This permanently deletes live broker
-        configuration.
+        Deletes a counterparty broker record.
 
         ### Request parameters
 
-        - Required: `brokers_id` (Rival Broker Record ID)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `brokers_id` (counterparty broker record ID)
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Risk warning
+
+        This operation permanently deletes live counterparty broker configuration data and cannot be undone. Confirm the target record before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the counterparty broker record is deleted. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -719,16 +751,16 @@ paths:
         - Stock Management
       x-lbonly: false
       description: |-
-        Security Detail.
+        Returns the basic details of the specified security.
 
         ### Request parameters
 
-        - Required: `id` (Security id)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (security ID)
+        - See the field descriptions for the format, value range, and business meaning of each field.
 
-        ### Result
+        ### Returns
 
-        Returns the result; see the `200` response schema for fields.
+        On success, returns the basic details of the security. See the response definition below for field meanings.
       security:
         - bearerAuth: []
       parameters:
@@ -926,16 +958,16 @@ paths:
         - Stock Management
       x-lbonly: false
       description: |-
-        Trade Meta.
+        Returns the trading metadata of the specified security.
 
         ### Request parameters
 
-        - Required: `counter_id` (Counter id)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `counter_id` (security ID)
+        - See the field descriptions for the format, value range, and business meaning of each field.
 
-        ### Result
+        ### Returns
 
-        Returns the result; see the `200` response schema for fields.
+        On success, returns the trading-related metadata of the security. See the response definition below for field meanings.
       security:
         - bearerAuth: []
       parameters:
@@ -1035,17 +1067,25 @@ paths:
         - Stock Management
       x-lbonly: false
       description: |-
-        Create/Update Private Security.
+        Creates or updates a private security. Passing `id` performs an edit; otherwise a new record is created.
 
         ### Request parameters
 
-        - Required: `market` (Market), `type` (Type), `ticker` (Ticker), `name` (Name), `currency` (Currency)
-        - Optional: `exchange` (Exchange), `name_locales` (Name locales (JSON-stringified {zh-CN,zh-HK,en})), `short_name_locales` (Short-name locales (JSON string)), `industry_locales` (Industry locales (JSON string)), `lot_size` (Lot size), `ipo_price` (IPO price), `risk_level` (Risk level (for BOND/OTHER)), `ipo_date` (IPO date), `delisting_date` (Delisting date), `ISIN` (ISIN), `CUSIP` (CUSIP), `bloomberg_code` (Bloomberg code), `SEDOL` (SEDOL), `reuters_code` (Reuters code), `group_name` (Group name), `bond_info` (Bond info), `id` (Security id (for edit)), `audit_frontend_resource` (Caller-provided audit context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `market` (market), `type` (type), `ticker` (ticker), `name` (name), `currency` (currency)
+        - Optional: `exchange`, `name_locales`/`short_name_locales`/`industry_locales` (multilingual name/short name/industry as a JSON string `{zh-CN,zh-HK,en}`), `lot_size` (board lot), `ipo_price`, `risk_level` (used for `BOND`/`OTHER`), `ipo_date` (`YYYY-MM-DD`), `delisting_date` (`YYYY-MM-DD`), `ISIN`, `CUSIP`, `bloomberg_code`, `SEDOL`, `reuters_code`, `group_name`, `bond_info`, `id` (security ID, pass when editing), `audit_frontend_resource` (caller-provided audit context)
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        The private security library lets a tenant maintain its own securities outside the platform's public library, for reference by quote maintenance, transfer, and other business.
+
+        ### Risk warning
+
+        This operation changes live private-security data and may affect downstream business that references the security. Confirm the parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for details.
+        On success, the private security is created or updated. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -1246,16 +1286,16 @@ paths:
         - gemini_tenant.stock_query
       x-lbonly: false
       description: |-
-        Private Security Detail.
+        Returns the details of the specified private security.
 
         ### Request parameters
 
-        - Required: `id` (Security id)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (security ID)
+        - See the field descriptions for the format, value range, and business meaning of each field.
 
-        ### Result
+        ### Returns
 
-        Returns the result; see the `200` response schema for fields.
+        On success, returns the details of the private security. See the response definition below for field meanings.
       security:
         - bearerAuth: []
       parameters:
@@ -1416,17 +1456,25 @@ paths:
         - Stock Management
       x-lbonly: false
       description: |-
-        Submitted by the detail drawer form on the Daily Quote page; no id is sent on create, and an id is carried on edit.
+        Creates or edits a private-library daily quote (EOD) record. Omitting `id` creates a new record; passing `id` edits it.
 
         ### Request parameters
 
-        - Required: `counter_id` (Stock Code), `trade_day` (Trade Day), `suspension_indicator` (Suspension Indicator), `close` (Close Price)
-        - Optional: `id` (Record ID), `open` (Open Price), `high` (High Price), `low` (Low Price), `volume` (Volume), `turnover` (Turnover), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `counter_id` (security code), `trade_day` (trade day), `suspension_indicator` (board status flag), `close` (close price)
+        - Optional: `id` (quote record ID), `open`, `high`, `low`, `volume`, `turnover`, `audit_frontend_resource` (caller-provided audit context)
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        A private-library quote is maintained uniquely per security and trade day, providing daily quotes to downstream business that references the private security.
+
+        ### Risk warning
+
+        This operation changes live quote data and may affect downstream valuation and display. Confirm the trade day and prices before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the quote for the trade day is created or edited. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -1561,7 +1609,12 @@ paths:
       x-permission-key:
         - finance.rollover
       x-lbonly: false
-      description: Query the transfer-in application count statistics list.
+      description: |-
+        Queries transfer-in application count statistics records. Use `filters` to combine business filter conditions, and `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Returns
+
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -1669,11 +1722,11 @@ paths:
         - finance.rollover
       x-lbonly: false
       description: |-
-        Queries Transfer In data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries deposit application records. Use `filters` to combine business filter conditions, and `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -1965,11 +2018,11 @@ paths:
         - finance.rollover_stock
       x-lbonly: false
       description: |-
-        Queries Transfer-In Details data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries deposit detail records. Use `filters` to combine business filter conditions, and `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -2400,7 +2453,12 @@ paths:
         - finance.rollover
         - finance.rollover_stock
       x-lbonly: false
-      description: Query the transfer-in detail statistics list.
+      description: |-
+        Queries transfer-in detail statistics records. Use `filters` to combine business filter conditions, and `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Returns
+
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -2508,11 +2566,11 @@ paths:
         - finance.rollover_stocks_limit
       x-lbonly: false
       description: |-
-        Queries Restricted Stock data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries deposit restriction records. Use `filters` to combine business filter conditions, and `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -2667,11 +2725,11 @@ paths:
         - finance.transfer_out_record
       x-lbonly: false
       description: |-
-        Queries Email Records data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries email delivery record records. Use `filters` to combine business filter conditions, and `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -2834,11 +2892,11 @@ paths:
         - finance.settlement_instructions
       x-lbonly: false
       description: |-
-        Queries SI List data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries settlement instruction (SI) records. Use `filters` to combine business filter conditions, and `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -3004,11 +3062,11 @@ paths:
         - cmbc.broker_my
       x-lbonly: false
       description: |-
-        Queries My Broker data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries own-side broker records. Use `filters` to combine business filter conditions, and `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -3195,11 +3253,11 @@ paths:
         - cmbc.broker_rival
       x-lbonly: false
       description: |-
-        Queries Sending Brokerage Firm data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries counterparty broker records. Use `filters` to combine business filter conditions, and `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -3480,11 +3538,11 @@ paths:
         - gemini.stock_info
       x-lbonly: false
       description: |-
-        Queries Instrument Brief Query data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries public instrument library records. Use `filters` to combine business filter conditions, and `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -3639,11 +3697,11 @@ paths:
         - gemini.stock_info
       x-lbonly: false
       description: |-
-        Queries security_private data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries private instrument library records. Use `filters` to combine business filter conditions, and `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -3832,11 +3890,11 @@ paths:
         - gemini.stock_info
       x-lbonly: false
       description: |-
-        Queries Private Library Quote EOD Management data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries private-library EOD quote records. Use `filters` to combine business filter conditions, and `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -4000,21 +4058,25 @@ paths:
         - b2b_atm.admin_transfer_out_apply
       x-lbonly: false
       description: |-
-        Processes Transfer-out Apply.
+        Submits a manual transfer-out (securities withdrawal) application for a customer, moving holdings out to an external receiving broker.
 
         ### Request parameters
 
-        - Required: `aaid` (Asset Account ID), `member_id` (Member ID), `from` (Source Flag), `params.name_en` (Name of Receiving Broker), `params.code` (CCASS / DTC No.), `params.name` (Account Name), `params.account_channel` (Account Channel), `params.stocks` (Transfer Out Stock List), `params.stocks[].counter_id` (Stock (Counter ID)), `params.stocks[].is_reality` (Whether It Is a Physical Stock), `params.stocks[].custodian` (Custodian), `params.stocks[].sub_position_no` (Depot), `params.stocks[].amount` (Total Amount)
-        - Optional: `params.broker_id` (Receiving Broker), `params.account` (A/C No.), `params.broker` (Broker Name (submit)), `params.stocks[].street_amount` (Street Amount), `params.stocks[].nominee_amount` (Nominee Amount), `params.stocks[].own_amount` (Own Amount), `params.stocks[].market` (Market), `params.stocks[].name_en` (Stock Name (English)), `params.stocks[].code` (Stock Code)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `aaid` (asset account ID), `member_id` (member/customer ID), `from` (source flag), `params.name_en` (receiving broker name), `params.code` (CCASS / DTC code), `params.name` (account name), `params.account_channel` (account channel), `params.stocks` (withdrawal detail list) and its items `counter_id` (security counter ID), `is_reality` (whether physical stock), `custodian` (custodian number), `sub_position_no` (sub-position number), `amount` (total holding quantity)
+        - Optional: `params.broker_id` (transfer-in broker), `params.account` (account number), `params.broker` (broker name), item-level `street_amount`/`nominee_amount`/`own_amount`, `market`, `name_en` (security English name), `code` (security code)
+        - See the field descriptions for the format, value range, and business meaning of each field.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may change real cash balances, positions, or transaction state. Verify the target records and parameters before calling it.
+        Each security line specifies the withdrawal quantity and custody information. After submission the application enters the subsequent withdrawal review workflow.
+
+        ### Risk warning
+
+        This operation creates a live transfer-out application and affects the customer's holdings and trading state. Confirm the customer, receiving broker, and each security line before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the manual transfer-out application is created. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -4223,17 +4285,25 @@ paths:
         - atm.transfer_out_update
       x-lbonly: false
       description: |-
-        Reviews a transfer-out application.
+        Reviews securities withdrawal applications, updating a batch of applications to the specified post-review status.
 
         ### Request parameters
 
-        - Required: `ids` (Transfer-out Request IDs), `state` (Resulting State)
-        - Optional: `remark` (Remark), `is_show` (Remark Visible to User), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ids` (withdrawal application ID list), `state` (post-review status)
+        - Optional: `remark` (remark), `is_show` (whether the remark is visible to the user), `audit_frontend_resource` (caller-provided audit context)
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        Multiple withdrawal applications can be reviewed in one call. `remark` is recorded with the review result and `is_show` controls whether it is shown to the customer.
+
+        ### Risk warning
+
+        This operation changes the live review status of withdrawal applications and affects subsequent transfer-out processing. Confirm the target applications and target status before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the selected withdrawal applications are updated. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -4355,17 +4425,25 @@ paths:
         - finance.update_transfer_out_stock
       x-lbonly: false
       description: |-
-        Update Transfer Fee.
+        Edits the transfer-out fee of a withdrawal application.
 
         ### Request parameters
 
-        - Required: `id` (Transfer-out Request ID), `is_show` (Remark Visible to User), `fee` (Transfer-out Fee)
-        - Optional: `remarkType` (Default Remark Type), `remark` (Modify Reason / Remark)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (withdrawal application ID), `is_show` (whether the remark is visible to the user), `fee` (transfer-out fee)
+        - Optional: `remarkType` (default remark type), `remark` (reason for change / remark)
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        Adjusts the transfer-out fee charged to the customer for this withdrawal application. A change reason may be attached, and `is_show` controls whether it is shown to the customer.
+
+        ### Risk warning
+
+        This operation changes a live charge amount and directly affects the fee actually deducted from the customer. Confirm the application and fee before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the transfer-out fee of the withdrawal application is updated. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -4480,17 +4558,25 @@ paths:
         - finance.update_transfer_out_stock
       x-lbonly: false
       description: |-
-        Batch Update Transfer-out Stock Detail.
+        Batch-updates the status of withdrawal detail items, updating a group of items to the specified status.
 
         ### Request parameters
 
-        - Required: `ids` (Transfer-out Stock Detail IDs), `state` (Resulting State)
-        - Optional: `remark` (Remark), `remark_config_type` (Remark Config Type)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ids` (withdrawal detail ID list), `state` (updated status)
+        - Optional: `remark` (remark), `remark_config_type` (remark type configuration)
+        - See the field descriptions for the format, value range, and business meaning of each field.
+
+        ### Business notes
+
+        Advances transfer-out processing in batch at the security-detail granularity. `remark` is recorded according to `remark_config_type`.
+
+        ### Risk warning
+
+        This operation changes the live status of withdrawal detail items and affects transfer-out processing progress. Confirm the target items and target status before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the selected withdrawal detail items are updated. The resulting state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -4598,11 +4684,11 @@ paths:
         - finance.transfer_out_record
       x-lbonly: false
       description: |-
-        Queries Transfer-out Request data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries withdrawal application records. Use `filters` to combine business filter conditions, and `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:
@@ -4854,11 +4940,11 @@ paths:
         - finance.transfer_out_record
       x-lbonly: false
       description: |-
-        Queries Transfer-Out Details data. Combine business filters in `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+        Queries withdrawal detail records. Use `filters` to combine business filter conditions, and `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination information. See the field descriptions for the purpose, allowed values, and dynamic data source of each filter.
       security:
         - bearerAuth: []
       requestBody:

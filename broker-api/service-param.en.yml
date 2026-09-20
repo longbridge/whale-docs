@@ -23,18 +23,24 @@ paths:
         - lb_hk_clearing.clearing_busin_step_edit
       x-lbonly: false
       description: |-
-        Cross-check the request against the actual payload example in the audit template. This operation
-        changes live pre-clearing checklist configuration.
+        Create or update a pre-clearing readiness check-item setting. Whether an existing record is matched by `task_code` determines create versus update.
 
         ### Request parameters
 
-        - Required: `task_code` (Task Code), `task_name` (Task Name)
-        - Optional: `process_mode` (Post-failure Processing Mode), `is_enable` (Enable/Disable), `audit_frontend_resource` (Audit Frontend Resource (auxiliary))
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `task_code` (task code), `task_name` (task name)
+        - See each field's definition for its format, value range, default behavior, and business meaning.
+
+        ### Business notes
+
+        `task_code` is the business-unique identifier of the check item. When editing an existing record, reuse the target record's `task_code`; it must not be changed. `process_mode` controls how the item is handled after a failure, and `is_enable` controls whether it is enabled. `audit_frontend_resource` is caller-provided audit context.
+
+        ### Risk warning
+
+        This operation changes the check items of the pre-clearing readiness flow and may affect end-of-day clearing execution and interception. Confirm the target record and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the check-item setting is created or updated; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -156,16 +162,24 @@ paths:
         - lb_hk_clearing.clearing_busin_step_edit
       x-lbonly: false
       description: |-
-        Update System Config.
+        Update the value of a clearing-system configuration item.
 
         ### Request parameters
 
-        - Required: `config_code` (Config Code), `config_value` (Config Value)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `config_code` (config code), `config_value` (config value)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        `config_code` identifies the clearing-system configuration item to change, and `config_value` is its new value.
+
+        ### Risk warning
+
+        This operation changes the clearing system's runtime configuration and may affect clearing-flow behavior. Confirm the config item and value before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the configuration item is updated; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -256,17 +270,25 @@ paths:
         - lb_hk_fund.companybank_update
       x-lbonly: false
       description: |-
-        Uses the same request fields as Create Company Bank Account, wrapped in `lb_bank_account_info`.
+        Edit a company bank-account configuration. The request structure matches "Add company bank account", with the account details wrapped in `lb_bank_account_info`.
 
         ### Request parameters
 
-        - Required: `id` (Bank Account ID), `lb_bank_account_info` (Bank Account Info)
-        - Optional: `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `id` (bank account ID), `lb_bank_account_info` (bank-account request data, same structure as "Add company bank account")
+        - Optional: `audit_frontend_resource` (caller-provided audit-log payload)
+        - See each field's definition for its format, value range, default behavior, and business meaning.
+
+        ### Business notes
+
+        `id` identifies the company bank account to edit. The fields inside `lb_bank_account_info` follow the "Add company bank account" endpoint and are not repeated here.
+
+        ### Risk warning
+
+        This operation changes the bank-account information used for company deposits and withdrawals and may affect subsequent deposits, withdrawals, and reconciliation. Confirm the target account and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the company bank account is updated; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -373,17 +395,25 @@ paths:
         - lb_hk_fund.companybank_update
       x-lbonly: false
       description: |-
-        Add Company Bank Account.
+        Create a company bank account, used to configure the bank-account information for company deposits and withdrawals.
 
         ### Request parameters
 
-        - Required: `nature_type` (Nature Type), `currency` (Currency), `account_name` (Account Name), `region` (Region), `bank_id` (Bank ID), `bank_account` (Bank Account), `bank_name` (Bank Name), `bank_region` (Bank Region), `swift_code` (Swift Code), `bank_addr` (Bank Address), `simple_name` (Simple Name), `deposit_types` (Deposit Types), `withdraw_types` (Withdraw Types), `version` (Version)
-        - Optional: `bank_code` (Bank Code), `connect_customer_id` (Connect Customer ID), `net_customer_id` (Net Customer ID), `intermediary_swift_code` (Intermediary Swift Code), `support_exchange` (Support Exchange), `remark` (Remark)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `nature_type` (account nature), `currency`, `account_name`, `region`, `bank_id`, `bank_account`, `bank_name`, `bank_region`, `swift_code`, `bank_addr`, `simple_name`, `deposit_types` (deposit methods), `withdraw_types` (withdrawal methods), `version`
+        - Optional: `bank_code`, `connect_customer_id` (routing / Connect Customer ID), `net_customer_id`, `intermediary_swift_code`, `support_exchange` (whether FX is supported), `remark`
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        `deposit_types` and `withdraw_types` are arrays; drop any item with an empty `name`/`id` before submitting. `version` is fixed to `1` for backward compatibility.
+
+        ### Risk warning
+
+        This operation adds a bank account used for company deposits and withdrawals and may affect subsequent deposits, withdrawals, and reconciliation. Confirm the account information before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the company bank account is created; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -569,11 +599,12 @@ paths:
 
         ### Request parameters
 
-        - Required: `id` (company bank account id), supplied as a query parameter.
+        - Required: `id` (company bank account id), passed as a query parameter.
+        - See each field's definition for its format, value range, and business meaning.
 
-        ### Result
+        ### Returns
 
-        On success, `data` contains the full configuration of the company bank account. The fields match the request fields of the "Add / Edit Company Bank Account" endpoints. See the `200` response fields for the meaning of each field.
+        On success `data` contains the account's full configuration; the fields match the request fields of "Add / Edit company bank account". See the response definition below for field meanings.
       security:
         - bearerAuth: []
       parameters:
@@ -774,17 +805,25 @@ paths:
         - atm.update_current_config
       x-lbonly: false
       description: |-
-        Edit Currency Config.
+        Edit a currency setting, used to maintain a currency's withdrawal, FX, precision, and display configuration.
 
         ### Request parameters
 
-        - Required: `id` (Config ID), `currency_iso` (Currency ISO), `currency` (Currency), `icon` (Icon), `logo` (Logo), `support_withdraw` (Support Withdraw), `support_exchange` (Support Exchange), `min_withdrawal_amount` (Min Withdrawal Amount), `min_exchange_amount` (Min Exchange Amount), `exchange_rate_precision` (Exchange Rate Precision), `amount_precision` (Amount Precision), `amount_round_mode` (Amount Round Mode), `standard_money` (Standard Money), `abbreviation_multi_name` (Abbreviation Multi Name), `multi_name` (Multi Name), `json_config` (JSON Config)
-        - Optional: `cash_amount` (Min Cash Amount), `remarks` (Remarks), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (config ID), `currency_iso` (currency code), `currency` (currency identifier), `icon`, `logo`, `support_withdraw`, `support_exchange`, `min_withdrawal_amount`, `min_exchange_amount`, `exchange_rate_precision`, `amount_precision`, `amount_round_mode`, `standard_money` (whether it is the base currency), `abbreviation_multi_name` (localized short name), `multi_name` (localized full name), `json_config` (display and business toggles)
+        - Optional: `cash_amount` (minimum deposit amount), `remarks`, `audit_frontend_resource` (caller-provided audit-log payload)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        Toggles such as `support_withdraw` and `support_exchange` are ultimately merged into `json_config`. `abbreviation_multi_name` and `multi_name` are localized JSON strings (with `zh-CN`, `zh-HK`, `en`).
+
+        ### Risk warning
+
+        This operation changes the currency's withdrawal, FX, and display configuration and may affect the funding services available to customers. Confirm the target currency and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the currency setting is updated; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -992,17 +1031,25 @@ paths:
         - atm.update_current_config
       x-lbonly: false
       description: |-
-        Add Currency Config.
+        Create a currency setting, used to configure withdrawal, FX, precision, and display parameters for a new currency.
 
         ### Request parameters
 
-        - Required: `currency_iso` (Currency ISO), `currency` (Currency), `icon` (Icon), `logo` (Logo), `support_withdraw` (Support Withdraw), `support_exchange` (Support Exchange), `min_withdrawal_amount` (Min Withdrawal Amount), `min_exchange_amount` (Min Exchange Amount), `exchange_rate_precision` (Exchange Rate Precision), `amount_precision` (Amount Precision), `amount_round_mode` (Amount Round Mode), `standard_money` (Standard Money), `abbreviation_multi_name` (Abbreviation Multi Name), `multi_name` (Multi Name), `json_config` (JSON Config)
-        - Optional: `cash_amount` (Min Cash Amount), `remarks` (Remarks)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `currency_iso` (three-letter currency code), `currency` (currency identifier), `icon`, `logo`, `support_withdraw`, `support_exchange`, `min_withdrawal_amount`, `min_exchange_amount`, `exchange_rate_precision`, `amount_precision`, `amount_round_mode`, `standard_money` (whether it is the base currency), `abbreviation_multi_name` (localized short name), `multi_name` (localized full name), `json_config` (display and business toggles)
+        - Optional: `cash_amount` (minimum deposit amount), `remarks`
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        `support_withdraw` and `support_exchange` are merged into `json_config` on submission. `abbreviation_multi_name`, `multi_name`, and `json_config` are all JSON strings. Allowed values for `amount_round_mode` come from the ref `atm_ref_amount_round_mode`.
+
+        ### Risk warning
+
+        This operation adds an available currency and its funding-business configuration and may affect the deposit, withdrawal, and FX capabilities visible to customers. Confirm the parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the currency setting is created; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -1357,16 +1404,24 @@ paths:
         - atm.settle_chnl_bank_acct_operation
       x-lbonly: false
       description: |-
-        Uses the same fields as Create Settlement Channel Account, with an additional `id`.
+        Edit a settlement-channel bank account. The field structure matches "Add settlement-channel account", with an additional `id` to locate the target record.
 
         ### Request parameters
 
-        - Required: `id` (Account ID)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `id` (account ID)
+        - The remaining fields follow "Add settlement-channel bank account". See each field's definition for its format, value range, default behavior, and business meaning.
+
+        ### Business notes
+
+        `id` identifies the settlement-channel bank account to edit; the remaining fields (settlement channel, account name, bank account, region, currency, etc.) have the same meaning as in the create endpoint.
+
+        ### Risk warning
+
+        This operation changes the bank-account information used by a settlement channel and may affect fund settlement and transfers. Confirm the target account and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the settlement-channel bank account is updated; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -1504,17 +1559,25 @@ paths:
         - atm.settle_chnl_bank_acct_operation
       x-lbonly: false
       description: |-
-        Create Whale Account.
+        Create a settlement-channel bank account, used to configure the receiving/paying bank account for a settlement channel.
 
         ### Request parameters
 
-        - Required: `settlement_channel` (Settlement Channel), `main_accounts` (Main Accounts), `account_name` (Account Name), `bank_account` (Bank Account), `bank_id` (Bank ID), `region` (Region), `currency` (Currency)
-        - Optional: `bank_addr` (Bank Address), `withdraw_types` (Withdraw Types), `remark` (Remark)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `settlement_channel`, `main_accounts` (main account), `account_name`, `bank_account`, `bank_id`, `region`, `currency`
+        - Optional: `bank_addr`, `withdraw_types`, `remark`
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        The account is bound to the specified settlement channel and used for subsequent fund settlement and transfers.
+
+        ### Risk warning
+
+        This operation adds a bank account relied on by a settlement channel and may affect fund settlement and transfers. Confirm the account information before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the settlement-channel bank account is created; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -1656,21 +1719,25 @@ paths:
         - atm.funds_alloc_config_operation
       x-lbonly: false
       description: |-
-        Create Whale Package Rule.
+        Create a fund-transfer (allocation) rule that defines how funds are automatically transferred between a specified source and destination according to a strategy.
 
         ### Request parameters
 
-        - Required: `transfer_type` (Transfer Type), `from_type` (From Type), `from_main_account` (From Main Account), `from_main_account_type` (From Main Account Type), `from_account_id` (From Account ID), `to_type` (To Type), `to_main_account` (To Main Account), `to_main_account_type` (To Main Account Type), `to_account_id` (To Account ID), `allocation_channel` (Allocation Channel), `transfer_strategy` (Transfer Strategy), `package_type` (Package Type), `currency` (Currency), `amount` (Amount), `status` (Status)
-        - Optional: `service_time` (Service Time), `postscript` (Postscript)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `transfer_type`, `from_type` (source type), `from_main_account`, `from_main_account_type`, `from_account_id`, `to_type` (destination type), `to_main_account`, `to_main_account_type`, `to_account_id`, `allocation_channel`, `transfer_strategy`, `package_type` (package type / frequency), `currency`, `amount`, `status`
+        - Optional: `service_time`, `postscript`
+        - See each field's definition for its format, value range, and business meaning.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may change real cash balances, positions, or transaction state. Verify the target records and parameters before calling it.
+        The rule defines the transfer strategy, frequency, currency, and amount from source to destination. `status` controls whether the rule is active.
+
+        ### Risk warning
+
+        This operation creates a rule that triggers real fund transfers; once active it may move real funds between accounts. Confirm the source, destination, amount, and strategy before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the fund-transfer rule is created; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -1808,16 +1875,24 @@ paths:
         - atm.funds_alloc_config_operation
       x-lbonly: false
       description: |-
-        Uses the same fields as Create Fund Transfer Rule, with an additional `id`.
+        Edit a fund-transfer (allocation) rule. The field structure matches "Add fund-transfer rule", with an additional `id` to locate the target record.
 
         ### Request parameters
 
-        - Required: `id` (Rule ID)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `id` (rule ID)
+        - The remaining fields follow "Add fund-transfer rule". See each field's definition for its format, value range, default behavior, and business meaning.
+
+        ### Business notes
+
+        `id` identifies the fund-transfer rule to edit; the remaining fields (source, destination, strategy, frequency, currency, amount, status, etc.) have the same meaning as in the create endpoint.
+
+        ### Risk warning
+
+        This operation changes a rule that triggers real fund transfers and may alter the direction, amount, or frequency of subsequent real fund movements. Confirm the target rule and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the fund-transfer rule is updated; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -1956,18 +2031,25 @@ paths:
         - atm.crypto_currency_operation
       x-lbonly: false
       description: |-
-        Uses `ModifyCoinConfigRequest`, shared with Edit Currency Configuration. Leave `id` empty when
-        creating.
+        Create a virtual-asset coin configuration to enable a coin and set its deposit/withdrawal, conversion, and limit parameters.
 
         ### Request parameters
 
-        - Required: `coin` (Coin), `chain_types` (Chain Types), `conversion_currency` (Conversion Currency), `conversion_rate` (Conversion Rate), `multi_name` (Multi Name), `icon` (Icon), `support_deposit` (Support Deposit), `support_withdraw` (Support Withdraw), `deposit_need_micro_verification` (Deposit Need Micro Verification), `quantity_precision` (Quantity Precision), `quantity_round_mode` (Quantity Round Mode)
-        - Optional: `max_per_withdraw` (Max Per Withdraw), `min_per_withdraw` (Min Per Withdraw), `daily_withdraw_limit` (Daily Withdraw Limit), `weekly_withdraw_limit` (Weekly Withdraw Limit), `remark` (Remark)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `coin` (coin code), `chain_types`, `conversion_currency`, `conversion_rate`, `multi_name` (localized full name), `icon`, `support_deposit`, `support_withdraw`, `deposit_need_micro_verification`, `quantity_precision`, `quantity_round_mode` (rounding logic)
+        - Optional: `max_per_withdraw`, `min_per_withdraw`, `daily_withdraw_limit`, `weekly_withdraw_limit`, `remark`
+        - See each field's definition for its format, value range, default behavior, and business meaning.
+
+        ### Business notes
+
+        `multi_name` is a localized JSON string (with `zh-CN`, `zh-HK`, `en`). `quantity_round_mode` is `round` (half-up) or `truncate`. Create and edit share the same request type; omit `id` when creating.
+
+        ### Risk warning
+
+        This operation adds an available virtual-asset coin along with its deposit/withdrawal and limit configuration and may affect the virtual-asset funding services visible to customers. Confirm the parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the virtual-asset coin configuration is created; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -2160,18 +2242,25 @@ paths:
         - atm.crypto_currency_operation
       x-lbonly: false
       description: |-
-        Uses `ModifyCoinConfigRequest`, shared with Create Currency Configuration, with an additional
-        required `id`.
+        Edit a virtual-asset coin configuration. It shares the request type with "Add coin configuration"; an `id` is additionally required when editing.
 
         ### Request parameters
 
-        - Required: `id` (Config ID), `coin` (Coin), `chain_types` (Chain Types), `conversion_currency` (Conversion Currency), `conversion_rate` (Conversion Rate), `multi_name` (Multi Name), `icon` (Icon), `support_deposit` (Support Deposit), `support_withdraw` (Support Withdraw), `deposit_need_micro_verification` (Deposit Need Micro Verification), `quantity_precision` (Quantity Precision), `quantity_round_mode` (Quantity Round Mode)
-        - Optional: `max_per_withdraw` (Max Per Withdraw), `min_per_withdraw` (Min Per Withdraw), `daily_withdraw_limit` (Daily Withdraw Limit), `weekly_withdraw_limit` (Weekly Withdraw Limit), `remark` (Remark)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `id` (config ID), `coin`, `chain_types`, `conversion_currency`, `conversion_rate`, `multi_name` (localized full name), `icon`, `support_deposit`, `support_withdraw`, `deposit_need_micro_verification`, `quantity_precision`, `quantity_round_mode` (rounding logic)
+        - Optional: `max_per_withdraw`, `min_per_withdraw`, `daily_withdraw_limit`, `weekly_withdraw_limit`, `remark`
+        - See each field's definition for its format, value range, default behavior, and business meaning.
+
+        ### Business notes
+
+        `id` identifies the coin configuration to edit. `multi_name` is a localized JSON string, and `quantity_round_mode` is `round` (half-up) or `truncate`.
+
+        ### Risk warning
+
+        This operation changes a coin's deposit/withdrawal, conversion, and limit configuration and may affect the virtual-asset funding services visible to customers. Confirm the target coin and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the virtual-asset coin configuration is updated; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -2369,17 +2458,21 @@ paths:
         - atm.modify_lookup
       x-lbonly: false
       description: |-
-        Updates Lookup.
+        Edit a deposit/withdrawal remark preset, used to change the text and priority of a predefined remark.
 
         ### Request parameters
 
-        - Required: `id` (Lookup ID), `category` (Remark Category), `value_cn` (Remark Content (Simplified Chinese)), `value_hk` (Remark Content (Traditional Chinese)), `value_en` (Remark Content (English)), `priority` (Priority)
-        - Optional: `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (remark preset ID), `category` (remark type), `value_cn` (Simplified Chinese text), `value_hk` (Traditional Chinese text), `value_en` (English text), `priority`
+        - Optional: `audit_frontend_resource` (caller-provided audit context)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        `category` cannot be changed when editing. `value_cn`/`value_hk`/`value_en` are up to 128 characters, or up to 500 characters when `category` is `setting_remark_withdrawal_reject` or `setting_remark_deposit_reject`. `priority` ranges from `1` to `999999`.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the remark preset is updated; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -2535,18 +2628,20 @@ paths:
         - atm.add_lookup
       x-lbonly: false
       description: |-
-        Creates a predefined remark. Fields include `category`, `value_cn`, `value_hk`, `value_en`,
-        `priority`, and `id`; `id` is used only when editing. This operation changes live business
-        configuration.
+        Create a deposit/withdrawal remark preset, used to add a reusable predefined remark.
 
         ### Request parameters
 
-        - Required: `category` (Remark Category), `priority` (Priority), `value_cn` (Remark Content (zh-CN)), `value_hk` (Remark Content (zh-HK)), `value_en` (Remark Content (en))
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `category` (remark category), `priority`, `value_cn` (Simplified Chinese text), `value_hk` (Traditional Chinese text), `value_en` (English text)
+        - See each field's definition for its format, value range, default behavior, and business meaning.
+
+        ### Business notes
+
+        `priority` is a positive integer in the range `1`-`999999`. `value_cn`/`value_hk`/`value_en` are the remark text for each language, provided by the caller.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the remark preset is created; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -2695,16 +2790,24 @@ paths:
         - atm.delete_lookup
       x-lbonly: false
       description: |-
-        Pass only `id` after confirmation. This operation permanently deletes live remark configuration.
+        Delete a deposit/withdrawal remark preset.
 
         ### Request parameters
 
-        - Required: `id` (Lookup ID)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `id` (remark preset ID)
+        - See each field's definition for its format, value range, default behavior, and business meaning.
+
+        ### Business notes
+
+        Only the `id` of the record to delete is required.
+
+        ### Risk warning
+
+        This operation deletes a configured remark preset; the predefined text will no longer be available afterward. Confirm the target record before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the remark preset is deleted; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -2787,19 +2890,18 @@ paths:
         - lb_hk_conversion.support_currency_update
       x-lbonly: false
       description: |-
-        Query the "Currency Pairs" configuration list. All filter fields are optional; sending an empty
-        object or omitting a field returns every currency-pair configuration.
+        Query the currency-pair configuration list. All filter fields are optional; an empty request body or an omitted field returns all currency-pair configurations.
 
         ### Request parameters
 
-        - `created_at`: Filter by creation time. When omitted, no filtering is applied on this field.
-        - `from_currency`: Filter by the debit (source) currency. When omitted, no filtering is applied on this field.
-        - `to_currency`: Filter by the credit (target) currency. When omitted, no filtering is applied on this field.
+        - `created_at`: filter by creation time; returns all when omitted.
+        - `from_currency`: filter by debit currency; returns all when omitted.
+        - `to_currency`: filter by credit currency; returns all when omitted.
+        - See each field's definition for its format, value range, and business meaning.
 
-        ### Result
+        ### Returns
 
-        On success, `data.support_currency_resp` returns the currency-pair configuration records grouped by
-        source currency. See the `200` response fields for the meaning of each field.
+        On success `data.support_currency_resp` contains the currency-pair configuration records grouped by source currency. See the response definition below for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -3221,16 +3323,24 @@ paths:
         - lb_hk_conversion.support_currency_update
       x-lbonly: false
       description: |-
-        Add Support Currency.
+        Add a supported FX currency pair, configuring the exchange relationship from a source currency to one or more target currencies.
 
         ### Request parameters
 
-        - Required: `from_currency` (From Currency), `to_currency` (To Currency)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `from_currency` (source currency), `to_currency` (target currency)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        `from_currency` is a three-letter currency code. `to_currency` supports multiple values joined by commas before submitting, so several target currencies can be added for one source currency at once.
+
+        ### Risk warning
+
+        This operation enables new FX currency pairs and may affect the exchange paths available to customers. Confirm the currency pair before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the FX currency pair is added; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -3466,17 +3576,25 @@ paths:
         - lb_hk_conversion.support_currency_update
       x-lbonly: false
       description: |-
-        Update Support Currency V2.
+        Batch-edit supported FX currency-pair configurations, allowing add, modify, and delete of sub-items in one request, and setting a target currency as default.
 
         ### Request parameters
 
-        - Required: `UpdateSupportCurrency` (Support Currency Update List), `UpdateSupportCurrency[].from_currency` (From Currency), `UpdateSupportCurrency[].to_currency` (To Currency), `UpdateSupportCurrency[].action` (Action Type)
-        - Optional: `UpdateSupportCurrency[].id` (Currency Pair Item ID), `UpdateSupportCurrency[].default_currency` (Is Default Currency), `audit_frontend_resource` (Audit Frontend Resource (Before/After))
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `UpdateSupportCurrency` (change list), `UpdateSupportCurrency[].from_currency`, `UpdateSupportCurrency[].to_currency`, `UpdateSupportCurrency[].action`
+        - Optional: `UpdateSupportCurrency[].id` (sub-item ID), `UpdateSupportCurrency[].default_currency` (whether to set as the default target), `audit_frontend_resource` (audit snapshot with the before/after target-currency lists)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        `UpdateSupportCurrency` is a change list; each item's `action` specifies add, modify, or delete. Added items have no `id`; modified/deleted items must carry the corresponding sub-item `id`. `default_currency` marks a target currency as the default exchange target for that source currency.
+
+        ### Risk warning
+
+        This operation batch-changes FX currency pairs and the default target currency and may affect the exchange paths and default exchange behavior available to customers. Confirm the change list before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the currency-pair configurations are batch-updated; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -3620,17 +3738,25 @@ paths:
         - lb_hk_conversion.support_currency_update
       x-lbonly: false
       description: |-
-        Delete Support Currency.
+        Delete supported FX target-currency records. One call deletes a batch of target currencies under a given source currency.
 
         ### Request parameters
 
-        - Required: `ids` (Currency Pair Item IDs)
-        - Optional: `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ids` (list of target-currency record IDs to delete)
+        - Optional: `audit_frontend_resource` (audit snapshot with the source currency and the deleted target currencies)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        `ids` are taken from the `id`s of all target-currency sub-items under a source currency, allowing a batch of target currencies under that source to be deleted at once.
+
+        ### Risk warning
+
+        This operation removes configured FX currency pairs and may affect the exchange paths available to customers. Confirm the records to delete before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the FX currency pairs are deleted; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -3729,16 +3855,24 @@ paths:
         - lb_hk_conversion.exchangeserve_update
       x-lbonly: false
       description: |-
-        Enable/Disable Service Strategy.
+        Enable or disable an FX service strategy.
 
         ### Request parameters
 
-        - Required: `id` (Strategy ID), `enable_flag` (Enable Flag)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (strategy ID), `enable_flag` (enabled state)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        `id` is taken from the target strategy record. `enable_flag` is `true` to enable and `false` to disable.
+
+        ### Risk warning
+
+        This operation toggles an FX strategy's enabled state and may affect whether the FX service under that strategy takes effect for customers. Confirm the target strategy before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the strategy's enabled state is updated; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -3835,16 +3969,24 @@ paths:
         - lb_hk_conversion.exchangeserve_update
       x-lbonly: false
       description: |-
-        Updates an existing `record` and includes its `id`.
+        Edit an FX service strategy. The field structure matches "Add FX strategy"; the target strategy's `id` is required when editing.
 
         ### Request parameters
 
-        - Required: `id` (Strategy ID)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `id` (strategy ID)
+        - The remaining fields follow "Add FX strategy". See each field's definition for its format, value range, default behavior, and business meaning.
+
+        ### Business notes
+
+        `id` identifies the FX strategy to edit; the remaining fields (service strategy, channel, supported currency pairs, service time, FX mode, spread-bearing method, etc.) have the same meaning as in the create endpoint.
+
+        ### Risk warning
+
+        This operation changes an FX strategy configuration and may affect the FX service that takes effect for customers under that strategy. Confirm the target strategy and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the FX strategy is updated; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -4018,16 +4160,25 @@ paths:
         - lb_hk_conversion.exchangeserve_update
       x-lbonly: false
       description: |-
-        Add Service Strategy.
+        Create an FX service strategy, used to define a combined rule set of exchange channels, supported currency pairs, service time, and FX mode.
 
         ### Request parameters
 
-        - Optional: `is_default` (Is Default), `change_type` (Change Type), `service_strategy` (Service Strategy), `channel_name` (Channel Name), `support_currency` (Support Currency), `support_currencies` (Support Currencies), `service_time` (Service Time), `is_combine` (Is Combine), `forex_mode` (Forex Mode), `bear_wave` (Bear Wave), `currency_prefix` (Currency Prefix), `currency_suffix` (Currency Suffix)
-        - See each field for its format, allowed values, and business meaning.
+        - This endpoint has no required parameters; see the field definitions below for optional parameters.
+        - Optional: `is_default` (whether it is the default strategy), `change_type`, `service_strategy`, `channel_name`, `support_currency` (assembled supported pairs), `support_currencies` (raw supported pairs), `service_time`, `is_combine`, `forex_mode` (FX mode), `bear_wave` (spread-bearing method), `currency_prefix`, `currency_suffix`
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        The strategy defines a combined rule set of exchange channel, supported currency pairs, service time, and FX mode. `is_default` can mark it as the default strategy.
+
+        ### Risk warning
+
+        This operation creates an FX strategy and may affect the FX service available to customers. Confirm the parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the FX strategy is created; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -4195,16 +4346,24 @@ paths:
         - lb_hk_conversion.exchange_pool_config_update
       x-lbonly: false
       description: |-
-        Add Exchange Balance.
+        Create an FX-pool quota configuration.
 
         ### Request parameters
 
-        - Required: `params` (Params)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `params` (configuration content)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        `params` carries the FX-pool quota configuration content (including currency and related information); submitting it creates one FX-pool quota configuration.
+
+        ### Risk warning
+
+        This operation adds an FX-pool quota configuration and may affect the quota available for FX business. Confirm the configuration content before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the FX-pool quota configuration is created; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -4298,17 +4457,25 @@ paths:
         - lb_hk_conversion.exchange_pool_config_update
       x-lbonly: false
       description: |-
-        Updates Exchange Balance.
+        Edit an FX-pool quota configuration.
 
         ### Request parameters
 
-        - Required: `id` (Config ID), `params` (Params)
-        - Optional: `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (config ID), `params` (configuration content)
+        - Optional: `audit_frontend_resource` (caller-provided audit-log payload)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        `id` is taken from the target record; `params` follows the same structure as "Create FX-pool quota configuration" (including `currency`).
+
+        ### Risk warning
+
+        This operation changes an FX-pool quota configuration and may affect the quota available for FX business. Confirm the target record and configuration content before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the FX-pool quota configuration is updated; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -4407,17 +4574,25 @@ paths:
         - lb_hk_outcashpackagerule.bankbalance_update
       x-lbonly: false
       description: |-
-        Delete Exchange Balance.
+        Delete an FX-pool quota configuration.
 
         ### Request parameters
 
-        - Required: `id` (Record ID)
-        - Optional: `business_type` (Business Type)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (record ID)
+        - Optional: `business_type`
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        `id` identifies the FX-pool quota configuration record to delete.
+
+        ### Risk warning
+
+        This operation deletes an FX-pool quota configuration and may affect the quota available for FX business. Confirm the target record before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the FX-pool quota configuration is deleted; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -4504,16 +4679,24 @@ paths:
         - lb_hk_conversion.rate_reference_update
       x-lbonly: false
       description: |-
-        Batch Add Rate Reference.
+        Batch-create reference-rate configurations, submitting multiple reference-rate entries at once.
 
         ### Request parameters
 
-        - Required: `data` (Data)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `data` (reference-rate entry list)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        `data` is the reference-rate entry list, submitted as a JSON array; each item corresponds to one reference-rate configuration.
+
+        ### Risk warning
+
+        This operation batch-creates reference-rate configurations, and reference rates affect the calculation of executed FX prices. Confirm the entry list before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the reference-rate configurations are batch-created; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -4605,17 +4788,25 @@ paths:
         - lb_hk_conversion.rate_reference_update
       x-lbonly: false
       description: |-
-        Update Rate Reference.
+        Edit a reference-rate configuration, used to change a reference rate's channel, currency pair, and spread settings.
 
         ### Request parameters
 
-        - Required: `id` (Rate Reference ID), `channel_name` (Exchange Channel), `from_currency` (From Currency), `to_currency` (To Currency), `spread_mode` (Spread Mode), `bp` (Spread Value)
-        - Optional: `audit_frontend_resource` (Audit Frontend Resource (Before Edit))
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (reference-rate record ID), `channel_name` (FX channel), `from_currency`, `to_currency`, `spread_mode`, `bp` (spread value)
+        - Optional: `audit_frontend_resource` (audit snapshot with the pre-edit original data)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        Allowed values for `channel_name` come from the ref `spot_forex_sources`; those for `from_currency` and `to_currency` come from the ref `tenant_currencies_for_exchange` and are mutually exclusive. Allowed values for `spread_mode` come from the ref `forex_spread_mode`. `bp` ranges from `0` to `100` with up to 4 decimal places.
+
+        ### Risk warning
+
+        This operation changes a reference rate and its spread configuration, directly affecting the calculation of executed FX prices. Confirm the target record and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the reference-rate configuration is updated; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -4756,16 +4947,24 @@ paths:
         - lb_hk_conversion.rate_reference_update
       x-lbonly: false
       description: |-
-        Delete Reference Exchange Rate Config.
+        Delete a reference-rate configuration.
 
         ### Request parameters
 
-        - Required: `id` (Config ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (config ID)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        `id` identifies the reference-rate configuration record to delete.
+
+        ### Risk warning
+
+        This operation deletes a reference-rate configuration, and reference rates affect the calculation of executed FX prices. Confirm the target record before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the reference-rate configuration is deleted; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -4855,16 +5054,24 @@ paths:
         - lb_hk_conversion.rate_reference_update
       x-lbonly: false
       description: |-
-        Batch Add User Rate.
+        Batch-create user execution spread rates, submitting multiple user-rate entries at once.
 
         ### Request parameters
 
-        - Required: `data` (Data)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `data` (user-rate entry list)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        `data` is the user execution spread-rate entry list, submitted as a JSON array; each item corresponds to one user-rate configuration.
+
+        ### Risk warning
+
+        This operation batch-creates user execution spread rates, directly affecting the executed FX prices for the relevant users. Confirm the entry list before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the user execution spread rates are batch-created; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -4956,17 +5163,25 @@ paths:
         - lb_hk_conversion.fee_update
       x-lbonly: false
       description: |-
-        Update User Rate.
+        Edit a user execution spread rate, used to change its effective time, currency pair, and spread settings.
 
         ### Request parameters
 
-        - Required: `id` (Config ID), `end_time` (End Time), `start_time` (Start Time), `from_currency` (From Currency), `to_currency` (To Currency), `default_effective` (Default Effective)
-        - Optional: `action_user` (Action User), `channel_name` (Channel Name), `is_default` (Is Default), `rate_source` (Rate Source), `rate_use_in` (Rate Use In), `reference_rate` (Reference Rate), `service_strategy` (Service Strategy), `spread_mode` (Spread Mode), `spread_value` (Spread Value), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (config ID), `start_time`, `end_time`, `from_currency` (source currency), `to_currency` (target currency), `default_effective` (whether it is effective by default, with no time window)
+        - Optional: `action_user`, `channel_name`, `is_default`, `rate_source`, `rate_use_in`, `reference_rate`, `service_strategy`, `spread_mode`, `spread_value` (spread-band configuration), `audit_frontend_resource` (caller-provided audit-log payload)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        When `default_effective` is `true` there is no time window, and `start_time`/`end_time` are fixed to `'0'`; otherwise they carry the effective range as unix seconds.
+
+        ### Risk warning
+
+        This operation changes a user execution spread rate, directly affecting the executed FX prices for the relevant user. Confirm the target record and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the user execution spread rate is updated; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -5131,16 +5346,24 @@ paths:
         - lb_hk_conversion.rate_reference_update
       x-lbonly: false
       description: |-
-        Delete Rate Markup.
+        Delete an execution spread (rate markup) configuration.
 
         ### Request parameters
 
-        - Required: `id` (Config ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (config ID)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        `id` identifies the execution spread configuration record to delete.
+
+        ### Risk warning
+
+        This operation deletes an execution spread configuration and may affect the calculation of the related executed FX prices. Confirm the target record before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the execution spread configuration is deleted; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -5224,16 +5447,24 @@ paths:
         - lb_hk_conversion.amount_config_update
       x-lbonly: false
       description: |-
-        Add Amount Config.
+        Create an FX large-amount limit configuration, setting the amount threshold that triggers large FX for a currency.
 
         ### Request parameters
 
-        - Required: `currency` (Currency), `amount` (Amount)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `currency`, `amount` (large-amount threshold)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        Allowed values for `currency` change with business and are not fixed; call `GET /v1/datasets/refs/tenant_currencies_for_exchange` to obtain the currently available values. `amount` is the threshold at which FX in that currency is treated as large.
+
+        ### Risk warning
+
+        This operation adds an FX large-amount limit configuration and may affect large-amount determination and handling in FX. Confirm the currency and threshold before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the FX large-amount limit configuration is created; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -5326,17 +5557,25 @@ paths:
         - lb_hk_conversion.amount_config_update
       x-lbonly: false
       description: |-
-        Update Amount Config.
+        Edit an FX large-amount limit configuration, used to change the large-amount threshold for a currency.
 
         ### Request parameters
 
-        - Required: `id` (Config ID), `currency` (Currency), `amount` (Amount)
-        - Optional: `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (config ID), `currency`, `amount` (large-amount threshold)
+        - Optional: `audit_frontend_resource` (caller-provided audit-log payload)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        `id` is taken from the target record; `amount` is the threshold at which FX in that currency is treated as large.
+
+        ### Risk warning
+
+        This operation changes an FX large-amount limit configuration and may affect large-amount determination and handling in FX. Confirm the target record and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the FX large-amount limit configuration is updated; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -5443,16 +5682,24 @@ paths:
         - lb_hk_conversion.amount_config_update
       x-lbonly: false
       description: |-
-        Delete Amount Config.
+        Delete an FX large-amount limit configuration.
 
         ### Request parameters
 
-        - Required: `id` (Record ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (record ID)
+        - See each field's definition for its format, value range, and business meaning.
+
+        ### Business notes
+
+        `id` identifies the FX large-amount limit configuration record to delete.
+
+        ### Risk warning
+
+        This operation deletes an FX large-amount limit configuration and may affect large-amount determination and handling in FX. Confirm the target record before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the FX large-amount limit configuration is deleted; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -5535,13 +5782,13 @@ paths:
         - lb_hk_clearing.clearing_busin_step_edit
       x-lbonly: false
       description: |-
-        Exports Clearing Day-End Cutoff - Day-End Market Configuration data to a file. `filters` defines the export scope, `orderBy` controls sorting, and `down_fields` can restrict the exported columns.
+        Export the "Clearing day-cut - end-of-day market configuration" data to a file. `filters` determines the export scope, and `down_fields` can restrict the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -5716,11 +5963,11 @@ paths:
         - lb_hk_clearing.clearing_busin_step_edit
       x-lbonly: false
       description: |-
-        Queries Clearing Day-End Cutoff - Day-End Market Configuration data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the "Clearing day-cut - end-of-day market configuration" data. Use `filters` to combine business filter conditions and `page`/`page_size` to control pagination.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, a list of matching records with pagination information is returned. See each filter field's definition for its purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -5857,13 +6104,13 @@ paths:
         - lb_hk_clearing.clearing_busin_step_edit
       x-lbonly: false
       description: |-
-        Exports Clearing - Pre-Clearing Preparation Task data to a file. `filters` defines the export scope, `orderBy` controls sorting, and `down_fields` can restrict the exported columns.
+        Export the "Clearing - pre-clearing readiness tasks" data to a file. `filters` determines the export scope, and `down_fields` can restrict the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -6077,11 +6324,11 @@ paths:
         - lb_hk_clearing.clearing_busin_step_edit
       x-lbonly: false
       description: |-
-        Queries Clearing - Pre-Clearing Preparation Task data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the "Clearing - pre-clearing readiness tasks" data. Use `filters` to combine business filter conditions and `page`/`page_size` to control pagination.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, a list of matching records with pagination information is returned. See each filter field's definition for its purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -6272,13 +6519,13 @@ paths:
         - lb_hk_clearing.clearing_busin_step_edit
       x-lbonly: false
       description: |-
-        Exports Clearing - System Configuration data to a file. `filters` defines the export scope, `orderBy` controls sorting, and `down_fields` can restrict the exported columns.
+        Export the "Clearing - system configuration" data to a file. `filters` determines the export scope, and `down_fields` can restrict the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -13719,17 +13966,24 @@ paths:
         - Service Parameter
       x-lbonly: false
       description: |-
-        Adds one or more stocks to a stock group in a single call.
+        Bulk-adds securities to a specified stock group.
 
         ### Request parameters
 
-        - Required: `group_id` (target stock group id), `counter_ids` (list of stock counter ids to add; multiple values allowed per call)
-        - Optional: `audit_frontend_resource` (caller-provided audit context for the approval workflow, such as the stock group name)
-        - See each field for its format, value source, and business meaning.
+        - Required: `group_id` (target stock group id) and `counter_ids` (the securities to add; multiple can be sent at once).
+        - See the field descriptions for each field's format, source, and business meaning.
+
+        ### Business notes
+
+        Stock groups define the scope that risk-control rules apply to. This endpoint appends the securities in `counter_ids` to the group identified by `group_id`. `audit_frontend_resource` may be supplied to carry approval-display context.
+
+        ### Risk warning
+
+        This operation changes stock group membership and may affect risk strategies that reference the group. Confirm the target group and security list before calling.
 
         ### Result
 
-        On success, every stock in `counter_ids` is added to the stock group identified by `group_id`. See the `200` response schema for returned data and subsequent state information.
+        On success the securities in `counter_ids` are added to the specified group; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -13834,17 +14088,21 @@ paths:
         - Service Parameter
       x-lbonly: false
       description: |-
-        Removes a single stock from a stock group.
+        Removes a single security from a specified stock group.
 
         ### Request parameters
 
-        - Required: `group_id` (target stock group id), `counter_id` (stock counter id to remove from the group)
-        - The request body is sent as a JSON body on the `DELETE` request.
-        - See each field for its format, value source, and business meaning.
+        - Required: `group_id` (target stock group id) and `counter_id` (the security to remove).
+        - The request body is passed as JSON in the `DELETE` request.
+        - See the field descriptions for each field's format, source, and business meaning.
+
+        ### Risk warning
+
+        This operation changes stock group membership and may affect risk strategies that reference the group. Confirm the target group and security before calling.
 
         ### Result
 
-        On success, the stock identified by `counter_id` is removed from the stock group identified by `group_id`. See the `200` response schema for returned data and subsequent state information.
+        On success the security identified by `counter_id` is removed from the specified group; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -13938,15 +14196,19 @@ paths:
         - Service Parameter
       x-lbonly: false
       description: |-
-        Query the current company-level capital configuration and return the currency, shareholder fund, and shareholder capital adjustment amount for read-only display on the Capital Setups page.
+        Returns the current company-level capital configuration, including currency, shareholder funds, and the shareholder capital adjustment amount.
 
         ### Request parameters
 
-        No request parameters. Send a `GET` request as the currently authenticated account; the server returns the capital configuration for the company that the caller belongs to.
+        - This endpoint has no required parameters. Issue the `GET` request as the current account; the server returns the capital configuration for the caller's company.
 
-        ### Result
+        ### Business notes
 
-        On success, `data` contains the company's current capital configuration. See the `200` response fields for the meaning of each field. Changes to the capital configuration are made through `POST /risk/v1/cp_capital_adjust/modify` (Modify Company Capital).
+        The capital configuration is read-only company-level information. It is modified through `POST /risk/v1/cp_capital_adjust/modify` (modify company capital).
+
+        ### Returns
+
+        On success the company's current capital configuration is returned in `data`. See the response definition below for field meanings.
       security:
         - bearerAuth: []
       responses:
@@ -14020,21 +14282,25 @@ paths:
         - Service Parameter
       x-lbonly: false
       description: |-
-        Updates the company-level capital configuration. All input values are converted to strings before submission. This operation changes the live capital configuration and is extremely high risk.
+        Updates the company-level capital configuration.
 
         ### Request parameters
 
-        - Required: `credit_currency` (Currency), `shareholder_fund` (Shareholder Fund), `shareholder_amount` (Shareholder Adjust Amount)
-        - Optional: `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `credit_currency` (currency), `shareholder_fund` (shareholder funds), and `shareholder_amount` (shareholder capital adjustment amount).
+        - All inputs are converted to strings before submission; the integer part of amount fields is at most 12–13 digits and may not be `0`.
+        - See the field descriptions for each field's format, range, and business meaning.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may affect live business data or asset state. Verify the target records, amounts, quantities, and operation type before calling it.
+        This endpoint directly updates the company capital configuration, which is the basis for company-level credit and risk calculations. `audit_frontend_resource` may be supplied to carry approval-display context.
+
+        ### Risk warning
+
+        This operation modifies the real company capital configuration and is extremely high-risk. Verify the currency, amounts, and target company before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the capital configuration is updated; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -14130,15 +14396,19 @@ paths:
         - Service Parameter
       x-lbonly: false
       description: |-
-        Get Warning Value Calculation Rule.
+        Returns the calculation strategy for margin-call warning values.
 
         ### Request parameters
 
-        This endpoint does not accept business parameters.
+        - This endpoint accepts no business parameters.
 
-        ### Result
+        ### Business notes
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        Returns the currently effective rule for computing margin-call warning values, for use by risk monitoring.
+
+        ### Returns
+
+        On success the warning-value calculation strategy is returned in `data`. See the response definition below for field meanings.
       security:
         - bearerAuth: []
       responses:
@@ -14256,21 +14526,25 @@ paths:
         - Service Parameter
       x-lbonly: false
       description: |-
-        Saves the risk-control rules. This operation changes the live risk-rule engine configuration; use it with caution.
+        Creates or edits a risk-control engine rule.
 
         ### Request parameters
 
-        - Required: `rule_name` (Rule Name), `group_name` (Rule Group Name), `status` (Status), `rule_detail` (Rule Detail List)
-        - Optional: `risk_rule_id` (Risk Rule ID), `aaid` (Account AAID), `group_id` (Client Group ID), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `rule_name` (rule name), `group_name` (rule group), `status` (status), and `rule_detail` (rule detail list).
+        - Optional: `risk_rule_id` (rule id), `aaid` (customer account id), `group_id` (customer group id), and `audit_frontend_resource` (approval-ticket display resource).
+        - See the field descriptions for each field's format, range, and business meaning.
 
-        ### Notes
+        ### Business notes
 
-        This single endpoint handles both create and edit: omit `risk_rule_id` to create a new rule, or provide `risk_rule_id` to edit that rule.
+        Both create and edit use this endpoint: omit `risk_rule_id` to create; supply `risk_rule_id` to edit that rule. A rule can be bound to a customer or customer group via `aaid` or `group_id`.
+
+        ### Risk warning
+
+        This operation affects the real risk-control rule engine and can change automated risk decisions and actions. Confirm the rule content and scope before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the rule is created or updated; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -14416,22 +14690,27 @@ paths:
         - Service Parameter
       x-lbonly: false
       description: |-
-        Create a per-account credit configuration for the specified securities account and submit it for review.
-
-        The change does not take effect immediately. On success, an approval ticket is created and the configuration is applied only after the ticket is approved. The ticket ID is returned in `data.ticket_id` of the `200` response.
+        Creates a per-account (user-level) credit configuration for a specified securities account and submits it for review.
 
         ### Request parameters
 
-        - Account scope: `member_id` (Member ID) and `aaid` (A/C No.) identify the target client and are both required.
-        - Credit subject: `credit_type` (Credit Type) and `credit_currency` (Currency) define the scope of the configuration.
-        - Limits and coefficients: `applicable`, `auto_credit_limit`, `credit_coefficient`, `ccf`, and `credit_fps` describe the credit limits and calculation parameters.
-        - Coefficient rules: `credit_coefficient_rule_list` is an optional set of tiered credit-coefficient rules; when rules are supplied, also set `is_enable_credit_coefficient_rule` to `true`.
-        - Dynamic adjustment: when `dynamic_credit_limit_adjustment_status` is enabled, provide `max_dynamic_credit_limit` and `min_dynamic_credit_limit`.
-        - See each field for its format, allowed values, and business meaning.
+        - Account scope: `member_id` (member id) and `aaid` (securities account) locate the target customer; both required.
+        - Credit subject: `credit_type` and `credit_currency` define the scope of the credit configuration.
+        - Limits and coefficients: `applicable`, `auto_credit_limit`, `credit_coefficient`, `ccf`, `credit_fps`, and related fields describe the credit limits and calculation parameters.
+        - Coefficient rules: `credit_coefficient_rule_list` is an optional tiered credit-coefficient rule set; when supplied, also set `is_enable_credit_coefficient_rule` to `true`.
+        - See the field descriptions for each field's format, range, and business meaning.
+
+        ### Business notes
+
+        This endpoint does not take effect immediately: a successful submission creates an approval ticket, and the configuration is applied only after the ticket is approved. The ticket id is returned in `data.ticket_id` of the `200` response.
+
+        ### Risk warning
+
+        This operation adds a real customer credit configuration that, once approved, affects the customer's available credit limit. Confirm the target customer and credit parameters before calling.
 
         ### Result
 
-        On success, an approval ticket is created and its ID is returned in `data.ticket_id`. The configuration takes effect only after the ticket is approved.
+        On success an approval ticket is created and its id returned in `data.ticket_id`; the configuration takes effect only after the ticket is approved.
       security:
         - bearerAuth: []
       requestBody:
@@ -14621,25 +14900,28 @@ paths:
         - Service Parameter
       x-lbonly: false
       description: |-
-        Modify a global (tenant-wide) credit configuration and submit it for review.
-
-        A global credit configuration applies to the entire tenant rather than to an individual client, so the request body has no account-scoped fields such as `member_id` or `aaid`. Identify the record to modify with `id` alone.
-
-        The change does not take effect immediately. On success, an approval ticket is created and the modification is applied only after the ticket is approved. The ticket ID is returned in `data.ticket_id` of the `200` response.
+        Modifies a global (tenant-level) credit configuration and submits it for review.
 
         ### Request parameters
 
-        - Target record: `id` identifies the global credit configuration to modify and is required.
-        - Credit subject: `credit_type` (Credit Type) and `credit_currency` (Currency).
-        - Limits and coefficients: `applicable`, `auto_credit_limit`, `credit_coefficient`, `ccf`, and `credit_fps` describe the credit limits and calculation parameters.
-        - Coefficient rules: `credit_coefficient_rule_list` is an optional set of tiered credit-coefficient rules; when rules are supplied, also set `is_enable_credit_coefficient_rule` to `true`.
-        - Dynamic adjustment: when `dynamic_credit_limit_adjustment_status` is enabled, provide `max_dynamic_credit_limit` and `min_dynamic_credit_limit`.
-        - Audit context: `audit_frontend_resource` is caller-provided audit context recorded for this modification.
-        - See each field for its format, allowed values, and business meaning.
+        - Target record: `id` identifies the global credit configuration to modify; required.
+        - Credit subject: `credit_type` and `credit_currency`.
+        - Limits and coefficients: `applicable`, `auto_credit_limit`, `credit_coefficient`, `ccf`, `credit_fps`, and related fields describe the credit limits and calculation parameters.
+        - Coefficient rules: `credit_coefficient_rule_list` is an optional tiered credit-coefficient rule set; when supplied, also set `is_enable_credit_coefficient_rule` to `true`.
+        - Audit context: `audit_frontend_resource`, supplied by the caller, records audit information for this change.
+        - See the field descriptions for each field's format, range, and business meaning.
+
+        ### Business notes
+
+        A global credit configuration applies to the entire tenant rather than an individual customer, so the request body has no account-level fields such as `member_id` or `aaid`; only `id` identifies the record. This endpoint does not take effect immediately: a successful submission creates an approval ticket, and the change is applied only after approval.
+
+        ### Risk warning
+
+        This operation modifies a tenant-level credit configuration that, once approved, affects credit calculations for the whole tenant. Confirm the target record and credit parameters before calling.
 
         ### Result
 
-        On success, an approval ticket is created and its ID is returned in `data.ticket_id`. The modification takes effect only after the ticket is approved.
+        On success an approval ticket is created and its id returned in `data.ticket_id`; the change takes effect only after the ticket is approved.
       security:
         - bearerAuth: []
       requestBody:
@@ -14829,16 +15111,21 @@ paths:
         - lb_hk_credit_limit.credit_limit_para_update
       x-lbonly: false
       description: |-
-        Delete Account Credit Config.
+        Deletes a per-account credit parameter configuration for a specified customer.
 
         ### Request parameters
 
-        - Required: `aaid` (A/C No.), `member_id` (Member ID), `credit_type` (Credit Type)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `aaid` (securities account), `member_id` (member id), and `credit_type` (credit type).
+        - The three fields together locate the customer credit configuration to delete.
+        - See the field descriptions for each field's format, range, and business meaning.
+
+        ### Risk warning
+
+        This operation deletes a real customer credit configuration; afterward the customer's configuration for that credit type no longer applies. Confirm the target customer and credit type before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the specified customer credit configuration is deleted; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -14933,13 +15220,22 @@ paths:
         - lb_hk_outcashpackagerule.outcashpackagerule_query
       x-lbonly: false
       description: |-
-        Exports Withdrawal Rules data to a file. `filters` defines the export scope, `orderBy` controls sorting, and `down_fields` can restrict the exported columns.
+        Exports the "automatic withdrawal rules" dataset to a file.
+
+        ### Request parameters
+
+        - No required parameters: `filters` sets the export scope and `down_fields` limits the exported columns.
+        - See the field descriptions for each field's format, range, and business meaning.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record when no longer needed.
+
+        ### Returns
+
+        On success returns either the download URL or a `file_download_id`, depending on the selected mode.
       security:
         - bearerAuth: []
       requestBody:
@@ -15233,11 +15529,11 @@ paths:
         - lb_hk_outcashpackagerule.outcashpackagerule_query
       x-lbonly: false
       description: |-
-        Queries Withdrawal Rules data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the "automatic withdrawal rules" dataset. Combine business filters via `filters` and control pagination with `page` and `page_size`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success returns the matching record list with pagination info. See the field descriptions for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -15571,13 +15867,22 @@ paths:
         - lb_hk_outcashpackagerule.bankbalance_query
       x-lbonly: false
       description: |-
-        Exports Daily limits data to a file. `filters` defines the export scope, `orderBy` controls sorting, and `down_fields` can restrict the exported columns.
+        Exports the "daily limits" dataset to a file.
+
+        ### Request parameters
+
+        - No required parameters: `filters` sets the export scope and `down_fields` limits the exported columns.
+        - See the field descriptions for each field's format, range, and business meaning.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record when no longer needed.
+
+        ### Returns
+
+        On success returns either the download URL or a `file_download_id`, depending on the selected mode.
       security:
         - bearerAuth: []
       requestBody:
@@ -15790,11 +16095,11 @@ paths:
         - lb_hk_outcashpackagerule.bankbalance_query
       x-lbonly: false
       description: |-
-        Queries Daily limits data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the "daily limits" dataset. Combine business filters via `filters` and control pagination with `page` and `page_size`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success returns the matching record list with pagination info. See the field descriptions for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -15990,13 +16295,22 @@ paths:
         - lb_hk_outcashpackagerule.bankbalancechange_query
       x-lbonly: false
       description: |-
-        Exports Daily Limit Changes data to a file. `filters` defines the export scope, `orderBy` controls sorting, and `down_fields` can restrict the exported columns.
+        Exports the "daily limit changes" dataset to a file.
+
+        ### Request parameters
+
+        - No required parameters: `filters` sets the export scope and `down_fields` limits the exported columns.
+        - See the field descriptions for each field's format, range, and business meaning.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record when no longer needed.
+
+        ### Returns
+
+        On success returns either the download URL or a `file_download_id`, depending on the selected mode.
       security:
         - bearerAuth: []
       requestBody:
@@ -16225,11 +16539,11 @@ paths:
         - lb_hk_outcashpackagerule.bankbalancechange_query
       x-lbonly: false
       description: |-
-        Queries Daily Limit Changes data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the "daily limit changes" dataset. Combine business filters via `filters` and control pagination with `page` and `page_size`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success returns the matching record list with pagination info. See the field descriptions for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -16461,13 +16775,22 @@ paths:
         - lb_hk_risk_withdraw.risk_balance_rules_export
       x-lbonly: false
       description: |-
-        Exports Balance Blocking Rules data to a file. `filters` defines the export scope, `orderBy` controls sorting, and `down_fields` can restrict the exported columns.
+        Exports the "balance interception" dataset to a file.
+
+        ### Request parameters
+
+        - No required parameters: `filters` sets the export scope and `down_fields` limits the exported columns.
+        - See the field descriptions for each field's format, range, and business meaning.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record when no longer needed.
+
+        ### Returns
+
+        On success returns either the download URL or a `file_download_id`, depending on the selected mode.
       security:
         - bearerAuth: []
       requestBody:
@@ -16677,11 +17000,11 @@ paths:
         - lb_hk_risk_withdraw.risk_balance_rules_query
       x-lbonly: false
       description: |-
-        Queries Balance Blocking Rules data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the "balance interception" dataset. Combine business filters via `filters` and control pagination with `page` and `page_size`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success returns the matching record list with pagination info. See the field descriptions for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -16869,11 +17192,11 @@ paths:
         - withdrawalparameter.withdrawal_parameter_query
       x-lbonly: false
       description: |-
-        Queries Withdrawal Configuration data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the "withdrawal parameter configuration" dataset. Combine business filters via `filters` and control pagination with `page` and `page_size`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success returns the matching record list with pagination info. See the field descriptions for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -17052,13 +17375,22 @@ paths:
         - lb_hk_margin_call.margin_call_auto_batch_forccconfig
       x-lbonly: false
       description: |-
-        Exports Auto Close Position Toggle data to a file. `filters` defines the export scope, `orderBy` controls sorting, and `down_fields` can restrict the exported columns.
+        Exports the "auto liquidation switch" dataset to a file.
+
+        ### Request parameters
+
+        - No required parameters: `filters` sets the export scope and `down_fields` limits the exported columns.
+        - See the field descriptions for each field's format, range, and business meaning.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record when no longer needed.
+
+        ### Returns
+
+        On success returns either the download URL or a `file_download_id`, depending on the selected mode.
       security:
         - bearerAuth: []
       requestBody:
@@ -17235,11 +17567,11 @@ paths:
         - lb_hk_margin_call.margin_call_auto_batch_forccconfig
       x-lbonly: false
       description: |-
-        Queries Auto Close Position Toggle data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the "auto liquidation switch" dataset. Combine business filters via `filters` and control pagination with `page` and `page_size`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success returns the matching record list with pagination info. See the field descriptions for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -17384,13 +17716,22 @@ paths:
         - risk_config.withdrawal_limit_query
       x-lbonly: false
       description: |-
-        Exports Client Fast Repayment Tier Limit Settings data to a file. `filters` defines the export scope, `orderBy` controls sorting, and `down_fields` can restrict the exported columns.
+        Exports the "account-level instant-repayment limit settings" dataset to a file.
+
+        ### Request parameters
+
+        - No required parameters: `filters` sets the export scope and `down_fields` limits the exported columns.
+        - See the field descriptions for each field's format, range, and business meaning.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record when no longer needed.
+
+        ### Returns
+
+        On success returns either the download URL or a `file_download_id`, depending on the selected mode.
       security:
         - bearerAuth: []
       requestBody:
@@ -17570,11 +17911,11 @@ paths:
         - risk_config.withdrawal_limit_query
       x-lbonly: false
       description: |-
-        Queries Client Fast Repayment Tier Limit Settings data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the "account-level instant-repayment limit settings" dataset. Combine business filters via `filters` and control pagination with `page` and `page_size`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success returns the matching record list with pagination info. See the field descriptions for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -17722,13 +18063,22 @@ paths:
         - risk_config.stock_group_list_export
       x-lbonly: false
       description: |-
-        Exports Stock Group Configuration data to a file. `filters` defines the export scope, `orderBy` controls sorting, and `down_fields` can restrict the exported columns.
+        Exports the "stock group configuration" dataset to a file.
+
+        ### Request parameters
+
+        - No required parameters: `filters` sets the export scope and `down_fields` limits the exported columns.
+        - See the field descriptions for each field's format, range, and business meaning.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record when no longer needed.
+
+        ### Returns
+
+        On success returns either the download URL or a `file_download_id`, depending on the selected mode.
       security:
         - bearerAuth: []
       requestBody:
@@ -17916,11 +18266,11 @@ paths:
         - risk_config.stock_group_list_query
       x-lbonly: false
       description: |-
-        Queries Stock Group Configuration data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the "stock group configuration" dataset. Combine business filters via `filters` and control pagination with `page` and `page_size`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success returns the matching record list with pagination info. See the field descriptions for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -18077,7 +18427,23 @@ paths:
       x-permission-key:
         - risk_config.stock_group_details_export
       x-lbonly: false
-      description: Export the Stock Group Details list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Exports the "stock group details" dataset to a file.
+
+        ### Request parameters
+
+        - No required parameters: `filters` sets the export scope and `down_fields` limits the exported columns.
+        - See the field descriptions for each field's format, range, and business meaning.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record when no longer needed.
+
+        ### Returns
+
+        On success returns either the download URL or a `file_download_id`, depending on the selected mode.
       security:
         - bearerAuth: []
       requestBody:
@@ -18233,7 +18599,12 @@ paths:
       x-permission-key:
         - risk_config.stock_group_details_query
       x-lbonly: false
-      description: Query the Stock Group Details list.
+      description: |-
+        Queries the "stock group details" dataset. Combine business filters via `filters` and control pagination with `page` and `page_size`.
+
+        ### Returns
+
+        On success returns the matching record list with pagination info. See the field descriptions for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -18341,13 +18712,22 @@ paths:
         - risk_config.risk_rules_manager_export
       x-lbonly: false
       description: |-
-        Exports Risk Rules Management data to a file. `filters` defines the export scope, `orderBy` controls sorting, and `down_fields` can restrict the exported columns.
+        Exports the "risk rule management" dataset to a file.
+
+        ### Request parameters
+
+        - No required parameters: `filters` sets the export scope and `down_fields` limits the exported columns.
+        - See the field descriptions for each field's format, range, and business meaning.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record when no longer needed.
+
+        ### Returns
+
+        On success returns either the download URL or a `file_download_id`, depending on the selected mode.
       security:
         - bearerAuth: []
       requestBody:
@@ -18558,11 +18938,11 @@ paths:
         - risk_config.risk_rules_manager_query
       x-lbonly: false
       description: |-
-        Queries Risk Rules Management data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the "risk rule management" dataset. Combine business filters via `filters` and control pagination with `page` and `page_size`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success returns the matching record list with pagination info. See the field descriptions for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -18754,13 +19134,22 @@ paths:
         - lb_hk_credit_limit.credit_limit_para_qurey
       x-lbonly: false
       description: |-
-        Exports Credit Line Parameters data to a file. `filters` defines the export scope, `orderBy` controls sorting, and `down_fields` can restrict the exported columns.
+        Exports the "credit parameters" dataset to a file.
+
+        ### Request parameters
+
+        - No required parameters: `filters` sets the export scope and `down_fields` limits the exported columns.
+        - See the field descriptions for each field's format, range, and business meaning.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record when no longer needed.
+
+        ### Returns
+
+        On success returns either the download URL or a `file_download_id`, depending on the selected mode.
       security:
         - bearerAuth: []
       requestBody:
@@ -18951,11 +19340,11 @@ paths:
         - lb_hk_credit_limit.credit_limit_para_qurey
       x-lbonly: false
       description: |-
-        Queries Credit Line Parameters data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the "credit parameters" dataset. Combine business filters via `filters` and control pagination with `page` and `page_size`.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success returns the matching record list with pagination info. See the field descriptions for each filter's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -19147,17 +19536,25 @@ paths:
         - corporate.sub_account_view_update
       x-lbonly: false
       description: |-
-        Create Sub Account View.
+        Creates a sub-position view that organizes sub-position scopes into groups.
 
         ### Request parameters
 
-        - Required: `view_name` (View Name), `usage_scene` (Usage Scenario), `groups` (Group List), `groups[].group_name` (Group Name), `groups[].sub_position_scope` (Sub-Account Scope)
-        - Optional: `remark` (Remark)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `view_name` (view name), `usage_scene` (usage scenario), `groups` (group list), `groups[].group_name` (group name), and `groups[].sub_position_scope` (sub-position scope).
+        - Optional: `remark`.
+        - See the field descriptions for each field's format, range, and business meaning.
+
+        ### Business notes
+
+        A sub-position view is scoped by `usage_scene` and may contain multiple groups, each defining its own sub-position scope.
+
+        ### Risk warning
+
+        This operation creates a real sub-position view configuration that may be referenced by downstream business such as corporate actions. Confirm the view name, scenario, and group scopes before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the sub-position view is created; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -19279,17 +19676,21 @@ paths:
         - corporate.sub_account_view_update
       x-lbonly: false
       description: |-
-        Delete Sub Account View.
+        Deletes a specified sub-position view.
 
         ### Request parameters
 
-        - Required: `id` (Sub Account View ID)
-        - Optional: `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (sub-position view id).
+        - Optional: `audit_frontend_resource` (approval-ticket display resource).
+        - See the field descriptions for each field's format, range, and business meaning.
+
+        ### Risk warning
+
+        This operation deletes a real sub-position view configuration; afterward business that references the view can no longer use it. Confirm the target view before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the specified sub-position view is deleted; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -19380,15 +19781,16 @@ paths:
         - corporate.sub_account_view_query
       x-lbonly: false
       description: |-
-        Retrieve the full configuration of a single sub-account view by `id`.
+        Returns the full configuration of a single sub-position view by `id`.
 
         ### Request parameters
 
-        - Required: `id` (sub-account view id), supplied as a query parameter.
+        - Required: `id` (sub-position view id), passed as a query parameter.
+        - See the field descriptions for each field's format, range, and business meaning.
 
-        ### Result
+        ### Returns
 
-        On success, `data` contains the full configuration of the sub-account view, including the view basic information `view` and the group list `groups`. See the `200` response fields for the meaning of each field.
+        On success the view's full configuration is returned in `data`, including the base info `view` and the group list `groups`. See the response definition below for field meanings.
       security:
         - bearerAuth: []
       parameters:
@@ -19517,17 +19919,25 @@ paths:
         - corporate.sub_account_view_update
       x-lbonly: false
       description: |-
-        Disable Sub Account View.
+        Disables a specified sub-position view.
 
         ### Request parameters
 
-        - Required: `id` (Sub Account View ID)
-        - Optional: `audit_frontend_resource` (Audit Frontend Resource (auxiliary))
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (sub-position view id).
+        - Optional: `audit_frontend_resource` (caller-supplied audit context).
+        - See the field descriptions for each field's format, range, and business meaning.
+
+        ### Business notes
+
+        Once disabled, the view no longer applies to business that references it, but its configuration record is retained.
+
+        ### Risk warning
+
+        This operation changes the enabled status of a real sub-position view and may affect business that references it. Confirm the target view before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the specified sub-position view is disabled; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -19620,17 +20030,26 @@ paths:
         - atm.crypto_approval_operation
       x-lbonly: false
       description: |-
-        Add Withdraw Audit Rule.
+        Creates a virtual-asset withdrawal (crypto) audit rule.
 
         ### Request parameters
 
-        - Required: `rule_name` (Rule Name), `priority` (Priority), `upstream_broker` (Channel), `account_nos` (Applicable Accounts), `broker_allocate_states` (Company Fund Allocation Status), `coin_quantity_list` (Crypto & Quantity Range List), `delay_time` (Review Delay Time), `audit_type` (Audit Type), `status` (Status)
-        - Optional: `equivalent_usd` (Equivalent USD Amount Range), `remark` (Remark)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `rule_name` (rule name), `priority`, `upstream_broker` (channel), `account_nos` (applicable accounts), `broker_allocate_states` (broker fund-allocation states), `coin_quantity_list` (coin and quantity-range list), `delay_time` (audit delay), `audit_type` (audit rule), and `status`.
+        - Optional: `equivalent_usd` (USD-equivalent amount range) and `remark`.
+        - Set `account_nos` to `all` for all accounts, or a comma-separated list of securities accounts; `delay_time` is in minutes, range `1`-`999`.
+        - See the field descriptions for each field's format, range, and business meaning.
+
+        ### Business notes
+
+        When a withdrawal request matches the rule, `audit_type` and `delay_time` determine the audit method and delay.
+
+        ### Risk warning
+
+        This operation creates a real withdrawal audit rule that directly affects the release and review flow for virtual-asset withdrawals. Confirm the rule conditions and status before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the withdrawal audit rule is created; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -19818,16 +20237,20 @@ paths:
         - atm.crypto_approval_operation
       x-lbonly: false
       description: |-
-        Delete Withdraw Audit Rule.
+        Deletes a specified virtual-asset withdrawal (crypto) audit rule.
 
         ### Request parameters
 
-        - Required: `id` (Rule ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (rule id).
+        - See the field descriptions for each field's format, range, and business meaning.
+
+        ### Risk warning
+
+        This operation deletes a real withdrawal audit rule; afterward the rule no longer participates in virtual-asset withdrawal review. Confirm the target rule before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the specified withdrawal audit rule is deleted; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -19910,18 +20333,25 @@ paths:
         - atm.crypto_approval_operation
       x-lbonly: false
       description: |-
-        Uses the same fields as the create operation, with an additional `id` identifying the record to
-        edit. This operation changes live rule data.
+        Edits a virtual-asset withdrawal (crypto) audit rule.
 
         ### Request parameters
 
-        - Required: `id` (Rule ID), `rule_name` (Rule Name), `priority` (Priority), `upstream_broker` (Channel), `account_nos` (Applicable Accounts), `broker_allocate_states` (Company Fund Allocation Status), `coin_quantity_list` (Crypto & Quantity Range List), `delay_time` (Review Delay Time), `audit_type` (Audit Type), `status` (Status)
-        - Optional: `equivalent_usd` (Equivalent USD Amount Range), `remark` (Remark)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `id` (rule id), `rule_name`, `priority`, `upstream_broker` (channel), `account_nos` (applicable accounts), `broker_allocate_states` (broker fund-allocation states), `coin_quantity_list` (coin and quantity-range list), `delay_time` (audit delay), `audit_type` (audit rule), and `status`.
+        - Optional: `equivalent_usd` (USD-equivalent amount range) and `remark`.
+        - See the field descriptions for each field's format, range, and business meaning.
+
+        ### Business notes
+
+        The field structure matches the create endpoint, with an additional `id` to locate the record being edited.
+
+        ### Risk warning
+
+        This operation modifies a real withdrawal audit rule that directly affects the release and review flow for virtual-asset withdrawals. Confirm the target record and rule conditions before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the specified withdrawal audit rule is updated; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -20114,17 +20544,22 @@ paths:
         - atm.cryptocurrency_limit_operation
       x-lbonly: false
       description: |-
-        Add Coin Withdraw Limit.
+        Creates a daily crypto-withdrawal limit configuration.
 
         ### Request parameters
 
-        - Required: `cut_time` (Cut Time), `exchange_currency` (Exchange Currency), `limit_amount` (Limit Amount), `member_ids` (Member IDs), `priority` (Priority), `status` (Status), `time_zone` (Time Zone)
-        - Optional: `id` (Config ID), `creator` (Creator), `frequency_limit` (Frequency Limit), `limit_type` (Limit Type), `remark` (Remark), `updater` (Updater), `withdrawal_crypto` (Withdrawal Crypto)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `cut_time` (cycle base date), `exchange_currency` (exchange currency), `limit_amount` (initial limit), `member_ids` (customer ids), `priority`, `status`, and `time_zone`.
+        - Optional: `frequency_limit`, `limit_type`, `remark`, `withdrawal_crypto` (supported withdrawal cryptocurrencies), and others.
+        - Set `member_ids` to `all` for all customers, or a comma-separated list of customer ids; `time_zone` is used to compute the daily-limit cycle.
+        - See the field descriptions for each field's format, range, and business meaning.
+
+        ### Risk warning
+
+        This operation creates a real daily withdrawal-limit configuration that directly affects a customer's withdrawable amount. Confirm the applicable customers, currency, and limit before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the daily withdrawal-limit configuration is created; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -20300,16 +20735,20 @@ paths:
         - atm.cryptocurrency_limit_operation
       x-lbonly: false
       description: |-
-        Delete Coin Withdraw Limit.
+        Deletes a specified daily crypto-withdrawal limit configuration.
 
         ### Request parameters
 
-        - Required: `id` (Config ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (configuration id).
+        - See the field descriptions for each field's format, range, and business meaning.
+
+        ### Risk warning
+
+        This operation deletes a real daily withdrawal-limit configuration; afterward it no longer applies to the relevant customers' withdrawal limits. Confirm the target configuration before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the specified daily withdrawal-limit configuration is deleted; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -20392,16 +20831,25 @@ paths:
         - atm.cryptocurrency_limit_operation
       x-lbonly: false
       description: |-
-        Updates Coin Withdraw Limit.
+        Edits a specified daily crypto-withdrawal limit configuration.
 
         ### Request parameters
 
-        - Required: `id` (Config ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (configuration id).
+        - The remaining fields match the create endpoint; update `exchange_currency`, `limit_amount`, `member_ids`, `priority`, `status`, `time_zone`, and others as needed.
+        - See the field descriptions for each field's format, range, and business meaning.
+
+        ### Business notes
+
+        The field structure matches the create endpoint; `id` is required when editing to locate the record being updated.
+
+        ### Risk warning
+
+        This operation modifies a real daily withdrawal-limit configuration that directly affects a customer's withdrawable amount. Confirm the target record, currency, and limit before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the specified daily withdrawal-limit configuration is updated; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:

@@ -27,12 +27,20 @@ paths:
 
         ### 請求參數
 
-        - 必填：`id`（記錄ID列表）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`id`（記錄 ID 列表，以 JSON 陣列形式提交）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        按記錄 ID 批量刪除已生成的 CRS（Common Reporting Standard，共同申報準則）申報數據。刪除後相關記錄不再參與後續申報。
+
+        ### 風險提示
+
+        此操作會刪除真實稅務申報數據，刪除後不可恢復，呼叫前請確認 `id` 列表無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成批量刪除；後續狀態以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -116,17 +124,25 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        生成 CRS（Common Reporting Standard）數據。
+        生成指定申報年度、指定 AEOI 歸屬的 CRS（Common Reporting Standard，共同申報準則）申報數據。
 
         ### 請求參數
 
         - 必填：`return_year`（申報年度）、`aeoi_id`（AEOI ID）
         - 可選：`company_name`（公司名稱）、`retain_has_asset`（是否保留有資產的數據）、`account_state`（賬戶狀態篩選）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        按申報年度和 AEOI 歸屬彙總生成待申報數據，可透過可選參數控制是否保留有資產賬戶及按賬戶狀態過濾。
+
+        ### 風險提示
+
+        此操作生成正式稅務申報數據，請確認申報年度與 AEOI 歸屬無誤後再呼叫。
 
         ### 處理結果
 
-        成功時觸發 CRS 數據生成；響應的 `data` 不包含額外業務字段。
+        成功時觸發 CRS 數據生成；響應的 `data` 不包含額外業務欄位。
       security:
         - bearerAuth: []
       requestBody:
@@ -230,15 +246,16 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        根據 `account_no` 查詢實控人。
+        根據賬戶號查詢該賬戶對應的實控人（控權人）資訊。
 
         ### 請求參數
 
-        - 必填：`account_no`（賬戶號）
+        - 必填：`account_no`（要查詢實控人的賬戶號）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
-        ### 處理結果
+        ### 返回結果
 
-        成功時返回該賬戶對應的實控人信息；響應的 `data` 承載實控人數據。
+        成功時在 `data` 返回該賬戶對應的實控人資訊，欄位含義見響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -344,11 +361,11 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        查詢「CRS 數據查詢」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢「CRS 數據」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -715,13 +732,13 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        將「CRS 數據查詢」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「CRS 數據」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後呼叫 `GET /v1/datasets/download/{id}` 取得下載地址。
+        - 不再需要匯出記錄時，可呼叫 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -1026,17 +1043,25 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        編輯 CRS 數據。
+        編輯 CRS（Common Reporting Standard，共同申報準則）數據，含控權人資訊。
 
         ### 請求參數
 
-        - 必填：`audit_frontend_resource`（審計上下文）
+        - 必填：`audit_frontend_resource`（呼叫方提供的審計上下文，含變更前後的支付類型、支付金額等資訊）
         - 可選：`crs_data`（CRS 數據）、`controlling_persons`（控權人列表）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        更新 CRS 申報主體數據及其關聯控權人資訊，涉及真實稅務申報數據變更。
+
+        ### 風險提示
+
+        此操作會變更真實稅務申報數據，呼叫前請確認目標記錄和參數無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成數據更新；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -1126,16 +1151,16 @@ paths:
         - report.crs_tasks
       x-lbonly: false
       description: |-
-        獲取 CRS 文件下載地址。
+        根據物件儲存 Key 取得 CRS 檔案的下載地址。
 
         ### 請求參數
 
-        - 必填：`key`（文件 Key）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`key`（檔案上傳後返回的物件儲存 Key，用於定位目標檔案）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
-        ### 處理結果
+        ### 返回結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時在 `data` 返回對應檔案的下載地址，欄位含義見響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -1220,11 +1245,11 @@ paths:
         - report.crs_tasks
       x-lbonly: false
       description: |-
-        查詢「CRS 日誌查詢」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢「CRS 日誌」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -1444,13 +1469,13 @@ paths:
         - report.crs_tasks
       x-lbonly: false
       description: |-
-        將「CRS 日誌查詢」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「CRS 日誌」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後呼叫 `GET /v1/datasets/download/{id}` 取得下載地址。
+        - 不再需要匯出記錄時，可呼叫 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -1680,11 +1705,11 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        查詢「曆年收益數據」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢「歷年收益數據」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -1825,13 +1850,13 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        將「曆年收益數據」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「歷年收益數據」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後呼叫 `GET /v1/datasets/download/{id}` 取得下載地址。
+        - 不再需要匯出記錄時，可呼叫 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -2007,16 +2032,24 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        導入 CRS 歷史數據。
+        匯入 CRS 歷史數據。
 
         ### 請求參數
 
-        - 必填：`file_key`（上傳文件 Key）、`file_name`（文件名）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`file_key`（檔案上傳後返回的物件儲存 Key，用於定位待匯入檔案）、`file_name`（含副檔名的檔名）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        先將數據檔案上傳至物件儲存取得 `file_key`，再呼叫本接口提交匯入 CRS 歷史數據。
+
+        ### 風險提示
+
+        此操作會寫入真實歷史申報數據，呼叫前請確認檔案內容與格式無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成歷史數據匯入；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -2102,11 +2135,11 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        查詢「申報税務管轄區查詢」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢「申報稅務管轄區」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -2261,13 +2294,13 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        將「申報税務管轄區查詢」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「申報稅務管轄區」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後呼叫 `GET /v1/datasets/download/{id}` 取得下載地址。
+        - 不再需要匯出記錄時，可呼叫 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -2461,16 +2494,24 @@ paths:
         - report.crs_tasks
       x-lbonly: false
       description: |-
-        更新申報税務地區。
+        更新申報稅務地區（稅務管轄區）的申報配置。
 
         ### 請求參數
 
-        - 必填：`id`（記錄ID）、`report_requirement`（申報要求）、`initial_reporting_year`（首次申報年份）、`audit_frontend_resource`（審計上下文）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`id`（記錄 ID）、`report_requirement`（申報要求）、`initial_reporting_year`（首次申報年份）、`audit_frontend_resource`（呼叫方提供的審計上下文，含稅務地區名稱）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        按記錄 ID 更新指定稅務管轄區的申報要求及首次申報年份等配置。
+
+        ### 風險提示
+
+        此操作會變更稅務申報配置，可能影響後續 CRS 數據生成範圍，呼叫前請確認參數無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成配置更新；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -2566,11 +2607,11 @@ paths:
         - b2b_billing.dcp_report
       x-lbonly: false
       description: |-
-        查詢「傭金年報表」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢「佣金年報表」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -2738,13 +2779,13 @@ paths:
         - b2b_billing.dcp_report
       x-lbonly: false
       description: |-
-        將「傭金年報表」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「佣金年報表」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後呼叫 `GET /v1/datasets/download/{id}` 取得下載地址。
+        - 不再需要匯出記錄時，可呼叫 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -2938,11 +2979,11 @@ paths:
         - b2b_billing.dcp_report
       x-lbonly: false
       description: |-
-        查詢「傭金日報表」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢「佣金日報表」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -3110,13 +3151,13 @@ paths:
         - b2b_billing.dcp_report
       x-lbonly: false
       description: |-
-        將「傭金日報表」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「佣金日報表」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後呼叫 `GET /v1/datasets/download/{id}` 取得下載地址。
+        - 不再需要匯出記錄時，可呼叫 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -3310,11 +3351,11 @@ paths:
         - b2b_billing.dcp_report
       x-lbonly: false
       description: |-
-        查詢「傭金月報表」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢「佣金月報表」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -3482,13 +3523,13 @@ paths:
         - b2b_billing.dcp_report
       x-lbonly: false
       description: |-
-        將「傭金月報表」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「佣金月報表」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後呼叫 `GET /v1/datasets/download/{id}` 取得下載地址。
+        - 不再需要匯出記錄時，可呼叫 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -3682,16 +3723,20 @@ paths:
         - lb_hk_report.report_printing
       x-lbonly: false
       description: |-
-        取消報表導出任務。
+        取消一個正在進行的報表匯出任務。
 
         ### 請求參數
 
-        - 必填：`task_id`（任務ID）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`task_id`（要取消的匯出任務 ID）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        中止指定報表匯出任務的執行；已完成的任務無法取消。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時任務被取消；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -3771,17 +3816,17 @@ paths:
         - lb_hk_report.report_printing
       x-lbonly: false
       description: |-
-        獲取導出文件下載地址。
+        取得指定匯出任務生成檔案的下載地址。
 
         ### 請求參數
 
-        - 必填：`task_id`（task_id）
-        - 可選：`inline`（inline）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`task_id`（匯出任務 ID）
+        - 可選：`inline`（是否內聯預覽，不傳時按預設方式返回）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
-        ### 處理結果
+        ### 返回結果
 
-        成功時返回查詢結果；響應字段及其含義見 `200` 響應定義。
+        成功時返回該任務對應檔案的下載地址，欄位含義見響應定義。
       security:
         - bearerAuth: []
       parameters:
@@ -3865,17 +3910,17 @@ paths:
         - lb_hk_report.report_export_list
       x-lbonly: false
       description: |-
-        分頁查詢報表導出任務列表。
+        分頁查詢報表匯出任務列表。
 
         ### 請求參數
 
-        - 必填：`page`（頁碼）、`limit`（每頁條數）
-        - 可選篩選：`report_id`（報表 ID）、`parent_id`（所屬批次 ID）、`task_id`（任務 ID）、`created_at_gt` / `created_at_lt`（創建時間區間，Unix 秒級時間戳）、`file_types`（文件類型，逗號分隔多值）、`file_name`（文件名）
+        - 必填：`page`（頁碼，從 1 開始）、`limit`（每頁條數）
+        - 可選篩選：`report_id`（報表 ID）、`parent_id`（所屬批次 ID）、`task_id`（任務 ID）、`created_at_gt` / `created_at_lt`（建立時間區間，Unix 秒級時間戳）、`file_types`（檔案類型，多值以英文逗號分隔）、`file_name`（檔名）
         - 各篩選項不傳時不參與過濾。
 
-        ### 處理結果
+        ### 返回結果
 
-        成功時在 `data.list` 返回當前頁的導出任務列表；每個任務的字段含義見 `200` 響應定義。
+        成功時在 `data.list` 返回當前頁的匯出任務列表，每個任務的欄位含義見響應定義。
       security:
         - bearerAuth: []
       parameters:
@@ -4100,11 +4145,11 @@ paths:
         - report.export_history_query
       x-lbonly: false
       description: |-
-        查詢「單個報表打印日誌」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢「單個報表列印日誌」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -4257,13 +4302,13 @@ paths:
         - report.export_history_query
       x-lbonly: false
       description: |-
-        將「單個報表打印日誌」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「單個報表列印日誌」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後呼叫 `GET /v1/datasets/download/{id}` 取得下載地址。
+        - 不再需要匯出記錄時，可呼叫 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -4451,11 +4496,11 @@ paths:
         - report.batch_export_history_query
       x-lbonly: false
       description: |-
-        查詢「報表批量打印日誌」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢「報表批量列印日誌」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -4627,13 +4672,13 @@ paths:
         - report.batch_export_history_query
       x-lbonly: false
       description: |-
-        將「報表批量打印日誌」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「報表批量列印日誌」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後呼叫 `GET /v1/datasets/download/{id}` 取得下載地址。
+        - 不再需要匯出記錄時，可呼叫 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -4828,11 +4873,16 @@ paths:
         - report.export_batches_query
       x-lbonly: false
       description: |-
-        從指定導出批次中刪除一張報表配置。
+        從指定匯出批次中刪除一張報表配置。
 
         ### 請求參數
 
         - 必填：`batch_id`（所屬批次 ID）、`report_id`（報表 ID）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        將指定報表從其所屬批次中移除，僅影響該批次內的報表配置。
 
         ### 處理結果
 
@@ -4922,16 +4972,21 @@ paths:
         - report.export_batches_query
       x-lbonly: false
       description: |-
-        創建一個批量打印/導出批次。
+        建立一個批量列印 / 匯出批次。
 
         ### 請求參數
 
         - 必填：`name`（批次名稱）、`sync_sftp`（是否同步到 SFTP）、`email_notify`（是否郵件通知）
-        - 可選：`auto_export_timing`（自動導出時間設置，不傳時不自動導出）、`visible_emails`（可見用戶郵箱列表）
+        - 可選：`auto_export_timing`（自動匯出時間設定，不傳時不自動匯出）、`visible_emails`（可見用戶郵箱列表）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        批次是批量匯出報表的容器，建立後可向其中新增報表配置並發起批量匯出任務。
 
         ### 處理結果
 
-        成功時創建導出批次，業務結果位於 `data`；請結合業務 `code` 判斷是否成功。
+        成功時建立匯出批次，業務結果位於 `data`；請結合業務 `code` 判斷是否成功。
       security:
         - bearerAuth: []
       requestBody:
@@ -5034,16 +5089,24 @@ paths:
         - report.export_batches_update
       x-lbonly: false
       description: |-
-        刪除批量打印批次。
+        刪除批量列印批次。
 
         ### 請求參數
 
-        - 必填：`batch_ids`（批次ID列表）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`batch_ids`（批次 ID 列表，以 JSON 陣列形式提交）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        批量刪除匯出批次；批次刪除後其內的報表配置一併失效。
+
+        ### 風險提示
+
+        此操作會刪除批次及其報表配置，呼叫前請確認 `batch_ids` 無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成批量刪除；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -5129,16 +5192,17 @@ paths:
         - report.export_batches_query
       x-lbonly: false
       description: |-
-        修改已創建的導出批次信息。
+        修改已建立的匯出批次資訊。
 
         ### 請求參數
 
-        - 必填：`batch_id`（批次 ID）、`name`（批次名稱）、`sync_sftp`（是否同步到 SFTP）、`email_notify`（是否郵件通知）
-        - 可選：`auto_export_timing`（自動導出時間設置，不傳時不自動導出）、`visible_emails`（可見用戶郵箱列表）
+        - 必填：`batch_id`（要修改的批次 ID）、`name`（批次名稱）、`sync_sftp`（是否同步到 SFTP）、`email_notify`（是否郵件通知）
+        - 可選：`auto_export_timing`（自動匯出時間設定，不傳時不自動匯出）、`visible_emails`（可見用戶郵箱列表）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 處理結果
 
-        成功時更新導出批次，業務結果位於 `data`；請結合業務 `code` 判斷是否成功。
+        成功時更新匯出批次，業務結果位於 `data`；請結合業務 `code` 判斷是否成功。
       security:
         - bearerAuth: []
       requestBody:
@@ -5246,17 +5310,21 @@ paths:
         - report.export_batches_query
       x-lbonly: false
       description: |-
-        新建批量導出任務。
+        針對指定批次新建一次批量匯出任務。
 
         ### 請求參數
 
-        - 必填：`batch_id`（批次ID）、`operator`（操作員）
-        - 可選：`bind_id`（綁定ID）、`sync_sftp`（是否同步至 SFTP）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`batch_id`（批次 ID）、`operator`（發起本次操作的操作員標識，用於審計追蹤）
+        - 可選：`bind_id`（綁定 ID）、`sync_sftp`（是否同步至 SFTP）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        按批次內已配置的報表批量生成匯出檔案，任務非同步執行，進度和結果可透過匯出任務列表查詢。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時建立批量匯出任務；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -5353,7 +5421,12 @@ paths:
       x-permission-key:
         - report.batch_export_reports_query
       x-lbonly: false
-      description: 查詢獲取某壹批次下的報表列表。
+      description: |-
+        查詢某一批次下的報表列表，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+
+        ### 返回結果
+
+        成功時返回該批次下的報表記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -5466,7 +5539,14 @@ paths:
       x-permission-key:
         - report.batch_export_reports_query
       x-lbonly: false
-      description: 導出獲取某一批次下的報表列表列表為文件。同步模式（mode:0）直接返回下載地址；異步模式（mode:1）返回 file_download_id，之後用 GET /v1/datasets/download/{id} 獲取最終下載地址，用 DELETE /v1/datasets/download/{id} 刪除該導出記錄。
+      description: |-
+        將「批次報表列表」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
+
+        ### 匯出模式
+
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後呼叫 `GET /v1/datasets/download/{id}` 取得下載地址。
+        - 不再需要匯出記錄時，可呼叫 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -5601,11 +5681,11 @@ paths:
         - report.export_batches_query
       x-lbonly: false
       description: |-
-        查詢「批量打印列表」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢「批量列印列表」數據，可透過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回符合的記錄列表及分頁資訊。各過濾欄位的用途、可選值和動態數據來源見對應欄位說明。
       security:
         - bearerAuth: []
       requestBody:
@@ -5771,13 +5851,13 @@ paths:
         - report.export_batches_query
       x-lbonly: false
       description: |-
-        將「批量打印列表」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「批量列印列表」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後呼叫 `GET /v1/datasets/download/{id}` 取得下載地址。
+        - 不再需要匯出記錄時，可呼叫 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -5959,15 +6039,13 @@ paths:
         - report.export_batches_query
       x-lbonly: false
       description: |-
-        在指定導出批次下新增或修改一張報表配置。
-
-        傳 `id` 時為修改，不傳時為新增。
+        在指定匯出批次下新增或修改一張報表配置。傳 `id` 時為修改，不傳時為新增。
 
         ### 請求參數
 
-        - 必填：`batch_id`（所屬批次 ID）、`report_id`（報表 ID）、`file_type`（導出文件類型）、`remark`（備註）、`porter_params`（報表查詢/導出參數）
+        - 必填：`batch_id`（所屬批次 ID）、`report_id`（報表 ID）、`file_type`（匯出檔案類型）、`remark`（備註）、`porter_params`（報表查詢 / 匯出參數）
         - 可選：`id`（報表配置 ID，修改時傳）、`new_ver`（是否使用新版本）
-        - `porter_params` 為鍵值對對象，具體字段隨報表而定。
+        - `porter_params` 為鍵值對物件，具體欄位隨報表而定。
 
         ### 處理結果
 
@@ -6082,15 +6160,13 @@ paths:
         - lb_hk_report.report_printing
       x-lbonly: false
       description: |-
-        新建或編輯報表書籤目錄。
-
-        新建與編輯共用此接口：傳 `dir_id` 時為編輯該目錄，不傳 `dir_id` 時為新建。
+        新建或編輯報表書籤目錄。新建與編輯共用此接口：傳 `dir_id` 時為編輯該目錄，不傳時為新建。
 
         ### 請求參數
 
         - 必填：`name`（目錄名稱）
-        - 可選：`dir_id`（書籤目錄ID，編輯時傳；不傳為新建）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 可選：`dir_id`（書籤目錄 ID，編輯時傳；不傳為新建）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 處理結果
 
@@ -6187,12 +6263,16 @@ paths:
 
         ### 請求參數
 
-        - 必填：`dir_ids`（目錄ID列表）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`dir_ids`（目錄 ID 列表，以 JSON 陣列形式提交）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        批量刪除指定的報表書籤目錄。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成刪除；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
