@@ -23,11 +23,11 @@ paths:
         - corporate.after_event_adjustment_query
       x-lbonly: false
       description: |-
-        Queries Post Adjust Announcement List data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query «Post-execution adjustment – announcement preview list» records. Use `filters` to combine business conditions and `page` / `page_size` to control pagination and ordering.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See each field's description for filter usage, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -172,13 +172,13 @@ paths:
         - corporate.after_event_adjustment_query
       x-lbonly: false
       description: |-
-        Exports Post Adjust Announcement List data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export «Post-execution adjustment – announcement preview list» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -357,11 +357,11 @@ paths:
         - corporate.after_event_adjustment_query
       x-lbonly: false
       description: |-
-        Queries Post Adjust Record List data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query «Post-execution adjustment – adjustment records» records. Use `filters` to combine business conditions and `page` / `page_size` to control pagination and ordering.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See each field's description for filter usage, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -513,13 +513,13 @@ paths:
         - corporate.after_event_adjustment_query
       x-lbonly: false
       description: |-
-        Exports Post Adjust Record List data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export «Post-execution adjustment – adjustment records» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -700,17 +700,25 @@ paths:
         - corporate.after_event_adjustment_update
       x-lbonly: false
       description: |-
-        Create Post Adjust.
+        Create a post-execution adjustment for a specific corporate action announcement, correcting quantity, amount, or fee discrepancies in that announcement's already-executed result according to the submitted line items.
 
         ### Request parameters
 
-        - Required: `ann_id` (Announcement ID), `items` (Adjust Items)
-        - Optional: `remark` (Remark)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_id` (the associated announcement ID), `items` (adjustment line items, submitted as a JSON array)
+        - Optional: `remark`
+        - See each field's description for format, value range, and business meaning.
+
+        ### Business notes
+
+        The adjustment applies only to the announcement referenced by `ann_id`. Each entry in `items` describes one detail to be corrected.
+
+        ### Risk warning
+
+        This operation modifies the result of an already-executed corporate action and may cause real changes to funds, positions, or fees. Verify the announcement and adjustment details before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the post-execution adjustment is applied. Subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -799,18 +807,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Submits a corporate-action rounding-difference adjustment (V2). A single request may include both
-        tax-and-fee adjustments (`tax_fee_items`) and difference adjustments (`diff_items`), with `group_id`
-        identifying the group this adjustment belongs to.
+        Submit a corporate-action rounding-difference adjustment (V2). A single request may contain both tax/fee adjustments (`tax_fee_items`) and difference adjustments (`diff_items`), grouped by `group_id`.
 
         ### Request parameters
 
-        - Required: `tax_fee_items` (tax-and-fee adjustment list), `diff_items` (difference adjustment list), `group_id` (group ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `tax_fee_items` (tax/fee adjustment list), `diff_items` (difference adjustment list), `group_id` (group ID)
+        - See each field's description for format, value range, and business meaning.
+
+        ### Business notes
+
+        Each entry in `tax_fee_items` describes a tax/fee to adjust for one account, and each entry in `diff_items` describes an amount and quantity to adjust for one event. Both adjustment types are submitted as a single rounding-difference operation under the same `group_id`.
+
+        ### Risk warning
+
+        This operation adjusts taxes, fees, and differences in corporate-action settlement and may cause real changes to funds or positions. Verify the group and every adjustment detail before calling.
 
         ### Result
 
-        On success, the rounding-difference adjustment is completed. See the `200` response schema for returned data.
+        On success, the rounding-difference adjustment is applied. See the `200` response definition for returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -950,18 +964,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Applies a single payable date to a batch of corporate-action announcements. Provide the list of
-        announcement IDs to update and the target payable date; the server applies the same payable date to
-        every announcement in the list.
+        Update the payable date for a batch of corporate-action announcements. Provide the announcement IDs to update and the target payable date; the server applies the same payable date to every announcement in the list.
 
         ### Request parameters
 
-        - Required: `ann_ids` (announcement ID list), `payable_date` (payable date as a `YYYYMMDD` integer, for example `20260710`)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_ids` (announcement ID list), `payable_date` (payable date as a `YYYYMMDD` integer, e.g. `20260710`)
+        - See each field's description for format, value range, and business meaning.
+
+        ### Business notes
+
+        `payable_date` is applied to every announcement in `ann_ids`, uniformly changing their payable date in one batch.
+
+        ### Risk warning
+
+        This operation changes the payable date of multiple announcements and may affect subsequent settlement and distribution timing. Verify the announcement scope and target date before calling.
 
         ### Result
 
-        On success, the batch update is completed. See the `200` response schema for returned data.
+        On success, the batch update is applied. See the `200` response definition for returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -1147,16 +1167,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Cancels a client's previously submitted voting instruction under a shareholders' meeting (Voting) corporate action.
+        Void the voting instruction a specific customer has submitted under a shareholder-meeting (Voting) corporate action.
 
         ### Request parameters
 
-        - Required: `ann_id` (announcement ID) and `aaid` (account ID).
-        - The two parameters together identify the target client and shareholders' meeting whose instruction is cancelled.
+        - Required: `ann_id` (corporate-action ID identifying the target shareholder meeting), `aaid` (account ID identifying the target customer account)
+        - The two parameters together locate the customer and shareholder meeting whose instruction is to be voided.
+
+        ### Business notes
+
+        Once voided, the customer's previously submitted voting instruction for this meeting no longer takes effect.
+
+        ### Risk warning
+
+        This operation voids a customer's submitted voting instruction and may affect that customer's voting outcome. Verify the target customer and shareholder meeting before calling.
 
         ### Result
 
-        On success, the voting instruction is cancelled and the result is returned in `data`. Interpret the outcome together with the business `code`.
+        On success, the voting instruction is voided; the business result is in `data`. Interpret it together with the business `code`.
       security:
         - bearerAuth: []
       requestBody:
@@ -1247,16 +1275,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Submits the CCASS feedback quantity.
+        Fill back the actual CCASS quantity for a specific corporate-action announcement, recording the quantity reported by the clearing house against that announcement.
 
         ### Request parameters
 
-        - Required: `ann_id` (Announcement ID), `feedback_quantity` (Feedback Quantity), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_id` (announcement ID), `feedback_quantity` (fed-back quantity), `audit_frontend_resource` (caller-provided audit context)
+        - See each field's description for format, value range, and business meaning.
+
+        ### Business notes
+
+        `feedback_quantity` is recorded as the announcement's CCASS fed-back quantity and used for subsequent reconciliation and execution.
+
+        ### Risk warning
+
+        This operation updates the announcement's CCASS fed-back quantity and may affect subsequent settlement and execution. Verify the announcement and quantity before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the fed-back quantity is recorded. Subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -1345,16 +1381,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Reports CCASS.
+        Report a specific corporate-action announcement to CCASS, submitting the announcement's information to CCASS and optionally notifying customers at the same time.
 
         ### Request parameters
 
-        - Required: `ann_id` (Announcement ID), `send_msg` (Send Message), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_id` (announcement ID), `send_msg` (whether to send a customer message), `audit_frontend_resource` (caller-provided audit context)
+        - See each field's description for format, value range, and business meaning.
+
+        ### Business notes
+
+        After reporting, whether a notification is sent to the relevant customers depends on `send_msg`.
+
+        ### Risk warning
+
+        This operation reports to CCASS and may trigger outbound customer messages. Verify the announcement and the send option before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the report is submitted. Subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -1448,16 +1492,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Submits CCASS sub-position feedback.
+        Fill back CCASS quantities per sub-position for a specific corporate-action announcement; one request can submit fed-back details for multiple sub-positions.
 
         ### Request parameters
 
-        - Required: `ann_id` (Announcement ID), `sub_positions` (Sub Positions)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_id` (announcement ID), `sub_positions` (per-sub-position fed-back details, each containing `sub_position` and `quantity`)
+        - See each field's description for format, value range, and business meaning.
+
+        ### Business notes
+
+        Each entry in `sub_positions` is the fed-back quantity for one sub-position; the server records each sub-position separately.
+
+        ### Risk warning
+
+        This operation updates the CCASS fed-back quantity of each sub-position and may affect subsequent settlement and execution. Verify the announcement and every sub-position detail before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the fed-back quantities are recorded. Subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -1543,19 +1595,20 @@ paths:
         - 公司行动 (Corporate Action)
       x-lbonly: false
       description: |-
-        Checks whether there are in-progress transfer records under the specified announcement. Call this
-        endpoint before executing a corporate action; if in-progress transfer records exist, the caller can
-        warn the operator or block the subsequent execution.
+        Check whether the specified announcement has any in-progress position-transfer records. Call this before executing a corporate action; if in-progress transfers exist, the caller can warn or block downstream execution accordingly.
 
         ### Request parameters
 
-        - Required: `ann_id` (announcement ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_id` (unique identifier of the announcement to check)
+        - See each field's description for format, value range, and business meaning.
 
-        ### Response
+        ### Business notes
 
-        On success, returns the list of in-progress transfer conflict records under the announcement in
-        `data.items`. An empty list means there are no in-progress transfer records.
+        This endpoint only performs a check and does not change any transfer or announcement state.
+
+        ### Returns
+
+        On success, returns the list of in-progress transfer conflict records for the announcement in `data.items`. An empty list means there are no in-progress transfers.
       security:
         - bearerAuth: []
       requestBody:
@@ -1658,18 +1711,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Approves or rejects the operation. With `active = 1`, a successful transfer, instruction
-        collection, and registration move the record to pending execution review. With `active = 2`,
-        pending execution review returns to registered.
+        Generic corporate-action review (V2): approve or reject a batch of announcements. Each entry specifies the announcement via `id` and the target state to advance to via `active`: `active=1` advances to "pending execution review" after transfer, instruction collection, and registration have all succeeded; `active=2` advances from "pending execution review" to "registration succeeded".
 
         ### Request parameters
 
-        - Required: `announcements` (Announcements), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `announcements` (review list, each entry containing `id` and `active`), `audit_frontend_resource` (caller-provided audit context)
+        - See each field's description for format, value range, default behavior, and business meaning.
+
+        ### Business notes
+
+        Each entry in `announcements` advances the state of one announcement; `audit_frontend_resource` records the audit context of this review.
+
+        ### Risk warning
+
+        This operation advances the corporate action's execution-review state and may trigger downstream registration and execution. Verify the announcements and target states before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the review is applied. See the `200` response definition for returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -1757,16 +1816,20 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Copy Announcement.
+        Create a new corporate-action announcement by copying an existing one, making it easy to build a new announcement from a similar template.
 
         ### Request parameters
 
-        - Required: `ann_id` (Announcement ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_id` (the source announcement ID to copy from)
+        - See each field's description for format, value range, and business meaning.
+
+        ### Business notes
+
+        The server generates the new announcement using the announcement referenced by `ann_id` as a template; the source announcement is unaffected.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, a new announcement is created. Its identifier and content follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -1844,7 +1907,12 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate ann timeline list.
+      description: |-
+        Query «Corporate action – announcement recommended-status timeline» records. Use `filters` to combine business conditions and `page` / `page_size` to control pagination and ordering.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See each field's description for filter usage, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -1975,7 +2043,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate ann timeline list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Corporate action – announcement recommended-status timeline» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -2140,7 +2215,12 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate announcement detail list.
+      description: |-
+        Query «Corporate action – announcement preview details» records. Use `filters` to combine business conditions and `page` / `page_size` to control pagination and ordering.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See each field's description for filter usage, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -2399,7 +2479,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate announcement detail list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Corporate action – announcement preview details» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -2596,7 +2683,12 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate announcement fee events.
+      description: |-
+        Query «Corporate action – announcement fee rules» records. Use `filters` to combine business conditions and `page` / `page_size` to control pagination and ordering.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See each field's description for filter usage, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -2795,7 +2887,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate announcement fee events list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Corporate action – announcement fee rules» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -2978,11 +3077,11 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Queries corporate announcements data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query «Corporate action – announcement management list» records. Use `filters` to combine business conditions and `page` / `page_size` to control pagination and ordering.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See each field's description for filter usage, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -3545,13 +3644,13 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Exports corporate announcements data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export «Corporate action – announcement management list» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -4082,7 +4181,12 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate fee details v2 list.
+      description: |-
+        Query «Fee details» records. Use `filters` to combine business conditions and `page` / `page_size` to control pagination and ordering.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See each field's description for filter usage, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -4220,7 +4324,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate fee details v2 list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Fee details» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -4389,7 +4500,12 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the notification list report.
+      description: |-
+        Query «Instruction collection summary – list» records. Use `filters` to combine business conditions and `page` / `page_size` to control pagination and ordering.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See each field's description for filter usage, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -4560,7 +4676,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the notification list report list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Instruction collection summary – list» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -4735,7 +4858,12 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the notification report list.
+      description: |-
+        Query «Instruction collection summary – header» records. Use `filters` to combine business conditions and `page` / `page_size` to control pagination and ordering.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See each field's description for filter usage, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -4878,7 +5006,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the notification report list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Instruction collection summary – header» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -5046,7 +5181,12 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the Corporate refund announcement counterpart list list.
+      description: |-
+        Query «Corporate action – refundable tax amount by sub-position» records. Use `filters` to combine business conditions and `page` / `page_size` to control pagination and ordering.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See each field's description for filter usage, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -5179,7 +5319,12 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate refund announcement details list.
+      description: |-
+        Query «Corporate action refund details» records. Use `filters` to combine business conditions and `page` / `page_size` to control pagination and ordering.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See each field's description for filter usage, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -5360,7 +5505,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate refund announcement details list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Corporate action refund details» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -5539,7 +5691,12 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the Corporate refund announcement list.
+      description: |-
+        Query «Corporate action refund list» records. Use `filters` to combine business conditions and `page` / `page_size` to control pagination and ordering.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See each field's description for filter usage, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -5739,7 +5896,12 @@ paths:
       x-permission-key:
         - corporate.email_notify
       x-lbonly: false
-      description: Query the corporate register aaids.
+      description: |-
+        Query «Corporate action registered beneficiary account ID list» records. Use `filters` to combine business conditions and `page` / `page_size` to control pagination and ordering.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See each field's description for filter usage, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -5871,7 +6033,12 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate stock events v2.
+      description: |-
+        Query «Corporate action – event plans by announcement ID» records. Use `filters` to combine business conditions and `page` / `page_size` to control pagination and ordering.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See each field's description for filter usage, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -6050,7 +6217,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate stock events v2 list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Corporate action – event plans by announcement ID» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -6227,7 +6401,12 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate stock register detail events.
+      description: |-
+        Query «Corporate action – execution plans by detail ID» records. Use `filters` to combine business conditions and `page` / `page_size` to control pagination and ordering.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See each field's description for filter usage, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -6370,7 +6549,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate stock register detail events list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Corporate action – execution plans by detail ID» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -6538,7 +6724,12 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate stock register details v2.
+      description: |-
+        Query «Corporate action – customer detail management list» records. Use `filters` to combine business conditions and `page` / `page_size` to control pagination and ordering.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See each field's description for filter usage, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -6717,7 +6908,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate stock register details v2 list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Corporate action – customer detail management list» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:

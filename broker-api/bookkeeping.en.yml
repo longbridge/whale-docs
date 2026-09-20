@@ -25,17 +25,24 @@ paths:
         - lb_hk_book.book_detail_update
       x-lbonly: false
       description: |-
-        Create an accounting entry (also supports creating from a copy_id pre-fill). It changes real accounting-entry data.
+        Create an accounting entry that records the debit/credit posting between subject accounts. You may also prefill from an existing entry via `copy_id` before creating.
 
         ### Request parameters
 
-        - Required: `bookingTypeId` (Booking Type ID), `txNo` (Transaction No.), `name` (Description), `accountAt` (Account Date), `ledgerDate` (Ledger Date), `objectCode` (Object Code), `debitFirstSubjectCode` (Debit First-level Subject Code), `debitSecondSubjectCode` (Debit Second-level Subject Code), `debitSubjectCode` (Debit Third-level Subject Code), `creditFirstSubjectCode` (Credit First-level Subject Code), `creditSecondSubjectCode` (Credit Second-level Subject Code), `creditSubjectCode` (Credit Third-level Subject Code), `amount` (Amount)
-        - Optional: `sourceId` (Book Source), `aaid` (Associated Account ID), `remark` (Remark), `debitName` (Debit Subject Full Name), `creditName` (Credit Subject Full Name), `objectType` (Object Type), `audit_frontend_resource` (Audit Frontend Resource Snapshot)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `bookingTypeId` (booking business type), `txNo` (transaction number), `name` (summary), `accountAt` (booking date), `ledgerDate` (ledger date), `objectCode` (object currency), `debitFirstSubjectCode` / `debitSecondSubjectCode` / `debitSubjectCode` (debit level 1/2/3 subject codes), `creditFirstSubjectCode` / `creditSecondSubjectCode` / `creditSubjectCode` (credit level 1/2/3 subject codes), and `amount`.
+        - See the individual field docs for each field's format, allowed values, and meaning.
+
+        ### Business notes
+
+        Both the debit and credit subjects must be selected level by level; the level-2 and level-3 subjects cascade from their parent. The allowed values for `objectCode` vary by channel — call `GET /v1/datasets/refs/tenant_currencies_by_channel` to fetch the currently available values.
+
+        ### Risk warning
+
+        This operation writes real accounting-entry data and affects bookkeeping results. Verify the debit/credit subjects, currency, and amount before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the accounting entry is created; see the `200` response for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -242,16 +249,24 @@ paths:
         - lb_hk_book.book_detail_update
       x-lbonly: false
       description: |-
-        Delete Account Detail.
+        Delete an accounting entry.
 
         ### Request parameters
 
-        - Required: `id` (Entry ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (entry ID).
+        - See the individual field docs for each field's format, allowed values, and meaning.
+
+        ### Business notes
+
+        Locates the accounting entry by `id` and deletes it. This affects real bookkeeping data.
+
+        ### Risk warning
+
+        This operation deletes real accounting-entry data and cannot be undone. Confirm the target entry before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the accounting entry is deleted; refer to the `200` response for the resulting state and returned data.
       security:
         - bearerAuth: []
       requestBody:
@@ -334,17 +349,24 @@ paths:
         - lb_hk_book.book_detail_update
       x-lbonly: false
       description: |-
-        Edit an accounting entry (sharing the same form as create, differing only in the additional id). It changes real accounting-entry data.
+        Edit an existing accounting entry. The request has the same shape as the create endpoint, with the addition of `id` to identify the entry to modify.
 
         ### Request parameters
 
-        - Required: `id` (Account Detail ID), `bookingTypeId` (Booking Type ID), `txNo` (Transaction No.), `name` (Description), `accountAt` (Account Date), `ledgerDate` (Ledger Date), `objectCode` (Object Code), `debitFirstSubjectCode` (Debit First-level Subject Code), `debitSecondSubjectCode` (Debit Second-level Subject Code), `debitSubjectCode` (Debit Third-level Subject Code), `creditFirstSubjectCode` (Credit First-level Subject Code), `creditSecondSubjectCode` (Credit Second-level Subject Code), `creditSubjectCode` (Credit Third-level Subject Code), `amount` (Amount)
-        - Optional: `sourceId` (Book Source), `aaid` (Associated Account ID), `remark` (Remark), `debitName` (Debit Subject Full Name), `creditName` (Credit Subject Full Name), `objectType` (Object Type), `audit_frontend_resource` (Audit Frontend Resource Snapshot)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `id` (accounting entry ID), `bookingTypeId` (booking business type), `txNo` (transaction number), `name` (summary), `accountAt` (booking date), `ledgerDate` (ledger date), `objectCode` (object currency), `debitFirstSubjectCode` / `debitSecondSubjectCode` / `debitSubjectCode` (debit level 1/2/3 subject codes), `creditFirstSubjectCode` / `creditSecondSubjectCode` / `creditSubjectCode` (credit level 1/2/3 subject codes), and `amount`.
+        - See the individual field docs for each field's format, allowed values, and meaning.
+
+        ### Business notes
+
+        The debit and credit subjects cascade level by level; once a leaf subject is selected, its full name becomes the corresponding debit/credit subject name. The allowed values for `objectCode` vary by channel — call `GET /v1/datasets/refs/tenant_currencies_by_channel` to fetch the currently available values.
+
+        ### Risk warning
+
+        This operation overwrites real accounting-entry data and affects bookkeeping results. Verify the target entry and its subjects, currency, and amount before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the accounting entry is updated; see the `200` response for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -563,16 +585,20 @@ paths:
         - accounting.deposit_transit_details
       x-lbonly: false
       description: |-
-        Add Book Remarks.
+        Add an accounting remark to a bookkeeping business object.
 
         ### Request parameters
 
-        - Required: `ref_id` (Ref ID), `ref_no` (Ref No.), `biz_type` (Biz Type), `remarks` (Remarks)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ref_id` (related business object ID), `ref_no` (related reference number), `biz_type` (business type), and `remarks` (remark content).
+        - See the individual field docs for each field's format, allowed values, and meaning.
+
+        ### Business notes
+
+        The remark is linked to a specific business object via `ref_id`, `ref_no`, and `biz_type`, providing supplementary notes for that record.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the accounting remark is added; refer to the `200` response for the resulting state and returned data.
       security:
         - bearerAuth: []
       requestBody:
@@ -675,16 +701,16 @@ paths:
         - accounting.deposit_transit_details
       x-lbonly: false
       description: |-
-        Delete Book Remarks.
+        Delete an accounting remark.
 
         ### Request parameters
 
-        - Required: `id` (Remark ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (remark ID).
+        - See the individual field docs for each field's format, allowed values, and meaning.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the accounting remark is deleted; refer to the `200` response for the resulting state and returned data.
       security:
         - bearerAuth: []
       requestBody:
@@ -772,16 +798,24 @@ paths:
         - accounting.summary_reconciliation_operation
       x-lbonly: false
       description: |-
-        Updates Summary Recon Items.
+        Edit a deposit-in-transit summary reconciliation item, updating its opening balance and adjustment amounts.
 
         ### Request parameters
 
-        - Required: `id` (Record ID), `remark` (Remark), `ref_no` (Ref No.), `begin_amount` (Begin Amount), `statement_adjustment` (Statement Adjustment), `in_transit_adjustment` (In Transit Adjustment), `remarks` (Remarks)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (record ID), `remark` (remark), `ref_no` (related reference number), `begin_amount` (opening balance), `statement_adjustment` (statement adjustment), `in_transit_adjustment` (in-transit adjustment), and `remarks` (remark content).
+        - See the individual field docs for each field's format, allowed values, and meaning.
+
+        ### Business notes
+
+        Used to make manual adjustments to the deposit-in-transit summary reconciliation result. This affects real accounting reconciliation data.
+
+        ### Risk warning
+
+        This operation modifies real accounting reconciliation data and affects the deposit-in-transit reconciliation result. Verify the target record and amounts before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the reconciliation item is updated; refer to the `200` response for the resulting state and returned data.
       security:
         - bearerAuth: []
       requestBody:
@@ -899,16 +933,20 @@ paths:
         - accounting.ccass_delete
       x-lbonly: false
       description: |-
-        Deletes a CCASS billing record. Broker Fee uses the same backend endpoint.
+        Delete a CCASS bill record. The Broker Fee scenario reuses the same backend endpoint.
 
         ### Request parameters
 
-        - Required: `id` (Bill ID)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `id` (bill ID).
+        - See the individual field docs for each field's format, allowed values, and meaning.
+
+        ### Risk warning
+
+        This operation deletes real bill data and cannot be undone. Confirm the target bill before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the bill is deleted; see the `200` response for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -997,18 +1035,24 @@ paths:
         - accounting.payment_flow_deletion
       x-lbonly: false
       description: |-
-        Channel Exchange Order and Settlement Contract share this endpoint. Each uses its own
-        `deleteDataSource` wrapper with the same parameter structure. This operation affects live
-        accounting-entry source data.
+        Delete an accounting-entry data source record. The Channel Exchange Order and Settlement Contract scenarios reuse the same endpoint with an identical parameter structure.
 
         ### Request parameters
 
-        - Required: `source_id` (Source ID), `tx_no` (Transaction No.)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `source_id` (data source type, `BookkeepingSourceType` enum) and `tx_no` (transaction number).
+        - See the individual field docs for each field's format, allowed values, and meaning.
+
+        ### Business notes
+
+        Locates and deletes the entry data source by data source type and transaction number. This affects real accounting-entry data sources.
+
+        ### Risk warning
+
+        This operation deletes a real accounting-entry data source and cannot be undone. Verify the data source type and transaction number before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the data source record is deleted; see the `200` response for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -1158,19 +1202,25 @@ paths:
         - book.book_contract_bills_operation
       x-lbonly: false
       description: |-
-        Retrigger bilateral payment-transaction matching for the specified date range.
-
-        Always set `scenes` to `bookkeeping_bilateral`.
+        Re-trigger bilateral payment transaction matching for a given date range.
 
         ### Request parameters
 
-        - Required: `start_date` (Start Date), `end_date` (End Date), `scenes` (Scene)
-        - Optional: `manual` (Manual Flag), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `start_date` (start date, `YYYYMMDD`), `end_date` (end date, `YYYYMMDD`), and `scenes` (rerun scene, fixed value `bookkeeping_bilateral`).
+        - Optional: `manual` (manual-trigger flag) and `audit_frontend_resource` (caller audit context).
+        - See the individual field docs for each field's format, allowed values, and meaning.
+
+        ### Business notes
+
+        Recomputes the existing bilateral payment matching results for the given date range. `scenes` is fixed to `bookkeeping_bilateral`.
+
+        ### Risk warning
+
+        This operation regenerates the matching results for the date range and affects reconciliation data. Verify the date range before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the re-matching is triggered; see the `200` response for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -1285,16 +1335,20 @@ paths:
         - book.book_ipo_bills_delete
       x-lbonly: false
       description: |-
-        Delete Stock Bill.
+        Delete an IPO share bill record.
 
         ### Request parameters
 
-        - Required: `id` (Bill ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (bill ID).
+        - See the individual field docs for each field's format, allowed values, and meaning.
+
+        ### Risk warning
+
+        This operation deletes real bill data and cannot be undone. Confirm the target bill before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the IPO share bill is deleted; refer to the `200` response for the resulting state and returned data.
       security:
         - bearerAuth: []
       requestBody:
@@ -1382,16 +1436,19 @@ paths:
         - accounting.bank_balance_info
       x-lbonly: false
       description: |-
-        This trigger-only endpoint takes no arguments and sends no `data`. It starts real-time bank-card
-        balance synchronization, so the request body is intentionally empty.
+        Trigger a real-time sync of bank card balances. This is a pure trigger endpoint and the request body is empty.
 
         ### Request parameters
 
-        This endpoint does not accept business parameters.
+        This endpoint takes no business parameters.
+
+        ### Business notes
+
+        On invocation the backend starts a real-time sync of bank card balances; it does not target a single record.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the sync is triggered; see the `200` response for the returned content.
       security:
         - bearerAuth: []
       responses:
@@ -1461,16 +1518,20 @@ paths:
         - lb_hk_book.bank_balance_update
       x-lbonly: false
       description: |-
-        Rechecks Bank Balance.
+        Re-run the bank balance reconciliation for a specified date.
 
         ### Request parameters
 
-        - Required: `runDay` (Run Day)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `runDay` (reconciliation date).
+        - See the individual field docs for each field's format, allowed values, and meaning.
+
+        ### Business notes
+
+        Re-runs the bank balance reconciliation for the date given in `runDay`. This affects real reconciliation data.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the reconciliation is re-run; refer to the `200` response for the resulting state and returned data.
       security:
         - bearerAuth: []
       requestBody:
@@ -1558,13 +1619,13 @@ paths:
         - lb_hk_book.book_detail_query
       x-lbonly: false
       description: |-
-        Exports Accounting Entries - Summary data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export the `Merged Accounting Entries` dataset to a file. `filters` sets the export scope and `down_fields` limits the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -1778,11 +1839,11 @@ paths:
         - lb_hk_book.book_detail_query
       x-lbonly: false
       description: |-
-        Queries Accounting Entries - Summary data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the `Merged Accounting Entries` dataset. Use `filters` to combine business conditions and `page`/`page_size` to control pagination.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field docs for each filter's purpose, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -2000,13 +2061,13 @@ paths:
         - lb_hk_book.book_detail_query
       x-lbonly: false
       description: |-
-        Exports Accounting Entries - Details data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export the `Accounting Entry Details` dataset to a file. `filters` sets the export scope and `down_fields` limits the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -2243,11 +2304,11 @@ paths:
         - lb_hk_book.book_detail_query
       x-lbonly: false
       description: |-
-        Queries Accounting Entries - Details data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the `Accounting Entry Details` dataset. Use `filters` to combine business conditions and `page`/`page_size` to control pagination.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field docs for each filter's purpose, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -2491,11 +2552,11 @@ paths:
         - accounting.deposit_transit_details
       x-lbonly: false
       description: |-
-        Queries Deposit in transit Details data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the `Deposit-in-Transit Details` dataset. Use `filters` to combine business conditions and `page`/`page_size` to control pagination.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field docs for each filter's purpose, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -2754,13 +2815,13 @@ paths:
         - lb_hk_book.book_detail_query
       x-lbonly: false
       description: |-
-        Exports Deposit in transit - Summary check data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export the `Deposit-in-Transit Summary Reconciliation` dataset to a file. `filters` sets the export scope and `down_fields` limits the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -2990,11 +3051,11 @@ paths:
         - lb_hk_book.book_detail_query
       x-lbonly: false
       description: |-
-        Queries Deposit in transit - Summary check data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the `Deposit-in-Transit Summary Reconciliation` dataset. Use `filters` to combine business conditions and `page`/`page_size` to control pagination.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field docs for each filter's purpose, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -3232,13 +3293,13 @@ paths:
         - accounting.ccass_query
       x-lbonly: false
       description: |-
-        Exports CCASS Statement data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export the `CCASS Bills` dataset to a file. `filters` sets the export scope and `down_fields` limits the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -3468,11 +3529,11 @@ paths:
         - accounting.ccass_query
       x-lbonly: false
       description: |-
-        Queries CCASS Statement data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the `CCASS Bills` dataset. Use `filters` to combine business conditions and `page`/`page_size` to control pagination.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field docs for each filter's purpose, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -3691,13 +3752,13 @@ paths:
         - book.book_ifast_statement_query
       x-lbonly: false
       description: |-
-        Exports IFAST Statement data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export the `iFAST Statements` dataset to a file. `filters` sets the export scope and `down_fields` limits the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -3955,11 +4016,11 @@ paths:
         - book.book_ifast_statement_query
       x-lbonly: false
       description: |-
-        Queries IFAST Statement data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the `iFAST Statements` dataset. Use `filters` to combine business conditions and `page`/`page_size` to control pagination.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field docs for each filter's purpose, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -4189,13 +4250,13 @@ paths:
         - Accounting
       x-lbonly: false
       description: |-
-        Exports Settlement Contract data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export the `Settlement Contracts` dataset to a file. `filters` sets the export scope and `down_fields` limits the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -4414,11 +4475,11 @@ paths:
         - Accounting
       x-lbonly: false
       description: |-
-        Queries Settlement Contract data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the `Settlement Contracts` dataset. Use `filters` to combine business conditions and `page`/`page_size` to control pagination.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field docs for each filter's purpose, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -4631,13 +4692,13 @@ paths:
         - book.other_bills_query
       x-lbonly: false
       description: |-
-        Exports Broker Fee data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export the `Broker Fees` dataset to a file. `filters` sets the export scope and `down_fields` limits the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -4867,11 +4928,11 @@ paths:
         - book.other_bills_query
       x-lbonly: false
       description: |-
-        Queries Broker Fee data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the `Broker Fees` dataset. Use `filters` to combine business conditions and `page`/`page_size` to control pagination.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field docs for each filter's purpose, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -5109,13 +5170,13 @@ paths:
         - accounting.member_fee_bills
       x-lbonly: false
       description: |-
-        Exports All Client Fee List data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export the `Client Fee Bills` dataset to a file. `filters` sets the export scope and `down_fields` limits the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -5387,11 +5448,11 @@ paths:
         - accounting.member_fee_bills
       x-lbonly: false
       description: |-
-        Queries All Client Fee List data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the `Client Fee Bills` dataset. Use `filters` to combine business conditions and `page`/`page_size` to control pagination.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field docs for each filter's purpose, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -5679,13 +5740,13 @@ paths:
         - lb_hk_book.book_exception_export
       x-lbonly: false
       description: |-
-        Exports Exceptions data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export the `Exception Data Sources` dataset to a file. `filters` sets the export scope and `down_fields` limits the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -5922,11 +5983,11 @@ paths:
         - lb_hk_book.book_exception_query
       x-lbonly: false
       description: |-
-        Queries Exceptions data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the `Exception Data Sources` dataset. Use `filters` to combine business conditions and `page`/`page_size` to control pagination.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field docs for each filter's purpose, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -6155,13 +6216,13 @@ paths:
         - accounting.bilateral
       x-lbonly: false
       description: |-
-        Exports Payment Transaction data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export the `Payment Transactions` dataset to a file. `filters` sets the export scope and `down_fields` limits the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -6470,11 +6531,11 @@ paths:
         - accounting.bilateral
       x-lbonly: false
       description: |-
-        Queries Payment Transaction data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the `Payment Transactions` dataset. Use `filters` to combine business conditions and `page`/`page_size` to control pagination.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field docs for each filter's purpose, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -6832,13 +6893,13 @@ paths:
         - book.book_ipo_bills_query
       x-lbonly: false
       description: |-
-        Exports IPO Statement data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export the `IPO Share Bills` dataset to a file. `filters` sets the export scope and `down_fields` limits the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -7047,11 +7108,11 @@ paths:
         - book.book_ipo_bills_query
       x-lbonly: false
       description: |-
-        Queries IPO Statement data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the `IPO Share Bills` dataset. Use `filters` to combine business conditions and `page`/`page_size` to control pagination.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field docs for each filter's purpose, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -7264,13 +7325,13 @@ paths:
         - book.channel_exchange_order_inquiry
       x-lbonly: false
       description: |-
-        Exports Channel Exchange Order data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export the `Channel Exchange` dataset to a file. `filters` sets the export scope and `down_fields` limits the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -7493,11 +7554,11 @@ paths:
         - book.channel_exchange_order_inquiry
       x-lbonly: false
       description: |-
-        Queries Channel Exchange Order data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the `Channel Exchange` dataset. Use `filters` to combine business conditions and `page`/`page_size` to control pagination.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field docs for each filter's purpose, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -7705,13 +7766,13 @@ paths:
         - lb_hk_book.book_daily_export
       x-lbonly: false
       description: |-
-        Exports Daily Closing Summary of Accounting Subjects - Cash data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export the `Subject Day-End Summary (Cash)` dataset to a file. `filters` sets the export scope and `down_fields` limits the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -7919,11 +7980,11 @@ paths:
         - lb_hk_book.book_daily_query
       x-lbonly: false
       description: |-
-        Queries Daily Closing Summary of Accounting Subjects - Cash data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the `Subject Day-End Summary (Cash)` dataset. Use `filters` to combine business conditions and `page`/`page_size` to control pagination.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching records with pagination info. See the individual field docs for each filter's purpose, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:
@@ -8117,13 +8178,13 @@ paths:
         - lb_hk_book.book_balance_export
       x-lbonly: false
       description: |-
-        Exports Account Details data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export the `Subject Ledger Details` dataset to a file. `filters` sets the export scope and `down_fields` limits the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -8369,11 +8430,11 @@ paths:
         - lb_hk_book.book_balance_query
       x-lbonly: false
       description: |-
-        Queries Account Details data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the account subsidiary ledger (`科目明细账`), listing individual fund-movement entries grouped by accounting subject. Combine business filters via `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching account-change detail records with pagination info. See each field's documentation for the purpose, allowed values, and dynamic data source of the filters.
       security:
         - bearerAuth: []
       requestBody:
@@ -8615,13 +8676,17 @@ paths:
         - lb_hk_book.book_bank_balance_query
       x-lbonly: false
       description: |-
-        Exports Bank Balance Records data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export the clearing-bank historical balance (`历史余额`) data to a file for reconciliation or archiving. `filters` determines the export scope and `down_fields` restricts the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; first returns a `file_download_id`, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export you no longer need.
+
+        ### Result
+
+        On success, an export file of clearing-bank historical balances is generated; the download URL or `file_download_id` is defined by the response.
       security:
         - bearerAuth: []
       requestBody:
@@ -8823,11 +8888,11 @@ paths:
         - lb_hk_book.book_bank_balance_query
       x-lbonly: false
       description: |-
-        Queries Bank Balance Records data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the clearing-bank historical balance (`历史余额`) data, i.e. per-day archived balance records for each clearing-bank account. Combine business filters via `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching historical-balance records with pagination info. See each field's documentation for the purpose, allowed values, and dynamic data source of the filters.
       security:
         - bearerAuth: []
       requestBody:
@@ -9004,13 +9069,17 @@ paths:
         - accounting.bank_balance_info
       x-lbonly: false
       description: |-
-        Exports Account Balance Query data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export the real-time bank balance (`实时余额`) data to a file for reconciliation or archiving. `filters` determines the export scope and `down_fields` restricts the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; first returns a `file_download_id`, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export you no longer need.
+
+        ### Result
+
+        On success, an export file of real-time bank balances is generated; the download URL or `file_download_id` is defined by the response.
       security:
         - bearerAuth: []
       requestBody:
@@ -9212,11 +9281,11 @@ paths:
         - accounting.bank_balance_info
       x-lbonly: false
       description: |-
-        Queries Account Balance Query data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the real-time bank balance (`实时余额`) data, i.e. the current live balance of each bank account. Combine business filters via `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching real-time balance records with pagination info. See each field's documentation for the purpose, allowed values, and dynamic data source of the filters.
       security:
         - bearerAuth: []
       requestBody:
@@ -9402,13 +9471,17 @@ paths:
         - lb_hk_book.book_balance_check_export
       x-lbonly: false
       description: |-
-        Exports Bank Balance Reconciliation data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export the statement reconciliation (`账单核对`) data to a file for reconciliation or archiving. `filters` determines the export scope and `down_fields` restricts the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; first returns a `file_download_id`, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove an export you no longer need.
+
+        ### Result
+
+        On success, an export file of the statement reconciliation results is generated; the download URL or `file_download_id` is defined by the response.
       security:
         - bearerAuth: []
       requestBody:
@@ -9609,11 +9682,11 @@ paths:
         - lb_hk_book.book_balance_check_query
       x-lbonly: false
       description: |-
-        Queries Bank Balance Reconciliation data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the statement reconciliation (`账单核对`) data, i.e. the results of matching the system's booked balances against the clearing bank's statement balances entry by entry. Combine business filters via `filters`, and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success, returns the matching reconciliation records with pagination info. See each field's documentation for the purpose, allowed values, and dynamic data source of the filters.
       security:
         - bearerAuth: []
       requestBody:

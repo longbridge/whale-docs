@@ -23,15 +23,15 @@ paths:
         - lb_hk_clearing.billing_va_contracts
       x-lbonly: false
       description: |-
-        查询当前虚拟资产清算业务状态。
+        查询当前虚拟资产清算业务所处的状态，用于了解清算流程当前进行到哪个阶段。
 
         ### 请求参数
 
-        该接口不接收业务参数。
+        - 本接口无必填参数。
 
-        ### 处理结果
+        ### 返回结果
 
-        成功时返回查询结果；响应字段及其含义见 `200` 响应定义。
+        成功时返回当前虚拟资产清算业务的状态信息。字段含义见下方响应定义。
       security:
         - bearerAuth: []
       responses:
@@ -124,7 +124,7 @@ paths:
         - lb_hk_clearing.billing_va_contracts
       x-lbonly: false
       description: |-
-        触发虚拟资产清算。
+        按指定业务日期启动虚拟资产清算流程。
 
         ### 请求参数
 
@@ -133,11 +133,15 @@ paths:
 
         ### 业务说明
 
-        按业务日期启动清算流程。涉及真实清算流程触发。
+        以 `biz_date` 为清算周期启动对应的虚拟资产清算流程，触发后系统将对该业务日期的数据进行清算处理。
+
+        ### 风险提示
+
+        此操作会真实触发清算流程，影响相关资金与账务处理。调用前请确认 `biz_date` 无误。
 
         ### 处理结果
 
-        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+        成功时完成清算流程的触发；后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -217,7 +221,25 @@ paths:
       x-permission-key:
         - lb_hk_clearing.billing_va_contracts
       x-lbonly: false
-      description: 对指定业务日期的虚拟资产成交配对进行人工审核通过（交易匹配审核）。写操作。
+      description: |-
+        对指定业务日期的虚拟资产成交配对进行人工审核通过，确认该业务日期的成交匹配结果无误后放行至后续处理。
+
+        ### 请求参数
+
+        - 必填：`biz_date`（业务日期）
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        审核通过后，该 `biz_date` 的成交配对结果将被确认，进入清算等后续环节。
+
+        ### 风险提示
+
+        此操作会确认真实成交配对结果并推动后续账务处理。调用前请确认 `biz_date` 及对应的配对结果无误。
+
+        ### 处理结果
+
+        成功时完成该业务日期的交易匹配审核通过；后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -291,19 +313,19 @@ paths:
         - assets.position_anagement_inquiry_operation
       x-lbonly: false
       description: |-
-        触发获取虚拟资产头寸。
+        手动触发一次虚拟资产头寸（余额）的获取，从存管渠道拉取最新的 VA 头寸数据。
 
         ### 请求参数
 
-        该接口不接收业务参数。
+        - 本接口无必填参数，无请求体。
 
         ### 业务说明
 
-        触发获取 VA 头寸，无请求体。
+        触发后系统会主动获取最新的虚拟资产头寸，用于更新头寸管理数据。
 
         ### 处理结果
 
-        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+        成功时完成头寸获取的触发；后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       responses:
@@ -371,16 +393,24 @@ paths:
         - assets.position_anagement_inquiry_operation
       x-lbonly: false
       description: |-
-        更新头寸告警配置。
+        更新虚拟资产头寸告警配置，调整触发提示与拦截的头寸阈值。
 
         ### 请求参数
 
-        - 必填：`prompt_pos`（提示阈值）、`intercepted_pos`（拦截阈值）、`id`（记录ID）
+        - 必填：`prompt_pos`（提示阈值）、`intercepted_pos`（拦截阈值）、`id`（记录 ID）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        通过 `id` 定位待更新的告警配置记录，`prompt_pos` 用于触发提示，`intercepted_pos` 用于触发拦截，更新后按新阈值进行头寸监控。
+
+        ### 风险提示
+
+        此操作会修改头寸告警的生效阈值，影响后续监控与拦截行为。调用前请确认目标记录和阈值无误。
 
         ### 处理结果
 
-        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+        成功时完成告警配置的更新；后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -471,17 +501,25 @@ paths:
         - atm.va_channel_custodial_account_operation
       x-lbonly: false
       description: |-
-        删除渠道存管钱包。
+        删除指定的渠道存管钱包记录。
 
         ### 请求参数
 
-        - 必填：`id`（记录ID）
-        - 可选：`audit_frontend_resource`（审计上下文）
+        - 必填：`id`（记录 ID）
+        - 可选：`audit_frontend_resource`（调用方提供的审计上下文）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        通过 `id` 定位并删除对应的渠道存管钱包记录，删除后该钱包不再用于存管相关业务。
+
+        ### 风险提示
+
+        此操作会永久删除渠道存管钱包记录，可能影响相关资金存管与业务处理。调用前请确认目标记录无误。
 
         ### 处理结果
 
-        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+        成功时完成渠道存管钱包的删除；后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -573,17 +611,25 @@ paths:
         - atm.va_crypto_currency_deposit_application_operation
       x-lbonly: false
       description: |-
-        删除入币申请。
+        删除指定的入币申请记录。
 
         ### 请求参数
 
-        - 必填：`id`（记录ID）
-        - 可选：`audit_frontend_resource`（审计上下文）
+        - 必填：`id`（记录 ID）
+        - 可选：`audit_frontend_resource`（调用方提供的审计上下文）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        通过 `id` 定位并删除对应的入币申请记录，删除后该申请不再参与后续入币处理。
+
+        ### 风险提示
+
+        此操作会永久删除入币申请记录，可能影响相关入币流程。调用前请确认目标记录无误。
 
         ### 处理结果
 
-        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+        成功时完成入币申请的删除；后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -674,7 +720,22 @@ paths:
       x-permission-key:
         - atm.va_crypto_currency_deposit_application_inquiry
       x-lbonly: false
-      description: 手动触发虚拟资产入币账单拉取，可按渠道、钱包和时间范围（毫秒时间戳）过滤。写操作。
+      description: |-
+        手动触发虚拟资产入币账单的拉取，从存管渠道获取入币账单数据。
+
+        ### 请求参数
+
+        - 本接口无必填参数，可选参数见下方字段说明。
+        - 可通过 `bank_code`（渠道）、`wallet_id`（钱包）、`start_time` 与 `end_time`（毫秒时间戳区间）缩小拉取范围，不传时按默认范围拉取。
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        触发后系统会按给定过滤条件主动拉取对应的入币账单，用于同步入币数据。
+
+        ### 处理结果
+
+        成功时完成入币账单拉取的触发；后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -739,7 +800,7 @@ paths:
         - lb_hk_clearing.billing_va_contracts
       x-lbonly: false
       description: |-
-        查询「虚拟资产合约」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 和 `orderBy` 控制分页与排序。
+        查询「虚拟资产合约」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
 
         ### 返回结果
 
@@ -1037,7 +1098,7 @@ paths:
         - lb_hk_clearing.billing_va_contracts
       x-lbonly: false
       description: |-
-        查询「虚拟资产成交记录」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 和 `orderBy` 控制分页与排序。
+        查询「虚拟资产成交记录」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
 
         ### 返回结果
 
@@ -1271,7 +1332,7 @@ paths:
         - lb_hk_clearing.billing_va_contracts
       x-lbonly: false
       description: |-
-        查询「上手成交记录」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 和 `orderBy` 控制分页与排序。
+        查询「上手成交记录」数据，即对手方（上游）的虚拟资产成交明细，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
 
         ### 返回结果
 
@@ -1483,7 +1544,7 @@ paths:
         - assets.position_anagement_inquiry_query
       x-lbonly: false
       description: |-
-        查询「头寸管理」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 和 `orderBy` 控制分页与排序。
+        查询「头寸管理」数据，即虚拟资产账户头寸（余额）明细，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
 
         ### 返回结果
 
@@ -1710,7 +1771,7 @@ paths:
         - atm.va_channel_custodial_account_inquiry
       x-lbonly: false
       description: |-
-        查询「渠道存管账户」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 和 `orderBy` 控制分页与排序。
+        查询「渠道存管账户」数据，即用于虚拟资产存管的渠道钱包账户，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
 
         ### 返回结果
 
@@ -1894,7 +1955,7 @@ paths:
         - atm.va_client_wallet_address_inquiry
       x-lbonly: false
       description: |-
-        查询「客户钱包地址」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 和 `orderBy` 控制分页与排序。
+        查询「客户钱包地址」数据，即客户的虚拟资产钱包地址明细，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
 
         ### 返回结果
 
@@ -2161,7 +2222,7 @@ paths:
         - atm.va_crypto_currency_deposit_application_inquiry
       x-lbonly: false
       description: |-
-        查询「入币申请」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 和 `orderBy` 控制分页与排序。
+        查询「入币申请」数据，即客户提交的虚拟资产入币（充值）申请，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
 
         ### 返回结果
 
@@ -2424,7 +2485,7 @@ paths:
         - atm.va_coin_deposit_records_inquiry
       x-lbonly: false
       description: |-
-        查询「入币记录」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 和 `orderBy` 控制分页与排序。
+        查询「入币记录」数据，即已完成或在途的虚拟资产入币（到账）记录，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
 
         ### 返回结果
 
@@ -2743,7 +2804,7 @@ paths:
         - atm.crypto_currency_withdrawal_application_inquiry
       x-lbonly: false
       description: |-
-        查询「出币申请」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 和 `orderBy` 控制分页与排序。
+        查询「出币申请」数据，即客户提交的虚拟资产出币（提现）申请，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
 
         ### 返回结果
 

@@ -23,16 +23,24 @@ paths:
         - lb_hk_app.announcements
       x-lbonly: false
       description: |-
-        Create SaaS Announcement.
+        Creates a tenant announcement; once submitted it enters the review workflow.
 
         ### Request parameters
 
-        - Required: `review_url` (Review URL)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `review_url` (review callback URL)
+        - See the field descriptions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        A submitted announcement is not shown to customers immediately; it takes effect only after approval. The caller must supply `review_url`, the callback address used to redirect to or return the review result once review completes.
+
+        ### Risk warning
+
+        This operation creates customer-facing announcement content. Confirm the title, content, display channels, and effective period before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the announcement is created and enters the review workflow; subsequent status and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -114,17 +122,25 @@ paths:
         - stock.market_holiday
       x-lbonly: false
       description: |-
-        Update Announcement Status.
+        Updates the publish status of a specified announcement (for example, on-shelf or off-shelf).
 
         ### Request parameters
 
-        - Required: `id` (Announcement ID), `status` (Status)
-        - Optional: `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (announcement ID), `status` (target status)
+        - Optional: `audit_frontend_resource` (caller-provided audit context)
+        - See the field descriptions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        `status` switches the announcement's publish state, directly controlling whether it is visible to customers. `audit_frontend_resource` records before/after audit context for this change.
+
+        ### Risk warning
+
+        This operation changes the state of customer-facing announcement content. Confirm the target announcement and status before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the announcement status is updated; subsequent status and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -216,16 +232,24 @@ paths:
         - lb_hk_app.announcements
       x-lbonly: false
       description: |-
-        Update SaaS Announcement.
+        Edits an existing tenant announcement; once submitted it enters the review workflow.
 
         ### Request parameters
 
-        - Required: `review_url` (Review URL)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (announcement ID), `reason` (remark), `show_begin` (display start time), `show_end` (display end time), `title` (title), `announcement_type` (announcement type)
+        - See the field descriptions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        The announcement is located by `id`. You can modify the title, content, display channels, priority, effective period, user scope, and other settings. Changes take effect only after review approval. `review_url` supplies the review callback address.
+
+        ### Risk warning
+
+        This operation modifies customer-facing announcement content. Confirm the target announcement and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the announcement is updated and enters the review workflow; subsequent status and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -384,15 +408,20 @@ paths:
         - stock.market_holiday
       x-lbonly: false
       description: |-
-        Retrieves the full configuration of a single announcement by its ID, used to populate an edit form or display announcement details.
+        Returns the full configuration of a single announcement by its ID, for prefilling an edit form or displaying announcement details.
 
         ### Request parameters
 
-        - Required: `id` (announcement ID), passed as the query string parameter `?id=`.
+        - Required: `id` (announcement ID), passed as the query-string parameter `?id=`.
+        - See the field descriptions for each field's format, allowed values, and business meaning.
 
-        ### Response
+        ### Business notes
 
-        On success, returns the complete configuration object for the announcement, including its title, content, display channels, effective time, user scope, and status. Multi-language fields such as `title` and `description` are returned as JSON strings and must be parsed by the caller.
+        Multilingual fields (such as `title` and `description`) are returned as JSON strings; the caller must parse them.
+
+        ### Result
+
+        On success returns the announcement's full configuration object, including title, content, display channels, effective period, user scope, and status. See the response definition below for field meanings.
       security:
         - bearerAuth: []
       parameters:
@@ -516,19 +545,27 @@ paths:
         - lb_hk_cash_in_out_notice.lb_hk_cash_in_out_notice_update
       x-lbonly: false
       description: |-
-        Creates a deposit/withdrawal notice, configuring its type, display channels, effective time, target scope, and multi-language title and content.
+        Creates a deposit/withdrawal (ATM) notice, configuring its type, display channels, effective period, target scope, and multilingual title and content.
 
         ### Request parameters
 
         - Required: `notice_type` (notice type), `title` (title), `description` (content).
-        - `title`, `description`, and `confirm_button_label` are multi-language fields and must be passed as JSON strings keyed by language code.
-        - `account_channel`, `region_ids`, and `region_bank_ids` are multi-value fields passed as comma-separated strings.
+        - `title`, `description`, and `confirm_button_label` are multilingual fields and must be passed as JSON strings keyed by language code.
+        - `account_channel`, `region_ids`, and `region_bank_ids` are multi-value fields; join multiple values into a comma-separated string.
         - `show_begin` and `show_end` are Unix timestamps in seconds.
-        - See each field for its format, allowed values, and business meaning.
+        - See the field descriptions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        A deposit/withdrawal notice shows prompt information to a targeted set of customers in deposit/withdrawal scenarios. The display scope can be constrained by client channel, account channel, region, and regional bank, and ordering is controlled by `priority`.
+
+        ### Risk warning
+
+        This operation creates a customer-facing deposit/withdrawal notice. Confirm the display scope, effective period, and multilingual content before calling.
 
         ### Result
 
-        On success, the notice is created. See the `200` response schema for returned data and subsequent state information.
+        On success the notice is created; subsequent status and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -711,20 +748,28 @@ paths:
         - lb_hk_cash_in_out_notice.lb_hk_cash_in_out_notice_update
       x-lbonly: false
       description: |-
-        Updates an existing deposit/withdrawal notice. The request body carries the target notice `id` at the top level, and all notice configuration fields are placed inside the `config` object.
+        Edits an existing deposit/withdrawal (ATM) notice. The request body carries the target notice's `id` at the top level, and all announcement configuration fields go inside the `config` object.
 
         ### Request parameters
 
-        - Required: `id` (notice ID), `config` (notice configuration object).
-        - Fields inside `config` are identical to those of "Create Deposit/Withdrawal Notice"; `config.notice_type`, `config.title`, and `config.description` are required.
-        - `config.title`, `config.description`, and `config.confirm_button_label` are multi-language fields passed as JSON strings.
-        - `config.account_channel`, `config.region_ids`, and `config.region_bank_ids` are multi-value fields passed as comma-separated strings.
+        - Required: `id` (notice ID), `config` (announcement configuration object).
+        - Fields inside `config` match "Create deposit/withdrawal notice"; `config.notice_type`, `config.title`, and `config.description` are required.
+        - `config.title`, `config.description`, and `config.confirm_button_label` are multilingual fields and must be passed as JSON strings.
+        - `config.account_channel`, `config.region_ids`, and `config.region_bank_ids` are multi-value fields; join multiple values into a comma-separated string.
         - `config.show_begin` and `config.show_end` are Unix timestamps in seconds.
-        - `audit_frontend_resource` is caller-provided audit context (before/after comparison data). Optional.
+        - `audit_frontend_resource` is caller-provided audit context (before/after comparison data) and is optional.
+
+        ### Business notes
+
+        The notice is located by the top-level `id`, and the settings in `config` overwrite the existing announcement configuration as a whole.
+
+        ### Risk warning
+
+        This operation modifies a customer-facing deposit/withdrawal notice. Confirm the target notice and parameters before calling.
 
         ### Result
 
-        On success, the notice is updated. See the `200` response schema for returned data and subsequent state information.
+        On success the notice is updated; subsequent status and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -918,16 +963,24 @@ paths:
         - lb_hk_cash_in_out_notice.lb_hk_cash_in_out_notice_update
       x-lbonly: false
       description: |-
-        Update Deposit/Withdraw Notice Status.
+        Updates the status of a deposit/withdrawal (ATM) notice (for example, on-shelf or off-shelf).
 
         ### Request parameters
 
-        - Required: `id` (Notice ID), `action` (Action)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (notice ID), `action` (operation action)
+        - See the field descriptions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        `action` specifies the status operation to perform on the target notice, directly controlling whether it is visible to customers.
+
+        ### Risk warning
+
+        This operation changes the state of a customer-facing deposit/withdrawal notice. Confirm the target notice and action before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the notice status is updated; subsequent status and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -1025,11 +1078,11 @@ paths:
         - lb_hk_app.announcements
       x-lbonly: false
       description: |-
-        Queries Announcement Management data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries "Announcement Management" data. Use `filters` to combine business filter conditions and `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Result
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success returns the matching list of records with pagination information. See the field descriptions for each filter field's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:
@@ -1301,13 +1354,25 @@ paths:
         - lb_hk_cash_in_out_notice.lb_hk_cash_in_out_notice_query
       x-lbonly: false
       description: |-
-        Exports Transfer Announcement data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Exports "Deposit/Withdrawal Notices" data to a file. `filters` determines the export scope, and `down_fields` can limit the exported fields.
 
-        ### Export modes
+        ### Request parameters
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - This endpoint has no required parameters; see the field descriptions for optional parameters.
+        - See the field descriptions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        Two export modes are supported:
+
+        - `mode: 0`: synchronous export, returns the download URL directly on success.
+        - `mode: 1`: asynchronous export, first returns a `file_download_id`; then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+
+        When an export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
+
+        ### Result
+
+        On success returns the download URL of the exported file or the asynchronous export task identifier, depending on the selected `mode`.
       security:
         - bearerAuth: []
       requestBody:
@@ -1539,11 +1604,11 @@ paths:
         - lb_hk_cash_in_out_notice.lb_hk_cash_in_out_notice_query
       x-lbonly: false
       description: |-
-        Queries Transfer Announcement data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries "Deposit/Withdrawal Notices" data. Use `filters` to combine business filter conditions and `page`, `page_size`, and `orderBy` to control pagination and sorting.
 
-        ### Response
+        ### Result
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success returns the matching list of records with pagination information. See the field descriptions for each filter field's purpose, allowed values, and dynamic data source.
       security:
         - bearerAuth: []
       requestBody:

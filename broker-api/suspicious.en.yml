@@ -34,17 +34,25 @@ paths:
         - ticket.import_relation
       x-lbonly: false
       description: |-
-        Always set `type` to `SuspiciousIncident`.
+        Bulk-imports suspicious events (AML suspicious incidents) from an uploaded file, creating suspicious-event records for multiple securities accounts in one request.
 
         ### Request parameters
 
-        - Required: `type` (File Type)
-        - Optional: `s3_key` (S3 Key), `name` (Name), `filename` (File Name), `base_account_ids` (Base Account IDs), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `type` (import file type). For suspicious-event imports this is always `SuspiciousIncident`.
+        - Optional: `s3_key` (S3 key of the uploaded file), `name`, `filename`, `base_account_ids` (list of base account IDs), and `audit_frontend_resource` (caller-provided audit context).
+        - See the field definitions for each field's format, allowed values, defaults, and business meaning.
+
+        ### Business notes
+
+        Upload the file and obtain its `s3_key` before importing; the imported records come from the file. Validate the file through the import pre-check endpoint before submitting.
+
+        ### Risk warning
+
+        This operation creates suspicious-event records in bulk and drives the subsequent AML review and compliance workflow. Confirm the file contents and `type` before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the bulk import completes; see the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -148,17 +156,25 @@ paths:
         - kyc.suspicious_incident_monitoring
       x-lbonly: false
       description: |-
-        Create Suspicious Event.
+        Creates a new suspicious event (AML suspicious incident) record for the specified securities account.
 
         ### Request parameters
 
-        - Required: `aaid` (A/C No.)
-        - Optional: `trigger_indicator` (Trigger Indicator), `trigger_remark` (Trigger Remark), `last_alert_date` (Last Alert Date)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `aaid` (the securities account this request relates to).
+        - Optional: `trigger_indicator`, `trigger_remark`, and `last_alert_date` (date of the latest alert).
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        The new suspicious event enters the AML review and compliance workflow; `trigger_indicator` and `trigger_remark` document why it was raised.
+
+        ### Risk warning
+
+        This operation creates a suspicious-event record and triggers the downstream compliance review. Confirm `aaid` and the trigger details before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the suspicious event is created; final state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -254,17 +270,25 @@ paths:
         - kyc.suspicious_incident_monitoring
       x-lbonly: false
       description: |-
-        Edit Suspicious Event.
+        Edits an existing suspicious event (AML suspicious incident) record, updating its trigger details and alert date.
 
         ### Request parameters
 
-        - Required: `event_id` (Event ID), `aaid` (A/C No.), `trigger_indicator` (Trigger Indicator), `trigger_remark` (Trigger Remark), `last_alert_date` (Last Alert Date)
-        - Optional: `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `event_id` (identifies the suspicious event to edit), `aaid` (associated securities account), `trigger_indicator`, `trigger_remark`, and `last_alert_date`.
+        - Optional: `audit_frontend_resource` (caller-provided audit context).
+        - See the field definitions for each field's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        The target event is located by `event_id`, and the submitted field values overwrite the existing content.
+
+        ### Risk warning
+
+        This operation modifies an existing suspicious-event record and affects the downstream AML review and compliance handling. Confirm that `event_id` points to the correct record and that all fields are correct before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the suspicious event is updated; final state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -371,13 +395,22 @@ paths:
         - account.sem_query
       x-lbonly: false
       description: |-
-        Exports Suspicious Event List data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Exports the suspicious events list as a file. `filters` determines the export scope and `down_fields` limits the exported columns.
+
+        ### Request parameters
+
+        - This endpoint has no required parameters; see the field definitions for the optional parameters.
+        - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export — the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export — a `file_download_id` is returned first; then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When an export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
+
+        ### Returns
+
+        On success returns a download URL or an asynchronous export task identifier; the export scope and columns are determined by `filters` and `down_fields`.
       security:
         - bearerAuth: []
       requestBody:
@@ -635,11 +668,11 @@ paths:
         - account.sem_query
       x-lbonly: false
       description: |-
-        Queries Suspicious Event List data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the suspicious events list (AML suspicious incidents). Use `filters` to combine business filter conditions and `page` / `page_size` for pagination.
 
-        ### Response
+        ### Returns
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        On success returns the list of matching records with pagination info. See the field definitions for each filter field's purpose, allowed values, and dynamic data sources.
       security:
         - bearerAuth: []
       requestBody:

@@ -34,17 +34,25 @@ paths:
         - ticket.import_relation
       x-lbonly: false
       description: |-
-        type 固定传 SuspiciousIncident。
+        通过上传文件批量导入可疑事件（反洗钱可疑事件），一次性为多个证券账号创建可疑事件记录。
 
         ### 请求参数
 
-        - 必填：`type`（导入文件类型）
-        - 可选：`s3_key`（上传文件 S3 Key）、`name`（名称）、`filename`（文件名）、`base_account_ids`（基础账号ID列表）、`audit_frontend_resource`（审计上下文）
+        - 必填：`type`（导入文件类型），可疑事件导入时固定传入 `SuspiciousIncident`。
+        - 可选：`s3_key`（已上传文件的 S3 Key）、`name`（名称）、`filename`（文件名）、`base_account_ids`（基础账号 ID 列表）、`audit_frontend_resource`（调用方提供的审计上下文）。
         - 各字段的格式、取值范围、默认行为和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        导入前应先完成文件上传并取得 `s3_key`，导入内容以文件中的记录为准。建议先通过导入预检查接口确认文件格式与数据无误后再提交。
+
+        ### 风险提示
+
+        此操作会批量新建可疑事件记录，影响后续的反洗钱审核与合规处理流程。调用前请确认导入文件内容和 `type` 无误。
 
         ### 处理结果
 
-        成功时完成所述业务操作，具体返回内容见 `200` 响应定义。
+        成功时完成批量导入；具体返回内容见 `200` 响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -147,17 +155,25 @@ paths:
         - kyc.suspicious_incident_monitoring
       x-lbonly: false
       description: |-
-        新建可疑事件。
+        为指定证券账号新建一条可疑事件（反洗钱可疑事件）记录。
 
         ### 请求参数
 
-        - 必填：`aaid`（证券账号）
-        - 可选：`trigger_indicator`（触发指标）、`trigger_remark`（触发备注）、`last_alert_date`（最近预警日期）
+        - 必填：`aaid`（本次请求关联的证券账号）。
+        - 可选：`trigger_indicator`（触发指标）、`trigger_remark`（触发备注）、`last_alert_date`（最近预警日期）。
         - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        新建的可疑事件将进入反洗钱审核与合规处理流程，`trigger_indicator` 与 `trigger_remark` 用于说明触发原因。
+
+        ### 风险提示
+
+        此操作会新建可疑事件记录并触发后续合规审核流程。调用前请确认 `aaid` 及触发信息无误。
 
         ### 处理结果
 
-        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+        成功时完成可疑事件创建；后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -253,17 +269,25 @@ paths:
         - kyc.suspicious_incident_monitoring
       x-lbonly: false
       description: |-
-        编辑可疑事件。
+        编辑已存在的可疑事件（反洗钱可疑事件）记录，更新其触发信息与预警日期。
 
         ### 请求参数
 
-        - 必填：`event_id`（事件ID）、`aaid`（证券账号）、`trigger_indicator`（触发指标）、`trigger_remark`（触发备注）、`last_alert_date`（最近预警日期）
-        - 可选：`audit_frontend_resource`（审计上下文）
+        - 必填：`event_id`（事件 ID，标识待编辑的可疑事件）、`aaid`（关联的证券账号）、`trigger_indicator`（触发指标）、`trigger_remark`（触发备注）、`last_alert_date`（最近预警日期）。
+        - 可选：`audit_frontend_resource`（调用方提供的审计上下文）。
         - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        通过 `event_id` 定位目标可疑事件，并以本次请求提交的字段值覆盖原有内容。
+
+        ### 风险提示
+
+        此操作会修改已有可疑事件记录，影响后续的反洗钱审核与合规处理。调用前请确认 `event_id` 指向正确的记录且各字段无误。
 
         ### 处理结果
 
-        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+        成功时完成可疑事件更新；后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -369,11 +393,20 @@ paths:
       description: |-
         将「可疑事件列表」数据导出为文件。`filters` 决定导出范围，`down_fields` 可限制导出字段。
 
+        ### 请求参数
+
+        - 本接口无必填参数，可选参数见下方字段说明。
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
+
         ### 导出模式
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
         - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
+
+        ### 返回结果
+
+        成功时返回下载地址或异步导出任务标识，导出范围与列内容由 `filters` 和 `down_fields` 决定。
       security:
         - bearerAuth: []
       requestBody:
@@ -625,7 +658,7 @@ paths:
         - account.sem_query
       x-lbonly: false
       description: |-
-        查询「可疑事件列表」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询「可疑事件列表」（反洗钱可疑事件）数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
 
         ### 返回结果
 
