@@ -3942,18 +3942,15 @@ paths:
               type: object
               required:
                 - id
+                - service_strategy
+                - channel_name
+                - support_currency
+                - service_time
+                - change_type
               properties:
                 id:
                   type: string
                   description: Strategy ID associated with this request.
-                is_default:
-                  type: boolean
-                  description: |-
-                    Boolean flag for is default.
-
-                    **Boolean values:**
-                    - `true` - The condition applies
-                    - `false` - The condition does not apply
                 change_type:
                   type: string
                   enum:
@@ -3988,13 +3985,6 @@ paths:
                     type: string
                   x-value-source:
                     endpoint: POST /forex/query_support_currency
-                support_currencies:
-                  type: array
-                  description: |-
-                    The request field support_currency raw array, which is moved entirely under the
-                    support_currencies key before submission.
-                  items:
-                    type: string
                 service_time:
                   type: string
                   description: |-
@@ -4002,26 +3992,19 @@ paths:
                     service_time.time_zones/time_rule/time_rule_0, etc. The structure is fairly complex
                     (covering time zones and time-slot rules); the inner fields are not exhaustively
                     enumerated here.
-                is_combine:
-                  type: boolean
-                  description: |-
-                    Boolean flag for is combine.
-
-                    **Boolean values:**
-                    - `true` - The condition applies
-                    - `false` - The condition does not apply
-                forex_mode:
+                verify_pool_limit:
                   type: string
                   description: |-
-                    forex_mode. The set of accepted values could not be confirmed from the frontend; refer to the backend definition.
-                bear_wave:
+                    Verification pool limit configuration.
+                isDefault:
                   type: string
                   description: |-
-                    bear_wave. The set of accepted values could not be confirmed from the frontend; refer to the backend definition.
-                currency_prefix:
-                  type: string
-                currency_suffix:
-                  type: string
+                    Flag indicating whether this is the default strategy; options come from a backend data dictionary.
+                audit_frontend_resource:
+                  type: object
+                  properties: {}
+                  description: |-
+                    Caller-attached audit context capturing the pre-update strategy snapshot.
             example:
               id: '123'
               is_default: false
@@ -14671,9 +14654,10 @@ paths:
                 - credit_currency
                 - applicable
                 - auto_credit_limit
+                - credit_fps
                 - ccf
                 - auto_credit
-                - credit_coefficient
+                - credit_coefficient_rule_list
               properties:
                 member_id:
                   type: string
@@ -14718,10 +14702,6 @@ paths:
                   type: boolean
                   description: 'Whether auto-credit is enabled: `true` to enable, `false` to disable. This field is required.'
                   example: true
-                credit_coefficient:
-                  type: number
-                  description: Default credit multiplier coefficient. This field is required.
-                  example: 1
                 is_enable_credit_coefficient_rule:
                   type: boolean
                   description: Whether tiered credit-coefficient rules are enabled. Set to `true` when `credit_coefficient_rule_list` is non-empty.
@@ -14756,6 +14736,34 @@ paths:
                         type: string
                         description: Value of the upper bound; may be empty when the upper bound is unlimited.
                         example: '1000000'
+                di_discount_factor:
+                  type: string
+                  description: |-
+                    DI discount factor; submitted only for tenants with position-calculation parameters enabled and a specific credit type.
+                margin_multiplier:
+                  type: string
+                  description: |-
+                    Margin multiplier; submitted under the same condition as the DI discount factor.
+                equity_cap_multiplier:
+                  type: string
+                  description: |-
+                    Equity cap multiplier; submitted under the same condition as the DI discount factor.
+                cash_discount_rate:
+                  type: string
+                  description: |-
+                    Cash discount rate; submitted under the same condition as the DI discount factor.
+                dynamic_credit_limit_adjustment_status:
+                  type: boolean
+                  description: |-
+                    Whether dynamic credit-limit adjustment is enabled; shown and submitted only for Longbridge-internal tenants.
+                max_dynamic_credit_limit:
+                  type: number
+                  description: |-
+                    Upper bound of dynamic credit-limit adjustment; submitted when dynamic adjustment is enabled.
+                min_dynamic_credit_limit:
+                  type: number
+                  description: |-
+                    Lower bound of dynamic credit-limit adjustment; submitted when dynamic adjustment is enabled.
             example:
               member_id: '101456715'
               aaid: H00000000
@@ -19512,8 +19520,6 @@ paths:
                 - view_name
                 - usage_scene
                 - groups
-                - groups[].group_name
-                - groups[].sub_position_scope
               properties:
                 view_name:
                   type: string
@@ -19540,12 +19546,6 @@ paths:
                   description: A list of groups, multiple can be added; each item contains a group name and a sub-account scope.
                   items:
                     type: string
-                groups[].group_name:
-                  type: string
-                  description: Group name, required; group names must not repeat within a single submission.
-                groups[].sub_position_scope:
-                  type: string
-                  description: Required. Multi-select scope of settlement sub-accounts assigned to the group. Each value must be an existing sub-account number in the system.
             example:
               view_name: 尾差调整视图A
               usage_scene: 1
@@ -20516,17 +20516,11 @@ paths:
               required:
                 - cut_time
                 - exchange_currency
-                - limit_amount
                 - member_ids
                 - priority
                 - status
                 - time_zone
               properties:
-                id:
-                  type: string
-                  description: Config ID associated with this request.
-                creator:
-                  type: string
                 cut_time:
                   type: string
                   description: This field is required.
@@ -20568,8 +20562,6 @@ paths:
                 priority:
                   type: number
                   description: Processing priority. Interpret the value and sort order according to the allowed-value definitions. This field is required.
-                remark:
-                  type: string
                 status:
                   type: string
                   description: Target state to set through this request. This field is required.
@@ -20597,10 +20589,13 @@ paths:
                     - value: HKT
                       label: Hong Kong Time
                   example: ET
-                updater:
-                  type: string
                 withdrawal_crypto:
                   type: string
+                audit_frontend_resource:
+                  type: object
+                  properties: {}
+                  description: |-
+                    Caller-attached audit context for the add operation.
             example:
               creator: ''
               cut_time: ''
@@ -20807,9 +20802,6 @@ paths:
                 id:
                   type: string
                   description: ID
-                creator:
-                  type: string
-                  description: creator
                 cut_time:
                   type: string
                   description: Cut-off time
@@ -20831,21 +20823,28 @@ paths:
                 priority:
                   type: integer
                   description: Priority
-                remark:
-                  type: string
-                  description: Remark
                 status:
                   type: string
                   description: Status
                 time_zone:
                   type: string
                   description: Time zone
-                updater:
-                  type: string
-                  description: updater
                 withdrawal_crypto:
                   type: string
                   description: Withdrawal crypto
+                audit_frontend_resource:
+                  type: object
+                  properties: {}
+                  description: |-
+                    Caller-attached audit context for the edit operation, including before/after comparison.
+              required:
+                - id
+                - cut_time
+                - exchange_currency
+                - member_ids
+                - priority
+                - status
+                - time_zone
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.
@@ -22092,8 +22091,6 @@ paths:
                 custodian_id:
                   type: string
                   description: Specifies Broker ID, identifying the broker that owns the settlement channel mapping.
-                settlement_channel:
-                  type: string
                 channel_type:
                   type: string
                   description: |-
@@ -22117,17 +22114,19 @@ paths:
                   example: '0'
                   description: |-
                     account_mode.
-                verify_accounts:
-                  type: string
-                verified:
-                  type: string
-                  description: |-
-                    verified. Values come from a backend data dictionary (maintained dynamically), not a fixed enum; use the options the service actually returns.
                 remark:
                   type: string
                 audit_frontend_resource:
                   type: string
                   description: Caller-provided audit context used for operation audit logging. The delete operation submits this field together with the request body.
+                match_type:
+                  type: string
+                  description: |-
+                    Reconciliation match mode; options come from a backend data dictionary
+                accounts:
+                  type: string
+                  description: |-
+                    Seat/account numbers
             example:
               action_in: '1'
               id: ''
@@ -22261,17 +22260,20 @@ paths:
                   description: Sub-position record ID that identifies the target of this request. Required when editing or deleting.
                 custodian_id:
                   type: string
-                false:
-                  type: string
                 name:
-                  type: string
-                position_direction:
                   type: string
                 remark:
                   type: string
-                audit_frontend_resource:
+                position_directions:
                   type: string
-                  description: Caller-provided audit context used for operation audit logging. The delete operation submits this field together with the request body.
+                  description: |-
+                    Position directions; multi-select, comma-joined; options come from a backend data dictionary
+                tax_ratio:
+                  type: string
+                  description: |-
+                    Tax ratio; options come from a backend data dictionary
+                "no":
+                  type: string
             example:
               action_in: '1'
               id: ''

@@ -3461,12 +3461,16 @@ paths:
               type: object
               required:
                 - member_id
-                - name
-                - account
-                - country
-                - bank_en
-                - region
                 - name_en
+                - name
+                - region
+                - payee_country
+                - bank_id
+                - bank_en
+                - account
+                - swift_code
+                - account_type
+                - review_urls
               properties:
                 member_id:
                   type: integer
@@ -3523,6 +3527,39 @@ paths:
                   type: boolean
                   description: |-
                     是否為 ToB 後台發起：`true` 表示由 ToB（WAS）後台發起，`false`（或不傳）表示由其它後台路徑創建。
+                payee_country:
+                  type: string
+                  description: |-
+                    收款人國家/地區，可選值來自後端數據字典
+                payee_state:
+                  type: string
+                  description: |-
+                    收款人省/州
+                payee_city:
+                  type: string
+                  description: |-
+                    收款人城市
+                payee_street:
+                  type: string
+                  description: |-
+                    收款人街道地址
+                payee_building:
+                  type: string
+                  description: |-
+                    收款人樓宇，收款國家為菲律賓時必填
+                payee_postcode:
+                  type: string
+                  description: |-
+                    收款人郵政編碼
+                admin_remark:
+                  type: string
+                  description: |-
+                    管理員備註，僅新增時提交
+                audit_frontend_resource:
+                  type: object
+                  properties: {}
+                  description: |-
+                    調用方附加的審計上下文
             example:
               member_id: 0
               bank_id: 0
@@ -4407,7 +4444,9 @@ paths:
             schema:
               type: object
               required:
+                - aaid
                 - from
+                - origin
                 - to
               properties:
                 from:
@@ -4422,18 +4461,37 @@ paths:
                 target_amount:
                   type: string
                   description: 目標金額. 用於指定「目標金額」。
-                account_channel:
-                  type: string
-                  description: 賬戶渠道. 用於指定「賬戶渠道」。
                 aaid:
                   type: integer
                   description: 賬戶AAID. 用於指定「賬戶AAID」。
                 origin:
                   type: integer
                   description: 來源. 用於指定「來源」。
-                ref_no:
+                manual_rate:
                   type: string
-                  description: 關聯單號. 用於指定「關聯單號」。
+                  description: |-
+                    手動指定的匯率
+                manual_mode:
+                  type: string
+                  description: |-
+                    手動換匯模式，可選值來自後端數據字典
+                manual_rule:
+                  type: string
+                  description: |-
+                    手動換匯規則；為 0 時前端不提交該字段
+                channel_name:
+                  type: string
+                  description: |-
+                    換匯渠道名稱，可選值來自後端數據字典
+                service_strategy:
+                  type: string
+                  description: |-
+                    服務策略，可選值來自後端數據字典
+                audit_frontend_resource:
+                  type: object
+                  properties: {}
+                  description: |-
+                    調用方附加的審計上下文
             example:
               from: ''
               to: ''
@@ -4705,6 +4763,7 @@ paths:
               required:
                 - id
                 - channel_name
+                - source_from
                 - base_currency
                 - other_currency
                 - record_date
@@ -4772,6 +4831,10 @@ paths:
                 audit_frontend_resource:
                   type: object
                   description: 審計上下文. 調用方自動附帶的審計信息，編輯場景下包含 $behavior/$action='edit'/bid_rate/offer_rate/average_rate（編輯前舊值）
+                source_from:
+                  type: string
+                  description: |-
+                    匯率來源方式，可選值來自後端數據字典
             example:
               id: '10086'
               source: MANUAL_CURRENT
@@ -4971,9 +5034,6 @@ paths:
             schema:
               type: object
               properties:
-                account_channel:
-                  type: string
-                  description: 賬戶渠道. 用於指定「賬戶渠道」。
                 currencies:
                   type: string
                   description: 幣種. 用於指定「幣種」。
@@ -5003,12 +5063,21 @@ paths:
                 org_id:
                   type: string
                   description: 機構 ID. 用於指定「機構 ID」。
-                content:
-                  type: string
-                  description: 指引內容. 用於指定「指引內容」。
                 audit_frontend_resource:
                   type: object
                   description: 審計上下文. 調用方提交的審計上下文，用於記錄本次操作。
+                config:
+                  type: string
+                  description: |-
+                    指引明細配置，提交前用 JSON 字符串序列化（含 vouchers、labels_config、pc/mobile/common 等）
+              required:
+                - bank_operation_id
+                - currencies
+                - guide_type
+                - language
+                - name
+                - org_id
+                - config
             example:
               account_channel: ''
               currencies: ''
@@ -5106,48 +5175,19 @@ paths:
               type: object
               required:
                 - id
+                - config
               properties:
                 id:
                   type: string
                   description: 指引配置 ID. 用於指定「指引配置 ID」。此字段為必填項。
-                account_channel:
-                  type: string
-                  description: 賬戶渠道. 用於指定「賬戶渠道」。
-                currencies:
-                  type: string
-                  description: 幣種. 用於指定「幣種」。
-                guide_type:
-                  type: integer
-                  description: |-
-                    指引類型。
-                  enum:
-                    - 1
-                    - 2
-                  x-enum-details:
-                    - value: 1
-                      label: 通用
-                    - value: 2
-                      label: 指定
-                  example: 1
-                name:
-                  type: string
-                  description: 名稱. 用於指定「名稱」。
-                language:
-                  type: string
-                  description: 語言. 用於指定「語言」。
-                bank_operation_id:
-                  type: integer
-                  description: |-
-                    入金方式 ID。取值來自後端數據字典（動態維護），非固定枚舉；請以接口實際返回的可選項為準。
-                org_id:
-                  type: string
-                  description: 機構 ID. 用於指定「機構 ID」。
-                content:
-                  type: string
-                  description: 指引內容. 用於指定「指引內容」。
                 audit_frontend_resource:
                   type: object
                   description: 審計上下文. 調用方提交的審計上下文，用於記錄本次操作。
+                config:
+                  type: object
+                  properties: {}
+                  description: |-
+                    入金指引配置對象，包含 bank_operation_id、currencies、guide_type、language、name、org_id，以及序列化為 JSON 字符串的明細 config
             example:
               id: ''
               account_channel: ''
@@ -5342,40 +5382,12 @@ paths:
             schema:
               type: object
               required:
-                - account_channel
-                - company_id
+                - org_id
                 - region_id
-                - region_bank_id
-                - bank_operation_types_id
-                - auth_state
-                - currency_banks
-                - weight
               properties:
-                account_channel:
-                  type: string
-                  description: 賬戶渠道. 用於指定「賬戶渠道」。此字段為必填項。
-                company_id:
-                  type: integer
-                  description: 公司ID. 用於指定「公司ID」。此字段為必填項。
                 region_id:
                   type: integer
                   description: 地區ID. 用於指定「地區ID」。此字段為必填項。
-                region_bank_id:
-                  type: integer
-                  description: |-
-                    地區銀行類型。
-                  enum:
-                    - -1
-                    - 0
-                    - 999999999
-                  x-enum-details:
-                    - value: -1
-                      label: 指定銀行
-                    - value: 0
-                      label: 其他銀行
-                    - value: 999999999
-                      label: 全部銀行
-                  example: -1
                 region_bank_ids:
                   type: array
                   description: 地區銀行ID列表. 用於指定「地區銀行ID列表」。
@@ -5441,6 +5453,18 @@ paths:
                 audit_frontend_resource:
                   type: object
                   description: 審計上下文. 用於指定「審計上下文」。
+                fps_account_no:
+                  type: string
+                  description: |-
+                    FPS 賬號
+                edda_auth_type:
+                  type: string
+                  description: |-
+                    eDDA 授權類型，可選值來自後端數據字典
+                fee_payer:
+                  type: string
+                  description: |-
+                    手續費承擔方，可選值來自後端數據字典
             example:
               account_channel: ''
               company_id: 0
@@ -5544,46 +5568,18 @@ paths:
             schema:
               type: object
               required:
-                - ids
-                - account_channel
-                - company_id
+                - org_id
                 - region_id
-                - region_bank_id
-                - bank_operation_types_id
-                - auth_state
-                - currency_banks
-                - weight
+                - ids
               properties:
                 ids:
                   type: array
                   description: 被修改的配置ID列表. 用於指定「被修改的配置ID列表」。此字段為必填項。
                   items:
                     type: string
-                account_channel:
-                  type: string
-                  description: 賬戶渠道. 用於指定「賬戶渠道」。此字段為必填項。
-                company_id:
-                  type: integer
-                  description: 公司ID. 用於指定「公司ID」。此字段為必填項。
                 region_id:
                   type: integer
                   description: 地區ID. 用於指定「地區ID」。此字段為必填項。
-                region_bank_id:
-                  type: integer
-                  description: |-
-                    地區銀行類型。
-                  enum:
-                    - -1
-                    - 0
-                    - 999999999
-                  x-enum-details:
-                    - value: -1
-                      label: 指定銀行
-                    - value: 0
-                      label: 其他銀行
-                    - value: 999999999
-                      label: 全部銀行
-                  example: -1
                 region_bank_ids:
                   type: array
                   description: 地區銀行ID列表. 用於指定「地區銀行ID列表」。
@@ -5656,6 +5652,18 @@ paths:
                 audit_frontend_resource:
                   type: object
                   description: 審計上下文. 用於指定「審計上下文」。
+                fps_account_no:
+                  type: string
+                  description: |-
+                    FPS 賬號
+                edda_auth_type:
+                  type: string
+                  description: |-
+                    eDDA 授權類型，可選值來自後端數據字典
+                fee_payer:
+                  type: string
+                  description: |-
+                    手續費承擔方，可選值來自後端數據字典
             example:
               ids: []
               account_channel: ''

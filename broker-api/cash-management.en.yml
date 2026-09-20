@@ -3556,12 +3556,16 @@ paths:
               type: object
               required:
                 - member_id
-                - name
-                - account
-                - country
-                - bank_en
-                - region
                 - name_en
+                - name
+                - region
+                - payee_country
+                - bank_id
+                - bank_en
+                - account
+                - swift_code
+                - account_type
+                - review_urls
               properties:
                 member_id:
                   type: integer
@@ -3618,6 +3622,39 @@ paths:
                   type: boolean
                   description: |-
                     Whether the request originates from the ToB (WAS) admin backend: `true` if so; `false` (or omitted) if created via the other admin path.
+                payee_country:
+                  type: string
+                  description: |-
+                    Payee country/region; options come from a backend data dictionary
+                payee_state:
+                  type: string
+                  description: |-
+                    Payee state or province
+                payee_city:
+                  type: string
+                  description: |-
+                    Payee city
+                payee_street:
+                  type: string
+                  description: |-
+                    Payee street address
+                payee_building:
+                  type: string
+                  description: |-
+                    Payee building; required when the payee country is the Philippines
+                payee_postcode:
+                  type: string
+                  description: |-
+                    Payee postal code
+                admin_remark:
+                  type: string
+                  description: |-
+                    Admin remark; submitted only when adding
+                audit_frontend_resource:
+                  type: object
+                  properties: {}
+                  description: |-
+                    Audit context attached by the caller
             example:
               member_id: 0
               bank_id: 0
@@ -4523,7 +4560,9 @@ paths:
             schema:
               type: object
               required:
+                - aaid
                 - from
+                - origin
                 - to
               properties:
                 from:
@@ -4538,18 +4577,37 @@ paths:
                 target_amount:
                   type: string
                   description: Target amount. Specifies Target amount.
-                account_channel:
-                  type: string
-                  description: Account channel. Specifies Account channel.
                 aaid:
                   type: integer
                   description: Account aaid. Specifies Account aaid.
                 origin:
                   type: integer
                   description: Origin. Specifies Origin.
-                ref_no:
+                manual_rate:
                   type: string
-                  description: Reference no. Specifies Reference no.
+                  description: |-
+                    Manually specified exchange rate
+                manual_mode:
+                  type: string
+                  description: |-
+                    Manual conversion mode; options come from a backend data dictionary
+                manual_rule:
+                  type: string
+                  description: |-
+                    Manual conversion rule; omitted by the caller when its value is 0
+                channel_name:
+                  type: string
+                  description: |-
+                    Conversion channel name; options come from a backend data dictionary
+                service_strategy:
+                  type: string
+                  description: |-
+                    Service strategy; options come from a backend data dictionary
+                audit_frontend_resource:
+                  type: object
+                  properties: {}
+                  description: |-
+                    Audit context attached by the caller
             example:
               from: ''
               to: ''
@@ -4821,6 +4879,7 @@ paths:
               required:
                 - id
                 - channel_name
+                - source_from
                 - base_currency
                 - other_currency
                 - record_date
@@ -4881,6 +4940,10 @@ paths:
                     Audit Context. Audit information attached automatically by the client; in the edit scenario it
                     contains $behavior / $action='edit' / bid_rate / offer_rate / average_rate (the
                     pre-edit old values).
+                source_from:
+                  type: string
+                  description: |-
+                    Rate source mode; options come from a backend data dictionary
             example:
               id: '10086'
               source: MANUAL_CURRENT
@@ -5088,9 +5151,6 @@ paths:
             schema:
               type: object
               properties:
-                account_channel:
-                  type: string
-                  description: Account Channel. Specifies Account Channel.
                 currencies:
                   type: string
                   description: Currencies. Specifies Currencies.
@@ -5120,12 +5180,21 @@ paths:
                 org_id:
                   type: string
                   description: Org ID. Specifies Org ID.
-                content:
-                  type: string
-                  description: Content. Specifies Content.
                 audit_frontend_resource:
                   type: object
                   description: Audit Context. Provides audit context for this operation.
+                config:
+                  type: string
+                  description: |-
+                    Guide detail config serialized as a JSON string before submit (vouchers, labels_config, pc/mobile/common, etc.)
+              required:
+                - bank_operation_id
+                - currencies
+                - guide_type
+                - language
+                - name
+                - org_id
+                - config
             example:
               account_channel: ''
               currencies: ''
@@ -5226,48 +5295,19 @@ paths:
               type: object
               required:
                 - id
+                - config
               properties:
                 id:
                   type: string
                   description: Guide Config ID. Specifies Guide Config ID. This field is required.
-                account_channel:
-                  type: string
-                  description: Account Channel. Specifies Account Channel.
-                currencies:
-                  type: string
-                  description: Currencies. Specifies Currencies.
-                guide_type:
-                  type: integer
-                  description: |-
-                    Guide Type.
-                  enum:
-                    - 1
-                    - 2
-                  x-enum-details:
-                    - value: 1
-                      label: Common
-                    - value: 2
-                      label: Specified
-                  example: 1
-                name:
-                  type: string
-                  description: Name. Specifies Name.
-                language:
-                  type: string
-                  description: Language. Specifies Language.
-                bank_operation_id:
-                  type: integer
-                  description: |-
-                    Bank Operation ID. Values come from a backend data dictionary (maintained dynamically), not a fixed enum; use the options the service actually returns.
-                org_id:
-                  type: string
-                  description: Org ID. Specifies Org ID.
-                content:
-                  type: string
-                  description: Content. Specifies Content.
                 audit_frontend_resource:
                   type: object
                   description: Audit Context. Provides audit context for this operation.
+                config:
+                  type: object
+                  properties: {}
+                  description: |-
+                    Deposit guide config object containing bank_operation_id, currencies, guide_type, language, name, org_id, plus a JSON-string detail config
             example:
               id: ''
               account_channel: ''
@@ -5469,40 +5509,12 @@ paths:
             schema:
               type: object
               required:
-                - account_channel
-                - company_id
+                - org_id
                 - region_id
-                - region_bank_id
-                - bank_operation_types_id
-                - auth_state
-                - currency_banks
-                - weight
               properties:
-                account_channel:
-                  type: string
-                  description: Account channel. Specifies Account channel. This field is required.
-                company_id:
-                  type: integer
-                  description: Company id. Specifies Company id. This field is required.
                 region_id:
                   type: integer
                   description: Region id. Specifies Region id. This field is required.
-                region_bank_id:
-                  type: integer
-                  description: |-
-                    Region bank type.
-                  enum:
-                    - -1
-                    - 0
-                    - 999999999
-                  x-enum-details:
-                    - value: -1
-                      label: Specified banks
-                    - value: 0
-                      label: Other
-                    - value: 999999999
-                      label: All banks
-                  example: -1
                 region_bank_ids:
                   type: array
                   description: Region bank ids. Specifies Region bank ids.
@@ -5568,6 +5580,18 @@ paths:
                 audit_frontend_resource:
                   type: object
                   description: Caller-provided audit context. Specifies Caller-provided audit context.
+                fps_account_no:
+                  type: string
+                  description: |-
+                    FPS account number
+                edda_auth_type:
+                  type: string
+                  description: |-
+                    eDDA authorization type; options come from a backend data dictionary
+                fee_payer:
+                  type: string
+                  description: |-
+                    Fee-bearing party; options come from a backend data dictionary
             example:
               account_channel: ''
               company_id: 0
@@ -5674,46 +5698,18 @@ paths:
             schema:
               type: object
               required:
-                - ids
-                - account_channel
-                - company_id
+                - org_id
                 - region_id
-                - region_bank_id
-                - bank_operation_types_id
-                - auth_state
-                - currency_banks
-                - weight
+                - ids
               properties:
                 ids:
                   type: array
                   description: Config ids to modify. Specifies Config ids to modify. This field is required.
                   items:
                     type: string
-                account_channel:
-                  type: string
-                  description: Account channel. Specifies Account channel. This field is required.
-                company_id:
-                  type: integer
-                  description: Company id. Specifies Company id. This field is required.
                 region_id:
                   type: integer
                   description: Region id. Specifies Region id. This field is required.
-                region_bank_id:
-                  type: integer
-                  description: |-
-                    Region bank type.
-                  enum:
-                    - -1
-                    - 0
-                    - 999999999
-                  x-enum-details:
-                    - value: -1
-                      label: Specified banks (then supply region_bank_ids)
-                    - value: 0
-                      label: Other
-                    - value: 999999999
-                      label: All banks
-                  example: -1
                 region_bank_ids:
                   type: array
                   description: Region bank ids. Specifies Region bank ids.
@@ -5786,6 +5782,18 @@ paths:
                 audit_frontend_resource:
                   type: object
                   description: Caller-provided audit context. Specifies Caller-provided audit context.
+                fps_account_no:
+                  type: string
+                  description: |-
+                    FPS account number
+                edda_auth_type:
+                  type: string
+                  description: |-
+                    eDDA authorization type; options come from a backend data dictionary
+                fee_payer:
+                  type: string
+                  description: |-
+                    Fee-bearing party; options come from a backend data dictionary
             example:
               ids: []
               account_channel: ''

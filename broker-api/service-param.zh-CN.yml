@@ -3867,18 +3867,15 @@ paths:
               type: object
               required:
                 - id
+                - service_strategy
+                - channel_name
+                - support_currency
+                - service_time
+                - change_type
               properties:
                 id:
                   type: string
                   description: 策略ID，用于标识本次请求关联的业务对象。此字段为必填项。
-                is_default:
-                  type: boolean
-                  description: |-
-                    是否默认策略。
-
-                    **布尔值：**
-                    - `true` - 表示条件成立
-                    - `false` - 表示条件不成立
                 change_type:
                   type: string
                   description: |-
@@ -3914,36 +3911,22 @@ paths:
                     type: string
                   x-value-source:
                     endpoint: POST /forex/query_support_currency
-                support_currencies:
-                  type: array
-                  description: 请求字段 support_currency 原始数组，提交前被整体挪到 support_currencies 键下
-                  items:
-                    type: string
                 service_time:
                   type: string
                   description: JSON 字符串，由请求 service_time.time_zones/time_rule/time_rule_0 等分段字段组装，结构较复杂（含时区、时间段规则），未逐一穷举内层字段
-                is_combine:
-                  type: boolean
-                  description: |-
-                    是否合并。
-
-                    **布尔值：**
-                    - `true` - 表示条件成立
-                    - `false` - 表示条件不成立
-                forex_mode:
+                verify_pool_limit:
                   type: string
                   description: |-
-                    用于指定「换汇模式」。取值集合未能从前端源码确认，请以后端定义为准。
-                bear_wave:
+                    核验资金池限额配置。
+                isDefault:
                   type: string
                   description: |-
-                    用于指定「承担波动方式」。取值集合未能从前端源码确认，请以后端定义为准。
-                currency_prefix:
-                  type: string
-                  description: 用于指定「币种前缀」。
-                currency_suffix:
-                  type: string
-                  description: 用于指定「币种后缀」。
+                    是否为默认策略的标识，可选值来自后端数据字典。
+                audit_frontend_resource:
+                  type: object
+                  properties: {}
+                  description: |-
+                    调用方附带的审计上下文，记录修改前的策略快照。
             example:
               id: '123'
               is_default: false
@@ -14325,9 +14308,10 @@ paths:
                 - credit_currency
                 - applicable
                 - auto_credit_limit
+                - credit_fps
                 - ccf
                 - auto_credit
-                - credit_coefficient
+                - credit_coefficient_rule_list
               properties:
                 member_id:
                   type: string
@@ -14372,10 +14356,6 @@ paths:
                   type: boolean
                   description: 是否开启自动授信：`true` 开启，`false` 关闭。此字段为必填项。
                   example: true
-                credit_coefficient:
-                  type: number
-                  description: 默认授信系数（乘数）。此字段为必填项。
-                  example: 1
                 is_enable_credit_coefficient_rule:
                   type: boolean
                   description: 是否启用分段授信系数规则。当 `credit_coefficient_rule_list` 非空时应置为 `true`。
@@ -14410,6 +14390,34 @@ paths:
                         type: string
                         description: 区间上界的值；上界不限时可为空。
                         example: '1000000'
+                di_discount_factor:
+                  type: string
+                  description: |-
+                    DI 折扣系数，仅在开放持仓计算参数的租户且特定授信类型下提交。
+                margin_multiplier:
+                  type: string
+                  description: |-
+                    保证金乘数，条件同 DI 折扣系数。
+                equity_cap_multiplier:
+                  type: string
+                  description: |-
+                    权益上限乘数，条件同 DI 折扣系数。
+                cash_discount_rate:
+                  type: string
+                  description: |-
+                    现金折扣率，条件同 DI 折扣系数。
+                dynamic_credit_limit_adjustment_status:
+                  type: boolean
+                  description: |-
+                    是否开启授信动态调额，仅长桥内部租户展示并提交。
+                max_dynamic_credit_limit:
+                  type: number
+                  description: |-
+                    授信动态调额上限，开启动态调额时提交。
+                min_dynamic_credit_limit:
+                  type: number
+                  description: |-
+                    授信动态调额下限，开启动态调额时提交。
             example:
               member_id: '101456715'
               aaid: H00000000
@@ -19073,8 +19081,6 @@ paths:
                 - view_name
                 - usage_scene
                 - groups
-                - groups[].group_name
-                - groups[].sub_position_scope
               properties:
                 view_name:
                   type: string
@@ -19102,12 +19108,6 @@ paths:
                   description: 分组列表，可添加多个；每项包含分组名称与子仓范围。
                   items:
                     type: string
-                groups[].group_name:
-                  type: string
-                  description: 分组名称，必填；同一次提交内分组名称不可重复。
-                groups[].sub_position_scope:
-                  type: string
-                  description: 分组适用的结算子仓范围，多选且必填；子仓编号须为系统中已存在的子仓号。
             example:
               view_name: 尾差调整视图A
               usage_scene: 1
@@ -20047,18 +20047,11 @@ paths:
               required:
                 - cut_time
                 - exchange_currency
-                - limit_amount
                 - member_ids
                 - priority
                 - status
                 - time_zone
               properties:
-                id:
-                  type: string
-                  description: 配置ID，用于标识本次请求关联的业务对象。
-                creator:
-                  type: string
-                  description: 用于指定「创建人」。
                 cut_time:
                   type: string
                   description: 用于指定「循环周期基准日」。此字段为必填项。
@@ -20101,9 +20094,6 @@ paths:
                 priority:
                   type: number
                   description: 处理优先级；数值含义及排序方向以可选值定义为准。此字段为必填项。
-                remark:
-                  type: string
-                  description: 随本次操作保存的备注。
                 status:
                   type: string
                   description: 本次请求要设置的目标状态。此字段为必填项。
@@ -20131,12 +20121,14 @@ paths:
                     - value: HKT
                       label: 香港时间
                   example: ET
-                updater:
-                  type: string
-                  description: 用于指定「更新人」。
                 withdrawal_crypto:
                   type: string
                   description: 用于指定「出币支持的加密货币」。
+                audit_frontend_resource:
+                  type: object
+                  properties: {}
+                  description: |-
+                    调用方附带的审计上下文（新增操作）。
             example:
               creator: ''
               cut_time: ''
@@ -20337,9 +20329,6 @@ paths:
                 id:
                   type: string
                   description: 编号
-                creator:
-                  type: string
-                  description: creator
                 cut_time:
                   type: string
                   description: 截止时间
@@ -20361,21 +20350,28 @@ paths:
                 priority:
                   type: integer
                   description: 优先级
-                remark:
-                  type: string
-                  description: 备注
                 status:
                   type: string
                   description: 状态
                 time_zone:
                   type: string
                   description: 时区
-                updater:
-                  type: string
-                  description: updater
                 withdrawal_crypto:
                   type: string
                   description: 出币币种
+                audit_frontend_resource:
+                  type: object
+                  properties: {}
+                  description: |-
+                    调用方附带的审计上下文（编辑操作，含修改前后对比）。
+              required:
+                - id
+                - cut_time
+                - exchange_currency
+                - member_ids
+                - priority
+                - status
+                - time_zone
       responses:
         '200':
           description: 请求处理成功。响应的 `data` 不包含额外业务字段。
@@ -21621,9 +21617,6 @@ paths:
                 custodian_id:
                   type: string
                   description: 用于指定「代理商编号」，标识结算渠道映射所属的代理商。
-                settlement_channel:
-                  type: string
-                  description: 用于指定「结算渠道」。
                 channel_type:
                   type: string
                   description: |-
@@ -21647,19 +21640,20 @@ paths:
                     - value: '2'
                       label: 排除席位
                   example: '0'
-                verify_accounts:
-                  type: string
-                  description: 用于指定「席位号」。
-                verified:
-                  type: string
-                  description: |-
-                    用于指定「交易对账模式」。取值来自后端数据字典（动态维护），非固定枚举；请以接口实际返回的可选项为准。
                 remark:
                   type: string
                   description: 用于指定「备注」。
                 audit_frontend_resource:
                   type: string
                   description: 调用方提供的审计上下文，用于操作审计留痕。删除操作会随请求体一起提交该字段。
+                match_type:
+                  type: string
+                  description: |-
+                    交易对账模式，可选值来自后端数据字典
+                accounts:
+                  type: string
+                  description: |-
+                    席位号
             example:
               action_in: '1'
               id: ''
@@ -21791,21 +21785,23 @@ paths:
                 custodian_id:
                   type: string
                   description: 用于指定「托管商编号」，标识子仓所属的托管商。
-                false:
-                  type: string
-                  description: 用于指定「子仓编号」。
                 name:
                   type: string
                   description: 用于指定「子仓名称」。
-                position_direction:
-                  type: string
-                  description: 用于指定子仓的「特征」（仓位方向）。
                 remark:
                   type: string
                   description: 用于指定「备注」。
-                audit_frontend_resource:
+                position_directions:
                   type: string
-                  description: 调用方提供的审计上下文，用于操作审计留痕。删除操作会随请求体一起提交该字段。
+                  description: |-
+                    长短仓，可多选，逗号分割，可选值来自后端数据字典
+                tax_ratio:
+                  type: string
+                  description: |-
+                    纳税比例，可选值来自后端数据字典
+                "no":
+                  type: string
+                  description: 用于指定「子仓编号」。
             example:
               action_in: '1'
               id: ''
