@@ -23,17 +23,24 @@ paths:
         - lb_hk_book.book_detail_update
       x-lbonly: false
       description: |-
-        新建會計分錄（也支持按 copy_id 複製預填後新建）。涉及真實會計分錄數據變更。
+        新建一條會計分錄，記錄一筆借貸方科目之間的記賬。亦支援按 `copy_id` 複製一條已有分錄預填後再新建。
 
         ### 請求參數
 
-        - 必填：`bookingTypeId`（記賬類型）、`txNo`（交易流水號）、`name`（摘要説明）、`accountAt`（記賬日期）、`ledgerDate`（分類賬日期）、`objectCode`（幣種/結算對象）、`debitFirstSubjectCode`（借方一級科目編碼）、`debitSecondSubjectCode`（借方二級科目編碼）、`debitSubjectCode`（借方三級科目編碼）、`creditFirstSubjectCode`（貸方一級科目編碼）、`creditSecondSubjectCode`（貸方二級科目編碼）、`creditSubjectCode`（貸方三級科目編碼）、`amount`（金額）
-        - 可選：`sourceId`（賬務來源）、`aaid`（關聯賬戶ID）、`remark`（備註）、`debitName`（借方科目全稱）、`creditName`（貸方科目全稱）、`objectType`（對象類型）、`audit_frontend_resource`（審計追溯調用方快照）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 必填：`bookingTypeId`（記賬業務類型）、`txNo`（交易流水號）、`name`（摘要說明）、`accountAt`（記賬日期）、`ledgerDate`（分類賬日期）、`objectCode`（對象幣種）、`debitFirstSubjectCode`、`debitSecondSubjectCode`、`debitSubjectCode`（借方一/二/三級科目編碼）、`creditFirstSubjectCode`、`creditSecondSubjectCode`、`creditSubjectCode`（貸方一/二/三級科目編碼）、`amount`（金額）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        借貸雙方科目均需逐級選擇，二、三級科目依賴上一級聯動。`objectCode` 的可用取值隨渠道變化，請調用 `GET /v1/datasets/refs/tenant_currencies_by_channel` 獲取當前可用值。
+
+        ### 風險提示
+
+        此操作會寫入真實會計分錄數據，影響賬務核算結果。調用前請確認借貸科目、幣種和金額無誤。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時創建對應會計分錄，具體返回內容見 `200` 響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -60,7 +67,7 @@ paths:
                 sourceId:
                   type: number
                   description: |-
-                    分錄數據源，從可選值中選擇；取值來自 book_source 動態枚舉，非固定
+                    分錄數據源，從可選值中選擇；候選值隨業務變化，非固定；請調用 `GET /v1/datasets/refs/book_source` 獲取當前可用取值
 
                     請調用 `GET /v1/datasets/refs/book_source` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本字段值。
                   x-value-source:
@@ -68,7 +75,7 @@ paths:
                 bookingTypeId:
                   type: string
                   description: |-
-                    記賬業務類型，從可選值中選擇（依賴數據源聯動）；取值來自 book_business_types_by_source 動態枚舉，非固定
+                    記賬業務類型，從可選值中選擇（依賴數據源聯動）；候選值隨業務變化，非固定；請調用 `GET /v1/datasets/refs/book_business_types_by_source` 獲取當前可用取值
 
                     請調用 `GET /v1/datasets/refs/book_business_types_by_source` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本字段值。
                   x-value-source:
@@ -91,7 +98,7 @@ paths:
                 objectCode:
                   type: string
                   description: |-
-                    對象幣種，從可選值中選擇；取值來自 tenant_currencies_by_channel 動態枚舉，非固定
+                    對象幣種，從可選值中選擇；候選值隨業務變化，非固定；請調用 `GET /v1/datasets/refs/tenant_currencies_by_channel` 獲取當前可用取值
 
                     請調用 `GET /v1/datasets/refs/tenant_currencies_by_channel` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本字段值。
                   x-value-source:
@@ -128,7 +135,23 @@ paths:
                   description: 貸方科目名稱，隨貸方明細科目自動帶出
                 objectType:
                   type: string
-                  description: 用於指定「對象類型」。
+                  description: |-
+                    用於指定「對象類型」。
+                  enum:
+                    - '0'
+                    - '1'
+                    - '2'
+                    - '3'
+                  x-enum-details:
+                    - value: '0'
+                      label: 未知
+                    - value: '1'
+                      label: 現金標的
+                    - value: '2'
+                      label: 股票標的
+                    - value: '3'
+                      label: 基金標的
+                  example: '0'
                 audit_frontend_resource:
                   type: object
                   description: 審計用數據快照（複製場景為原始記錄快照，純新增為空對象），供後端審計對比，非用戶填寫字段
@@ -215,16 +238,24 @@ paths:
         - lb_hk_book.book_detail_update
       x-lbonly: false
       description: |-
-        刪除會計分錄。
+        刪除一條會計分錄。
 
         ### 請求參數
 
-        - 必填：`id`（分錄ID）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`id`（分錄 ID）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        按 `id` 定位並刪除對應的會計分錄記錄，涉及真實賬務數據。
+
+        ### 風險提示
+
+        此操作會刪除真實會計分錄數據，刪除後不可恢復。調用前請確認目標分錄無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時刪除對應會計分錄，後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -304,17 +335,24 @@ paths:
         - lb_hk_book.book_detail_update
       x-lbonly: false
       description: |-
-        編輯會計分錄（與新建共用同一請求，區別在於額外傳入 id）。涉及真實會計分錄數據變更。
+        編輯一條已有會計分錄。請求結構與新建接口一致，僅額外要求傳入 `id` 指定待修改的分錄。
 
         ### 請求參數
 
-        - 必填：`id`（會計分錄ID）、`bookingTypeId`（記賬類型）、`txNo`（交易流水號）、`name`（摘要説明）、`accountAt`（記賬日期）、`ledgerDate`（分類賬日期）、`objectCode`（幣種/結算對象）、`debitFirstSubjectCode`（借方一級科目編碼）、`debitSecondSubjectCode`（借方二級科目編碼）、`debitSubjectCode`（借方三級科目編碼）、`creditFirstSubjectCode`（貸方一級科目編碼）、`creditSecondSubjectCode`（貸方二級科目編碼）、`creditSubjectCode`（貸方三級科目編碼）、`amount`（金額）
-        - 可選：`sourceId`（賬務來源）、`aaid`（關聯賬戶ID）、`remark`（備註）、`debitName`（借方科目全稱）、`creditName`（貸方科目全稱）、`objectType`（對象類型）、`audit_frontend_resource`（審計追溯調用方快照）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 必填：`id`（會計分錄 ID）、`bookingTypeId`（記賬業務類型）、`txNo`（交易流水號）、`name`（摘要說明）、`accountAt`（記賬日期）、`ledgerDate`（分類賬日期）、`objectCode`（對象幣種）、`debitFirstSubjectCode`、`debitSecondSubjectCode`、`debitSubjectCode`（借方一/二/三級科目編碼）、`creditFirstSubjectCode`、`creditSecondSubjectCode`、`creditSubjectCode`（貸方一/二/三級科目編碼）、`amount`（金額）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        借貸科目逐級聯動，末級科目選定後其全稱將作為對應的借/貸方科目名稱。`objectCode` 的可用取值隨渠道變化，請調用 `GET /v1/datasets/refs/tenant_currencies_by_channel` 獲取當前可用值。
+
+        ### 風險提示
+
+        此操作會覆蓋真實會計分錄數據，影響賬務核算結果。調用前請確認目標分錄及各科目、幣種、金額無誤。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時更新對應會計分錄，具體返回內容見 `200` 響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -345,7 +383,7 @@ paths:
                 sourceId:
                   type: number
                   description: |-
-                    - 從可選值中選擇，取值來自 book_source 動態枚舉
+                    - 從可選值中選擇，候選值隨業務變化；請調用 `GET /v1/datasets/refs/book_source` 獲取當前可用取值
                     - 編輯時禁用不可修改
                     - 提交前轉為數字
 
@@ -355,7 +393,7 @@ paths:
                 bookingTypeId:
                   type: string
                   description: |-
-                    從可選值中選擇，取值來自 book_business_types_by_source 動態枚舉（依賴來源字段聯動加載）；當來源為 0 時該項隱藏，不傳
+                    從可選值中選擇，候選值隨業務變化（依賴來源字段聯動加載）；當來源為 0 時該項隱藏，不傳；請調用 `GET /v1/datasets/refs/book_business_types_by_source` 獲取當前可用取值
 
                     請調用 `GET /v1/datasets/refs/book_business_types_by_source` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本字段值。
                   x-value-source:
@@ -378,7 +416,7 @@ paths:
                 objectCode:
                   type: string
                   description: |-
-                    從可選值中選擇，取值來自 tenant_currencies_by_channel 動態枚舉
+                    從可選值中選擇，候選值隨業務變化；請調用 `GET /v1/datasets/refs/tenant_currencies_by_channel` 獲取當前可用取值
 
                     請調用 `GET /v1/datasets/refs/tenant_currencies_by_channel` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本字段值。
                   x-value-source:
@@ -415,7 +453,23 @@ paths:
                   description: 非請求項，選中貸方末級科目時從選項全稱取值並隨提交附帶
                 objectType:
                   type: string
-                  description: 用於指定「對象類型」。
+                  description: |-
+                    用於指定「對象類型」。
+                  enum:
+                    - '0'
+                    - '1'
+                    - '2'
+                    - '3'
+                  x-enum-details:
+                    - value: '0'
+                      label: 未知
+                    - value: '1'
+                      label: 現金標的
+                    - value: '2'
+                      label: 股票標的
+                    - value: '3'
+                      label: 基金標的
+                  example: '0'
                 audit_frontend_resource:
                   type: object
                   description: 編輯前拉取的原始數據快照，用於後端審計對比，非用戶可編輯字段
@@ -503,16 +557,20 @@ paths:
         - accounting.deposit_transit_details
       x-lbonly: false
       description: |-
-        新增會計備註。
+        為某個賬務業務對象新增一條會計備註。
 
         ### 請求參數
 
-        - 必填：`ref_id`（關聯ID）、`ref_no`（關聯單號）、`biz_type`（業務類型）、`remarks`（備註內容）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`ref_id`（關聯業務對象 ID）、`ref_no`（關聯單號）、`biz_type`（業務類型）、`remarks`（備註內容）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        備註透過 `ref_id`、`ref_no` 與 `biz_type` 關聯到具體業務對象，用於對該記錄附加說明。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時新增對應會計備註，後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -612,16 +670,16 @@ paths:
         - accounting.deposit_transit_details
       x-lbonly: false
       description: |-
-        刪除會計備註。
+        刪除一條會計備註。
 
         ### 請求參數
 
-        - 必填：`id`（備註ID）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`id`（備註 ID）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時刪除對應會計備註，後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -706,16 +764,24 @@ paths:
         - accounting.summary_reconciliation_operation
       x-lbonly: false
       description: |-
-        編輯入金在途彙總核對項。
+        編輯一條入金在途匯總核對項，更新其期初金額及各項調整額。
 
         ### 請求參數
 
-        - 必填：`id`（記錄ID）、`remark`（備註）、`ref_no`（關聯單號）、`begin_amount`（期初金額）、`statement_adjustment`（賬單調整額）、`in_transit_adjustment`（在途調整額）、`remarks`（備註內容）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`id`（記錄 ID）、`remark`（備註）、`ref_no`（關聯單號）、`begin_amount`（期初金額）、`statement_adjustment`（賬單調整額）、`in_transit_adjustment`（在途調整額）、`remarks`（備註內容）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        用於對入金在途的匯總核對結果做人工調整，涉及真實會計核對數據。
+
+        ### 風險提示
+
+        此操作會修改真實會計核對數據，影響入金在途對賬結果。調用前請確認目標記錄和各金額無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時更新對應核對項，後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -830,16 +896,20 @@ paths:
         - accounting.ccass_delete
       x-lbonly: false
       description: |-
-        刪除一條 CCASS 賬單記錄；代理商收費 (Broker Fee) 場景共用同一個後端接口。
+        刪除一條 CCASS 賬單記錄。代理商收費 (Broker Fee) 場景複用同一後端接口。
 
         ### 請求參數
 
-        - 必填：`id`（賬單ID）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 必填：`id`（賬單 ID）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 風險提示
+
+        此操作會刪除真實賬單數據，刪除後不可恢復。調用前請確認目標賬單無誤。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時刪除對應賬單，具體返回內容見 `200` 響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -925,16 +995,24 @@ paths:
         - accounting.payment_flow_deletion
       x-lbonly: false
       description: |-
-        渠道匯兌單 (Channel Exchange Order)/交收合約 (Settlement Contract) 場景共用同一接口（分別使用各自 中的獨立 deleteDataSource 封裝，參數結構一致）。涉及真實會計分錄數據源。
+        刪除一條會計分錄數據源記錄。渠道匯兌單 (Channel Exchange Order) 與交收合約 (Settlement Contract) 場景複用同一接口，參數結構一致。
 
         ### 請求參數
 
-        - 必填：`source_id`（數據源類型）、`tx_no`（交易流水號）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 必填：`source_id`（數據源類型，枚舉 `BookkeepingSourceType`）、`tx_no`（交易流水號）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        按數據源類型與交易流水號定位並刪除對應的分錄數據源，涉及真實會計分錄數據源。
+
+        ### 風險提示
+
+        此操作會刪除真實會計分錄數據源，刪除後不可恢復。調用前請確認數據源類型和流水號無誤。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時刪除對應數據源記錄，具體返回內容見 `200` 響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -1081,17 +1159,25 @@ paths:
         - book.book_contract_bills_operation
       x-lbonly: false
       description: |-
-        重新觸發指定日期範圍內的雙邊支付流水匹配。`scenes` 固定傳入 `bookkeeping_bilateral`。
+        重新觸發指定日期範圍內的雙邊支付流水匹配。
 
         ### 請求參數
 
-        - 必填：`start_date`（開始日期）、`end_date`（結束日期）、`scenes`（重跑場景）
-        - 可選：`manual`（手動觸發標記）、`audit_frontend_resource`（審計日誌附加信息）
-        - 各字段的格式、取值範圍、默認行為和業務含義見對應字段説明。
+        - 必填：`start_date`（開始日期，格式 `YYYYMMDD`）、`end_date`（結束日期，格式 `YYYYMMDD`）、`scenes`（重跑場景，固定傳入 `bookkeeping_bilateral`）
+        - 可選：`manual`（手動觸發標記）、`audit_frontend_resource`（審計追溯調用方快照）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        用於對已有的雙邊支付流水匹配結果按日期範圍重新計算。`scenes` 固定為 `bookkeeping_bilateral`。
+
+        ### 風險提示
+
+        此操作會重新生成對應日期範圍的匹配結果，影響賬務對賬數據。調用前請確認日期範圍無誤。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時完成重新匹配觸發，具體返回內容見 `200` 響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -1201,16 +1287,20 @@ paths:
         - book.book_ipo_bills_delete
       x-lbonly: false
       description: |-
-        刪除新股賬單。
+        刪除一條新股賬單記錄。
 
         ### 請求參數
 
-        - 必填：`id`（賬單ID）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 必填：`id`（賬單 ID）
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 風險提示
+
+        此操作會刪除真實賬單數據，刪除後不可恢復。調用前請確認目標賬單無誤。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時刪除對應新股賬單，後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -1295,15 +1385,19 @@ paths:
         - accounting.bank_balance_info
       x-lbonly: false
       description: |-
-        該函數不接受任何參數、調用 request 時也不傳 data，是純觸發類接口（一鍵觸發銀行卡餘額實時同步），因此本接口請求體確為空。
+        一鍵觸發銀行卡餘額的即時同步。這是純觸發類接口，請求體為空。
 
         ### 請求參數
 
-        該接口不接收業務參數。
+        本接口不接收業務參數。
+
+        ### 業務說明
+
+        調用後由後端發起銀行卡餘額的即時同步，不針對單條記錄。
 
         ### 處理結果
 
-        成功時完成所述業務操作，具體返回內容見 `200` 響應定義。
+        成功時完成同步觸發，具體返回內容見 `200` 響應定義。
       security:
         - bearerAuth: []
       responses:
@@ -1370,16 +1464,20 @@ paths:
         - lb_hk_book.bank_balance_update
       x-lbonly: false
       description: |-
-        重新核對銀行餘額。
+        按指定日期重新核對銀行餘額。
 
         ### 請求參數
 
         - 必填：`runDay`（核對日期）
-        - 各字段的格式、取值範圍和業務含義見對應字段説明。
+        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+
+        ### 業務說明
+
+        針對 `runDay` 指定的日期重新執行銀行餘額核對，涉及真實賬務核對數據。
 
         ### 處理結果
 
-        成功時完成上述業務操作；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成重新核對，後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -1464,13 +1562,13 @@ paths:
         - lb_hk_book.book_detail_query
       x-lbonly: false
       description: |-
-        將「會計分錄 - 合並」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「会计分录 - 合并」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -1678,11 +1776,21 @@ paths:
         - lb_hk_book.book_detail_query
       x-lbonly: false
       description: |-
-        查詢「會計分錄 - 合並」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢會計中台的合併會計分錄，用於財務人員按賬務日期核對已入賬的借貸分錄及其原幣/折算金額。
+
+        ### 請求參數
+
+        - 透過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 業務說明
+
+        - 數據來源於會計中台生成的記賬分錄，按賬務日期倒序返回，同一憑證下的借貸方彙總為整體分錄。
+        - 每條記錄包含憑證號、會計科目編碼與名稱、外部科目編碼、原幣借貸金額與折算幣種借貸金額、匯率、幣種及製單人等信息。
+        - 常用於賬務覆核、總賬核對與財務出賬場景。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁信息。返回列含義見響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -1897,13 +2005,13 @@ paths:
         - lb_hk_book.book_detail_query
       x-lbonly: false
       description: |-
-        將「會計分錄 - 明細」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「会计分录 - 明细」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -2134,11 +2242,21 @@ paths:
         - lb_hk_book.book_detail_query
       x-lbonly: false
       description: |-
-        查詢「會計分錄 - 明細」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢會計中台的會計分錄明細，用於按借貸方展開查看每一筆分錄的科目、金額與來源。
+
+        ### 請求參數
+
+        - 透過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 業務說明
+
+        - 數據來源於會計分錄明細及其關聯的分錄規則，按賬務日期倒序返回。
+        - 每條記錄包含分錄編號、原始憑證號、分錄數據源（如現金流水、收費賬單、其他賬單）、來源（含是否人工修改）、分錄摘要、借貸方三級科目編碼與名稱、經紀人賬號、幣種、金額、交易日期與備註等。
+        - 常用於逐筆追溯分錄的資金來源與科目對應關係，支撐賬務核對與差異排查。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁信息。返回列含義見響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -2379,11 +2497,20 @@ paths:
         - accounting.deposit_transit_details
       x-lbonly: false
       description: |-
-        查詢「入金在途明細」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢入金在途明細，用於逐筆核對銀行入賬流水與系統訂單的匹配及在途狀態。
+
+        ### 請求參數
+
+        - 透過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 業務說明
+
+        - 每條記錄對應一筆銀行入賬流水，包含入金賬單編號、金額與餘額、公司銀行賬號與渠道、銀行流水號、客戶名稱、入賬日期、幣種、匹配狀態（未匹配 / 已匹配 / 人工匹配）、是否在途及資金類型等信息。
+        - 常用於對賬人員排查未匹配或在途的入金，並支持人工標記是否在途。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁信息。返回列含義見響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -2639,13 +2766,13 @@ paths:
         - lb_hk_book.book_detail_query
       x-lbonly: false
       description: |-
-        將「入金在途 - 彙總核對」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「入金在途 - 汇总核对」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -2869,11 +2996,20 @@ paths:
         - lb_hk_book.book_detail_query
       x-lbonly: false
       description: |-
-        查詢「入金在途 - 彙總核對」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢入金在途彙總核對，用於按公司銀行賬號與幣種核對每個賬務日的在途入金餘額與差異。
+
+        ### 請求參數
+
+        - 透過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 業務說明
+
+        - 每條記錄按銀行賬號、幣種與賬務日期彙總，包含期初/期末金額、入金金額、已到賬金額、在途金額、在途差異、在途調整與賬單調整、核對結果（一致 / 不一致）及備註等。
+        - 常用於財務對賬，識別在途差異並跟進調整，直至核對結果一致。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁信息。返回列含義見響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -3108,13 +3244,13 @@ paths:
         - accounting.ccass_query
       x-lbonly: false
       description: |-
-        將「CCASS 賬單」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「CCASS 账单」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -3338,11 +3474,20 @@ paths:
         - accounting.ccass_query
       x-lbonly: false
       description: |-
-        查詢「CCASS 賬單」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢 CCASS 賬單，作為會計中台的分錄數據源之一，記錄香港結算所（CCASS）產生的結算賬單。
+
+        ### 請求參數
+
+        - 透過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 業務說明
+
+        - 每條記錄包含編號、報告編號（如 `CSESE01`）、業務類型（如未交收頭寸應付）、市場、幣種、金額、賬務日期、賬戶渠道及備註等。
+        - 常用於核對 CCASS 結算數據並作為生成相關會計分錄的依據。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁信息。返回列含義見響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -3558,13 +3703,13 @@ paths:
         - book.book_ifast_statement_query
       x-lbonly: false
       description: |-
-        將「IFAST 賬單」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「IFAST 账单」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -3816,11 +3961,20 @@ paths:
         - book.book_ifast_statement_query
       x-lbonly: false
       description: |-
-        查詢「IFAST 賬單」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢 IFAST 賬單，作為會計中台的分錄數據源之一，記錄經 iFAST 清算的賬單數據。
+
+        ### 請求參數
+
+        - 透過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 業務說明
+
+        - 每條記錄包含編號、表類型、報表名稱、業務類型、賬務日期、幣種、金額及創建/更新時間等。
+        - 常用於核對 iFAST 清算賬單並作為生成相關會計分錄的依據。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁信息。返回列含義見響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -4047,13 +4201,13 @@ paths:
         - 會計中台
       x-lbonly: false
       description: |-
-        將「交收合約」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「交收合约」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -4266,11 +4420,20 @@ paths:
         - 會計中台
       x-lbonly: false
       description: |-
-        查詢「交收合約」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢交收合約賬單，作為會計中台的分錄數據源之一，記錄需入賬的成交交收合約。
+
+        ### 請求參數
+
+        - 透過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 業務說明
+
+        - 數據僅包含配置為需記賬的業務類型的交收合約，每條記錄包含編號、業務類型、數據源賬務日期與賬務日期、成交合約編號、賬戶類型、交易方向、幣種、金額、渠道及產品類型等。
+        - 常用於核對交易交收數據並作為生成相關會計分錄的依據。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁信息。返回列含義見響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -4480,13 +4643,13 @@ paths:
         - book.other_bills_query
       x-lbonly: false
       description: |-
-        將「代理商收費」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「代理商收费」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -4710,11 +4873,20 @@ paths:
         - book.other_bills_query
       x-lbonly: false
       description: |-
-        查詢「代理商收費」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢代理商收費賬單，作為會計中台的分錄數據源之一，記錄託管代理商就成交產生的各類收費。
+
+        ### 請求參數
+
+        - 透過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 業務說明
+
+        - 每條記錄包含費用編號、合約號、業務類型（如美股經紀費—股票交易—佣金）、託管方/代理商、對手方標識、市場、交易方向、成交數量與成交金額、費用金額、幣種、賬務日期與交易日期等。
+        - 常用於核對代理商收費並作為生成相關會計分錄的依據。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁信息。返回列含義見響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -4949,13 +5121,13 @@ paths:
         - accounting.member_fee_bills
       x-lbonly: false
       description: |-
-        將「客戶收費賬單」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「客户收费账单」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -5221,11 +5393,23 @@ paths:
         - accounting.member_fee_bills
       x-lbonly: false
       description: |-
-        查詢「客戶收費賬單」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢客戶收費賬單，屬於會計中台的分錄數據源，記錄向客戶實際收取的各類費用，作為生成會計分錄的原始憑證。
 
-        ### 返回結果
+        ### 请求参数
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        - 透過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 业务说明
+
+        - 數據來源於客戶收費賬單，涵蓋佣金、平台費、印花稅、暗盤交易等各類收費項目。
+
+        - 每條記錄關聯費用記錄編號、業務流水號、客戶編號與證券賬戶，並標明業務類型、收費項目、交易方向及涉及的股票代碼與名稱。
+
+        - 記錄同時給出金額、幣種、`GST` 稅率、結算渠道，以及賬務日期、扣款日期、交易日期，供財務核對與對賬使用。
+
+        ### 返回结果
+
+        成功時返回匹配的記錄列表及分頁資訊。返回欄含義見回應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -5510,13 +5694,13 @@ paths:
         - lb_hk_book.book_exception_export
       x-lbonly: false
       description: |-
-        將「異常數據源」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「异常数据源」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -5747,11 +5931,23 @@ paths:
         - lb_hk_book.book_exception_query
       x-lbonly: false
       description: |-
-        查詢「異常數據源」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢異常數據源，列出未能成功生成會計分錄的異常單據，供財務排查與處理。
 
-        ### 返回結果
+        ### 请求参数
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        - 透過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 业务说明
+
+        - 數據來源於分錄生成過程中被判定為異常的單據，記錄所屬分錄數據源、原始憑證號與業務流水號。
+
+        - 每條記錄包含標的、業務類型、幣種、金額、賬務日期，以及未生成分錄的原因和處理狀態。
+
+        - 常用於定位賬務異常、跟進補錄或修正，確保分錄數據完整。
+
+        ### 返回结果
+
+        成功時返回匹配的記錄列表及分頁資訊。返回欄含義見回應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -5977,13 +6173,13 @@ paths:
         - accounting.bilateral
       x-lbonly: false
       description: |-
-        將「支付流水」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「支付流水」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -6286,11 +6482,23 @@ paths:
         - accounting.bilateral
       x-lbonly: false
       description: |-
-        查詢「支付流水」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢支付流水，屬於會計中台的分錄數據源，記錄付款方與收款方之間的雙邊現金收付明細。
 
-        ### 返回結果
+        ### 请求参数
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        - 透過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 业务说明
+
+        - 數據來源於雙邊現金收付記錄，每條流水標明付款用戶與收款用戶及各自的賬戶類型、業務類型。
+
+        - 記錄包含流水號、業務流水號、渠道、金額、幣種、匯率、支付完成時間，以及賬務日期與交易日期。
+
+        - 還可攜帶支票號、數量、代碼、行權價格、業務期間、業務來源、客戶銀行名稱、收費項目與多語言備註，供資金收付核對使用。
+
+        ### 返回结果
+
+        成功時返回匹配的記錄列表及分頁資訊。返回欄含義見回應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -6645,13 +6853,13 @@ paths:
         - book.book_ipo_bills_query
       x-lbonly: false
       description: |-
-        將「新股賬單」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「新股账单」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -6854,11 +7062,23 @@ paths:
         - book.book_ipo_bills_query
       x-lbonly: false
       description: |-
-        查詢「新股賬單」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢新股賬單，屬於會計中台的分錄數據源，記錄新股（IPO）認購及相關資金往來的賬單。
 
-        ### 返回結果
+        ### 请求参数
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        - 透過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 业务说明
+
+        - 數據來源於新股賬單，每條記錄標明業務類型、類型、狀態、渠道，以及客戶編號與證券賬號。
+
+        - 記錄包含新股代碼、認購股數、認購金額、中籤股數，以及金額、幣種、賬務日期。
+
+        - 用於核對新股認購、中籤及退款等資金處理，作為生成會計分錄的依據。
+
+        ### 返回结果
+
+        成功時返回匹配的記錄列表及分頁資訊。返回欄含義見回應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -7068,13 +7288,13 @@ paths:
         - book.channel_exchange_order_inquiry
       x-lbonly: false
       description: |-
-        將「渠道彙兌」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「渠道汇兑」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -7291,11 +7511,23 @@ paths:
         - book.channel_exchange_order_inquiry
       x-lbonly: false
       description: |-
-        查詢「渠道彙兌」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢渠道匯兌單，屬於會計中台的分錄數據源，記錄透過渠道辦理的貨幣匯兌單據。
 
-        ### 返回結果
+        ### 请求参数
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        - 透過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 业务说明
+
+        - 數據來源於渠道匯兌單，每條記錄標明業務類型、匯兌類型、渠道，以及客戶匯兌單號與渠道匯兌單號。
+
+        - 記錄包含金額、幣種、賬務日期與交易日期，用於對應渠道側的兌換處理。
+
+        - 常用於核對貨幣兌換資金往來，作為生成會計分錄的原始憑證。
+
+        ### 返回结果
+
+        成功時返回匹配的記錄列表及分頁資訊。返回欄含義見回應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -7500,13 +7732,13 @@ paths:
         - lb_hk_book.book_daily_export
       x-lbonly: false
       description: |-
-        將「會計科目日終彙總_現金」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「会计科目日终汇总_现金」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -7708,11 +7940,23 @@ paths:
         - lb_hk_book.book_daily_query
       x-lbonly: false
       description: |-
-        查詢「會計科目日終彙總_現金」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢會計科目日終匯總（現金），按會計科目和賬務日期匯總現金類科目的日終餘額與發生額。
 
-        ### 返回結果
+        ### 请求参数
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        - 透過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 业务说明
+
+        - 數據按幣種、科目名稱與賬務日期歸集現金類會計科目的日終匯總結果。
+
+        - 每條記錄反映某一科目在某賬務日期的匯總口徑數據，可用於按日核對科目餘額與資金變動。
+
+        - 與科目明細賬配合使用：匯總用於總量核對，明細賬用於逐筆追溯。
+
+        ### 返回结果
+
+        成功時返回匹配的記錄列表及分頁資訊。返回欄含義見回應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -7903,13 +8147,13 @@ paths:
         - lb_hk_book.book_balance_export
       x-lbonly: false
       description: |-
-        將「科目明細賬」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「科目明细账」數據匯出為檔案。`filters` 決定匯出範圍，`down_fields` 可限制匯出欄位。
 
-        ### 導出模式
+        ### 匯出模式
 
-        - `mode: 0`：同步導出，成功後直接返回下載地址。
-        - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+        - `mode: 0`：同步匯出，成功後直接返回下載地址。
+        - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
+        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -8149,11 +8393,23 @@ paths:
         - lb_hk_book.book_balance_query
       x-lbonly: false
       description: |-
-        查詢「科目明細賬」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢科目明細賬（現金），按會計科目逐筆列示資金變動，含借貸發生額與期初期末餘額。
 
-        ### 返回結果
+        ### 请求参数
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        - 透過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 业务说明
+
+        - 數據來源於科目餘額變動記錄，並關聯科目資訊，給出三級科目編碼／名稱與外部科目編碼、櫃台、分錄數據源。
+
+        - 每條記錄包含原始憑證號、會計分錄編號、分錄摘要、交易日期與賬務日期，以及幣種和餘額方向。
+
+        - 記錄逐筆列出期初餘額、借方發生額、貸方發生額與期末餘額，用於科目對賬與資金變動追溯。
+
+        ### 返回结果
+
+        成功時返回匹配的記錄列表及分頁資訊。返回欄含義見回應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -8392,13 +8648,17 @@ paths:
         - lb_hk_book.book_bank_balance_query
       x-lbonly: false
       description: |-
-        將「曆史餘額」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「歷史餘額」數據導出為文件，用於對賬或存檔。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
 
         ### 導出模式
 
         - `mode: 0`：同步導出，成功後直接返回下載地址。
         - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
         - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+
+        ### 處理結果
+
+        成功時生成清算銀行歷史餘額的導出文件，下載地址或 `file_download_id` 以響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -8594,11 +8854,23 @@ paths:
         - lb_hk_book.book_bank_balance_query
       x-lbonly: false
       description: |-
-        查詢「曆史餘額」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢銀行歷史餘額，列出各公司銀行賬戶按日歸檔的餘額記錄。
 
-        ### 返回結果
+        ### 请求参数
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        - 透過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 业务说明
+
+        - 數據來源於生效狀態的銀行餘額歸檔，每條記錄關聯公司銀行賬戶編號、銀行賬號與銀行簡稱。
+
+        - 記錄包含賬務日期、幣種、餘額與來源，反映該銀行賬戶在某一賬務日期的餘額。
+
+        - 用於逐日核對公司銀行賬戶資金，以及與賬務數據的對賬。
+
+        ### 返回结果
+
+        成功時返回匹配的記錄列表及分頁資訊。返回欄含義見回應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -8772,13 +9044,17 @@ paths:
         - accounting.bank_balance_info
       x-lbonly: false
       description: |-
-        將「實時餘額」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「實時餘額」數據導出為文件，用於對賬或存檔。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
 
         ### 導出模式
 
         - `mode: 0`：同步導出，成功後直接返回下載地址。
         - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
         - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+
+        ### 處理結果
+
+        成功時生成銀行實時餘額的導出文件，下載地址或 `file_download_id` 以響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -8974,11 +9250,23 @@ paths:
         - accounting.bank_balance_info
       x-lbonly: false
       description: |-
-        查詢「實時餘額」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢各公司銀行賬戶的實時餘額，用於資金運營與賬戶資金監控。
+
+        ### 請求參數
+
+        - 通過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 業務說明
+
+        數據來源為各銀行賬戶的實時餘額快照，按銀行賬戶逐條記錄。
+
+        每條記錄包含銀行賬號、銀行名稱、幣種，以及昨日餘額、當前餘額、可用餘額、凍結額度合計等資金欄位，並給出最後交易日、最後計息日和餘額更新時間。
+
+        資金運營人員據此監控各賬戶的可用資金與凍結情況；餘額可按需觸發實時刷新以獲取最新快照。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁信息。返回列含義見響應定義。
       security:
         - bearerAuth: []
       requestBody:
@@ -9161,13 +9449,17 @@ paths:
         - lb_hk_book.book_balance_check_export
       x-lbonly: false
       description: |-
-        將「賬單核對」數據導出為文件。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
+        將「賬單核對」數據導出為文件，用於對賬或存檔。`filters` 決定導出範圍，`down_fields` 可限制導出字段。
 
         ### 導出模式
 
         - `mode: 0`：同步導出，成功後直接返回下載地址。
         - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
         - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
+
+        ### 處理結果
+
+        成功時生成賬單核對結果的導出文件，下載地址或 `file_download_id` 以響應定義為準。
       security:
         - bearerAuth: []
       requestBody:
@@ -9362,11 +9654,23 @@ paths:
         - lb_hk_book.book_balance_check_query
       x-lbonly: false
       description: |-
-        查詢「賬單核對」數據，可通過 `filters` 組合業務篩選條件，並使用 `page`、`page_size` 控制分頁。
+        查詢系統賬務餘額與清算銀行餘額的逐日對賬結果，用於財務核對銀行賬戶餘額是否一致。
+
+        ### 請求參數
+
+        - 通過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
+
+        ### 業務說明
+
+        數據來源為按對賬日期、銀行賬戶逐筆生成的餘額核對結果。
+
+        每條記錄包含對賬日期、銀行財務日期、銀行賬號、銀行名稱、幣種，以及上一日銀行餘額、整合賬單發生額、賬務系統餘額、銀行餘額等金額欄位，並以狀態標記該賬戶當日兩側餘額是否一致。
+
+        財務人員據此排查賬務系統與銀行之間的餘額差異；可按指定日期重新發起核對。
 
         ### 返回結果
 
-        成功時返回匹配的記錄列表及分頁信息。各過濾字段的用途、可選值和動態數據來源見對應字段説明。
+        成功時返回匹配的記錄列表及分頁信息。返回列含義見響應定義。
       security:
         - bearerAuth: []
       requestBody:

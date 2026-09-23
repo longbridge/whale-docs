@@ -436,13 +436,29 @@ const [pyHtml, pyAsyncHtml, nodeHtml, javaHtml, rustHtml, cppHtml, goHtml] = awa
   codeToHtml(cppExample, { lang: "cpp", themes: th, defaultColor: false }),
   codeToHtml(goExample, { lang: "go", themes: th, defaultColor: false }),
 ]);
+// Error responses ($ref the shared error envelope) must show a status-appropriate
+// example — a non-zero business code, an error message, and null data — not the
+// success envelope (code 0 / success) that the schema's code/message/data shape
+// would otherwise produce for every tab.
+function errorExample(status: string): any {
+  const M: Record<string, { code: number; msg: Record<string, string> }> = {
+    "400": { code: 400, msg: { en: "Invalid request; interpret the business code and message in the body.", "zh-CN": "请求无效，请结合响应体中的业务 code 与 message 判断原因。", "zh-HK": "請求無效，請結合回應內容中的業務 code 與 message 判斷原因。" } },
+    "401": { code: 401010, msg: { en: "Not authenticated.", "zh-CN": "未登录。", "zh-HK": "未登錄。" } },
+    "403": { code: 403000, msg: { en: "The account is not authorized for this function; grant access via User Permission.", "zh-CN": "当前账号未获得该功能授权，需通过 User Permission 授权。", "zh-HK": "當前賬號未獲得該功能授權，需透過 User Permission 授權。" } },
+    "408": { code: 408, msg: { en: "Request timed out.", "zh-CN": "请求超时。", "zh-HK": "請求逾時。" } },
+  };
+  const e = M[status] ?? { code: Number(status) || -1, msg: { en: "Request failed.", "zh-CN": "请求失败。", "zh-HK": "請求失敗。" } };
+  return { code: e.code, message: e.msg[locale] ?? e.msg["en"], data: null };
+}
 const responseExamples = responses.map(([status, response]) => {
   const contentType = Object.keys(response.content ?? {})[0];
   const body = contentType ? response.content[contentType] : undefined;
   return { status, contentType, response, body, example: body?.example ?? body?.examples?.default?.value };
 });
 const highlightedResponses = await Promise.all(responseExamples.filter(({ body }) => body).map(async ({ status, contentType, body, example: responseExample }) => {
-  const value = responseExample !== undefined ? sanitizeExample(responseExample) : schemaExample(body.schema);
+  const value = status === "200"
+    ? (responseExample !== undefined ? sanitizeExample(responseExample) : schemaExample(body.schema))
+    : errorExample(status);
   const code = JSON.stringify(value, null, 2);
   return {
     status,

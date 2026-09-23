@@ -23,16 +23,24 @@ paths:
         - lb_hk_app.announcements
       x-lbonly: false
       description: |-
-        新建租户公告。
+        新建一条租户公告，提交后进入审核流程。
 
         ### 请求参数
 
         - 必填：`review_url`（审核回调 URL）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
+        ### 业务说明
+
+        公告提交后不会立即对外展示，需经审核通过后才生效。调用方须通过 `review_url` 传入审核回调地址，供审核完成后跳转或返回审核结果。
+
+        ### 风险提示
+
+        此操作会创建面向客户展示的公告内容。调用前请确认标题、内容、展示渠道与生效时间等参数无误。
+
         ### 处理结果
 
-        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+        成功时创建公告并进入审核流程；后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -111,17 +119,25 @@ paths:
         - stock.market_holiday
       x-lbonly: false
       description: |-
-        更新公告发布状态。
+        更新指定公告的发布状态（如上架、下架）。
 
         ### 请求参数
 
         - 必填：`id`（公告ID）、`status`（状态）
-        - 可选：`audit_frontend_resource`（审计上下文）
+        - 可选：`audit_frontend_resource`（调用方提供的审计上下文）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        通过 `status` 切换公告的发布状态，直接影响该公告是否对客户可见。`audit_frontend_resource` 用于记录本次变更的审计对照数据。
+
+        ### 风险提示
+
+        此操作会改变面向客户展示的公告状态。调用前请确认目标公告和状态无误。
 
         ### 处理结果
 
-        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+        成功时更新公告状态；后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -210,16 +226,24 @@ paths:
         - lb_hk_app.announcements
       x-lbonly: false
       description: |-
-        编辑租户公告。
+        编辑一条已存在的租户公告，提交后进入审核流程。
 
         ### 请求参数
 
-        - 必填：`review_url`（审核回调 URL）
+        - 必填：`id`（公告ID）、`reason`（备注）、`show_begin`（展示开始时间）、`show_end`（展示结束时间）、`title`（标题）、`announcement_type`（公告类型）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        通过 `id` 定位待编辑的公告，可修改标题、内容、展示渠道、优先级、生效时间、用户范围等配置。修改提交后需经审核通过才生效。`review_url` 用于传入审核回调地址。
+
+        ### 风险提示
+
+        此操作会修改面向客户展示的公告内容。调用前请确认目标公告和参数无误。
 
         ### 处理结果
 
-        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+        成功时更新公告并进入审核流程；后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -229,12 +253,88 @@ paths:
             schema:
               type: object
               required:
-                - review_url
+                - id
+                - reason
+                - show_begin
+                - show_end
+                - title
+                - announcement_type
               properties:
+                id:
+                  type: number
+                  description: 公告ID
+                channel:
+                  type: object
+                  properties:
+                    list:
+                      type: array
+                      items:
+                        type: string
+                      description: channel.list
+                closable:
+                  type: boolean
+                  description: 是否可关闭
+                priority:
+                  type: number
+                  description: 优先级（值越大优先级越高）
+                reason:
+                  type: string
+                  description: 备注
+                show_begin:
+                  type: number
+                  description: 展示开始时间
+                show_end:
+                  type: number
+                  description: 展示结束时间
+                title:
+                  type: string
+                  description: 标题
+                description:
+                  type: string
+                  description: 内容
+                rich_desc:
+                  type: string
+                  description: 富文本内容
+                conditions:
+                  type: string
+                  description: conditions
+                announcement_type:
+                  type: number
+                  description: 公告类型
+                link:
+                  type: string
+                  description: 跳转链接
+                status:
+                  type: number
+                  description: 是否启用
+                button:
+                  type: string
+                  description: 按钮文案
+                user_scope:
+                  type: object
+                  properties:
+                    org_ids:
+                      type: array
+                      items:
+                        type: string
+                      description: user_scope.org_ids
+                    app_ids:
+                      type: array
+                      items:
+                        type: string
+                      description: user_scope.app_ids
+                    account_channel:
+                      type: boolean
+                      description: user_scope.account_channel
+                    user_cluster:
+                      type: boolean
+                      description: user_scope.user_cluster
+                audit_frontend_resource:
+                  type: object
+                  description: audit_frontend_resource
                 review_url:
                   type: string
-                  description: 审核完成后使用的回调 URL。此字段为必填项。
-            example: {}
+                  description: 审核回调地址
       responses:
         '200':
           description: 请求处理成功。响应的 `data` 不包含额外业务字段。
@@ -304,10 +404,15 @@ paths:
         ### 请求参数
 
         - 必填：`id`（公告 ID），作为查询字符串参数 `?id=` 传入。
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        多语言字段（如 `title`、`description`）以 JSON 字符串形式返回，调用方需自行解析。
 
         ### 返回结果
 
-        成功时返回该公告的完整配置对象，包含标题、内容、展示渠道、生效时间、用户范围和状态等字段。多语言字段（如 `title`、`description`）以 JSON 字符串形式返回，调用方需自行解析。
+        成功时返回该公告的完整配置对象，包含标题、内容、展示渠道、生效时间、用户范围和状态等字段。字段含义见下方响应定义。
       security:
         - bearerAuth: []
       parameters:
@@ -437,6 +542,14 @@ paths:
         - `account_channel`、`region_ids`、`region_bank_ids` 为多值字段，多个值以英文逗号拼接为字符串传入。
         - `show_begin`、`show_end` 为 Unix 时间戳（秒）。
         - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        出入金公告用于在出入金相关场景向指定范围的客户展示提示信息，可通过客户端渠道、账户渠道、地区、地区银行等维度限定展示范围，并按 `priority` 控制优先级。
+
+        ### 风险提示
+
+        此操作会创建面向客户展示的出入金公告。调用前请确认展示范围、生效时间与多语言内容无误。
 
         ### 处理结果
 
@@ -631,6 +744,14 @@ paths:
         - `config.show_begin`、`config.show_end` 为 Unix 时间戳（秒）。
         - `audit_frontend_resource` 为调用方提供的审计上下文（编辑前后的对照数据），可选。
 
+        ### 业务说明
+
+        通过顶层 `id` 定位待编辑的出入金公告，`config` 中的配置将整体覆盖原有公告设置。
+
+        ### 风险提示
+
+        此操作会修改面向客户展示的出入金公告。调用前请确认目标公告和参数无误。
+
         ### 处理结果
 
         成功时更新公告；后续状态和返回数据以 `200` 响应定义为准。
@@ -824,16 +945,24 @@ paths:
         - lb_hk_cash_in_out_notice.lb_hk_cash_in_out_notice_update
       x-lbonly: false
       description: |-
-        更新出入金公告状态。
+        更新出入金公告的状态（如上架、下架）。
 
         ### 请求参数
 
         - 必填：`id`（公告ID）、`action`（操作动作）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
+        ### 业务说明
+
+        通过 `action` 指定对目标公告执行的状态操作，直接影响该出入金公告是否对客户可见。
+
+        ### 风险提示
+
+        此操作会改变面向客户展示的出入金公告状态。调用前请确认目标公告和操作动作无误。
+
         ### 处理结果
 
-        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+        成功时更新公告状态；后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -851,7 +980,17 @@ paths:
                   description: 公告ID，用于标识本次请求关联的业务对象。此字段为必填项。
                 action:
                   type: string
-                  description: 用于指定「操作动作」。此字段为必填项。
+                  description: |-
+                    用于指定「操作动作」。
+                  enum:
+                    - '1'
+                    - '2'
+                  x-enum-details:
+                    - value: '1'
+                      label: 不启用/关闭
+                    - value: '2'
+                      label: 启用/开启
+                  example: '1'
             example:
               id: '123'
               action: ''
@@ -918,11 +1057,23 @@ paths:
         - lb_hk_app.announcements
       x-lbonly: false
       description: |-
-        查询「公告管理」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询面向 App 客户端投放的运营公告配置，用于运营人员维护并审核在 App 各页面展示的公告。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        每条记录代表一条运营公告，包含公告编号、生效开始与结束时间、公告类型、备注原因，以及启用状态、公告状态（未开始 / 生效中 / 已结束）和审核状态。
+
+        公告可按支持市场、展示页面与支持标的限定投放范围，并记录操作人。
+
+        公告需经审核流程通过后方可生效，常用于按类型、页面范围、审核状态或时间范围筛选，跟进公告的投放与生效情况。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -1193,11 +1344,23 @@ paths:
       description: |-
         将「出入金公告」数据导出为文件。`filters` 决定导出范围，`down_fields` 可限制导出字段。
 
-        ### 导出模式
+        ### 请求参数
+
+        - 本接口无必填参数，可选参数见下方字段说明。
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        导出支持两种模式：
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
+
+        不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
+
+        ### 返回结果
+
+        成功时返回导出文件的下载地址或异步导出任务标识，具体以所选 `mode` 为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -1423,11 +1586,23 @@ paths:
         - lb_hk_cash_in_out_notice.lb_hk_cash_in_out_notice_query
       x-lbonly: false
       description: |-
-        查询「出入金公告」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询面向 App 客户端展示的出入金公告配置，用于运营人员维护与存入、提取相关的客户端提示公告。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        每条记录代表一条出入金公告，区分公告类型（存入 / 提取），包含多语言标题与说明、生效时间范围、启用状态与优先级。
+
+        公告可按账户渠道、机构、地区、银行及银行业务类型限定生效范围，并可配置客户端展示方式、跳转链接与确认按钮文案。
+
+        常用于按公告类型、编号或状态筛选，维护当前生效的出入金提示。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:

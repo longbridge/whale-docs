@@ -23,16 +23,24 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        Batch Delete CRS Data.
+        Batch-delete CRS records.
 
         ### Request parameters
 
-        - Required: `id` (ID List)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (list of record IDs, submitted as a JSON array)
+        - See each field's documentation for format, value ranges, and business meaning.
+
+        ### Business notes
+
+        Deletes generated CRS (Common Reporting Standard) reporting records in bulk by record ID. Deleted records no longer participate in subsequent reporting.
+
+        ### Risk warning
+
+        This operation deletes real tax-reporting data and cannot be undone. Confirm the `id` list before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the batch deletion completes; refer to the `200` response definition for the resulting state.
       security:
         - bearerAuth: []
       requestBody:
@@ -119,17 +127,25 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        Generate CRS (Common Reporting Standard) data.
+        Generate CRS (Common Reporting Standard) reporting data for a given reporting year and AEOI entity.
 
         ### Request parameters
 
         - Required: `return_year` (reporting year), `aeoi_id` (AEOI ID)
-        - Optional: `company_name` (company name), `retain_has_asset` (whether to retain records that have assets), `account_state` (account-state filter)
-        - See each field for its format, allowed values, and business meaning.
+        - Optional: `company_name`, `retain_has_asset` (whether to keep records that have assets), `account_state` (account-status filter)
+        - See each field's documentation for format, value ranges, and business meaning.
+
+        ### Business notes
+
+        Aggregates and produces reportable data by reporting year and AEOI entity. Optional parameters control whether accounts holding assets are retained and how records are filtered by account status.
+
+        ### Risk warning
+
+        This operation produces formal tax-reporting data. Confirm the reporting year and AEOI entity before calling.
 
         ### Result
 
-        On success, CRS data generation is triggered. The response `data` does not contain additional business fields.
+        On success, CRS data generation is triggered; the response `data` carries no additional business fields.
       security:
         - bearerAuth: []
       requestBody:
@@ -157,7 +173,8 @@ paths:
                   description: Whether to retain only records that have assets.
                 account_state:
                   type: array
-                  description: Filter by account state, submitted as a string array. No account-state filtering is applied when omitted.
+                  description: |-
+                    Filter by account state, submitted as a string array. Values come from a backend data dictionary (maintained dynamically), not a fixed enum; use the options the service actually returns.
                   items:
                     type: string
             example:
@@ -235,15 +252,16 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        Get the controlling persons for the account identified by `account_no`.
+        Look up the controlling persons associated with an account.
 
         ### Request parameters
 
-        - Required: `account_no` (account number)
+        - Required: `account_no` (the account number to look up)
+        - See each field's documentation for format, value ranges, and business meaning.
 
-        ### Result
+        ### Returns
 
-        On success, the controlling-person information for the account is returned in the response `data`.
+        On success, `data` carries the controlling-person information for the account; see the response definition for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -352,11 +370,23 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        Queries CRS Data Query data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the detailed CRS (Common Reporting Standard / AEOI) reportable-account records used to verify reporting scope and to feed the generation of CRS reporting files.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (available fields are described under the filters section below), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        The data is CRS reportable-account detail organized by return year and batch, where each record corresponds to one reportable securities account.
+
+        Each record carries the return year, AEOI ID, batch, account batch, account number, client type (individual / entity), entity type, tax identification number, tax country and country of residence, name, address, birth date, total asset balance and currency, several payment-type and payment-amount groups, document type, account status, and processing and lock status.
+
+        It is typically used to review reportable-account amounts, confirm the reporting scope, and provide source data for generating the reporting files.
+
+        ### Returns
+
+        On success, returns the matching record list together with pagination information. See the response definition for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -726,13 +756,13 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        Exports CRS Data Query data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export CRS reporting records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -1043,17 +1073,25 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        Update CRS Data.
+        Edit CRS (Common Reporting Standard) data, including controlling-person information.
 
         ### Request parameters
 
-        - Required: `audit_frontend_resource` (Audit Context)
-        - Optional: `crs_data` (CRS Data), `controlling_persons` (Controlling Persons)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `audit_frontend_resource` (caller-provided audit context, including before/after payment type and payment amount)
+        - Optional: `crs_data` (CRS data), `controlling_persons` (controlling-person list)
+        - See each field's documentation for format, value ranges, and business meaning.
+
+        ### Business notes
+
+        Updates the CRS reporting subject and its associated controlling persons. This changes real tax-reporting data.
+
+        ### Risk warning
+
+        This operation changes real tax-reporting data. Confirm the target record and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the update completes; refer to the `200` response definition for the resulting state and returned data.
       security:
         - bearerAuth: []
       requestBody:
@@ -1145,16 +1183,16 @@ paths:
         - report.crs_tasks
       x-lbonly: false
       description: |-
-        Get CRS File Download URL.
+        Resolve the download URL for a CRS file by its object-storage key.
 
         ### Request parameters
 
-        - Required: `key` (Key)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `key` (object-storage key returned after upload, used to locate the target file)
+        - See each field's documentation for format, value ranges, and business meaning.
 
-        ### Result
+        ### Returns
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, `data` carries the download URL for the file; see the response definition for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -1242,11 +1280,23 @@ paths:
         - report.crs_tasks
       x-lbonly: false
       description: |-
-        Queries CRS Log Query data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the task logs for generating and submitting CRS reporting files, used to track task progress and trace operation history.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (available fields are described under the filters section below), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        The data is CRS task execution records, organized by return year, AEOI ID, company name, batch, and task type.
+
+        Each record carries the task type, execution status, start and end times (creation / update time), operator, generated file name and file serial number, and remarks.
+
+        It is typically used to track the progress of CRS file generation and submission, investigate failed tasks, and trace operation history.
+
+        ### Returns
+
+        On success, returns the matching record list together with pagination information. See the response definition for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -1469,13 +1519,13 @@ paths:
         - report.crs_tasks
       x-lbonly: false
       description: |-
-        Exports CRS Log Query data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export CRS log records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -1711,11 +1761,23 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        Queries Historical Annual Returns Data data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the imported historical CRS income data, which serves as the source record of each client's income amounts per return year for CRS reporting calculations.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (available fields are described under the filters section below), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        The data is historical income records imported by client and return year, filterable by client (`member_id`).
+
+        Each record carries the account number, client identifier, return year, and several categories of CRS income amounts (such as `crs501`, `crs502`, `crs503`, and `crs504`, each mapping to a different income category).
+
+        It is typically used to supply and reconcile prior-year income figures for CRS reporting.
+
+        ### Returns
+
+        On success, returns the matching record list together with pagination information. See the response definition for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -1859,13 +1921,13 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        Exports Historical Annual Returns Data data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export historical income records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -2047,16 +2109,24 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        Import CRS Historical Data.
+        Import historical CRS data.
 
         ### Request parameters
 
-        - Required: `file_key` (File Key), `file_name` (File Name)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `file_key` (object-storage key returned after upload, used to locate the file to import), `file_name` (file name including extension)
+        - See each field's documentation for format, value ranges, and business meaning.
+
+        ### Business notes
+
+        Upload the data file to object storage to obtain a `file_key` first, then call this endpoint to submit the historical CRS data for import.
+
+        ### Risk warning
+
+        This operation writes real historical reporting data. Confirm the file content and format before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the historical import completes; refer to the `200` response definition for the resulting state and returned data.
       security:
         - bearerAuth: []
       requestBody:
@@ -2145,11 +2215,23 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        Queries Reporting Tax Jurisdiction Query data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the CRS reportable tax-jurisdiction configuration, which maintains whether each country / region requires reporting and its initial reporting year.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (available fields are described under the filters section below), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        The data is a list of reportable tax jurisdictions, filterable by tax jurisdiction, initial reporting year, and whether reporting is required.
+
+        Each record carries the tax jurisdiction (country / region code and its Chinese and English names), whether reporting is required, and the initial reporting year.
+
+        It is typically used to determine the jurisdiction coverage of CRS reporting and to guide reportable-account filtering and file generation.
+
+        ### Returns
+
+        On success, returns the matching record list together with pagination information. See the response definition for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -2307,13 +2389,13 @@ paths:
         - report.crs_data
       x-lbonly: false
       description: |-
-        Exports Reporting Tax Jurisdiction Query data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export reporting tax jurisdiction records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -2513,16 +2595,24 @@ paths:
         - report.crs_tasks
       x-lbonly: false
       description: |-
-        Update Reporting Jurisdiction.
+        Update the reporting configuration of a tax jurisdiction.
 
         ### Request parameters
 
-        - Required: `id` (Record ID), `report_requirement` (Report Requirement), `initial_reporting_year` (Initial Reporting Year), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (record ID), `report_requirement` (reporting requirement), `initial_reporting_year` (first reporting year), `audit_frontend_resource` (caller-provided audit context, including the jurisdiction name)
+        - See each field's documentation for format, value ranges, and business meaning.
+
+        ### Business notes
+
+        Updates the reporting requirement and first reporting year for the specified tax jurisdiction, identified by record ID.
+
+        ### Risk warning
+
+        This operation changes tax-reporting configuration and may affect the scope of subsequent CRS data generation. Confirm the parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the configuration update completes; refer to the `200` response definition for the resulting state and returned data.
       security:
         - bearerAuth: []
       requestBody:
@@ -2621,11 +2711,23 @@ paths:
         - b2b_billing.dcp_report
       x-lbonly: false
       description: |-
-        Queries Commission Annual Report data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the yearly commission settlement summary of broker (AE) commission-split packages, used for annual reconciliation of brokerage commission sharing.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (available fields are described under the filters section below), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        The data is aggregated by ledger year, broker (AE), AE group, commission-split package, and currency, and can be filtered by ledger year, currency, and broker.
+
+        Each record carries the trade amount, total commission, AE commission, company (brokerage) commission, and currency.
+
+        It is typically used to reconcile each broker's yearly trading volume and commission split across different commission-split packages.
+
+        ### Returns
+
+        On success, returns the matching record list together with pagination information. See the response definition for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -2796,13 +2898,13 @@ paths:
         - b2b_billing.dcp_report
       x-lbonly: false
       description: |-
-        Exports Commission Annual Report data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export yearly commission report records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -3002,11 +3104,23 @@ paths:
         - b2b_billing.dcp_report
       x-lbonly: false
       description: |-
-        Queries Commission Daily Report data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the daily commission settlement summary of broker (AE) commission-split packages by ledger date, used for daily reconciliation of brokerage commission sharing.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (available fields are described under the filters section below), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        The data is aggregated by ledger date, broker (AE), AE group, commission-split package, and currency, and can be filtered by ledger date, currency, and broker.
+
+        Each record carries the trade amount, total commission, AE commission, company (brokerage) commission, and currency.
+
+        It is typically used to reconcile each broker's daily trading volume and commission split across different commission-split packages.
+
+        ### Returns
+
+        On success, returns the matching record list together with pagination information. See the response definition for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -3177,13 +3291,13 @@ paths:
         - b2b_billing.dcp_report
       x-lbonly: false
       description: |-
-        Exports Commission Daily Report data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export daily commission report records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -3383,11 +3497,23 @@ paths:
         - b2b_billing.dcp_report
       x-lbonly: false
       description: |-
-        Queries Commission Monthly Report data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the monthly commission settlement summary of broker (AE) commission-split packages by ledger month, used for monthly reconciliation of brokerage commission sharing.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (available fields are described under the filters section below), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        The data is aggregated by ledger month, broker (AE), AE group, commission-split package, and currency, and can be filtered by ledger month, currency, and broker.
+
+        Each record carries the trade amount, total commission, AE commission, company (brokerage) commission, and currency.
+
+        It is typically used to reconcile each broker's monthly trading volume and commission split across different commission-split packages.
+
+        ### Returns
+
+        On success, returns the matching record list together with pagination information. See the response definition for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -3558,13 +3684,13 @@ paths:
         - b2b_billing.dcp_report
       x-lbonly: false
       description: |-
-        Exports Commission Monthly Report data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export monthly commission report records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -3764,16 +3890,20 @@ paths:
         - lb_hk_report.report_printing
       x-lbonly: false
       description: |-
-        Cancel Report Export Task.
+        Cancel an in-progress report export task.
 
         ### Request parameters
 
-        - Required: `task_id` (Task ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `task_id` (ID of the export task to cancel)
+        - See each field's documentation for format, value ranges, and business meaning.
+
+        ### Business notes
+
+        Aborts execution of the specified export task. Tasks that have already completed cannot be cancelled.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the task is cancelled; refer to the `200` response definition for the resulting state and returned data.
       security:
         - bearerAuth: []
       requestBody:
@@ -3856,17 +3986,17 @@ paths:
         - lb_hk_report.report_printing
       x-lbonly: false
       description: |-
-        Get Export Task Download URL.
+        Get the download URL(s) for the file(s) produced by an export task.
 
         ### Request parameters
 
-        - Required: `task_id` (task_id)
-        - Optional: `inline` (inline)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `task_id` (export task ID)
+        - Optional: `inline` (whether to preview inline; defaults when omitted)
+        - See each field's documentation for format, value ranges, and business meaning.
 
-        ### Result
+        ### Returns
 
-        On success, the endpoint returns the requested data. See the `200` response schema for field definitions.
+        On success, returns the download URL(s) for the task's file(s); see the response definition for field meanings.
       security:
         - bearerAuth: []
       parameters:
@@ -3957,13 +4087,13 @@ paths:
 
         ### Request parameters
 
-        - Required: `page` (page number), `limit` (page size)
-        - Optional filters: `report_id` (report ID), `parent_id` (parent batch ID), `task_id` (task ID), `created_at_gt` / `created_at_lt` (creation-time range, Unix second timestamps), `file_types` (file types, comma-separated for multiple values), `file_name` (file name)
-        - An omitted filter is not applied.
+        - Required: `page` (page number, starting at 1), `limit` (page size)
+        - Optional filters: `report_id`, `parent_id` (owning batch ID), `task_id`, `created_at_gt` / `created_at_lt` (creation-time range, Unix seconds), `file_types` (file types, comma-separated for multiple values), `file_name`
+        - Any filter omitted is not applied.
 
-        ### Result
+        ### Returns
 
-        On success, `data.list` returns the export tasks on the current page. See the `200` response schema for each task field.
+        On success, `data.list` carries the current page of export tasks; see the response definition for each task's field meanings.
       security:
         - bearerAuth: []
       parameters:
@@ -4191,11 +4321,23 @@ paths:
         - report.export_history_query
       x-lbonly: false
       description: |-
-        Queries Single Report Print Log data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the export task log of individual reports, used to track the generation progress of a single report and trace operation history.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (available fields are described under the filters section below), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        The data is export task records for individual reports, filterable by report name and operation date.
+
+        Each record carries the report number, report name, generation status (progress), operator (marked as `System` for automatic exports), and operation time.
+
+        It is typically used to check report generation progress, confirm whether an export has completed, and trace the operator.
+
+        ### Returns
+
+        On success, returns the matching record list together with pagination information. See the response definition for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -4351,13 +4493,13 @@ paths:
         - report.export_history_query
       x-lbonly: false
       description: |-
-        Exports Single Report Print Log data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export single-report export log records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -4551,11 +4693,23 @@ paths:
         - report.batch_export_history_query
       x-lbonly: false
       description: |-
-        Queries Report Batch Print Log data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the generation log of batch report printing, used to track the export execution and results of reports in each batch.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (see the filter field notes below), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        - Each record corresponds to the generation of a single report within a batch export task triggered by batch printing.
+
+        - A record carries the batch name, report number and name, generation status, whether data is present, operator, operation time, and generation time, allowing you to confirm whether a batch's reports were produced successfully.
+
+        - Typically used by operations to review the batch export history, investigate failed or empty reports, and decide whether to re-export or download the results.
+
+        ### Returns
+
+        On success, returns the matching record list with pagination info. See the response definition for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -4730,13 +4884,13 @@ paths:
         - report.batch_export_history_query
       x-lbonly: false
       description: |-
-        Exports Report Batch Print Log data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export batch report export log records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -4937,15 +5091,20 @@ paths:
         - report.export_batches_query
       x-lbonly: false
       description: |-
-        Delete a report configuration from a specified export batch.
+        Remove a single report configuration from an export batch.
 
         ### Request parameters
 
-        - Required: `batch_id` (batch ID), `report_id` (report ID)
+        - Required: `batch_id` (owning batch ID), `report_id` (report ID)
+        - See each field's documentation for format, value ranges, and business meaning.
+
+        ### Business notes
+
+        Removes the specified report from its batch; only the report configuration within that batch is affected.
 
         ### Result
 
-        On success, the business result is in `data`. Interpret the outcome together with the business `code`.
+        On success, the business result is carried in `data`; interpret it together with the business `code`.
       security:
         - bearerAuth: []
       requestBody:
@@ -5034,16 +5193,21 @@ paths:
         - report.export_batches_query
       x-lbonly: false
       description: |-
-        Create a batch-printing / export batch.
+        Create a batch-print / export batch.
 
         ### Request parameters
 
-        - Required: `name` (batch name), `sync_sftp` (whether to sync to SFTP), `email_notify` (whether to send an email notification)
-        - Optional: `auto_export_timing` (auto-export timing; not auto-exported when omitted), `visible_emails` (emails allowed to see the batch)
+        - Required: `name` (batch name), `sync_sftp` (whether to sync to SFTP), `email_notify` (whether to notify by email)
+        - Optional: `auto_export_timing` (scheduled auto-export timing; no auto-export when omitted), `visible_emails` (list of user emails granted visibility)
+        - See each field's documentation for format, value ranges, and business meaning.
+
+        ### Business notes
+
+        A batch is a container for bulk report export. After creation you can add report configurations to it and trigger batch export tasks.
 
         ### Result
 
-        On success, the export batch is created and the result is returned in `data`. Interpret the outcome together with the business `code`.
+        On success, the export batch is created and the business result is carried in `data`; interpret it together with the business `code`.
       security:
         - bearerAuth: []
       requestBody:
@@ -5149,16 +5313,24 @@ paths:
         - report.export_batches_update
       x-lbonly: false
       description: |-
-        Delete Export Batch.
+        Delete batch-print batches.
 
         ### Request parameters
 
-        - Required: `batch_ids` (Batch IDs)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `batch_ids` (list of batch IDs, submitted as a JSON array)
+        - See each field's documentation for format, value ranges, and business meaning.
+
+        ### Business notes
+
+        Deletes export batches in bulk. When a batch is deleted, the report configurations it contains are invalidated as well.
+
+        ### Risk warning
+
+        This operation deletes batches and their report configurations. Confirm `batch_ids` before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the batch deletion completes; refer to the `200` response definition for the resulting state and returned data.
       security:
         - bearerAuth: []
       requestBody:
@@ -5251,12 +5423,13 @@ paths:
 
         ### Request parameters
 
-        - Required: `batch_id` (batch ID), `name` (batch name), `sync_sftp` (whether to sync to SFTP), `email_notify` (whether to send an email notification)
-        - Optional: `auto_export_timing` (auto-export timing; not auto-exported when omitted), `visible_emails` (emails allowed to see the batch)
+        - Required: `batch_id` (ID of the batch to update), `name` (batch name), `sync_sftp` (whether to sync to SFTP), `email_notify` (whether to notify by email)
+        - Optional: `auto_export_timing` (scheduled auto-export timing; no auto-export when omitted), `visible_emails` (list of user emails granted visibility)
+        - See each field's documentation for format, value ranges, and business meaning.
 
         ### Result
 
-        On success, the export batch is updated and the result is returned in `data`. Interpret the outcome together with the business `code`.
+        On success, the export batch is updated and the business result is carried in `data`; interpret it together with the business `code`.
       security:
         - bearerAuth: []
       requestBody:
@@ -5367,17 +5540,21 @@ paths:
         - report.export_batches_query
       x-lbonly: false
       description: |-
-        Create Batch Export Task.
+        Create a new batch export task for a given batch.
 
         ### Request parameters
 
-        - Required: `batch_id` (Batch ID), `operator` (Operator)
-        - Optional: `bind_id` (Bind ID), `sync_sftp` (Sync SFTP)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `batch_id` (batch ID), `operator` (identifier of the operator initiating this action, for audit tracing)
+        - Optional: `bind_id` (binding ID), `sync_sftp` (whether to sync to SFTP)
+        - See each field's documentation for format, value ranges, and business meaning.
+
+        ### Business notes
+
+        Generates export files in bulk for the reports configured in the batch. The task runs asynchronously; progress and results can be queried through the export task list.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the batch export task is created; refer to the `200` response definition for the resulting state and returned data.
       security:
         - bearerAuth: []
       requestBody:
@@ -5477,7 +5654,24 @@ paths:
       x-permission-key:
         - report.batch_export_reports_query
       x-lbonly: false
-      description: Query the list of reports contained in a given export batch.
+      description: |-
+        Query the list of reports configured under a specific print batch, used to review which reports are included in the batch and their print settings.
+
+        ### Request parameters
+
+        - Combine business filters through `filters` (see the filter field notes below), and use `page`, `page_size`, and `orderBy` to control pagination and sorting. Specify the owning batch to scope the query.
+
+        ### Business notes
+
+        - The data lists the reports added to a batch print batch; each record corresponds to one report in the batch.
+
+        - A record carries the report name, file type, remark, and print conditions, where the print conditions record the parameter configuration used when exporting that report.
+
+        - Typically used to maintain batch members and verify each report's export format and filter conditions before running a batch export.
+
+        ### Returns
+
+        On success, returns the matching record list with pagination info. See the response definition for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -5492,6 +5686,8 @@ paths:
                   properties:
                     title:
                       type: string
+                      description: |-
+                        Filters results by Report name.
                 page:
                   type: integer
                 page_size:
@@ -5590,7 +5786,14 @@ paths:
       x-permission-key:
         - report.batch_export_reports_query
       x-lbonly: false
-      description: 'Export the list of reports under a given batch to a file. In synchronous mode (`mode: 0`), the download URL is returned directly. In asynchronous mode (`mode: 1`), a `file_download_id` is returned; then call `GET /v1/datasets/download/{id}` to obtain the final download URL, or `DELETE /v1/datasets/download/{id}` to delete the export record.'
+      description: |-
+        Export batch report list records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -5725,11 +5928,23 @@ paths:
         - report.export_batches_query
       x-lbonly: false
       description: |-
-        Queries Batch Print List data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the list of report batch-print batches, used to manage batches that bundle multiple reports for a one-time export.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (see the filter field notes below), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        - Each record corresponds to one batch-print batch, which can bundle multiple reports and export them together.
+
+        - A record carries the batch name, export mode (manual or scheduled automatic), report count, whether email notification is enabled, whether it syncs to SFTP, visible members, creator, and the operator and time of the most recent export.
+
+        - Typically used by operations to maintain batch-print tasks, verify each batch's export configuration and execution status, and serve as the entry point for viewing batch details or triggering an export.
+
+        ### Returns
+
+        On success, returns the matching record list with pagination info. See the response definition for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -5898,13 +6113,13 @@ paths:
         - report.export_batches_query
       x-lbonly: false
       description: |-
-        Exports Batch Print List data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export batch print records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -6092,19 +6307,17 @@ paths:
         - report.export_batches_query
       x-lbonly: false
       description: |-
-        Create or update a report configuration under a specified export batch.
-
-        Provide `id` to update an existing configuration, or omit it to create a new one.
+        Create or update a report configuration under an export batch. Passing `id` updates an existing configuration; omitting it creates a new one.
 
         ### Request parameters
 
-        - Required: `batch_id` (batch ID), `report_id` (report ID), `file_type` (export file type), `remark` (remark), `porter_params` (report query/export parameters)
-        - Optional: `id` (report config ID, provide when updating), `new_ver` (whether to use the new version)
-        - `porter_params` is a key-value object whose fields depend on the report.
+        - Required: `batch_id` (owning batch ID), `report_id` (report ID), `file_type` (export file type), `remark`, `porter_params` (report query / export parameters)
+        - Optional: `id` (report configuration ID, passed when updating), `new_ver` (whether to use the new version)
+        - `porter_params` is a key-value object whose fields vary by report.
 
         ### Result
 
-        On success, the business result is in `data`. Interpret the outcome together with the business `code`.
+        On success, the business result is carried in `data`; interpret it together with the business `code`.
       security:
         - bearerAuth: []
       requestBody:
@@ -6218,19 +6431,17 @@ paths:
         - lb_hk_report.report_printing
       x-lbonly: false
       description: |-
-        Create or update a report bookmark directory.
-
-        A single endpoint handles both create and update: pass `dir_id` to update that directory, or omit it to create a new one.
+        Create or edit a report bookmark directory. Create and edit share this endpoint: passing `dir_id` edits that directory; omitting it creates a new one.
 
         ### Request parameters
 
         - Required: `name` (directory name)
-        - Optional: `dir_id` (bookmark directory ID; provide to update, omit to create)
-        - See each field for its format, allowed values, and business meaning.
+        - Optional: `dir_id` (bookmark directory ID, passed when editing; omit to create)
+        - See each field's documentation for format, value ranges, and business meaning.
 
         ### Result
 
-        On success, `data.dir_id` returns the ID of the created or updated directory.
+        On success, `data.dir_id` carries the ID of the created or edited directory.
       security:
         - bearerAuth: []
       requestBody:
@@ -6322,16 +6533,20 @@ paths:
         - lb_hk_report.report_printing
       x-lbonly: false
       description: |-
-        Delete Bookmark Directory.
+        Delete report bookmark directories.
 
         ### Request parameters
 
-        - Required: `dir_ids` (Dir IDs)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `dir_ids` (list of directory IDs, submitted as a JSON array)
+        - See each field's documentation for format, value ranges, and business meaning.
+
+        ### Business notes
+
+        Deletes the specified report bookmark directories in bulk.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the deletion completes; refer to the `200` response definition for the resulting state and returned data.
       security:
         - bearerAuth: []
       requestBody:
@@ -6417,15 +6632,15 @@ paths:
         - lb_hk_report.report_printing
       x-lbonly: false
       description: |-
-        Get the report bookmark directory list.
+        Returns all report bookmark directories used to organize and group bookmarked reports.
 
         ### Request parameters
 
-        None.
+        - This endpoint takes no required parameters.
 
-        ### Result
+        ### Returns
 
-        On success, `data.list` returns all report bookmark directories. Each item contains the directory ID `dir_id` and directory name `name`.
+        On success, `data.list` contains all report bookmark directories. Each item includes the directory ID `dir_id` and directory name `name`. See the response definition below for field details.
       security:
         - bearerAuth: []
       responses:
@@ -6510,17 +6725,21 @@ paths:
         - lb_hk_report.report_printing
       x-lbonly: false
       description: |-
-        Creates a report export task. View the result under Download Report > Export Log.
+        Creates an asynchronous export task for a given report. The file produced by the task can be viewed and downloaded from the export records.
 
         ### Request parameters
 
-        - Required: `report_id` (Report ID), `file_type` (File Type), `operator` (Operator), `columns` (Export Columns), `porter_params` (Porter Params)
-        - Optional: `paper` (Paper Size)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `report_id` (report ID), `file_type` (export file type), `operator` (operator), `columns` (columns to export), `porter_params` (query condition parameters).
+        - Optional: `paper` (paper size).
+        - See the field descriptions for each parameter's format, allowed values, default behavior, and business meaning.
+
+        ### Business notes
+
+        The exported content is determined jointly by `columns` (the report's currently sorted/displayed columns) and `porter_params` (the report's current query conditions), so the export matches the report data the caller sees. The values allowed for `file_type` may vary by report.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, an export task is created and the file is generated asynchronously. See the `200` response definition for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -6650,15 +6869,16 @@ paths:
         - lb_hk_report.report_printing
       x-lbonly: false
       description: |-
-        Get the report list, grouped by report category.
+        Returns the report list, grouped by report category.
 
         ### Request parameters
 
-        - Optional filter: `category_id` (report category ID; returns all when omitted)
+        - This endpoint takes no required parameters.
+        - Optional: `category_id` (report category ID; omit to query all categories).
 
-        ### Result
+        ### Returns
 
-        On success, `data.list` returns the reports grouped by category. Each entry contains its category information in `category` and the reports under that category in `reports`. `data.update_hint` returns a text hint describing the report data's update status.
+        On success, `data.list` contains the reports grouped by category: each item includes the category info `category` and the array of reports `reports` under it. `data.update_hint` returns the update-notice text for the report data. See the response definition below for field details.
       security:
         - bearerAuth: []
       parameters:
@@ -6761,16 +6981,20 @@ paths:
         - lb_hk_report.report_printing
       x-lbonly: false
       description: |-
-        Sets Report Disabled Columns.
+        Sets the columns that should be hidden (disabled) for a report.
 
         ### Request parameters
 
-        - Required: `report_id` (Report ID), `keys` (Disabled Column Keys)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `report_id` (report ID), `keys` (list of columns to disable).
+        - See the field descriptions for each parameter's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        Each element of `keys` is the field key of a column to hide. This setting controls which columns are omitted when the report is displayed and exported, and it replaces the report's existing disabled-column configuration.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the report's disabled-column configuration is updated. Subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -6862,16 +7086,20 @@ paths:
         - lb_hk_report.ccr_report_factor
       x-lbonly: false
       description: |-
-        Update Report Parameters.
+        Submits and saves a report's parameter settings.
 
         ### Request parameters
 
-        - Required: `data` (Data)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `data` (parameter data).
+        - See the field descriptions for each parameter's format, allowed values, and business meaning.
+
+        ### Business notes
+
+        `data` carries the full set of report parameter settings. Submitting it updates the parameter configuration the report uses when it is generated and queried.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the report parameter settings are saved. Subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:

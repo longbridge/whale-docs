@@ -23,17 +23,24 @@ paths:
         - lb_hk_book.book_detail_update
       x-lbonly: false
       description: |-
-        新建会计分录（也支持按 copy_id 复制预填后新建）。涉及真实会计分录数据变更。
+        新建一条会计分录，记录一笔借贷方科目之间的记账。也支持按 `copy_id` 复制一条已有分录预填后再新建。
 
         ### 请求参数
 
-        - 必填：`bookingTypeId`（记账类型）、`txNo`（交易流水号）、`name`（摘要说明）、`accountAt`（记账日期）、`ledgerDate`（分类账日期）、`objectCode`（币种/结算对象）、`debitFirstSubjectCode`（借方一级科目编码）、`debitSecondSubjectCode`（借方二级科目编码）、`debitSubjectCode`（借方三级科目编码）、`creditFirstSubjectCode`（贷方一级科目编码）、`creditSecondSubjectCode`（贷方二级科目编码）、`creditSubjectCode`（贷方三级科目编码）、`amount`（金额）
-        - 可选：`sourceId`（账务来源）、`aaid`（关联账户ID）、`remark`（备注）、`debitName`（借方科目全称）、`creditName`（贷方科目全称）、`objectType`（对象类型）、`audit_frontend_resource`（审计追溯调用方快照）
-        - 各字段的格式、取值范围、默认行为和业务含义见对应字段说明。
+        - 必填：`bookingTypeId`（记账业务类型）、`txNo`（交易流水号）、`name`（摘要说明）、`accountAt`（记账日期）、`ledgerDate`（分类账日期）、`objectCode`（对象币种）、`debitFirstSubjectCode`、`debitSecondSubjectCode`、`debitSubjectCode`（借方一/二/三级科目编码）、`creditFirstSubjectCode`、`creditSecondSubjectCode`、`creditSubjectCode`（贷方一/二/三级科目编码）、`amount`（金额）
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        借贷双方科目均需逐级选择，二、三级科目依赖上一级联动。`objectCode` 的可用取值随渠道变化，请调用 `GET /v1/datasets/refs/tenant_currencies_by_channel` 获取当前可用值。
+
+        ### 风险提示
+
+        此操作会写入真实会计分录数据，影响账务核算结果。调用前请确认借贷科目、币种和金额无误。
 
         ### 处理结果
 
-        成功时完成所述业务操作，具体返回内容见 `200` 响应定义。
+        成功时创建对应会计分录，具体返回内容见 `200` 响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -60,7 +67,7 @@ paths:
                 sourceId:
                   type: number
                   description: |-
-                    分录数据源，从可选值中选择；取值来自 book_source 动态枚举，非固定
+                    分录数据源，从可选值中选择；候选值随业务变化，非固定；请调用 `GET /v1/datasets/refs/book_source` 获取当前可用取值
 
                     请调用 `GET /v1/datasets/refs/book_source` 获取当前可用的数据字典，并使用返回项的 `key` 作为本字段值。
                   x-value-source:
@@ -68,7 +75,7 @@ paths:
                 bookingTypeId:
                   type: string
                   description: |-
-                    记账业务类型，从可选值中选择（依赖数据源联动）；取值来自 book_business_types_by_source 动态枚举，非固定
+                    记账业务类型，从可选值中选择（依赖数据源联动）；候选值随业务变化，非固定；请调用 `GET /v1/datasets/refs/book_business_types_by_source` 获取当前可用取值
 
                     请调用 `GET /v1/datasets/refs/book_business_types_by_source` 获取当前可用的数据字典，并使用返回项的 `key` 作为本字段值。
                   x-value-source:
@@ -91,7 +98,7 @@ paths:
                 objectCode:
                   type: string
                   description: |-
-                    对象币种，从可选值中选择；取值来自 tenant_currencies_by_channel 动态枚举，非固定
+                    对象币种，从可选值中选择；候选值随业务变化，非固定；请调用 `GET /v1/datasets/refs/tenant_currencies_by_channel` 获取当前可用取值
 
                     请调用 `GET /v1/datasets/refs/tenant_currencies_by_channel` 获取当前可用的数据字典，并使用返回项的 `key` 作为本字段值。
                   x-value-source:
@@ -128,7 +135,23 @@ paths:
                   description: 贷方科目名称，随贷方明细科目自动带出
                 objectType:
                   type: string
-                  description: 用于指定「对象类型」。
+                  description: |-
+                    用于指定「对象类型」。
+                  enum:
+                    - '0'
+                    - '1'
+                    - '2'
+                    - '3'
+                  x-enum-details:
+                    - value: '0'
+                      label: 未知
+                    - value: '1'
+                      label: 现金标的
+                    - value: '2'
+                      label: 股票标的
+                    - value: '3'
+                      label: 基金标的
+                  example: '0'
                 audit_frontend_resource:
                   type: object
                   description: 审计用数据快照（复制场景为原始记录快照，纯新增为空对象），供后端审计对比，非用户填写字段
@@ -215,20 +238,24 @@ paths:
         - lb_hk_book.book_detail_update
       x-lbonly: false
       description: |-
-        删除会计分录。
+        删除一条会计分录。
 
         ### 请求参数
 
-        - 必填：`id`（分录ID）
+        - 必填：`id`（分录 ID）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 业务说明
 
-        涉及真实会计分录数据。
+        按 `id` 定位并删除对应的会计分录记录，涉及真实账务数据。
+
+        ### 风险提示
+
+        此操作会删除真实会计分录数据，删除后不可恢复。调用前请确认目标分录无误。
 
         ### 处理结果
 
-        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+        成功时删除对应会计分录，后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -308,17 +335,24 @@ paths:
         - lb_hk_book.book_detail_update
       x-lbonly: false
       description: |-
-        编辑会计分录（与新建共用同一请求，区别在于额外传入 id）。涉及真实会计分录数据变更。
+        编辑一条已有会计分录。请求结构与新建接口一致，仅额外要求传入 `id` 指定待修改的分录。
 
         ### 请求参数
 
-        - 必填：`id`（会计分录ID）、`bookingTypeId`（记账类型）、`txNo`（交易流水号）、`name`（摘要说明）、`accountAt`（记账日期）、`ledgerDate`（分类账日期）、`objectCode`（币种/结算对象）、`debitFirstSubjectCode`（借方一级科目编码）、`debitSecondSubjectCode`（借方二级科目编码）、`debitSubjectCode`（借方三级科目编码）、`creditFirstSubjectCode`（贷方一级科目编码）、`creditSecondSubjectCode`（贷方二级科目编码）、`creditSubjectCode`（贷方三级科目编码）、`amount`（金额）
-        - 可选：`sourceId`（账务来源）、`aaid`（关联账户ID）、`remark`（备注）、`debitName`（借方科目全称）、`creditName`（贷方科目全称）、`objectType`（对象类型）、`audit_frontend_resource`（审计追溯调用方快照）
-        - 各字段的格式、取值范围、默认行为和业务含义见对应字段说明。
+        - 必填：`id`（会计分录 ID）、`bookingTypeId`（记账业务类型）、`txNo`（交易流水号）、`name`（摘要说明）、`accountAt`（记账日期）、`ledgerDate`（分类账日期）、`objectCode`（对象币种）、`debitFirstSubjectCode`、`debitSecondSubjectCode`、`debitSubjectCode`（借方一/二/三级科目编码）、`creditFirstSubjectCode`、`creditSecondSubjectCode`、`creditSubjectCode`（贷方一/二/三级科目编码）、`amount`（金额）
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        借贷科目逐级联动，末级科目选定后其全称将作为对应的借/贷方科目名称。`objectCode` 的可用取值随渠道变化，请调用 `GET /v1/datasets/refs/tenant_currencies_by_channel` 获取当前可用值。
+
+        ### 风险提示
+
+        此操作会覆盖真实会计分录数据，影响账务核算结果。调用前请确认目标分录及各科目、币种、金额无误。
 
         ### 处理结果
 
-        成功时完成所述业务操作，具体返回内容见 `200` 响应定义。
+        成功时更新对应会计分录，具体返回内容见 `200` 响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -349,7 +383,7 @@ paths:
                 sourceId:
                   type: number
                   description: |-
-                    - 从可选值中选择，取值来自 book_source 动态枚举
+                    - 从可选值中选择，候选值随业务变化；请调用 `GET /v1/datasets/refs/book_source` 获取当前可用取值
                     - 编辑时禁用不可修改
                     - 提交前转为数字
 
@@ -359,7 +393,7 @@ paths:
                 bookingTypeId:
                   type: string
                   description: |-
-                    从可选值中选择，取值来自 book_business_types_by_source 动态枚举（依赖来源字段联动加载）；当来源为 0 时该项隐藏，不传
+                    从可选值中选择，候选值随业务变化（依赖来源字段联动加载）；当来源为 0 时该项隐藏，不传；请调用 `GET /v1/datasets/refs/book_business_types_by_source` 获取当前可用取值
 
                     请调用 `GET /v1/datasets/refs/book_business_types_by_source` 获取当前可用的数据字典，并使用返回项的 `key` 作为本字段值。
                   x-value-source:
@@ -382,7 +416,7 @@ paths:
                 objectCode:
                   type: string
                   description: |-
-                    从可选值中选择，取值来自 tenant_currencies_by_channel 动态枚举
+                    从可选值中选择，候选值随业务变化；请调用 `GET /v1/datasets/refs/tenant_currencies_by_channel` 获取当前可用取值
 
                     请调用 `GET /v1/datasets/refs/tenant_currencies_by_channel` 获取当前可用的数据字典，并使用返回项的 `key` 作为本字段值。
                   x-value-source:
@@ -419,7 +453,23 @@ paths:
                   description: 非请求项，选中贷方末级科目时从选项全称取值并随提交附带
                 objectType:
                   type: string
-                  description: 用于指定「对象类型」。
+                  description: |-
+                    用于指定「对象类型」。
+                  enum:
+                    - '0'
+                    - '1'
+                    - '2'
+                    - '3'
+                  x-enum-details:
+                    - value: '0'
+                      label: 未知
+                    - value: '1'
+                      label: 现金标的
+                    - value: '2'
+                      label: 股票标的
+                    - value: '3'
+                      label: 基金标的
+                  example: '0'
                 audit_frontend_resource:
                   type: object
                   description: 编辑前拉取的原始数据快照，用于后端审计对比，非用户可编辑字段
@@ -507,16 +557,20 @@ paths:
         - accounting.deposit_transit_details
       x-lbonly: false
       description: |-
-        新增会计备注。
+        为某个账务业务对象新增一条会计备注。
 
         ### 请求参数
 
-        - 必填：`ref_id`（关联ID）、`ref_no`（关联单号）、`biz_type`（业务类型）、`remarks`（备注内容）
+        - 必填：`ref_id`（关联业务对象 ID）、`ref_no`（关联单号）、`biz_type`（业务类型）、`remarks`（备注内容）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        备注通过 `ref_id`、`ref_no` 与 `biz_type` 关联到具体业务对象，用于对该记录附加说明。
 
         ### 处理结果
 
-        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+        成功时新增对应会计备注，后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -616,16 +670,16 @@ paths:
         - accounting.deposit_transit_details
       x-lbonly: false
       description: |-
-        删除会计备注。
+        删除一条会计备注。
 
         ### 请求参数
 
-        - 必填：`id`（备注ID）
+        - 必填：`id`（备注 ID）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 处理结果
 
-        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+        成功时删除对应会计备注，后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -710,20 +764,24 @@ paths:
         - accounting.summary_reconciliation_operation
       x-lbonly: false
       description: |-
-        编辑入金在途汇总核对项。
+        编辑一条入金在途汇总核对项，更新其期初金额及各项调整额。
 
         ### 请求参数
 
-        - 必填：`id`（记录ID）、`remark`（备注）、`ref_no`（关联单号）、`begin_amount`（期初金额）、`statement_adjustment`（账单调整额）、`in_transit_adjustment`（在途调整额）、`remarks`（备注内容）
+        - 必填：`id`（记录 ID）、`remark`（备注）、`ref_no`（关联单号）、`begin_amount`（期初金额）、`statement_adjustment`（账单调整额）、`in_transit_adjustment`（在途调整额）、`remarks`（备注内容）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 业务说明
 
-        涉及真实会计核对数据。
+        用于对入金在途的汇总核对结果做人工调整，涉及真实会计核对数据。
+
+        ### 风险提示
+
+        此操作会修改真实会计核对数据，影响入金在途对账结果。调用前请确认目标记录和各金额无误。
 
         ### 处理结果
 
-        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+        成功时更新对应核对项，后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -838,16 +896,20 @@ paths:
         - accounting.ccass_delete
       x-lbonly: false
       description: |-
-        删除一条 CCASS 账单记录；代理商收费 (Broker Fee) 场景共用同一个后端接口。
+        删除一条 CCASS 账单记录。代理商收费 (Broker Fee) 场景复用同一后端接口。
 
         ### 请求参数
 
-        - 必填：`id`（账单ID）
-        - 各字段的格式、取值范围、默认行为和业务含义见对应字段说明。
+        - 必填：`id`（账单 ID）
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 风险提示
+
+        此操作会删除真实账单数据，删除后不可恢复。调用前请确认目标账单无误。
 
         ### 处理结果
 
-        成功时完成所述业务操作，具体返回内容见 `200` 响应定义。
+        成功时删除对应账单，具体返回内容见 `200` 响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -933,16 +995,24 @@ paths:
         - accounting.payment_flow_deletion
       x-lbonly: false
       description: |-
-        渠道汇兑单 (Channel Exchange Order)/交收合约 (Settlement Contract) 场景共用同一接口（分别使用各自 中的独立 deleteDataSource 封装，参数结构一致）。涉及真实会计分录数据源。
+        删除一条会计分录数据源记录。渠道汇兑单 (Channel Exchange Order) 与交收合约 (Settlement Contract) 场景复用同一接口，参数结构一致。
 
         ### 请求参数
 
-        - 必填：`source_id`（数据源类型）、`tx_no`（交易流水号）
-        - 各字段的格式、取值范围、默认行为和业务含义见对应字段说明。
+        - 必填：`source_id`（数据源类型，枚举 `BookkeepingSourceType`）、`tx_no`（交易流水号）
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        按数据源类型与交易流水号定位并删除对应的分录数据源，涉及真实会计分录数据源。
+
+        ### 风险提示
+
+        此操作会删除真实会计分录数据源，删除后不可恢复。调用前请确认数据源类型和流水号无误。
 
         ### 处理结果
 
-        成功时完成所述业务操作，具体返回内容见 `200` 响应定义。
+        成功时删除对应数据源记录，具体返回内容见 `200` 响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -1089,17 +1159,25 @@ paths:
         - book.book_contract_bills_operation
       x-lbonly: false
       description: |-
-        重新触发指定日期范围内的双边支付流水匹配。`scenes` 固定传入 `bookkeeping_bilateral`。
+        重新触发指定日期范围内的双边支付流水匹配。
 
         ### 请求参数
 
-        - 必填：`start_date`（开始日期）、`end_date`（结束日期）、`scenes`（重跑场景）
-        - 可选：`manual`（手动触发标记）、`audit_frontend_resource`（审计日志附加信息）
-        - 各字段的格式、取值范围、默认行为和业务含义见对应字段说明。
+        - 必填：`start_date`（开始日期，格式 `YYYYMMDD`）、`end_date`（结束日期，格式 `YYYYMMDD`）、`scenes`（重跑场景，固定传入 `bookkeeping_bilateral`）
+        - 可选：`manual`（手动触发标记）、`audit_frontend_resource`（审计追溯调用方快照）
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        用于对已有的双边支付流水匹配结果按日期范围重新计算。`scenes` 固定为 `bookkeeping_bilateral`。
+
+        ### 风险提示
+
+        此操作会重新生成对应日期范围的匹配结果，影响账务对账数据。调用前请确认日期范围无误。
 
         ### 处理结果
 
-        成功时完成所述业务操作，具体返回内容见 `200` 响应定义。
+        成功时完成重新匹配触发，具体返回内容见 `200` 响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -1209,16 +1287,20 @@ paths:
         - book.book_ipo_bills_delete
       x-lbonly: false
       description: |-
-        删除新股账单。
+        删除一条新股账单记录。
 
         ### 请求参数
 
-        - 必填：`id`（账单ID）
+        - 必填：`id`（账单 ID）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
+
+        ### 风险提示
+
+        此操作会删除真实账单数据，删除后不可恢复。调用前请确认目标账单无误。
 
         ### 处理结果
 
-        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+        成功时删除对应新股账单，后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -1303,15 +1385,19 @@ paths:
         - accounting.bank_balance_info
       x-lbonly: false
       description: |-
-        该函数不接受任何参数、调用 request 时也不传 data，是纯触发类接口（一键触发银行卡余额实时同步），因此本接口请求体确为空。
+        一键触发银行卡余额的实时同步。这是纯触发类接口，请求体为空。
 
         ### 请求参数
 
-        该接口不接收业务参数。
+        本接口不接收业务参数。
+
+        ### 业务说明
+
+        调用后由后端发起银行卡余额的实时同步，不针对单条记录。
 
         ### 处理结果
 
-        成功时完成所述业务操作，具体返回内容见 `200` 响应定义。
+        成功时完成同步触发，具体返回内容见 `200` 响应定义。
       security:
         - bearerAuth: []
       responses:
@@ -1378,16 +1464,20 @@ paths:
         - lb_hk_book.bank_balance_update
       x-lbonly: false
       description: |-
-        重新核对银行余额。
+        按指定日期重新核对银行余额。
 
         ### 请求参数
 
         - 必填：`runDay`（核对日期）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
+        ### 业务说明
+
+        针对 `runDay` 指定的日期重新执行银行余额核对，涉及真实账务核对数据。
+
         ### 处理结果
 
-        成功时完成上述业务操作；后续状态和返回数据以 `200` 响应定义为准。
+        成功时完成重新核对，后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -1686,11 +1776,21 @@ paths:
         - lb_hk_book.book_detail_query
       x-lbonly: false
       description: |-
-        查询「会计分录 - 合并」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询会计中台的合并会计分录，用于财务人员按账务日期核对已入账的借贷分录及其原始/折算金额。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        - 数据来源于会计中台生成的记账分录，按账务日期倒序返回，同一凭证下的借贷方汇总为整体分录。
+        - 每条记录包含凭证号、会计科目编码与名称、外部科目编码、原币借贷金额与折算币种借贷金额、汇率、币种及制单人等信息。
+        - 常用于账务复核、总账核对与财务出账场景。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -2142,11 +2242,21 @@ paths:
         - lb_hk_book.book_detail_query
       x-lbonly: false
       description: |-
-        查询「会计分录 - 明细」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询会计中台的会计分录明细，用于按借贷方展开查看每一笔分录的科目、金额与来源。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        - 数据来源于会计分录明细及其关联的分录规则，按账务日期倒序返回。
+        - 每条记录包含分录编号、原始凭证号、分录数据源（如现金流水、收费账单、其他账单）、来源（含是否人工修改）、分录摘要、借贷方三级科目编码与名称、经纪人账号、币种、金额、交易日期与备注等。
+        - 常用于逐笔追溯分录的资金来源与科目对应关系，支撑账务核对与差异排查。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -2387,11 +2497,20 @@ paths:
         - accounting.deposit_transit_details
       x-lbonly: false
       description: |-
-        查询「入金在途明细」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询入金在途明细，用于逐笔核对银行入账流水与系统订单的匹配及在途状态。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        - 每条记录对应一笔银行入账流水，包含入金账单编号、金额与余额、公司银行账号与渠道、银行流水号、客户名称、入账日期、币种、匹配状态（未匹配 / 已匹配 / 人工匹配）、是否在途及资金类型等信息。
+        - 常用于对账人员排查未匹配或在途的入金，并支持人工标记是否在途。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -2877,11 +2996,20 @@ paths:
         - lb_hk_book.book_detail_query
       x-lbonly: false
       description: |-
-        查询「入金在途 - 汇总核对」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询入金在途汇总核对，用于按公司银行账号与币种核对每个账务日的在途入金余额与差异。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        - 每条记录按银行账号、币种与账务日期汇总，包含期初/期末金额、入金金额、已到账金额、在途金额、在途差异、在途调整与账单调整、核对结果（一致 / 不一致）及备注等。
+        - 常用于财务对账，识别在途差异并跟进调整，直至核对结果一致。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -3346,11 +3474,20 @@ paths:
         - accounting.ccass_query
       x-lbonly: false
       description: |-
-        查询「CCASS 账单」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询 CCASS 账单，作为会计中台的分录数据源之一，记录香港结算所（CCASS）产生的结算账单。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        - 每条记录包含编号、报告编号（如 `CSESE01`）、业务类型（如未交收头寸应付）、市场、币种、金额、账务日期、账户渠道及备注等。
+        - 常用于核对 CCASS 结算数据并作为生成相关会计分录的依据。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -3824,11 +3961,20 @@ paths:
         - book.book_ifast_statement_query
       x-lbonly: false
       description: |-
-        查询「IFAST 账单」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询 IFAST 账单，作为会计中台的分录数据源之一，记录经 iFAST 清算的账单数据。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        - 每条记录包含编号、表类型、报表名称、业务类型、账务日期、币种、金额及创建/更新时间等。
+        - 常用于核对 iFAST 清算账单并作为生成相关会计分录的依据。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -4274,11 +4420,20 @@ paths:
         - 会计中台
       x-lbonly: false
       description: |-
-        查询「交收合约」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询交收合约账单，作为会计中台的分录数据源之一，记录需入账的成交交收合约。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        - 数据仅包含配置为需记账的业务类型的交收合约，每条记录包含编号、业务类型、数据源账务日期与账务日期、成交合约编号、账户类型、交易方向、币种、金额、渠道及产品类型等。
+        - 常用于核对交易交收数据并作为生成相关会计分录的依据。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -4718,11 +4873,20 @@ paths:
         - book.other_bills_query
       x-lbonly: false
       description: |-
-        查询「代理商收费」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询代理商收费账单，作为会计中台的分录数据源之一，记录托管代理商就成交产生的各类收费。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        - 每条记录包含费用编号、合约号、业务类型（如美股经纪费—股票交易—佣金）、托管方/代理商、对手方标识、市场、交易方向、成交数量与成交金额、费用金额、币种、账务日期与交易日期等。
+        - 常用于核对代理商收费并作为生成相关会计分录的依据。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -5229,11 +5393,23 @@ paths:
         - accounting.member_fee_bills
       x-lbonly: false
       description: |-
-        查询「客户收费账单」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询客户收费账单，属于会计中台的分录数据源，记录向客户实际收取的各类费用，作为生成会计分录的原始凭证。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        - 数据来源于客户收费账单，覆盖佣金、平台费、印花税、暗盘交易等各类收费项目。
+
+        - 每条记录关联费用记录编号、业务流水号、客户编号与证券账户，并标明业务类型、收费项目、交易方向和涉及的股票代码与名称。
+
+        - 记录同时给出金额、币种、`GST` 税率、结算渠道，以及账务日期、扣款日期、交易日期，供财务核对与对账使用。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -5755,11 +5931,23 @@ paths:
         - lb_hk_book.book_exception_query
       x-lbonly: false
       description: |-
-        查询「异常数据源」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询异常数据源，列出未能成功生成会计分录的异常单据，供财务排查与处理。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        - 数据来源于分录生成过程中被判定为异常的单据，记录所属分录数据源、原始凭证号与业务流水号。
+
+        - 每条记录包含标的、业务类型、币种、金额、账务日期，以及未生成分录的原因和处理状态。
+
+        - 常用于定位账务异常、跟进补录或修正，确保分录数据完整。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -6294,11 +6482,23 @@ paths:
         - accounting.bilateral
       x-lbonly: false
       description: |-
-        查询「支付流水」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询支付流水，属于会计中台的分录数据源，记录付款方与收款方之间的双边现金收付明细。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        - 数据来源于双边现金收付记录，每条流水标明付款用户与收款用户及各自的账户类型、业务类型。
+
+        - 记录包含流水号、业务流水号、渠道、金额、币种、汇率、支付完成时间，以及账务日期与交易日期。
+
+        - 还可携带支票号、数量、代码、行权价格、业务期间、业务来源、客户银行名称、收费项目与多语言备注，供资金收付核对使用。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -6862,11 +7062,23 @@ paths:
         - book.book_ipo_bills_query
       x-lbonly: false
       description: |-
-        查询「新股账单」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询新股账单，属于会计中台的分录数据源，记录新股（IPO）认购及相关资金往来的账单。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        - 数据来源于新股账单，每条记录标明业务类型、类型、状态、渠道，以及客户编号与证券账号。
+
+        - 记录包含新股代码、认购股数、认购金额、中签股数，以及金额、币种、账务日期。
+
+        - 用于核对新股认购、中签及退款等资金处理，作为生成会计分录的依据。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -7299,11 +7511,23 @@ paths:
         - book.channel_exchange_order_inquiry
       x-lbonly: false
       description: |-
-        查询「渠道汇兑」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询渠道汇兑单，属于会计中台的分录数据源，记录通过渠道办理的货币汇兑单据。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        - 数据来源于渠道汇兑单，每条记录标明业务类型、汇兑类型、渠道，以及客户汇兑单号与渠道汇兑单号。
+
+        - 记录包含金额、币种、账务日期与交易日期，用于对应渠道侧的兑换处理。
+
+        - 常用于核对货币兑换资金往来，作为生成会计分录的原始凭证。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -7716,11 +7940,23 @@ paths:
         - lb_hk_book.book_daily_query
       x-lbonly: false
       description: |-
-        查询「会计科目日终汇总_现金」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询会计科目日终汇总（现金），按会计科目和账务日期汇总现金类科目的日终余额与发生额。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        - 数据按币种、科目名称与账务日期归集现金类会计科目的日终汇总结果。
+
+        - 每条记录反映某一科目在某账务日期的汇总口径数据，可用于按日核对科目余额与资金变动。
+
+        - 与科目明细账配合使用：汇总用于总量核对，明细账用于逐笔追溯。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -8157,11 +8393,23 @@ paths:
         - lb_hk_book.book_balance_query
       x-lbonly: false
       description: |-
-        查询「科目明细账」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询科目明细账（现金），按会计科目逐笔列示资金变动，含借贷发生额与期初期末余额。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        - 数据来源于科目余额变动记录，并关联科目信息，给出三级科目编码/名称与外部科目编码、柜台、分录数据源。
+
+        - 每条记录包含原始凭证号、会计分录编号、分录摘要、交易日期与账务日期，以及币种和余额方向。
+
+        - 记录逐笔列出期初余额、借方发生额、贷方发生额与期末余额，用于科目对账与资金变动追溯。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -8400,13 +8648,17 @@ paths:
         - lb_hk_book.book_bank_balance_query
       x-lbonly: false
       description: |-
-        将「历史余额」数据导出为文件。`filters` 决定导出范围，`down_fields` 可限制导出字段。
+        将「历史余额」数据导出为文件，用于对账或存档。`filters` 决定导出范围，`down_fields` 可限制导出字段。
 
         ### 导出模式
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
         - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
+
+        ### 处理结果
+
+        成功时生成清算银行历史余额的导出文件，下载地址或 `file_download_id` 以响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -8602,11 +8854,23 @@ paths:
         - lb_hk_book.book_bank_balance_query
       x-lbonly: false
       description: |-
-        查询「历史余额」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询银行历史余额，列出各公司银行账户按日归档的余额记录。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        - 数据来源于生效状态的银行余额归档，每条记录关联公司银行账户编号、银行账号与银行简称。
+
+        - 记录包含账务日期、币种、余额与来源，反映该银行账户在某一账务日期的余额。
+
+        - 用于逐日核对公司银行账户资金，以及与账务数据的对账。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -8780,13 +9044,17 @@ paths:
         - accounting.bank_balance_info
       x-lbonly: false
       description: |-
-        将「实时余额」数据导出为文件。`filters` 决定导出范围，`down_fields` 可限制导出字段。
+        将「实时余额」数据导出为文件，用于对账或存档。`filters` 决定导出范围，`down_fields` 可限制导出字段。
 
         ### 导出模式
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
         - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
+
+        ### 处理结果
+
+        成功时生成银行实时余额的导出文件，下载地址或 `file_download_id` 以响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -8982,11 +9250,23 @@ paths:
         - accounting.bank_balance_info
       x-lbonly: false
       description: |-
-        查询「实时余额」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询各公司银行账户的实时余额，用于资金运营与账户资金监控。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        数据来源为各银行账户的实时余额快照，按银行账户逐条记录。
+
+        每条记录包含银行账号、银行名称、币种，以及昨日余额、当前余额、可用余额、冻结额度合计等资金字段，并给出最后交易日、最后计息日和余额更新时间。
+
+        资金运营人员据此监控各账户的可用资金与冻结情况；余额可按需触发实时刷新以获取最新快照。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:
@@ -9169,13 +9449,17 @@ paths:
         - lb_hk_book.book_balance_check_export
       x-lbonly: false
       description: |-
-        将「账单核对」数据导出为文件。`filters` 决定导出范围，`down_fields` 可限制导出字段。
+        将「账单核对」数据导出为文件，用于对账或存档。`filters` 决定导出范围，`down_fields` 可限制导出字段。
 
         ### 导出模式
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
         - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
+
+        ### 处理结果
+
+        成功时生成账单核对结果的导出文件，下载地址或 `file_download_id` 以响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -9370,11 +9654,23 @@ paths:
         - lb_hk_book.book_balance_check_query
       x-lbonly: false
       description: |-
-        查询「账单核对」数据，可通过 `filters` 组合业务筛选条件，并使用 `page`、`page_size` 控制分页。
+        查询系统账务余额与清算银行余额的逐日对账结果，用于财务核对银行账户余额是否一致。
+
+        ### 请求参数
+
+        - 通过 `filters` 组合业务筛选条件（可选字段见下方 filters 字段说明），并使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        数据来源为按对账日期、银行账户逐笔生成的余额核对结果。
+
+        每条记录包含对账日期、银行财务日期、银行账号、银行名称、币种，以及上一日银行余额、整合账单发生额、账务系统余额、银行余额等金额字段，并以状态标记该账户当日两侧余额是否一致。
+
+        财务人员据此排查账务系统与银行之间的余额差异；可按指定日期重新发起核对。
 
         ### 返回结果
 
-        成功时返回匹配的记录列表及分页信息。各过滤字段的用途、可选值和动态数据来源见对应字段说明。
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
       security:
         - bearerAuth: []
       requestBody:

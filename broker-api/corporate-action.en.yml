@@ -23,11 +23,23 @@ paths:
         - corporate.after_event_adjustment_query
       x-lbonly: false
       description: |-
-        Queries Post Adjust Announcement List data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the list of corporate-action announcements that have post-execution adjustments, used to correct payout discrepancies after a corporate action has been executed.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filter conditions through `filters` (see the filters field descriptions below for the available fields), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        The data comes from corporate-action announcements and only includes announcements that already have post-execution adjustments.
+
+        Each record carries the announcement number, announcement type, underlying security, record date, payable date, remark, and the number of adjustments already made against the announcement.
+
+        Operators use it to locate announcements that need post-execution adjustments reviewed or added.
+
+        ### Returns
+
+        On success, returns the list of matching records with pagination. See the response schema for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -172,13 +184,13 @@ paths:
         - corporate.after_event_adjustment_query
       x-lbonly: false
       description: |-
-        Exports Post Adjust Announcement List data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export «Post-execution adjustment – announcement preview list» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -357,11 +369,23 @@ paths:
         - corporate.after_event_adjustment_query
       x-lbonly: false
       description: |-
-        Queries Post Adjust Record List data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the list of post-execution adjustment records under a single corporate-action announcement, used to track the progress of payout corrections.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filter conditions through `filters` (see the filters field descriptions below for the available fields), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        Records are grouped by announcement `ann_id` and cover every post-execution adjustment made against that announcement.
+
+        Each record carries the adjustment state (pending, success, reverted, revert-confirmed, and so on), currency, expected adjustment amount, expected fee, expected quantity, along with the proposer, the confirmer, and the last update time.
+
+        Use it to review and track the outcome of each adjustment.
+
+        ### Returns
+
+        On success, returns the list of matching records with pagination. See the response schema for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -513,13 +537,13 @@ paths:
         - corporate.after_event_adjustment_query
       x-lbonly: false
       description: |-
-        Exports Post Adjust Record List data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export «Post-execution adjustment – adjustment records» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -700,17 +724,25 @@ paths:
         - corporate.after_event_adjustment_update
       x-lbonly: false
       description: |-
-        Create Post Adjust.
+        Create a post-execution adjustment for a specific corporate action announcement, correcting quantity, amount, or fee discrepancies in that announcement's already-executed result according to the submitted line items.
 
         ### Request parameters
 
-        - Required: `ann_id` (Announcement ID), `items` (Adjust Items)
-        - Optional: `remark` (Remark)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_id` (the associated announcement ID), `items` (adjustment line items, submitted as a JSON array)
+        - Optional: `remark`
+        - See each field's description for format, value range, and business meaning.
+
+        ### Business notes
+
+        The adjustment applies only to the announcement referenced by `ann_id`. Each entry in `items` describes one detail to be corrected.
+
+        ### Risk warning
+
+        This operation modifies the result of an already-executed corporate action and may cause real changes to funds, positions, or fees. Verify the announcement and adjustment details before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the post-execution adjustment is applied. Subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -799,18 +831,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Submits a corporate-action rounding-difference adjustment (V2). A single request may include both
-        tax-and-fee adjustments (`tax_fee_items`) and difference adjustments (`diff_items`), with `group_id`
-        identifying the group this adjustment belongs to.
+        Submit a corporate-action rounding-difference adjustment (V2). A single request may contain both tax/fee adjustments (`tax_fee_items`) and difference adjustments (`diff_items`), grouped by `group_id`.
 
         ### Request parameters
 
-        - Required: `tax_fee_items` (tax-and-fee adjustment list), `diff_items` (difference adjustment list), `group_id` (group ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `tax_fee_items` (tax/fee adjustment list), `diff_items` (difference adjustment list), `group_id` (group ID)
+        - See each field's description for format, value range, and business meaning.
+
+        ### Business notes
+
+        Each entry in `tax_fee_items` describes a tax/fee to adjust for one account, and each entry in `diff_items` describes an amount and quantity to adjust for one event. Both adjustment types are submitted as a single rounding-difference operation under the same `group_id`.
+
+        ### Risk warning
+
+        This operation adjusts taxes, fees, and differences in corporate-action settlement and may cause real changes to funds or positions. Verify the group and every adjustment detail before calling.
 
         ### Result
 
-        On success, the rounding-difference adjustment is completed. See the `200` response schema for returned data.
+        On success, the rounding-difference adjustment is applied. See the `200` response definition for returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -950,18 +988,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Applies a single payable date to a batch of corporate-action announcements. Provide the list of
-        announcement IDs to update and the target payable date; the server applies the same payable date to
-        every announcement in the list.
+        Update the payable date for a batch of corporate-action announcements. Provide the announcement IDs to update and the target payable date; the server applies the same payable date to every announcement in the list.
 
         ### Request parameters
 
-        - Required: `ann_ids` (announcement ID list), `payable_date` (payable date as a `YYYYMMDD` integer, for example `20260710`)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_ids` (announcement ID list), `payable_date` (payable date as a `YYYYMMDD` integer, e.g. `20260710`)
+        - See each field's description for format, value range, and business meaning.
+
+        ### Business notes
+
+        `payable_date` is applied to every announcement in `ann_ids`, uniformly changing their payable date in one batch.
+
+        ### Risk warning
+
+        This operation changes the payable date of multiple announcements and may affect subsequent settlement and distribution timing. Verify the announcement scope and target date before calling.
 
         ### Result
 
-        On success, the batch update is completed. See the `200` response schema for returned data.
+        On success, the batch update is applied. See the `200` response definition for returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -1147,16 +1191,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Cancels a client's previously submitted voting instruction under a shareholders' meeting (Voting) corporate action.
+        Void the voting instruction a specific customer has submitted under a shareholder-meeting (Voting) corporate action.
 
         ### Request parameters
 
-        - Required: `ann_id` (announcement ID) and `aaid` (account ID).
-        - The two parameters together identify the target client and shareholders' meeting whose instruction is cancelled.
+        - Required: `ann_id` (corporate-action ID identifying the target shareholder meeting), `aaid` (account ID identifying the target customer account)
+        - The two parameters together locate the customer and shareholder meeting whose instruction is to be voided.
+
+        ### Business notes
+
+        Once voided, the customer's previously submitted voting instruction for this meeting no longer takes effect.
+
+        ### Risk warning
+
+        This operation voids a customer's submitted voting instruction and may affect that customer's voting outcome. Verify the target customer and shareholder meeting before calling.
 
         ### Result
 
-        On success, the voting instruction is cancelled and the result is returned in `data`. Interpret the outcome together with the business `code`.
+        On success, the voting instruction is voided; the business result is in `data`. Interpret it together with the business `code`.
       security:
         - bearerAuth: []
       requestBody:
@@ -1247,16 +1299,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Submits the CCASS feedback quantity.
+        Fill back the actual CCASS quantity for a specific corporate-action announcement, recording the quantity reported by the clearing house against that announcement.
 
         ### Request parameters
 
-        - Required: `ann_id` (Announcement ID), `feedback_quantity` (Feedback Quantity), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_id` (announcement ID), `feedback_quantity` (fed-back quantity), `audit_frontend_resource` (caller-provided audit context)
+        - See each field's description for format, value range, and business meaning.
+
+        ### Business notes
+
+        `feedback_quantity` is recorded as the announcement's CCASS fed-back quantity and used for subsequent reconciliation and execution.
+
+        ### Risk warning
+
+        This operation updates the announcement's CCASS fed-back quantity and may affect subsequent settlement and execution. Verify the announcement and quantity before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the fed-back quantity is recorded. Subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -1345,16 +1405,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Reports CCASS.
+        Report a specific corporate-action announcement to CCASS, submitting the announcement's information to CCASS and optionally notifying customers at the same time.
 
         ### Request parameters
 
-        - Required: `ann_id` (Announcement ID), `send_msg` (Send Message), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_id` (announcement ID), `send_msg` (whether to send a customer message), `audit_frontend_resource` (caller-provided audit context)
+        - See each field's description for format, value range, and business meaning.
+
+        ### Business notes
+
+        After reporting, whether a notification is sent to the relevant customers depends on `send_msg`.
+
+        ### Risk warning
+
+        This operation reports to CCASS and may trigger outbound customer messages. Verify the announcement and the send option before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the report is submitted. Subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -1448,16 +1516,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Submits CCASS sub-position feedback.
+        Fill back CCASS quantities per sub-position for a specific corporate-action announcement; one request can submit fed-back details for multiple sub-positions.
 
         ### Request parameters
 
-        - Required: `ann_id` (Announcement ID), `sub_positions` (Sub Positions)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_id` (announcement ID), `sub_positions` (per-sub-position fed-back details, each containing `sub_position` and `quantity`)
+        - See each field's description for format, value range, and business meaning.
+
+        ### Business notes
+
+        Each entry in `sub_positions` is the fed-back quantity for one sub-position; the server records each sub-position separately.
+
+        ### Risk warning
+
+        This operation updates the CCASS fed-back quantity of each sub-position and may affect subsequent settlement and execution. Verify the announcement and every sub-position detail before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, the fed-back quantities are recorded. Subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -1543,19 +1619,20 @@ paths:
         - 公司行动 (Corporate Action)
       x-lbonly: false
       description: |-
-        Checks whether there are in-progress transfer records under the specified announcement. Call this
-        endpoint before executing a corporate action; if in-progress transfer records exist, the caller can
-        warn the operator or block the subsequent execution.
+        Check whether the specified announcement has any in-progress position-transfer records. Call this before executing a corporate action; if in-progress transfers exist, the caller can warn or block downstream execution accordingly.
 
         ### Request parameters
 
-        - Required: `ann_id` (announcement ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_id` (unique identifier of the announcement to check)
+        - See each field's description for format, value range, and business meaning.
 
-        ### Response
+        ### Business notes
 
-        On success, returns the list of in-progress transfer conflict records under the announcement in
-        `data.items`. An empty list means there are no in-progress transfer records.
+        This endpoint only performs a check and does not change any transfer or announcement state.
+
+        ### Returns
+
+        On success, returns the list of in-progress transfer conflict records for the announcement in `data.items`. An empty list means there are no in-progress transfers.
       security:
         - bearerAuth: []
       requestBody:
@@ -1658,18 +1735,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Approves or rejects the operation. With `active = 1`, a successful transfer, instruction
-        collection, and registration move the record to pending execution review. With `active = 2`,
-        pending execution review returns to registered.
+        Generic corporate-action review (V2): approve or reject a batch of announcements. Each entry specifies the announcement via `id` and the target state to advance to via `active`: `active=1` advances to "pending execution review" after transfer, instruction collection, and registration have all succeeded; `active=2` advances from "pending execution review" to "registration succeeded".
 
         ### Request parameters
 
-        - Required: `announcements` (Announcements), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `announcements` (review list, each entry containing `id` and `active`), `audit_frontend_resource` (caller-provided audit context)
+        - See each field's description for format, value range, default behavior, and business meaning.
+
+        ### Business notes
+
+        Each entry in `announcements` advances the state of one announcement; `audit_frontend_resource` records the audit context of this review.
+
+        ### Risk warning
+
+        This operation advances the corporate action's execution-review state and may trigger downstream registration and execution. Verify the announcements and target states before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success, the review is applied. See the `200` response definition for returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -1757,16 +1840,20 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Copy Announcement.
+        Create a new corporate-action announcement by copying an existing one, making it easy to build a new announcement from a similar template.
 
         ### Request parameters
 
-        - Required: `ann_id` (Announcement ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_id` (the source announcement ID to copy from)
+        - See each field's description for format, value range, and business meaning.
+
+        ### Business notes
+
+        The server generates the new announcement using the announcement referenced by `ann_id` as a template; the source announcement is unaffected.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success, a new announcement is created. Its identifier and content follow the `200` response definition.
       security:
         - bearerAuth: []
       requestBody:
@@ -1844,7 +1931,24 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate ann timeline list.
+      description: |-
+        Queries the stage-progress timeline of a single corporate-action announcement, showing how far it has advanced through each processing stage.
+
+        ### Request parameters
+
+        - Combine business filter conditions through `filters` (see the filters field descriptions below for the available fields), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        Records are returned by announcement `ann_id` and cover the progress nodes across the registration, mandate-collection, execution, and completion stages.
+
+        Each record carries the stage identifier, whether it is the current active stage, the operation time of that stage, and the execution details.
+
+        Use it to see at a glance how a corporate action is progressing.
+
+        ### Returns
+
+        On success, returns the list of matching records with pagination. See the response schema for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -1975,7 +2079,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate ann timeline list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Corporate action – announcement recommended-status timeline» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -2140,7 +2251,24 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate announcement detail list.
+      description: |-
+        Queries the full detail of a single corporate-action announcement, used to review every element of one corporate action.
+
+        ### Request parameters
+
+        - Combine business filter conditions through `filters` (see the filters field descriptions below for the available fields), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        Returns the detail of one announcement by its `id`.
+
+        It includes the announcement number, announcement type, market, underlying security and security type, execution status, transfer status, mandate-collection status, record date, ex date, election start and end times, payable date (including the CCASS payable date), last trading date, terms, holding position, execution type, and master/copied relationship.
+
+        Use it to verify the key dates and business parameters of a corporate action.
+
+        ### Returns
+
+        On success, returns the list of matching records with pagination. See the response schema for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -2399,7 +2527,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate announcement detail list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Corporate action – announcement preview details» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -2596,7 +2731,24 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate announcement fee events.
+      description: |-
+        Queries the list of fee rules that apply to a single corporate-action announcement, used to verify its fee scheme.
+
+        ### Request parameters
+
+        - Combine business filter conditions through `filters` (see the filters field descriptions below for the available fields), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        Returns the applicable fee schemes by announcement `id`.
+
+        Each record carries the scheme number and type, fee type, applicable sub-account, metric type, calculation formula, fee rate, maximum and minimum fee, currency, priority, rounding method, and special fee rule, and it distinguishes standard fee rules from announcement-level customised fee rules.
+
+        Use it to confirm how fees are calculated when the corporate action is executed.
+
+        ### Returns
+
+        On success, returns the list of matching records with pagination. See the response schema for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -2795,7 +2947,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate announcement fee events list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Corporate action – announcement fee rules» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -2978,11 +3137,23 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Queries corporate announcements data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Queries the corporate-action announcement management list, the primary list for managing the full corporate-action workflow.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filter conditions through `filters` (see the filters field descriptions below for the available fields), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        Aggregates corporate-action announcements across markets.
+
+        Each record carries the announcement type, announcement number, underlying security, market, execution status, mandate-collection status, whether any client holds a position, record date, payable date, election start and end times, CCASS status and file date, last trading date, creation method, and the operator who last updated it.
+
+        It supports multi-dimensional filtering by underlying security, announcement number, announcement type, market, status, and dates, and is used by operators to manage and follow up on corporate actions.
+
+        ### Returns
+
+        On success, returns the list of matching records with pagination. See the response schema for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -3545,13 +3716,13 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Exports corporate announcements data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export «Corporate action – announcement management list» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -4082,7 +4253,24 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate fee details v2 list.
+      description: |-
+        Queries the fee detail records of a corporate action, used to verify how an individual charge is composed.
+
+        ### Request parameters
+
+        - Combine business filter conditions through `filters` (see the filters field descriptions below for the available fields), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        Returns the related fee details by announcement `ann_id` and allocation `aaid`.
+
+        Each record carries the fee ID, currency, charged amount, fee item, and remark.
+
+        Use it to verify the individual fees incurred during a corporate-action payout.
+
+        ### Returns
+
+        On success, returns the list of matching records with pagination. See the response schema for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -4220,7 +4408,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate fee details v2 list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Fee details» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -4389,7 +4584,24 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the notification list report.
+      description: |-
+        Queries the summary of corporate-action mandate collection, aggregating clients' exercise and payout results by custodian and sub-account.
+
+        ### Request parameters
+
+        - Combine business filter conditions through `filters` (see the filters field descriptions below for the available fields), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        Aggregates the mandate-collection results by announcement `ann_id`.
+
+        Each record is grouped by custodian, sub-account, and long/short position, and carries the actual exercised quantity, the odd-lot-adjusted stock-option quantity, currency, credit amount, credit quantity, tax fee, ADR fee, and the scheme type and number.
+
+        Use it to verify the shares and cash receivable for each custodian account when a corporate action is executed.
+
+        ### Returns
+
+        On success, returns the list of matching records with pagination. See the response schema for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -4560,7 +4772,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the notification list report list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Instruction collection summary – list» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -4735,7 +4954,25 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the notification report list.
+      description: |-
+        Returns the header summary of instruction collection for a single corporate-action announcement, giving an overview of the eligible exercise scale and the progress of exercise instructions for that announcement.
+
+        ### Request parameters
+
+        - Combine business filters through `filters` (see the filters field reference below), and use `page`, `page_size`, and `orderBy` for pagination and sorting.
+        - Provide `ann_id` to target one announcement; the endpoint returns a single aggregated summary at the announcement level.
+
+        ### Business notes
+
+        - Data is aggregated per corporate-action announcement and covers the announcement code, the underlying security, and election cut-off dates (including the CCASS basis).
+
+        - Statistics include the exercisable share quantity, the number of eligible users, and the number of users that have completed an exercise operation, split between customer self-service on the App and back-office operations on the customer's behalf.
+
+        - Typically used during the instruction-collection window to reconcile customer participation and outstanding gaps, and to decide whether follow-up reminders or back-office operations are needed.
+
+        ### Returns
+
+        On success, returns the matching record list and pagination info. See the response definition for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -4878,7 +5115,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the notification report list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Instruction collection summary – header» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -5046,7 +5290,25 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the Corporate refund announcement counterpart list list.
+      description: |-
+        Returns tax-refundable details aggregated by sub-account (counterpart) for a corporate-action announcement, used to reconcile collected versus refunded withholding tax and to support refund execution.
+
+        ### Request parameters
+
+        - Combine business filters through `filters` (see the filters field reference below), and use `page`, `page_size`, and `orderBy` for pagination and sorting.
+        - `ann_id` is a required business-context parameter that targets the announcement; it is not shown in the filter panel and its value comes from the selected announcement.
+
+        ### Business notes
+
+        - Only successfully executed tax (`TAX_FEE`) charge details are counted, grouped by the counterpart account (sub-account) under the announcement.
+
+        - Each record reports the announcement code, execution currency, charge item, amount actually collected, and cumulative amount already refunded for that sub-account, from which the current remaining refundable amount can be derived.
+
+        - Typically used before initiating a refund to verify refundable tax per sub-account and to avoid over- or duplicate refunds.
+
+        ### Returns
+
+        On success, returns the matching record list and pagination info. See the response definition for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -5179,7 +5441,25 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate refund announcement details list.
+      description: |-
+        Returns the tax-refund execution details under a corporate-action announcement, used to trace the amount, state, and revocation status of every individual refund.
+
+        ### Request parameters
+
+        - Combine business filters through `filters` (see the filters field reference below), and use `page`, `page_size`, and `orderBy` for pagination and sorting.
+        - Provide `ann_id` to target the announcement; results are returned in descending order of creation time.
+
+        ### Business notes
+
+        - Data comes from tax-refund execution detail records, with one record per refund action.
+
+        - Each record includes the owning announcement, customer (`aaid`), securities account, refund charge item, refund and adjustment amounts, execution currency, execution state, the original charged amount, remarks, and whether it is revoked along with the reference to the revoked original detail.
+
+        - Typically used for auditing and reconciling refund records, or to verify individual refund execution results during customer enquiries or exception investigation.
+
+        ### Returns
+
+        On success, returns the matching record list and pagination info. See the response definition for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -5360,7 +5640,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate refund announcement details list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Corporate action refund details» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -5539,7 +5826,25 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the Corporate refund announcement list.
+      description: |-
+        Returns a summary list of withholding-tax refunds for US corporate actions, used to centrally manage the collected tax, refund progress, and status of each announcement.
+
+        ### Request parameters
+
+        - Combine business filters through `filters` (see the filters field reference below), and use `page`, `page_size`, and `orderBy` for pagination and sorting.
+        - Supports filtering by announcement code, payable-date range, underlying security, remark, and state; either end of the range may be omitted (an omitted side is unbounded), and omitting a filter matches all.
+
+        ### Business notes
+
+        - Data covers US corporate-action announcements that have reached the relevant stage and carry withholding tax (`TAX_FEE`), sorted by payable date in descending order.
+
+        - Each record summarizes the announcement code, underlying security, payable date, tax actually collected, final charge and refunded amount, execution currency, operator, and last-updated time, together with the refund state (such as not refunded, refunding, refunded, execution failed, revoked, or under approval).
+
+        - Typically serves as the entry list for the refund workflow, used to track the refund progress of each withholding-tax charge and to initiate subsequent refund actions.
+
+        ### Returns
+
+        On success, returns the matching record list and pagination info. See the response definition for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -5592,6 +5897,8 @@ paths:
                         - '3'
                         - '5'
                         - '6'
+                      description: |-
+                        Filters results by Status. Values come from a backend data dictionary.
                   description: Filters
                 page:
                   type: integer
@@ -5739,7 +6046,25 @@ paths:
       x-permission-key:
         - corporate.email_notify
       x-lbonly: false
-      description: Query the corporate register aaids.
+      description: |-
+        Returns the list of registered eligible customer accounts under a corporate-action announcement, used to scope the target customers for notifications and instruction collection.
+
+        ### Request parameters
+
+        - Combine business filters through `filters` (see the filters field reference below), and use `page`, `page_size`, and `orderBy` for pagination and sorting.
+        - Provide the announcement code `ca_code` to target an announcement, and `aaid` to further narrow to a specific customer; only registration records of announcements in a valid stage are matched.
+
+        ### Business notes
+
+        - Data comes from customer registration details under the announcement, with one record per registered eligible customer.
+
+        - Each record returns the customer account (`aaid`), the owning announcement, the customer name, and the securities account (A/C No.), forming the roster of rights holders for that announcement.
+
+        - Typically used as the base recipient and operation roster when sending corporate-action notifications in bulk to registered customers or collecting their exercise instructions.
+
+        ### Returns
+
+        On success, returns the matching record list and pagination info. See the response definition for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -5871,7 +6196,25 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate stock events v2.
+      description: |-
+        Returns the scheme list of a corporate action by announcement ID, used to view the distribution schemes available for customer election or system execution under that announcement.
+
+        ### Request parameters
+
+        - Combine business filters through `filters` (see the filters field reference below), and use `page`, `page_size`, and `orderBy` for pagination and sorting.
+        - Provide `ann_id` to target the announcement; results are returned in descending order of scheme number.
+
+        ### Business notes
+
+        - Data represents the exercise/distribution schemes configured under a corporate-action announcement, with one record per scheme.
+
+        - Each record includes the scheme number, scheme type, whether it is the default scheme, currency and exchange rate, execution price, minimum share lot, the old and new distribution ratios, dividend rate, whether fractional shares convert to cash dividend, the distribution security (new security), the scheme execution date (CCASS), and visible remarks.
+
+        - Typically used to verify the corporate action's scheme configuration, serving as the basis for customers to elect an exercise method or for the system to execute the distribution.
+
+        ### Returns
+
+        On success, returns the matching record list and pagination info. See the response definition for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -6050,7 +6393,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate stock events v2 list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Corporate action – event plans by announcement ID» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -6227,7 +6577,25 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate stock register detail events.
+      description: |-
+        Returns the execution schemes tied to a customer registration detail by its ID, used to view a single customer's actual share transfer-in/transfer-out results in a corporate action.
+
+        ### Request parameters
+
+        - Combine business filters through `filters` (see the filters field reference below), and use `page`, `page_size`, and `orderBy` for pagination and sorting.
+        - Provide the registration-detail ID `register_id` to target the detail; results are returned in descending order of scheme number.
+
+        ### Business notes
+
+        - Data represents the executed schemes under one customer registration detail, one record per executed scheme.
+
+        - Each record includes the scheme number, execution currency, the transfer-out security and quantity, the transfer-in security and quantity, the transfer-in amount, and remarks.
+
+        - Typically used to verify a single customer's actual distribution or share-conversion execution result in a corporate action, or for customer enquiries and error investigation.
+
+        ### Returns
+
+        On success, returns the matching record list and pagination info. See the response definition for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -6370,7 +6738,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate stock register detail events list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Corporate action – execution plans by detail ID» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -6538,7 +6913,25 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate stock register details v2.
+      description: |-
+        Returns the customer detail management list of a corporate action, used to track instruction collection and execution status per customer; this is the core data for customer detail management.
+
+        ### Request parameters
+
+        - Combine business filters through `filters` (see the filters field reference below), and use `page`, `page_size`, and `orderBy` for pagination and sorting.
+        - Provide the customer account `aaid` to target a specific customer; results surface abnormal customers and OB-type accounts first.
+
+        ### Business notes
+
+        - Data is aggregated per customer registration record and covers the announcement code, announcement type, market, underlying security, custodian, sub-account, customer account, and securities account.
+
+        - Each record also carries the customer status and account sub-type, customer name, record date, election start/end times (CCASS), payable date, exercisable and actually exercised share quantities, the customer's instruction-collection state, execution state, exercise source, operation time, and email-sent time.
+
+        - Typically used during the instruction-collection and execution phases to reconcile each customer's exercise election and progress and to identify pending or abnormal customers.
+
+        ### Returns
+
+        On success, returns the matching record list and pagination info. See the response definition for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -6717,7 +7110,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate stock register details v2 list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Export «Corporate action – customer detail management list» records to a file. `filters` determines the export scope and `down_fields` can restrict the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; the download URL is returned directly on success.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -6894,7 +7294,24 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate stock register details drawer.
+      description: |-
+        Query the client roster under a corporate-action registration record, used to drill into corporate-action client details by client.
+
+        ### Request parameters
+
+        - Combine business filters through `filters` (available fields are listed under the filters field docs), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        Data comes from corporate-action client registration records and can be filtered by client via `aaid`.
+
+        Each record is one client's registration entry, carrying the registration record ID, securities account (`origin_id`), and client name (`real_name`).
+
+        Typically used to locate a client's registration from the corporate-action client list before drilling into their chosen options or entitlement details.
+
+        ### Returns
+
+        On success, returns the matched record list with pagination info. See the response definitions for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -7013,7 +7430,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate stock register details drawer list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Exports the corporate-action client-detail management list as a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove the export record when it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -7175,7 +7599,24 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate stock register events.
+      description: |-
+        Query the options a client can choose under a corporate action and the resulting exercise, typically drilled in by `register_id`.
+
+        ### Request parameters
+
+        - Combine business filters through `filters` (available fields are listed under the filters field docs), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        Data links corporate-action options (events) with a client's registration detail, filterable by `ann_id` (announcement ID) and `register_id`.
+
+        Each record is one option, carrying the event ID (`event_id`), event type (`event_type`), option remark (`remark`), and the client's actual exercise quantity (`choices_quantity`).
+
+        Typically used to review the options a client faced in a corporate action and the quantity they ultimately elected or exercised.
+
+        ### Returns
+
+        On success, returns the matched record list with pagination info. See the response definitions for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -7309,7 +7750,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate stock register events list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Exports the list of client-selected corporate-action options as a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove the export record when it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -7477,7 +7925,24 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the Corporate stock voting details attending in person list.
+      description: |-
+        Query clients who participate in a shareholders' meeting corporate action by attending in person, used for meeting voting registration management.
+
+        ### Request parameters
+
+        - This dataset exposes no business filter fields; pass an empty object for `filters`. You can still use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        Data comes from shareholders'-meeting voting registrations and includes only clients whose participation method is attending in person and who have submitted their vote.
+
+        Each record carries the client account and state, attendee name (`attendee_name`), gender, ID number and address, plus the poll count (`polling_number`), fee currency and amount, operation time, and notification-email send time.
+
+        Typically used to tally and reconcile the roster, votes, and fees of clients attending the meeting in person.
+
+        ### Returns
+
+        On success, returns the matched record list with pagination info. See the response definitions for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -7489,7 +7954,7 @@ paths:
               properties:
                 filters:
                   type: object
-                  properties: null
+                  properties:
                   description: Filters
                 page:
                   type: integer
@@ -7637,7 +8102,24 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the Corporate stock voting details proxy attendance list.
+      description: |-
+        Query clients who participate in a shareholders' meeting corporate action by proxy attendance, used for meeting voting registration management.
+
+        ### Request parameters
+
+        - This dataset exposes no business filter fields; pass an empty object for `filters`. You can still use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        Data comes from shareholders'-meeting voting registrations and includes only clients whose participation method is proxy attendance and who have submitted their vote.
+
+        Each record carries the client account and state, the appointed attendee's name (`attendee_name`), gender, ID number and address, plus the poll count (`polling_number`), fee currency and amount, operation time, and notification-email send time.
+
+        Typically used to tally and reconcile clients who appointed a proxy to attend the meeting, along with their votes and fees.
+
+        ### Returns
+
+        On success, returns the matched record list with pagination info. See the response definitions for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -7649,7 +8131,7 @@ paths:
               properties:
                 filters:
                   type: object
-                  properties: null
+                  properties:
                   description: Filters
                 page:
                   type: integer
@@ -7797,7 +8279,24 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the Corporate stock voting details proxy voting list.
+      description: |-
+        Query clients who participate in a shareholders' meeting corporate action by proxy voting, used for meeting voting registration management.
+
+        ### Request parameters
+
+        - This dataset exposes no business filter fields; pass an empty object for `filters`. You can still use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        Data comes from shareholders'-meeting voting registrations and includes only clients whose participation method is proxy voting and who have submitted their vote.
+
+        Unlike the attendance datasets, this method does not collect attendee personal details; each record carries the client account and state, poll count (`polling_number`), fee currency and amount, operation time, and notification-email send time.
+
+        Typically used to tally and reconcile clients who cast their vote by proxy, along with their votes and fees.
+
+        ### Returns
+
+        On success, returns the matched record list with pagination info. See the response definitions for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -7809,7 +8308,7 @@ paths:
               properties:
                 filters:
                   type: object
-                  properties: null
+                  properties:
                   description: Filters
                 page:
                   type: integer
@@ -7937,7 +8436,24 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the corporate subscribe orders.
+      description: |-
+        Query client subscription orders generated by corporate actions (such as rights issues or open offers that require subscription), used for subscription-order reconciliation and management.
+
+        ### Request parameters
+
+        - Combine business filters through `filters` (available fields are listed under the filters field docs), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        Data comes from corporate-action subscription-order records, filterable by `aaid` (client AAID) and `ann_id` (announcement ID).
+
+        Each record is a client's subscription order under one option, carrying the event ID, application price, elected application quantity, expected allotted quantity, total holding quantity, order state, initiator (App or back office), estimated application amount and fees, plus locked amount/quantity/fee and creation and update times.
+
+        Typically used to reconcile a client's subscribed quantity and amount, fees, and locked funds.
+
+        ### Returns
+
+        On success, returns the matched record list with pagination info. See the response definitions for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -8115,7 +8631,14 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Export the corporate subscribe orders list to a file. In sync mode (mode:0) the download URL is returned directly; in async mode (mode:1) a file_download_id is returned — then use GET /v1/datasets/download/{id} to obtain the final download URL, and DELETE /v1/datasets/download/{id} to delete the export record.
+      description: |-
+        Exports the corporate-action subscription-order list as a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
+
+        ### Export modes
+
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove the export record when it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -8295,17 +8818,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Creates the record manually. Alternatively, create it by synchronizing from an announcement
-        number.
+        Manually creates a corporate-action announcement. Alternatively, an announcement can be created by syncing from an advance notice code via `/v1/sync/announcement`.
 
         ### Request parameters
 
-        - Required: `ca_code` (CA Code), `origin_counter_id` (Counter ID), `announcement_type` (Announcement Type), `date_type` (Date Type), `date` (Date)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `ca_code` (corporate-action code), `origin_counter_id` (underlying security code), `announcement_type`, `date_type`, `date`.
+        - See the field descriptions for the format, allowed values, defaults, and business meaning of each field.
+
+        ### Business notes
+
+        On success a corporate-action announcement is created for use in the later registration, notification, and execution flows.
+
+        ### Risk warning
+
+        This operation adds corporate-action business data. Confirm the underlying, announcement type, and date before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the announcement is created; see the `200` response for the resulting state and data.
       security:
         - bearerAuth: []
       requestBody:
@@ -8329,10 +8859,66 @@ paths:
                   description: Counter ID associated with this request.
                 announcement_type:
                   type: string
-                  description: This field is required.
+                  description: |-
+                    This field is required.
+                  enum:
+                    - '3'
+                    - '4'
+                    - '5'
+                    - '6'
+                    - '7'
+                    - '8'
+                    - '9'
+                    - '10'
+                    - '11'
+                    - '12'
+                    - '13'
+                    - '14'
+                    - '15'
+                    - '16'
+                  x-enum-details:
+                    - value: '3'
+                      label: Take-Over (Compulsory) / Auto-Exercise of Structured Products (TM)
+                    - value: '4'
+                      label: Benefit Entitlement (BE)
+                    - value: '5'
+                      label: Corporate Action (CA)
+                    - value: '6'
+                      label: Delisted/Expired/Lapsed (DS)
+                    - value: '7'
+                      label: Open Offer (OO)
+                    - value: '8'
+                      label: Excess Open Offer (EO)
+                    - value: '9'
+                      label: Rights Subscription (RS)
+                    - value: '10'
+                      label: Excess Rights Subscription (ER)
+                    - value: '11'
+                      label: Take-Over (Unconditional) (TU)
+                    - value: '12'
+                      label: Take-Over (Conditional) (TC)
+                    - value: '13'
+                      label: Adr Fee (ADR)
+                    - value: '14'
+                      label: Spin Off (SO)
+                    - value: '15'
+                      label: Interest Payment (IP)
+                    - value: '16'
+                      label: VT (Voting)
+                  example: '3'
                 date_type:
-                  type: string
-                  description: This field is required.
+                  type: integer
+                  description: |-
+                    This field is required.
+                  enum:
+                    - 1
+                    - 2
+                  x-enum-details:
+                    - value: 1
+                      label: Ex Date
+                    - value: 2
+                      label: Record Date
+                  example: 1
                 date:
                   type: string
                   description: Date associated with this request. Use the date format defined by the API. This field is required.
@@ -8404,18 +8990,20 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Voids client register details under a corporate action in batch.
-
-        The caller must provide `ids`, the list of register-detail IDs (client detail records) to void. The system marks those details as voided.
+        Voids client registration details under a corporate action in bulk. The caller supplies the list of registration-detail IDs `ids`, and the system marks those details as voided.
 
         ### Request parameters
 
-        - Required: `ids` (list of register-detail IDs)
-        - Optional: `audit_frontend_resource` (caller-provided audit context)
+        - Required: `ids` (registration-detail IDs; each item is one client-detail record).
+        - Optional: `audit_frontend_resource` (caller-provided audit context).
+
+        ### Risk warning
+
+        This operation voids client registration details and affects downstream corporate-action processing. Confirm the target detail IDs before calling.
 
         ### Result
 
-        On success, the specified register details are voided and the result is returned in `data`. Interpret the outcome together with the business `code`.
+        On success the specified details are voided; the outcome is in `data`. Interpret it together with the business `code`.
       security:
         - bearerAuth: []
       requestBody:
@@ -8523,18 +9111,21 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Updates the exercise quantity (choices quantity) of each event under a client register detail of a corporate action.
-
-        The caller must provide the announcement ID `ann_id`, the register-detail ID `register_id`, and `details`, the list of items to modify. Each item specifies the event ID `event_id`, the detail item ID `id`, and the new exercise quantity `choices_quantity`.
+        Modifies the exercised (chosen) quantity for each event under a specific client registration detail of a corporate action.
 
         ### Request parameters
 
-        - Required: `ann_id` (announcement ID), `register_id` (register-detail ID), `details` (list of items to modify)
-        - Optional: `audit_frontend_resource` (caller-provided audit context)
+        - Required: `ann_id` (advance-notice ID), `register_id` (registration-detail ID), `details` (the detail items to modify).
+        - Optional: `audit_frontend_resource` (caller-provided audit context).
+        - Each `details` item must give the event ID `event_id`, the detail-item ID `id`, and the new exercised quantity `choices_quantity`.
+
+        ### Risk warning
+
+        This operation changes a client's exercised (chosen) quantity and affects the corporate action's execution outcome. Confirm the detail items and quantities before calling.
 
         ### Result
 
-        On success, the exercise quantity of each item is updated and the result is returned in `data`. Interpret the outcome together with the business `code`.
+        On success the exercised quantity of each detail item is updated; the outcome is in `data`. Interpret it together with the business `code`.
       security:
         - bearerAuth: []
       requestBody:
@@ -8666,18 +9257,22 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Adds, modifies, or deletes a client's voting instructions and attendance details under a shareholders' meeting (Voting) corporate action.
+        Adds, modifies, or deletes the voting instructions and attendance info for a client under a shareholders' meeting (Voting) corporate action.
 
         ### Request parameters
 
-        - Required: `ann_id` (announcement ID), `aaid` (account ID), and `voting_infos` (voting instruction list).
+        - Required: `ann_id` (corporate-action ID), `aaid` (account ID), `voting_infos` (voting instructions).
         - Optional: `attendee_info` (attendee details).
-        - `voting_infos` must have the same length as the number of proposals returned by the server, and each item's `chosen_proxy_serial` must be unique.
-        - `attendee_info` only takes effect when `attend_type` is `1` (proxy voting) or `2` (attend in person); its field values may contain English letters and punctuation only.
+        - The length of `voting_infos` must equal the number of proposals returned by the server, and `chosen_proxy_serial` must be unique across items.
+        - `attendee_info` applies only when `attend_type` is `1` (proxy voting) or `2` (attending in person); its field values may contain only Latin letters and punctuation.
+
+        ### Risk warning
+
+        This operation changes a client's voting instructions and attendance arrangement on their behalf. Confirm the account, proposal mapping, and attendance type before calling.
 
         ### Result
 
-        On success, the voting instructions are updated and the result is returned in `data`. Interpret the outcome together with the business `code`.
+        On success the voting instructions are added/modified/deleted; the outcome is in `data`. Interpret it together with the business `code`.
       security:
         - bearerAuth: []
       requestBody:
@@ -8847,20 +9442,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Executes Stock Corp Action.
+        Executes stock corporate actions in bulk. Triggers the execution flow for the specified announcements and optionally sends messages to clients.
 
         ### Request parameters
 
-        - Required: `ann_ids` (Announcement IDs), `send_msg` (Send Message)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_ids` (announcement IDs as a JSON array), `send_msg` (whether to send client messages).
+        - See the field descriptions for the format, allowed values, and business meaning of each field.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may change real cash balances, positions, or transaction state. Verify the target records and parameters before calling it.
+        Execution advances the corporate-action flow and may cause real asset changes; this is a high-risk operation. If ticket approval is enabled for the tenant, the approval flow must be completed first.
+
+        ### Risk warning
+
+        This operation may change real funds, positions, or trade status. Confirm the target announcements and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the corporate actions are executed; see the `200` response for the resulting state and data.
       security:
         - bearerAuth: []
       requestBody:
@@ -8952,20 +9551,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Executes stock delivery for a corporate action.
+        Performs the securities-side (goods) execution of a stock corporate action for the specified announcement.
 
         ### Request parameters
 
-        - Required: `ann_id` (Announcement ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_id` (announcement ID).
+        - See the field descriptions for the format, allowed values, and business meaning of each field.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may change real cash balances, positions, or transaction state. Verify the target records and parameters before calling it.
+        The goods execution handles the securities settlement leg of the corporate action and involves real asset changes.
+
+        ### Risk warning
+
+        This operation may change real funds, positions, or trade status. Confirm the target announcement and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the goods execution completes; see the `200` response for the resulting state and data.
       security:
         - bearerAuth: []
       requestBody:
@@ -9044,15 +9647,19 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Queries whether corporate actions of the current tenant require flow-ticket approval.
+        Returns whether corporate actions in the current tenant require ticket approval.
 
         ### Request parameters
 
-        This API takes no request parameters and applies to the tenant of the current caller.
+        - No parameters; the call applies to the caller's own tenant.
 
-        ### Response
+        ### Business notes
 
-        On success, whether flow-ticket approval is enabled is returned in `data.flow_ticket_on`. When enabled, corporate action operations such as execution and revocation must first go through the flow-ticket approval process.
+        When ticket approval is enabled, corporate-action operations such as execution and revocation must first go through the ticket approval flow.
+
+        ### Returns
+
+        On success returns whether ticket approval is enabled, in `data.flow_ticket_on`.
       security:
         - bearerAuth: []
       requestBody:
@@ -9136,16 +9743,16 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Gets the in-progress flow-ticket information of a given corporate action.
+        Returns the in-progress ticket for a given corporate action.
 
         ### Request parameters
 
-        - Required: `ann_id` (corporate action ID), `flow_ticket_type` (flow ticket type)
-        - When querying the flow ticket for executing or revoking a corporate action, pass `1` (announcement); for tax refund or refund revocation, pass `2` (refund).
+        - Required: `ann_id` (corporate-action ID), `flow_ticket_type` (ticket type).
+        - Pass `1` (announcement type) when querying the ticket for executing or revoking a corporate action; pass `2` (tax-refund type) when querying the ticket for a tax refund or its revocation.
 
-        ### Response
+        ### Returns
 
-        On success, the flow-ticket ID is returned in `data.flow_ticket_id`, which the caller can use to open the corresponding flow-ticket page.
+        On success returns the ticket ID in `data.flow_ticket_id`, which the caller can use to open the corresponding ticket.
       security:
         - bearerAuth: []
       requestBody:
@@ -9253,16 +9860,16 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Get Check Exec Details.
+        Returns the entitlement/fee reconciliation details between the third party and our side for the specified announcements, used to check consistency before execution.
 
         ### Request parameters
 
-        - Required: `ann_ids` (Announcement IDs)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_ids` (announcement IDs as a JSON array).
+        - See the field descriptions for the format, allowed values, and business meaning of each field.
 
-        ### Result
+        ### Returns
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success returns the third-party vs. our-side entitlement and fee reconciliation details; see the response definition for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -9388,17 +9995,21 @@ paths:
         - corporate.email_notify
       x-lbonly: false
       description: |-
-        Sends batch email notifications to the registered clients of a corporate action.
+        Sends email notifications in bulk to the registered clients of a corporate action.
 
         ### Request parameters
 
-        - Required: `ann_id` (corporate action ID), `type` (notify type)
-        - Optional: `excluded_aaids` (list of account AAIDs to exclude; excluded accounts will not receive this notification)
+        - Required: `ann_id` (corporate-action ID), `type` (notification type).
+        - Optional: `excluded_aaids` (accounts to exclude; listed accounts will not receive this notification).
         - `ann_id` can be obtained via `corporate_register_aaids`.
+
+        ### Risk warning
+
+        This operation sends emails to real clients. Confirm the corporate action, notification type, and exclusion list before calling; previewing the email content first is recommended.
 
         ### Result
 
-        On success, the batch email notification is triggered and the result is returned in `data`. Interpret the outcome together with the business `code`.
+        On success the bulk email notification is triggered; the outcome is in `data`. Interpret it together with the business `code`.
       security:
         - bearerAuth: []
       requestBody:
@@ -9508,16 +10119,20 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Notify Announcement.
+        Triggers notification for the specified corporate-action announcements in bulk, optionally sending messages to clients.
 
         ### Request parameters
 
-        - Required: `ann_ids` (Announcement IDs), `send_msg` (Send Message)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_ids` (announcement IDs as a JSON array), `send_msg` (whether to send client messages).
+        - See the field descriptions for the format, allowed values, and business meaning of each field.
+
+        ### Risk warning
+
+        When `send_msg` is true, messages are sent to real clients. Confirm the target announcements and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the announcements are notified; see the `200` response for the resulting state and data.
       security:
         - bearerAuth: []
       requestBody:
@@ -9609,16 +10224,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Notify Finish.
+        Marks the end of the client selection / instruction-collection phase for the specified announcements.
 
         ### Request parameters
 
-        - Required: `ann_ids` (Announcement IDs)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_ids` (announcement IDs as a JSON array).
+        - See the field descriptions for the format, allowed values, and business meaning of each field.
+
+        ### Business notes
+
+        After this call the client selection / instruction-collection phase is closed, typically signaling that the flow can move on to execution and later steps.
+
+        ### Risk warning
+
+        This operation advances the corporate-action flow state. Confirm the target announcements before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the instruction-collection phase is marked complete; see the `200` response for the resulting state and data.
       security:
         - bearerAuth: []
       requestBody:
@@ -9700,17 +10323,17 @@ paths:
         - corporate.email_notify
       x-lbonly: false
       description: |-
-        Renders and returns a preview of the email that would be sent, before triggering the actual batch notification.
+        Renders and returns the email preview before actually sending bulk notifications to clients.
 
         ### Request parameters
 
-        - Required: `ann_id` (corporate action ID), `type` (notify type)
-        - Optional: `excluded_aaids` (list of account AAIDs to exclude)
-        - The request parameters are identical to Notify Clients (`/corporate_action/notify`).
+        - Required: `ann_id` (corporate-action ID), `type` (notification type).
+        - Optional: `excluded_aaids` (accounts to exclude).
+        - The request parameters are the same as `/corporate_action/notify` (bulk client notification).
 
-        ### Response
+        ### Returns
 
-        On success, the email preview is returned in `data.payload`. `payload` is a JSON string; after parsing, its `data.body` holds the email body HTML.
+        On success returns the email preview in `data.payload`. `payload` is a JSON string; after parsing, its `data.body` holds the email body HTML.
       security:
         - bearerAuth: []
       requestBody:
@@ -9826,18 +10449,20 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Revokes (voids) a client's rights-offer subscription order.
-
-        The caller must provide `order_id`, the ID of the order to void. The system cancels that order.
+        Voids (cancels) a client's rights-offer subscription order. The caller supplies the order ID `order_id`, and the system cancels that order.
 
         ### Request parameters
 
-        - Required: `order_id` (order ID)
-        - Optional: `audit_frontend_resource` (caller-provided audit context)
+        - Required: `order_id` (order ID).
+        - Optional: `audit_frontend_resource` (caller-provided audit context).
+
+        ### Risk warning
+
+        This operation cancels a subscription order the client already submitted and affects their entitlement. Confirm the target order before calling.
 
         ### Result
 
-        On success, the specified order is revoked and the result is returned in `data`. Interpret the outcome together with the business `code`.
+        On success the order is cancelled; the outcome is in `data`. Interpret it together with the business `code`.
       security:
         - bearerAuth: []
       requestBody:
@@ -9939,17 +10564,20 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Submits a subscription for a client against a corporate-action announcement (the subscription application in a rights-offer scenario).
-
-        The caller must provide the client account `aaid`, the announcement ID `ann_id`, and the subscription quantity `quantity`.
+        Submits a subscription for a client against a corporate-action advance notice (the subscription filing in a rights-offer scenario).
 
         ### Request parameters
 
-        - Required: `aaid` (client account), `ann_id` (announcement ID), `quantity` (subscription quantity)
+        - Required: `aaid` (client account), `ann_id` (advance-notice ID), `quantity` (subscription quantity).
+        - See the field descriptions for the format, allowed values, and business meaning of each field.
+
+        ### Risk warning
+
+        This operation submits a subscription on the client's behalf and involves their real entitlement and funds. Confirm the account, advance notice, and quantity before calling.
 
         ### Result
 
-        On success, the subscription is submitted for the client with the specified quantity and the result is returned in `data`. Interpret the outcome together with the business `code`.
+        On success the subscription is submitted for the client at the given quantity; the outcome is in `data`. Interpret it together with the business `code`.
       security:
         - bearerAuth: []
       requestBody:
@@ -10046,16 +10674,16 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Queries a client's voting instruction details and attendance information under a shareholders' meeting (Voting) corporate action.
+        Returns a specific client's voting instructions and attendance info under a shareholders' meeting (Voting) corporate action.
 
         ### Request parameters
 
-        - Required: `ann_id` (announcement ID) and `aaid` (account ID).
-        - The two parameters together identify the target client and shareholders' meeting.
+        - Required: `ann_id` (corporate-action ID), `aaid` (account ID).
+        - Together the two parameters identify the target client and meeting.
 
-        ### Response
+        ### Returns
 
-        On success, returns the client's attendance information (`attendee_info`) and per-proposal voting instructions (`voting_infos`).
+        On success returns the client's attendance info (`attendee_info`) and per-proposal voting instructions (`voting_infos`).
       security:
         - bearerAuth: []
       requestBody:
@@ -10217,15 +10845,15 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Retrieves the meeting information and proposal (proxy) list of a single shareholders' meeting (Voting) corporate action.
+        Returns the meeting information and proposal (proxy) list of a single shareholders' meeting (Voting) corporate action.
 
         ### Request parameters
 
-        - Required: `ann_id` (announcement ID) identifying the target shareholders' meeting corporate action.
+        - Required: `ann_id` (corporate-action ID) identifying the target meeting.
 
-        ### Response
+        ### Returns
 
-        On success, returns the meeting time, place, type, number of proposals, and the proposal list `proxy_details`. `number_of_proposals` equals the number of elements in `proxy_details`.
+        On success returns the meeting time, place, type, and proposal count, plus the proposal list `proxy_details`. `number_of_proposals` matches the number of elements in `proxy_details`.
       security:
         - bearerAuth: []
       requestBody:
@@ -10365,15 +10993,15 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Aggregates how clients participate in a shareholders' meeting (Voting) corporate action, along with the per-proposal vote distribution.
+        Aggregates how clients participate in a shareholders' meeting (Voting) corporate action, plus the vote distribution per proposal.
 
         ### Request parameters
 
-        - Required: `ann_id` (announcement ID) identifying the target shareholders' meeting corporate action.
+        - Required: `ann_id` (corporate-action ID) identifying the target meeting.
 
-        ### Response
+        ### Returns
 
-        On success, returns the counts for each participation method (proxy voting, attend in person, attend by proxy, not yet operated) and the total, plus the per-proposal approve/against/abstain statistics in `proxy_voting_statistics`.
+        On success returns the count and total for each participation type (proxy voting, in-person attendance, proxy attendance, no action), plus the for/against/abstain tally per proposal in `proxy_voting_statistics`.
       security:
         - bearerAuth: []
       requestBody:
@@ -10501,19 +11129,22 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Initiate tax refunds grouped by the selected sub-position view.
-
-        After the caller picks a sub-position view, refund amounts are entered and submitted per group under that view. Each group carries a refund amount and the set of sub-position accounts it covers.
+        Initiates tax refunds grouped by the selected sub-position view during the refund flow. Each group specifies a refund amount and the sub-position accounts it covers.
 
         ### Request parameters
 
-        - Required: `ann_id` (corporate-action announcement ID), `view_id` (sub-position view ID), `groups` (refund group list)
-        - Each item in `groups` must provide `group_id` (group ID), `amount` (refund amount), and `sub_position_scope` (the sub-position accounts covered by the group)
-        - Optional: `audit_frontend_resource` (caller-provided audit context)
+        - Required: `ann_id` (corporate-action advance-notice ID), `view_id` (sub-position view ID), `groups` (refund groups).
+        - Optional: `audit_frontend_resource` (caller-provided audit context).
+        - Each `groups` item must give `group_id`, `amount` (refund amount), and `sub_position_scope` (the sub-position accounts the group covers).
+        - `view_id` comes from the list of sub-position views available for the refund scenario.
+
+        ### Risk warning
+
+        This operation initiates real tax refunds and involves fund movement. Confirm the view, groups, and refund amounts before calling.
 
         ### Result
 
-        On success, the refund is initiated and the result is returned in `data`. Interpret the outcome together with the business `code`.
+        On success the refunds are initiated; the outcome is in `data`. Interpret it together with the business `code`.
       security:
         - bearerAuth: []
       requestBody:
@@ -10642,17 +11273,16 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Query the per-group refund summary for a corporate action under a given sub-position view.
-
-        Used in the refund flow after switching to a sub-position view, to show each group's refundable fees and already-refunded amount so the caller can enter a refund amount per group.
+        Returns the per-group refundable summary for a corporate action under a given sub-position view, so refund amounts can be filled in group by group.
 
         ### Request parameters
 
-        - Required: `ann_id` (corporate-action announcement ID), `view_id` (sub-position view ID)
+        - Required: `ann_id` (corporate-action advance-notice ID), `view_id` (sub-position view ID).
+        - See the field descriptions for the format, allowed values, and business meaning of each field.
 
-        ### Result
+        ### Returns
 
-        On success, `data.groups` returns the groups under the view. Each group includes the refundable fee, already-refunded amount, currency, and the sub-position accounts it covers.
+        On success returns the group list under the view in `data.groups`; each group includes the refundable fee, already-refunded amount, currency, and the sub-position accounts it covers.
       security:
         - bearerAuth: []
       parameters:
@@ -10776,16 +11406,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Register Announcements.
+        Registers the specified corporate-action announcements, bringing them into the corporate-action processing flow.
 
         ### Request parameters
 
-        - Required: `ann_ids` (Announcement IDs), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_ids` (announcement IDs as a JSON array), `audit_frontend_resource` (caller-provided audit context).
+        - See the field descriptions for the format, allowed values, and business meaning of each field.
+
+        ### Business notes
+
+        Registration advances the real corporate-action flow; once registered, the announcements can proceed to notification, execution, and later steps.
+
+        ### Risk warning
+
+        This operation advances the corporate-action flow state. Confirm the target announcements before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the announcements are registered; see the `200` response for the resulting state and data.
       security:
         - bearerAuth: []
       requestBody:
@@ -10872,17 +11510,25 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Restart Revoke Announcement.
+        Restarts revocation: retries the revocation flow for the specified announcement after a prior revocation failed.
 
         ### Request parameters
 
-        - Required: `ann_id` (Announcement ID)
-        - Optional: `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_id` (announcement ID).
+        - Optional: `audit_frontend_resource` (caller-provided audit context).
+        - See the field descriptions for the format, allowed values, and business meaning of each field.
+
+        ### Business notes
+
+        Use only for corporate actions whose revocation previously failed. It retries the revocation flow, which reverses an already-executed action and is high-risk.
+
+        ### Risk warning
+
+        This operation may affect real business data or asset status. Verify the target announcement and operation type before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the revocation flow is retriggered; see the `200` response for the resulting state and data.
       security:
         - bearerAuth: []
       requestBody:
@@ -10965,21 +11611,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Reverses an executed corporate action. This is a high-risk post-execution reversal. If it fails,
-        use Restart Reversal.
+        Revokes an already-executed corporate action. If revocation fails, retry it with restart revocation (`/v1/ann/revoke/restart`).
 
         ### Request parameters
 
-        - Required: `ann_id` (Announcement ID)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `ann_id` (announcement ID).
+        - See the field descriptions for the format, allowed values, defaults, and business meaning of each field.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may affect live business data or asset state. Verify the target records, amounts, quantities, and operation type before calling it.
+        This reverses an already-executed action and rolls back completed corporate-action processing; it is high-risk.
+
+        ### Risk warning
+
+        This operation may affect real business data or asset status. Verify the target record, amount, quantity, and operation type before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the action is revoked; see the `200` response for the returned content.
       security:
         - bearerAuth: []
       requestBody:
@@ -11058,20 +11707,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Executes Stock Execute.
+        Entitlement execution: triggers the actual position-change processing for the specified announcement.
 
         ### Request parameters
 
-        - Required: `ann_id` (Announcement ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_id` (announcement ID).
+        - See the field descriptions for the format, allowed values, and business meaning of each field.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may change real cash balances, positions, or transaction state. Verify the target records and parameters before calling it.
+        This triggers real position changes and is high-risk.
+
+        ### Risk warning
+
+        This operation may change real funds, positions, or trade status. Confirm the target announcement and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the entitlement execution (position change) completes; see the `200` response for the resulting state and data.
       security:
         - bearerAuth: []
       requestBody:
@@ -11150,17 +11803,16 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Query the sub-position views available for the rounding-adjustment scenario of a corporate action.
-
-        In the rounding-adjustment flow, this provides the selectable sub-position views beyond the default view. After the caller selects a view, rounding adjustments can be carried out by group under that view.
+        Returns the sub-position views available for a corporate action in the rounding-difference adjustment scenario. It offers views beyond the default view; once a view is chosen, the adjustment can be done by that view's groups.
 
         ### Request parameters
 
-        - Required: `ann_id` (corporate-action announcement ID)
+        - Required: `ann_id` (corporate-action advance-notice ID).
+        - See the field descriptions for the format, allowed values, and business meaning of each field.
 
-        ### Result
+        ### Returns
 
-        On success, `data.items` returns the available sub-position views. Each item includes the view ID and the view name.
+        On success returns the available sub-position views in `data.items`; each item includes the view ID and view name.
       security:
         - bearerAuth: []
       parameters:
@@ -11253,17 +11905,16 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Query the sub-position views available for the tax-refund scenario of a corporate action.
-
-        In the refund flow, this provides the selectable sub-position views beyond the default view. After the caller selects a view, it can query the per-group refund details for that view and initiate refunds by group.
+        Returns the sub-position views available for a corporate action in the tax-refund scenario. It offers views beyond the default view; once a view is chosen, its per-group refundable details can be queried and refunds initiated by group.
 
         ### Request parameters
 
-        - Required: `ann_id` (corporate-action announcement ID)
+        - Required: `ann_id` (corporate-action advance-notice ID).
+        - See the field descriptions for the format, allowed values, and business meaning of each field.
 
-        ### Result
+        ### Returns
 
-        On success, `data.items` returns the available sub-position views. Each item includes the view ID and the view name.
+        On success returns the available sub-position views in `data.items`; each item includes the view ID and view name.
       security:
         - bearerAuth: []
       parameters:
@@ -11356,16 +12007,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Sync Announcement.
+        Creates a corporate action by syncing from an advance-notice code (corporate-action code). This is an alternative to manual creation.
 
         ### Request parameters
 
-        - Required: `ca_code` (CA Code)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ca_code` (corporate-action code).
+        - See the field descriptions for the format, allowed values, and business meaning of each field.
+
+        ### Business notes
+
+        Syncs the corporate-action announcement from upstream by advance-notice code, for use in the later registration, notification, and execution flows.
+
+        ### Risk warning
+
+        This operation adds corporate-action business data. Confirm the corporate-action code before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the corporate action is created; see the `200` response for the resulting state and data.
       security:
         - bearerAuth: []
       requestBody:
@@ -11449,11 +12108,23 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Queries corporate stock register details data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the corporate-action client detail management list, showing each corporate action's processing and execution status by client and announcement.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (available fields are listed under the filters field docs), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        Data comes from corporate-action client registration details and can be filtered by client (`aaid`), announcement type (`ann_type`), market (`market`), client execution status (`execute_state`), announcement execution status (`stage_state`), instruction-collection status (`notify_state`), payable date, election end time, underlying (`origin_counter_id`), announcement number (`ca_code`), and operation time.
+
+        Each record is a client's detail under one announcement, carrying account state, announcement type and number, market, underlying, elected/exercise quantity and holding quantity, client execution status, announcement execution status, instruction-collection status, record date, and payable date.
+
+        Typically used by operations to monitor each client's execution progress, instruction collection, and processing status across corporate actions.
+
+        ### Returns
+
+        On success, returns the matched record list with pagination info. See the response definitions for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -11959,13 +12630,13 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Exports corporate stock register details data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Exports the corporate-action client-detail management list as a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove the export record when it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -12438,11 +13109,23 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Queries corporate registers data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the corporate-action entitlement list, showing each client's entitlement detail and the resulting cash/quantity transfers in a corporate action.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (available fields are listed under the filters field docs), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        Data comes from corporate-action client entitlement registration details, filterable by payable date, announcement number (`ca_code`), client (`aaid`), market (`market`), underlying (`origin_counter_id`), client execution status (`execute_state`), and announcement execution status (`stage_state`).
+
+        Each record is a client's entitlement under one announcement, carrying the announcement and event IDs, client and custodian info, market, debit/credit underlyings, holding quantity, settlement currency, estimated and actual payable amounts, estimated/actual transfer-out and transfer-in quantities, plus client execution status, announcement execution status, and payable date.
+
+        Typically used to reconcile the cash and quantities distributed or converted by a corporate action and to track entitlement execution results.
+
+        ### Returns
+
+        On success, returns the matched record list with pagination info. See the response definitions for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -12825,13 +13508,13 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Exports corporate registers data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Exports the corporate-action entitlement list as a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
-        - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 0`: synchronous export; returns the download URL directly on success.
+        - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - Call `DELETE /v1/datasets/download/{id}` to remove the export record when it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -13197,11 +13880,23 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Queries corporate fees data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the per-client fee records generated by corporate-action registration, used to reconcile each client's payable and collected fees for a corporate action.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (see the filters field documentation below for the available fields), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        The data comes from the client fee details produced by corporate-action registration; each record represents one fee for a specific announcement, client, and fee type.
+
+        A record carries attribution details such as announcement number, event ID, market, underlying, and payable date, together with client information including client ID, securities account, and name.
+
+        Fee information covers the fee type, payable amount, collected amount, and currency, while the client execution status and announcement execution status mark the processing progress of the fee and of the announcement as a whole, supporting fee verification and reconciliation.
+
+        ### Returns
+
+        On success, returns the matching record list with pagination. See the response definition for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -13567,13 +14262,13 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Exports corporate fees data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export corporate-action registration fee detail records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -13938,11 +14633,23 @@ paths:
         - corporate.us_corporate_query
       x-lbonly: false
       description: |-
-        Queries option change list data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the execution details of US-option corporate actions, recording the before/after comparison of option contracts adjusted by a corporate action.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (see the filters field documentation below for the available fields), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        The data comes from the reconciliation execution records of option corporate actions; each record represents the adjustment result for one affected option contract.
+
+        A record carries the underlying, the original option instrument, the new option instrument, the associated rule ID, and the current execution status.
+
+        It also provides the original quantity and the post-adjustment quantity derived from the contract multiplier, and counts the positions and holding-client numbers involved, supporting verification of the scope and outcome of the option corporate action.
+
+        ### Returns
+
+        On success, returns the matching record list with pagination. See the response definition for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -14145,13 +14852,13 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Exports option change list data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export option corporate-action execution detail records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -14369,11 +15076,23 @@ paths:
         - corporate.us_corporate_query
       x-lbonly: false
       description: |-
-        Queries option rule list data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the list of adjustment rules for US-option corporate actions; each rule defines how an option instrument's symbol and contract parameters change, and it drives the execution details.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (see the filters field documentation below for the available fields), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        The data comes from the contract-change rules of option corporate actions; each record defines the adjustment basis for one option contract.
+
+        A record carries the account channel, the original symbol, the new symbol, and the IB symbol, together with contract-parameter changes such as contract size, strike-price change, contract-quantity multiplier, and contract multiplier.
+
+        Each rule also records its current status, the last operator, and the update time, for reference when maintaining option corporate-action adjustment schemes.
+
+        ### Returns
+
+        On success, returns the matching record list with pagination. See the response definition for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -14568,13 +15287,13 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Exports option rule list data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export option corporate-action rule list records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -14788,17 +15507,25 @@ paths:
         - corporate.us_corporate_query
       x-lbonly: false
       description: |-
-        Save Option Rule.
+        Create or edit a US-equity option corporate-action adjustment rule, used to adjust the affected option contracts' multiplier, contract size, and strike price when a corporate action occurs on the underlying.
 
         ### Request parameters
 
-        - Required: `change_to` (Change To), `contract_multiplier` (Contract Multiplier), `contract_size` (Contract Size), `counter_id` (Counter ID), `new_multiplier` (New Multiplier), `origin_option_symbol` (Origin Option Symbol), `strike_divisor` (Strike Divisor), `strike_price_expr` (Strike Price Expr)
-        - Optional: `id` (Rule ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `change_to` (change direction/type), `counter_id` (underlying symbol), `origin_option_symbol` (original option symbol), `contract_multiplier`, `contract_size`, `new_multiplier`, `strike_divisor`, `strike_price_expr`.
+        - Optional: `id` (rule ID).
+        - See each field's documentation for format, value range, and business meaning.
+
+        ### Business notes
+
+        When `id` is provided the request edits an existing rule; otherwise it creates a new one. The rule parameters drive the subsequent contract adjustment and reconciliation.
+
+        ### Risk warning
+
+        This operation creates or modifies an option corporate-action adjustment rule and may affect later contract-parameter adjustments and reconciliation results. Confirm the underlying, original option symbol, and all adjustment parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the rule is created or updated; the resulting state and returned data are defined by the `200` response.
       security:
         - bearerAuth: []
       requestBody:
@@ -14822,7 +15549,8 @@ paths:
                   description: Rule ID associated with this request.
                 change_to:
                   type: string
-                  description: This field is required.
+                  description: |-
+                    This field is required. A free-form value (not an enum); provide the actual business value.
                 contract_multiplier:
                   type: string
                   description: This field is required.
@@ -14916,16 +15644,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Add Fee Event.
+        Create a global fee configuration that defines the corporate-action charging rule for a given market, announcement type, and event type.
 
         ### Request parameters
 
-        - Required: `ann_type` (Announcement Type), `event_type` (Event Type), `market` (Market), `fee_code` (Fee Code), `metric_type` (Metric Type), `calc_method` (Calc Method), `ref_value` (Ref Value), `max_fee` (Max Fee), `min_fee` (Min Fee), `currency` (Currency), `target` (Target), `order` (Order), `fraction_type` (Fraction Type), `restrict_type` (Restrict Type)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `ann_type` (announcement type), `event_type`, `market`, `fee_code`, `metric_type`, `calc_method`, `ref_value`, `max_fee`, `min_fee`, `currency`, `target` (charged audience), `order` (charging priority), `fraction_type` (rounding rule), `restrict_type` (special charging rule).
+        - See each field's documentation for format, value range, and business meaning.
+
+        ### Business notes
+
+        The configuration is a global default charging rule applied when computing matching corporate-action fees. `ref_value`, `calc_method`, and `fraction_type` together determine how the fee is calculated and rounded, while `max_fee`/`min_fee` cap the fee range.
+
+        ### Risk warning
+
+        This operation adds a charging rule that takes effect for real customers and may affect actual fee calculation and deduction. Confirm the market, event type, and all charging parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the fee configuration is created; the resulting state and returned data are defined by the `200` response.
       security:
         - bearerAuth: []
       requestBody:
@@ -15021,13 +15757,16 @@ paths:
                   description: This field is required.
                 order:
                   type: number
-                  description: This field is required.
+                  description: |-
+                    This field is required. A free-form value (not an enum); provide the actual business value.
                 fraction_type:
                   type: number
-                  description: This field is required.
+                  description: |-
+                    This field is required. Values come from a backend data dictionary (maintained dynamically), not a fixed enum; use the options the service actually returns.
                 restrict_type:
                   type: number
-                  description: This field is required.
+                  description: |-
+                    This field is required. Values come from a backend data dictionary (maintained dynamically), not a fixed enum; use the options the service actually returns.
             example:
               ann_type: 1
               event_type: 1
@@ -15108,11 +15847,23 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Queries corporate fee events data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the global fee-scheme configuration for corporate actions, used to maintain the fee-calculation rules for corporate actions across different markets and event types.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (see the filters field documentation below for the available fields), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        The data comes from the global corporate-action fee configuration; each record represents a fee rule for one combination of event type, fee type, and market.
+
+        A record carries the business category, calculation method, metric basis (for example holdings as of record date, actual exercised quantity, or payout amount), fee rate, rounding method, plus the maximum fee, minimum fee, and currency.
+
+        It also includes the restriction type and applicable target, and serves as the basis for computing client fees when a corporate action is executed.
+
+        ### Returns
+
+        On success, returns the matching record list with pagination. See the response definition for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -15481,13 +16232,13 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Exports corporate fee events data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export global fee configuration records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -15842,16 +16593,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Delete Fee Event.
+        Delete a global fee configuration.
 
         ### Request parameters
 
-        - Required: `id` (Config ID), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (configuration ID), `audit_frontend_resource` (audit context).
+        - See each field's documentation for format, value range, and business meaning.
+
+        ### Business notes
+
+        Deletes the global fee configuration identified by `id`. `audit_frontend_resource` is the caller-provided audit context recording this operation. Once deleted, the configuration no longer participates in fee calculation.
+
+        ### Risk warning
+
+        This operation removes a charging rule that is live for real customers and may affect subsequent fee calculation. Confirm the target configuration ID before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the fee configuration is deleted; the resulting state and returned data are defined by the `200` response.
       security:
         - bearerAuth: []
       requestBody:
@@ -15935,18 +16694,25 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Uses nearly the same fields as Create Fee Configuration, with an additional `enable` field
-        indicating whether consumption tax is enabled.
+        Edit an existing global fee configuration. The field structure matches the create-fee-configuration request, with an additional `enable` field to toggle GST.
 
         ### Request parameters
 
-        - Required: `id` (Config ID)
-        - Optional: `enable` (Enable)
-        - See each field for its format, allowed values, default behavior, and business meaning.
+        - Required: `id` (configuration ID).
+        - Optional: `enable` (whether GST is on) and the same charging fields as the create request.
+        - See each field's documentation for format, value range, default behavior, and business meaning.
+
+        ### Business notes
+
+        Locates and updates the target global fee configuration by `id`. Send only the fields to change; omitted fields keep their current values. `enable` controls whether the configuration's GST applies.
+
+        ### Risk warning
+
+        This operation modifies a charging rule that is live for real customers and may affect actual fee calculation and deduction. Confirm the configuration ID and all charging parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the described business operation. See the `200` response schema for returned data.
+        On success the fee configuration is updated; the resulting state and returned data are defined by the `200` response.
       security:
         - bearerAuth: []
       requestBody:
@@ -15969,6 +16735,67 @@ paths:
                     **Boolean values:**
                     - `true` - The condition applies
                     - `false` - The condition does not apply
+                ann_type:
+                  type: integer
+                  description: |-
+                    Announcement type. Options come from a backend data dictionary.
+                event_type:
+                  type: integer
+                  description: |-
+                    Event type. Options come from a backend data dictionary.
+                market:
+                  type: string
+                  description: |-
+                    Applicable market. Options come from a backend data dictionary.
+                fee_code:
+                  type: string
+                  description: |-
+                    Fee code identifying the fee type.
+                metric_type:
+                  type: integer
+                  description: |-
+                    Metric type. Options come from a backend data dictionary.
+                calc_method:
+                  type: string
+                  description: |-
+                    Calculation method. Options come from a backend data dictionary.
+                ref_value:
+                  type: string
+                  description: |-
+                    Reference value used in fee calculation.
+                max_fee:
+                  type: string
+                  description: |-
+                    Maximum fee cap.
+                min_fee:
+                  type: string
+                  description: |-
+                    Minimum fee floor.
+                currency:
+                  type: string
+                  description: |-
+                    Currency of the fee.
+                target:
+                  type: string
+                  description: |-
+                    Target audience for the fee. Options come from a backend data dictionary.
+                order:
+                  type: integer
+                  description: |-
+                    Fee-charging priority order.
+                fraction_type:
+                  type: integer
+                  description: |-
+                    Fraction/rounding rule. Options come from a backend data dictionary.
+                restrict_type:
+                  type: integer
+                  description: |-
+                    Special charging restriction rule. Options come from a backend data dictionary.
+                audit_frontend_resource:
+                  type: object
+                  properties: {}
+                  description: |-
+                    Caller-provided audit context used for operation logging.
             example:
               id: 1
               enable: true
@@ -16034,16 +16861,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Delete Client Fee.
+        Delete a client-specific fee rule.
 
         ### Request parameters
 
-        - Required: `id` (Rule ID), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `id` (rule ID), `audit_frontend_resource` (audit context).
+        - See each field's documentation for format, value range, and business meaning.
+
+        ### Business notes
+
+        Deletes the fee rule that applies to a specific client by `id`. After deletion the client falls back to the global fee configuration. `audit_frontend_resource` records the audit context for this operation.
+
+        ### Risk warning
+
+        This operation removes a client-specific charging rule that is currently live and may affect that client's subsequent fee calculation. Confirm the target rule ID before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the client fee rule is deleted; the resulting state and returned data are defined by the `200` response.
       security:
         - bearerAuth: []
       requestBody:
@@ -16128,17 +16963,25 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Save Client Fee.
+        Create or edit a client-specific fee rule for a securities account, overriding that client's charging parameters for a particular fee item.
 
         ### Request parameters
 
-        - Required: `aaid` (A/C No.), `fee_code` (Fee Code), `ref_value_ratio` (Ref Value Ratio), `min_value_ratio` (Min Value Ratio)
-        - Optional: `id` (Rule ID), `audit_frontend_resource` (Audit Context)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `aaid` (securities account), `fee_code`, `ref_value_ratio` (reference ratio), `min_value_ratio` (minimum ratio).
+        - Optional: `id` (rule ID), `audit_frontend_resource` (audit context).
+        - See each field's documentation for format, value range, and business meaning.
+
+        ### Business notes
+
+        When `id` is provided the request edits an existing rule; otherwise it creates one. The rule applies to the client and fee item identified by `aaid` and `fee_code`; `ref_value_ratio` and `min_value_ratio` determine that client's charging ratio.
+
+        ### Risk warning
+
+        This operation creates or modifies a charging rule that is live for a real client and may affect actual fee calculation and deduction. Confirm the securities account, fee code, and ratio parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the client fee rule is created or updated; the resulting state and returned data are defined by the `200` response.
       security:
         - bearerAuth: []
       requestBody:
@@ -16239,11 +17082,23 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Queries corporate client fee events data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the client-specific fee rules for corporate actions, used to configure fee rates and minimum charges for particular clients that differ from the global scheme.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (see the filters field documentation below for the available fields), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        The data comes from client-level fee rules; each record represents one client's dedicated configuration for a given fee type.
+
+        A record carries client information such as client ID, securities account, and name, together with the fee type, fee-rate ratio, and minimum-fee ratio.
+
+        The fee-rate ratio and minimum-fee ratio apply a client-specific adjustment on top of the global fee scheme, and the last operator and update time are recorded for traceability.
+
+        ### Returns
+
+        On success, returns the matching record list with pagination. See the response definition for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -16395,13 +17250,13 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Exports corporate client fee events data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export client fee rule list records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/{id}`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -16581,7 +17436,17 @@ paths:
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
-      description: Query the reconciliation list for a given US-stock option corporate-action rule.
+      description: |-
+        Query the reconciliation list for a given US-equity option corporate-action rule, returning the before/after reconciliation records of the option contracts under that rule.
+
+        ### Request parameters
+
+        - Required: `rule_id` (option corporate-action rule ID).
+        - See each field's documentation for format, value range, and business meaning.
+
+        ### Returns
+
+        On success, returns the reconciliation record list for the rule. See the response definition below for field meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -16698,11 +17563,23 @@ paths:
         - corporate.after_event_adjustment_query
       x-lbonly: false
       description: |-
-        Queries Post Adjust Announcement List data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the announcement header information for the corporate-action after-event adjustment detail view, summarizing each announcement's basic information plus registration and adjustment statistics.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (see the filters field documentation below for the available fields), and use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        The data comes from corporate-action announcements together with their registration and adjustment statistics; each record represents one announcement.
+
+        A record carries basic information such as announcement ID, announcement number, announcement type, underlying, record date, payable date, and remark.
+
+        It also aggregates the registered quantity, the number of clients involved, and the number of after-event adjustments for that announcement, giving an overview of a single announcement in the after-event adjustment scenario.
+
+        ### Returns
+
+        On success, returns the matching record list with pagination. See the response definition for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -16853,13 +17730,13 @@ paths:
         - corporate.after_event_adjustment_query
       x-lbonly: false
       description: |-
-        Exports Post Adjust Announcement List data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export post-execution adjustment detail-header announcement records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/<built-in function id>` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/<built-in function id>`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -17037,11 +17914,23 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Queries Corporate Scrip Fee data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the transfer (scrip) fee configuration for scrip-dividend corporate actions; it is the portion of the global fee configuration whose fee type is the scrip fee.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - This dataset provides no business filter fields; pass an empty object for `filters`. You can still use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        The data comes from the corporate-action fee configuration records whose fee type is the scrip fee, used to configure the transfer handling fee for scrip-dividend scenarios.
+
+        A record carries the per-lot fee, rounding method, its relationship with the handling fee, and parameters such as currency, market, maximum fee, and minimum fee.
+
+        It is used when maintaining the fee basis for scrip-dividend transfer fees.
+
+        ### Returns
+
+        On success, returns the matching record list with pagination. See the response definition for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -17170,13 +18059,13 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Exports Corporate Scrip Fee data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export corporate-action scrip (transfer) fee records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/<built-in function id>` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/<built-in function id>`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -17344,11 +18233,23 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Queries Corporate GST Fee data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the Goods and Services Tax (GST) fee configuration for corporate actions; it is the portion of the global fee configuration whose fee type is GST.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - This dataset provides no business filter fields; pass an empty object for `filters`. You can still use `page`, `page_size`, and `orderBy` to control pagination and sorting.
+
+        ### Business notes
+
+        The data comes from the corporate-action fee configuration records whose fee type is GST, used to configure the GST rules applied to corporate-action fees.
+
+        A record carries parameters such as the tax rate, rounding method, and whether it is enabled.
+
+        It is used when maintaining the GST calculation basis for corporate actions.
+
+        ### Returns
+
+        On success, returns the matching record list with pagination. See the response definition for the meaning of each returned column.
       security:
         - bearerAuth: []
       requestBody:
@@ -17473,13 +18374,13 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Exports Corporate GST Fee data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export corporate-action GST (consumption tax) configuration records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/<built-in function id>` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/<built-in function id>`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -17646,11 +18547,24 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Queries Option Change Details List data. Combine business filters in `filters`, and use `page` and `page_size` to control pagination.
+        Query the per-account change details of a US-option corporate action, used to reconcile how a given option-contract adjustment actually affected client positions.
 
-        ### Response
+        ### Request parameters
 
-        On success, the API returns the matching records and pagination metadata. See each filter field for its purpose, allowed values, and dynamic value source.
+        - Combine business filters through `filters` (see the filter field notes below), and use `page`, `page_size`, and `orderBy` for pagination and sorting.
+        - Typically filter by `recondiliation_id` (the associated option change rule / reconciliation batch) to list every account affected by that change.
+
+        ### Business notes
+
+        The data comes from the option corporate-action change-detail records, joined with the corresponding change rule to add the account channel.
+
+        Each record represents one affected account's position adjustment in the event, carrying `origin_option_counter_id` and `new_option_counter_id` (option code before and after the change), `origin_quantity` and `new_quantity` (position quantity before and after the change), plus the securities account number, client name, and account channel.
+
+        A typical use is to reconcile, account by account, the position difference before and after a US-option contract code or quantity adjustment.
+
+        ### Returns
+
+        On success, returns the matching records with pagination info. See the response definition for column meanings.
       security:
         - bearerAuth: []
       requestBody:
@@ -17802,13 +18716,13 @@ paths:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Exports Option Change Details List data to a file. `filters` defines the export scope, and `down_fields` can restrict the exported columns.
+        Export option corporate-action change detail records to a file. `filters` determines the export scope, and `down_fields` can limit the exported columns.
 
         ### Export modes
 
         - `mode: 0`: synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: asynchronous export; the API first returns `file_download_id`. Call `GET /v1/datasets/download/<built-in function id>` to obtain the download URL.
-        - When the export record is no longer needed, delete it with `DELETE /v1/datasets/download/<built-in function id>`.
+        - `mode: 1`: asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
+        - When the export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -17984,21 +18898,25 @@ paths:
         - corporate.after_event_adjustment_update
       x-lbonly: false
       description: |-
-        Confirm Post Adjust.
+        Confirm a post-execution adjustment record so that its adjustment result becomes effective and is applied.
 
         ### Request parameters
 
-        - Required: `adjustment_id` (Adjustment ID)
-        - Optional: `remark` (Remark)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `adjustment_id` (adjustment ID).
+        - Optional: `remark`.
+        - See each field's documentation for format, value range, and business meaning.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may change real cash balances, positions, or transaction state. Verify the target records and parameters before calling it.
+        Once confirmed, the funds, positions, or quantity changes covered by the adjustment take effect. Confirmation is a critical, non-reversible action and is normally performed only on adjustments in the unconfirmed state.
+
+        ### Risk warning
+
+        This operation applies the post-execution adjustment for real and may change actual funds, positions, or trade state. Confirm the target adjustment record and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the post-execution adjustment is confirmed; the resulting state and returned data are defined by the `200` response.
       security:
         - bearerAuth: []
       requestBody:
@@ -18081,16 +18999,24 @@ paths:
         - corporate.after_event_adjustment_update
       x-lbonly: false
       description: |-
-        Delete Post Adjust.
+        Delete a post-execution adjustment record.
 
         ### Request parameters
 
-        - Required: `adjustment_id` (Adjustment ID)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `adjustment_id` (adjustment ID).
+        - See each field's documentation for format, value range, and business meaning.
+
+        ### Business notes
+
+        Only adjustments in the unconfirmed state can be deleted; confirmed adjustments cannot be removed through this endpoint.
+
+        ### Risk warning
+
+        This operation deletes an unconfirmed post-execution adjustment; once deleted it can only be restored by recreating it. Confirm the target adjustment ID before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the post-execution adjustment is deleted; the resulting state and returned data are defined by the `200` response.
       security:
         - bearerAuth: []
       requestBody:
@@ -18169,21 +19095,25 @@ paths:
         - corporate.after_event_adjustment_update
       x-lbonly: false
       description: |-
-        Revokes Post Adjust.
+        Revoke a confirmed post-execution adjustment, rolling back the funds, positions, or quantity changes it caused.
 
         ### Request parameters
 
-        - Required: `adjustment_id` (Adjustment ID)
-        - Optional: `remark` (Remark)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `adjustment_id` (adjustment ID).
+        - Optional: `remark`.
+        - See each field's documentation for format, value range, and business meaning.
 
-        ### Risk notice
+        ### Business notes
 
-        > This operation may change real cash balances, positions, or transaction state. Verify the target records and parameters before calling it.
+        This endpoint revokes an already-confirmed post-execution adjustment and reverses the previously applied result. It is a very high-risk operation; use with caution.
+
+        ### Risk warning
+
+        This operation rolls back an adjustment that is already in effect, directly changing real funds, positions, or trade state, and the impact is not easily recoverable. Carefully verify the target adjustment record and parameters before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the post-execution adjustment is revoked; the resulting state and returned data are defined by the `200` response.
       security:
         - bearerAuth: []
       requestBody:
@@ -18266,17 +19196,25 @@ paths:
         - corporate.after_event_adjustment_update
       x-lbonly: false
       description: |-
-        Update Post Adjust Detail.
+        Update a line item of a post-execution adjustment, changing its confirmed value and related parameters.
 
         ### Request parameters
 
-        - Required: `adjustment_id` (Adjustment ID), `confirmed_value` (Confirmed Value)
-        - Optional: `event_id` (Event ID), `item_id` (Item ID), `aaid` (A/C No.), `target` (Target)
-        - See each field for its format, allowed values, and business meaning.
+        - Required: `adjustment_id` (adjustment ID), `confirmed_value`.
+        - Optional: `event_id`, `item_id` (line-item ID), `aaid` (securities account), `target`.
+        - See each field's documentation for format, value range, and business meaning.
+
+        ### Business notes
+
+        Updates the confirmed value of a post-execution adjustment identified by `adjustment_id` (optionally narrowed by `item_id`, `aaid`, etc.). The confirmed value becomes the basis for the adjustment's final effect and is normally modified before confirmation.
+
+        ### Risk warning
+
+        This operation modifies a pending post-execution adjustment line item; the confirmed value affects the eventual real funds, positions, or quantity changes. Confirm the adjustment record and confirmed value before calling.
 
         ### Result
 
-        On success, the endpoint completes the operation. See the `200` response schema for returned data and subsequent state information.
+        On success the post-execution adjustment line item is updated; the resulting state and returned data are defined by the `200` response.
       security:
         - bearerAuth: []
       requestBody:
