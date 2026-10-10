@@ -54,6 +54,28 @@
           "message"
         ]
       },
+      "StockFlowDetailItem": {
+        "type": "object",
+        "description": "Large/medium/small order capital flow amounts, in units of 10,000 in the stock's trading currency",
+        "properties": {
+          "large": {
+            "type": "string",
+            "description": "Large order amount"
+          },
+          "medium": {
+            "type": "string",
+            "description": "Medium order amount"
+          },
+          "small": {
+            "type": "string",
+            "description": "Small order amount"
+          },
+          "total_balance": {
+            "type": "string",
+            "description": "Total amount"
+          }
+        }
+      },
       "RewardsCard": {
         "type": "object",
         "description": "Card/Coupon information",
@@ -10721,6 +10743,209 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/quote/flow/aggregate": {
+      "get": {
+        "tags": [
+          "Market data"
+        ],
+        "summary": "Get Aggregated Stock Capital Flow Data",
+        "description": "Fetch capital flow data for a single stock in one request. The response aggregates three parts: capital flow details (today's large/medium/small order inflows and outflows), capital flow history (daily net inflow), and capital flow trend (today's intraday net inflow), for display in the capital flow module of the stock detail page. Amounts are in units of 10,000 in the stock's trading currency.\n",
+        "operationId": "getV1QuoteFlowAggregate",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "Stock id, such as `ST/US/AAPL`. If omitted, no error is returned, but every part returns empty data.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "example": "ST/US/AAPL"
+          },
+          {
+            "name": "line_num",
+            "in": "query",
+            "required": false,
+            "description": "Number of days returned in the capital flow history (kline.flowklines). Defaults to 20 if omitted; the Broker App always passes 20.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get aggregated stock capital flow data” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "detail": {
+                              "type": "object",
+                              "description": "Capital flow details (today's large/medium/small orders)",
+                              "properties": {
+                                "timestamp": {
+                                  "type": "string",
+                                  "description": "Data timestamp (in seconds; int64 returned as a string)"
+                                },
+                                "inflow": {
+                                  "$ref": "#/components/schemas/StockFlowDetailItem"
+                                },
+                                "outflow": {
+                                  "$ref": "#/components/schemas/StockFlowDetailItem"
+                                },
+                                "next_pull_interval": {
+                                  "type": "string",
+                                  "description": "Interval before the next pull (in seconds; int64 returned as a string). The Broker App uses it to schedule periodic refreshes."
+                                }
+                              }
+                            },
+                            "kline": {
+                              "type": "object",
+                              "description": "Capital flow history (daily)",
+                              "properties": {
+                                "flowklines": {
+                                  "type": "array",
+                                  "description": "Daily net capital inflows, in ascending time order",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "inflow": {
+                                        "type": "string",
+                                        "description": "Net capital inflow for the day (negative values indicate net outflow), in units of 10,000"
+                                      },
+                                      "timestamp": {
+                                        "type": "string",
+                                        "description": "Trading day timestamp (in seconds; int64 returned as a string)"
+                                      },
+                                      "close": {
+                                        "type": "string",
+                                        "description": "Closing price for the day. Returned only when candlestick data is requested; this endpoint always returns an empty string."
+                                      },
+                                      "prev_close": {
+                                        "type": "string",
+                                        "description": "Previous day's closing price. Returned only when candlestick data is requested; this endpoint always returns an empty string."
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "minute": {
+                              "type": "object",
+                              "description": "Capital flow trend (today's intraday)",
+                              "properties": {
+                                "flowminutes": {
+                                  "type": "array",
+                                  "description": "Cumulative net capital inflow for each minute of today, in ascending time order",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "inflow": {
+                                        "type": "string",
+                                        "description": "Cumulative net capital inflow up to this minute (negative values indicate net outflow), in units of 10,000"
+                                      },
+                                      "timestamp": {
+                                        "type": "string",
+                                        "description": "Minute timestamp (in seconds; int64 returned as a string)"
+                                      },
+                                      "line_no": {
+                                        "type": "integer",
+                                        "description": "Intraday sequence number, starting from 1"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "detail": {
+                      "inflow": {
+                        "large": "15520.01",
+                        "medium": "38290.12",
+                        "small": "58926.24",
+                        "total_balance": "112736.36"
+                      },
+                      "next_pull_interval": "60",
+                      "outflow": {
+                        "large": "17075.65",
+                        "medium": "46691.37",
+                        "small": "81679.35",
+                        "total_balance": "145446.36"
+                      },
+                      "timestamp": "1791576000"
+                    },
+                    "kline": {
+                      "flowklines": [
+                        {
+                          "close": "",
+                          "inflow": "-8804.69",
+                          "prev_close": "",
+                          "timestamp": "1789358400"
+                        },
+                        {
+                          "close": "",
+                          "inflow": "-22184.57",
+                          "prev_close": "",
+                          "timestamp": "1789444800"
+                        },
+                        {
+                          "close": "",
+                          "inflow": "-26941.13",
+                          "prev_close": "",
+                          "timestamp": "1789531200"
+                        }
+                      ]
+                    },
+                    "minute": {
+                      "flowminutes": [
+                        {
+                          "inflow": "-920.85",
+                          "line_no": 1,
+                          "timestamp": "1791552600"
+                        },
+                        {
+                          "inflow": "-1726.05",
+                          "line_no": 2,
+                          "timestamp": "1791552660"
+                        },
+                        {
+                          "inflow": "-1956.82",
+                          "line_no": 3,
+                          "timestamp": "1791552720"
+                        }
+                      ]
+                    }
+                  }
                 }
               }
             }

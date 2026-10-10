@@ -54,6 +54,28 @@
           "message"
         ]
       },
+      "StockFlowDetailItem": {
+        "type": "object",
+        "description": "资金流大/中/小单金额，单位万（股票交易币种）",
+        "properties": {
+          "large": {
+            "type": "string",
+            "description": "大单金额"
+          },
+          "medium": {
+            "type": "string",
+            "description": "中单金额"
+          },
+          "small": {
+            "type": "string",
+            "description": "小单金额"
+          },
+          "total_balance": {
+            "type": "string",
+            "description": "合计金额"
+          }
+        }
+      },
       "RewardsCard": {
         "type": "object",
         "description": "卡券信息",
@@ -10721,6 +10743,209 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/quote/flow/aggregate": {
+      "get": {
+        "tags": [
+          "行情"
+        ],
+        "summary": "获取股票资金流聚合数据",
+        "description": "一次性查询单支股票的资金流数据，聚合了资金流详情（当日大/中/小单流入流出）、资金流历史（按日净流入）、资金流趋势（当日分时净流入）三部分，用于股票详情页资金流模块展示。金额单位为万（股票交易币种）。\n",
+        "operationId": "getV1QuoteFlowAggregate",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "股票 id，如 `ST/US/AAPL`；不传时不报错，但各部分均返回空数据",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            "example": "ST/US/AAPL"
+          },
+          {
+            "name": "line_num",
+            "in": "query",
+            "required": false,
+            "description": "资金流历史（kline.flowklines）返回的天数，不传时默认 20；Broker App 固定传 20",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“获取股票资金流聚合数据”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "detail": {
+                              "type": "object",
+                              "description": "资金流详情（当日大/中/小单）",
+                              "properties": {
+                                "timestamp": {
+                                  "type": "string",
+                                  "description": "数据时间戳（秒，int64 以字符串返回）"
+                                },
+                                "inflow": {
+                                  "$ref": "#/components/schemas/StockFlowDetailItem"
+                                },
+                                "outflow": {
+                                  "$ref": "#/components/schemas/StockFlowDetailItem"
+                                },
+                                "next_pull_interval": {
+                                  "type": "string",
+                                  "description": "下次拉取间隔（秒，int64 以字符串返回），Broker App 据此控制定时刷新"
+                                }
+                              }
+                            },
+                            "kline": {
+                              "type": "object",
+                              "description": "资金流历史（按日）",
+                              "properties": {
+                                "flowklines": {
+                                  "type": "array",
+                                  "description": "按日资金净流入列表，按时间升序",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "inflow": {
+                                        "type": "string",
+                                        "description": "当日资金净流入（负数为净流出），单位万"
+                                      },
+                                      "timestamp": {
+                                        "type": "string",
+                                        "description": "交易日时间戳（秒，int64 以字符串返回）"
+                                      },
+                                      "close": {
+                                        "type": "string",
+                                        "description": "当日收盘价；仅在请求 K 线数据时返回，本接口固定返回空字符串"
+                                      },
+                                      "prev_close": {
+                                        "type": "string",
+                                        "description": "昨日收盘价；仅在请求 K 线数据时返回，本接口固定返回空字符串"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "minute": {
+                              "type": "object",
+                              "description": "资金流趋势（当日分时）",
+                              "properties": {
+                                "flowminutes": {
+                                  "type": "array",
+                                  "description": "当日每分钟累计资金净流入列表，按时间升序",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "inflow": {
+                                        "type": "string",
+                                        "description": "截至该分钟的累计资金净流入（负数为净流出），单位万"
+                                      },
+                                      "timestamp": {
+                                        "type": "string",
+                                        "description": "分钟时间戳（秒，int64 以字符串返回）"
+                                      },
+                                      "line_no": {
+                                        "type": "integer",
+                                        "description": "分时序号，从 1 开始"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "detail": {
+                      "inflow": {
+                        "large": "15520.01",
+                        "medium": "38290.12",
+                        "small": "58926.24",
+                        "total_balance": "112736.36"
+                      },
+                      "next_pull_interval": "60",
+                      "outflow": {
+                        "large": "17075.65",
+                        "medium": "46691.37",
+                        "small": "81679.35",
+                        "total_balance": "145446.36"
+                      },
+                      "timestamp": "1791576000"
+                    },
+                    "kline": {
+                      "flowklines": [
+                        {
+                          "close": "",
+                          "inflow": "-8804.69",
+                          "prev_close": "",
+                          "timestamp": "1789358400"
+                        },
+                        {
+                          "close": "",
+                          "inflow": "-22184.57",
+                          "prev_close": "",
+                          "timestamp": "1789444800"
+                        },
+                        {
+                          "close": "",
+                          "inflow": "-26941.13",
+                          "prev_close": "",
+                          "timestamp": "1789531200"
+                        }
+                      ]
+                    },
+                    "minute": {
+                      "flowminutes": [
+                        {
+                          "inflow": "-920.85",
+                          "line_no": 1,
+                          "timestamp": "1791552600"
+                        },
+                        {
+                          "inflow": "-1726.05",
+                          "line_no": 2,
+                          "timestamp": "1791552660"
+                        },
+                        {
+                          "inflow": "-1956.82",
+                          "line_no": 3,
+                          "timestamp": "1791552720"
+                        }
+                      ]
+                    }
+                  }
                 }
               }
             }
