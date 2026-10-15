@@ -21668,13 +21668,15 @@ paths:
 
         ### 請求參數
 
-        - 必填：`action_in`（操作類型）、`id`（市場記錄 ID，新增時可傳 `0`）。
-        - 可選：`market`（市場）、`currency`（幣種）、`overnight_flag`（隔夜市場標識）、`custodian_id`（托管商編號）、`sub_position_no`（托管商子倉）、`balance_back_n`（錢交收 Tn）、`equity_back_n`（券交收 Tn）、`main_flag`（本位市場）、`otc_flag`（OTC 市場標記）、`use_public_stock_info`（使用公有庫標的信息）、`busin_flow_id`（日終流程 ID）。
+        - 必填：`action_in`（操作類型）、`market`（市場，必須是 `POST /v1/datasets/clearing_markets` 列表中已存在的市場）、`time_zone_name`（市場的 IANA 時區名，如 `Asia/Tokyo`；新增和修改時後端必需）。
+        - `id`：修改（`3`）/刪除（`2`）時必填，取 `clearing_markets` 列表行的 `id`；新增（`1`）時不傳，並選擇該列表中 `otc_flag` 為 `99`（未啓用）的市場。
+        - `otc_flag` 為 `0`（普通日終流程）時需傳 `busin_flow_id`；`otc_flag` 不為 `99` 時，管理後台會同時提交 `currency`、`overnight_flag`、`balance_back_n`、`equity_back_n`、`custodian_id`、`sub_position_no`、`main_flag`、`use_public_stock_info`。
+        - 可選：`market`（市場）、`currency`（幣種）、`overnight_flag`（隔夜市場標識）、`custodian_id`（托管商編號）、`sub_position_no`（托管商子倉）、`balance_back_n`（錢交收 Tn）、`equity_back_n`（券交收 Tn）、`main_flag`（本位市場）、`otc_flag`（OTC 市場標記）、`use_public_stock_info`（使用公有庫標的信息）、`busin_flow_id`（日終流程 ID）、`allow_manual_order`（是否允許手工下單，`0`/`1`）。
         - 各欄位的格式、取值範圍、預設行為和業務含義見對應欄位說明。
 
         ### 已知問題
 
-        在測試環境的端到端測試中，新增市場返回 `800001`（`InvalidField=Time Zone Name`）。管理後台表單不會向本接口傳任何時區字段，後端期望的字段尚未確認；依賴本接口新增市場前，請先與清算團隊確認。
+        未傳 `time_zone_name` 時，即使對已有記錄做不改任何值的修改（`id` 和 `market` 均有效），也會返回 `800001`（`InvalidField=Time Zone Name`）。後端要求傳 `time_zone_name`（IANA 時區名，如 `Asia/Tokyo`、`Asia/Hong_Kong`、`America/New_York`），並且很可能還要求 `allow_manual_order`（`0`/`1`）；後端不會根據市場推導這兩個值。各市場這兩個字段的當前值見 Data Porter 模板 `clear_markets_v2` 的結果行；修改市場時請傳入現有值。
 
         ### 風險提示
 
@@ -21693,7 +21695,8 @@ paths:
               type: object
               required:
                 - action_in
-                - id
+                - market
+                - time_zone_name
               properties:
                 action_in:
                   type: string
@@ -21715,15 +21718,15 @@ paths:
                   example: '1'
                 id:
                   type: integer
-                  description: 新增時為 0，可不傳；編輯/刪除時為已有記錄 ID
+                  description: 修改（`3`）/刪除（`2`）時必填，取 `POST /v1/datasets/clearing_markets` 列表行的 `id`；新增（`1`）時不傳。
                 market:
                   type: string
                   description: |-
-                    候選值隨業務變化；請調用 `GET /v1/datasets/refs/clearing_markets_all` 獲取當前可用取值
+                    必須是 `POST /v1/datasets/clearing_markets` 列表中已存在的市場；新增時選擇該列表中 `otc_flag` 為 `99`（未啓用）的市場。
 
-                    請調用 `GET /v1/datasets/refs/clearing_markets_all` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本字段值。
+                    請調用 `GET /v1/datasets/refs/clearing_markets` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本字段值。
                   x-value-source:
-                    endpoint: GET /v1/datasets/refs/clearing_markets_all
+                    endpoint: GET /v1/datasets/refs/clearing_markets
                 currency:
                   type: string
                   description: 幣種。
@@ -21785,7 +21788,7 @@ paths:
                   description: |-
                     候選值隨業務變化；請調用 `GET /v1/datasets/refs/custodian_sub_positions` 獲取當前可用取值
 
-                    請調用 `GET /v1/datasets/refs/custodian_sub_positions` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本字段值。
+                    請調用 `GET /v1/datasets/refs/custodian_sub_positions` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本字段值。調用時傳 `key=<custodian_id>`，按托管商篩選子倉。
                   x-value-source:
                     endpoint: GET /v1/datasets/refs/custodian_sub_positions
                 balance_back_n:
@@ -21877,20 +21880,34 @@ paths:
                   example: 0
                 busin_flow_id:
                   type: integer
-                  description: 當選擇日終流程時填寫，非日終流程時該字段為空
+                  description: 日終流程 ID。`otc_flag` 為 `0`（普通日終流程）時必填，取日終流程配置（數據模板 `clear_busin_flows_list`）記錄的 `id`；其他情況不傳。
+                time_zone_name:
+                  type: string
+                  description: '市場的 IANA 時區名，如 `Asia/Tokyo`、`Asia/Hong_Kong`、`America/New_York`。新增（`1`）和修改（`3`）時後端必需，缺少時返回 `800001`（`InvalidField=Time Zone Name`）。各市場的當前值見 Data Porter 模板 `clear_markets_v2` 的結果行。'
+                  example: Asia/Tokyo
+                allow_manual_order:
+                  type: integer
+                  description: '是否允許手工下單：`0` 否，`1` 是。新增和修改時後端很可能需要此字段；各市場的當前值見 Data Porter 模板 `clear_markets_v2` 的結果行。'
+                  enum:
+                    - 0
+                    - 1
+                  example: 0
             example:
-              action_in: '1'
-              id: 0
+              action_in: '3'
+              id: 12
               market: US
-              currency: USD
-              overnight_flag: 0
-              custodian_id: 1001
-              sub_position_no: SUB01
-              balance_back_n: 1
-              equity_back_n: 2
-              main_flag: 1
+              main_flag: 0
               otc_flag: 0
-              use_public_stock_info: 1
+              busin_flow_id: 1
+              overnight_flag: 0
+              equity_back_n: 1
+              balance_back_n: 1
+              custodian_id: 626
+              sub_position_no: OTC01
+              currency: USD
+              use_public_stock_info: 0
+              time_zone_name: America/New_York
+              allow_manual_order: 0
       responses:
         '200':
           description: 請求處理成功。響應的 `data` 不包含額外業務字段。
@@ -22878,7 +22895,7 @@ paths:
 
         ### 請求參數
 
-        - 必填：`id`（配置 ID）。
+        - 必填：`id`（配置 ID）。`POST /v1/datasets/ipo_buy_powers` 不返回該 ID；管理後台從 Data Porter 數據模板 `ipo_buy_power` 讀取。MCP 的 `data_porter_query` 目前無法查詢該模板。
         - 可選：`audit_frontend_resource`（審計上下文）。
         - 各欄位的格式和業務含義見對應欄位說明。
 

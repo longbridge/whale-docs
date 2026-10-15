@@ -285,7 +285,7 @@ paths:
         - Required: `default_id` (record ID identifying the org package reference to delete)
         - Optional: `audit_frontend_resource` (caller-provided audit context)
         - See the field descriptions for the format, value range, and business meaning of each field.
-        - `default_id` is the record ID of the org package reference. `POST /v1/datasets/booking_org_package_refs` does not return this ID; the admin console reads it from the `id` column of the `billing_org_package_ref` data template.
+        - `default_id` is the record ID of the org package reference. `POST /v1/datasets/booking_org_package_refs` does not return this ID; the admin console reads it from the `id` column of the Data Porter template `billing_org_package_ref`. The MCP `data_porter_query` tool cannot currently query this template.
 
         ### Risk warning
 
@@ -307,12 +307,12 @@ paths:
               properties:
                 default_id:
                   type: string
-                  description: Default ID associated with this request.
+                  description: Org package reference record ID. Not returned by `POST /v1/datasets/booking_org_package_refs`; the admin console reads it from the `id` column of the Data Porter template `billing_org_package_ref`. This field is required.
                 audit_frontend_resource:
                   type: object
                   description: Provides audit context for this operation.
             example:
-              default_id: '123'
+              default_id: '17'
               audit_frontend_resource: {}
       responses:
         '200':
@@ -380,13 +380,14 @@ paths:
         - lb_hk_charging.lb_hk_billing_org_package_ref_list
       x-lbonly: false
       description: |-
-        Retrieves the package-reference configuration of an organization by `org_id`.
+        Retrieves one org package-reference configuration by its record ID `default_id`.
 
         ### Request parameters
 
-        - Required: `org_id` (organization ID), passed as a query parameter.
+        - Required: `default_id` (org package reference record ID), passed as a query parameter.
+        - `POST /v1/datasets/booking_org_package_refs` does not return this ID; the admin console reads it from the `id` column of the Data Porter template `billing_org_package_ref`. The MCP `data_porter_query` tool cannot currently query this template.
         - See the field descriptions for the format and business meaning of each field.
-        - The admin console does not call this endpoint. In testing, `org_id` values returned by `POST /v1/datasets/booking_org_package_refs` produced a record-not-found error here, so the expected lookup key is unconfirmed. Read the configuration from that list instead.
+        - The admin console does not call this endpoint.
 
         ### Returns
 
@@ -394,13 +395,13 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - name: org_id
+        - name: default_id
           in: query
           required: true
           schema:
             type: string
-          description: Organization id.
-          example: '3'
+          description: Org package reference record ID. Not returned by `POST /v1/datasets/booking_org_package_refs`; the admin console reads it from the `id` column of the Data Porter template `billing_org_package_ref`.
+          example: '17'
       responses:
         '200':
           description: The request was processed successfully. `data` contains the organization's package reference configuration.
@@ -650,7 +651,7 @@ paths:
         - Required: `default_id` (record ID), `default_package_id` (default package ID)
         - Optional: `cash_package_id`, `financing_package_id`, `bo_package_id`, `allow_package_ids` (allowed package ID list), `personal_allow_item_ids` (allowed personalized fee-item ID list)
         - See the field descriptions for the format, value range, and business meaning of each field.
-        - `default_id` is the record ID of the org package reference. `POST /v1/datasets/booking_org_package_refs` does not return this ID; the admin console reads it from the `id` column of the `billing_org_package_ref` data template.
+        - `default_id` is the record ID of the org package reference. `POST /v1/datasets/booking_org_package_refs` does not return this ID; the admin console reads it from the `id` column of the Data Porter template `billing_org_package_ref`. The MCP `data_porter_query` tool cannot currently query this template.
 
         ### Risk warning
 
@@ -672,7 +673,7 @@ paths:
               properties:
                 default_id:
                   type: string
-                  description: The primary key of the institutional package record being edited (the id of the corresponding list row).
+                  description: Record ID of the org package reference being edited. Not returned by `POST /v1/datasets/booking_org_package_refs`; the admin console reads it from the `id` column of the Data Porter template `billing_org_package_ref`. This field is required.
                 default_package_id:
                   type: string
                   description: |-
@@ -9450,221 +9451,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
-      x-dataset-download:
-        method: POST
-        path: /v1/datasets/billing_item_for_secondary_item/download
-        operationId: billing_item_for_secondary_item_download
-  /v1/datasets/billing_item_for_secondary_item/download:
-    post:
-      operationId: billing_item_for_secondary_item_download
-      summary: Fee Scenario List Export
-      tags:
-        - Service Parameter
-      x-permission-key:
-        - lb_hk_charging.lb_hk_scene_query
-      x-lbonly: false
-      description: |-
-        Export the `billing scenario list` dataset to a file. `filters` determines the export scope, and `down_fields` limits which columns are exported.
-
-        A billing scenario (billing item) describes under which business conditions and by which rules a charge applies.
-
-        The backend does not currently support exporting this dataset and returns an export-not-supported error. Use `POST /v1/datasets/billing_item_for_secondary_item` to query the data page by page instead.
-
-        ### Export modes
-
-        - `mode: 0`: Synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: Asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record when it is no longer needed.
-
-        ### Returns
-
-        On success, returns the download URL or `file_download_id` according to the selected mode.
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                filters:
-                  type: object
-                  description: Combines business filters. Omit a filter field to disable that filter.
-                  properties:
-                    biz_type_code:
-                      type: string
-                      description: |-
-                        Filters results by Fee Type.
-
-                        Values are dynamic. Call `GET /v1/datasets/refs/billing_business_type_code` to retrieve the current data dictionary, and use the returned entry's `key` as this parameter's value.
-                      x-value-source:
-                        endpoint: GET /v1/datasets/refs/billing_business_type_code
-                mode:
-                  type: integer
-                  default: 0
-                  description: Defaults to `0` (synchronous mode) when omitted.
-                  enum:
-                    - 0
-                    - 1
-                  x-enum-details:
-                    - value: 0
-                      label: Sync
-                    - value: 1
-                      label: Async
-                  example: 0
-                ext:
-                  type: string
-                  description: Download file format. Defaults to `csv` when omitted.
-                  enum:
-                    - csv
-                    - xlsx
-                  x-enum-details:
-                    - value: csv
-                      label: CSV
-                    - value: xlsx
-                      label: Excel
-                  example: csv
-                file_name:
-                  type: string
-                  description: Export file name. The server generates a name when omitted.
-                down_fields:
-                  type: array
-                  description: |-
-                    When omitted, all fields are exported; allowed values are listed under items.enum (the
-                    same field list as the query endpoint's data.list.items).
-                  items:
-                    type: string
-                    enum:
-                      - id
-                      - biz_type
-                      - biz_type_val
-                      - name_id
-                      - name_id_val
-                      - basis_type
-                      - basis_type_val
-                      - basis
-                      - metric_type
-                      - metric_type_val
-                      - benchmark_rate_show
-                      - granularity
-                      - granularity_val
-                      - coefficient
-                      - divisor
-                      - direction
-                      - direction_val
-                      - cutoff_method
-                      - cutoff_method_val
-                      - cutoff_digits
-                    example: id
-                ticket_content:
-                  type: string
-                  description: Information shown to the approver when download approval is enabled for the template.
-                ticket_preview_url:
-                  type: string
-                  description: Export approval detail URL. Used only when the export requires approval.
-                hide:
-                  type: integer
-                  description: Whether to hide this export from the download-record list.
-                  enum:
-                    - 0
-                    - 1
-                  x-enum-details:
-                    - value: 0
-                      label: Not Hidden
-                    - value: 1
-                      label: Hidden
-                  example: 0
-            example:
-              filters: {}
-              mode: 0
-              ext: csv
-              file_name: ''
-              remark: ''
-              down_fields: []
-              ticket_content: ''
-              ticket_preview_url: ''
-              hide: 0
-      responses:
-        '200':
-          description: On success, returns information about the Fee Scenario List export task. Synchronous exports provide a download URL directly; asynchronous exports provide `file_download_id` for subsequent status queries.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - code
-                  - message
-                  - data
-                properties:
-                  code:
-                    type: integer
-                    description: |-
-                      `0` indicates success. A non-zero value is a business error code, in which case
-                      `data` is usually empty.
-
-                      HTTP status codes use their standard semantics. A successful request normally
-                      returns `200`; errors may return `400`, `401`, `403`, `408`, or another applicable
-                      status. Interpret the HTTP status together with the business `code`.
-
-                      - `401`: The user is not authenticated.
-                      - `403`: The current account is not authorized to use this function. Grant access
-                        through User Permission.
-                    x-enum-details:
-                      - value: 0
-                        label: Success
-                  message:
-                    type: string
-                  data:
-                    type: object
-                    properties:
-                      url:
-                        type: string
-                        description: 'Returned in synchronous mode (`mode: 0`); empty in asynchronous mode.'
-                      file_download_id:
-                        type: string
-                        description: |-
-                          Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
-                      ticket_id:
-                        type: string
-                        description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
-              example:
-                code: 0
-                message: success
-                data:
-                  url: https://b-api.longbridge.xyz/download/export_result.csv
-                  file_download_id: ''
-                  ticket_id: ''
-        '400':
-          description: Bad request. Check the business error code in `code` and the error details in `message`.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
-        '401':
-          description: The user is not authenticated, or the login session has expired.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
-        '403':
-          description: The current account is not authorized to use this feature. Grant the required permission to the account in User Permission.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
-        '408':
-          description: The request timed out. Check the business error code in `code` and the error details in `message`.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
-      x-dataset-parent:
-        method: GET
-        path: /v1/datasets/billing_item_for_secondary_item
-        operationId: billing_item_for_secondary_item
 components:
   schemas:
     BrokerGatewayErrorEnvelope:

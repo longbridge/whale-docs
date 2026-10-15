@@ -2452,7 +2452,14 @@ paths:
               properties:
                 request_id:
                   type: string
-                  description: 发奖请求唯一标识（UUID）
+                  minLength: 36
+                  maxLength: 36
+                  format: uuid
+                  description: 发奖请求唯一标识，必须是 36 位 UUID（如 `3f1c2a9e-6b1d-4c1e-9a7a-2b9d1e0f4c55`）。
+                member_id:
+                  type: string
+                  description: 接收奖励的客户编号 `member_id`（不是证券账号 `account_no`，也不是 `aaid`）。
+                  example: '10594038'
                 type:
                   type: string
                   enum:
@@ -2469,12 +2476,15 @@ paths:
                     currency:
                       type: string
                       enum:
+                        - CNY
                         - HKD
                         - USD
+                        - SGD
                       description: 现金币种，仅现金奖励必填。
                     amount:
                       type: integer
-                      description: 仅现金奖励必填，单位：分
+                      minimum: 1
+                      description: 仅现金奖励必填，正整数，单位：分
                   required:
                     - currency
                     - amount
@@ -2484,11 +2494,22 @@ paths:
                   description: 实物、卡券奖励必填
                 remark:
                   type: string
-                  description: 发奖备注
+                  maxLength: 200
+                  description: 发奖备注，最多 200 个字符
               required:
                 - request_id
+                - member_id
                 - type
                 - campaign_code
+            example:
+              request_id: 3f1c2a9e-6b1d-4c1e-9a7a-2b9d1e0f4c55
+              member_id: '10594038'
+              type: cash
+              campaign_code: M20221130
+              cash_value:
+                currency: HKD
+                amount: 100
+              remark: e2e
       responses:
         '200':
           content:
@@ -2550,7 +2571,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
           description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`
-      description: 用于外部接口发放现金、实物、卡券奖励。请求定义中未记录接收奖励的客户或账户字段，端到端测试调用返回业务错误码 `330001`。调用前请先与项目团队确认接收方字段。
+      description: |-
+        用于外部接口向指定客户发放现金、实物、卡券奖励。
+
+        ### 请求参数
+
+        - 必填：`request_id`（发奖请求唯一标识，必须是 36 位 UUID，如 `3f1c2a9e-6b1d-4c1e-9a7a-2b9d1e0f4c55`）、`member_id`（接收奖励的客户编号，不是 `account_no` 或 `aaid`）、`type`（奖励类型）、`campaign_code`（归属活动 Code）。
+        - 现金奖励（`type` 为 `cash`）必填 `cash_value`：`currency` 取 `CNY`、`HKD`、`USD`、`SGD` 之一，`amount` 为正整数，单位：分。
+        - 实物（`merch`）、卡券（`coupon`）奖励必填 `code`。
+        - 可选：`remark`（发奖备注，最多 200 个字符）。
+        - 示例：`{"request_id":"3f1c2a9e-6b1d-4c1e-9a7a-2b9d1e0f4c55","member_id":"10594038","type":"cash","campaign_code":"M20221130","cash_value":{"currency":"HKD","amount":100},"remark":"e2e"}`。
+
+        ### 已知问题
+
+        测试中，使用管理后台登录态调用本网关路由时，无论 `member_id` 取何值（包括 `0`）均返回 `330001`，后端似乎忽略请求体中的 `member_id`。管理后台的奖励页面改用 `/reward/send` 发放奖励。
+
+        ### 风险提示
+
+        此操作会向客户真实发放奖励，涉及资金或权益变动。调用前请确认接收客户、奖励类型和金额无误。
       x-mint:
         href: /zh-CN/api-reference/exec_send_reward
         metadata:

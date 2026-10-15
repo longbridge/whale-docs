@@ -19327,7 +19327,12 @@ paths:
         ### 請求參數
 
         - 必填：`adjustment_id`（調整 ID）、`confirmed_value`（確認值）
-        - 可選：`event_id`（事件 ID）、`item_id`（明細項 ID）、`aaid`（證券賬號）、`target`（目標）
+        - 可選：`item_id`（明細項 ID）、`event_id`（事件 ID）、`aaid`（證券賬號）、`target`（調整目標）
+        - `adjustment_id` 取 `POST /v1/datasets/corp_action_post_adjust_records` 列表行的 `id`（僅狀態為 Pending 的記錄可編輯），或 `post_adjust` 返回的 `adjustment_id`。
+        - `item_id` 取明細行的 `amount_item_id`、`fee_item_id` 或 `quantity_item_id`（按要修改的金額、費用或數量選擇）；明細行通過 `data_porter_query` 查詢數據模板 `post_adjust_detail_items` 獲得。
+        - `item_id` 為 `0`（該項尚無明細）時，需同時傳 `aaid`、`target`、`event_id`（取同一明細行的值）；`item_id` 非 `0` 時不傳這三個欄位。
+        - `confirmed_value` 精度：數量保留 4 位小數，金額和費用保留 2 位小數。
+        - 示例：`{"adjustment_id":"45","confirmed_value":"1200.5","item_id":"8812"}`；`{"adjustment_id":"45","confirmed_value":"100","item_id":"0","aaid":"50208322","target":"ADJUSTMENT_TARGET_QUANTITY","event_id":"9001"}`。
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
@@ -19355,32 +19360,46 @@ paths:
               properties:
                 adjustment_id:
                   type: string
-                  description: 調整ID，用於標識本次請求關聯的業務對象。此字段為必填項。
+                  description: 調整 ID，取 `POST /v1/datasets/corp_action_post_adjust_records` 列表行的 `id`（僅狀態為 Pending 的記錄可編輯），或 `post_adjust` 返回的 `adjustment_id`。此字段為必填項。
                 confirmed_value:
                   type: string
                   description: 用於指定「確認值」。此字段為必填項。
                 event_id:
                   type: string
-                  description: 事件ID，用於標識本次請求關聯的業務對象。
+                  description: 事件 ID，取明細行的 `event_id`。僅在 `item_id` 為 `0` 時傳。
                 item_id:
                   type: string
-                  description: 明細項ID，用於標識本次請求關聯的業務對象。
+                  description: |-
+                    明細項 ID，取明細行的 `amount_item_id`、`fee_item_id` 或 `quantity_item_id`（按要修改的金額、費用或數量選擇）；明細行通過 `data_porter_query` 查詢數據模板 `post_adjust_detail_items` 獲得。
+
+                    該項尚無明細時傳 `0`，並同時傳 `aaid`、`target`、`event_id`。
                 aaid:
                   type: string
                   description: |-
-                    本次請求關聯的證券賬號。
+                    明細行的 `aaid`，僅在 `item_id` 為 `0` 時傳。
 
                     此處傳客戶證券賬戶的內部數字編號 `aaid`，並非證券賬號 `account_no`（如 `H00000000`），亦非客戶編號 `member_id`；一個客戶可擁有多個 `aaid`。
                 target:
                   type: string
-                  description: 用於指定「目標」。
+                  description: |-
+                    調整目標，僅在 `item_id` 為 `0` 時傳。
+
+                    **可選值：** `ADJUSTMENT_TARGET_AMOUNT` 金額、`ADJUSTMENT_TARGET_QUANTITY` 數量、`ADJUSTMENT_TARGET_FEE` 費用
+                  enum:
+                    - ADJUSTMENT_TARGET_AMOUNT
+                    - ADJUSTMENT_TARGET_QUANTITY
+                    - ADJUSTMENT_TARGET_FEE
+                  x-enum-details:
+                    - value: ADJUSTMENT_TARGET_AMOUNT
+                      label: 金額
+                    - value: ADJUSTMENT_TARGET_QUANTITY
+                      label: 數量
+                    - value: ADJUSTMENT_TARGET_FEE
+                      label: 費用
             example:
-              adjustment_id: '123'
-              confirmed_value: '0'
-              event_id: ''
-              item_id: ''
-              aaid: ''
-              target: ''
+              adjustment_id: '45'
+              confirmed_value: '1200.5'
+              item_id: '8812'
       responses:
         '200':
           description: 請求處理成功。響應的 `data` 不包含額外業務字段。

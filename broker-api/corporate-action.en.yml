@@ -19354,7 +19354,12 @@ paths:
         ### Request parameters
 
         - Required: `adjustment_id` (adjustment ID), `confirmed_value`.
-        - Optional: `event_id`, `item_id` (line-item ID), `aaid` (securities account), `target`.
+        - Optional: `item_id` (line-item ID), `event_id`, `aaid` (securities account), `target` (adjustment target).
+        - `adjustment_id` is the `id` of a row returned by `POST /v1/datasets/corp_action_post_adjust_records` (only records in Pending state can be edited), or the `adjustment_id` returned by `post_adjust`.
+        - `item_id` is the line row's `amount_item_id`, `fee_item_id`, or `quantity_item_id` (depending on whether you edit the amount, fee, or quantity); fetch the line rows with `data_porter_query` using data template `post_adjust_detail_items`.
+        - When `item_id` is `0` (the line has no detail yet), also send `aaid`, `target`, and `event_id` from the same line row; omit these three fields when `item_id` is not `0`.
+        - `confirmed_value` precision: 4 decimal places for quantity, 2 for amount and fee.
+        - Examples: `{"adjustment_id":"45","confirmed_value":"1200.5","item_id":"8812"}`; `{"adjustment_id":"45","confirmed_value":"100","item_id":"0","aaid":"50208322","target":"ADJUSTMENT_TARGET_QUANTITY","event_id":"9001"}`.
         - See each field's documentation for format, value range, and business meaning.
 
         ### Business notes
@@ -19382,31 +19387,46 @@ paths:
               properties:
                 adjustment_id:
                   type: string
-                  description: Adjustment ID associated with this request.
+                  description: Adjustment ID; use the `id` of a row returned by `POST /v1/datasets/corp_action_post_adjust_records` (only Pending records can be edited), or the `adjustment_id` returned by `post_adjust`. This field is required.
                 confirmed_value:
                   type: string
                   description: This field is required.
                 event_id:
                   type: string
-                  description: Event ID associated with this request.
+                  description: Event ID from the line row's `event_id`. Send only when `item_id` is `0`.
                 item_id:
                   type: string
-                  description: Item ID associated with this request.
+                  description: |-
+                    Line-item ID: the line row's `amount_item_id`, `fee_item_id`, or `quantity_item_id` (depending on whether you edit the amount, fee, or quantity); fetch the line rows with `data_porter_query` using data template `post_adjust_detail_items`.
+
+                    Pass `0` when the line has no detail yet, together with `aaid`, `target`, and `event_id`.
                 aaid:
                   type: string
                   description: |-
-                    Specifies A/C No..
+                    The line row's `aaid`. Send only when `item_id` is `0`.
 
                     Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 target:
                   type: string
+                  description: |-
+                    Adjustment target. Send only when `item_id` is `0`.
+
+                    **Allowed values:** `ADJUSTMENT_TARGET_AMOUNT` Amount, `ADJUSTMENT_TARGET_QUANTITY` Quantity, `ADJUSTMENT_TARGET_FEE` Fee
+                  enum:
+                    - ADJUSTMENT_TARGET_AMOUNT
+                    - ADJUSTMENT_TARGET_QUANTITY
+                    - ADJUSTMENT_TARGET_FEE
+                  x-enum-details:
+                    - value: ADJUSTMENT_TARGET_AMOUNT
+                      label: Amount
+                    - value: ADJUSTMENT_TARGET_QUANTITY
+                      label: Quantity
+                    - value: ADJUSTMENT_TARGET_FEE
+                      label: Fee
             example:
-              adjustment_id: '123'
-              confirmed_value: '0'
-              event_id: ''
-              item_id: ''
-              aaid: ''
-              target: ''
+              adjustment_id: '45'
+              confirmed_value: '1200.5'
+              item_id: '8812'
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.

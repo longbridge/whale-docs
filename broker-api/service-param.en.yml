@@ -22137,13 +22137,15 @@ paths:
 
         ### Request parameters
 
-        - Required: `action_in` (operation type) and `id` (market record ID; may be `0` when adding).
-        - Optional: `market`, `currency`, `overnight_flag`, `custodian_id`, `sub_position_no`, `balance_back_n` (cash settlement T+n), `equity_back_n` (securities settlement T+n), `main_flag`, `otc_flag`, `use_public_stock_info`, `busin_flow_id` (end-of-day flow ID).
+        - Required: `action_in` (operation type), `market` (must be a market that already exists in the `POST /v1/datasets/clearing_markets` list), and `time_zone_name` (IANA time zone name of the market, such as `Asia/Tokyo`; the backend requires it for add and modify).
+        - `id`: required for modify (`3`) and delete (`2`); use the `id` of the `clearing_markets` row. Omit it when adding (`1`), and pick a market whose row has `otc_flag` `99` (disabled).
+        - When `otc_flag` is `0` (normal day-end process), also send `busin_flow_id`. When `otc_flag` is not `99`, the admin console also submits `currency`, `overnight_flag`, `balance_back_n`, `equity_back_n`, `custodian_id`, `sub_position_no`, `main_flag`, and `use_public_stock_info`.
+        - Optional: `market`, `currency`, `overnight_flag`, `custodian_id`, `sub_position_no`, `balance_back_n` (cash settlement T+n), `equity_back_n` (securities settlement T+n), `main_flag`, `otc_flag`, `use_public_stock_info`, `busin_flow_id` (end-of-day flow ID), `allow_manual_order` (whether manual orders are allowed, `0`/`1`).
         - See the field definitions for format, value ranges, defaults, and business meaning.
 
         ### Known issue
 
-        In e2e tests on the test environment, adding a market returned `800001` with `InvalidField=Time Zone Name`. The Admin console form does not send any time-zone field to this endpoint, so the field the backend expects is unconfirmed; check with the clearing team before relying on this endpoint to add markets.
+        Calls without `time_zone_name` return `800001` with `InvalidField=Time Zone Name`, even for a no-op modify of an existing row with a valid `id` and `market`. The backend requires `time_zone_name` (an IANA time zone name such as `Asia/Tokyo`, `Asia/Hong_Kong`, or `America/New_York`) and likely `allow_manual_order` (`0`/`1`); it does not derive them from the market. The current values of both fields for each market are in the rows of the Data Porter template `clear_markets_v2`; send the existing values when modifying a market.
 
         ### Risk warning
 
@@ -22162,7 +22164,8 @@ paths:
               type: object
               required:
                 - action_in
-                - id
+                - market
+                - time_zone_name
               properties:
                 action_in:
                   type: string
@@ -22184,15 +22187,15 @@ paths:
                   example: '1'
                 id:
                   type: integer
-                  description: 0 on add (may be omitted); the existing record ID on edit/delete.
+                  description: Required for modify (`3`) and delete (`2`); use the `id` of a row returned by `POST /v1/datasets/clearing_markets`. Omit it when adding (`1`).
                 market:
                   type: string
                   description: |-
-                    Values come from the clearing_markets_all dynamic enumeration.
+                    Must be a market that already exists in the `POST /v1/datasets/clearing_markets` list; when adding, pick a market whose row has `otc_flag` `99` (disabled).
 
-                    Call `GET /v1/datasets/refs/clearing_markets_all` to retrieve the current data dictionary, and use the returned entry's `key` as this field's value.
+                    Call `GET /v1/datasets/refs/clearing_markets` to retrieve the current data dictionary, and use the returned entry's `key` as this field's value.
                   x-value-source:
-                    endpoint: GET /v1/datasets/refs/clearing_markets_all
+                    endpoint: GET /v1/datasets/refs/clearing_markets
                 currency:
                   type: string
                   description: Settlement currency of the market.
@@ -22254,7 +22257,7 @@ paths:
                   description: |-
                     Values come from the custodian_sub_positions dynamic enumeration.
 
-                    Call `GET /v1/datasets/refs/custodian_sub_positions` to retrieve the current data dictionary, and use the returned entry's `key` as this field's value.
+                    Call `GET /v1/datasets/refs/custodian_sub_positions` to retrieve the current data dictionary, and use the returned entry's `key` as this field's value.Pass `key=<custodian_id>` to filter sub-positions by custodian.
                   x-value-source:
                     endpoint: GET /v1/datasets/refs/custodian_sub_positions
                 balance_back_n:
@@ -22346,20 +22349,34 @@ paths:
                   example: 0
                 busin_flow_id:
                   type: integer
-                  description: Filled in when a day-end process is selected; empty otherwise.
+                  description: Day-end flow ID. Required when `otc_flag` is `0` (normal day-end process); use the `id` of a day-end flow record (data template `clear_busin_flows_list`). Omit it otherwise.
+                time_zone_name:
+                  type: string
+                  description: 'IANA time zone name of the market, such as `Asia/Tokyo`, `Asia/Hong_Kong`, or `America/New_York`. Required by the backend for add (`1`) and modify (`3`); without it the call returns `800001` (`InvalidField=Time Zone Name`). The current value for each market is in the rows of the Data Porter template `clear_markets_v2`.'
+                  example: Asia/Tokyo
+                allow_manual_order:
+                  type: integer
+                  description: 'Whether manual orders are allowed for the market: `0` = no, `1` = yes. The backend likely requires it for add and modify; the current value for each market is in the rows of the Data Porter template `clear_markets_v2`.'
+                  enum:
+                    - 0
+                    - 1
+                  example: 0
             example:
-              action_in: '1'
-              id: 0
+              action_in: '3'
+              id: 12
               market: US
-              currency: USD
-              overnight_flag: 0
-              custodian_id: 1001
-              sub_position_no: SUB01
-              balance_back_n: 1
-              equity_back_n: 2
-              main_flag: 1
+              main_flag: 0
               otc_flag: 0
-              use_public_stock_info: 1
+              busin_flow_id: 1
+              overnight_flag: 0
+              equity_back_n: 1
+              balance_back_n: 1
+              custodian_id: 626
+              sub_position_no: OTC01
+              currency: USD
+              use_public_stock_info: 0
+              time_zone_name: America/New_York
+              allow_manual_order: 0
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.
@@ -23354,7 +23371,7 @@ paths:
 
         ### Request parameters
 
-        - Required: `id` (configuration ID).
+        - Required: `id` (configuration ID). `POST /v1/datasets/ipo_buy_powers` does not return this ID; the admin console reads it from the Data Porter template `ipo_buy_power`. The MCP `data_porter_query` tool cannot currently query this template.
         - Optional: `audit_frontend_resource` (audit context).
         - See the field definitions for format and business meaning.
 

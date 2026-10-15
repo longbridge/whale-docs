@@ -2487,7 +2487,24 @@ paths:
   /v1/whaleapi/reward/send_reward:
     post:
       operationId: exec_send_reward
-      description: Grants cash, physical, or voucher rewards through an external interface. The request schema documents no recipient (customer or account) field, and end-to-end test calls returned business error `330001`. Confirm the recipient field with the project team before calling this endpoint.
+      description: |-
+        Grants a cash, physical, or voucher reward to a specified customer through an external interface.
+
+        ### Request parameters
+
+        - Required: `request_id` (unique request ID; must be a 36-character UUID such as `3f1c2a9e-6b1d-4c1e-9a7a-2b9d1e0f4c55`), `member_id` (customer ID of the recipient, not `account_no` or `aaid`), `type` (reward type), and `campaign_code` (campaign code).
+        - Cash rewards (`type` is `cash`) require `cash_value`: `currency` is one of `CNY`, `HKD`, `USD`, `SGD`, and `amount` is a positive integer in cents.
+        - Physical (`merch`) and voucher (`coupon`) rewards require `code`.
+        - Optional: `remark` (up to 200 characters).
+        - Example: `{"request_id":"3f1c2a9e-6b1d-4c1e-9a7a-2b9d1e0f4c55","member_id":"10594038","type":"cash","campaign_code":"M20221130","cash_value":{"currency":"HKD","amount":100},"remark":"e2e"}`.
+
+        ### Known issues
+
+        In tests, this gateway route returns `330001` when called with an admin console login, regardless of `member_id` (even `0`); the backend appears to ignore `member_id` in the body. The admin console's reward page uses `/reward/send` instead.
+
+        ### Risk warning
+
+        This operation grants a real reward to the customer and changes funds or entitlements. Confirm the recipient, reward type, and amount before calling.
       summary: Send Reward
       tags:
         - Reward Center
@@ -2504,7 +2521,14 @@ paths:
               properties:
                 request_id:
                   type: string
-                  description: request_id
+                  minLength: 36
+                  maxLength: 36
+                  format: uuid
+                  description: Unique ID of the reward request; must be a 36-character UUID (such as `3f1c2a9e-6b1d-4c1e-9a7a-2b9d1e0f4c55`).
+                member_id:
+                  type: string
+                  description: Customer ID (`member_id`) of the reward recipient; not the securities account number `account_no` or the `aaid`.
+                  example: '10594038'
                 type:
                   type: string
                   enum:
@@ -2521,12 +2545,15 @@ paths:
                     currency:
                       type: string
                       enum:
+                        - CNY
                         - HKD
                         - USD
+                        - SGD
                       description: Cash currency. Required only for cash rewards.
                     amount:
                       type: integer
-                      description: Cash amount
+                      minimum: 1
+                      description: Cash amount in cents; a positive integer. Required only for cash rewards.
                   required:
                     - currency
                     - amount
@@ -2536,11 +2563,22 @@ paths:
                   description: Prize code
                 remark:
                   type: string
-                  description: remark
+                  maxLength: 200
+                  description: Reward remark, up to 200 characters.
               required:
                 - request_id
+                - member_id
                 - type
                 - campaign_code
+            example:
+              request_id: 3f1c2a9e-6b1d-4c1e-9a7a-2b9d1e0f4c55
+              member_id: '10594038'
+              type: cash
+              campaign_code: M20221130
+              cash_value:
+                currency: HKD
+                amount: 100
+              remark: e2e
       responses:
         '200':
           content:

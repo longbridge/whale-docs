@@ -19327,7 +19327,12 @@ paths:
         ### 请求参数
 
         - 必填：`adjustment_id`（调整 ID）、`confirmed_value`（确认值）
-        - 可选：`event_id`（事件 ID）、`item_id`（明细项 ID）、`aaid`（证券账号）、`target`（目标）
+        - 可选：`item_id`（明细项 ID）、`event_id`（事件 ID）、`aaid`（证券账号）、`target`（调整目标）
+        - `adjustment_id` 取 `POST /v1/datasets/corp_action_post_adjust_records` 列表行的 `id`（仅状态为 Pending 的记录可编辑），或 `post_adjust` 返回的 `adjustment_id`。
+        - `item_id` 取明细行的 `amount_item_id`、`fee_item_id` 或 `quantity_item_id`（按要修改的金额、费用或数量选择）；明细行通过 `data_porter_query` 查询数据模板 `post_adjust_detail_items` 获得。
+        - `item_id` 为 `0`（该项尚无明细）时，需同时传 `aaid`、`target`、`event_id`（取同一明细行的值）；`item_id` 非 `0` 时不传这三个字段。
+        - `confirmed_value` 精度：数量保留 4 位小数，金额和费用保留 2 位小数。
+        - 示例：`{"adjustment_id":"45","confirmed_value":"1200.5","item_id":"8812"}`；`{"adjustment_id":"45","confirmed_value":"100","item_id":"0","aaid":"50208322","target":"ADJUSTMENT_TARGET_QUANTITY","event_id":"9001"}`。
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 业务说明
@@ -19355,32 +19360,46 @@ paths:
               properties:
                 adjustment_id:
                   type: string
-                  description: 调整ID，用于标识本次请求关联的业务对象。此字段为必填项。
+                  description: 调整 ID，取 `POST /v1/datasets/corp_action_post_adjust_records` 列表行的 `id`（仅状态为 Pending 的记录可编辑），或 `post_adjust` 返回的 `adjustment_id`。此字段为必填项。
                 confirmed_value:
                   type: string
                   description: 用于指定「确认值」。此字段为必填项。
                 event_id:
                   type: string
-                  description: 事件ID，用于标识本次请求关联的业务对象。
+                  description: 事件 ID，取明细行的 `event_id`。仅在 `item_id` 为 `0` 时传。
                 item_id:
                   type: string
-                  description: 明细项ID，用于标识本次请求关联的业务对象。
+                  description: |-
+                    明细项 ID，取明细行的 `amount_item_id`、`fee_item_id` 或 `quantity_item_id`（按要修改的金额、费用或数量选择）；明细行通过 `data_porter_query` 查询数据模板 `post_adjust_detail_items` 获得。
+
+                    该项尚无明细时传 `0`，并同时传 `aaid`、`target`、`event_id`。
                 aaid:
                   type: string
                   description: |-
-                    本次请求关联的证券账号。
+                    明细行的 `aaid`，仅在 `item_id` 为 `0` 时传。
 
                     此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
                 target:
                   type: string
-                  description: 用于指定「目标」。
+                  description: |-
+                    调整目标，仅在 `item_id` 为 `0` 时传。
+
+                    **可选值：** `ADJUSTMENT_TARGET_AMOUNT` 金额、`ADJUSTMENT_TARGET_QUANTITY` 数量、`ADJUSTMENT_TARGET_FEE` 费用
+                  enum:
+                    - ADJUSTMENT_TARGET_AMOUNT
+                    - ADJUSTMENT_TARGET_QUANTITY
+                    - ADJUSTMENT_TARGET_FEE
+                  x-enum-details:
+                    - value: ADJUSTMENT_TARGET_AMOUNT
+                      label: 金额
+                    - value: ADJUSTMENT_TARGET_QUANTITY
+                      label: 数量
+                    - value: ADJUSTMENT_TARGET_FEE
+                      label: 费用
             example:
-              adjustment_id: '123'
-              confirmed_value: '0'
-              event_id: ''
-              item_id: ''
-              aaid: ''
-              target: ''
+              adjustment_id: '45'
+              confirmed_value: '1200.5'
+              item_id: '8812'
       responses:
         '200':
           description: 请求处理成功。响应的 `data` 不包含额外业务字段。
