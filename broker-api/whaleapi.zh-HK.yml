@@ -17910,19 +17910,34 @@ paths:
                   type: array
                   items:
                     type: string
-                  description: 入金申請鏈接
+                  description: 入金申請鏈接。須為通過文件上傳接口獲得的真實文件 key，不能是任意字符串或外部 URL。
                 card_id:
-                  type: number
+                  type: integer
                   description: 用戶銀行卡ID
                 deposit_type:
-                  type: number
-                  description: 入金類型可選值：[0：普通入金 | 1：開戶入金]
+                  type: integer
+                  description: |-
+                    入金類型。
+
+                    **可選值：** `0` 普通入金、`1` 開戶入金
+                  enum:
+                    - 0
+                    - 1
+                  x-enum-details:
+                    - value: 0
+                      label: 普通入金
+                    - value: 1
+                      label: 開戶入金
+                  example: 0
                 deposit_config_id:
-                  type: number
+                  type: integer
                   description: 入金配置ID
                 ps:
                   type: string
                   description: 用戶備註
+                remittance_time:
+                  type: string
+                  description: 匯款時間。Unix 時間戳（秒）的字符串形式，如 `"1760500000"`；不傳或傳 `"0"` 表示未填寫。
                 account_no:
                   type: string
                   description: |-
@@ -19169,7 +19184,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
           description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
-      description: 查看轉出詳情
+      description: |-
+        查看轉出詳情
+
+        ### 已知問題
+
+        - 網關把此路徑路由到 `PortfolioATM/TransferOutDetail`（非 Whale 服務），該方法按調用方 member 查找記錄、不使用 `account_no`，因此對有效記錄也會返回 `203501`（記錄不存在）。需修正網關路由，改為 `PortfolioATMWhale/TransferOutDetail`。
       x-mint:
         href: /zh-HK/api-reference/transfer_out_detail
         metadata:
@@ -19403,14 +19423,26 @@ paths:
                   type: string
                   description: 金額
                 card_id:
-                  type: string
+                  type: integer
                   description: 用戶銀行卡ID
                 confirm:
-                  type: string
+                  type: integer
                   description: 風控參數
                 is_pad_funded:
-                  type: string
-                  description: 是否墊資：[1-已墊資，無需贖回（純現金場景也返回此類型）；2-未墊資，需走贖迴流程]
+                  type: integer
+                  description: |-
+                    是否墊資。
+
+                    **可選值：** `1` 已墊資，無需贖回（純現金場景也返回此類型）、`2` 未墊資，需走贖回流程
+                  enum:
+                    - 1
+                    - 2
+                  x-enum-details:
+                    - value: 1
+                      label: 已墊資，無需贖回（純現金場景也返回此類型）
+                    - value: 2
+                      label: 未墊資，需走贖回流程
+                  example: 1
                 account_no:
                   type: string
                   description: |-
@@ -19426,6 +19458,12 @@ paths:
                 - card_id
                 - is_pad_funded
                 - account_no
+            example:
+              account_no: H10306710
+              currency: HKD
+              amount: '10'
+              card_id: 402342
+              is_pad_funded: 1
       responses:
         '200':
           content:
@@ -20021,7 +20059,7 @@ paths:
               type: object
               properties:
                 bank_id:
-                  type: number
+                  type: integer
                   description: 地區銀行ID
                 region:
                   type: string
@@ -20062,6 +20100,11 @@ paths:
                 fps_id:
                   type: string
                   description: FPS ID
+                review_urls:
+                  type: array
+                  items:
+                    type: string
+                  description: 認證資料文件 key 列表。通過文件上傳接口獲得的認證圖片 key；`need_certification` 為 `true` 時應傳入非空列表。
                 account_no:
                   type: string
                   description: |-
@@ -20075,12 +20118,24 @@ paths:
                 - name
                 - name_en
                 - account
-                - swift_code
                 - account_type
                 - country
-                - need_certification
-                - fps_id
                 - account_no
+            example:
+              account_no: H10306710
+              bank_id: 79
+              region: HONGKONG
+              bank_en: MOX Bank
+              bank_code: '389'
+              name: AUTO TEST
+              name_en: AUTO TEST
+              account: '987654321012345'
+              swift_code: MOXBHKHK
+              account_type: HKD
+              country: Hong Kong
+              need_certification: false
+              fps_id: ''
+              review_urls: []
       responses:
         '200':
           content:
@@ -20131,7 +20186,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
           description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
-      description: 新增銀行卡
+      description: |-
+        新增銀行卡。
+
+        ### 請求參數
+
+        - 必填：`bank_id`、`region`、`bank_en`、`name`、`name_en`、`account`、`account_type`、`country`、`account_no`
+        - 可選：`swift_code`、`need_certification`、`fps_id`、`review_urls`、`address`、`remark`、`bank_code`
+        - 需要認證時，`review_urls` 傳入通過文件上傳接口獲得的認證圖片 key。
       x-mint:
         href: /zh-HK/api-reference/create_withdraw_card_v2
         metadata:
@@ -24598,6 +24660,7 @@ paths:
               properties:
                 type:
                   type: string
+                  example: account_agreement_list
                   description: 簽署協議類型
                 agreements_info:
                   type: array
@@ -24606,13 +24669,24 @@ paths:
                     properties:
                       key:
                         type: string
+                        example: securities_trading_service_agreement
                         description: 協議名稱
                       version:
                         type: string
+                        example: V1.0
                         description: 協議版本
                       signed:
                         type: string
                         description: 是否已簽署 Y/N
+                        enum:
+                          - 'Y'
+                          - 'N'
+                        x-enum-details:
+                          - value: 'Y'
+                            label: 已簽署
+                          - value: 'N'
+                            label: 未簽署
+                        example: "Y"
                     required:
                       - key
                       - version
@@ -24626,7 +24700,10 @@ paths:
                     `member_id` 為客戶編號，與證券賬號 `account_no` 及證券賬戶內部編號 `aaid` 不同；一個客戶可擁有多個證券賬戶。
                 platform:
                   type: string
-                  description: 簽署方式
+                  description: 簽署方式。目前僅支持 `api`。
+                  enum:
+                    - api
+                  example: api
                 remark:
                   type: string
                   description: 備註
@@ -24635,6 +24712,14 @@ paths:
                 - agreements_info
                 - member_id
                 - platform
+            example:
+              type: account_agreement_list
+              member_id: 10594038
+              platform: api
+              agreements_info:
+                - key: securities_trading_service_agreement
+                  version: V1.0
+                  signed: "Y"
       responses:
         '200':
           content:
@@ -24667,7 +24752,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
           description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
-      description: 該接口用於同步記錄用戶對指定協議的簽署狀態。通過傳入簽署協議類型 type、協議信息列表（包含協議名稱、版本號及是否已簽署）、用戶 ID member_id、簽署方式 platform 及備註信息，將用戶的協議簽署狀態同步至平台
+      description: |-
+        該接口用於同步記錄用戶對指定協議的簽署狀態。通過傳入簽署協議類型 type、協議信息列表（包含協議名稱、版本號及是否已簽署）、用戶 ID member_id、簽署方式 platform 及備註信息，將用戶的協議簽署狀態同步至平台
+
+        ### 已知問題
+
+        - 在 TEST 環境，後端返回 gRPC code 12（UNIMPLEMENTED，方法未實現）：member-account 服務尚未部署該方法，任何請求體都無法成功。
       x-mint:
         href: /zh-HK/api-reference/whale_record_agreement
         metadata:

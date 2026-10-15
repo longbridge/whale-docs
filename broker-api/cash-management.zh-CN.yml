@@ -5977,7 +5977,9 @@ paths:
 
         ### 请求参数
 
-        - 必填：`account_channel`（账户渠道）、`company_id`（公司 ID）、`region_id`（地区 ID）、`region_bank_id`（地区银行类型）、`bank_operation_types_id`（银行操作类型 ID）
+        - 必填：`company_id`（公司 ID）、`region_id`（地区 ID）、`region_bank_ids`（地区银行 ID 列表）、`bank_operation_types_id`（银行操作类型 ID）、`currency_banks`（币种-银行配置列表）
+        - 可选：`org_id`（组织 ID）、`weight`（权重）、`auth_state`（授权状态，LBHK 使用）、`ids`（编辑时排除自身的配置 ID 列表）
+        - `region_bank_ids` 取值：指定银行时传所选地区银行 ID 列表；其他银行传 `[0]`；全部银行传 `[999999999]`。后端只读取 `region_bank_ids`，不读取单值 `region_bank_id`，也不需要 `account_channel`。
         - 编辑场景可通过 `ids` 排除自身，各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 返回结果
@@ -5992,39 +5994,26 @@ paths:
             schema:
               type: object
               required:
-                - account_channel
                 - company_id
                 - region_id
-                - region_bank_id
+                - region_bank_ids
                 - bank_operation_types_id
+                - currency_banks
               properties:
-                account_channel:
-                  type: string
-                  description: 账户渠道. 用于指定「账户渠道」。此字段为必填项。
                 company_id:
                   type: integer
                   description: 公司ID. 用于指定「公司ID」。此字段为必填项。
                 region_id:
                   type: integer
                   description: 地区ID. 用于指定「地区ID」。此字段为必填项。
-                region_bank_id:
-                  type: integer
-                  description: |-
-                    地区银行类型。
-
-                    **可选值：** `-1` 指定银行、`0` 其他银行、`999999999` 全部银行
-                  enum:
-                    - -1
+                region_bank_ids:
+                  type: array
+                  minItems: 1
+                  description: 地区银行 ID 列表。此字段为必填项，至少 1 项。指定银行：所选地区银行 ID 列表；其他银行：`[0]`；全部银行：`[999999999]`。
+                  items:
+                    type: integer
+                  example:
                     - 0
-                    - 999999999
-                  x-enum-details:
-                    - value: -1
-                      label: 指定银行
-                    - value: 0
-                      label: 其他银行
-                    - value: 999999999
-                      label: 全部银行
-                  example: -1
                 bank_operation_types_id:
                   type: integer
                   description: |-
@@ -6047,9 +6036,13 @@ paths:
                     - value: '2'
                       label: 已认证
                   example: '0'
+                weight:
+                  type: integer
+                  description: 权重. 用于指定「权重」，未设置时传 `0`。
+                  example: 0
                 currency_banks:
                   type: array
-                  description: 币种-银行配置列表. 用于指定「币种-银行配置列表」。
+                  description: 币种-银行配置列表. 用于指定「币种-银行配置列表」。此字段为必填项。
                   items:
                     type: object
                     properties:
@@ -6060,9 +6053,12 @@ paths:
                         type: string
                         description: 汇款银行. 用于指定「汇款银行」。
                       priority:
+                        type: integer
+                        description: 优先级。整数，按业务实际填写。
+                        example: 2
+                      open_lb_bank_account_id:
                         type: string
-                        description: |-
-                          优先级。为自由取值（非枚举），按业务实际填写。
+                        description: 开户入金收款银行账户 ID. 用于指定「开户入金收款银行账户 ID」，无则不传。
                 ids:
                   type: array
                   description: 排除自身的配置ID列表（编辑时）. 用于指定「排除自身的配置ID列表（编辑时）」。
@@ -6072,15 +6068,18 @@ paths:
                   type: integer
                   description: 组织ID. 用于指定「组织ID」。
             example:
-              account_channel: ''
-              company_id: 0
-              region_id: 0
-              region_bank_id: 0
-              bank_operation_types_id: 0
-              auth_state: ''
-              currency_banks: []
-              ids: []
-              org_id: 0
+              company_id: 34
+              org_id: 34
+              region_id: 1
+              region_bank_ids:
+                - 0
+              bank_operation_types_id: 100
+              auth_state: '0'
+              weight: 0
+              currency_banks:
+                - currencies: HKD
+                  lb_bank_account_id: '172'
+                  priority: 2
       responses:
         '200':
           description: 请求处理成功。`data` 为返回结果。

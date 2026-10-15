@@ -5977,7 +5977,9 @@ paths:
 
         ### 請求參數
 
-        - 必填：`account_channel`（賬戶渠道）、`company_id`（公司 ID）、`region_id`（地區 ID）、`region_bank_id`（地區銀行類型）、`bank_operation_types_id`（銀行操作類型 ID）
+        - 必填：`company_id`（公司 ID）、`region_id`（地區 ID）、`region_bank_ids`（地區銀行 ID 列表）、`bank_operation_types_id`（銀行操作類型 ID）、`currency_banks`（幣種-銀行配置列表）
+        - 可選：`org_id`（組織 ID）、`weight`（權重）、`auth_state`（授權狀態，LBHK 使用）、`ids`（編輯時排除自身的配置 ID 列表）
+        - `region_bank_ids` 取值：指定銀行時傳所選地區銀行 ID 列表；其他銀行傳 `[0]`；全部銀行傳 `[999999999]`。後端只讀取 `region_bank_ids`，不讀取單值 `region_bank_id`，也不需要 `account_channel`。
         - 編輯場景可通過 `ids` 排除自身，各字段的格式、取值範圍和業務含義見對應字段說明。
 
         ### 返回結果
@@ -5992,39 +5994,26 @@ paths:
             schema:
               type: object
               required:
-                - account_channel
                 - company_id
                 - region_id
-                - region_bank_id
+                - region_bank_ids
                 - bank_operation_types_id
+                - currency_banks
               properties:
-                account_channel:
-                  type: string
-                  description: 賬戶渠道. 用於指定「賬戶渠道」。此字段為必填項。
                 company_id:
                   type: integer
                   description: 公司ID. 用於指定「公司ID」。此字段為必填項。
                 region_id:
                   type: integer
                   description: 地區ID. 用於指定「地區ID」。此字段為必填項。
-                region_bank_id:
-                  type: integer
-                  description: |-
-                    地區銀行類型。
-
-                    **可選值：** `-1` 指定銀行、`0` 其他銀行、`999999999` 全部銀行
-                  enum:
-                    - -1
+                region_bank_ids:
+                  type: array
+                  minItems: 1
+                  description: 地區銀行 ID 列表。此字段為必填項，至少 1 項。指定銀行：所選地區銀行 ID 列表；其他銀行：`[0]`；全部銀行：`[999999999]`。
+                  items:
+                    type: integer
+                  example:
                     - 0
-                    - 999999999
-                  x-enum-details:
-                    - value: -1
-                      label: 指定銀行
-                    - value: 0
-                      label: 其他銀行
-                    - value: 999999999
-                      label: 全部銀行
-                  example: -1
                 bank_operation_types_id:
                   type: integer
                   description: |-
@@ -6047,9 +6036,13 @@ paths:
                     - value: '2'
                       label: 已認證
                   example: '0'
+                weight:
+                  type: integer
+                  description: 權重. 用於指定「權重」，未設置時傳 `0`。
+                  example: 0
                 currency_banks:
                   type: array
-                  description: 幣種-銀行配置列表. 用於指定「幣種-銀行配置列表」。
+                  description: 幣種-銀行配置列表. 用於指定「幣種-銀行配置列表」。此字段為必填項。
                   items:
                     type: object
                     properties:
@@ -6060,9 +6053,12 @@ paths:
                         type: string
                         description: 匯款銀行. 用於指定「匯款銀行」。
                       priority:
+                        type: integer
+                        description: 優先級。整數，按業務實際填寫。
+                        example: 2
+                      open_lb_bank_account_id:
                         type: string
-                        description: |-
-                          優先級。為自由取值（非枚舉），按業務實際填寫。
+                        description: 開戶入金收款銀行賬戶 ID. 用於指定「開戶入金收款銀行賬戶 ID」，無則不傳。
                 ids:
                   type: array
                   description: 排除自身的配置ID列表（編輯時）. 用於指定「排除自身的配置ID列表（編輯時）」。
@@ -6072,15 +6068,18 @@ paths:
                   type: integer
                   description: 組織ID. 用於指定「組織ID」。
             example:
-              account_channel: ''
-              company_id: 0
-              region_id: 0
-              region_bank_id: 0
-              bank_operation_types_id: 0
-              auth_state: ''
-              currency_banks: []
-              ids: []
-              org_id: 0
+              company_id: 34
+              org_id: 34
+              region_id: 1
+              region_bank_ids:
+                - 0
+              bank_operation_types_id: 100
+              auth_state: '0'
+              weight: 0
+              currency_banks:
+                - currencies: HKD
+                  lb_bank_account_id: '172'
+                  priority: 2
       responses:
         '200':
           description: 請求處理成功。`data` 為返回結果。

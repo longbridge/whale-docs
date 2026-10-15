@@ -18404,19 +18404,34 @@ paths:
                   type: array
                   items:
                     type: string
-                  description: Deposit application url
+                  description: Deposit application url. Must be real file keys returned by the file upload API, not arbitrary strings or external URLs.
                 card_id:
-                  type: number
+                  type: integer
                   description: User BankCard Id
                 deposit_type:
-                  type: number
-                  description: 'Deposit Type option values: [0: normal | 1: open account]'
+                  type: integer
+                  description: |-
+                    Deposit type.
+
+                    **Allowed values:** `0` Normal deposit, `1` Account-opening deposit
+                  enum:
+                    - 0
+                    - 1
+                  x-enum-details:
+                    - value: 0
+                      label: Normal deposit
+                    - value: 1
+                      label: Account-opening deposit
+                  example: 0
                 deposit_config_id:
-                  type: number
+                  type: integer
                   description: Deposit config Id
                 ps:
                   type: string
                   description: The user's note
+                remittance_time:
+                  type: string
+                  description: Remittance time. A Unix timestamp in seconds, as a string, e.g. `"1760500000"`; omit or pass `"0"` when not provided.
                 account_no:
                   type: string
                   description: |-
@@ -19681,7 +19696,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
           description: The request timed out. Check the business error code in `code` and the error details in `message`.
-      description: Stock transfer out detail
+      description: |-
+        Stock transfer out detail
+
+        ### Known issues
+
+        - The gateway routes this path to `PortfolioATM/TransferOutDetail` (a non-Whale service), which looks up the record by the calling member instead of `account_no`, so it returns `203501` (record not found) even for valid records. The gateway route needs to be fixed to point to `PortfolioATMWhale/TransferOutDetail`.
       x-mint:
         href: /en/api-reference/transfer_out_detail
         metadata:
@@ -19918,14 +19938,26 @@ paths:
                   type: string
                   description: Amount
                 card_id:
-                  type: string
+                  type: integer
                   description: User BankCard Id
                 confirm:
-                  type: string
+                  type: integer
                   description: Risk control parameters
                 is_pad_funded:
-                  type: string
-                  description: Is Pad-funded option values:[1 pad funds, do not need to be redeemed (pure CASH case also returns this type) 2 pad funds, to go through the redemption process]
+                  type: integer
+                  description: |-
+                    Whether pre-funded.
+
+                    **Allowed values:** `1` Pre-funded, no fund redemption needed (also returned for cash-only cases), `2` Not pre-funded, fund redemption needed
+                  enum:
+                    - 1
+                    - 2
+                  x-enum-details:
+                    - value: 1
+                      label: Pre-funded, no fund redemption needed (also returned for cash-only cases)
+                    - value: 2
+                      label: Not pre-funded, fund redemption needed
+                  example: 1
                 account_no:
                   type: string
                   description: |-
@@ -19941,6 +19973,12 @@ paths:
                 - card_id
                 - is_pad_funded
                 - account_no
+            example:
+              account_no: H10306710
+              currency: HKD
+              amount: '10'
+              card_id: 402342
+              is_pad_funded: 1
       responses:
         '200':
           content:
@@ -20545,7 +20583,7 @@ paths:
               type: object
               properties:
                 bank_id:
-                  type: number
+                  type: integer
                   description: region bank id
                 region:
                   type: string
@@ -20586,6 +20624,11 @@ paths:
                 fps_id:
                   type: string
                   description: Fps Id
+                review_urls:
+                  type: array
+                  items:
+                    type: string
+                  description: Certification file keys. The keys of certification images obtained from the file upload API; pass a non-empty list when `need_certification` is `true`.
                 account_no:
                   type: string
                   description: |-
@@ -20599,12 +20642,24 @@ paths:
                 - name
                 - name_en
                 - account
-                - swift_code
                 - account_type
                 - country
-                - need_certification
-                - fps_id
                 - account_no
+            example:
+              account_no: H10306710
+              bank_id: 79
+              region: HONGKONG
+              bank_en: MOX Bank
+              bank_code: '389'
+              name: AUTO TEST
+              name_en: AUTO TEST
+              account: '987654321012345'
+              swift_code: MOXBHKHK
+              account_type: HKD
+              country: Hong Kong
+              need_certification: false
+              fps_id: ''
+              review_urls: []
       responses:
         '200':
           content:
@@ -20658,7 +20713,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
           description: The request timed out. Check the business error code in `code` and the error details in `message`.
-      description: Add Bank Card
+      description: |-
+        Adds a bank card.
+
+        ### Request parameters
+
+        - Required: `bank_id`, `region`, `bank_en`, `name`, `name_en`, `account`, `account_type`, `country`, `account_no`
+        - Optional: `swift_code`, `need_certification`, `fps_id`, `review_urls`, `address`, `remark`, `bank_code`
+        - When certification is needed, pass the certification image keys from the file upload API in `review_urls`.
       x-mint:
         href: /en/api-reference/create_withdraw_card_v2
         metadata:
@@ -25206,6 +25268,7 @@ paths:
               properties:
                 type:
                   type: string
+                  example: account_agreement_list
                   description: type
                 agreements_info:
                   type: array
@@ -25214,13 +25277,24 @@ paths:
                     properties:
                       key:
                         type: string
+                        example: securities_trading_service_agreement
                         description: key
                       version:
                         type: string
+                        example: V1.0
                         description: version
                       signed:
                         type: string
                         description: signed
+                        enum:
+                          - 'Y'
+                          - 'N'
+                        x-enum-details:
+                          - value: 'Y'
+                            label: Signed
+                          - value: 'N'
+                            label: Not signed
+                        example: "Y"
                     required:
                       - key
                       - version
@@ -25234,7 +25308,10 @@ paths:
                     `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                 platform:
                   type: string
-                  description: platform
+                  description: platform. Only `api` is supported.
+                  enum:
+                    - api
+                  example: api
                 remark:
                   type: string
                   description: remark
@@ -25243,6 +25320,14 @@ paths:
                 - agreements_info
                 - member_id
                 - platform
+            example:
+              type: account_agreement_list
+              member_id: 10594038
+              platform: api
+              agreements_info:
+                - key: securities_trading_service_agreement
+                  version: V1.0
+                  signed: "Y"
       responses:
         '200':
           content:
@@ -25275,7 +25360,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
           description: The request timed out. Check the business error code in `code` and the error details in `message`.
-      description: This interface is used to synchronize and record the signing status of specified agreements for a user. By providing the agreement type type, agreement information list (including agreement name, version, and signing status), user ID member_id, signing method platform, and remarks, it synchronizes the user's agreement signing status to the platform.
+      description: |-
+        This interface is used to synchronize and record the signing status of specified agreements for a user. By providing the agreement type type, agreement information list (including agreement name, version, and signing status), user ID member_id, signing method platform, and remarks, it synchronizes the user's agreement signing status to the platform.
+
+        ### Known issues
+
+        - On TEST the backend returns gRPC code 12 (UNIMPLEMENTED, method not implemented): the member-account service does not have this method deployed, so no request body can succeed.
       x-mint:
         href: /en/api-reference/whale_record_agreement
         metadata:

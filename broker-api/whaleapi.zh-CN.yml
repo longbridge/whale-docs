@@ -17910,19 +17910,34 @@ paths:
                   type: array
                   items:
                     type: string
-                  description: 入金申请链接
+                  description: 入金申请链接。须为通过文件上传接口获得的真实文件 key，不能是任意字符串或外部 URL。
                 card_id:
-                  type: number
+                  type: integer
                   description: 用户银行卡ID
                 deposit_type:
-                  type: number
-                  description: 入金类型可选值：[0：普通入金 | 1：开户入金]
+                  type: integer
+                  description: |-
+                    入金类型。
+
+                    **可选值：** `0` 普通入金、`1` 开户入金
+                  enum:
+                    - 0
+                    - 1
+                  x-enum-details:
+                    - value: 0
+                      label: 普通入金
+                    - value: 1
+                      label: 开户入金
+                  example: 0
                 deposit_config_id:
-                  type: number
+                  type: integer
                   description: 入金配置ID
                 ps:
                   type: string
                   description: 用户备注
+                remittance_time:
+                  type: string
+                  description: 汇款时间。Unix 时间戳（秒）的字符串形式，如 `"1760500000"`；不传或传 `"0"` 表示未填写。
                 account_no:
                   type: string
                   description: |-
@@ -19169,7 +19184,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
           description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`
-      description: 查看转出详情
+      description: |-
+        查看转出详情
+
+        ### 已知问题
+
+        - 网关把此路径路由到 `PortfolioATM/TransferOutDetail`（非 Whale 服务），该方法按调用方 member 查找记录、不使用 `account_no`，因此对有效记录也会返回 `203501`（记录不存在）。需修正网关路由，改为 `PortfolioATMWhale/TransferOutDetail`。
       x-mint:
         href: /zh-CN/api-reference/transfer_out_detail
         metadata:
@@ -19403,14 +19423,26 @@ paths:
                   type: string
                   description: 金额
                 card_id:
-                  type: string
+                  type: integer
                   description: 用户银行卡ID
                 confirm:
-                  type: string
+                  type: integer
                   description: 风控参数
                 is_pad_funded:
-                  type: string
-                  description: 是否垫资：[1-已垫资，无需赎回（纯现金场景也返回此类型）；2-未垫资，需走赎回流程]
+                  type: integer
+                  description: |-
+                    是否垫资。
+
+                    **可选值：** `1` 已垫资，无需赎回（纯现金场景也返回此类型）、`2` 未垫资，需走赎回流程
+                  enum:
+                    - 1
+                    - 2
+                  x-enum-details:
+                    - value: 1
+                      label: 已垫资，无需赎回（纯现金场景也返回此类型）
+                    - value: 2
+                      label: 未垫资，需走赎回流程
+                  example: 1
                 account_no:
                   type: string
                   description: |-
@@ -19426,6 +19458,12 @@ paths:
                 - card_id
                 - is_pad_funded
                 - account_no
+            example:
+              account_no: H10306710
+              currency: HKD
+              amount: '10'
+              card_id: 402342
+              is_pad_funded: 1
       responses:
         '200':
           content:
@@ -20021,7 +20059,7 @@ paths:
               type: object
               properties:
                 bank_id:
-                  type: number
+                  type: integer
                   description: 地区银行ID
                 region:
                   type: string
@@ -20062,6 +20100,11 @@ paths:
                 fps_id:
                   type: string
                   description: FPS ID
+                review_urls:
+                  type: array
+                  items:
+                    type: string
+                  description: 认证资料文件 key 列表。通过文件上传接口获得的认证图片 key；`need_certification` 为 `true` 时应传入非空列表。
                 account_no:
                   type: string
                   description: |-
@@ -20075,12 +20118,24 @@ paths:
                 - name
                 - name_en
                 - account
-                - swift_code
                 - account_type
                 - country
-                - need_certification
-                - fps_id
                 - account_no
+            example:
+              account_no: H10306710
+              bank_id: 79
+              region: HONGKONG
+              bank_en: MOX Bank
+              bank_code: '389'
+              name: AUTO TEST
+              name_en: AUTO TEST
+              account: '987654321012345'
+              swift_code: MOXBHKHK
+              account_type: HKD
+              country: Hong Kong
+              need_certification: false
+              fps_id: ''
+              review_urls: []
       responses:
         '200':
           content:
@@ -20131,7 +20186,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
           description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`
-      description: 新增银行卡
+      description: |-
+        新增银行卡。
+
+        ### 请求参数
+
+        - 必填：`bank_id`、`region`、`bank_en`、`name`、`name_en`、`account`、`account_type`、`country`、`account_no`
+        - 可选：`swift_code`、`need_certification`、`fps_id`、`review_urls`、`address`、`remark`、`bank_code`
+        - 需要认证时，`review_urls` 传入通过文件上传接口获得的认证图片 key。
       x-mint:
         href: /zh-CN/api-reference/create_withdraw_card_v2
         metadata:
@@ -24598,6 +24660,7 @@ paths:
               properties:
                 type:
                   type: string
+                  example: account_agreement_list
                   description: 签署协议类型
                 agreements_info:
                   type: array
@@ -24606,13 +24669,24 @@ paths:
                     properties:
                       key:
                         type: string
+                        example: securities_trading_service_agreement
                         description: 协议名称
                       version:
                         type: string
+                        example: V1.0
                         description: 协议版本
                       signed:
                         type: string
                         description: 是否已签署 Y/N
+                        enum:
+                          - 'Y'
+                          - 'N'
+                        x-enum-details:
+                          - value: 'Y'
+                            label: 已签署
+                          - value: 'N'
+                            label: 未签署
+                        example: "Y"
                     required:
                       - key
                       - version
@@ -24626,7 +24700,10 @@ paths:
                     `member_id` 为客户编号，与证券账号 `account_no` 及证券账户内部编号 `aaid` 不同；一个客户可有多个证券账户。
                 platform:
                   type: string
-                  description: 签署方式
+                  description: 签署方式。目前仅支持 `api`。
+                  enum:
+                    - api
+                  example: api
                 remark:
                   type: string
                   description: 备注
@@ -24635,6 +24712,14 @@ paths:
                 - agreements_info
                 - member_id
                 - platform
+            example:
+              type: account_agreement_list
+              member_id: 10594038
+              platform: api
+              agreements_info:
+                - key: securities_trading_service_agreement
+                  version: V1.0
+                  signed: "Y"
       responses:
         '200':
           content:
@@ -24667,7 +24752,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
           description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`
-      description: 该接口用于同步记录用户对指定协议的签署状态。通过传入签署协议类型 type、协议信息列表（包含协议名称、版本号及是否已签署）、用户 ID member_id、签署方式 platform 及备注信息，将用户的协议签署状态同步至平台
+      description: |-
+        该接口用于同步记录用户对指定协议的签署状态。通过传入签署协议类型 type、协议信息列表（包含协议名称、版本号及是否已签署）、用户 ID member_id、签署方式 platform 及备注信息，将用户的协议签署状态同步至平台
+
+        ### 已知问题
+
+        - 在 TEST 环境，后端返回 gRPC code 12（UNIMPLEMENTED，方法未实现）：member-account 服务尚未部署该方法，任何请求体都无法成功。
       x-mint:
         href: /zh-CN/api-reference/whale_record_agreement
         metadata:
