@@ -2656,7 +2656,26 @@ paths:
                   type: array
                   description: 每項含 order_seq(前台訂單號)/quantity(數量)/amount(金額)/per_value(每股面值)/ibond_interest(累計利息)/price(價格)
                   items:
-                    type: string
+                    type: object
+                    properties:
+                      order_seq:
+                        type: string
+                        description: 前台訂單號。
+                      quantity:
+                        type: string
+                        description: 數量。
+                      amount:
+                        type: string
+                        description: 金額。
+                      per_value:
+                        type: string
+                        description: 每股面值。
+                      ibond_interest:
+                        type: string
+                        description: 累計利息。
+                      price:
+                        type: string
+                        description: 價格。
             example:
               trade_date: 2026-07-10
               counter_id: ST/US/AAPL
@@ -2756,7 +2775,8 @@ paths:
 
         ### 請求參數
 
-        - 必填：`id`（合約 ID，路徑參數）、`trade_dones`（成交明細列表）、`audit_frontend_resource`（審計上下文）
+        - 必填：`id`（合約 ID，路徑參數）、`trade_date`、`counter_id`、`direction`、`currency`、`aaid`、`settlement_channel`、`open_close`、`position`、`trade_dones`（成交明細列表）、`audit_frontend_resource`（審計上下文）
+        - 管理後台編輯時提交完整合約：包含新建合約的全部字段，並附帶 `audit_frontend_resource`。`trade_dones` 的每一項為對象。
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
@@ -2786,18 +2806,168 @@ paths:
             schema:
               type: object
               required:
+                - trade_date
+                - counter_id
+                - direction
+                - currency
+                - aaid
+                - settlement_channel
+                - open_close
+                - position
                 - trade_dones
                 - audit_frontend_resource
               properties:
+                trade_date:
+                  type: string
+                  description: 本次請求對應的交易日期。請按接口約定的日期格式提交。此字段為必填項。
+                counter_id:
+                  type: string
+                  description: 用於指定「標的」。此字段為必填項。格式為 `{類型}/{市場}/{代碼}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期權 `OP/US/AAPL270319C320000`。
+                direction:
+                  type: string
+                  description: 本次業務處理的方向。此字段為必填項。
+                currency:
+                  type: string
+                  description: 用於指定「交易幣種」。此字段為必填項。
+                aaid:
+                  type: string
+                  description: |-
+                    本次請求關聯的證券賬號。此字段為必填項。
+
+                    此處傳客戶證券賬戶的內部數字編號 `aaid`，並非證券賬號 `account_no`（如 `H00000000`），亦非客戶編號 `member_id`；一個客戶可擁有多個 `aaid`。
+                settlement_channel:
+                  type: string
+                  description: 用於指定「結算渠道」。此字段為必填項。
+                settlement_account:
+                  type: string
+                  description: 用於指定「結算子倉」。
+                stage:
+                  type: string
+                  description: 用於指定「交易階段」。
+                order_source:
+                  type: string
+                  description: 用於指定「下單渠道/代理商」。
+                custodian_id:
+                  type: string
+                  description: 託管商ID，用於標識本次請求關聯的業務對象。
+                expected_equity_settlement_date:
+                  type: string
+                  description: 用於指定「預計券交收日」。
+                expected_balance_settlement_date:
+                  type: string
+                  description: 用於指定「預計錢交收日」。
+                currency_setl:
+                  type: string
+                  description: 用於指定「結算幣種」。
+                trade_to_setl_exchange_rate:
+                  type: string
+                  description: 用於指定「交易轉結算匯率」。
+                otcr_flag:
+                  type: string
+                  description: |-
+                    用於指定「OTCR 報表標識」。
+
+                    **可選值：** `1` 上報、`0` 不上報
+                  enum:
+                    - '1'
+                    - '0'
+                  x-enum-details:
+                    - value: '1'
+                      label: 是（上報 OTCR）
+                    - value: '0'
+                      label: 否（不上報 OTCR）
+                  example: '1'
+                open_close:
+                  type: string
+                  description: 用於指定「開平倉」。此字段為必填項。
+                  enum:
+                    - OPEN
+                    - CLOSE
+                  x-enum-details:
+                    - value: OPEN
+                      hk: 開倉
+                      label: 開倉
+                    - value: CLOSE
+                      hk: 平倉
+                      label: 平倉
+                  example: OPEN
+                position:
+                  type: string
+                  description: 用於指定「倉位方向」。此字段為必填項。
+                  enum:
+                    - LONG
+                    - SHORT
+                  x-enum-details:
+                    - value: LONG
+                      hk: 多頭
+                      label: 多頭
+                    - value: SHORT
+                      hk: 空頭
+                      label: 空頭
+                  example: LONG
+                biz_type:
+                  type: string
+                  description: 用於區分本次請求適用的業務場景。
+                issue_price:
+                  type: string
+                  description: 標的類型為 BOND 時使用
                 trade_dones:
                   type: array
-                  description: 成交明細列表，以 JSON 數組形式提交。此字段為必填項。
+                  description: 成交明細列表，以 JSON 數組形式提交。此字段為必填項。 每一項為成交對象，而非字符串。
                   items:
-                    type: string
+                    type: object
+                    properties:
+                      order_seq:
+                        type: string
+                        description: 前台訂單號。
+                      quantity:
+                        type: string
+                        description: 數量。
+                      amount:
+                        type: string
+                        description: 金額。
+                      per_value:
+                        type: string
+                        description: 每股面值。
+                      ibond_interest:
+                        type: string
+                        description: 累計利息。
+                      price:
+                        type: string
+                        description: 價格。
+                      ems_order_id:
+                        type: string
+                        description: 成交對應的 EMS 訂單號。
                 audit_frontend_resource:
                   type: object
-                  description: 含 $behavior/$action/no
+                  description: 調用方提交的審計上下文。管理後台提交 `$behavior`（操作描述）、`$action`（`edit`）和 `no`。此字段為必填項。
+                  properties:
+                    $behavior:
+                      type: string
+                    $action:
+                      type: string
+                    'no':
+                      type: string
             example:
+              trade_date: 2026-07-10
+              counter_id: ST/US/AAPL
+              direction: ''
+              currency: HKD
+              aaid: ''
+              settlement_channel: ''
+              settlement_account: ''
+              stage: ''
+              order_source: ''
+              custodian_id: ''
+              expected_equity_settlement_date: 2026-07-10
+              expected_balance_settlement_date: 2026-07-10
+              currency_setl: ''
+              trade_to_setl_exchange_rate: '1'
+              otcr_flag: ''
+              open_close: OPEN
+              position: LONG
+              biz_type: ''
+              issue_price: ''
               trade_dones:
                 - order_seq: ''
                   quantity: ''
@@ -2805,10 +2975,11 @@ paths:
                   per_value: ''
                   ibond_interest: ''
                   price: ''
+                  ems_order_id: ''
               audit_frontend_resource:
                 $behavior: ''
-                $action: ''
-                false: ''
+                $action: edit
+                'no': ''
       responses:
         '200':
           description: 請求處理成功。響應的 `data` 不包含額外業務字段。
@@ -6540,12 +6711,12 @@ paths:
 
         ### 請求參數
 
-        - 必填：`data_source`（數據源）、`counter_id`（標的代碼）
+        - 必填：`source`（數據源）、`counter_id`（標的代碼）
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
 
-        按 `data_source` 指定的來源，拉取並刷新 `counter_id` 對應標的的基礎資訊。
+        按 `source` 指定的來源，拉取並刷新 `counter_id` 對應標的的基礎資訊。
 
         ### 處理結果
 
@@ -6559,17 +6730,35 @@ paths:
             schema:
               type: object
               required:
-                - data_source
+                - source
                 - counter_id
               properties:
-                data_source:
-                  type: number
-                  description: 用於指定「數據源」。此字段為必填項。
+                source:
+                  type: integer
+                  description: |-
+                    同步所用的數據源。請求字段名為 `source`。此字段為必填項。
+
+                    **可選值：** `1` 公有庫（非期權）、`2` 公有庫（期權）、`4` 基金。管理後台在此不允許選擇 `3`（私有庫）；私有庫標的請在私有庫中維護。
+                  enum:
+                    - 1
+                    - 2
+                    - 4
+                  x-enum-details:
+                    - value: 1
+                      label: 公有庫（非期權）
+                    - value: 2
+                      label: 公有庫（期權）
+                    - value: 4
+                      label: 基金
+                  example: 1
                 counter_id:
                   type: string
-                  description: 證券或基金標的代碼，用於定位本次請求處理的標的。此字段為必填項。格式為 `{類型}/{市場}/{代碼}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期權 `OP/US/AAPL270319C320000`。
+                  description: |-
+                    要同步的標的代碼。此字段為必填項。
+
+                    `source` 為 `1` 時，傳 `{類型}/{市場}/{代碼}` 格式的標的代碼，如 `ST/US/AAPL`。`source` 為 `2` 時，傳內部證券代碼，多個以英文逗號分隔。
             example:
-              data_source: 1
+              source: 1
               counter_id: ST/US/AAPL
       responses:
         '200':
@@ -6643,12 +6832,13 @@ paths:
 
         ### 請求參數
 
-        - 必填：`counter_id`（標的代碼）、`bond_info`（債券資訊列表）、`bond_rates`（利率列表）
+        - 必填：`counter_id`（標的代碼）、`bond_info`（債券信息對象）、`bond_rates`（利率列表）
+        - 可選：`audit_frontend_resource`（調用方提交的審計上下文）
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
 
-        `bond_info` 與 `bond_rates` 均以 JSON 陣列形式提交，一次性登記該債券的基礎資訊和對應利率明細。
+        `bond_info` 為 JSON 對象，`bond_rates` 為對象組成的 JSON 數組，一次性登記該債券的基礎信息和對應利率明細。
 
         ### 處理結果
 
@@ -6670,19 +6860,79 @@ paths:
                   type: string
                   description: 證券或基金標的代碼，用於定位本次請求處理的標的。此字段為必填項。格式為 `{類型}/{市場}/{代碼}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期權 `OP/US/AAPL270319C320000`。
                 bond_info:
-                  type: array
-                  description: 債券信息列表，以 JSON 數組形式提交。此字段為必填項。
-                  items:
-                    type: string
+                  type: object
+                  description: 債券信息對象。此字段為必填項。
+                  required:
+                    - period_complete
+                    - interest_calc_basis
+                    - par_value
+                    - cutoff_method
+                    - cutoff_digits
+                  properties:
+                    period_complete:
+                      type: string
+                      description: |-
+                        期數完整。此字段為必填項。取 `1` 時，`bond_rates` 最後一項的 `rate` 留空。
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/clear_period_complete` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。
+                    interest_calc_basis:
+                      type: string
+                      description: |-
+                        計息使用的一年天數，如 `365`。此字段為必填項。
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/clear_interest_calc_basis` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。
+                    par_value:
+                      type: number
+                      description: 賬面價格，取值 `0` 至 `99999`，最多 2 位小數，如 `100`。此字段為必填項。
+                    cutoff_method:
+                      type: string
+                      description: |-
+                        結果截取方式。此字段為必填項。
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/billing_cutoff_method` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。
+                    cutoff_digits:
+                      type: string
+                      description: |-
+                        小數截取位數。此字段為必填項。
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/billing_cutoff_digit` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。
                 bond_rates:
                   type: array
-                  description: 利率列表，以 JSON 數組形式提交。此字段為必填項。
+                  minItems: 2
+                  description: 利率明細，至少提交 2 項，按期數排序。此字段為必填項。
                   items:
-                    type: string
+                    type: object
+                    required:
+                      - period
+                      - interest_payment_date
+                    properties:
+                      period:
+                        type: integer
+                        description: 期數，從 `0` 開始。
+                      interest_payment_date:
+                        type: string
+                        description: 派息日，格式為 `YYYYMMDD`。每項日期須晚於上一項。
+                      rate:
+                        type: string
+                        description: 利率，以小數表示，如 `0.05` 表示 5%。第一項必填；`period_complete` 為 `1` 時最後一項留空。
+                audit_frontend_resource:
+                  type: object
+                  description: 調用方提交的審計上下文，如 `$behavior` 和 `$action`（`add` 或 `edit`）。
             example:
               counter_id: ''
-              bond_info: []
-              bond_rates: []
+              bond_info:
+                period_complete: '0'
+                interest_calc_basis: '365'
+                par_value: 100
+                cutoff_method: ''
+                cutoff_digits: ''
+              bond_rates:
+                - period: 0
+                  interest_payment_date: '20260115'
+                  rate: '0.05'
+                - period: 1
+                  interest_payment_date: '20260715'
+                  rate: '0.05'
       responses:
         '200':
           description: 請求處理成功。響應的 `data` 不包含額外業務字段。
@@ -6755,12 +7005,13 @@ paths:
 
         ### 請求參數
 
-        - 必填：`counter_id`（標的代碼）、`bond_info`（債券資訊）、`bond_rates`（利率）
+        - 必填：`bond_info_id`（債券信息記錄 ID）、`counter_id`（標的代碼）、`bond_info`（債券信息對象）、`bond_rates`（利率列表）
+        - 可選：`audit_frontend_resource`（調用方提交的審計上下文）
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
 
-        `bond_info` 與 `bond_rates` 以 JSON 字串形式提交，覆蓋更新該標的現有的債券資訊與利率明細。
+        `bond_info` 為 JSON 對象，`bond_rates` 為對象組成的 JSON 數組，結構與新增時一致，覆蓋更新 `bond_info_id` 對應記錄現有的債券信息與利率明細。
 
         ### 處理結果
 
@@ -6774,23 +7025,92 @@ paths:
             schema:
               type: object
               required:
+                - bond_info_id
                 - counter_id
                 - bond_info
                 - bond_rates
               properties:
+                bond_info_id:
+                  type: string
+                  description: 要編輯的債券信息記錄 ID。此字段為必填項。
                 counter_id:
                   type: string
                   description: 證券或基金標的代碼，用於定位本次請求處理的標的。此字段為必填項。格式為 `{類型}/{市場}/{代碼}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期權 `OP/US/AAPL270319C320000`。
                 bond_info:
-                  type: string
-                  description: 用於指定「債券信息（JSON 字符串）」。此字段為必填項。
+                  type: object
+                  description: 債券信息對象。此字段為必填項。
+                  required:
+                    - period_complete
+                    - interest_calc_basis
+                    - par_value
+                    - cutoff_method
+                    - cutoff_digits
+                  properties:
+                    period_complete:
+                      type: string
+                      description: |-
+                        期數完整。此字段為必填項。取 `1` 時，`bond_rates` 最後一項的 `rate` 留空。
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/clear_period_complete` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。
+                    interest_calc_basis:
+                      type: string
+                      description: |-
+                        計息使用的一年天數，如 `365`。此字段為必填項。
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/clear_interest_calc_basis` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。
+                    par_value:
+                      type: number
+                      description: 賬面價格，取值 `0` 至 `99999`，最多 2 位小數，如 `100`。此字段為必填項。
+                    cutoff_method:
+                      type: string
+                      description: |-
+                        結果截取方式。此字段為必填項。
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/billing_cutoff_method` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。
+                    cutoff_digits:
+                      type: string
+                      description: |-
+                        小數截取位數。此字段為必填項。
+
+                        候選值會動態變化。請調用 `GET /v1/datasets/refs/billing_cutoff_digit` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。
                 bond_rates:
-                  type: string
-                  description: 用於指定「利率（JSON 字符串）」。此字段為必填項。
+                  type: array
+                  minItems: 2
+                  description: 利率明細，至少提交 2 項，按期數排序。此字段為必填項。
+                  items:
+                    type: object
+                    required:
+                      - period
+                      - interest_payment_date
+                    properties:
+                      period:
+                        type: integer
+                        description: 期數，從 `0` 開始。
+                      interest_payment_date:
+                        type: string
+                        description: 派息日，格式為 `YYYYMMDD`。每項日期須晚於上一項。
+                      rate:
+                        type: string
+                        description: 利率，以小數表示，如 `0.05` 表示 5%。第一項必填；`period_complete` 為 `1` 時最後一項留空。
+                audit_frontend_resource:
+                  type: object
+                  description: 調用方提交的審計上下文，如 `$behavior` 和 `$action`（`add` 或 `edit`）。
             example:
+              bond_info_id: '1'
               counter_id: ''
-              bond_info: ''
-              bond_rates: ''
+              bond_info:
+                period_complete: '0'
+                interest_calc_basis: '365'
+                par_value: 100
+                cutoff_method: ''
+                cutoff_digits: ''
+              bond_rates:
+                - period: 0
+                  interest_payment_date: '20260115'
+                  rate: '0.05'
+                - period: 1
+                  interest_payment_date: '20260715'
+                  rate: '0.05'
       responses:
         '200':
           description: 請求處理成功。響應的 `data` 不包含額外業務字段。
@@ -7081,7 +7401,7 @@ paths:
 
         ### 業務說明
 
-        可按 `ids` 指定具體結單，或按 `type` 與 `dt` 圈定發送範圍。`force_send` 控制是否忽略預設的發送限制強制下發。
+        可按 `ids` 指定具體結單，或按 `type` 與 `dt` 圈定發送範圍。按範圍批量發送時，管理後台傳 `type`、`dt`、`total_notify_allowed: true` 和 `force_send: false`；若後端返回錯誤碼 `820513`（需要確認），則以 `force_send: true` 重新提交同一請求。
 
         ### 風險提示
 
@@ -7103,13 +7423,13 @@ paths:
               properties:
                 ids:
                   type: array
-                  description: 結單ID列表，以 JSON 數組形式提交。
+                  description: 要發送的結單記錄 ID，取自 `atm_statement_histories` 返回行的 `id`。按記錄發送時，管理後台同時傳 `type`（該行的 `file_type_val`）和 `dt`（該行的 `dt`），並將 `force_send` 設為 `true`。
                   items:
                     type: string
                 type:
                   type: string
                   description: |-
-                    用於指定「結單類型」。取值來自後端數據字典（動態維護），非固定枚舉；請以接口實際返回的可選項為準。
+                    結單類型。 候選值會動態變化。請調用 `GET /v1/datasets/refs/statement_file_type` 獲取當前可用的數據字典，並使用返回項的 `key` 作為本參數值。
                 dt:
                   type: string
                   description: 本次請求對應的結單日期。請按接口約定的日期格式提交。
@@ -7596,13 +7916,14 @@ paths:
 
         ### 請求參數
 
-        - 必填：`member_id`（會員 ID）
-        - 可選：`daily_notice_app`（每日 App 通知）、`monthly_notice_app`（每月 App 通知）、`daily_notice_email`（每日郵件通知）、`monthly_notice_email`（每月郵件通知）、`online`（是否線上）
+        - 必填：`aaid`（證券賬戶內部編號）、`audit_frontend_resource`（審計上下文）
+        - 可選：`daily_notice_app`（每日 App 通知）、`monthly_notice_app`（每月 App 通知）、`daily_notice_email`（每日郵件通知）、`monthly_notice_email`（每月郵件通知）、`online`（是否線下發送）
+        - 管理後台以 `aaid`（而非 `member_id`）標識客戶，各開關均以字符串 `1` 或 `-1` 提交。新增時五個開關均提交 `1`。
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
 
-        為 `member_id` 建立結單通知配置，分別控制每日/每月的 App 與郵件通知開關。
+        為證券賬戶 `aaid` 建立結單通知配置，分別控制每日/每月的 App 與郵件通知開關，以及是否線下發送。
 
         ### 處理結果
 
@@ -7616,51 +7937,102 @@ paths:
             schema:
               type: object
               required:
-                - member_id
+                - aaid
+                - audit_frontend_resource
               properties:
-                member_id:
+                aaid:
                   type: string
                   description: |-
-                    會員ID，用於標識本次請求關聯的業務對象。此字段為必填項。
+                    客戶證券賬戶內部編號。此字段為必填項。
 
-                    `member_id` 為客戶編號，與證券賬號 `account_no` 及證券賬戶內部編號 `aaid` 不同；一個客戶可擁有多個證券賬戶。
+                    此處傳客戶證券賬戶的內部數字編號 `aaid`，並非證券賬號 `account_no`（如 `H00000000`），亦非客戶編號 `member_id`；一個客戶可擁有多個 `aaid`。
                 daily_notice_app:
-                  type: number
-                  description: 用於指定「每日 App 通知」。
-                monthly_notice_app:
-                  type: number
-                  description: 用於指定「每月 App 通知」。
-                daily_notice_email:
-                  type: number
-                  description: 用於指定「每日郵件通知」。
-                monthly_notice_email:
-                  type: number
-                  description: 用於指定「每月郵件通知」。
-                online:
-                  type: integer
+                  type: string
                   description: |-
-                    用於指定「是否線上」。
+                    每日 App 通知。
 
-                    **可選值：** `1` 線上發送、`-1` 線下發送、`0` 不修改
+                    **可選值：** `1` 開啟、`-1` 關閉
                   enum:
-                    - 1
-                    - -1
-                    - 0
+                    - '1'
+                    - '-1'
                   x-enum-details:
-                    - value: 1
-                      label: 開啓（線上）
-                    - value: -1
-                      label: 關閉（線下）
-                    - value: 0
-                      label: 不修改
-                  example: 1
+                    - value: '1'
+                      label: '開啟'
+                    - value: '-1'
+                      label: '關閉'
+                  example: '1'
+                monthly_notice_app:
+                  type: string
+                  description: |-
+                    每月 App 通知。
+
+                    **可選值：** `1` 開啟、`-1` 關閉
+                  enum:
+                    - '1'
+                    - '-1'
+                  x-enum-details:
+                    - value: '1'
+                      label: '開啟'
+                    - value: '-1'
+                      label: '關閉'
+                  example: '1'
+                daily_notice_email:
+                  type: string
+                  description: |-
+                    每日郵件通知。
+
+                    **可選值：** `1` 開啟、`-1` 關閉
+                  enum:
+                    - '1'
+                    - '-1'
+                  x-enum-details:
+                    - value: '1'
+                      label: '開啟'
+                    - value: '-1'
+                      label: '關閉'
+                  example: '1'
+                monthly_notice_email:
+                  type: string
+                  description: |-
+                    每月郵件通知。
+
+                    **可選值：** `1` 開啟、`-1` 關閉
+                  enum:
+                    - '1'
+                    - '-1'
+                  x-enum-details:
+                    - value: '1'
+                      label: '開啟'
+                    - value: '-1'
+                      label: '關閉'
+                  example: '1'
+                online:
+                  type: string
+                  description: |-
+                    是否線下發送結單。
+
+                    **可選值：** `-1` 是（線下發送）、`1` 否（線上發送）
+                  enum:
+                    - '-1'
+                    - '1'
+                  x-enum-details:
+                    - value: '-1'
+                      label: 是（線下發送）
+                    - value: '1'
+                      label: 否（線上發送）
+                  example: '1'
+                audit_frontend_resource:
+                  type: object
+                  description: 調用方提交的審計上下文。管理後台提交 `$action`（`add`）和 `id`。此字段為必填項。
             example:
-              member_id: '101456715'
-              daily_notice_app: 1
-              monthly_notice_app: 1
-              daily_notice_email: user@example.com
-              monthly_notice_email: user@example.com
-              online: 1
+              aaid: '20000001'
+              daily_notice_app: '1'
+              monthly_notice_app: '1'
+              daily_notice_email: '1'
+              monthly_notice_email: '1'
+              online: '1'
+              audit_frontend_resource:
+                $action: add
       responses:
         '200':
           description: 請求處理成功。響應的 `data` 不包含額外業務字段。
@@ -7734,13 +8106,14 @@ paths:
 
         ### 請求參數
 
-        - 必填：`member_id`（會員 ID）
-        - 可選：`daily_notice_app`（每日 App 通知）、`monthly_notice_app`（每月 App 通知）、`daily_notice_email`（每日郵件通知）、`monthly_notice_email`（每月郵件通知）、`online`（是否線上）
+        - 必填：`aaid`（證券賬戶內部編號）、`audit_frontend_resource`（審計上下文）
+        - 可選：`daily_notice_app`（每日 App 通知）、`monthly_notice_app`（每月 App 通知）、`daily_notice_email`（每日郵件通知）、`monthly_notice_email`（每月郵件通知）、`online`（是否線下發送）
+        - 管理後台以 `aaid`（而非 `member_id`）標識客戶，各開關均以字符串 `1` 或 `-1` 提交。
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
 
-        參數結構與「新增結單發送通知配置」一致，覆蓋更新 `member_id` 現有的結單通知開關配置。
+        參數結構與新增結單發送通知配置一致，覆蓋更新證券賬戶 `aaid` 現有的結單通知開關配置。
 
         ### 處理結果
 
@@ -7754,48 +8127,102 @@ paths:
             schema:
               type: object
               required:
-                - member_id
+                - aaid
+                - audit_frontend_resource
               properties:
-                member_id:
+                aaid:
                   type: string
                   description: |-
-                    會員ID，用於標識本次請求關聯的業務對象。此字段為必填項。
+                    客戶證券賬戶內部編號。此字段為必填項。
 
-                    `member_id` 為客戶編號，與證券賬號 `account_no` 及證券賬戶內部編號 `aaid` 不同；一個客戶可擁有多個證券賬戶。
+                    此處傳客戶證券賬戶的內部數字編號 `aaid`，並非證券賬號 `account_no`（如 `H00000000`），亦非客戶編號 `member_id`；一個客戶可擁有多個 `aaid`。
                 daily_notice_app:
-                  type: number
-                  description: 用於指定「每日 App 通知」。
-                monthly_notice_app:
-                  type: number
-                  description: 用於指定「每月 App 通知」。
-                daily_notice_email:
-                  type: number
-                  description: 用於指定「每日郵件通知」。
-                monthly_notice_email:
-                  type: number
-                  description: 用於指定「每月郵件通知」。
-                online:
-                  type: integer
+                  type: string
                   description: |-
-                    用於指定「是否線上」。
+                    每日 App 通知。
 
-                    **可選值：** `-1` 線下發送、`1` 線上發送
+                    **可選值：** `1` 開啟、`-1` 關閉
                   enum:
-                    - -1
-                    - 1
+                    - '1'
+                    - '-1'
                   x-enum-details:
-                    - value: -1
+                    - value: '1'
+                      label: '開啟'
+                    - value: '-1'
+                      label: '關閉'
+                  example: '1'
+                monthly_notice_app:
+                  type: string
+                  description: |-
+                    每月 App 通知。
+
+                    **可選值：** `1` 開啟、`-1` 關閉
+                  enum:
+                    - '1'
+                    - '-1'
+                  x-enum-details:
+                    - value: '1'
+                      label: '開啟'
+                    - value: '-1'
+                      label: '關閉'
+                  example: '1'
+                daily_notice_email:
+                  type: string
+                  description: |-
+                    每日郵件通知。
+
+                    **可選值：** `1` 開啟、`-1` 關閉
+                  enum:
+                    - '1'
+                    - '-1'
+                  x-enum-details:
+                    - value: '1'
+                      label: '開啟'
+                    - value: '-1'
+                      label: '關閉'
+                  example: '1'
+                monthly_notice_email:
+                  type: string
+                  description: |-
+                    每月郵件通知。
+
+                    **可選值：** `1` 開啟、`-1` 關閉
+                  enum:
+                    - '1'
+                    - '-1'
+                  x-enum-details:
+                    - value: '1'
+                      label: '開啟'
+                    - value: '-1'
+                      label: '關閉'
+                  example: '1'
+                online:
+                  type: string
+                  description: |-
+                    是否線下發送結單。
+
+                    **可選值：** `-1` 是（線下發送）、`1` 否（線上發送）
+                  enum:
+                    - '-1'
+                    - '1'
+                  x-enum-details:
+                    - value: '-1'
                       label: 是（線下發送）
-                    - value: 1
+                    - value: '1'
                       label: 否（線上發送）
-                  example: -1
+                  example: '1'
+                audit_frontend_resource:
+                  type: object
+                  description: 調用方提交的審計上下文。管理後台提交 `$action`（`edit`）以及修改前的配置值。此字段為必填項。
             example:
-              member_id: '101456715'
-              daily_notice_app: 1
-              monthly_notice_app: 1
-              daily_notice_email: user@example.com
-              monthly_notice_email: user@example.com
-              online: 1
+              aaid: '20000001'
+              daily_notice_app: '1'
+              monthly_notice_app: '1'
+              daily_notice_email: '1'
+              monthly_notice_email: '1'
+              online: '1'
+              audit_frontend_resource:
+                $action: edit
       responses:
         '200':
           description: 請求處理成功。響應的 `data` 不包含額外業務字段。
@@ -8846,6 +9273,10 @@ paths:
       x-lbonly: false
       description: |-
         發送單個租戶清算文件。
+
+        ### 可用性
+
+        後端當前已將此接口作廢，調用會返回錯誤碼 `500009`。如需按賬務日期和市場發送租戶清算文件，請使用批量發送租戶清算文件（`batch_send_downstream_files`）。
 
         ### 請求參數
 

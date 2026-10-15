@@ -2678,7 +2678,26 @@ paths:
                     Each item contains order_seq (front-office order number) / quantity / amount /
                     per_value (par value per share) / ibond_interest (accrued interest) / price.
                   items:
-                    type: string
+                    type: object
+                    properties:
+                      order_seq:
+                        type: string
+                        description: Front-office order number.
+                      quantity:
+                        type: string
+                        description: Quantity.
+                      amount:
+                        type: string
+                        description: Amount.
+                      per_value:
+                        type: string
+                        description: Par value per share.
+                      ibond_interest:
+                        type: string
+                        description: Accrued interest.
+                      price:
+                        type: string
+                        description: Price.
             example:
               trade_date: 2026-07-10
               counter_id: ST/US/AAPL
@@ -2781,7 +2800,8 @@ paths:
 
         ### Request parameters
 
-        - Required: `id` (contract ID, path parameter), `trade_dones` (fill detail list), `audit_frontend_resource` (audit context)
+        - Required: `id` (contract ID, path parameter), `trade_date`, `counter_id`, `direction`, `currency`, `aaid`, `settlement_channel`, `open_close`, `position`, `trade_dones` (fill detail list), `audit_frontend_resource` (audit context)
+        - The admin console submits the full contract when editing: every field of contract creation plus `audit_frontend_resource`. Each `trade_dones` item is an object.
         - See each field's description for format, value range, and business meaning.
 
         ### Business notes
@@ -2811,18 +2831,168 @@ paths:
             schema:
               type: object
               required:
+                - trade_date
+                - counter_id
+                - direction
+                - currency
+                - aaid
+                - settlement_channel
+                - open_close
+                - position
                 - trade_dones
                 - audit_frontend_resource
               properties:
+                trade_date:
+                  type: string
+                  description: Trading date associated with this request. Use the date format defined by the API. This field is required.
+                counter_id:
+                  type: string
+                  description: Counter ID associated with this request. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
+                direction:
+                  type: string
+                  description: Direction of this business operation. This field is required.
+                currency:
+                  type: string
+                  description: This field is required.
+                aaid:
+                  type: string
+                  description: |-
+                    Specifies A/C No.. This field is required.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
+                settlement_channel:
+                  type: string
+                  description: This field is required.
+                settlement_account:
+                  type: string
+                  description: Settlement sub-position.
+                stage:
+                  type: string
+                  description: Trading stage.
+                order_source:
+                  type: string
+                  description: Order channel or agent.
+                custodian_id:
+                  type: string
+                  description: Custodian ID associated with this request.
+                expected_equity_settlement_date:
+                  type: string
+                  description: Expected securities settlement date.
+                expected_balance_settlement_date:
+                  type: string
+                  description: Expected cash settlement date.
+                currency_setl:
+                  type: string
+                  description: Settlement currency.
+                trade_to_setl_exchange_rate:
+                  type: string
+                  description: Exchange rate from the trade currency to the settlement currency.
+                otcr_flag:
+                  type: string
+                  enum:
+                    - '1'
+                    - '0'
+                  x-enum-details:
+                    - value: '1'
+                      label: Yes (report OTCR)
+                    - value: '0'
+                      label: 'No'
+                  example: '1'
+                  description: |-
+                    otcr_flag.
+
+                    **Allowed values:** `1` Report, `0` Do not report
+                open_close:
+                  type: string
+                  description: Specifies Open/Close. This field is required.
+                  enum:
+                    - OPEN
+                    - CLOSE
+                  x-enum-details:
+                    - value: OPEN
+                      hk: 開倉
+                      label: Open
+                    - value: CLOSE
+                      hk: 平倉
+                      label: Close
+                  example: OPEN
+                position:
+                  type: string
+                  description: Specifies Position. This field is required.
+                  enum:
+                    - LONG
+                    - SHORT
+                  x-enum-details:
+                    - value: LONG
+                      hk: 多頭
+                      label: Long
+                    - value: SHORT
+                      hk: 空頭
+                      label: Short
+                  example: LONG
+                biz_type:
+                  type: string
+                  description: Identifies the business scenario to which this request applies.
+                issue_price:
+                  type: string
+                  description: Used when the instrument type is BOND.
                 trade_dones:
                   type: array
-                  description: Submit Trade Done List as a JSON array. This field is required.
+                  description: Submit Trade Done List as a JSON array. This field is required. Each item is a fill object, not a string.
                   items:
-                    type: string
+                    type: object
+                    properties:
+                      order_seq:
+                        type: string
+                        description: Front-office order number.
+                      quantity:
+                        type: string
+                        description: Quantity.
+                      amount:
+                        type: string
+                        description: Amount.
+                      per_value:
+                        type: string
+                        description: Par value per share.
+                      ibond_interest:
+                        type: string
+                        description: Accrued interest.
+                      price:
+                        type: string
+                        description: Price.
+                      ems_order_id:
+                        type: string
+                        description: EMS order ID of the fill.
                 audit_frontend_resource:
                   type: object
-                  description: Contains $behavior/$action/no.
+                  description: Audit context submitted by the caller. The admin console sends `$behavior` (operation description), `$action` (`edit`), and `no`. This field is required.
+                  properties:
+                    $behavior:
+                      type: string
+                    $action:
+                      type: string
+                    'no':
+                      type: string
             example:
+              trade_date: 2026-07-10
+              counter_id: ST/US/AAPL
+              direction: ''
+              currency: HKD
+              aaid: ''
+              settlement_channel: ''
+              settlement_account: ''
+              stage: ''
+              order_source: ''
+              custodian_id: ''
+              expected_equity_settlement_date: 2026-07-10
+              expected_balance_settlement_date: 2026-07-10
+              currency_setl: ''
+              trade_to_setl_exchange_rate: '1'
+              otcr_flag: ''
+              open_close: OPEN
+              position: LONG
+              biz_type: ''
+              issue_price: ''
               trade_dones:
                 - order_seq: ''
                   quantity: ''
@@ -2830,10 +3000,11 @@ paths:
                   per_value: ''
                   ibond_interest: ''
                   price: ''
+                  ems_order_id: ''
               audit_frontend_resource:
                 $behavior: ''
-                $action: ''
-                false: ''
+                $action: edit
+                'no': ''
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.
@@ -6611,12 +6782,12 @@ paths:
 
         ### Request parameters
 
-        - Required: `data_source` (data source), `counter_id` (instrument code)
+        - Required: `source` (data source), `counter_id` (instrument code)
         - See each field description for format, value range, and business meaning.
 
         ### Business notes
 
-        Fetches and refreshes the basic information of the instrument identified by `counter_id` from the source specified by `data_source`.
+        Fetches and refreshes the basic information of the instrument identified by `counter_id` from the source specified by `source`.
 
         ### Result
 
@@ -6630,17 +6801,35 @@ paths:
             schema:
               type: object
               required:
-                - data_source
+                - source
                 - counter_id
               properties:
-                data_source:
-                  type: number
-                  description: This field is required.
+                source:
+                  type: integer
+                  description: |-
+                    Data source to sync from. The request field name is `source`. This field is required.
+
+                    **Allowed values:** `1` Public library (non-option), `2` Public library (option), `4` Fund. The admin console does not allow `3` (private library) here; update private instruments in the private library instead.
+                  enum:
+                    - 1
+                    - 2
+                    - 4
+                  x-enum-details:
+                    - value: 1
+                      label: Public library (non-option)
+                    - value: 2
+                      label: Public library (option)
+                    - value: 4
+                      label: Fund
+                  example: 1
                 counter_id:
                   type: string
-                  description: Counter ID associated with this request. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
+                  description: |-
+                    Instrument code to sync. This field is required.
+
+                    When `source` is `1`, pass a counter ID in the format `{type}/{market}/{code}`, such as `ST/US/AAPL`. When `source` is `2`, pass internal counter IDs; separate multiple values with commas.
             example:
-              data_source: 1
+              source: 1
               counter_id: ST/US/AAPL
       responses:
         '200':
@@ -6717,12 +6906,13 @@ paths:
 
         ### Request parameters
 
-        - Required: `counter_id` (instrument code), `bond_info` (bond information list), `bond_rates` (rate list)
+        - Required: `counter_id` (instrument code), `bond_info` (bond information object), `bond_rates` (rate list)
+        - Optional: `audit_frontend_resource` (caller-provided audit context)
         - See each field description for format, value range, and business meaning.
 
         ### Business notes
 
-        Both `bond_info` and `bond_rates` are submitted as JSON arrays, registering the bond's basic information and its rate details in a single call.
+        `bond_info` is a JSON object and `bond_rates` is a JSON array of objects; one call registers the bond's basic information and its rate schedule.
 
         ### Result
 
@@ -6744,19 +6934,79 @@ paths:
                   type: string
                   description: Counter ID associated with this request. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 bond_info:
-                  type: array
-                  description: Submit Bond Info List as a JSON array. This field is required.
-                  items:
-                    type: string
+                  type: object
+                  description: Bond information object. This field is required.
+                  required:
+                    - period_complete
+                    - interest_calc_basis
+                    - par_value
+                    - cutoff_method
+                    - cutoff_digits
+                  properties:
+                    period_complete:
+                      type: string
+                      description: |-
+                        Period complete. This field is required. When `1`, the `rate` of the last `bond_rates` item is left empty.
+
+                        Call `GET /v1/datasets/refs/clear_period_complete` to retrieve the current data dictionary, and use the returned entry's `key` as this field's value.
+                    interest_calc_basis:
+                      type: string
+                      description: |-
+                        Annual days used for interest calculation, such as `365`. This field is required.
+
+                        Call `GET /v1/datasets/refs/clear_interest_calc_basis` to retrieve the current data dictionary, and use the returned entry's `key` as this field's value.
+                    par_value:
+                      type: number
+                      description: Par value, from `0` to `99999` with up to 2 decimal places, such as `100`. This field is required.
+                    cutoff_method:
+                      type: string
+                      description: |-
+                        Rounding method. This field is required.
+
+                        Call `GET /v1/datasets/refs/billing_cutoff_method` to retrieve the current data dictionary, and use the returned entry's `key` as this field's value.
+                    cutoff_digits:
+                      type: string
+                      description: |-
+                        Rounding decimal places. This field is required.
+
+                        Call `GET /v1/datasets/refs/billing_cutoff_digit` to retrieve the current data dictionary, and use the returned entry's `key` as this field's value.
                 bond_rates:
                   type: array
-                  description: Submit Bond Rates List as a JSON array. This field is required.
+                  minItems: 2
+                  description: Rate schedule. Submit at least 2 items, ordered by period. This field is required.
                   items:
-                    type: string
+                    type: object
+                    required:
+                      - period
+                      - interest_payment_date
+                    properties:
+                      period:
+                        type: integer
+                        description: Period number, starting from `0`.
+                      interest_payment_date:
+                        type: string
+                        description: Interest payment date in `YYYYMMDD` format. Each date must be later than the previous item's date.
+                      rate:
+                        type: string
+                        description: Rate as a decimal fraction, for example `0.05` for 5%. Required for the first item; leave empty for the last item when `period_complete` is `1`.
+                audit_frontend_resource:
+                  type: object
+                  description: Audit context submitted by the caller, such as `$behavior` and `$action` (`add` or `edit`).
             example:
               counter_id: ''
-              bond_info: []
-              bond_rates: []
+              bond_info:
+                period_complete: '0'
+                interest_calc_basis: '365'
+                par_value: 100
+                cutoff_method: ''
+                cutoff_digits: ''
+              bond_rates:
+                - period: 0
+                  interest_payment_date: '20260115'
+                  rate: '0.05'
+                - period: 1
+                  interest_payment_date: '20260715'
+                  rate: '0.05'
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.
@@ -6832,12 +7082,13 @@ paths:
 
         ### Request parameters
 
-        - Required: `counter_id` (instrument code), `bond_info` (bond information), `bond_rates` (rates)
+        - Required: `bond_info_id` (bond information record ID), `counter_id` (instrument code), `bond_info` (bond information object), `bond_rates` (rate list)
+        - Optional: `audit_frontend_resource` (caller-provided audit context)
         - See each field description for format, value range, and business meaning.
 
         ### Business notes
 
-        `bond_info` and `bond_rates` are submitted as JSON strings and overwrite the instrument's existing bond information and rate details.
+        `bond_info` is a JSON object and `bond_rates` is a JSON array of objects, with the same structure as creation. They overwrite the existing bond information and rate schedule of the record identified by `bond_info_id`.
 
         ### Result
 
@@ -6851,23 +7102,92 @@ paths:
             schema:
               type: object
               required:
+                - bond_info_id
                 - counter_id
                 - bond_info
                 - bond_rates
               properties:
+                bond_info_id:
+                  type: string
+                  description: ID of the bond information record to update. This field is required.
                 counter_id:
                   type: string
                   description: Counter ID associated with this request. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 bond_info:
-                  type: string
-                  description: This field is required.
+                  type: object
+                  description: Bond information object. This field is required.
+                  required:
+                    - period_complete
+                    - interest_calc_basis
+                    - par_value
+                    - cutoff_method
+                    - cutoff_digits
+                  properties:
+                    period_complete:
+                      type: string
+                      description: |-
+                        Period complete. This field is required. When `1`, the `rate` of the last `bond_rates` item is left empty.
+
+                        Call `GET /v1/datasets/refs/clear_period_complete` to retrieve the current data dictionary, and use the returned entry's `key` as this field's value.
+                    interest_calc_basis:
+                      type: string
+                      description: |-
+                        Annual days used for interest calculation, such as `365`. This field is required.
+
+                        Call `GET /v1/datasets/refs/clear_interest_calc_basis` to retrieve the current data dictionary, and use the returned entry's `key` as this field's value.
+                    par_value:
+                      type: number
+                      description: Par value, from `0` to `99999` with up to 2 decimal places, such as `100`. This field is required.
+                    cutoff_method:
+                      type: string
+                      description: |-
+                        Rounding method. This field is required.
+
+                        Call `GET /v1/datasets/refs/billing_cutoff_method` to retrieve the current data dictionary, and use the returned entry's `key` as this field's value.
+                    cutoff_digits:
+                      type: string
+                      description: |-
+                        Rounding decimal places. This field is required.
+
+                        Call `GET /v1/datasets/refs/billing_cutoff_digit` to retrieve the current data dictionary, and use the returned entry's `key` as this field's value.
                 bond_rates:
-                  type: string
-                  description: This field is required.
+                  type: array
+                  minItems: 2
+                  description: Rate schedule. Submit at least 2 items, ordered by period. This field is required.
+                  items:
+                    type: object
+                    required:
+                      - period
+                      - interest_payment_date
+                    properties:
+                      period:
+                        type: integer
+                        description: Period number, starting from `0`.
+                      interest_payment_date:
+                        type: string
+                        description: Interest payment date in `YYYYMMDD` format. Each date must be later than the previous item's date.
+                      rate:
+                        type: string
+                        description: Rate as a decimal fraction, for example `0.05` for 5%. Required for the first item; leave empty for the last item when `period_complete` is `1`.
+                audit_frontend_resource:
+                  type: object
+                  description: Audit context submitted by the caller, such as `$behavior` and `$action` (`add` or `edit`).
             example:
+              bond_info_id: '1'
               counter_id: ''
-              bond_info: ''
-              bond_rates: ''
+              bond_info:
+                period_complete: '0'
+                interest_calc_basis: '365'
+                par_value: 100
+                cutoff_method: ''
+                cutoff_digits: ''
+              bond_rates:
+                - period: 0
+                  interest_payment_date: '20260115'
+                  rate: '0.05'
+                - period: 1
+                  interest_payment_date: '20260715'
+                  rate: '0.05'
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.
@@ -7167,7 +7487,7 @@ paths:
 
         ### Business notes
 
-        Targets specific statements via `ids`, or a range via `type` and `dt`. `force_send` controls whether the default sending restrictions are bypassed.
+        Targets specific statements via `ids`, or a range via `type` and `dt`. For a batch send by range, the admin console sends `type`, `dt`, `total_notify_allowed: true`, and `force_send: false`; if the backend returns error `820513` (confirmation required), it resends the same request with `force_send: true`.
 
         ### Risk warning
 
@@ -7189,13 +7509,13 @@ paths:
               properties:
                 ids:
                   type: array
-                  description: Submit IDs as a JSON array.
+                  description: Statement record IDs to send, taken from the `id` field of `atm_statement_histories` rows. When sending specific records, the admin console also passes `type` (the row's `file_type_val`) and `dt` (the row's `dt`) with `force_send` set to `true`.
                   items:
                     type: string
                 type:
                   type: string
                   description: |-
-                    type. Values come from a backend data dictionary (maintained dynamically), not a fixed enum; use the options the service actually returns.
+                    Statement type. Call `GET /v1/datasets/refs/statement_file_type` to retrieve the current data dictionary, and use the returned entry's `key` as this field's value.
                 dt:
                   type: string
                   description: Date associated with this request. Use the date format defined by the API.
@@ -7695,13 +8015,14 @@ paths:
 
         ### Request parameters
 
-        - Required: `member_id` (member ID)
-        - Optional: `daily_notice_app` (daily app notification), `monthly_notice_app` (monthly app notification), `daily_notice_email` (daily email notification), `monthly_notice_email` (monthly email notification), `online` (whether online)
+        - Required: `aaid` (internal securities account ID), `audit_frontend_resource` (audit context)
+        - Optional: `daily_notice_app` (daily app notification), `monthly_notice_app` (monthly app notification), `daily_notice_email` (daily email notification), `monthly_notice_email` (monthly email notification), `online` (offline delivery)
+        - The admin console identifies the customer by `aaid`, not `member_id`, and sends every switch as the string `1` or `-1`. When adding, it sends all five switches as `1`.
         - See each field description for format, value range, and business meaning.
 
         ### Business notes
 
-        Creates the statement notification configuration for `member_id`, controlling the daily/monthly app and email notification switches respectively.
+        Creates the statement notification configuration for the securities account `aaid`, controlling the daily/monthly app and email notification switches and the offline delivery switch.
 
         ### Result
 
@@ -7715,47 +8036,102 @@ paths:
             schema:
               type: object
               required:
-                - member_id
+                - aaid
+                - audit_frontend_resource
               properties:
-                member_id:
+                aaid:
                   type: string
                   description: |-
-                    Member ID associated with this request.
+                    Internal securities account ID of the customer. This field is required.
 
-                    `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 daily_notice_app:
-                  type: number
-                monthly_notice_app:
-                  type: number
-                daily_notice_email:
-                  type: number
-                monthly_notice_email:
-                  type: number
-                online:
-                  type: integer
-                  enum:
-                    - 1
-                    - -1
-                    - 0
-                  x-enum-details:
-                    - value: 1
-                      label: On (online)
-                    - value: -1
-                      label: Off (offline)
-                    - value: 0
-                      label: No change
-                  example: 1
+                  type: string
                   description: |-
-                    online.
+                    Daily app notification.
 
-                    **Allowed values:** `1` Send online, `-1` Send offline, `0` No change
+                    **Allowed values:** `1` On, `-1` Off
+                  enum:
+                    - '1'
+                    - '-1'
+                  x-enum-details:
+                    - value: '1'
+                      label: 'On'
+                    - value: '-1'
+                      label: 'Off'
+                  example: '1'
+                monthly_notice_app:
+                  type: string
+                  description: |-
+                    Monthly app notification.
+
+                    **Allowed values:** `1` On, `-1` Off
+                  enum:
+                    - '1'
+                    - '-1'
+                  x-enum-details:
+                    - value: '1'
+                      label: 'On'
+                    - value: '-1'
+                      label: 'Off'
+                  example: '1'
+                daily_notice_email:
+                  type: string
+                  description: |-
+                    Daily email notification.
+
+                    **Allowed values:** `1` On, `-1` Off
+                  enum:
+                    - '1'
+                    - '-1'
+                  x-enum-details:
+                    - value: '1'
+                      label: 'On'
+                    - value: '-1'
+                      label: 'Off'
+                  example: '1'
+                monthly_notice_email:
+                  type: string
+                  description: |-
+                    Monthly email notification.
+
+                    **Allowed values:** `1` On, `-1` Off
+                  enum:
+                    - '1'
+                    - '-1'
+                  x-enum-details:
+                    - value: '1'
+                      label: 'On'
+                    - value: '-1'
+                      label: 'Off'
+                  example: '1'
+                online:
+                  type: string
+                  description: |-
+                    Whether statements are delivered offline.
+
+                    **Allowed values:** `-1` Yes (send offline), `1` No (send online)
+                  enum:
+                    - '-1'
+                    - '1'
+                  x-enum-details:
+                    - value: '-1'
+                      label: Yes (send offline)
+                    - value: '1'
+                      label: No (send online)
+                  example: '1'
+                audit_frontend_resource:
+                  type: object
+                  description: Audit context submitted by the caller. The admin console sends `$action` (`add`) and `id`. This field is required.
             example:
-              member_id: '101456715'
-              daily_notice_app: 1
-              monthly_notice_app: 1
-              daily_notice_email: user@example.com
-              monthly_notice_email: user@example.com
-              online: 1
+              aaid: '20000001'
+              daily_notice_app: '1'
+              monthly_notice_app: '1'
+              daily_notice_email: '1'
+              monthly_notice_email: '1'
+              online: '1'
+              audit_frontend_resource:
+                $action: add
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.
@@ -7832,13 +8208,14 @@ paths:
 
         ### Request parameters
 
-        - Required: `member_id` (member ID)
-        - Optional: `daily_notice_app` (daily app notification), `monthly_notice_app` (monthly app notification), `daily_notice_email` (daily email notification), `monthly_notice_email` (monthly email notification), `online` (whether online)
+        - Required: `aaid` (internal securities account ID), `audit_frontend_resource` (audit context)
+        - Optional: `daily_notice_app` (daily app notification), `monthly_notice_app` (monthly app notification), `daily_notice_email` (daily email notification), `monthly_notice_email` (monthly email notification), `online` (offline delivery)
+        - The admin console identifies the customer by `aaid`, not `member_id`, and sends every switch as the string `1` or `-1`.
         - See each field description for format, value range, and business meaning.
 
         ### Business notes
 
-        The parameter structure matches "Create statement-delivery notification configuration"; overwrites the existing notification switches for `member_id`.
+        The parameter structure matches statement notification creation; overwrites the existing notification switches of the securities account `aaid`.
 
         ### Result
 
@@ -7852,44 +8229,102 @@ paths:
             schema:
               type: object
               required:
-                - member_id
+                - aaid
+                - audit_frontend_resource
               properties:
-                member_id:
+                aaid:
                   type: string
                   description: |-
-                    Member ID associated with this request.
+                    Internal securities account ID of the customer. This field is required.
 
-                    `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 daily_notice_app:
-                  type: number
-                monthly_notice_app:
-                  type: number
-                daily_notice_email:
-                  type: number
-                monthly_notice_email:
-                  type: number
-                online:
-                  type: integer
-                  enum:
-                    - -1
-                    - 1
-                  x-enum-details:
-                    - value: -1
-                      label: Yes (send offline)
-                    - value: 1
-                      label: No (send online)
-                  example: -1
+                  type: string
                   description: |-
-                    online.
+                    Daily app notification.
 
-                    **Allowed values:** `-1` Send offline, `1` Send online
+                    **Allowed values:** `1` On, `-1` Off
+                  enum:
+                    - '1'
+                    - '-1'
+                  x-enum-details:
+                    - value: '1'
+                      label: 'On'
+                    - value: '-1'
+                      label: 'Off'
+                  example: '1'
+                monthly_notice_app:
+                  type: string
+                  description: |-
+                    Monthly app notification.
+
+                    **Allowed values:** `1` On, `-1` Off
+                  enum:
+                    - '1'
+                    - '-1'
+                  x-enum-details:
+                    - value: '1'
+                      label: 'On'
+                    - value: '-1'
+                      label: 'Off'
+                  example: '1'
+                daily_notice_email:
+                  type: string
+                  description: |-
+                    Daily email notification.
+
+                    **Allowed values:** `1` On, `-1` Off
+                  enum:
+                    - '1'
+                    - '-1'
+                  x-enum-details:
+                    - value: '1'
+                      label: 'On'
+                    - value: '-1'
+                      label: 'Off'
+                  example: '1'
+                monthly_notice_email:
+                  type: string
+                  description: |-
+                    Monthly email notification.
+
+                    **Allowed values:** `1` On, `-1` Off
+                  enum:
+                    - '1'
+                    - '-1'
+                  x-enum-details:
+                    - value: '1'
+                      label: 'On'
+                    - value: '-1'
+                      label: 'Off'
+                  example: '1'
+                online:
+                  type: string
+                  description: |-
+                    Whether statements are delivered offline.
+
+                    **Allowed values:** `-1` Yes (send offline), `1` No (send online)
+                  enum:
+                    - '-1'
+                    - '1'
+                  x-enum-details:
+                    - value: '-1'
+                      label: Yes (send offline)
+                    - value: '1'
+                      label: No (send online)
+                  example: '1'
+                audit_frontend_resource:
+                  type: object
+                  description: Audit context submitted by the caller. The admin console sends `$action` (`edit`) together with the configuration values before the change. This field is required.
             example:
-              member_id: '101456715'
-              daily_notice_app: 1
-              monthly_notice_app: 1
-              daily_notice_email: user@example.com
-              monthly_notice_email: user@example.com
-              online: 1
+              aaid: '20000001'
+              daily_notice_app: '1'
+              monthly_notice_app: '1'
+              daily_notice_email: '1'
+              monthly_notice_email: '1'
+              online: '1'
+              audit_frontend_resource:
+                $action: edit
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.
@@ -8957,6 +9392,10 @@ paths:
       x-lbonly: false
       description: |-
         Send a single tenant clearing file.
+
+        ### Availability
+
+        The backend currently rejects this endpoint as deprecated and returns error `500009`. To send tenant clearing files by ledger date and market, use Batch Send Downstream Files (`batch_send_downstream_files`).
 
         ### Request parameters
 

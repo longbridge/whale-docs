@@ -1746,13 +1746,27 @@ paths:
 
         ### 請求參數
 
-        - 本接口無必填參數，具體請求字段見下方字段說明。
+        - 必填：`id`（消息 ID）。取 `get_push_msg_history` 返回的推送消息的 `post_id`。
 
         ### 返回結果
 
         成功時返回風控消息的詳細內容。字段含義見下方響應定義。
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+              properties:
+                id:
+                  type: integer
+                  description: 消息 ID. `get_push_msg_history` 返回的推送消息的 `post_id`，以數字傳入。
+            example:
+              id: 1001
       responses:
         '200':
           description: 未實調，響應字段以真實接口為準。
@@ -3424,8 +3438,8 @@ paths:
 
         ### 請求參數
 
-        - 本接口無必填參數，可選參數見下方字段說明。
-        - 傳入 `aaid` 時按指定證券賬號過濾。
+        - 必填：`record_id`（追收記錄 ID）。取 `risk_option_stock_margin_call_records` 返回記錄的 `id`。
+        - 管理後台僅按 `record_id` 查詢本接口。
 
         ### 返回結果
 
@@ -3433,6 +3447,12 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - name: record_id
+          in: query
+          required: true
+          description: 追收記錄 ID. `risk_option_stock_margin_call_records` 返回的期權備兌追收股票記錄的 `id`。
+          schema:
+            type: string
         - name: aaid
           in: query
           required: false
@@ -20325,7 +20345,8 @@ paths:
 
         ### 請求參數
 
-        - 本接口無必填參數，可選參數見下方欄位說明。
+        - 本規範未定義請求體。後端會拒絕刪除列表為空的請求，而該列表的欄位名尚未確認，因此暫時無法可靠調用本接口。
+        - 管理後台刪除期權保證金配置時調用 `/risk/v1/opt_margin_ratio_config/batch_delete_review`，傳入 `source` 和 `configs`（每項包含 `aaid` 和 `counter_id`）；該接口不在本規範中。
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
@@ -21671,7 +21692,9 @@ paths:
 
         ### 請求參數
 
-        - 必填：`id`（配置 ID）、`counter_id`（標的代碼）、`haircut`（折扣率）
+        - 必填：`id`（配置 ID）、`name`（規則名稱）、`security_type`（證券類型）、`haircut`（折扣率）。
+        - `security_type` 為 `Stock` 時還需傳入 `market`，並可用 `include_indexes` 或 `exclude_indexes`、`include_exchanges` 或 `exclude_exchanges` 限定適用範圍。
+        - `risk_index_haircut_configs` 未定義記錄 ID 欄，調用前請先確認目標規則的 `id`。
         - 各欄位的格式、取值範圍、預設行為和業務含義見對應欄位說明。
 
         ### 業務說明
@@ -21695,17 +21718,52 @@ paths:
               type: object
               required:
                 - id
+                - name
+                - security_type
                 - haircut
               properties:
                 id:
                   type: number
-                  description: 配置ID. 配置ID，用於標識本次請求關聯的業務對象。此字段為必填項。
+                  description: 配置ID. 要編輯的指數 Haircut 規則 ID。
+                name:
+                  type: string
+                  description: 規則名稱. 指數 Haircut 規則的名稱。
+                security_type:
+                  type: string
+                  description: 證券類型. 取值來自 data-porter 引用 `haircut_rule_security_type`。取值為 `Stock` 時必須傳 `market`，指數和交易所範圍才會生效。
+                market:
+                  type: string
+                  description: 市場. 取值來自 data-porter 引用 `haircut_market_list`。`security_type` 為 `Stock` 時必填。
+                include_indexes:
+                  type: array
+                  description: 包含指數. 規則適用的指數 `counter_id` 列表（如 `IX/SH/000011`），對其成分股生效。`include_indexes` 與 `exclude_indexes` 二選一。
+                  items:
+                    type: string
+                exclude_indexes:
+                  type: array
+                  description: 排除指數. 規則排除的指數 `counter_id` 列表，其成分股不適用該規則。
+                  items:
+                    type: string
+                include_exchanges:
+                  type: array
+                  description: 包含交易所. 取值來自 data-porter 引用 `haircut_exchange_list`。`include_exchanges` 與 `exclude_exchanges` 二選一。
+                  items:
+                    type: string
+                exclude_exchanges:
+                  type: array
+                  description: 排除交易所. 取值來自 data-porter 引用 `haircut_exchange_list`。
+                  items:
+                    type: string
                 haircut:
                   type: string
-                  description: 折扣率. 用於指定「折扣率」。此字段為必填項。
+                  description: 折扣率. 大於 0 且不超過 1 的小數字符串，例如 `0.5` 表示 50%。
             example:
               id: 1
-              counter_id: ST/US/AAPL
+              name: Stock Test
+              security_type: Stock
+              market: HK
+              include_indexes:
+                - IX/HK/HSI
               haircut: '0.5'
       responses:
         '200':
@@ -24918,7 +24976,8 @@ paths:
 
         ### 請求參數
 
-        - 必填：`aaids`（證券賬號列表）
+        - 必填：`client_group_id`（客戶組 ID）、`aaids`（證券賬號列表）。
+        - `client_group_id` 取 `risk_member_groups` 返回的客戶組 `id`。
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
@@ -24941,14 +25000,19 @@ paths:
             schema:
               type: object
               required:
+                - client_group_id
                 - aaids
               properties:
+                client_group_id:
+                  type: string
+                  description: 客戶組 ID. `risk_member_groups` 返回的目標客戶組的 `id`。
                 aaids:
                   type: array
                   description: 證券賬號列表. 要移除的證券賬號數組。
                   items:
                     type: string
             example:
+              client_group_id: '1139'
               aaids:
                 - H00000000
       responses:
@@ -24993,7 +25057,8 @@ paths:
 
         ### 請求參數
 
-        - 必填：`aaid`（證券賬號）
+        - 必填：`client_group_id`（客戶組 ID）、`aaid`（證券賬號）。
+        - `client_group_id` 取 `risk_member_groups` 返回的客戶組 `id`。
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
@@ -25016,8 +25081,12 @@ paths:
             schema:
               type: object
               required:
+                - client_group_id
                 - aaid
               properties:
+                client_group_id:
+                  type: string
+                  description: 客戶組 ID. `risk_member_groups` 返回的目標客戶組的 `id`。
                 aaid:
                   type: string
                   description: |-
@@ -25025,6 +25094,7 @@ paths:
 
                     此處傳客戶證券賬戶的內部數字編號 `aaid`，並非證券賬號 `account_no`（如 `H00000000`），亦非客戶編號 `member_id`；一個客戶可擁有多個 `aaid`。
             example:
+              client_group_id: '1139'
               aaid: H00000000
       responses:
         '200':

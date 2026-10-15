@@ -1775,13 +1775,27 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field definitions below for the request fields.
+        - Required: `id` (message ID). Use the `post_id` of a pushed message returned by `get_push_msg_history`.
 
         ### Returns
 
         On success, returns the risk-control message details. See the response definition for field meanings.
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+              properties:
+                id:
+                  type: integer
+                  description: Message ID. The `post_id` of a pushed message returned by `get_push_msg_history`, passed as a number.
+            example:
+              id: 1001
       responses:
         '200':
           content:
@@ -3459,8 +3473,8 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field definitions for optional ones.
-        - Pass `aaid` to filter by a given securities account.
+        - Required: `record_id` (margin-call record ID). Use the `id` of a record returned by `risk_option_stock_margin_call_records`.
+        - The admin console queries this endpoint by `record_id` only.
 
         ### Returns
 
@@ -3468,6 +3482,12 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - name: record_id
+          in: query
+          required: true
+          description: Margin-call record ID. The `id` of an option covered-stock margin-call record returned by `risk_option_stock_margin_call_records`.
+          schema:
+            type: string
         - name: aaid
           in: query
           required: false
@@ -20520,7 +20540,8 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field descriptions for optional parameters.
+        - This specification does not document the request body. The backend rejects requests whose delete list is empty, and the field name of that list has not been confirmed, so this operation cannot be called reliably yet.
+        - To delete option margin configurations in the admin console, the console calls `/risk/v1/opt_margin_ratio_config/batch_delete_review` with `source` and `configs` (each item has `aaid` and `counter_id`); that endpoint is not part of this specification.
         - See the field descriptions for the format, value range, and business meaning of each field.
 
         ### Business notes
@@ -21876,7 +21897,9 @@ paths:
 
         ### Request parameters
 
-        - Required: `id` (configuration ID), `counter_id` (security code), `haircut` (haircut rate).
+        - Required: `id` (configuration ID), `name` (rule name), `security_type` (security type), `haircut` (haircut rate).
+        - When `security_type` is `Stock`, also pass `market`, and optionally scope the rule with `include_indexes` or `exclude_indexes` and `include_exchanges` or `exclude_exchanges`.
+        - `risk_index_haircut_configs` does not document a record ID column, so confirm the `id` of the target rule before calling.
         - See the field descriptions for the format, value range, default behavior, and business meaning of each field.
 
         ### Business notes
@@ -21900,17 +21923,52 @@ paths:
               type: object
               required:
                 - id
+                - name
+                - security_type
                 - haircut
               properties:
                 id:
                   type: number
-                  description: Config ID. Config ID associated with this request.
+                  description: Config ID. The ID of the index Haircut rule to edit.
+                name:
+                  type: string
+                  description: Rule Name. Name of the index Haircut rule.
+                security_type:
+                  type: string
+                  description: Security Type. Values come from the data-porter reference `haircut_rule_security_type`. When the value is `Stock`, `market` is required and the index and exchange scopes apply.
+                market:
+                  type: string
+                  description: Market. Values come from the data-porter reference `haircut_market_list`. Required when `security_type` is `Stock`.
+                include_indexes:
+                  type: array
+                  description: Include Indexes. Index `counter_id` values (such as `IX/SH/000011`) whose constituents the rule applies to. Pass either `include_indexes` or `exclude_indexes`.
+                  items:
+                    type: string
+                exclude_indexes:
+                  type: array
+                  description: Exclude Indexes. Index `counter_id` values whose constituents the rule excludes.
+                  items:
+                    type: string
+                include_exchanges:
+                  type: array
+                  description: Include Exchanges. Values come from the data-porter reference `haircut_exchange_list`. Pass either `include_exchanges` or `exclude_exchanges`.
+                  items:
+                    type: string
+                exclude_exchanges:
+                  type: array
+                  description: Exclude Exchanges. Values come from the data-porter reference `haircut_exchange_list`.
+                  items:
+                    type: string
                 haircut:
                   type: string
-                  description: Haircut. This field is required.
+                  description: Haircut. A decimal string greater than 0 and at most 1, for example `0.5` for 50%.
             example:
               id: 1
-              counter_id: ST/US/AAPL
+              name: Stock Test
+              security_type: Stock
+              market: HK
+              include_indexes:
+                - IX/HK/HSI
               haircut: '0.5'
       responses:
         '200':
@@ -25178,7 +25236,8 @@ paths:
 
         ### Request parameters
 
-        - Required: `aaids` (list of securities accounts).
+        - Required: `client_group_id` (client group ID), `aaids` (list of securities accounts).
+        - Use the `id` of a client group returned by `risk_member_groups` as `client_group_id`.
         - See the field descriptions for the format, value range, and business meaning of each field.
 
         ### Business notes
@@ -25201,14 +25260,19 @@ paths:
             schema:
               type: object
               required:
+                - client_group_id
                 - aaids
               properties:
+                client_group_id:
+                  type: string
+                  description: Client Group ID. The `id` of the target client group returned by `risk_member_groups`.
                 aaids:
                   type: array
                   description: A/C No. List. Array of securities account numbers to remove.
                   items:
                     type: string
             example:
+              client_group_id: '1139'
               aaids:
                 - H00000000
       responses:
@@ -25252,7 +25316,8 @@ paths:
 
         ### Request parameters
 
-        - Required: `aaid` (securities account).
+        - Required: `client_group_id` (client group ID), `aaid` (securities account).
+        - Use the `id` of a client group returned by `risk_member_groups` as `client_group_id`.
         - See the field descriptions for the format, value range, and business meaning of each field.
 
         ### Business notes
@@ -25275,8 +25340,12 @@ paths:
             schema:
               type: object
               required:
+                - client_group_id
                 - aaid
               properties:
+                client_group_id:
+                  type: string
+                  description: Client Group ID. The `id` of the target client group returned by `risk_member_groups`.
                 aaid:
                   type: string
                   description: |-
@@ -25284,6 +25353,7 @@ paths:
 
                     Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
             example:
+              client_group_id: '1139'
               aaid: H00000000
       responses:
         '200':

@@ -1636,8 +1636,9 @@ paths:
 
         ### 请求参数
 
-        - 必填：`transfer_type`（转账类型）、`from_type`（转出方类型）、`from_main_account`（转出主账户）、`from_main_account_type`（转出主账户类型）、`from_account_id`（转出账户 ID）、`to_type`（转入方类型）、`to_main_account`（转入主账户）、`to_main_account_type`（转入主账户类型）、`to_account_id`（转入账户 ID）、`allocation_channel`（调拨渠道）、`transfer_strategy`（转账策略）、`package_type`（套餐类型 / 频率）、`currency`（币种）、`amount`（金额）、`status`（状态）
-        - 可选：`service_time`（服务时间）、`postscript`（附言）
+        - 必填：`transfer_type`（调拨类型）、`from_type`（转出方类型）、`to_type`（转入方类型）、`transfer_strategy`（调拨策略）、`package_type`（频率）、`currency`（币种）、`amount`（金额）、`postscript`（附言）、`status`（状态）、`priority`（优先级）
+        - 视通道而定：`from_main_account`、`from_main_account_type`、`from_account_id`、`to_main_account`、`to_main_account_type`、`to_account_id`、`allocation_channel`；HashKey 结算渠道调拨还需 `currency_type`
+        - 可选：`service_time`（服务时间；系统计算金额的频率不传）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 业务说明
@@ -1660,24 +1661,40 @@ paths:
             schema:
               type: object
               required:
-                - id
                 - transfer_type
                 - from_type
                 - to_type
                 - transfer_strategy
                 - package_type
+                - currency
+                - amount
                 - postscript
                 - status
+                - priority
               properties:
-                id:
-                  type: string
-                  description: 规则 ID
                 transfer_type:
                   type: string
-                  description: 划拨类型
+                  description: |-
+                    调拨类型。传 `atm_whale_transfer_type` 数据字典（`GET /v1/datasets/refs/atm_whale_transfer_type`）中条目的 `key`。
+
+                    管理后台中，`1`（银行间调拨）会把 `from_type` 和 `to_type` 都固定为 `1`；`2`（结算账户充值）会把 `from_type` 固定为 `1`；`3`（结算账户提现）会把 `to_type` 固定为 `1`。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_transfer_type
                 from_type:
                   type: string
-                  description: 出账通道
+                  description: |-
+                    转出通道类型。管理后台提交时，银行传 `1`，结算渠道传 `2`。
+
+                    **可选值：** `1` 银行、`2` 结算渠道
+                  enum:
+                    - '1'
+                    - '2'
+                  x-enum-details:
+                    - value: '1'
+                      label: 银行
+                    - value: '2'
+                      label: 结算渠道
+                  example: '1'
                 from_main_account:
                   type: string
                   description: 大账号（出账，出账通道非银行时必填）
@@ -1689,7 +1706,19 @@ paths:
                   description: 银行账号（出账，出账通道为银行或非加密币种时必填）
                 to_type:
                   type: string
-                  description: 入账通道
+                  description: |-
+                    转入通道类型。管理后台提交时，银行传 `1`，结算渠道传 `2`。
+
+                    **可选值：** `1` 银行、`2` 结算渠道
+                  enum:
+                    - '1'
+                    - '2'
+                  x-enum-details:
+                    - value: '1'
+                      label: 银行
+                    - value: '2'
+                      label: 结算渠道
+                  example: '1'
                 to_main_account:
                   type: string
                   description: 大账号（入账，入账通道非银行时必填）
@@ -1704,25 +1733,55 @@ paths:
                   description: 划拨渠道（出账通道为银行时必填）
                 transfer_strategy:
                   type: string
-                  description: 划拨策略
+                  description: |-
+                    调拨策略。传 `atm_whale_transfer_strategy` 数据字典（`GET /v1/datasets/refs/atm_whale_transfer_strategy`）中条目的 `key`。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_transfer_strategy
                 package_type:
                   type: string
-                  description: 频率
+                  description: |-
+                    频率。传 `atm_whale_package_type` 数据字典（`GET /v1/datasets/refs/atm_whale_package_type`）中条目的 `key`。
+
+                    - `week` 使用 `service_time.week_rule`；其他按时间触发的频率使用 `service_time.time_rule`。
+                    - `balance`、`coin_withdraw_quantity_submit`、`coin_withdraw_fee_submit`、`coin_withdraw_quantity_fail`、`coin_withdraw_fee_fail`、`coin_deposit_success` 由系统计算金额：`currency` 和 `amount` 均传 `system`，管理后台不传 `service_time`。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_package_type
                 currency:
                   type: string
-                  description: 币种（金额非系统计算时必填）
+                  description: 币种，取 `global_currency` 数据字典中的代码（虚拟资产取 `global_coin`）。金额由系统计算时传 `system`（见 `package_type`）。
+                currency_type:
+                  type: string
+                  description: |-
+                    币种类别。仅当 `transfer_type` 为 `4` 且转出通道为 `settlement_hashkey_hk` 时传。传 `atm_ref_currency_type` 数据字典中条目的 `key`；为 `crypto` 时 `currency` 改用币种代码。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_ref_currency_type
                 amount:
                   type: string
-                  description: 金额（金额非系统计算时必填）
+                  description: 调拨金额。金额由系统计算时传 `system`（见 `package_type`）。
                 service_time:
                   type: string
-                  description: 服务时间（JSON 序列化对象）
+                  description: |-
+                    执行时间，JSON 字符串。时间为整点或半点的 `HH:mm`（`00:00` 至 `23:30`）。
+
+                    - `week` 以外按时间触发的频率：`{"time_rule":["09:00","15:30"]}`。
+                    - `week`：`{"week_rule":[{"week":1,"time":["09:00"]}]}`，`week` 为 `1`（周一）至 `7`（周日）。
                 postscript:
                   type: string
                   description: 转账附言
                 status:
                   type: string
-                  description: 状态
+                  description: |-
+                    规则状态。传 `atm_status` 数据字典（`GET /v1/datasets/refs/atm_status`）中条目的 `key`，管理后台传 `1` 或 `2`。
+                  enum:
+                    - '1'
+                    - '2'
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_status
+                priority:
+                  type: integer
+                  minimum: 0
+                  maximum: 999
+                  description: 规则优先级，0 至 999 的整数。管理后台表单必填。
       responses:
         '200':
           description: 请求处理成功。响应的 `data` 不包含额外业务字段。
@@ -1789,7 +1848,7 @@ paths:
 
         ### 请求参数
 
-        - 必填：`id`（规则 ID）
+        - 必填：`id`（规则 ID）。目前没有 Broker API 列表接口返回该 ID；管理后台从资金调拨配置页面背后的 `lb_whale_package_rules` 数据集读取。
         - 其余字段结构同「新增资金调拨规则」，各字段的格式、取值范围、默认行为和业务含义见对应字段说明。
 
         ### 业务说明
@@ -1818,18 +1877,38 @@ paths:
                 - to_type
                 - transfer_strategy
                 - package_type
+                - currency
+                - amount
                 - postscript
                 - status
+                - priority
               properties:
                 id:
                   type: string
                   description: 规则 ID
                 transfer_type:
                   type: string
-                  description: 划拨类型
+                  description: |-
+                    调拨类型。传 `atm_whale_transfer_type` 数据字典（`GET /v1/datasets/refs/atm_whale_transfer_type`）中条目的 `key`。
+
+                    管理后台中，`1`（银行间调拨）会把 `from_type` 和 `to_type` 都固定为 `1`；`2`（结算账户充值）会把 `from_type` 固定为 `1`；`3`（结算账户提现）会把 `to_type` 固定为 `1`。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_transfer_type
                 from_type:
                   type: string
-                  description: 出账通道
+                  description: |-
+                    转出通道类型。管理后台提交时，银行传 `1`，结算渠道传 `2`。
+
+                    **可选值：** `1` 银行、`2` 结算渠道
+                  enum:
+                    - '1'
+                    - '2'
+                  x-enum-details:
+                    - value: '1'
+                      label: 银行
+                    - value: '2'
+                      label: 结算渠道
+                  example: '1'
                 from_main_account:
                   type: string
                   description: 大账号（出账，出账通道非银行时必填）
@@ -1841,7 +1920,19 @@ paths:
                   description: 银行账号（出账，出账通道为银行或非加密币种时必填）
                 to_type:
                   type: string
-                  description: 入账通道
+                  description: |-
+                    转入通道类型。管理后台提交时，银行传 `1`，结算渠道传 `2`。
+
+                    **可选值：** `1` 银行、`2` 结算渠道
+                  enum:
+                    - '1'
+                    - '2'
+                  x-enum-details:
+                    - value: '1'
+                      label: 银行
+                    - value: '2'
+                      label: 结算渠道
+                  example: '1'
                 to_main_account:
                   type: string
                   description: 大账号（入账，入账通道非银行时必填）
@@ -1856,25 +1947,55 @@ paths:
                   description: 划拨渠道（出账通道为银行时必填）
                 transfer_strategy:
                   type: string
-                  description: 划拨策略
+                  description: |-
+                    调拨策略。传 `atm_whale_transfer_strategy` 数据字典（`GET /v1/datasets/refs/atm_whale_transfer_strategy`）中条目的 `key`。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_transfer_strategy
                 package_type:
                   type: string
-                  description: 频率
+                  description: |-
+                    频率。传 `atm_whale_package_type` 数据字典（`GET /v1/datasets/refs/atm_whale_package_type`）中条目的 `key`。
+
+                    - `week` 使用 `service_time.week_rule`；其他按时间触发的频率使用 `service_time.time_rule`。
+                    - `balance`、`coin_withdraw_quantity_submit`、`coin_withdraw_fee_submit`、`coin_withdraw_quantity_fail`、`coin_withdraw_fee_fail`、`coin_deposit_success` 由系统计算金额：`currency` 和 `amount` 均传 `system`，管理后台不传 `service_time`。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_package_type
                 currency:
                   type: string
-                  description: 币种（金额非系统计算时必填）
+                  description: 币种，取 `global_currency` 数据字典中的代码（虚拟资产取 `global_coin`）。金额由系统计算时传 `system`（见 `package_type`）。
+                currency_type:
+                  type: string
+                  description: |-
+                    币种类别。仅当 `transfer_type` 为 `4` 且转出通道为 `settlement_hashkey_hk` 时传。传 `atm_ref_currency_type` 数据字典中条目的 `key`；为 `crypto` 时 `currency` 改用币种代码。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_ref_currency_type
                 amount:
                   type: string
-                  description: 金额（金额非系统计算时必填）
+                  description: 调拨金额。金额由系统计算时传 `system`（见 `package_type`）。
                 service_time:
                   type: string
-                  description: 服务时间（JSON 序列化对象）
+                  description: |-
+                    执行时间，JSON 字符串。时间为整点或半点的 `HH:mm`（`00:00` 至 `23:30`）。
+
+                    - `week` 以外按时间触发的频率：`{"time_rule":["09:00","15:30"]}`。
+                    - `week`：`{"week_rule":[{"week":1,"time":["09:00"]}]}`，`week` 为 `1`（周一）至 `7`（周日）。
                 postscript:
                   type: string
                   description: 转账附言
                 status:
                   type: string
-                  description: 状态
+                  description: |-
+                    规则状态。传 `atm_status` 数据字典（`GET /v1/datasets/refs/atm_status`）中条目的 `key`，管理后台传 `1` 或 `2`。
+                  enum:
+                    - '1'
+                    - '2'
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_status
+                priority:
+                  type: integer
+                  minimum: 0
+                  maximum: 999
+                  description: 规则优先级，0 至 999 的整数。管理后台表单必填。
       responses:
         '200':
           description: 请求处理成功。响应的 `data` 不包含额外业务字段。
@@ -4021,8 +4142,8 @@ paths:
 
         ### 请求参数
 
-        - 本接口无必填参数，可选参数见下方字段说明。
-        - 可选：`is_default`（是否默认策略）、`change_type`（变动类型）、`service_strategy`（服务策略）、`channel_name`（渠道名称）、`support_currency`（支持币种对（拼装后））、`support_currencies`（支持币种对（请求原始值））、`service_time`（服务时间配置）、`is_combine`（是否合并）、`forex_mode`（换汇模式）、`bear_wave`（承担波动方式）、`currency_prefix`（币种前缀）、`currency_suffix`（币种后缀）
+        - 必填：`is_default`、`service_strategy`、`change_type`、`support_currency`、`support_currencies`、`support_currencies_keys`、`service_time`。`service_strategy` 不为 `BATCH` 时，`channel_name` 也必填。
+        - 可选：`is_combine`（是否合并）、`forex_mode`（换汇模式）、`bear_wave`（承担波动方式）、`currency_prefix`（币种前缀）、`currency_suffix`（币种后缀）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 业务说明
@@ -4044,15 +4165,23 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - is_default
+                - service_strategy
+                - change_type
+                - support_currency
+                - support_currencies
+                - support_currencies_keys
+                - service_time
               properties:
                 is_default:
-                  type: boolean
+                  type: string
                   description: |-
-                    是否默认策略。
+                    是否默认策略。传 `forex_is_default` 数据字典（`GET /v1/datasets/refs/forex_is_default`）中条目的 `key`，不是布尔值。
 
-                    **布尔值：**
-                    - `true` - 表示条件成立
-                    - `false` - 表示条件不成立
+                    `DEFAULT` 表示默认策略，此时管理后台会把 `change_type` 固定为 `0`。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/forex_is_default
                 change_type:
                   type: string
                   description: |-
@@ -4076,10 +4205,18 @@ paths:
                   example: '0'
                 service_strategy:
                   type: string
-                  description: 用于指定「服务策略」。
+                  description: |-
+                    服务策略。传 `forex_service_strategy` 数据字典（`GET /v1/datasets/refs/forex_service_strategy`）中条目的 `key`。
+
+                    取值为 `BATCH` 时，管理后台不传 `channel_name`。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/forex_service_strategy
                 channel_name:
                   type: string
-                  description: 非默认策略且需要区分渠道时必填
+                  description: |-
+                    换汇渠道。传 `can_exchange_channel_configs` 数据字典（`GET /v1/datasets/refs/can_exchange_channel_configs`）中条目的 `key`。`service_strategy` 不为 `BATCH` 时必填。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/can_exchange_channel_configs
                 support_currency:
                   type: array
                   description: |-
@@ -4092,12 +4229,34 @@ paths:
                     endpoint: POST /forex/query_support_currency
                 support_currencies:
                   type: array
-                  description: 请求字段 support_currency 原始数组，提交前被整体挪到 support_currencies 键下
+                  description: |-
+                    与 `support_currency` 相同、顺序一致的币种对，以对象形式传入。币种代码来自 `global_currency_for_exchange` 数据字典。
                   items:
-                    type: string
+                    type: object
+                    required:
+                      - currency_prefix
+                      - currency_suffix
+                    properties:
+                      currency_prefix:
+                        type: string
+                        description: 币种对的源币种，例如 `USD`。
+                      currency_suffix:
+                        type: string
+                        description: 币种对的目标币种，例如 `HKD`。
+                support_currencies_keys:
+                  type: array
+                  description: |-
+                    `support_currencies` 中每一项的下标，从 0 开始。两个币种对时传 `[0, 1]`。
+                  items:
+                    type: integer
                 service_time:
                   type: string
-                  description: JSON 字符串，由请求 service_time.time_zones/time_rule/time_rule_0 等分段字段组装，结构较复杂（含时区、时间段规则），未逐一穷举内层字段
+                  description: |-
+                    服务时间，JSON 字符串，包含 `time_zones` 和 `time_rule`：
+
+                    - `time_zones`：`hk_trade_day`（香港交易日）、`calendar_day`（自然日）或 `week`（按星期）。
+                    - `hk_trade_day` 和 `calendar_day` 时，`time_rule` 为字符串，由一个或多个 `HH:mm:ss-HH:mm:ss` 时间段以 `&` 连接，例如 `"09:00:00-12:00:00&13:00:00-16:00:00"`。
+                    - `week` 时，`time_rule` 为 `{week_interval, time_interval}` 对象数组。`week_interval` 格式为 `起-止`，`1`（周一）至 `7`（周日），例如 `"1-5"`；`time_interval` 格式同上。
                 is_combine:
                   type: boolean
                   description: |-
@@ -4121,21 +4280,17 @@ paths:
                   type: string
                   description: 用于指定「币种后缀」。
             example:
-              is_default: false
-              change_type: ''
-              service_strategy: ''
-              channel_name: ''
+              is_default: DEFAULT
+              change_type: '0'
+              service_strategy: BATCH
               support_currency:
                 - USD/HKD
               support_currencies:
                 - currency_prefix: USD
                   currency_suffix: HKD
+              support_currencies_keys:
+                - 0
               service_time: '{"time_zones":"hk_trade_day","time_rule":"09:00:00-16:00:00"}'
-              is_combine: false
-              forex_mode: ''
-              bear_wave: ''
-              currency_prefix: ''
-              currency_suffix: ''
       responses:
         '200':
           description: 请求处理成功。响应的 `data` 不包含额外业务字段。
@@ -4423,8 +4578,7 @@ paths:
 
         ### 请求参数
 
-        - 必填：`id`（记录 ID）
-        - 可选：`business_type`（业务类型）
+        - 必填：`id`（记录 ID）、`business_type`。删除换汇池额度记录传 `exchange`，删除银行日限额记录传 `cash`。
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 业务说明
@@ -4448,16 +4602,29 @@ paths:
               type: object
               required:
                 - id
+                - business_type
               properties:
                 id:
                   type: string
                   description: 记录ID，用于标识本次请求关联的业务对象。此字段为必填项。
                 business_type:
                   type: string
-                  description: 用于区分本次请求适用的业务场景。
+                  description: |-
+                    要删除的记录类型。
+
+                    **可选值：** `exchange` 换汇池额度、`cash` 银行日限额
+                  enum:
+                    - exchange
+                    - cash
+                  x-enum-details:
+                    - value: exchange
+                      label: 换汇池额度
+                    - value: cash
+                      label: 银行日限额
+                  example: exchange
             example:
               id: '123'
-              business_type: ''
+              business_type: exchange
       responses:
         '200':
           description: 请求处理成功。响应的 `data` 不包含额外业务字段。
@@ -11208,7 +11375,9 @@ paths:
                   x-value-source:
                     endpoint: GET /v1/datasets/refs/tenant_currencies_by_channel
                 single_quota_currency_amount_keys:
-                  type: string
+                  type: array
+                  items:
+                    type: integer
                   description: 值为 single_quota_currency_amount 数组的下标序列（如 [0,1,...]），用于标识行顺序。
                 currency:
                   type: string
@@ -11222,7 +11391,9 @@ paths:
                   x-value-source:
                     endpoint: GET /v1/datasets/refs/withdraw_rule_bank_regions
                 support_bank_ids:
-                  type: string
+                  type: array
+                  items:
+                    type: string
                   description: 多选，候选项来自按 support_region 联动查询 atm_region_banks_pick_exclude_default 返回的银行列表。
                 sec_auth:
                   type: string
@@ -11261,7 +11432,9 @@ paths:
                   type: string
                   description: 随本次操作保存的备注。
                 rule_codes:
-                  type: string
+                  type: array
+                  items:
+                    type: string
                   description: |-
                     仅特定站点展示，多选，候选值随业务变化（含 all=全部，选 all 会互斥清空其它选项）；请调用 `GET /v1/datasets/refs/risk_rule_indicators_withdraw` 获取当前可用取值。
 
@@ -11269,25 +11442,18 @@ paths:
                   x-value-source:
                     endpoint: GET /v1/datasets/refs/risk_rule_indicators_withdraw
                 original_limit_bank_accounts:
-                  type: string
+                  type: array
+                  items:
+                    type: string
                   description: 仅特定站点且 original_limit='1' 时展示，按银行分组多选账户，候选项来自动态查询 atm_lb_bank_accounts_package_rule 的结果。
                 service_time:
                   type: string
                   description: |-
-                    由 time_zones(枚举: hk_trade_day/calendar_day/week) + time_rule 拼装的 JSON
-                    字符串；time_zones='week' 时 time_rule 为多组 {week_interval, time_interval}。
-                  enum:
-                    - hk_trade_day
-                    - calendar_day
-                    - week
-                  x-enum-details:
-                    - value: hk_trade_day
-                      label: 港股交易日
-                    - value: calendar_day
-                      label: 自然日
-                    - value: week
-                      label: 星期
-                  example: hk_trade_day
+                    服务时间，JSON 字符串，包含 `time_zones` 和 `time_rule`：
+
+                    - `time_zones`：`hk_trade_day`（香港交易日）、`calendar_day`（自然日）或 `week`（按星期）。
+                    - `hk_trade_day` 和 `calendar_day` 时，`time_rule` 为 `HH:mm:ss-HH:mm:ss` 字符串，例如 `"09:00:00-18:00:00"`。
+                    - `week` 时，`time_rule` 为 `{week_interval, time_interval}` 对象数组。`week_interval` 格式为 `起-止`，`1`（周一）至 `7`（周日），例如 `"1-5"`；`time_interval` 为 `HH:mm:ss-HH:mm:ss` 字符串。
                 lb_service_time:
                   type: string
                   description: 结构同 service_time，另一套独立的时间窗口配置，JSON 字符串。
@@ -11315,7 +11481,9 @@ paths:
                 - 0
               currency: USD
               support_region: hk,us
-              support_bank_ids: 101,102
+              support_bank_ids:
+                - '101'
+                - '102'
               sec_auth: '1'
               priority: 10
               status: '1'
@@ -20798,25 +20966,22 @@ paths:
         - lb_hk_clearing.clearing_busin_step_edit
       x-lbonly: false
       description: |-
-        创建或编辑日终清算任务流，为一组市场配置一条按名称标识的日终清算流程。
+        在一次请求中新增、编辑、删除日终清算流程并调整其顺序。请求体为 `flows` 数组，每一项各自携带 `action_in`。
 
         ### 请求参数
 
-        - 必填：`flow_name`（流程名称）、`markets`（市场）。
-        - 编辑已有流程时传入 `id`（流程编号）；新建时省略。
-        - 各字段的取值范围和业务含义见对应字段说明。
-
-        ### 业务说明
-
-        同一接口同时承担新建与编辑：不传 `id` 为新建，传入已有 `id` 为覆盖更新。`markets` 声明该任务流覆盖的市场范围。
+        - 必填：`flows`。每一项必填 `flow_name`（流程名称）、`busin_no`（执行顺序，从 1 开始）、`action_in`（`1` 新增、`2` 删除、`3` 修改）。
+        - `id`：新增流程传空字符串；修改或删除已有流程传该流程 ID。
+        - 管理后台会按页面显示顺序提交全部流程，`busin_no` 从 1 重新编号。
+        - `clearing_busin_flows` 数据集不返回流程 `id`；管理后台从 `clear_busin_flows_list` 数据集读取。市场与流程的绑定通过 `POST /clearing/markets` 的 `busin_flow_id` 完成，不在本接口中设置。
 
         ### 风险提示
 
-        此配置影响日终清算流程的执行范围，请在调用前确认流程名称与市场组合无误。
+        此配置会变更日终清算流程及其执行顺序，请在调用前确认流程列表无误。
 
         ### 处理结果
 
-        成功时创建或更新对应的日终清算任务流，返回数据以 `200` 响应定义为准。
+        成功时按请求新增、更新或删除对应流程，返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -20826,28 +20991,56 @@ paths:
             schema:
               type: object
               required:
-                - flow_name
-                - markets
+                - flows
               properties:
-                flow_name:
-                  type: string
-                  description: 日终清算任务流的名称。此字段为必填项。
-                  example: HK-EOD-Flow
-                markets:
+                flows:
                   type: array
+                  description: 日终流程列表。
                   items:
-                    type: string
-                  description: 该任务流覆盖的市场代码列表。此字段为必填项。
-                  example:
-                    - GTMMF
-                id:
-                  type: integer
-                  description: 日终清算任务流的编号。编辑已有流程时传入以指定要更新的流程；新建流程时省略。
-                  example: 1001
+                    type: object
+                    required:
+                      - id
+                      - flow_name
+                      - busin_no
+                      - action_in
+                    properties:
+                      id:
+                        type: string
+                        description: 流程 ID。新增流程传空字符串。
+                      flow_name:
+                        type: string
+                        description: 流程名称。
+                      busin_no:
+                        type: integer
+                        minimum: 1
+                        description: 流程执行顺序，从 1 开始。
+                      action_in:
+                        type: string
+                        description: |-
+                          对该流程执行的操作。
+
+                          **可选值：** `1` 新增、`2` 删除、`3` 修改
+                        enum:
+                          - '1'
+                          - '2'
+                          - '3'
+                        x-enum-details:
+                          - value: '1'
+                            label: 新增
+                          - value: '2'
+                            label: 删除
+                          - value: '3'
+                            label: 修改
             example:
-              flow_name: HK-EOD-Flow
-              markets:
-                - GTMMF
+              flows:
+                - id: '1'
+                  flow_name: HK-EOD-Flow
+                  busin_no: 1
+                  action_in: '3'
+                - id: ''
+                  flow_name: US-EOD-Flow
+                  busin_no: 2
+                  action_in: '1'
       responses:
         '200':
           description: |-
@@ -21469,6 +21662,10 @@ paths:
         - 可选：`market`（市场）、`currency`（币种）、`overnight_flag`（隔夜市场标识）、`custodian_id`（托管商编号）、`sub_position_no`（托管商子仓）、`balance_back_n`（钱交收 Tn）、`equity_back_n`（券交收 Tn）、`main_flag`（本位市场）、`otc_flag`（OTC 市场标记）、`use_public_stock_info`（使用公有库标的信息）、`busin_flow_id`（日终流程 ID）。
         - 各字段的格式、取值范围、默认行为和业务含义见对应字段说明。
 
+        ### 已知问题
+
+        在测试环境的端到端测试中，新增市场返回 `800001`（`InvalidField=Time Zone Name`）。管理后台表单不会向本接口传任何时区字段，后端期望的字段尚未确认；依赖本接口新增市场前，请先与清算团队确认。
+
         ### 风险提示
 
         此操作变更真实清算市场配置，影响交收周期与日终清算流程。调用前请确认目标记录和参数无误。
@@ -21507,7 +21704,7 @@ paths:
                       label: 修改
                   example: '1'
                 id:
-                  type: number
+                  type: integer
                   description: 新增时为 0，可不传；编辑/删除时为已有记录 ID
                 market:
                   type: string
@@ -21551,22 +21748,22 @@ paths:
                       label: 离岸人民币
                   example: USD
                 overnight_flag:
-                  type: number
+                  type: integer
                   description: |-
                     是否为隔夜市场。
 
                     **可选值：** `0` 非隔夜、`1` 隔夜
                   enum:
-                    - '0'
-                    - '1'
+                    - 0
+                    - 1
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: 非隔夜
-                    - value: '1'
+                    - value: 1
                       label: 隔夜
-                  example: '0'
+                  example: 0
                 custodian_id:
-                  type: number
+                  type: integer
                   description: |-
                     候选值随业务变化；请调用 `GET /v1/datasets/refs/clearing_custodians` 获取当前可用取值
 
@@ -21582,94 +21779,94 @@ paths:
                   x-value-source:
                     endpoint: GET /v1/datasets/refs/custodian_sub_positions
                 balance_back_n:
-                  type: number
+                  type: integer
                   description: 结算回退天数。
                   enum:
-                    - '0'
-                    - '1'
-                    - '2'
-                    - '3'
+                    - 0
+                    - 1
+                    - 2
+                    - 3
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: '0'
-                    - value: '1'
+                    - value: 1
                       label: '1'
-                    - value: '2'
+                    - value: 2
                       label: '2'
-                    - value: '3'
+                    - value: 3
                       label: '3'
-                  example: '0'
+                  example: 0
                 equity_back_n:
-                  type: number
+                  type: integer
                   description: 结算回退天数。
                   enum:
-                    - '0'
-                    - '1'
-                    - '2'
-                    - '3'
+                    - 0
+                    - 1
+                    - 2
+                    - 3
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: '0'
-                    - value: '1'
+                    - value: 1
                       label: '1'
-                    - value: '2'
+                    - value: 2
                       label: '2'
-                    - value: '3'
+                    - value: 3
                       label: '3'
-                  example: '0'
+                  example: 0
                 main_flag:
-                  type: number
+                  type: integer
                   description: |-
                     是否为本位市场。
 
                     **可选值：** `0` 否、`1` 是
                   enum:
-                    - '0'
-                    - '1'
+                    - 0
+                    - 1
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: 否
-                    - value: '1'
+                    - value: 1
                       label: 是
-                  example: '0'
+                  example: 0
                 otc_flag:
-                  type: number
+                  type: integer
                   description: |-
                     日终流程类型。
 
                     **可选值：** `0` 普通日终流程、`1` OTC 简化版日终流程、`2` 非日终流程、`99` 未启用
                   enum:
-                    - '0'
-                    - '1'
-                    - '2'
-                    - '99'
+                    - 0
+                    - 1
+                    - 2
+                    - 99
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: 普通日终流程
-                    - value: '1'
+                    - value: 1
                       label: OTC 简化版日终流程
-                    - value: '2'
+                    - value: 2
                       label: 非日终流程
-                    - value: '99'
+                    - value: 99
                       label: 未启用
-                  example: '0'
+                  example: 0
                 use_public_stock_info:
-                  type: number
+                  type: integer
                   description: |-
                     是否依赖公有标的库。
 
                     **可选值：** `0` 不依赖公有标的库、`1` 依赖公有库
                   enum:
-                    - '0'
-                    - '1'
+                    - 0
+                    - 1
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: 不依赖公有标的库
-                    - value: '1'
+                    - value: 1
                       label: 依赖公有库
-                  example: '0'
+                  example: 0
                 busin_flow_id:
-                  type: number
+                  type: integer
                   description: 当选择日终流程时填写，非日终流程时该字段为空
             example:
               action_in: '1'
@@ -25148,20 +25345,20 @@ paths:
 
                     **可选值：** `0` 不匹配、`1` Cash、`2` Margin、`3` House
                   enum:
-                    - '0'
-                    - '1'
-                    - '2'
-                    - '3'
+                    - 0
+                    - 1
+                    - 2
+                    - 3
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: 不匹配
-                    - value: '1'
+                    - value: 1
                       label: Cash
-                    - value: '2'
+                    - value: 2
                       label: Margin
-                    - value: '3'
+                    - value: 3
                       label: House
-                  example: '0'
+                  example: 0
                 currency:
                   type: array
                   description: |-
@@ -25229,12 +25426,32 @@ paths:
                   example: PLUS
                 name_types:
                   type: array
-                  description: |-
-                    分录摘要列表，每项对应一条摘要拼接规则；提交前会过滤掉类型为 0
-                    或值为空的项。子结构：name_type(string，1=固定文本/2=引用字段类型)、name(string，可选，
-                    固定文本)、name_field_type(string，可选，引用字段类型时，使用所选数据源返回的可用摘要字段类型)
+                  description: 分录摘要规则列表。管理后台会过滤 `name_type` 为 `0` 或取值为空的项。
                   items:
-                    type: string
+                    type: object
+                    required:
+                      - name_type
+                    properties:
+                      name_type:
+                        type: string
+                        description: |-
+                          摘要片段类型。
+
+                          **可选值：** `1` 固定文本、`2` 引用字段
+                        enum:
+                          - '1'
+                          - '2'
+                        x-enum-details:
+                          - value: '1'
+                            label: 固定文本
+                          - value: '2'
+                            label: 引用字段
+                      name:
+                        type: string
+                        description: 固定文本。`name_type` 为 `1` 时使用。
+                      name_field_type:
+                        type: string
+                        description: 引用字段类型。`name_type` 为 `2` 时使用，取所选数据来源可用的摘要字段类型。
                 debit_feature:
                   type: string
                   description: |-

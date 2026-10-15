@@ -3741,6 +3741,8 @@ paths:
 
         - 必填：`id`（银行卡 ID）、`region`（地区代码）、`name_en`（英文姓名）、`account`（银行账号）、`country`（国家名称）、`bank_en`（银行英文名）
         - 可选：`bank_id`（银行 ID）、`swift_code`（Swift 代码）、`account_type`（账户类型，如 `ALL`/`HKD`/`USD`）、`address`（地址）、`bank_code`（银行代码，香港的银行传）、`fps_id`（FPS ID，电话/邮箱/FPS ID）、`review_urls`（审核资料上传 URL）、`account_no`（账号）
+        - 管理后台前端总会传 `bank_id`（从所选地区的银行列表中选择）和 `review_urls`（银行卡证明文件的上传 key，不是签名 URL），同时还会传 `member_id`、`name`（与 `name_en` 取值相同）、`account_channel`、`remark`、`front_payload` 和 `audit_frontend_resource`。
+        - `id` 为 `atm_withdraw_cards` 列表中该银行卡行的 `id`。管理后台前端的服务定义将此接口标记为 `discard`。
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 业务说明
@@ -3769,6 +3771,8 @@ paths:
                 - account
                 - country
                 - bank_en
+                - bank_id
+                - review_urls
               properties:
                 id:
                   type: integer
@@ -3812,6 +3816,24 @@ paths:
                   description: 审核资料上传URL. 用于指定「审核资料上传URL」。
                   items:
                     type: string
+                member_id:
+                  type: string
+                  description: 银行卡所属客户 ID。管理后台前端从银行卡记录中取值。
+                name:
+                  type: string
+                  description: 账户持有人姓名。管理后台前端将其设为 `name_en` 的值。
+                account_channel:
+                  type: string
+                  description: 当前管理后台会话的账户渠道，由前端自动填充。
+                remark:
+                  type: string
+                  description: 客户备注。
+                front_payload:
+                  type: object
+                  description: 供审计日志使用的字段变更摘要（`type` 为 `data_diff`），由管理后台前端生成。
+                audit_frontend_resource:
+                  type: object
+                  description: 管理后台前端提交的审计上下文。
             example:
               id: 0
               bank_id: 0
@@ -6237,11 +6259,13 @@ paths:
         - lb_hk_depositconfig.depositconfig_group_update
       x-lbonly: false
       description: |-
-        按 `id` 删除一条分组入金参数配置。
+        按 `ids` 删除分组入金参数配置。
 
         ### 请求参数
 
-        - 必填：`id`（配置 ID）
+        - 必填：`ids`（配置 ID 列表）
+        - 可选：`audit_frontend_resource`（审计上下文）
+        - 配置 ID 须以数组形式放在 `ids` 中传入。管理后台前端中，分组入金配置列表的每一行带有逗号分隔的 `ids` 值，前端将其拆分为该数组。
 
         ### 风险提示
 
@@ -6259,13 +6283,19 @@ paths:
             schema:
               type: object
               required:
-                - id
+                - ids
               properties:
-                id:
-                  type: string
-                  description: 配置ID. 配置ID，用于标识本次请求关联的业务对象。此字段为必填项。
+                ids:
+                  type: array
+                  description: 要删除的配置 ID 列表。
+                  items:
+                    type: string
+                audit_frontend_resource:
+                  type: object
+                  description: 管理后台前端提交的审计上下文，例如 `$behavior` 和 `$action`。
             example:
-              id: '123'
+              ids:
+                - '123'
       responses:
         '200':
           description: 请求处理成功。响应的 `data` 不包含额外业务字段。

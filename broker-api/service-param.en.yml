@@ -1671,8 +1671,9 @@ paths:
 
         ### Request parameters
 
-        - Required: `transfer_type`, `from_type` (source type), `from_main_account`, `from_main_account_type`, `from_account_id`, `to_type` (destination type), `to_main_account`, `to_main_account_type`, `to_account_id`, `allocation_channel`, `transfer_strategy`, `package_type` (package type / frequency), `currency`, `amount`, `status`
-        - Optional: `service_time`, `postscript`
+        - Required: `transfer_type`, `from_type` (source type), `to_type` (destination type), `transfer_strategy`, `package_type` (frequency), `currency`, `amount`, `postscript`, `status`, `priority`
+        - Required depending on the channels: `from_main_account`, `from_main_account_type`, `from_account_id`, `to_main_account`, `to_main_account_type`, `to_account_id`, `allocation_channel`; `currency_type` for HashKey settlement transfers
+        - Optional: `service_time` (not sent for system-calculated frequencies)
         - See each field's definition for its format, value range, and business meaning.
 
         ### Business notes
@@ -1695,24 +1696,40 @@ paths:
             schema:
               type: object
               required:
-                - id
                 - transfer_type
                 - from_type
                 - to_type
                 - transfer_strategy
                 - package_type
+                - currency
+                - amount
                 - postscript
                 - status
+                - priority
               properties:
-                id:
-                  type: string
-                  description: Rule ID
                 transfer_type:
                   type: string
-                  description: Allocation type
+                  description: |-
+                    Allocation type. Pass a `key` from the `atm_whale_transfer_type` data dictionary (`GET /v1/datasets/refs/atm_whale_transfer_type`).
+
+                    In the Admin console, `1` (bank-to-bank transfer) fixes both `from_type` and `to_type` to `1`, `2` (settlement account top-up) fixes `from_type` to `1`, and `3` (settlement account withdrawal) fixes `to_type` to `1`.
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_transfer_type
                 from_type:
                   type: string
-                  description: Source channel
+                  description: |-
+                    Source channel type. The Admin console submits `1` for a bank and `2` for a settlement channel.
+
+                    **Allowed values:** `1` Bank, `2` Settlement channel
+                  enum:
+                    - '1'
+                    - '2'
+                  x-enum-details:
+                    - value: '1'
+                      label: Bank
+                    - value: '2'
+                      label: Settlement channel
+                  example: '1'
                 from_main_account:
                   type: string
                   description: Main account (source; required when the source channel is not a bank)
@@ -1724,7 +1741,19 @@ paths:
                   description: Bank account (source; required when the source channel is a bank or the currency is not crypto)
                 to_type:
                   type: string
-                  description: Destination channel
+                  description: |-
+                    Destination channel type. The Admin console submits `1` for a bank and `2` for a settlement channel.
+
+                    **Allowed values:** `1` Bank, `2` Settlement channel
+                  enum:
+                    - '1'
+                    - '2'
+                  x-enum-details:
+                    - value: '1'
+                      label: Bank
+                    - value: '2'
+                      label: Settlement channel
+                  example: '1'
                 to_main_account:
                   type: string
                   description: Main account (destination; required when the destination channel is not a bank)
@@ -1739,25 +1768,55 @@ paths:
                   description: Allocation channel (required when the source channel is a bank)
                 transfer_strategy:
                   type: string
-                  description: Allocation strategy
+                  description: |-
+                    Allocation strategy. Pass a `key` from the `atm_whale_transfer_strategy` data dictionary (`GET /v1/datasets/refs/atm_whale_transfer_strategy`).
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_transfer_strategy
                 package_type:
                   type: string
-                  description: Frequency
+                  description: |-
+                    Frequency. Pass a `key` from the `atm_whale_package_type` data dictionary (`GET /v1/datasets/refs/atm_whale_package_type`).
+
+                    - `week` uses `service_time.week_rule`; other time-based frequencies use `service_time.time_rule`.
+                    - For `balance`, `coin_withdraw_quantity_submit`, `coin_withdraw_fee_submit`, `coin_withdraw_quantity_fail`, `coin_withdraw_fee_fail`, and `coin_deposit_success`, the system calculates the amount: pass `system` for both `currency` and `amount`, and the Admin console does not send `service_time`.
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_package_type
                 currency:
                   type: string
-                  description: Currency (required when the amount is not system-calculated)
+                  description: Currency code from the `global_currency` data dictionary (`global_coin` for crypto). Pass `system` when the amount is system-calculated (see `package_type`).
+                currency_type:
+                  type: string
+                  description: |-
+                    Currency category. Sent only when `transfer_type` is `4` and the source channel is `settlement_hashkey_hk`. Pass a `key` from the `atm_ref_currency_type` data dictionary; `crypto` switches `currency` to coin codes.
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_ref_currency_type
                 amount:
                   type: string
-                  description: Amount (required when the amount is not system-calculated)
+                  description: Transfer amount. Pass `system` when the amount is system-calculated (see `package_type`).
                 service_time:
                   type: string
-                  description: Service time (JSON-serialized object)
+                  description: |-
+                    Execution time, as a JSON string. Times are `HH:mm` values on the half hour (`00:00` to `23:30`).
+
+                    - For time-based frequencies other than `week`: `{"time_rule":["09:00","15:30"]}`.
+                    - For `week`: `{"week_rule":[{"week":1,"time":["09:00"]}]}`, where `week` is `1` (Monday) to `7` (Sunday).
                 postscript:
                   type: string
                   description: Transfer postscript
                 status:
                   type: string
-                  description: Status
+                  description: |-
+                    Rule status. Pass a `key` from the `atm_status` data dictionary (`GET /v1/datasets/refs/atm_status`); the Admin console sends `1` or `2`.
+                  enum:
+                    - '1'
+                    - '2'
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_status
+                priority:
+                  type: integer
+                  minimum: 0
+                  maximum: 999
+                  description: Rule priority, an integer from 0 to 999. Required by the Admin console form.
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.
@@ -1827,7 +1886,7 @@ paths:
 
         ### Request parameters
 
-        - Required: `id` (rule ID)
+        - Required: `id` (rule ID). No Broker API list endpoint returns this ID; the Admin console reads it from the `lb_whale_package_rules` dataset behind the fund allocation configuration page.
         - The remaining fields follow "Add fund-transfer rule". See each field's definition for its format, value range, default behavior, and business meaning.
 
         ### Business notes
@@ -1856,18 +1915,38 @@ paths:
                 - to_type
                 - transfer_strategy
                 - package_type
+                - currency
+                - amount
                 - postscript
                 - status
+                - priority
               properties:
                 id:
                   type: string
                   description: Rule ID
                 transfer_type:
                   type: string
-                  description: Allocation type
+                  description: |-
+                    Allocation type. Pass a `key` from the `atm_whale_transfer_type` data dictionary (`GET /v1/datasets/refs/atm_whale_transfer_type`).
+
+                    In the Admin console, `1` (bank-to-bank transfer) fixes both `from_type` and `to_type` to `1`, `2` (settlement account top-up) fixes `from_type` to `1`, and `3` (settlement account withdrawal) fixes `to_type` to `1`.
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_transfer_type
                 from_type:
                   type: string
-                  description: Source channel
+                  description: |-
+                    Source channel type. The Admin console submits `1` for a bank and `2` for a settlement channel.
+
+                    **Allowed values:** `1` Bank, `2` Settlement channel
+                  enum:
+                    - '1'
+                    - '2'
+                  x-enum-details:
+                    - value: '1'
+                      label: Bank
+                    - value: '2'
+                      label: Settlement channel
+                  example: '1'
                 from_main_account:
                   type: string
                   description: Main account (source; required when the source channel is not a bank)
@@ -1879,7 +1958,19 @@ paths:
                   description: Bank account (source; required when the source channel is a bank or the currency is not crypto)
                 to_type:
                   type: string
-                  description: Destination channel
+                  description: |-
+                    Destination channel type. The Admin console submits `1` for a bank and `2` for a settlement channel.
+
+                    **Allowed values:** `1` Bank, `2` Settlement channel
+                  enum:
+                    - '1'
+                    - '2'
+                  x-enum-details:
+                    - value: '1'
+                      label: Bank
+                    - value: '2'
+                      label: Settlement channel
+                  example: '1'
                 to_main_account:
                   type: string
                   description: Main account (destination; required when the destination channel is not a bank)
@@ -1894,25 +1985,55 @@ paths:
                   description: Allocation channel (required when the source channel is a bank)
                 transfer_strategy:
                   type: string
-                  description: Allocation strategy
+                  description: |-
+                    Allocation strategy. Pass a `key` from the `atm_whale_transfer_strategy` data dictionary (`GET /v1/datasets/refs/atm_whale_transfer_strategy`).
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_transfer_strategy
                 package_type:
                   type: string
-                  description: Frequency
+                  description: |-
+                    Frequency. Pass a `key` from the `atm_whale_package_type` data dictionary (`GET /v1/datasets/refs/atm_whale_package_type`).
+
+                    - `week` uses `service_time.week_rule`; other time-based frequencies use `service_time.time_rule`.
+                    - For `balance`, `coin_withdraw_quantity_submit`, `coin_withdraw_fee_submit`, `coin_withdraw_quantity_fail`, `coin_withdraw_fee_fail`, and `coin_deposit_success`, the system calculates the amount: pass `system` for both `currency` and `amount`, and the Admin console does not send `service_time`.
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_package_type
                 currency:
                   type: string
-                  description: Currency (required when the amount is not system-calculated)
+                  description: Currency code from the `global_currency` data dictionary (`global_coin` for crypto). Pass `system` when the amount is system-calculated (see `package_type`).
+                currency_type:
+                  type: string
+                  description: |-
+                    Currency category. Sent only when `transfer_type` is `4` and the source channel is `settlement_hashkey_hk`. Pass a `key` from the `atm_ref_currency_type` data dictionary; `crypto` switches `currency` to coin codes.
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_ref_currency_type
                 amount:
                   type: string
-                  description: Amount (required when the amount is not system-calculated)
+                  description: Transfer amount. Pass `system` when the amount is system-calculated (see `package_type`).
                 service_time:
                   type: string
-                  description: Service time (JSON-serialized object)
+                  description: |-
+                    Execution time, as a JSON string. Times are `HH:mm` values on the half hour (`00:00` to `23:30`).
+
+                    - For time-based frequencies other than `week`: `{"time_rule":["09:00","15:30"]}`.
+                    - For `week`: `{"week_rule":[{"week":1,"time":["09:00"]}]}`, where `week` is `1` (Monday) to `7` (Sunday).
                 postscript:
                   type: string
                   description: Transfer postscript
                 status:
                   type: string
-                  description: Status
+                  description: |-
+                    Rule status. Pass a `key` from the `atm_status` data dictionary (`GET /v1/datasets/refs/atm_status`); the Admin console sends `1` or `2`.
+                  enum:
+                    - '1'
+                    - '2'
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_status
+                priority:
+                  type: integer
+                  minimum: 0
+                  maximum: 999
+                  description: Rule priority, an integer from 0 to 999. Required by the Admin console form.
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.
@@ -4102,8 +4223,8 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field definitions below for optional parameters.
-        - Optional: `is_default` (whether it is the default strategy), `change_type`, `service_strategy`, `channel_name`, `support_currency` (assembled supported pairs), `support_currencies` (raw supported pairs), `service_time`, `is_combine`, `forex_mode` (FX mode), `bear_wave` (spread-bearing method), `currency_prefix`, `currency_suffix`
+        - Required: `is_default`, `service_strategy`, `change_type`, `support_currency`, `support_currencies`, `support_currencies_keys`, and `service_time`. `channel_name` is also required unless `service_strategy` is `BATCH`.
+        - Optional: `is_combine`, `forex_mode` (FX mode), `bear_wave` (spread-bearing method), `currency_prefix`, `currency_suffix`
         - See each field's definition for its format, value range, and business meaning.
 
         ### Business notes
@@ -4125,15 +4246,23 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - is_default
+                - service_strategy
+                - change_type
+                - support_currency
+                - support_currencies
+                - support_currencies_keys
+                - service_time
               properties:
                 is_default:
-                  type: boolean
+                  type: string
                   description: |-
-                    Boolean flag for is default.
+                    Whether this is the default strategy. Pass a `key` from the `forex_is_default` data dictionary (`GET /v1/datasets/refs/forex_is_default`), not a boolean.
 
-                    **Boolean values:**
-                    - `true` - The condition applies
-                    - `false` - The condition does not apply
+                    `DEFAULT` marks the default strategy; in that case the Admin console fixes `change_type` to `0`.
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/forex_is_default
                 change_type:
                   type: string
                   enum:
@@ -4157,9 +4286,18 @@ paths:
                     **Allowed values:** `0` All, `1` Large-amount exchange, `2` Small-amount exchange (within the pool), `3` Small-amount exchange (beyond the pool)
                 service_strategy:
                   type: string
+                  description: |-
+                    Service strategy. Pass a `key` from the `forex_service_strategy` data dictionary (`GET /v1/datasets/refs/forex_service_strategy`).
+
+                    When the value is `BATCH`, the Admin console does not send `channel_name`.
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/forex_service_strategy
                 channel_name:
                   type: string
-                  description: Required when it is not the default strategy and channels must be distinguished.
+                  description: |-
+                    Exchange channel. Pass a `key` from the `can_exchange_channel_configs` data dictionary (`GET /v1/datasets/refs/can_exchange_channel_configs`). Required unless `service_strategy` is `BATCH`.
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/can_exchange_channel_configs
                 support_currency:
                   type: array
                   description: |-
@@ -4173,17 +4311,33 @@ paths:
                 support_currencies:
                   type: array
                   description: |-
-                    The request field support_currency raw array, which is moved entirely under the
-                    support_currencies key before submission.
+                    The same currency pairs as `support_currency`, in the same order, as objects. Currency codes come from the `global_currency_for_exchange` data dictionary.
                   items:
-                    type: string
+                    type: object
+                    required:
+                      - currency_prefix
+                      - currency_suffix
+                    properties:
+                      currency_prefix:
+                        type: string
+                        description: Source currency of the pair, such as `USD`.
+                      currency_suffix:
+                        type: string
+                        description: Target currency of the pair, such as `HKD`.
+                support_currencies_keys:
+                  type: array
+                  description: |-
+                    Zero-based index of each entry in `support_currencies`. For two currency pairs, pass `[0, 1]`.
+                  items:
+                    type: integer
                 service_time:
                   type: string
                   description: |-
-                    A JSON string assembled from the segmented request fields
-                    service_time.time_zones/time_rule/time_rule_0, etc. The structure is fairly complex
-                    (covering time zones and time-slot rules); the inner fields are not exhaustively
-                    enumerated here.
+                    Service time, as a JSON string with `time_zones` and `time_rule`:
+
+                    - `time_zones`: `hk_trade_day` (Hong Kong trading days), `calendar_day` (calendar days), or `week` (by weekday).
+                    - For `hk_trade_day` and `calendar_day`, `time_rule` is a string of one or more `HH:mm:ss-HH:mm:ss` ranges joined by `&`, for example `"09:00:00-12:00:00&13:00:00-16:00:00"`.
+                    - For `week`, `time_rule` is an array of `{week_interval, time_interval}` objects. `week_interval` is `start-end` with `1` (Monday) to `7` (Sunday), for example `"1-5"`; `time_interval` uses the same range format as above.
                 is_combine:
                   type: boolean
                   description: |-
@@ -4205,21 +4359,17 @@ paths:
                 currency_suffix:
                   type: string
             example:
-              is_default: false
-              change_type: ''
-              service_strategy: ''
-              channel_name: ''
+              is_default: DEFAULT
+              change_type: '0'
+              service_strategy: BATCH
               support_currency:
                 - USD/HKD
               support_currencies:
                 - currency_prefix: USD
                   currency_suffix: HKD
+              support_currencies_keys:
+                - 0
               service_time: '{"time_zones":"hk_trade_day","time_rule":"09:00:00-16:00:00"}'
-              is_combine: false
-              forex_mode: ''
-              bear_wave: ''
-              currency_prefix: ''
-              currency_suffix: ''
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.
@@ -4518,8 +4668,7 @@ paths:
 
         ### Request parameters
 
-        - Required: `id` (record ID)
-        - Optional: `business_type`
+        - Required: `id` (record ID) and `business_type`. Pass `exchange` to delete an FX-pool quota record, or `cash` to delete a bank daily-limit record.
         - See each field's definition for its format, value range, and business meaning.
 
         ### Business notes
@@ -4543,16 +4692,29 @@ paths:
               type: object
               required:
                 - id
+                - business_type
               properties:
                 id:
                   type: string
                   description: Record ID associated with this request.
                 business_type:
                   type: string
-                  description: Identifies the business scenario to which this request applies.
+                  description: |-
+                    Record type to delete.
+
+                    **Allowed values:** `exchange` FX-pool quota, `cash` Bank daily limit
+                  enum:
+                    - exchange
+                    - cash
+                  x-enum-details:
+                    - value: exchange
+                      label: FX-pool quota
+                    - value: cash
+                      label: Bank daily limit
+                  example: exchange
             example:
               id: '123'
-              business_type: ''
+              business_type: exchange
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.
@@ -11451,7 +11613,9 @@ paths:
                   x-value-source:
                     endpoint: GET /v1/datasets/refs/tenant_currencies_by_channel
                 single_quota_currency_amount_keys:
-                  type: string
+                  type: array
+                  items:
+                    type: integer
                   description: |-
                     The value is a sequence of indices into the single_quota_currency_amount array (e.g.
                     [0,1,...]), used to indicate row order.
@@ -11471,7 +11635,9 @@ paths:
                   x-value-source:
                     endpoint: GET /v1/datasets/refs/withdraw_rule_bank_regions
                 support_bank_ids:
-                  type: string
+                  type: array
+                  items:
+                    type: string
                   description: |-
                     Multi-select; candidates come from the bank list returned by
                     atm_region_banks_pick_exclude_default, queried in cascade with support_region.
@@ -11511,7 +11677,9 @@ paths:
                 remark:
                   type: string
                 rule_codes:
-                  type: string
+                  type: array
+                  items:
+                    type: string
                   description: |-
                     Shown only on certain sites; multi-select, values from the risk_rule_indicators_withdraw dynamic
                     enum (includes all=All; selecting All mutually excludes and clears the other options).
@@ -11520,28 +11688,20 @@ paths:
                   x-value-source:
                     endpoint: GET /v1/datasets/refs/risk_rule_indicators_withdraw
                 original_limit_bank_accounts:
-                  type: string
+                  type: array
+                  items:
+                    type: string
                   description: |-
                     Shown only on certain sites when original_limit='1'; multi-select accounts grouped by
                     bank, with candidates from the dynamic query atm_lb_bank_accounts_package_rule.
                 service_time:
                   type: string
                   description: |-
-                    A JSON string assembled from time_zones (enum: hk_trade_day/calendar_day/week) +
-                    time_rule; when time_zones='week', time_rule is multiple groups of {week_interval,
-                    time_interval}.
-                  enum:
-                    - hk_trade_day
-                    - calendar_day
-                    - week
-                  x-enum-details:
-                    - value: hk_trade_day
-                      label: HK Trading Day
-                    - value: calendar_day
-                      label: Calendar Day
-                    - value: week
-                      label: Week
-                  example: hk_trade_day
+                    Service time, as a JSON string with `time_zones` and `time_rule`:
+
+                    - `time_zones`: `hk_trade_day` (Hong Kong trading days), `calendar_day` (calendar days), or `week` (by weekday).
+                    - For `hk_trade_day` and `calendar_day`, `time_rule` is a `HH:mm:ss-HH:mm:ss` string, for example `"09:00:00-18:00:00"`.
+                    - For `week`, `time_rule` is an array of `{week_interval, time_interval}` objects. `week_interval` is `start-end` with `1` (Monday) to `7` (Sunday), for example `"1-5"`; `time_interval` is a `HH:mm:ss-HH:mm:ss` string.
                 lb_service_time:
                   type: string
                   description: Same structure as service_time; a separate time-window configuration, as a JSON string.
@@ -11575,7 +11735,9 @@ paths:
                 - 0
               currency: USD
               support_region: hk,us
-              support_bank_ids: 101,102
+              support_bank_ids:
+                - '101'
+                - '102'
               sec_auth: '1'
               priority: 10
               status: '1'
@@ -21275,25 +21437,22 @@ paths:
         - lb_hk_clearing.clearing_busin_step_edit
       x-lbonly: false
       description: |-
-        Creates or edits an end-of-day clearing task flow, defining a named clearing process for a set of markets.
+        Creates, edits, deletes, and reorders end-of-day clearing flows in one request. The request body is a `flows` array; each item carries its own `action_in`.
 
         ### Request parameters
 
-        - Required: `flow_name` (flow name) and `markets` (markets).
-        - Pass `id` (flow number) to edit an existing flow; omit it when creating a new one.
-        - See the field definitions for value ranges and business meaning.
-
-        ### Business notes
-
-        The same endpoint handles both create and edit: omitting `id` creates a new flow, while passing an existing `id` overwrites that flow. `markets` declares the market scope covered by the flow.
+        - Required: `flows`. Each item requires `flow_name`, `busin_no` (execution order, starting from 1), and `action_in` (`1` Add, `2` Delete, `3` Modify).
+        - `id`: pass an empty string for a new flow; pass the existing flow ID to modify or delete it.
+        - The Admin console sends every flow on the page in display order, with `busin_no` renumbered from 1.
+        - The `clearing_busin_flows` dataset does not return the flow `id`; the Admin console reads it from the `clear_busin_flows_list` dataset. Markets are bound to a flow through `busin_flow_id` in `POST /clearing/markets`, not through this endpoint.
 
         ### Risk warning
 
-        This configuration affects the scope of the end-of-day clearing process. Confirm the flow name and market combination before calling.
+        This configuration changes the end-of-day clearing flows and their execution order. Confirm the flow list before calling.
 
         ### Result
 
-        On success the corresponding clearing task flow is created or updated. Refer to the `200` response definition for returned data.
+        On success the flows are created, updated, or deleted as requested. Refer to the `200` response definition for returned data.
       security:
         - bearerAuth: []
       requestBody:
@@ -21303,30 +21462,56 @@ paths:
             schema:
               type: object
               required:
-                - flow_name
-                - markets
+                - flows
               properties:
-                flow_name:
-                  type: string
-                  description: Name of the day-end clearing business flow. This field is required.
-                  example: HK-EOD-Flow
-                markets:
+                flows:
                   type: array
+                  description: List of end-of-day flows.
                   items:
-                    type: string
-                  description: List of market codes covered by this business flow. This field is required.
-                  example:
-                    - GTMMF
-                id:
-                  type: integer
-                  description: |-
-                    Identifier of the day-end clearing business flow. Provide it when editing an existing
-                    flow to indicate which flow to update; omit it when creating a new flow.
-                  example: 1001
+                    type: object
+                    required:
+                      - id
+                      - flow_name
+                      - busin_no
+                      - action_in
+                    properties:
+                      id:
+                        type: string
+                        description: Flow ID. Empty string for a new flow.
+                      flow_name:
+                        type: string
+                        description: Flow name.
+                      busin_no:
+                        type: integer
+                        minimum: 1
+                        description: Execution order of the flow, starting from 1.
+                      action_in:
+                        type: string
+                        description: |-
+                          Action for this flow.
+
+                          **Allowed values:** `1` Add, `2` Delete, `3` Modify
+                        enum:
+                          - '1'
+                          - '2'
+                          - '3'
+                        x-enum-details:
+                          - value: '1'
+                            label: Add
+                          - value: '2'
+                            label: Delete
+                          - value: '3'
+                            label: Modify
             example:
-              flow_name: HK-EOD-Flow
-              markets:
-                - GTMMF
+              flows:
+                - id: '1'
+                  flow_name: HK-EOD-Flow
+                  busin_no: 1
+                  action_in: '3'
+                - id: ''
+                  flow_name: US-EOD-Flow
+                  busin_no: 2
+                  action_in: '1'
       responses:
         '200':
           description: |-
@@ -21952,6 +22137,10 @@ paths:
         - Optional: `market`, `currency`, `overnight_flag`, `custodian_id`, `sub_position_no`, `balance_back_n` (cash settlement T+n), `equity_back_n` (securities settlement T+n), `main_flag`, `otc_flag`, `use_public_stock_info`, `busin_flow_id` (end-of-day flow ID).
         - See the field definitions for format, value ranges, defaults, and business meaning.
 
+        ### Known issue
+
+        In e2e tests on the test environment, adding a market returned `800001` with `InvalidField=Time Zone Name`. The Admin console form does not send any time-zone field to this endpoint, so the field the backend expects is unconfirmed; check with the clearing team before relying on this endpoint to add markets.
+
         ### Risk warning
 
         This operation changes real clearing-market configuration and affects settlement cycles and the end-of-day clearing process. Confirm the target record and parameters before calling.
@@ -21990,7 +22179,7 @@ paths:
                       label: Modify
                   example: '1'
                 id:
-                  type: number
+                  type: integer
                   description: 0 on add (may be omitted); the existing record ID on edit/delete.
                 market:
                   type: string
@@ -22034,22 +22223,22 @@ paths:
                       label: CNH
                   example: USD
                 overnight_flag:
-                  type: number
+                  type: integer
                   description: |-
                     Whether this is an overnight market.
 
                     **Allowed values:** `0` Non-overnight, `1` Overnight
                   enum:
-                    - '0'
-                    - '1'
+                    - 0
+                    - 1
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: 'No'
-                    - value: '1'
+                    - value: 1
                       label: 'Yes'
-                  example: '0'
+                  example: 0
                 custodian_id:
-                  type: number
+                  type: integer
                   description: |-
                     Values come from the clearing_custodians dynamic enumeration.
 
@@ -22065,94 +22254,94 @@ paths:
                   x-value-source:
                     endpoint: GET /v1/datasets/refs/custodian_sub_positions
                 balance_back_n:
-                  type: number
+                  type: integer
                   description: Number of days the balance is carried back (T+N).
                   enum:
-                    - '0'
-                    - '1'
-                    - '2'
-                    - '3'
+                    - 0
+                    - 1
+                    - 2
+                    - 3
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: '0'
-                    - value: '1'
+                    - value: 1
                       label: '1'
-                    - value: '2'
+                    - value: 2
                       label: '2'
-                    - value: '3'
+                    - value: 3
                       label: '3'
-                  example: '0'
+                  example: 0
                 equity_back_n:
-                  type: number
+                  type: integer
                   description: Number of days equity is carried back (T+N).
                   enum:
-                    - '0'
-                    - '1'
-                    - '2'
-                    - '3'
+                    - 0
+                    - 1
+                    - 2
+                    - 3
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: '0'
-                    - value: '1'
+                    - value: 1
                       label: '1'
-                    - value: '2'
+                    - value: 2
                       label: '2'
-                    - value: '3'
+                    - value: 3
                       label: '3'
-                  example: '0'
+                  example: 0
                 main_flag:
-                  type: number
+                  type: integer
                   description: |-
                     Whether this is the base (main) market for clearing.
 
                     **Allowed values:** `0` No, `1` Yes
                   enum:
-                    - '0'
-                    - '1'
+                    - 0
+                    - 1
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: 'No'
-                    - value: '1'
+                    - value: 1
                       label: 'Yes'
-                  example: '0'
+                  example: 0
                 otc_flag:
-                  type: number
+                  type: integer
                   description: |-
                     OTC day-end processing mode for the market.
 
                     **Allowed values:** `0` Normal day-end process, `1` Simplified day-end process for OTC, `2` Non-day-end process, `99` Disabled
                   enum:
-                    - '0'
-                    - '1'
-                    - '2'
-                    - '99'
+                    - 0
+                    - 1
+                    - 2
+                    - 99
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: Normal Day-End Tasks
-                    - value: '1'
+                    - value: 1
                       label: Simplified Day-End Tasks For OTC
-                    - value: '2'
+                    - value: 2
                       label: Non-Day-End Process
-                    - value: '99'
+                    - value: 99
                       label: Disabled
-                  example: '0'
+                  example: 0
                 use_public_stock_info:
-                  type: number
+                  type: integer
                   description: |-
                     Whether the market depends on the public stock information library.
 
                     **Allowed values:** `0` Does not depend on the public stock information library, `1` Depends on the public stock information library
                   enum:
-                    - '0'
-                    - '1'
+                    - 0
+                    - 1
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: Independent On Public Stock Information
-                    - value: '1'
+                    - value: 1
                       label: Dependent On Public Stock Information
-                  example: '0'
+                  example: 0
                 busin_flow_id:
-                  type: number
+                  type: integer
                   description: Filled in when a day-end process is selected; empty otherwise.
             example:
               action_in: '1'
@@ -25705,20 +25894,20 @@ paths:
 
                     **Allowed values:** `0` No match, `1` Cash, `2` Margin, `3` House
                   enum:
-                    - '0'
-                    - '1'
-                    - '2'
-                    - '3'
+                    - 0
+                    - 1
+                    - 2
+                    - 3
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: Not Match
-                    - value: '1'
+                    - value: 1
                       label: Cash
-                    - value: '2'
+                    - value: 2
                       label: Margin
-                    - value: '3'
+                    - value: 3
                       label: House
-                  example: '0'
+                  example: 0
                 currency:
                   type: array
                   description: |-
@@ -25786,14 +25975,32 @@ paths:
                   example: PLUS
                 name_types:
                   type: array
-                  description: |-
-                    Journal-entry summary list, each item corresponding to one summary-concatenation rule;
-                    items with type 0 or an empty value are filtered out before submission. Sub-structure:
-                    name_type (string, 1=fixed text / 2=referenced field type), name (string, optional,
-                    fixed text), name_field_type (string, optional; when using a referenced field type,
-                    use an available summary-field type returned for the selected data source).
+                  description: Journal-entry summary rules. The Admin console drops items whose `name_type` is `0` or whose value is empty.
                   items:
-                    type: string
+                    type: object
+                    required:
+                      - name_type
+                    properties:
+                      name_type:
+                        type: string
+                        description: |-
+                          Summary part type.
+
+                          **Allowed values:** `1` Fixed text, `2` Referenced field
+                        enum:
+                          - '1'
+                          - '2'
+                        x-enum-details:
+                          - value: '1'
+                            label: Fixed text
+                          - value: '2'
+                            label: Referenced field
+                      name:
+                        type: string
+                        description: Fixed text. Used when `name_type` is `1`.
+                      name_field_type:
+                        type: string
+                        description: Referenced field type. Used when `name_type` is `2`; use a summary-field type available for the selected data source.
                 debit_feature:
                   type: string
                   description: |-

@@ -3839,6 +3839,8 @@ paths:
 
         - Required: `id` (bank card ID), `region` (region code), `name_en` (English name), `account` (bank account), `country` (country name), `bank_en` (bank English name)
         - Optional: `bank_id` (bank ID), `swift_code` (SWIFT code), `account_type` (account type, e.g. `ALL`/`HKD`/`USD`), `address` (address), `bank_code` (bank code, for HK banks), `fps_id` (FPS ID: phone/email/FPS ID), `review_urls` (review document upload URLs), `account_no` (account number)
+        - The admin frontend always sends `bank_id` (chosen from the banks of the selected region) and `review_urls` (upload keys of the bank-card proof files, not signed URLs). It also sends `member_id`, `name` (same value as `name_en`), `account_channel`, `remark`, `front_payload`, and `audit_frontend_resource`.
+        - `id` is the `id` of the card row in the `atm_withdraw_cards` list. The admin frontend service definition marks this endpoint as `discard`.
         - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Business notes
@@ -3867,6 +3869,8 @@ paths:
                 - account
                 - country
                 - bank_en
+                - bank_id
+                - review_urls
               properties:
                 id:
                   type: integer
@@ -3910,6 +3914,24 @@ paths:
                   description: Audit data upload urls. Specifies Audit data upload urls.
                   items:
                     type: string
+                member_id:
+                  type: string
+                  description: Customer ID that owns the card. The admin frontend sends it from the card record.
+                name:
+                  type: string
+                  description: Account holder name. The admin frontend sets it to the value of `name_en`.
+                account_channel:
+                  type: string
+                  description: Account channel of the current admin session. The admin frontend fills it in automatically.
+                remark:
+                  type: string
+                  description: Customer remark.
+                front_payload:
+                  type: object
+                  description: Field-change summary for the audit log (`type` is `data_diff`), built by the admin frontend.
+                audit_frontend_resource:
+                  type: object
+                  description: Audit context submitted by the admin frontend.
             example:
               id: 0
               bank_id: 0
@@ -6379,11 +6401,13 @@ paths:
         - lb_hk_depositconfig.depositconfig_group_update
       x-lbonly: false
       description: |-
-        Deletes a group deposit parameter configuration identified by `id`.
+        Deletes the group deposit parameter configurations identified by `ids`.
 
         ### Request parameters
 
-        - Required: `id` (configuration ID)
+        - Required: `ids` (configuration IDs)
+        - Optional: `audit_frontend_resource` (audit context)
+        - Send the configuration IDs as an array in `ids`. In the admin frontend, each row of the group deposit configuration list carries a comma-separated `ids` value, which is split into this array.
 
         ### Risk warning
 
@@ -6401,13 +6425,19 @@ paths:
             schema:
               type: object
               required:
-                - id
+                - ids
               properties:
-                id:
-                  type: string
-                  description: Config ID. Config ID associated with this request.
+                ids:
+                  type: array
+                  description: Configuration IDs to delete.
+                  items:
+                    type: string
+                audit_frontend_resource:
+                  type: object
+                  description: Audit context submitted by the admin frontend, for example `$behavior` and `$action`.
             example:
-              id: '123'
+              ids:
+                - '123'
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.
