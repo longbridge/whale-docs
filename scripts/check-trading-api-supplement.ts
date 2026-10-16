@@ -86,6 +86,19 @@ for (const locale of LOCALES) {
   }
 }
 
+for (const locale of LOCALES) {
+  const supplement = supplements.get(locale)! as Spec & { components?: { schemas?: Record<string, unknown> } };
+  const upstream = upstreams.get(locale)! as Spec & { components?: { schemas?: Record<string, unknown> } };
+  const schemaNames = new Set([
+    ...Object.keys(upstream.components?.schemas ?? {}),
+    ...Object.keys(supplement.components?.schemas ?? {}),
+  ]);
+  const refs = JSON.stringify(supplement).matchAll(/"#\/components\/schemas\/([^"]+)"/g);
+  for (const [, name] of refs) {
+    if (!schemaNames.has(name)) errors.push(`${locale} supplement references missing schema ${name}`);
+  }
+}
+
 const operationIds = new Map<string, string>();
 for (const spec of [upstreams.get("zh-CN")!, supplements.get("zh-CN")!]) {
   for (const [path, pathItem] of Object.entries(spec.paths ?? {})) {
