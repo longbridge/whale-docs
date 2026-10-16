@@ -1574,13 +1574,15 @@ paths:
 
         ### Request parameters
 
-        - Required: `aaid` (account ID), `exchange_books` (list of exchange entries), `exchange_books.from_currency` (currency to convert from), `exchange_books.to_currency` (currency to convert to)
-        - Optional: `exchange_books.from_amount` (amount converted from), `exchange_books.to_amount` (amount converted to)
+        - Required: `aaid` (account ID), `exchange_books` (list of exchange entries). Each entry requires `from_currency` and `to_currency`, plus exactly one of `from_amount` or `to_amount`.
+        - Body shape: `{"aaid": 57036919, "exchange_books": [{"from_currency": "USD", "to_currency": "HKD", "from_amount": "100.00"}]}`.
         - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Business notes
 
         Executes currency conversion entry by entry to repay the customer's borrowing; each entry specifies the from/to currencies and amounts.
+
+        Prerequisite: the account must have an FX repayment reminder (swap-remind) record under margin-call debt info (`risk_debt_info`); otherwise the call fails with `30020049`. Use `query_exchange_v2` with the same `aaid` to check the debt amount and available cash books first.
 
         ### Risk warning
 
@@ -1600,39 +1602,36 @@ paths:
               required:
                 - aaid
                 - exchange_books
-                - exchange_books.from_currency
-                - exchange_books.to_currency
               properties:
                 aaid:
-                  type: number
+                  type: integer
                   description: |-
                     Account ID. Programmatically derived by the client from the selected record's record.aaid_val; not a form-editable field.
 
                     Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 exchange_books:
                   type: array
-                  description: |-
-                    Exchange Books. Array of dynamic FX rows; multiple exchange records can be added. See the sub-fields
-                    of exchange_books (from_currency, etc.) for each row's structure.
+                  description: Exchange Books. Array of exchange entries; multiple entries can be submitted. Each entry is an object with `from_currency`, `to_currency`, and exactly one of `from_amount` / `to_amount`.
                   items:
-                    type: string
-                exchange_books.from_currency:
-                  type: string
-                  description: From Currency. Currency dropdown populated from currencies held in the client's cash ledger.
-                exchange_books.to_currency:
-                  type: string
-                  description: |-
-                    Target currency to be exchanged. Options come from the backend data dictionary of exchange-supported currencies; use the options the service returns.
-                exchange_books.from_amount:
-                  type: string
-                  description: |-
-                    From Amount. Submit either from_amount or to_amount: the field the user edited last is kept, while
-                    the other is computed from the exchange rate and dropped by the client.
-                exchange_books.to_amount:
-                  type: string
-                  description: To Amount. Same as from_amount; the two are mutually exclusive and only one is submitted.
+                    type: object
+                    required:
+                      - from_currency
+                      - to_currency
+                    properties:
+                      from_currency:
+                        type: string
+                        description: From Currency. Currency to convert from; choose one of the currencies held in the customer's cash books.
+                      to_currency:
+                        type: string
+                        description: To Currency. Currency to convert to. Options come from the backend data dictionary of exchange-supported currencies; use the options the service returns.
+                      from_amount:
+                        type: string
+                        description: From Amount. Amount of `from_currency` to convert. Submit either `from_amount` or `to_amount`, not both; the other side is computed from the exchange rate.
+                      to_amount:
+                        type: string
+                        description: To Amount. Amount of `to_currency` to receive. Mutually exclusive with `from_amount`; submit only one of them.
             example:
-              aaid: H00000000
+              aaid: 57036919
               exchange_books:
                 - from_currency: USD
                   to_currency: HKD
@@ -3103,7 +3102,9 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field definitions below for the request fields.
+        - Required: `aaid` (securities account ID), `counter_id` (security), `order_type` (order type), `submitted_quantity` (buy-back quantity).
+        - `price` is required unless `order_type` is `MO` (market order); `rth` (trading session) applies to limit orders (`LO`).
+        - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Business notes
 
@@ -3118,6 +3119,43 @@ paths:
         On success the short-sell forced liquidation is submitted; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - counter_id
+                - order_type
+                - submitted_quantity
+              properties:
+                aaid:
+                  type: string
+                  description: Securities account ID (`aaid`) of the short-sell position, taken from the position row. Pass the internal numeric ID, not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`.
+                counter_id:
+                  type: string
+                  description: Security counter ID of the short-sell position, e.g. `ST/HK/700`, taken from the position row.
+                order_type:
+                  type: string
+                  description: Order type, from data dictionary `option_force_close_order_type`, e.g. `MO` (market order, the frontend default) or `LO` (limit order).
+                price:
+                  type: number
+                  description: Order price. Required unless `order_type` is `MO`; must be ≥ 0.
+                submitted_quantity:
+                  type: number
+                  description: Buy-back quantity to submit (shares); must be ≥ 0.
+                rth:
+                  type: integer
+                  description: Trading session, from data dictionary `rth`; only applies when `order_type` is `LO`. The frontend default is `1`.
+            example:
+              aaid: '57036919'
+              counter_id: ST/HK/700
+              order_type: LO
+              price: 400
+              submitted_quantity: 100
+              rth: 1
       responses:
         '200':
           content:
@@ -3158,7 +3196,9 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field definitions below for the request fields.
+        - Required: `aaid` (securities account ID), `counter_id` (security), `push_msg_type` (`1` App message, `2` Email message).
+        - The frontend calls this once per selected message type.
+        - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Business notes
 
@@ -3173,6 +3213,41 @@ paths:
         On success the short-sell liquidation push notification is sent; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - counter_id
+                - push_msg_type
+              properties:
+                aaid:
+                  type: string
+                  description: Securities account ID (`aaid`) of the short-sell position, taken from the position row. Pass the internal numeric ID, not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`.
+                counter_id:
+                  type: string
+                  description: Security counter ID of the short-sell position, e.g. `ST/HK/700`, taken from the position row.
+                push_msg_type:
+                  type: integer
+                  description: |-
+                    Push message type.
+
+                    **Allowed values:** `1` App message, `2` Email message
+                  enum:
+                    - 1
+                    - 2
+                  x-enum-details:
+                    - value: 1
+                      label: App Message
+                    - value: 2
+                      label: Email Message
+            example:
+              aaid: '57036919'
+              counter_id: ST/HK/700
+              push_msg_type: 1
       responses:
         '200':
           content:
@@ -3213,7 +3288,9 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field definitions below for the request fields.
+        - Required: `aaid` (securities account ID), `counter_id` (security), `push_msg_type` (`1` App message, `2` Email message).
+        - The frontend calls this once per selected message type.
+        - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Business notes
 
@@ -3224,6 +3301,41 @@ paths:
         On success, returns the preview content of the short-sell liquidation push notification. See the response definition for field meanings.
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - counter_id
+                - push_msg_type
+              properties:
+                aaid:
+                  type: string
+                  description: Securities account ID (`aaid`) of the short-sell position, taken from the position row. Pass the internal numeric ID, not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`.
+                counter_id:
+                  type: string
+                  description: Security counter ID of the short-sell position, e.g. `ST/HK/700`, taken from the position row.
+                push_msg_type:
+                  type: integer
+                  description: |-
+                    Push message type.
+
+                    **Allowed values:** `1` App message, `2` Email message
+                  enum:
+                    - 1
+                    - 2
+                  x-enum-details:
+                    - value: 1
+                      label: App Message
+                    - value: 2
+                      label: Email Message
+            example:
+              aaid: '57036919'
+              counter_id: ST/HK/700
+              push_msg_type: 1
       responses:
         '200':
           content:
@@ -3672,8 +3784,9 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field definitions for optional ones.
-        - Pass `aaid` to filter by a given securities account.
+        - Required: `aaid` (securities account ID) and `log_id` (short-stock recall record ID). The frontend always sends both.
+        - `log_id` is the `id` of a row returned by `holding_short_stock_margin_logs`; pass that row's `aaid` with it.
+        - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Returns
 
@@ -3686,6 +3799,9 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - aaid
+                - log_id
               properties:
                 aaid:
                   type: string
@@ -3693,8 +3809,13 @@ paths:
                     A/C No.
 
                     Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
+                log_id:
+                  type: integer
+                  description: |-
+                    Short-stock recall record ID: the `id` of the row returned by `holding_short_stock_margin_logs` (short-stock margin recall logs). Pass it together with the same row's `aaid`; without it the backend cannot locate the recall record and returns `30020049`.
             example:
-              aaid: H00000000
+              aaid: '57036919'
+              log_id: 123
       responses:
         '200':
           content:
@@ -3751,8 +3872,9 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field definitions for optional ones.
-        - Pass `aaid` to filter by a given securities account.
+        - Required: `aaid` (securities account ID) and `log_id` (short-stock recall record ID). The frontend always sends both.
+        - `log_id` is the `id` of a row returned by `holding_short_stock_margin_logs`; pass that row's `aaid` with it.
+        - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Returns
 
@@ -3765,6 +3887,9 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - aaid
+                - log_id
               properties:
                 aaid:
                   type: string
@@ -3772,8 +3897,13 @@ paths:
                     A/C No.
 
                     Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
+                log_id:
+                  type: integer
+                  description: |-
+                    Short-stock recall record ID: the `id` of the row returned by `holding_short_stock_margin_logs` (short-stock margin recall logs). Pass it together with the same row's `aaid`; without it the backend cannot locate the recall record and returns `30020049`.
             example:
-              aaid: H00000000
+              aaid: '57036919'
+              log_id: 123
       responses:
         '200':
           content:
@@ -3900,8 +4030,9 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; use `aaid` (account ID) to target a specific account.
-        - See the field descriptions for the format, value range, and business meaning of each field.
+        - Required: `aaid` (securities account ID) and `log_id` (short-stock recall record ID). The frontend always sends both.
+        - `log_id` is the `id` of a row returned by `holding_short_stock_margin_logs`; pass that row's `aaid` with it.
+        - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Returns
 
@@ -3914,6 +4045,9 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - aaid
+                - log_id
               properties:
                 aaid:
                   type: string
@@ -3921,8 +4055,13 @@ paths:
                     A/C No.
 
                     Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
+                log_id:
+                  type: integer
+                  description: |-
+                    Short-stock recall record ID: the `id` of the row returned by `holding_short_stock_margin_logs` (short-stock margin recall logs). Pass it together with the same row's `aaid`; without it the backend cannot locate the recall record and returns `30020049`.
             example:
-              aaid: H00000000
+              aaid: '57036919'
+              log_id: 123
       responses:
         '200':
           content:

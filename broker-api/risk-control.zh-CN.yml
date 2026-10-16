@@ -1540,13 +1540,15 @@ paths:
 
         ### 请求参数
 
-        - 必填：`aaid`（账户 ID）、`exchange_books`（换汇明细列表）、`exchange_books.from_currency`（兑出币种）、`exchange_books.to_currency`（兑入币种）
-        - 可选：`exchange_books.from_amount`（兑出金额）、`exchange_books.to_amount`（兑入金额）
+        - 必填：`aaid`（账户 ID）、`exchange_books`（换汇明细列表）。每条明细必填 `from_currency`、`to_currency`，并且 `from_amount` 与 `to_amount` 二者只能传其一。
+        - 请求体结构：`{"aaid": 57036919, "exchange_books": [{"from_currency": "USD", "to_currency": "HKD", "from_amount": "100.00"}]}`。
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 业务说明
 
         按换汇明细列表逐笔为客户执行货币兑换，用于归还借币；每笔需指定兑出与兑入币种及金额。
+
+        前提：该账户需存在追收负债信息（`risk_debt_info`）下的换汇还款提醒（swap-remind）记录，否则返回 `30020049`。可先用 `query_exchange_v2` 以同一 `aaid` 查询负债金额与可用现金账本。
 
         ### 风险提示
 
@@ -1566,35 +1568,36 @@ paths:
               required:
                 - aaid
                 - exchange_books
-                - exchange_books.from_currency
-                - exchange_books.to_currency
               properties:
                 aaid:
-                  type: number
+                  type: integer
                   description: |-
                     账户ID. 调用方由所选记录 record.aaid_val 程序化带出，非请求可编辑字段
 
                     此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
                 exchange_books:
                   type: array
-                  description: 换汇明细列表. 动态换汇行数组，可添加多组换汇记录；每行结构见 exchange_books 的子字段（from_currency 等）。
+                  description: 换汇明细列表。可提交多条换汇明细；每条为对象，包含 `from_currency`、`to_currency`，以及 `from_amount` / `to_amount` 二者之一。
                   items:
-                    type: string
-                exchange_books.from_currency:
-                  type: string
-                  description: 兑换币种. 可选值，可选项为该客户现金账本里持有的币种
-                exchange_books.to_currency:
-                  type: string
-                  description: |-
-                    被兑换币种。可选值来自后端支持兑换的币种数据字典，请以接口返回的可选项为准。
-                exchange_books.from_amount:
-                  type: string
-                  description: 兑换金额. from_amount / to_amount 二选一提交：用户最后编辑的字段保留，另一个按汇率计算后在调用方被剔除
-                exchange_books.to_amount:
-                  type: string
-                  description: 被兑换金额. 同 from_amount，二者互斥，仅提交其一
+                    type: object
+                    required:
+                      - from_currency
+                      - to_currency
+                    properties:
+                      from_currency:
+                        type: string
+                        description: 兑出币种。从该客户现金账本中持有的币种中选择。
+                      to_currency:
+                        type: string
+                        description: 兑入币种。可选值来自后端支持兑换的币种数据字典，请以接口返回的可选项为准。
+                      from_amount:
+                        type: string
+                        description: 兑出金额，即兑出的 `from_currency` 金额。`from_amount` 与 `to_amount` 二选一提交，另一方按汇率计算。
+                      to_amount:
+                        type: string
+                        description: 兑入金额，即兑入的 `to_currency` 金额。与 `from_amount` 互斥，仅提交其一。
             example:
-              aaid: H00000000
+              aaid: 57036919
               exchange_books:
                 - from_currency: USD
                   to_currency: HKD
@@ -3050,7 +3053,9 @@ paths:
 
         ### 请求参数
 
-        - 本接口无必填参数，具体请求字段见下方字段说明。
+        - 必填：`aaid`（证券账户 ID）、`counter_id`（证券）、`order_type`（订单类型）、`submitted_quantity`（买回数量）。
+        - `order_type` 为 `MO`（市价单）以外时必填 `price`；`rth`（交易时段）适用于限价单（`LO`）。
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 业务说明
 
@@ -3065,6 +3070,43 @@ paths:
         成功时提交融券强平；后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - counter_id
+                - order_type
+                - submitted_quantity
+              properties:
+                aaid:
+                  type: string
+                  description: 融券持仓所属证券账户的内部数字编号 `aaid`，取自持仓行。不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`。
+                counter_id:
+                  type: string
+                  description: 融券持仓的证券 counter ID，如 `ST/HK/700`，取自持仓行。
+                order_type:
+                  type: string
+                  description: 订单类型，取自数据字典 `option_force_close_order_type`，如 `MO`（市价单，前端默认）或 `LO`（限价单）。
+                price:
+                  type: number
+                  description: 委托价格。`order_type` 不为 `MO` 时必填，须 ≥ 0。
+                submitted_quantity:
+                  type: number
+                  description: 提交的买回数量（股），须 ≥ 0。
+                rth:
+                  type: integer
+                  description: 交易时段，取自数据字典 `rth`；仅在 `order_type` 为 `LO` 时生效，前端默认 `1`。
+            example:
+              aaid: '57036919'
+              counter_id: ST/HK/700
+              order_type: LO
+              price: 400
+              submitted_quantity: 100
+              rth: 1
       responses:
         '200':
           content:
@@ -3105,7 +3147,9 @@ paths:
 
         ### 请求参数
 
-        - 本接口无必填参数，具体请求字段见下方字段说明。
+        - 必填：`aaid`（证券账户 ID）、`counter_id`（证券）、`push_msg_type`（`1` App 消息，`2` 邮件消息）。
+        - 前端按所选的每种消息类型各调用一次。
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 业务说明
 
@@ -3120,6 +3164,41 @@ paths:
         成功时完成融券平仓推送消息发送；后续状态和返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - counter_id
+                - push_msg_type
+              properties:
+                aaid:
+                  type: string
+                  description: 融券持仓所属证券账户的内部数字编号 `aaid`，取自持仓行。不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`。
+                counter_id:
+                  type: string
+                  description: 融券持仓的证券 counter ID，如 `ST/HK/700`，取自持仓行。
+                push_msg_type:
+                  type: integer
+                  description: |-
+                    推送消息类型。
+
+                    **可选值：** `1` App 消息，`2` 邮件消息
+                  enum:
+                    - 1
+                    - 2
+                  x-enum-details:
+                    - value: 1
+                      label: App 消息
+                    - value: 2
+                      label: 邮件消息
+            example:
+              aaid: '57036919'
+              counter_id: ST/HK/700
+              push_msg_type: 1
       responses:
         '200':
           content:
@@ -3160,7 +3239,9 @@ paths:
 
         ### 请求参数
 
-        - 本接口无必填参数，具体请求字段见下方字段说明。
+        - 必填：`aaid`（证券账户 ID）、`counter_id`（证券）、`push_msg_type`（`1` App 消息，`2` 邮件消息）。
+        - 前端按所选的每种消息类型各调用一次。
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 业务说明
 
@@ -3171,6 +3252,41 @@ paths:
         成功时返回融券平仓推送消息的预览内容。字段含义见下方响应定义。
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - counter_id
+                - push_msg_type
+              properties:
+                aaid:
+                  type: string
+                  description: 融券持仓所属证券账户的内部数字编号 `aaid`，取自持仓行。不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`。
+                counter_id:
+                  type: string
+                  description: 融券持仓的证券 counter ID，如 `ST/HK/700`，取自持仓行。
+                push_msg_type:
+                  type: integer
+                  description: |-
+                    推送消息类型。
+
+                    **可选值：** `1` App 消息，`2` 邮件消息
+                  enum:
+                    - 1
+                    - 2
+                  x-enum-details:
+                    - value: 1
+                      label: App 消息
+                    - value: 2
+                      label: 邮件消息
+            example:
+              aaid: '57036919'
+              counter_id: ST/HK/700
+              push_msg_type: 1
       responses:
         '200':
           content:
@@ -3610,8 +3726,9 @@ paths:
 
         ### 请求参数
 
-        - 本接口无必填参数，可选参数见下方字段说明。
-        - 传入 `aaid` 时按指定证券账号过滤。
+        - 必填：`aaid`（证券账户 ID）、`log_id`（空头股票追收记录 ID），前端始终同时传入二者。
+        - `log_id` 取自 `holding_short_stock_margin_logs` 返回行的 `id`，并与该行的 `aaid` 一起传入。
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 返回结果
 
@@ -3624,6 +3741,9 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - aaid
+                - log_id
               properties:
                 aaid:
                   type: string
@@ -3631,8 +3751,12 @@ paths:
                     证券账号
 
                     此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
+                log_id:
+                  type: integer
+                  description: 空头股票追收记录 ID：`holding_short_stock_margin_logs`（空头股票追收记录）返回行的 `id`。需与同一行的 `aaid` 一起传入；缺少时后端无法定位追收记录，返回 `30020049`。
             example:
-              aaid: H00000000
+              aaid: '57036919'
+              log_id: 123
       responses:
         '200':
           content:
@@ -3689,8 +3813,9 @@ paths:
 
         ### 请求参数
 
-        - 本接口无必填参数，可选参数见下方字段说明。
-        - 传入 `aaid` 时按指定证券账号过滤。
+        - 必填：`aaid`（证券账户 ID）、`log_id`（空头股票追收记录 ID），前端始终同时传入二者。
+        - `log_id` 取自 `holding_short_stock_margin_logs` 返回行的 `id`，并与该行的 `aaid` 一起传入。
+        - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 返回结果
 
@@ -3703,6 +3828,9 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - aaid
+                - log_id
               properties:
                 aaid:
                   type: string
@@ -3710,8 +3838,12 @@ paths:
                     证券账号
 
                     此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
+                log_id:
+                  type: integer
+                  description: 空头股票追收记录 ID：`holding_short_stock_margin_logs`（空头股票追收记录）返回行的 `id`。需与同一行的 `aaid` 一起传入；缺少时后端无法定位追收记录，返回 `30020049`。
             example:
-              aaid: H00000000
+              aaid: '57036919'
+              log_id: 123
       responses:
         '200':
           content:
@@ -3838,7 +3970,8 @@ paths:
 
         ### 请求参数
 
-        - 本接口无必填参数；通过 `aaid`（账户 ID）定位目标账户。
+        - 必填：`aaid`（证券账户 ID）、`log_id`（空头股票追收记录 ID），前端始终同时传入二者。
+        - `log_id` 取自 `holding_short_stock_margin_logs` 返回行的 `id`，并与该行的 `aaid` 一起传入。
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 返回结果
@@ -3852,6 +3985,9 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - aaid
+                - log_id
               properties:
                 aaid:
                   type: string
@@ -3859,8 +3995,12 @@ paths:
                     证券账号
 
                     此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
+                log_id:
+                  type: integer
+                  description: 空头股票追收记录 ID：`holding_short_stock_margin_logs`（空头股票追收记录）返回行的 `id`。需与同一行的 `aaid` 一起传入；缺少时后端无法定位追收记录，返回 `30020049`。
             example:
-              aaid: H00000000
+              aaid: '57036919'
+              log_id: 123
       responses:
         '200':
           content:

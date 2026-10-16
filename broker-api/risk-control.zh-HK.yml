@@ -1551,13 +1551,15 @@ paths:
 
         ### 請求參數
 
-        - 必填：`aaid`（賬戶 ID）、`exchange_books`（換匯明細列表）、`exchange_books.from_currency`（兌出幣種）、`exchange_books.to_currency`（兌入幣種）
-        - 可選：`exchange_books.from_amount`（兌出金額）、`exchange_books.to_amount`（兌入金額）
+        - 必填：`aaid`（賬戶 ID）、`exchange_books`（換匯明細列表）。每條明細必填 `from_currency`、`to_currency`，並且 `from_amount` 與 `to_amount` 二者只能傳其一。
+        - 請求體結構：`{"aaid": 57036919, "exchange_books": [{"from_currency": "USD", "to_currency": "HKD", "from_amount": "100.00"}]}`。
         - 各字段的格式、取值範圍和業務含義見對應字段說明。
 
         ### 業務說明
 
         按換匯明細列表逐筆為客戶執行貨幣兌換，用於歸還借幣；每筆需指定兌出與兌入幣種及金額。
+
+        前提：該賬戶需存在追收負債信息（`risk_debt_info`）下的換匯還款提醒（swap-remind）記錄，否則返回 `30020049`。可先用 `query_exchange_v2` 以同一 `aaid` 查詢負債金額與可用現金賬本。
 
         ### 風險提示
 
@@ -1577,35 +1579,36 @@ paths:
               required:
                 - aaid
                 - exchange_books
-                - exchange_books.from_currency
-                - exchange_books.to_currency
               properties:
                 aaid:
-                  type: number
+                  type: integer
                   description: |-
                     賬戶ID. 調用方由所選記錄 record.aaid_val 程序化帶出，非請求可編輯字段
 
                     此處傳客戶證券賬戶的內部數字編號 `aaid`，並非證券賬號 `account_no`（如 `H00000000`），亦非客戶編號 `member_id`；一個客戶可擁有多個 `aaid`。
                 exchange_books:
                   type: array
-                  description: 換匯明細列表. 動態換匯行數組，可添加多組換匯記錄；每行結構見 exchange_books 的子字段（from_currency 等）。
+                  description: 換匯明細列表。可提交多條換匯明細；每條為對象，包含 `from_currency`、`to_currency`，以及 `from_amount` / `to_amount` 二者之一。
                   items:
-                    type: string
-                exchange_books.from_currency:
-                  type: string
-                  description: 兌換幣種. 可选值，可選項為該客戶現金賬本里持有的幣種
-                exchange_books.to_currency:
-                  type: string
-                  description: |-
-                    被兌換幣種。可選值來自後端支持兌換的幣種數據字典，請以接口返回的可選項為準。
-                exchange_books.from_amount:
-                  type: string
-                  description: 兌換金額. from_amount / to_amount 二選一提交：用戶最後編輯的字段保留，另一個按匯率計算後在調用方被剔除
-                exchange_books.to_amount:
-                  type: string
-                  description: 被兌換金額. 同 from_amount，二者互斥，僅提交其一
+                    type: object
+                    required:
+                      - from_currency
+                      - to_currency
+                    properties:
+                      from_currency:
+                        type: string
+                        description: 兌出幣種。從該客戶現金賬本中持有的幣種中選擇。
+                      to_currency:
+                        type: string
+                        description: 兌入幣種。可選值來自後端支持兌換的幣種數據字典，請以接口返回的可選項為準。
+                      from_amount:
+                        type: string
+                        description: 兌出金額，即兌出的 `from_currency` 金額。`from_amount` 與 `to_amount` 二選一提交，另一方按匯率計算。
+                      to_amount:
+                        type: string
+                        description: 兌入金額，即兌入的 `to_currency` 金額。與 `from_amount` 互斥，僅提交其一。
             example:
-              aaid: H00000000
+              aaid: 57036919
               exchange_books:
                 - from_currency: USD
                   to_currency: HKD
@@ -3071,7 +3074,9 @@ paths:
 
         ### 請求參數
 
-        - 本接口無必填參數，具體請求字段見下方字段說明。
+        - 必填：`aaid`（證券賬戶 ID）、`counter_id`（證券）、`order_type`（訂單類型）、`submitted_quantity`（買回數量）。
+        - `order_type` 為 `MO`（市價單）以外時必填 `price`；`rth`（交易時段）適用於限價單（`LO`）。
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
 
         ### 業務說明
 
@@ -3086,6 +3091,43 @@ paths:
         成功時提交融券強平；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - counter_id
+                - order_type
+                - submitted_quantity
+              properties:
+                aaid:
+                  type: string
+                  description: 融券持倉所屬證券賬戶的內部數字編號 `aaid`，取自持倉行。並非證券賬號 `account_no`（如 `H00000000`），亦非客戶編號 `member_id`。
+                counter_id:
+                  type: string
+                  description: 融券持倉的證券 counter ID，如 `ST/HK/700`，取自持倉行。
+                order_type:
+                  type: string
+                  description: 訂單類型，取自數據字典 `option_force_close_order_type`，如 `MO`（市價單，前端默認）或 `LO`（限價單）。
+                price:
+                  type: number
+                  description: 委託價格。`order_type` 不為 `MO` 時必填，須 ≥ 0。
+                submitted_quantity:
+                  type: number
+                  description: 提交的買回數量（股），須 ≥ 0。
+                rth:
+                  type: integer
+                  description: 交易時段，取自數據字典 `rth`；僅在 `order_type` 為 `LO` 時生效，前端默認 `1`。
+            example:
+              aaid: '57036919'
+              counter_id: ST/HK/700
+              order_type: LO
+              price: 400
+              submitted_quantity: 100
+              rth: 1
       responses:
         '200':
           description: 未實調，響應字段以真實接口為準。
@@ -3127,7 +3169,9 @@ paths:
 
         ### 請求參數
 
-        - 本接口無必填參數，具體請求字段見下方字段說明。
+        - 必填：`aaid`（證券賬戶 ID）、`counter_id`（證券）、`push_msg_type`（`1` App 消息，`2` 郵件消息）。
+        - 前端按所選的每種消息類型各調用一次。
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
 
         ### 業務說明
 
@@ -3142,6 +3186,41 @@ paths:
         成功時完成融券平倉推送消息發送；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - counter_id
+                - push_msg_type
+              properties:
+                aaid:
+                  type: string
+                  description: 融券持倉所屬證券賬戶的內部數字編號 `aaid`，取自持倉行。並非證券賬號 `account_no`（如 `H00000000`），亦非客戶編號 `member_id`。
+                counter_id:
+                  type: string
+                  description: 融券持倉的證券 counter ID，如 `ST/HK/700`，取自持倉行。
+                push_msg_type:
+                  type: integer
+                  description: |-
+                    推送消息類型。
+
+                    **可選值：** `1` App 消息，`2` 郵件消息
+                  enum:
+                    - 1
+                    - 2
+                  x-enum-details:
+                    - value: 1
+                      label: App 消息
+                    - value: 2
+                      label: 郵件消息
+            example:
+              aaid: '57036919'
+              counter_id: ST/HK/700
+              push_msg_type: 1
       responses:
         '200':
           description: 未實調，響應字段以真實接口為準。
@@ -3183,7 +3262,9 @@ paths:
 
         ### 請求參數
 
-        - 本接口無必填參數，具體請求字段見下方字段說明。
+        - 必填：`aaid`（證券賬戶 ID）、`counter_id`（證券）、`push_msg_type`（`1` App 消息，`2` 郵件消息）。
+        - 前端按所選的每種消息類型各調用一次。
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
 
         ### 業務說明
 
@@ -3194,6 +3275,41 @@ paths:
         成功時返回融券平倉推送消息的預覽內容。字段含義見下方響應定義。
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - counter_id
+                - push_msg_type
+              properties:
+                aaid:
+                  type: string
+                  description: 融券持倉所屬證券賬戶的內部數字編號 `aaid`，取自持倉行。並非證券賬號 `account_no`（如 `H00000000`），亦非客戶編號 `member_id`。
+                counter_id:
+                  type: string
+                  description: 融券持倉的證券 counter ID，如 `ST/HK/700`，取自持倉行。
+                push_msg_type:
+                  type: integer
+                  description: |-
+                    推送消息類型。
+
+                    **可選值：** `1` App 消息，`2` 郵件消息
+                  enum:
+                    - 1
+                    - 2
+                  x-enum-details:
+                    - value: 1
+                      label: App 消息
+                    - value: 2
+                      label: 郵件消息
+            example:
+              aaid: '57036919'
+              counter_id: ST/HK/700
+              push_msg_type: 1
       responses:
         '200':
           description: 未實調，響應字段以真實接口為準。
@@ -3635,8 +3751,9 @@ paths:
 
         ### 請求參數
 
-        - 本接口無必填參數，可選參數見下方字段說明。
-        - 傳入 `aaid` 時按指定證券賬號過濾。
+        - 必填：`aaid`（證券賬戶 ID）、`log_id`（空頭股票追收記錄 ID），前端始終同時傳入二者。
+        - `log_id` 取自 `holding_short_stock_margin_logs` 返回行的 `id`，並與該行的 `aaid` 一起傳入。
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
 
         ### 返回結果
 
@@ -3649,6 +3766,9 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - aaid
+                - log_id
               properties:
                 aaid:
                   type: string
@@ -3656,8 +3776,12 @@ paths:
                     證券賬號
 
                     此處傳客戶證券賬戶的內部數字編號 `aaid`，並非證券賬號 `account_no`（如 `H00000000`），亦非客戶編號 `member_id`；一個客戶可擁有多個 `aaid`。
+                log_id:
+                  type: integer
+                  description: 空頭股票追收記錄 ID：`holding_short_stock_margin_logs`（空頭股票追收記錄）返回行的 `id`。需與同一行的 `aaid` 一起傳入；缺少時後端無法定位追收記錄，返回 `30020049`。
             example:
-              aaid: H00000000
+              aaid: '57036919'
+              log_id: 123
       responses:
         '200':
           description: 未實調，響應字段以真實接口為準。
@@ -3715,8 +3839,9 @@ paths:
 
         ### 請求參數
 
-        - 本接口無必填參數，可選參數見下方字段說明。
-        - 傳入 `aaid` 時按指定證券賬號過濾。
+        - 必填：`aaid`（證券賬戶 ID）、`log_id`（空頭股票追收記錄 ID），前端始終同時傳入二者。
+        - `log_id` 取自 `holding_short_stock_margin_logs` 返回行的 `id`，並與該行的 `aaid` 一起傳入。
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
 
         ### 返回結果
 
@@ -3729,6 +3854,9 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - aaid
+                - log_id
               properties:
                 aaid:
                   type: string
@@ -3736,8 +3864,12 @@ paths:
                     證券賬號
 
                     此處傳客戶證券賬戶的內部數字編號 `aaid`，並非證券賬號 `account_no`（如 `H00000000`），亦非客戶編號 `member_id`；一個客戶可擁有多個 `aaid`。
+                log_id:
+                  type: integer
+                  description: 空頭股票追收記錄 ID：`holding_short_stock_margin_logs`（空頭股票追收記錄）返回行的 `id`。需與同一行的 `aaid` 一起傳入；缺少時後端無法定位追收記錄，返回 `30020049`。
             example:
-              aaid: H00000000
+              aaid: '57036919'
+              log_id: 123
       responses:
         '200':
           description: 未實調，響應字段以真實接口為準。
@@ -3866,8 +3998,9 @@ paths:
 
         ### 請求參數
 
-        - 本接口無必填參數；透過 `aaid`（賬戶 ID）定位目標賬戶。
-        - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
+        - 必填：`aaid`（證券賬戶 ID）、`log_id`（空頭股票追收記錄 ID），前端始終同時傳入二者。
+        - `log_id` 取自 `holding_short_stock_margin_logs` 返回行的 `id`，並與該行的 `aaid` 一起傳入。
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
 
         ### 返回結果
 
@@ -3880,6 +4013,9 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - aaid
+                - log_id
               properties:
                 aaid:
                   type: string
@@ -3887,8 +4023,12 @@ paths:
                     證券賬號
 
                     此處傳客戶證券賬戶的內部數字編號 `aaid`，並非證券賬號 `account_no`（如 `H00000000`），亦非客戶編號 `member_id`；一個客戶可擁有多個 `aaid`。
+                log_id:
+                  type: integer
+                  description: 空頭股票追收記錄 ID：`holding_short_stock_margin_logs`（空頭股票追收記錄）返回行的 `id`。需與同一行的 `aaid` 一起傳入；缺少時後端無法定位追收記錄，返回 `30020049`。
             example:
-              aaid: H00000000
+              aaid: '57036919'
+              log_id: 123
       responses:
         '200':
           description: 未實調，響應字段以真實接口為準。
