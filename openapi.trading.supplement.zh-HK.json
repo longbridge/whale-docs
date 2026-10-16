@@ -1,0 +1,4118 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "TradingAPI supplement",
+    "description": "在上游來源收錄前，由本倉庫維護的 TradingAPI 補充介面。",
+    "version": "1.0.0"
+  },
+  "tags": [],
+  "components": {
+    "schemas": {
+      "OrderPageBidSize": {
+        "type": "object",
+        "description": "價位表中的一個價格區間及其最小價格變動單位。價格大於 `str_proceed` 且不大於 `end_proceed` 時，使用該區間的 `bid_size`。",
+        "properties": {
+          "bid_size": {
+            "type": "string",
+            "description": "該區間的最小價格變動單位，如 \"0.01\""
+          },
+          "str_proceed": {
+            "type": "string",
+            "description": "區間起始價格（不含）"
+          },
+          "end_proceed": {
+            "type": "string",
+            "description": "區間結束價格（含）"
+          }
+        }
+      },
+      "OrderPageOrderTypeConfig": {
+        "type": "object",
+        "description": "單個訂單類型支援的交易時段與有效期",
+        "properties": {
+          "support_sessions": {
+            "type": "array",
+            "description": "該訂單類型支援的交易時段：\n- `1` - 僅盤中\n- `2` - 盤中及盤前盤後\n- `3` - 僅夜盤\n- `4` - 盤前（期權夜盤場景）\n\n為空時表示該訂單類型沒有時段選項，下單頁應隱藏時段選擇。\n",
+            "items": {
+              "type": "integer",
+              "format": "int32",
+              "enum": [
+                1,
+                2,
+                3,
+                4
+              ]
+            }
+          },
+          "support_time_in_forces": {
+            "type": "array",
+            "description": "該訂單類型支援的有效期：\n- `0` - 當日有效（DAY）\n- `1` - 撤單前有效（GTC）\n- `3` - 部成剩餘轉撤（IOC）\n- `5` - 全成或撤單（FOK）\n- `6` - 自訂有效期（GTD）\n",
+            "items": {
+              "type": "integer",
+              "format": "int32",
+              "enum": [
+                0,
+                1,
+                3,
+                5,
+                6
+              ]
+            }
+          }
+        }
+      },
+      "OrderPageGrantedStatus": {
+        "type": "object",
+        "description": "一項交易資格、認證或風險聲明的授權狀態",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "description": "認證狀態：\n- `0` - 未知\n- `1` - 已通過\n- `2` - 未通過\n- `3` - 審核中\n",
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ]
+          },
+          "expired": {
+            "type": "boolean",
+            "description": "授權或認證是否已過期；過期後需重新完成"
+          },
+          "url": {
+            "type": "string",
+            "description": "完成該授權或認證的頁面連結"
+          }
+        }
+      },
+      "OrderPageChannelInfo": {
+        "type": "object",
+        "description": "目前帳戶在該標的上的交易配置。除下列欄位外，還會返回若干 `*_granted` 布林欄位（是否已完成對應的授權、認證或風險聲明）及配套的認證連結欄位（`*_url`、`*_granted_url`），其中部分為特定市場或業務專屬授權，具體欄位以服務端下發為準。值為 `false` 時，應在提交訂單前引導用戶開啟對應連結完成流程，完成後重新調用本介面重新整理狀態。",
+        "properties": {
+          "account_channel": {
+            "type": "string",
+            "description": "帳戶渠道；與 `org_id`、`aaid` 一起定位該配置所屬的帳戶"
+          },
+          "org_id": {
+            "type": "string",
+            "description": "租戶 ID"
+          },
+          "aaid": {
+            "type": "string",
+            "description": "資產帳戶 ID"
+          },
+          "currency": {
+            "type": "string",
+            "description": "標的行情貨幣，如 USD、HKD、GBX"
+          },
+          "settlement_currency": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "可選結算貨幣；第一項為預設交易幣種，查詢持倉與現金、購買力和預估費用時作為 `currency` 傳入"
+          },
+          "order_type_config": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/OrderPageOrderTypeConfig"
+            },
+            "description": "目前標的與帳戶可用的訂單類型配置。鍵為訂單類型代碼，如 `LO`（限價單）、`ELO`（增強限價單）、`MO`（市價單）、`LIT`（觸價限價單）、`MIT`（觸價市價單）；未出現的訂單類型表示不可用。返回該物件時，時段與有效期以其中各訂單類型的配置為準。"
+          },
+          "support_trade": {
+            "type": "boolean",
+            "description": "目前帳戶渠道是否支援交易；為 `false` 時不應提供下單入口"
+          },
+          "restricted": {
+            "type": "integer",
+            "format": "int32",
+            "description": "線上交易限制：\n- `1` - 不可線上買入\n- `2` - 不可線上賣出\n- `3` - 不可線上買入或賣出\n\n未返回或為其他值時表示無此限制。受限方向應引導用戶聯絡 Broker 線下處理。\n",
+            "enum": [
+              1,
+              2,
+              3
+            ]
+          },
+          "support_rth": {
+            "type": "boolean",
+            "description": "是否支援盤前盤後交易；返回 `order_type_config` 時以其中的 `support_sessions` 為準"
+          },
+          "support_overnight": {
+            "type": "boolean",
+            "description": "是否支援夜盤交易；返回 `order_type_config` 時以其中的 `support_sessions` 為準"
+          },
+          "gtd_support_order_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "支援自訂有效期（GTD）的訂單類型代碼列表"
+          },
+          "support_attached_order_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "可附加附加單的訂單類型代碼列表"
+          },
+          "support_fractional_shares": {
+            "type": "boolean",
+            "description": "是否支援美股碎股交易"
+          },
+          "fractional_min_amount": {
+            "type": "string",
+            "description": "按金額下單碎股時的最低金額，單位為美元；低於該值不可下單"
+          },
+          "mo_avail_ratio": {
+            "type": "string",
+            "description": "市價單購買力係數。市價單（含未觸發的市價條件單）可用購買力 = 「取得下單購買力」的 `buy_limit` × 該係數；為空時按 1 處理"
+          },
+          "finance_account_status": {
+            "type": "integer",
+            "format": "int32",
+            "description": "融資額度狀態：\n- `0` - 正常\n- `1` - 融資額度為 0，調額申請審批中\n- `2` - 融資額度為 0，且未在審批中\n\n為 `1` 或 `2` 時，賣空開倉、期權賣出開倉等需要融資額度的交易無法進行，應提示用戶等待審批或申請調整額度。\n",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "account_risk_level": {
+            "type": "integer",
+            "format": "int32",
+            "description": "帳戶風險等級：\n- `0` - 無需額外聲明\n- `1` - 下單前需確認堅持交易聲明\n- `2` - 下單前需確認重要通知\n",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "confirm_purchase_statement": {
+            "type": "boolean",
+            "description": "用戶是否已確認堅持交易聲明"
+          },
+          "confirm_important_notice": {
+            "type": "boolean",
+            "description": "用戶是否已確認重要通知"
+          },
+          "granted_info": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/OrderPageGrantedStatus"
+            },
+            "description": "各項交易資格與風險聲明的授權狀態。鍵為資格類型代碼，例如 `us_overnight_risk_agreement`（美股夜盤交易風險聲明）、`fractional_shares_risk_agreement`（碎股交易風險聲明）；其餘鍵以服務端下發為準。"
+          }
+        }
+      },
+      "OrderPageStockContract": {
+        "type": "object",
+        "description": "期權合約資訊，僅期權標的返回",
+        "properties": {
+          "contract_direction": {
+            "type": "string",
+            "description": "期權方向：`C` 為認購期權，`P` 為認沽期權"
+          },
+          "underlying_counter_id": {
+            "type": "string",
+            "description": "正股的標的 ID"
+          },
+          "nearing_expire": {
+            "type": "boolean",
+            "description": "是否為臨近到期的期權"
+          },
+          "contract_model": {
+            "type": "integer",
+            "format": "int32",
+            "description": "期權保證金模式：\n- `1` - 非保證金模式\n- `2` - 保證金模式\n",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "open_purchase_limit": {
+            "type": "object",
+            "description": "期權開倉的最低購買力門檻；`threshold` 為空或為 0 時無門檻",
+            "properties": {
+              "threshold": {
+                "type": "string",
+                "description": "門檻金額"
+              },
+              "currency": {
+                "type": "string",
+                "description": "門檻金額幣種"
+              }
+            }
+          }
+        }
+      },
+      "OrderPageTradableButton": {
+        "type": "object",
+        "description": "可交易檢查彈窗中的引導按鈕",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "按鈕文案"
+          },
+          "link": {
+            "type": "string",
+            "description": "跳轉連結，`type` 為 `2` 時使用"
+          },
+          "type": {
+            "type": "integer",
+            "format": "int32",
+            "description": "點擊後的動作：\n- `0` - 關閉彈窗，不進入下單\n- `1` - 進入該標的的下單頁\n- `2` - 開啟 `link` 指向的頁面\n",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "direction": {
+            "type": "integer",
+            "format": "int32",
+            "description": "`type` 為 `1` 時進入下單頁的買賣方向：\n- `0` - 不限定\n- `1` - 僅買入\n- `2` - 僅賣出\n",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          }
+        }
+      },
+      "TradeAuthToken": {
+        "type": "object",
+        "description": "交易令牌及其刷新令牌，按帳戶簽發",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "交易令牌；傳給 `WhaleCoreService.updateTradeToken(...)` 的 `tradeToken`"
+          },
+          "refresh_token": {
+            "type": "string",
+            "description": "刷新令牌；傳給 `updateTradeToken` 的 `tradeRefreshToken`，亦用於 `POST /v1/member/trade/refresh_token`"
+          },
+          "refresh_token_expires": {
+            "type": "integer",
+            "format": "int64",
+            "description": "刷新令牌有效時長，單位為秒，自簽發時起計"
+          }
+        }
+      },
+      "SearchSecurityItem": {
+        "type": "object",
+        "description": "搜尋結果中的單個證券候選項",
+        "properties": {
+          "counter_id": {
+            "type": "string",
+            "description": "標的 ID，格式為 `<品類>/<市場>/<代碼>`，如 `ST/US/AAPL`；進入標的詳情、加入自選等後續操作均以它標識標的"
+          },
+          "code": {
+            "type": "string",
+            "description": "證券代碼，如 `AAPL`、`700`；翻頁時作為 code 參數傳入"
+          },
+          "name": {
+            "type": "string",
+            "description": "證券名稱，按請求語言返回"
+          },
+          "market": {
+            "type": "string",
+            "description": "所屬市場，如 `HK`、`US`；Broker App 據此展示市場標識"
+          },
+          "currency": {
+            "type": "string",
+            "description": "交易幣種，如 `USD`、`HKD`；基金標的的結果中 Broker App 以幣種代替市場標識展示"
+          },
+          "product": {
+            "type": "string",
+            "description": "證券品類代碼，如 `ST`、`ETF`、`UT`"
+          },
+          "score": {
+            "type": "number",
+            "description": "結果排序分值；翻頁時將上一頁最後一條結果的該值作為 score 參數傳入"
+          }
+        }
+      },
+      "CashFlowRecordItem": {
+        "type": "object",
+        "description": "單條資金記錄",
+        "properties": {
+          "tx_type": {
+            "type": "string",
+            "description": "流水類型代碼，如 `cash_in`、`cash_out`；面向 Client 展示時使用 type_name"
+          },
+          "type_name": {
+            "type": "string",
+            "description": "流水類型名稱，按請求語言返回，作為記錄標題展示"
+          },
+          "category": {
+            "type": "string",
+            "description": "金額方向前綴；Broker App 將其原樣拼接在 amount 之前展示，為空時只展示金額"
+          },
+          "amount": {
+            "type": "string",
+            "description": "資金變動金額，十進制字串；為空或為 0 時表示該記錄只涉及股票數量變動"
+          },
+          "currency": {
+            "type": "string",
+            "description": "金額幣種，如 `HKD`、`USD`"
+          },
+          "stock_quantity": {
+            "type": "string",
+            "description": "股票數量變動；非空時由 quantity_description 提供面向 Client 的說明"
+          },
+          "quantity_description": {
+            "type": "string",
+            "description": "股票數量變動說明，按請求語言返回；記錄只有股票變動時作為主展示內容，與金額同時存在時作為副文案"
+          },
+          "description": {
+            "type": "string",
+            "description": "記錄補充說明，按請求語言返回；非空時展示在日期之後"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "記錄建立時間，Unix 時間戳（秒）；Broker App 按該時間所在年月對列表分組"
+          },
+          "done_at": {
+            "type": "string",
+            "description": "記錄完成時間，Unix 時間戳（秒）；列表中展示的日期取該值"
+          }
+        }
+      },
+      "WithdrawRecordState": {
+        "type": "integer",
+        "format": "int32",
+        "description": "出金申請狀態：\n- `0` - 已提交，正在處理\n- `1` - 處理中\n- `2` - 已駁回\n- `3` - 已撤銷（Client 主動撤銷）\n- `4` - 已匯出\n- `5` - 失敗\n- `6` - 已退還\n- `7` - 審核通過，尚未匯出\n- `8` - 大額出金審核中\n- `9` - 修改待審批\n- `10` - 刪除待審批\n- `11` - 已刪除\n- `12` - 駁回待審批\n- `15` - 待確認：需 Client 確認更換收款銀行卡後繼續處理\n\n僅 `0` 及 `15` 狀態的申請可以撤銷。展示狀態時優先使用接口返回的 `state_description`。\n",
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          15
+        ]
+      },
+      "WithdrawPayeeAddress": {
+        "type": "object",
+        "description": "銀行卡收款人地址",
+        "properties": {
+          "payee_country": {
+            "type": "string",
+            "description": "收款人所在國家／地區，使用 ISO 3166-1 alpha-3 代碼（如 `HKG`），取自「取得國家／地區列表」的 `code2`"
+          },
+          "payee_state": {
+            "type": "string",
+            "description": "省、州或行政區"
+          },
+          "payee_city": {
+            "type": "string",
+            "description": "城市"
+          },
+          "payee_street": {
+            "type": "string",
+            "description": "街道"
+          },
+          "payee_building": {
+            "type": "string",
+            "description": "樓宇或大廈名稱，僅部分國家／地區需要"
+          },
+          "address": {
+            "type": "string",
+            "description": "詳細地址"
+          },
+          "payee_postcode": {
+            "type": "string",
+            "description": "郵政編碼"
+          }
+        }
+      },
+      "WithdrawBankCard": {
+        "type": "object",
+        "description": "已綁定的銀行卡",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "銀行卡 id，作為提現前置資訊及提交出金申請的 `card_id`"
+          },
+          "bank_card_identity": {
+            "type": "string",
+            "description": "銀行卡標識，與 `id` 共同確定一張銀行卡；提交出金申請時隨 `card_id` 一併傳入"
+          },
+          "bank": {
+            "type": "string",
+            "description": "銀行名稱"
+          },
+          "bank_en": {
+            "type": "string",
+            "description": "銀行英文名稱"
+          },
+          "bank_code": {
+            "type": "string",
+            "description": "銀行編碼；`FPS` 表示轉數快收款帳戶"
+          },
+          "account": {
+            "type": "string",
+            "description": "銀行帳號"
+          },
+          "account_type": {
+            "type": "string",
+            "description": "該卡支援出金的幣種，如 `HKD`；`ALL` 表示支援全部幣種。出金幣種須與該值一致或該值為 `ALL`"
+          },
+          "region": {
+            "type": "string",
+            "description": "銀行卡所在地區全稱，如 `HONGKONG`"
+          },
+          "swift_code": {
+            "type": "string",
+            "description": "銀行 SWIFT 代碼"
+          },
+          "icon": {
+            "type": "string",
+            "description": "銀行圖示 URL"
+          },
+          "status": {
+            "type": "integer",
+            "description": "銀行卡認證狀態：\n- `0` - 未認證，需先完成銀行卡認證\n- `1` - 認證審核中，不能發起出金\n- `2` - 已認證\n",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "witness_state": {
+            "type": "integer",
+            "description": "入金見證狀態：\n- `1` - 無需見證\n- `2` - 待見證\n- `3` - 已見證\n\n現金開戶驗證方式下，只有 `1` 或 `3` 的銀行卡可以出金。\n",
+            "format": "int32",
+            "enum": [
+              1,
+              2,
+              3
+            ]
+          },
+          "bind_state": {
+            "type": "integer",
+            "description": "綁定狀態：\n- `0` - 綁定審核中\n- `1` - 已綁定\n- `2` - 綁定失敗\n\n未返回時視為已綁定。只有已綁定的銀行卡可以出金。\n",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/v5/orders/info": {
+      "get": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "取得標的下單配置",
+        "description": "進入下單頁、切換標的或切換帳戶時，查詢標的在目前帳戶下的下單規則與配置：每手股數、價位表、委託價格上下限、訂單標籤、各訂單類型支援的交易時段與有效期、自訂有效期與附加單支援情況、美股碎股、可選結算貨幣、線上買賣限制、市價單購買力係數，以及下單前需完成的授權與聲明狀態。Broker 自建下單頁據此確定可選訂單類型、時段、有效期、數量步長與價格步長，並在提交前攔截未滿足的授權。改單時傳入原訂單 ID，返回該訂單對應的配置。用戶完成授權或認證後，應重新調用以重新整理狀態。該介面亦用於定投計劃建立頁（讀取標的交易配置）和期權收益增強與保險策略頁（讀取策略風險協議的授權狀態）。\n\nWhaleCore 的 `orderService()` 已透過 `getOrderInfo` 類型化封裝此介面，使用 WhaleCore 時建議優先呼叫該方法。\n",
+        "operationId": "getV5OrdersInfo",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "標的 ID（counter_id），如 `ST/US/AAPL`、`ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "description": "改單時傳入原訂單 ID；下單時不傳",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order_id_str",
+            "in": "query",
+            "required": false,
+            "description": "原訂單 ID 的字串形式；改單時與 `order_id` 傳入相同的值",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「取得標的下單配置」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "counter_id": {
+                              "type": "string",
+                              "description": "標的 ID"
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "標的名稱"
+                            },
+                            "last_done": {
+                              "type": "string",
+                              "description": "最新價，按行情貨幣計"
+                            },
+                            "lot_size": {
+                              "type": "string",
+                              "description": "每手股數；`buy_lot_size` 或 `sell_lot_size` 為空時使用該值作為數量步長"
+                            },
+                            "buy_lot_size": {
+                              "type": "string",
+                              "description": "買入方向的每手股數"
+                            },
+                            "sell_lot_size": {
+                              "type": "string",
+                              "description": "賣出方向的每手股數"
+                            },
+                            "upper_limit": {
+                              "type": "string",
+                              "description": "委託價格上限，委託價不能高於該值"
+                            },
+                            "lower_limit": {
+                              "type": "string",
+                              "description": "委託價格下限，委託價不能低於該值"
+                            },
+                            "tag": {
+                              "type": "integer",
+                              "format": "int32",
+                              "description": "訂單標籤，預估交易費用時作為 `order_tag` 傳入：\n- `1` - 普通訂單\n- `2` - 長期單\n- `3` - 暗盤訂單\n",
+                              "enum": [
+                                1,
+                                2,
+                                3
+                              ]
+                            },
+                            "timestamp": {
+                              "type": "string",
+                              "description": "伺服器目前時間，Unix 時間戳（秒）"
+                            },
+                            "bid_sizes": {
+                              "type": "array",
+                              "description": "價位表，用於按價格確定最小價格變動單位並校驗、調整委託價；沒有區間匹配時使用第一項",
+                              "items": {
+                                "$ref": "#/components/schemas/OrderPageBidSize"
+                              }
+                            },
+                            "is_connect": {
+                              "type": "boolean",
+                              "description": "是否為 A 股通標的"
+                            },
+                            "is_spac": {
+                              "type": "boolean",
+                              "description": "是否為 SPAC 標的"
+                            },
+                            "is_rights": {
+                              "type": "boolean",
+                              "description": "是否為供股權標的"
+                            },
+                            "channel_infos": {
+                              "$ref": "#/components/schemas/OrderPageChannelInfo"
+                            },
+                            "stock_contract": {
+                              "$ref": "#/components/schemas/OrderPageStockContract"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "counter_id": "ST/US/AAPL",
+                    "name": "Apple",
+                    "last_done": "228.52",
+                    "lot_size": "1",
+                    "buy_lot_size": "1",
+                    "sell_lot_size": "1",
+                    "upper_limit": "",
+                    "lower_limit": "",
+                    "tag": 1,
+                    "timestamp": "1760598000",
+                    "bid_sizes": [
+                      {
+                        "bid_size": "0.0001",
+                        "str_proceed": "0",
+                        "end_proceed": "1"
+                      },
+                      {
+                        "bid_size": "0.01",
+                        "str_proceed": "1",
+                        "end_proceed": "999999"
+                      }
+                    ],
+                    "is_connect": false,
+                    "is_spac": false,
+                    "is_rights": false,
+                    "channel_infos": {
+                      "account_channel": "<BROKER_CHANNEL>",
+                      "org_id": "<ORG_ID>",
+                      "aaid": "<AAID>",
+                      "currency": "USD",
+                      "settlement_currency": [
+                        "USD"
+                      ],
+                      "order_type_config": {
+                        "LO": {
+                          "support_sessions": [
+                            1,
+                            2,
+                            3
+                          ],
+                          "support_time_in_forces": [
+                            0,
+                            1,
+                            6
+                          ]
+                        },
+                        "MO": {
+                          "support_sessions": [],
+                          "support_time_in_forces": [
+                            0
+                          ]
+                        }
+                      },
+                      "support_trade": true,
+                      "support_rth": true,
+                      "support_overnight": true,
+                      "gtd_support_order_types": [
+                        "LO"
+                      ],
+                      "support_attached_order_types": [
+                        "LO"
+                      ],
+                      "support_fractional_shares": true,
+                      "fractional_min_amount": "5",
+                      "mo_avail_ratio": "0.95",
+                      "finance_account_status": 0,
+                      "account_risk_level": 0,
+                      "confirm_purchase_statement": false,
+                      "confirm_important_notice": false,
+                      "granted_info": {
+                        "us_overnight_risk_agreement": {
+                          "status": 1,
+                          "expired": false,
+                          "url": ""
+                        }
+                      }
+                    }
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v5/orders/tradable": {
+      "get": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "檢查標的是否可交易",
+        "description": "用戶在下單頁切換或搜尋選擇標的時，檢查該標的能否在目前帳戶交易，並返回提示文案和引導按鈕。`is_alert` 為 `true` 時，應以彈窗展示 `msg` 與 `buttons`，不直接進入下單；`buttons` 為空時視為不可交易。`is_alert` 為 `false` 時可進入下單頁，若 `is_toast` 為 `true`，再以輕提示展示 `msg`。\n\nWhaleCore 的 `orderService()` 已透過 `checkTradability` 類型化封裝此介面，使用 WhaleCore 時建議優先呼叫該方法。\n",
+        "operationId": "getV5OrdersTradable",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "標的 ID（counter_id），如 `ST/US/AAPL`、`ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/HK/700"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「檢查標的是否可交易」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "counter_id": {
+                              "type": "string",
+                              "description": "標的 ID"
+                            },
+                            "is_cnconnect": {
+                              "type": "boolean",
+                              "description": "是否為 A 股通標的"
+                            },
+                            "is_alert": {
+                              "type": "boolean",
+                              "description": "是否需要彈窗提示並阻止直接進入下單"
+                            },
+                            "is_toast": {
+                              "type": "boolean",
+                              "description": "可進入下單時，是否以輕提示展示 `msg`"
+                            },
+                            "msg": {
+                              "type": "string",
+                              "description": "提示文案"
+                            },
+                            "buttons": {
+                              "type": "array",
+                              "description": "彈窗中的引導按鈕",
+                              "items": {
+                                "$ref": "#/components/schemas/OrderPageTradableButton"
+                              }
+                            },
+                            "support_regular_saving_plan": {
+                              "type": "boolean",
+                              "description": "該標的是否支援定投"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "counter_id": "ST/HK/700",
+                    "is_cnconnect": false,
+                    "is_alert": false,
+                    "is_toast": false,
+                    "msg": "",
+                    "buttons": [],
+                    "support_regular_saving_plan": true
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orders/is_next_day": {
+      "get": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "查詢當日單是否順延至下一交易日",
+        "description": "下單頁載入時查詢：如果此刻提交該標的的當日有效（DAY）訂單，訂單是否順延到下一交易日。結果為 `true` 時，可在訂單確認頁的有效期旁提示「下一交易日收盤前有效」。該結果只適用於當日有效訂單；訂單僅在盤中交易時讀取 `is_next_day`，允許盤前盤後交易時讀取 `is_next_day_after`。僅夜盤時段的限價單按夜盤規則提示，不使用該結果。\n",
+        "operationId": "getV1OrdersIsNextDay",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "標的 ID（counter_id），如 `ST/US/AAPL`、`ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「查詢當日單是否順延至下一交易日」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "is_next_day": {
+                              "type": "boolean",
+                              "description": "訂單僅在盤中交易時，當日有效訂單是否順延至下一交易日"
+                            },
+                            "is_next_day_after": {
+                              "type": "boolean",
+                              "description": "訂單允許盤前盤後交易時，當日有效訂單是否順延至下一交易日"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "is_next_day": true,
+                    "is_next_day_after": false
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/asset/trade/detail": {
+      "get": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "取得下單頁持倉與現金",
+        "description": "下單頁載入時，查詢目前帳戶在指定標的上的持倉數量、可用數量與成本，以及指定幣種的現金，用於展示持倉與可賣數量。返回的 `quantity`、`average_cost`、`diluted_avg_cost` 是「預估成交後持倉成本」的入參；持倉方向（`quantity` 的正負）決定預估交易費用時的 `position_side`。經 WhaleCore `requestService()` 調用時，需將 `requiresTradeToken` 設為 `true`。\n\nWhaleCore 的 `orderService()` 已透過 `getTradeDetail` 類型化封裝此介面，使用 WhaleCore 時建議優先呼叫該方法。\n",
+        "operationId": "getV1PortfolioAssetTradeDetail",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "標的 ID（counter_id），如 `ST/US/AAPL`、`ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "description": "交易（結算）幣種，如 USD、HKD；取「取得標的下單配置」返回的 `channel_infos.settlement_currency` 的第一項",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "USD"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「取得下單頁持倉與現金」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "counter_id": {
+                              "type": "string",
+                              "description": "標的 ID"
+                            },
+                            "currency": {
+                              "type": "string",
+                              "description": "幣種"
+                            },
+                            "balance": {
+                              "type": "string",
+                              "description": "該幣種的現金餘額"
+                            },
+                            "available_cash": {
+                              "type": "string",
+                              "description": "帳戶可用現金"
+                            },
+                            "quantity": {
+                              "type": "string",
+                              "description": "持倉數量；負數表示空頭持倉"
+                            },
+                            "available_quantity": {
+                              "type": "string",
+                              "description": "可用持倉數量"
+                            },
+                            "average_cost": {
+                              "type": "string",
+                              "description": "平均買入成本"
+                            },
+                            "diluted_avg_cost": {
+                              "type": "string",
+                              "description": "攤薄成本"
+                            },
+                            "underlying_available_quantity": {
+                              "type": "string",
+                              "description": "期權標的時，關聯正股的可用持倉數量"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "counter_id": "ST/US/AAPL",
+                    "currency": "USD",
+                    "balance": "12500.00",
+                    "available_cash": "12500.00",
+                    "quantity": "20",
+                    "available_quantity": "20",
+                    "average_cost": "201.35",
+                    "diluted_avg_cost": "198.10",
+                    "underlying_available_quantity": "0"
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/app/stock_margin_ratios": {
+      "get": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "取得股票初始保證金係數",
+        "description": "股票（非期權）下單頁在已持有交易 token 時，查詢目前帳戶對該股票做多與做空開倉的初始保證金係數，用於在本地估算融資買入或賣空開倉的可交易數量與所需保證金：買入開倉使用 `long_im_factor`，賣出開倉使用 `short_im_factor`。期權下單不使用該介面。經 WhaleCore `requestService()` 調用時，需將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "getV1AppStockMarginRatios",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "標的 ID（counter_id），如 `ST/US/AAPL`、`ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「取得股票初始保證金係數」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "long_im_factor": {
+                              "type": "string",
+                              "description": "做多開倉的初始保證金係數，如 \"0.5\""
+                            },
+                            "short_im_factor": {
+                              "type": "string",
+                              "description": "做空開倉的初始保證金係數"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "long_im_factor": "0.5",
+                    "short_im_factor": "1.5"
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/app/risk/account_info/purchase": {
+      "get": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "取得下單購買力",
+        "description": "下單頁載入、切換帳戶或切換結算幣種時，查詢目前帳戶在指定標的上的最大購買力，用於展示可買金額與校驗委託金額。市價單（含未觸發的市價條件單）的可用購買力為 `buy_limit` 乘以「取得標的下單配置」返回的 `channel_infos.mo_avail_ratio`。改單時傳入原訂單 ID；改單對象為未觸發的條件單時不傳 `order_id`。經 WhaleCore `requestService()` 調用時，需將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "getV1AppRiskAccountInfoPurchase",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "標的 ID（counter_id），如 `ST/US/AAPL`、`ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "description": "交易（結算）幣種，如 USD、HKD；取「取得標的下單配置」返回的 `channel_infos.settlement_currency` 的第一項",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "USD"
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": true,
+            "description": "Broker 渠道",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "<BROKER_CHANNEL>"
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "description": "改單時傳入原訂單 ID；改單對象為未觸發的條件單或下新單時不傳",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「取得下單購買力」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "buy_limit": {
+                              "type": "string",
+                              "description": "最大購買力"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "buy_limit": "25000.00"
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v4/portfolio/current/estimatedcost": {
+      "get": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "預估交易費用",
+        "description": "用戶在下單頁修改價格或數量後，按標的、委託價格、數量與買賣方向估算本次交易的佣金、第三方收費和平台費，用於展示預估費用。三項之和可作為「預估成交後持倉成本」的 `fee_amount`。價格或數量為 0 時無需調用。經 WhaleCore `requestService()` 調用時，需將 `requiresTradeToken` 設為 `true`。\n\nWhaleCore 的 `orderService()` 已透過 `getEstimatedCost` 類型化封裝此介面，使用 WhaleCore 時建議優先呼叫該方法。\n",
+        "operationId": "getV4PortfolioCurrentEstimatedcost",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "標的 ID（counter_id），如 `ST/US/AAPL`、`ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "description": "交易（結算）幣種，如 USD、HKD；取「取得標的下單配置」返回的 `channel_infos.settlement_currency` 的第一項",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "USD"
+          },
+          {
+            "name": "price",
+            "in": "query",
+            "required": true,
+            "description": "委託單價，按交易幣種計；英國市場標的行情貨幣為 GBX 而交易幣種為 GBP 時，需先除以 100 換算為 GBP",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "228.50"
+          },
+          {
+            "name": "qty",
+            "in": "query",
+            "required": true,
+            "description": "委託數量（股數）",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "10"
+          },
+          {
+            "name": "dir",
+            "in": "query",
+            "required": true,
+            "description": "買賣方向：\n- `0` - 買入\n- `1` - 賣出\n",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "0",
+                "1"
+              ]
+            },
+            "example": "0"
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": true,
+            "description": "Broker 渠道",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "<BROKER_CHANNEL>"
+          },
+          {
+            "name": "order_tag",
+            "in": "query",
+            "required": false,
+            "description": "訂單標籤，取「取得標的下單配置」返回的 `tag`：\n- `1` - 普通訂單\n- `2` - 長期單\n- `3` - 暗盤訂單\n",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "enum": [
+                1,
+                2,
+                3
+              ]
+            }
+          },
+          {
+            "name": "order_type",
+            "in": "query",
+            "required": false,
+            "description": "訂單類型代碼，如 `LO`、`MO`",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "position_side",
+            "in": "query",
+            "required": false,
+            "description": "持倉方向：目前持倉大於 0 時傳 `LONG`，小於 0 時傳 `SHORT`；無持倉時，買入傳 `LONG`，賣出傳 `SHORT`",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LONG",
+                "SHORT"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「預估交易費用」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "commission": {
+                              "type": "string",
+                              "description": "預估佣金"
+                            },
+                            "third": {
+                              "type": "string",
+                              "description": "預估第三方收費"
+                            },
+                            "platform": {
+                              "type": "string",
+                              "description": "預估平台費"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "commission": "0.99",
+                    "third": "0.02",
+                    "platform": "1.00"
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v4/portfolio/stock/get_trading_stock_avgcost": {
+      "get": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "預估成交後持倉成本",
+        "description": "在預估交易費用成功後調用，按目前持倉數量與成本、本次委託價格與數量，計算本次成交後的平均買入成本和攤薄成本，用於下單頁展示預估成本。需要將交易費用計入成本時，傳入 `fee_amount`。經 WhaleCore `requestService()` 調用時，需將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "getV4PortfolioStockGetTradingStockAvgcost",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "標的 ID（counter_id），如 `ST/US/AAPL`、`ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          },
+          {
+            "name": "holding_quantity",
+            "in": "query",
+            "required": true,
+            "description": "目前持倉數量，取「取得下單頁持倉與現金」返回的 `quantity`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "20"
+          },
+          {
+            "name": "side",
+            "in": "query",
+            "required": true,
+            "description": "買賣方向",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "BUY",
+                "SELL"
+              ]
+            },
+            "example": "BUY"
+          },
+          {
+            "name": "avg_cost",
+            "in": "query",
+            "required": true,
+            "description": "目前平均買入成本，取 `average_cost`；無持倉時傳 `0`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "201.35"
+          },
+          {
+            "name": "diluted_avg_cost",
+            "in": "query",
+            "required": true,
+            "description": "目前攤薄成本，取 `diluted_avg_cost`；無持倉時傳 `0`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "198.10"
+          },
+          {
+            "name": "price",
+            "in": "query",
+            "required": true,
+            "description": "委託單價，與預估交易費用時傳入的 `price` 一致",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "228.50"
+          },
+          {
+            "name": "quantity",
+            "in": "query",
+            "required": true,
+            "description": "本次委託數量（股數）",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "10"
+          },
+          {
+            "name": "fee_amount",
+            "in": "query",
+            "required": false,
+            "description": "計入成本的交易費用，為預估交易費用返回的 `commission`、`third`、`platform` 之和；不傳時成本不含費用",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「預估成交後持倉成本」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "avg_cost": {
+                              "type": "string",
+                              "description": "成交後的平均買入成本"
+                            },
+                            "diluted_avg_cost": {
+                              "type": "string",
+                              "description": "成交後的攤薄成本"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "avg_cost": "210.40",
+                    "diluted_avg_cost": "208.23"
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/member/trade/auth": {
+      "post": {
+        "tags": [
+          "帳戶"
+        ],
+        "summary": "驗證交易密碼",
+        "description": "校驗客戶輸入的交易密碼；校驗通過且無需二次驗證時，返回該帳戶的交易令牌。\n\nWhaleCore 預設自動處理交易鑑權，宿主無需調用本接口。初始化時設定 `tradePasswordEnabled: true` 後，SDK 不再自行取得交易令牌：交易類調用拋出 `tradeAuthFailed`（1006）或 `hasTradeToken()` 返回 `false` 時，由宿主引導客戶輸入交易密碼並調用本接口，再把 `data.token.token` 作為 `tradeToken`、`data.token.refresh_token` 作為 `tradeRefreshToken` 傳給 `WhaleCoreService.updateTradeToken(...)`，最後重新發起原操作。令牌按帳戶簽發，`updateTradeToken` 的 `accountChannel` 應與本次請求所屬帳戶一致。\n\n如果 `need_two_factors` 或 `need_totp_two_factors` 為 `true`，不要使用本次響應中的令牌，改為調用對應的二次驗證接口，由二次驗證接口返回令牌：短信驗證碼對應 `POST /v1/member/trade/auth_two_factors`，第三方身份驗證器動態碼對應 `POST /v1/member/trade/totp/auth_two_factors`。`need_device_totp_two_factors` 對應的裝置令牌驗證不在本文範圍內。\n\n本接口亦用於修改安全設定前校驗客戶目前的交易密碼。\n\n密碼錯誤時顯示 `message` 並讓客戶重新輸入；返回 402009 時不要繼續重試。\n\n密碼欄位傳 6 位數字交易密碼的 MD5 摘要（32 位小寫十六進制字串），不要傳明文。\n\n本接口用於取得交易令牌，經 WhaleCore `requestService()` 調用時不要將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "postV3MemberTradeAuth",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "trade_password": {
+                    "type": "string",
+                    "description": "交易密碼的 MD5 摘要",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "校驗場景。交易解鎖時傳 `trade`。"
+                  }
+                },
+                "required": [
+                  "trade_password",
+                  "type"
+                ]
+              },
+              "example": {
+                "trade_password": "d3786ec2413a8cd9413bfcb24be95a73",
+                "type": "trade"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「驗證交易密碼」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "need_two_factors": {
+                              "type": "boolean",
+                              "description": "是否仍需完成短信驗證碼二次驗證；為 `true` 時調用 `POST /v1/member/trade/auth_two_factors`"
+                            },
+                            "need_totp_two_factors": {
+                              "type": "boolean",
+                              "description": "是否仍需完成第三方身份驗證器動態碼（TOTP）二次驗證；為 `true` 時調用 `POST /v1/member/trade/totp/auth_two_factors`"
+                            },
+                            "need_device_totp_two_factors": {
+                              "type": "boolean",
+                              "description": "是否仍需完成裝置令牌二次驗證；該驗證方式不在本文範圍內"
+                            },
+                            "tfa_guide": {
+                              "type": "boolean",
+                              "description": "為 `true` 時，短信二次驗證頁可提供「僅本次開啟驗證碼校驗」選項，所選結果透過 `POST /v1/member/trade/auth_two_factors` 的 `tfa_switch` 提交"
+                            },
+                            "token": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/TradeAuthToken"
+                                }
+                              ],
+                              "description": "交易令牌；僅在上述三個 `need_*` 欄位均不為 `true` 時使用"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "need_two_factors": false,
+                    "need_totp_two_factors": false,
+                    "need_device_totp_two_factors": false,
+                    "tfa_guide": false,
+                    "token": {
+                      "token": "<TRADE_TOKEN>",
+                      "refresh_token": "<TRADE_REFRESH_TOKEN>",
+                      "refresh_token_expires": 1800
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "請求未通過業務規則或輸入校驗。重試前，請根據業務碼修正請求。",
+            "x-business-codes": [
+              {
+                "code": 402009,
+                "description": "交易密碼錯誤次數已達上限，帳戶交易解鎖被凍結；顯示 `message`，不要繼續重試"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/auth_two_factors": {
+      "post": {
+        "tags": [
+          "帳戶"
+        ],
+        "summary": "提交交易解鎖短信驗證",
+        "description": "完成交易解鎖的短信驗證碼二次驗證。驗證交易密碼返回 `need_two_factors: true` 後，先向客戶發送交易解鎖短信驗證碼（發送驗證碼的接口不在本文範圍內），再提交驗證碼與同一交易密碼。驗證通過後返回交易令牌：`data.token.token` 對應 `updateTradeToken` 的 `tradeToken`，`data.token.refresh_token` 對應 `tradeRefreshToken`。\n\n傳入 `tfa_switch` 時，會同時修改該客戶之後交易解鎖是否需要短信驗證碼。驗證失敗時顯示 `message`，讓客戶重新輸入或重新獲取驗證碼。\n\n密碼欄位傳 6 位數字交易密碼的 MD5 摘要（32 位小寫十六進制字串），不要傳明文。\n\n本接口用於取得交易令牌，經 WhaleCore `requestService()` 調用時不要將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "postV1MemberTradeAuthTwoFactors",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "客戶收到的短信驗證碼"
+                  },
+                  "trade_password": {
+                    "type": "string",
+                    "description": "交易密碼的 MD5 摘要，與驗證交易密碼時提交的值相同",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  },
+                  "tfa_switch": {
+                    "type": "string",
+                    "enum": [
+                      "open",
+                      "close"
+                    ],
+                    "description": "調整之後交易解鎖的短信驗證要求；不傳則不修改。僅在驗證交易密碼返回 `tfa_guide: true` 時提供該選項：\n\n- `close` - 僅本次進行短信驗證，之後交易解鎖不再要求短信驗證碼\n- `open` - 之後交易解鎖繼續要求短信驗證碼"
+                  },
+                  "verify_credentials": {
+                    "type": "string",
+                    "description": "短信驗證碼校驗通過後取得的驗證憑證；已單獨校驗過驗證碼時傳入"
+                  }
+                },
+                "required": [
+                  "code",
+                  "trade_password"
+                ]
+              },
+              "example": {
+                "code": "<SMS_CODE>",
+                "trade_password": "d3786ec2413a8cd9413bfcb24be95a73"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「提交交易解鎖短信驗證」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "token": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/TradeAuthToken"
+                                }
+                              ],
+                              "description": "驗證通過後簽發的交易令牌"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "token": {
+                      "token": "<TRADE_TOKEN>",
+                      "refresh_token": "<TRADE_REFRESH_TOKEN>",
+                      "refresh_token_expires": 1800
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/totp/auth_two_factors": {
+      "post": {
+        "tags": [
+          "帳戶"
+        ],
+        "summary": "提交交易解鎖動態碼驗證",
+        "description": "以客戶綁定的第三方身份驗證器（TOTP）產生的動態碼完成交易解鎖二次驗證。須在驗證交易密碼返回 `need_totp_two_factors: true` 後，針對同一帳戶調用；請求中不再攜帶交易密碼。驗證通過後返回交易令牌：`data.token.token` 對應 `updateTradeToken` 的 `tradeToken`，`data.token.refresh_token` 對應 `tradeRefreshToken`。\n\n動態碼錯誤或過期時顯示 `message`，讓客戶輸入新的動態碼。\n\n本接口用於取得交易令牌，經 WhaleCore `requestService()` 調用時不要將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "postV1MemberTradeTotpAuthTwoFactors",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "verify_code": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 6,
+                    "description": "身份驗證器目前顯示的 6 位動態碼"
+                  }
+                },
+                "required": [
+                  "verify_code"
+                ]
+              },
+              "example": {
+                "verify_code": "<TOTP_CODE>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「提交交易解鎖動態碼驗證」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "token": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/TradeAuthToken"
+                                }
+                              ],
+                              "description": "驗證通過後簽發的交易令牌"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "token": {
+                      "token": "<TRADE_TOKEN>",
+                      "refresh_token": "<TRADE_REFRESH_TOKEN>",
+                      "refresh_token_expires": 1800
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/check_token": {
+      "get": {
+        "tags": [
+          "帳戶"
+        ],
+        "summary": "校驗交易令牌",
+        "description": "校驗請求攜帶的交易令牌是否仍被伺服器認可，並返回剩餘有效時長。`hasTradeToken()` 只反映本地是否持有令牌，進入交易頁前可調用本接口確認令牌在伺服器仍有效，避免客戶填完訂單才被要求驗證交易密碼。\n\n令牌失效時按業務碼處理：402000 表示令牌已過期，可用刷新令牌續期；402001 表示令牌已失效（例如帳戶在其他裝置登入），需重新驗證交易密碼。\n\n經 WhaleCore `requestService()` 調用時，需將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "getV1MemberTradeCheckToken",
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「校驗交易令牌」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "token_expires": {
+                              "type": "integer",
+                              "format": "int64",
+                              "description": "交易令牌剩餘有效時長，單位為秒；剩餘時間過短時可先刷新令牌"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "token_expires": 1200
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "請求未通過業務規則或輸入校驗。重試前，請根據業務碼修正請求。",
+            "x-business-codes": [
+              {
+                "code": 402000,
+                "description": "交易令牌已過期；調用 `POST /v1/member/trade/refresh_token` 續期，續期失敗時重新驗證交易密碼"
+              },
+              {
+                "code": 402001,
+                "description": "交易令牌已失效（例如帳戶在其他裝置登入）；重新驗證交易密碼"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/refresh_token": {
+      "post": {
+        "tags": [
+          "帳戶"
+        ],
+        "summary": "刷新交易令牌",
+        "description": "以刷新令牌換取新的交易令牌及刷新令牌，延長交易解鎖時長。令牌所屬帳戶由刷新令牌本身決定。\n\n透過 `updateTradeToken` 送入令牌後，WhaleCore 會以 `tradeRefreshToken` 自動續期，宿主通常無需調用本接口。若宿主自行刷新，需把返回的 `data.token.token` 和 `data.token.refresh_token` 再次透過 `updateTradeToken` 送入，使 SDK 持有的令牌與伺服器一致。返回 402003 表示刷新令牌已過期，需重新驗證交易密碼。\n\n經 WhaleCore `requestService()` 調用時無需將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "postV1MemberTradeRefreshToken",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refresh_token": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "最近一次取得的刷新令牌（`tradeRefreshToken`）"
+                  }
+                },
+                "required": [
+                  "refresh_token"
+                ]
+              },
+              "example": {
+                "refresh_token": "<TRADE_REFRESH_TOKEN>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「刷新交易令牌」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "token": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/TradeAuthToken"
+                                }
+                              ],
+                              "description": "新的交易令牌與刷新令牌"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "token": {
+                      "token": "<TRADE_TOKEN>",
+                      "refresh_token": "<TRADE_REFRESH_TOKEN>",
+                      "refresh_token_expires": 1800
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "請求未通過業務規則或輸入校驗。重試前，請根據業務碼修正請求。",
+            "x-business-codes": [
+              {
+                "code": 402003,
+                "description": "刷新令牌已過期；重新驗證交易密碼"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/change_password": {
+      "post": {
+        "tags": [
+          "帳戶"
+        ],
+        "summary": "修改交易密碼",
+        "description": "將客戶的交易密碼改為新密碼。調用前先透過 `POST /v3/member/trade/auth` 校驗客戶目前的交易密碼，確保持有該帳戶有效的交易令牌；本接口憑交易令牌鑑權，請求中只提交新密碼。修改成功後，其後交易解鎖需使用新密碼；失敗時顯示 `message`。\n\n密碼欄位傳 6 位數字交易密碼的 MD5 摘要（32 位小寫十六進制字串），不要傳明文。\n\n經 WhaleCore `requestService()` 調用時，需將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "postV1MemberTradeChangePassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "new_password": {
+                    "type": "string",
+                    "description": "新交易密碼的 MD5 摘要",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  }
+                },
+                "required": [
+                  "new_password"
+                ]
+              },
+              "example": {
+                "new_password": "63c7d0d6b2ffb8e081ed859d51177526"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「修改交易密碼」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "無業務欄位"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/member/trade/set_password": {
+      "post": {
+        "tags": [
+          "帳戶"
+        ],
+        "summary": "設定交易密碼",
+        "description": "為尚未設定交易密碼的客戶設定交易密碼。客戶需先透過手機或電郵驗證碼完成身份驗證並取得 `verify_credentials`（獲取憑證的接口不在本文範圍內）。設定成功後，客戶即可用該密碼驗證交易密碼、取得交易令牌；失敗時顯示 `message`，憑證失效時讓客戶重新完成身份驗證。\n\n密碼欄位傳 6 位數字交易密碼的 MD5 摘要（32 位小寫十六進制字串），不要傳明文。\n",
+        "operationId": "postV2MemberTradeSetPassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "trade_password": {
+                    "type": "string",
+                    "description": "新交易密碼的 MD5 摘要",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  },
+                  "verify_credentials": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "客戶完成手機或電郵身份驗證後取得的驗證憑證"
+                  }
+                },
+                "required": [
+                  "trade_password",
+                  "verify_credentials"
+                ]
+              },
+              "example": {
+                "trade_password": "d3786ec2413a8cd9413bfcb24be95a73",
+                "verify_credentials": "<VERIFY_CREDENTIALS>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「設定交易密碼」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "無業務欄位"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/member/trade/reset_password": {
+      "post": {
+        "tags": [
+          "帳戶"
+        ],
+        "summary": "重設交易密碼",
+        "description": "客戶忘記交易密碼時，完成身份驗證後設定新的交易密碼，通常由交易解鎖介面的「忘記密碼」進入。客戶需先完成開戶證件號碼及聯絡手機或電郵的驗證並取得 `verify_credentials`（相關驗證接口不在本文範圍內）。重設成功後，其後交易解鎖需使用新密碼；失敗時顯示 `message`，憑證失效時讓客戶重新完成身份驗證。\n\n密碼欄位傳 6 位數字交易密碼的 MD5 摘要（32 位小寫十六進制字串），不要傳明文。\n",
+        "operationId": "postV2MemberTradeResetPassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "trade_password": {
+                    "type": "string",
+                    "description": "新交易密碼的 MD5 摘要",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  },
+                  "verify_credentials": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "客戶完成身份驗證後取得的驗證憑證"
+                  }
+                },
+                "required": [
+                  "trade_password",
+                  "verify_credentials"
+                ]
+              },
+              "example": {
+                "trade_password": "63c7d0d6b2ffb8e081ed859d51177526",
+                "verify_credentials": "<VERIFY_CREDENTIALS>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「重設交易密碼」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "無業務欄位"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/setting": {
+      "post": {
+        "tags": [
+          "帳戶"
+        ],
+        "summary": "更新查看資產驗證設定",
+        "description": "開啟或關閉帳戶的「查看資產需驗證交易密碼」設定。提交前需由客戶輸入目前的交易密碼，伺服器校驗通過後儲存新值；目前值可從 `GET /v3/account/list` 的 `status[].setting.p_trade_auth` 讀取。儲存成功後重新獲取帳戶資訊以更新顯示；失敗時顯示 `message`。\n\n密碼欄位傳 6 位數字交易密碼的 MD5 摘要（32 位小寫十六進制字串），不要傳明文。\n",
+        "operationId": "postV1MemberTradeSetting",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "enum": [
+                      "p_trade_auth"
+                    ],
+                    "description": "設定項：\n\n- `p_trade_auth` - 查看資產是否需要驗證交易密碼"
+                  },
+                  "value": {
+                    "type": "string",
+                    "enum": [
+                      "YES",
+                      "NO"
+                    ],
+                    "description": "設定值：\n\n- `YES` - 開啟\n- `NO` - 關閉"
+                  },
+                  "trade_password": {
+                    "type": "string",
+                    "description": "目前交易密碼的 MD5 摘要",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  }
+                },
+                "required": [
+                  "key",
+                  "value",
+                  "trade_password"
+                ]
+              },
+              "example": {
+                "key": "p_trade_auth",
+                "value": "YES",
+                "trade_password": "d3786ec2413a8cd9413bfcb24be95a73"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「更新查看資產驗證設定」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "無業務欄位"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/GetSecurities": {
+      "get": {
+        "tags": [
+          "行情"
+        ],
+        "summary": "搜尋證券",
+        "description": "按關鍵字搜尋證券，返回匹配的股票、ETF、指數、板塊、基金等候選標的（counter_id、代碼、名稱、市場、幣種、品類與排序分值），用於搜尋框輸入聯想與搜尋結果列表。可按市場及證券品類過濾；翻頁時傳入上一頁最後一條結果的 score 與 code，返回其後的結果。\n\n該接口亦用於交易下單頁與訂單列表切換標的、行情橫屏頁與 K 線疊加對比新增標的、發帖時選擇股票，以及基金搜尋（product 傳 `UT`）。\n",
+        "operationId": "getV1GetSecurities",
+        "parameters": [
+          {
+            "name": "k",
+            "in": "query",
+            "required": true,
+            "description": "搜尋關鍵字，可輸入證券代碼、名稱、英文名或簡稱",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "AAPL"
+          },
+          {
+            "name": "search_src",
+            "in": "query",
+            "required": true,
+            "description": "搜尋場景來源，用於區分調用場景，已知取值：\n\n- `main_search` - 主搜尋頁、基金搜尋\n- `quote_horizontal` - 行情橫屏頁搜尋\n- `security_vs` - K 線疊加對比、行業對比新增標的\n- `trade` - 交易下單頁切換標的\n- `trade_order` - 訂單列表切換標的\n- `post_topic` - 發帖時選擇股票\n",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "main_search"
+          },
+          {
+            "name": "market",
+            "in": "query",
+            "required": false,
+            "description": "市場過濾，如 `HK`、`US`；不傳時不按市場過濾",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "product",
+            "in": "query",
+            "required": false,
+            "description": "證券品類過濾，多個用英文逗號分隔，如 `ST,ETF`；只搜尋基金時傳 `UT`。Broker App 不展示窩輪、牛熊證等輪證類產品時傳 `BK,DLC,ETF,IX,LB,MMF,ST,UT`；不傳時不按品類過濾",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "is_ut",
+            "in": "query",
+            "required": false,
+            "description": "是否在結果中包含基金",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "score",
+            "in": "query",
+            "required": false,
+            "description": "翻頁游標：上一頁最後一條結果的 score；請求第一頁時不傳",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "required": false,
+            "description": "翻頁游標：上一頁最後一條結果的 code，需與 score 一同傳入；請求第一頁時不傳",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": false,
+            "description": "Broker 渠道",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「搜尋證券」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "product_list": {
+                              "type": "array",
+                              "description": "匹配的證券列表，按排序分值返回；無匹配結果時為空陣列",
+                              "items": {
+                                "allOf": [
+                                  {
+                                    "$ref": "#/components/schemas/SearchSecurityItem"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "isin": {
+                                        "type": "string",
+                                        "description": "國際證券識別碼（ISIN）；基金結果中 Broker App 以它代替證券代碼展示，其他品類可能為空"
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "product_list": [
+                      {
+                        "counter_id": "ST/US/AAPL",
+                        "code": "AAPL",
+                        "name": "蘋果",
+                        "market": "US",
+                        "currency": "USD",
+                        "product": "ST",
+                        "score": 98.6,
+                        "isin": ""
+                      },
+                      {
+                        "counter_id": "ETF/US/AAPU",
+                        "code": "AAPU",
+                        "name": "Apple 2x 做多 ETF",
+                        "market": "US",
+                        "currency": "USD",
+                        "product": "ETF",
+                        "score": 71.2,
+                        "isin": ""
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v5/portfolio/transactionhistory": {
+      "get": {
+        "tags": [
+          "資產"
+        ],
+        "summary": "取得資金記錄",
+        "description": "分頁查詢目前帳戶的資金變動記錄，返回每條記錄的流水類型、金額與幣種、方向前綴、股票數量變動說明、補充說明以及建立與完成時間，用於「資金記錄」頁列表展示。可按產品、資金方向、幣種及時間範圍篩選；流水類型名稱等文案按請求的 `Accept-Language` 返回。\n\n未傳 start、end 時按 page、size 分頁，返回條數少於 size 即表示沒有更多；傳入 start、end 時返回該時間範圍內的全部記錄，page 不生效。部分 Broker 的定製資金記錄頁亦使用該接口。\n\n透過 WhaleCore `requestService()` 調用時，需聲明交易 token 要求（將 `requiresTradeToken` 設為 `true`）。\n",
+        "operationId": "getV5PortfolioTransactionhistory",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "description": "頁碼，從 1 開始；傳入 start、end 時不生效",
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "example": "1"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": true,
+            "description": "每頁條數；Broker App 傳 15",
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "example": "15"
+          },
+          {
+            "name": "business_type",
+            "in": "query",
+            "required": false,
+            "description": "產品篩選，多個用英文逗號分隔，如 `1,2`；不篩選時傳空字串：\n\n- `1` - 現金\n- `2` - 股票\n- `5` - 基金\n- `7` - 加密貨幣\n",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "description": "資金方向篩選，多個用英文逗號分隔；不篩選時傳空字串：\n\n- `1` - 流出\n- `2` - 流入\n",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "currencies",
+            "in": "query",
+            "required": false,
+            "description": "幣種篩選，多個用英文逗號分隔，如 `HKD,USD`；可選值取自「取得資金記錄幣種」的 currencies；不篩選時傳空字串",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "description": "開始時間，Unix 時間戳（秒）；Broker App 按月份查詢時傳該月 1 日 0 時。不按時間篩選時不傳",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "description": "結束時間，Unix 時間戳（秒），需與 start 一同傳入；Broker App 按月份查詢時傳下個月 1 日 0 時",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「取得資金記錄」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "list": {
+                              "type": "array",
+                              "description": "資金記錄列表，按接口返回順序展示；無記錄時為空陣列",
+                              "items": {
+                                "$ref": "#/components/schemas/CashFlowRecordItem"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "list": [
+                      {
+                        "tx_type": "cash_in",
+                        "type_name": "入金",
+                        "category": "+",
+                        "amount": "10000.00",
+                        "currency": "HKD",
+                        "stock_quantity": "",
+                        "quantity_description": "",
+                        "description": "",
+                        "created_at": "1728964800",
+                        "done_at": "1728968400"
+                      },
+                      {
+                        "tx_type": "cash_out",
+                        "type_name": "出金",
+                        "category": "-",
+                        "amount": "2000.00",
+                        "currency": "USD",
+                        "stock_quantity": "",
+                        "quantity_description": "",
+                        "description": "",
+                        "created_at": "1728878400",
+                        "done_at": "1729051200"
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portfolio/transactionhistory/currencies": {
+      "get": {
+        "tags": [
+          "資產"
+        ],
+        "summary": "取得資金記錄幣種",
+        "description": "返回目前帳戶「資金記錄」頁可用於篩選的幣種代碼列表，用於生成幣種篩選項；所選幣種作為「取得資金記錄」的 currencies 參數傳入。部分 Broker 的定製資金記錄頁亦使用該接口。\n",
+        "operationId": "getPortfolioTransactionhistoryCurrencies",
+        "parameters": [
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": true,
+            "description": "Broker 渠道",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "<BROKER_CHANNEL>"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「取得資金記錄幣種」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "currencies": {
+                              "type": "array",
+                              "description": "可篩選的幣種代碼，如 `HKD`、`USD`；缺失時 Broker App 不展示幣種篩選項",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "currencies": [
+                      "HKD",
+                      "USD",
+                      "CNH"
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/portfolio/withdraw/cards": {
+      "get": {
+        "tags": [
+          "資產"
+        ],
+        "summary": "取得出金銀行卡列表",
+        "description": "查詢 Client 已綁定的銀行卡，以及上次出金使用的銀行卡和幣種，用於出金頁選擇收款銀行卡並設定預設銀行卡與預設幣種。\n\n這是出金流程的第一步。選定銀行卡後，調用「取得提現前置資訊」（`GET /v3/portfolio/withdraw/pre`，部分租戶渠道使用 `GET /v4/portfolio/withdraw/pre`）查詢可提金額與手續費，再調用 `POST /v5/portfolio/withdraw` 提交出金。只有 `bind_state` 為 `1`（或未返回）、`status` 不為 `1` 且 `account_type` 與出金幣種相符的銀行卡可以發起出金。修改出金申請的收款銀行卡時，亦從本接口的列表中選擇新卡。\n\n傳 `withdraw=0` 時返回全部已綁定銀行卡，該接口亦用於銀行卡管理頁以及 ACH／電匯入金、出金的銀行卡選擇。\n\n完整的出金流程依次為：取得出金銀行卡列表（`GET /v3/portfolio/withdraw/cards`）→ 取得提現前置資訊與可提金額（`GET /v3/portfolio/withdraw/pre`，部分租戶渠道使用 `GET /v4/portfolio/withdraw/pre`；只需各幣種可提餘額時可調用 `GET /v1/rms_gateway/get_account_all_single_currency_withdraw`）→ 按需檢查並補錄收款人地址 → 提交出金申請（`POST /v5/portfolio/withdraw`）→ 查詢出金記錄與詳情 → 按需撤銷出金或修改收款銀行卡。\n",
+        "operationId": "getV3PortfolioWithdrawCards",
+        "parameters": [
+          {
+            "name": "withdraw",
+            "in": "query",
+            "required": true,
+            "description": "使用場景：\n- `1` - 出金頁選卡\n- `0` - 返回全部已綁定銀行卡（銀行卡管理、ACH／電匯出入金）\n",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "0",
+                "1"
+              ]
+            },
+            "example": "1"
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": true,
+            "description": "篩選標記，Broker App 目前固定傳 `0`",
+            "schema": {
+              "type": "string"
+            },
+            "example": "0"
+          },
+          {
+            "name": "from_app_page",
+            "in": "query",
+            "required": false,
+            "description": "出金場景來源，用於區分普通出金與南向／北向出金；僅部分租戶渠道使用",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "withdraw",
+                "north_withdraw",
+                "south_withdraw"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「取得出金銀行卡列表」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "last_bank_card_id": {
+                              "type": "string",
+                              "description": "上次出金使用的銀行卡 id；為 `0` 或不在可用銀行卡中時，Broker App 預設選擇第一張可用銀行卡"
+                            },
+                            "last_funding_currency": {
+                              "type": "string",
+                              "description": "上次出金使用的幣種；為空時 Broker App 按第一張銀行卡的 `account_type` 推薦預設幣種"
+                            },
+                            "list": {
+                              "type": "array",
+                              "description": "已綁定的銀行卡列表",
+                              "items": {
+                                "$ref": "#/components/schemas/WithdrawBankCard"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "last_bank_card_id": "20381",
+                    "last_funding_currency": "HKD",
+                    "list": [
+                      {
+                        "id": "20381",
+                        "bank_card_identity": "bc_7f3a9e21",
+                        "bank": "示例银行（香港）",
+                        "bank_en": "Example Bank (Hong Kong)",
+                        "bank_code": "012",
+                        "account": "012345678901",
+                        "account_type": "ALL",
+                        "region": "HONGKONG",
+                        "swift_code": "EXAMHKHH",
+                        "icon": "https://example.com/bank/icon.png",
+                        "status": 2,
+                        "witness_state": 3,
+                        "bind_state": 1
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/portfolio/withdraw/pre": {
+      "get": {
+        "tags": [
+          "資產"
+        ],
+        "summary": "取得通用渠道提現前置資訊",
+        "description": "選定出金幣種與收款銀行卡後，查詢可提現額度與提現設定，返回最大可提金額、現金可提金額、餘額通可提金額、各幣種可提明細、預計到賬時間、按金額區間劃分的手續費檔位、可選出金方式，以及該卡本幣種出金是否需要收款人地址，用於出金表單的額度展示、金額校驗與費用提示。不傳 `card_id` 時，可用於取得可選出金方式等與銀行卡無關的資訊。\n\n通用租戶渠道使用本接口；部分租戶渠道（含南向／北向出金場景）改用 `GET /v4/portfolio/withdraw/pre`，兩者返回結構基本一致。本接口位於「取得出金銀行卡列表」之後：`need_payee_address` 為 `true` 時先調用 `POST /v1/portfolio/withdraw/card/addresscheck`，再調用 `POST /v5/portfolio/withdraw` 提交出金。\n\n該接口亦用於跨券商資金劃轉，以 `cash_amount` 作為可轉出金額上限。\n\n經 WhaleCore `requestService()` 調用時，需將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "getV3PortfolioWithdrawPre",
+        "parameters": [
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "description": "提現幣種，如 HKD、USD、CNH",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "HKD"
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": true,
+            "description": "Broker 渠道",
+            "schema": {
+              "type": "string"
+            },
+            "example": "<BROKER_CHANNEL>"
+          },
+          {
+            "name": "aaid",
+            "in": "query",
+            "required": true,
+            "description": "帳戶 aaid",
+            "schema": {
+              "type": "string"
+            },
+            "example": "<AAID>"
+          },
+          {
+            "name": "card_id",
+            "in": "query",
+            "required": false,
+            "description": "收款銀行卡 id，取自「取得出金銀行卡列表」的 `list[].id`；不傳時不返回與銀行卡相關的到賬時間與手續費檔位",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「取得通用渠道提現前置資訊」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "list": {
+                              "type": "array",
+                              "description": "各幣種可提金額明細，用於展示「最大可提預估」的構成；Broker App 不展示金額為 `0.00` 的幣種",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "currency": {
+                                    "type": "string",
+                                    "description": "幣種"
+                                  },
+                                  "amount": {
+                                    "type": "string",
+                                    "description": "該幣種可提金額"
+                                  }
+                                }
+                              }
+                            },
+                            "cash_amount": {
+                              "type": "string",
+                              "description": "現金可提金額；提現金額不超過該值時走普通出金流程"
+                            },
+                            "max_amount": {
+                              "type": "string",
+                              "description": "最大可提金額，包含餘額通部分；提現金額超過該值時不允許提交"
+                            },
+                            "mmf_amount": {
+                              "type": "string",
+                              "description": "餘額通可提金額；提現金額介於 `cash_amount` 與 `max_amount` 之間時走餘額通自動贖回出金"
+                            },
+                            "tip_time": {
+                              "type": "string",
+                              "description": "預計到賬時間，單位為工作日，如 `1-2`；無設定時為空字串"
+                            },
+                            "mmf_time": {
+                              "type": "string",
+                              "description": "使用餘額通贖回出金時的預計到賬時間，單位為工作日，如 `2-3`；無設定時為空字串"
+                            },
+                            "currency_tip": {
+                              "type": "boolean",
+                              "description": "是否需要提示虛擬銀行風險；為 `true` 時表示該卡為虛擬銀行卡，以目前幣種出金可能失敗並被扣除手續費，Broker App 建議 Client 兌換為其他幣種或更換銀行卡"
+                            },
+                            "need_payee_address": {
+                              "type": "boolean",
+                              "description": "該卡以目前幣種出金是否需要收款人地址；為 `true` 時調用 `POST /v1/portfolio/withdraw/card/addresscheck` 確認需填欄位"
+                            },
+                            "bank_operation_type": {
+                              "type": "array",
+                              "description": "可選的出金方式列表，僅部分租戶渠道返回；提交出金時將所選項的 `id` 作為 `bank_operation_type_id`",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "description": "出金方式 id"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "description": "出金方式名稱"
+                                  }
+                                }
+                              }
+                            },
+                            "prompts": {
+                              "type": "array",
+                              "description": "按提現金額區間劃分的手續費與到賬時間檔位，Broker App 按輸入金額匹配對應檔位展示費用提示",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "min_amount": {
+                                    "type": "string",
+                                    "description": "該檔位適用的最小提現金額"
+                                  },
+                                  "max_amount": {
+                                    "type": "string",
+                                    "description": "該檔位適用的最大提現金額"
+                                  },
+                                  "bank_fee": {
+                                    "type": "string",
+                                    "description": "銀行手續費"
+                                  },
+                                  "plat_fee": {
+                                    "type": "string",
+                                    "description": "平台手續費"
+                                  },
+                                  "arrive_time": {
+                                    "type": "string",
+                                    "description": "該檔位的預計到賬時間，單位為工作日，如 `1-2`"
+                                  },
+                                  "mmf_time": {
+                                    "type": "string",
+                                    "description": "該檔位使用餘額通贖回出金時的預計到賬時間，單位為工作日"
+                                  },
+                                  "fee_description": {
+                                    "type": "string",
+                                    "description": "銀行手續費說明文案"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "list": [
+                      {
+                        "currency": "HKD",
+                        "amount": "12500.00"
+                      },
+                      {
+                        "currency": "USD",
+                        "amount": "800.00"
+                      }
+                    ],
+                    "cash_amount": "12500.00",
+                    "max_amount": "18740.00",
+                    "mmf_amount": "6240.00",
+                    "tip_time": "1-2",
+                    "mmf_time": "2-3",
+                    "currency_tip": false,
+                    "need_payee_address": false,
+                    "bank_operation_type": [],
+                    "prompts": [
+                      {
+                        "min_amount": "100",
+                        "max_amount": "1000000",
+                        "bank_fee": "0.00",
+                        "plat_fee": "0.00",
+                        "arrive_time": "1-2",
+                        "mmf_time": "2-3",
+                        "fee_description": ""
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v5/portfolio/withdraw": {
+      "post": {
+        "tags": [
+          "資產"
+        ],
+        "summary": "提交出金申請",
+        "description": "按所選幣種、金額與收款銀行卡提交一筆出金申請，受理後返回出金申請 id。`ok` 為 `true` 只表示申請已受理，資金是否匯出以出金記錄狀態為準。\n\n前置條件：已透過 `GET /v3/portfolio/withdraw/cards` 選定可用銀行卡，並透過「取得提現前置資訊」（`GET /v3/portfolio/withdraw/pre` 或 `GET /v4/portfolio/withdraw/pre`）確認金額不超過 `max_amount`、不低於幣種最小出金金額；若該卡需要收款人地址，須先調用 `POST /v1/portfolio/withdraw/card/address` 儲存地址。\n\n副作用：建立一筆出金申請。成功後可用返回的 `id` 調用 `GET /v7/portfolio/withdraw/detail` 查看詳情，在 `GET /v6/portfolio/withdraw/record` 中查看記錄；狀態為 `0` 或 `15` 時可調用 `POST /v2/portfolio/withdraw/cancel` 撤銷。失敗時按業務碼處理，其他業務碼請將 `message` 提示給 Client，不要直接重複提交。\n\n經 WhaleCore `requestService()` 調用時，需將 `requiresTradeToken` 設為 `true`。\n\n完整的出金流程依次為：取得出金銀行卡列表（`GET /v3/portfolio/withdraw/cards`）→ 取得提現前置資訊與可提金額（`GET /v3/portfolio/withdraw/pre`，部分租戶渠道使用 `GET /v4/portfolio/withdraw/pre`；只需各幣種可提餘額時可調用 `GET /v1/rms_gateway/get_account_all_single_currency_withdraw`）→ 按需檢查並補錄收款人地址 → 提交出金申請（`POST /v5/portfolio/withdraw`）→ 查詢出金記錄與詳情 → 按需撤銷出金或修改收款銀行卡。\n",
+        "operationId": "postV5PortfolioWithdraw",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "currency": {
+                    "type": "string",
+                    "description": "出金幣種，如 HKD",
+                    "minLength": 1
+                  },
+                  "amount": {
+                    "type": "string",
+                    "description": "出金金額，十進位字串，須大於 0 且不超過提現前置資訊中的 `max_amount`"
+                  },
+                  "card_id": {
+                    "type": "string",
+                    "description": "收款銀行卡 id，取自「取得出金銀行卡列表」的 `list[].id`"
+                  },
+                  "bank_card_identity": {
+                    "type": "string",
+                    "description": "收款銀行卡標識，取自「取得出金銀行卡列表」的 `list[].bank_card_identity`"
+                  },
+                  "account_channel": {
+                    "type": "string",
+                    "description": "Broker 渠道",
+                    "minLength": 1
+                  },
+                  "is_pad_funded": {
+                    "type": "string",
+                    "description": "餘額通墊資方式，取值含義同提現前置資訊中的 `is_pad_funded`：\n- `1` - 無需贖回，平台墊資出金\n- `2` - 需要贖回餘額通後出金\n\nBroker App 目前固定傳 `2`。\n",
+                    "enum": [
+                      "1",
+                      "2"
+                    ]
+                  },
+                  "bank_operation_type_id": {
+                    "type": "string",
+                    "description": "出金方式 id，取自提現前置資訊的 `bank_operation_type[].id`；無可選出金方式時傳 `null` 或不傳",
+                    "nullable": true
+                  },
+                  "confirm": {
+                    "type": "integer",
+                    "description": "獎勵作廢確認。Client 參與的獎勵鎖定活動會因本次出金被取消資格或扣取手續費時，向 Client 展示受影響的獎勵（`GET /rewards/lock_activities`）並取得同意後，傳 `1` 重新提交；其他情況不傳",
+                    "format": "int32",
+                    "enum": [
+                      1
+                    ]
+                  }
+                },
+                "required": [
+                  "currency",
+                  "amount",
+                  "card_id",
+                  "account_channel",
+                  "is_pad_funded"
+                ]
+              },
+              "example": {
+                "currency": "HKD",
+                "amount": "5000.00",
+                "card_id": "<CARD_ID>",
+                "bank_card_identity": "<BANK_CARD_IDENTITY>",
+                "account_channel": "<BROKER_CHANNEL>",
+                "is_pad_funded": "2",
+                "bank_operation_type_id": null
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「提交出金申請」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "ok": {
+                              "type": "boolean",
+                              "description": "申請是否已受理"
+                            },
+                            "id": {
+                              "type": "string",
+                              "description": "出金申請 id，用於查詢出金詳情、修改收款銀行卡"
+                            },
+                            "tip_time": {
+                              "type": "string",
+                              "description": "預計到賬時間，單位為工作日，如 `1-2`；用於出金結果頁展示"
+                            },
+                            "disable_link": {
+                              "type": "boolean",
+                              "description": "是否隱藏出金詳情入口；為 `true` 時出金結果頁不提供查看詳情入口"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "ok": true,
+                    "id": "881027",
+                    "tip_time": "1-2",
+                    "disable_link": false
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          },
+          "400": {
+            "description": "請求未通過業務規則或輸入校驗。重試前，請根據業務碼修正請求。",
+            "x-business-codes": [
+              {
+                "code": 2031199,
+                "description": "收款銀行卡缺少必填的收款人地址。調用 `POST /v1/portfolio/withdraw/card/addresscheck` 取得需填欄位，經 `POST /v1/portfolio/withdraw/card/address` 補錄後重新提交"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v6/portfolio/withdraw/record": {
+      "get": {
+        "tags": [
+          "資產"
+        ],
+        "summary": "取得出金記錄",
+        "description": "分頁查詢目前帳戶的出金申請記錄，支援按狀態、幣種與建立時間範圍篩選，用於出金記錄列表展示。可選狀態取自 `GET /v1/portfolio/withdraw/historyinfo`；點選記錄後用 `list[].id` 調用 `GET /v7/portfolio/withdraw/detail` 查看詳情。\n\n分頁：`page` 從 `1` 開始；當返回的 `list` 筆數小於 `size` 時表示沒有更多資料。部分租戶渠道使用免交易密碼校驗的同資料版本 `GET /v6/portfolio/withdraw/record/no/trade/auth`，參數與返回結構相同。\n\n經 WhaleCore `requestService()` 調用時，需將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "getV6PortfolioWithdrawRecord",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "頁碼，從 1 開始",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "description": "每頁筆數，Broker App 使用 20",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": false,
+            "description": "Broker 渠道",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "states",
+            "in": "query",
+            "required": false,
+            "description": "按狀態篩選，多個狀態 key 以英文逗號分隔，取自 `GET /v1/portfolio/withdraw/historyinfo` 的 `states[].key`；不傳或為空時不篩選",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "currencys",
+            "in": "query",
+            "required": false,
+            "description": "按幣種篩選，多個幣種以英文逗號分隔，如 `HKD,USD`；不傳或為空時不篩選",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "begin",
+            "in": "query",
+            "required": false,
+            "description": "建立時間起點，Unix 時間戳（秒）；與 `end` 同時傳入",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "description": "建立時間終點，Unix 時間戳（秒）；與 `begin` 同時傳入",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「取得出金記錄」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "list": {
+                              "type": "array",
+                              "description": "出金記錄列表",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "description": "出金申請 id，用於查詢出金詳情",
+                                    "format": "int64"
+                                  },
+                                  "order_id": {
+                                    "type": "string",
+                                    "description": "出金訂單號"
+                                  },
+                                  "amount": {
+                                    "type": "string",
+                                    "description": "出金金額"
+                                  },
+                                  "currency": {
+                                    "type": "string",
+                                    "description": "出金幣種"
+                                  },
+                                  "fee": {
+                                    "type": "string",
+                                    "description": "出金手續費"
+                                  },
+                                  "bank_account": {
+                                    "type": "string",
+                                    "description": "收款銀行帳號"
+                                  },
+                                  "created_at": {
+                                    "type": "integer",
+                                    "description": "建立時間，Unix 時間戳（秒）",
+                                    "format": "int64"
+                                  },
+                                  "state": {
+                                    "$ref": "#/components/schemas/WithdrawRecordState"
+                                  },
+                                  "state_description": {
+                                    "type": "string",
+                                    "description": "狀態展示文案；為空時按 `state` 展示"
+                                  },
+                                  "disable_link": {
+                                    "type": "boolean",
+                                    "description": "是否禁止進入詳情；為 `true` 時該記錄不提供詳情入口"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "list": [
+                      {
+                        "id": 881027,
+                        "order_id": "WD20261015000123",
+                        "amount": "5000.00",
+                        "currency": "HKD",
+                        "fee": "0.00",
+                        "bank_account": "012345678901",
+                        "created_at": 1760500800,
+                        "state": 0,
+                        "state_description": "已提交",
+                        "disable_link": false
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/historyinfo": {
+      "get": {
+        "tags": [
+          "資產"
+        ],
+        "summary": "取得出金記錄篩選項",
+        "description": "查詢出金記錄可用的狀態篩選項及出現過的幣種，用於出金記錄頁篩選面板。將所選狀態的 `key` 以英文逗號拼接後，作為 `GET /v6/portfolio/withdraw/record` 的 `states` 參數。\n",
+        "operationId": "getV1PortfolioWithdrawHistoryinfo",
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「取得出金記錄篩選項」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "states": {
+                              "type": "array",
+                              "description": "可選狀態",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "key": {
+                                    "type": "string",
+                                    "description": "狀態值，對應出金記錄的 `state`（字串形式）"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "description": "狀態名稱，按請求語言返回"
+                                  }
+                                }
+                              }
+                            },
+                            "currencys": {
+                              "type": "array",
+                              "description": "出金記錄中出現過的幣種",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "states": [
+                      {
+                        "key": "0",
+                        "name": "已提交"
+                      },
+                      {
+                        "key": "4",
+                        "name": "已汇出"
+                      },
+                      {
+                        "key": "3",
+                        "name": "已撤销"
+                      }
+                    ],
+                    "currencys": [
+                      "HKD",
+                      "USD"
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v7/portfolio/withdraw/detail": {
+      "get": {
+        "tags": [
+          "資產"
+        ],
+        "summary": "取得出金詳情",
+        "description": "按出金申請 id 查詢單筆出金的詳情，包括金額、手續費、狀態、訂單號、建立與更新時間、收款人與收款銀行資訊、收款人地址、備註、收款銀行卡修改記錄，以及是否可修改收款銀行卡、是否有待確認的換卡建議，用於出金結果頁及出金詳情頁。\n\n後續操作：`state` 為 `0` 或 `15` 時可用 `order_id` 調用 `POST /v2/portfolio/withdraw/cancel` 撤銷；`can_edit_card` 為 `true` 時可調用 `PUT /v1/portfolio/withdraw/member/change/card` 更換收款銀行卡；返回 `to_be_changed_card` 時，Client 確認後調用 `POST /v1/portfolio/withdraw/card/change/process` 接受換卡。部分租戶渠道使用免交易密碼校驗的同資料版本 `GET /v7/portfolio/withdraw/detail/no/trade/auth`，參數相同，但不返回 `card_id`、`payee_address` 與 `to_be_changed_card.card_id`。\n\n經 WhaleCore `requestService()` 調用時，需將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "getV7PortfolioWithdrawDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "description": "出金申請 id，取自提交出金申請返回的 `id` 或出金記錄的 `list[].id`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "<WITHDRAWAL_ID>"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「取得出金詳情」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "description": "出金申請 id；修改收款銀行卡時作為 `app_id`",
+                              "format": "int64"
+                            },
+                            "order_id": {
+                              "type": "string",
+                              "description": "出金訂單號；撤銷出金時傳入"
+                            },
+                            "state": {
+                              "$ref": "#/components/schemas/WithdrawRecordState"
+                            },
+                            "amount": {
+                              "type": "string",
+                              "description": "出金金額"
+                            },
+                            "currency": {
+                              "type": "string",
+                              "description": "出金幣種"
+                            },
+                            "fee": {
+                              "type": "string",
+                              "description": "出金手續費"
+                            },
+                            "created_at": {
+                              "type": "integer",
+                              "description": "建立時間，Unix 時間戳（秒）",
+                              "format": "int64"
+                            },
+                            "updated_at": {
+                              "type": "integer",
+                              "description": "更新時間，Unix 時間戳（秒）；未更新時可能為空",
+                              "format": "int64"
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "銀行帳戶姓名"
+                            },
+                            "bank": {
+                              "type": "string",
+                              "description": "收款銀行名稱"
+                            },
+                            "bank_en": {
+                              "type": "string",
+                              "description": "收款銀行英文名稱"
+                            },
+                            "account": {
+                              "type": "string",
+                              "description": "收款銀行帳號"
+                            },
+                            "swift_code": {
+                              "type": "string",
+                              "description": "收款銀行 SWIFT 代碼"
+                            },
+                            "card_id": {
+                              "type": "integer",
+                              "description": "目前收款銀行卡 id；更換收款銀行卡時，新卡須與該卡不同",
+                              "format": "int64"
+                            },
+                            "payee_address": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/WithdrawPayeeAddress"
+                                }
+                              ],
+                              "description": "收款人地址；未填寫時可能不返回"
+                            },
+                            "admin_remark": {
+                              "type": "string",
+                              "description": "備註"
+                            },
+                            "statement_remark": {
+                              "type": "string",
+                              "description": "結單備註"
+                            },
+                            "can_edit_card": {
+                              "type": "boolean",
+                              "description": "是否允許 Client 更換收款銀行卡；僅在 `state` 為 `0` 或 `15` 時有意義"
+                            },
+                            "to_be_changed_card": {
+                              "type": "object",
+                              "description": "經審核建議 Client 更換的收款銀行卡；返回時需 Client 確認後調用 `POST /v1/portfolio/withdraw/card/change/process` 才能繼續出金。無換卡建議時不返回",
+                              "properties": {
+                                "card_id": {
+                                  "type": "integer",
+                                  "description": "建議更換的收款銀行卡 id",
+                                  "format": "int64"
+                                },
+                                "bank": {
+                                  "type": "string",
+                                  "description": "銀行名稱"
+                                },
+                                "bank_en": {
+                                  "type": "string",
+                                  "description": "銀行英文名稱"
+                                },
+                                "account": {
+                                  "type": "string",
+                                  "description": "銀行帳號"
+                                },
+                                "swift_code": {
+                                  "type": "string",
+                                  "description": "銀行 SWIFT 代碼"
+                                }
+                              }
+                            },
+                            "records": {
+                              "type": "array",
+                              "description": "收款銀行卡修改記錄；`reversion` 為 `0` 的記錄的 `before` 為原收款銀行卡",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "reversion": {
+                                    "type": "integer",
+                                    "description": "修改序號，從 `0` 開始遞增",
+                                    "format": "int32"
+                                  },
+                                  "updated_at": {
+                                    "type": "integer",
+                                    "description": "變更時間，Unix 時間戳（秒）",
+                                    "format": "int64"
+                                  },
+                                  "before": {
+                                    "allOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "bank": {
+                                            "type": "string",
+                                            "description": "收款銀行名稱"
+                                          },
+                                          "account": {
+                                            "type": "string",
+                                            "description": "收款銀行帳號"
+                                          }
+                                        }
+                                      }
+                                    ],
+                                    "description": "變更前的收款銀行卡"
+                                  },
+                                  "after": {
+                                    "allOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "bank": {
+                                            "type": "string",
+                                            "description": "收款銀行名稱"
+                                          },
+                                          "account": {
+                                            "type": "string",
+                                            "description": "收款銀行帳號"
+                                          }
+                                        }
+                                      }
+                                    ],
+                                    "description": "變更後的收款銀行卡"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "id": 881027,
+                    "order_id": "WD20261015000123",
+                    "state": 0,
+                    "amount": "5000.00",
+                    "currency": "HKD",
+                    "fee": "0.00",
+                    "created_at": 1760500800,
+                    "updated_at": 1760504400,
+                    "name": "CHAN TAI MAN",
+                    "bank": "示例银行（香港）",
+                    "bank_en": "Example Bank (Hong Kong)",
+                    "account": "012345678901",
+                    "swift_code": "EXAMHKHH",
+                    "card_id": 20381,
+                    "payee_address": {
+                      "payee_country": "HKG",
+                      "payee_state": "Hong Kong Island",
+                      "payee_city": "Hong Kong",
+                      "payee_street": "1 Example Road",
+                      "payee_building": "Example Tower",
+                      "address": "Flat A, 10/F",
+                      "payee_postcode": "000000"
+                    },
+                    "admin_remark": "",
+                    "statement_remark": "",
+                    "can_edit_card": true,
+                    "records": []
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/portfolio/withdraw/cancel": {
+      "post": {
+        "tags": [
+          "資產"
+        ],
+        "summary": "撤銷出金申請",
+        "description": "撤銷一筆尚未處理完成的出金申請，用於出金詳情頁的「撤銷」操作。僅 `state` 為 `0`（已提交）或 `15`（待確認）的申請可以撤銷；撤銷後狀態變為 `3`（已撤銷），且不可恢復，Broker App 應在調用前請 Client 再次確認。\n\n`order_id` 取自 `GET /v7/portfolio/withdraw/detail`。成功後重新查詢出金詳情以更新狀態；失敗時將 `message` 提示給 Client，並重新查詢詳情確認目前狀態。\n\n經 WhaleCore `requestService()` 調用時，需將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "postV2PortfolioWithdrawCancel",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "order_id": {
+                    "type": "string",
+                    "description": "出金訂單號，取自出金詳情的 `order_id`",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "order_id"
+                ]
+              },
+              "example": {
+                "order_id": "<ORDER_ID>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「撤銷出金申請」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "ok": {
+                              "type": "boolean",
+                              "description": "是否撤銷成功"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "ok": true
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/member/change/card": {
+      "put": {
+        "tags": [
+          "資產"
+        ],
+        "summary": "修改出金收款銀行卡",
+        "description": "由 Client 為一筆處理中的出金申請更換收款銀行卡，用於出金詳情頁的「修改收款銀行」操作。成功後出金詳情的收款銀行資訊更新，並在 `records` 中新增一筆修改記錄。\n\n前置條件：出金詳情的 `can_edit_card` 為 `true` 且 `state` 為 `0` 或 `15`。新卡從 `GET /v3/portfolio/withdraw/cards` 中選擇，須已認證（`status` 為 `2`）、入金見證狀態為 `1` 或 `3`、`account_type` 與出金幣種一致或為 `ALL`，且不同於目前收款銀行卡。調用前先以新卡調用 `POST /v1/portfolio/withdraw/card/addresscheck`；`address_needed` 為 `true` 時，先透過 `POST /v1/portfolio/withdraw/card/address` 儲存收款人地址。\n\n成功後重新查詢出金詳情。若詳情返回的是後台建議的換卡（`to_be_changed_card`），請改用 `POST /v1/portfolio/withdraw/card/change/process`。\n",
+        "operationId": "putV1PortfolioWithdrawMemberChangeCard",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "app_id": {
+                    "type": "integer",
+                    "description": "出金申請 id，取自出金詳情的 `id`",
+                    "format": "int64"
+                  },
+                  "card_id": {
+                    "type": "integer",
+                    "description": "新的收款銀行卡 id，取自「取得出金銀行卡列表」的 `list[].id`",
+                    "format": "int64"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "card_id"
+                ]
+              },
+              "example": {
+                "app_id": 881027,
+                "card_id": 20395
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「修改出金收款銀行卡」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "請求未通過業務規則或輸入校驗。重試前，請根據業務碼修正請求。",
+            "x-business-codes": [
+              {
+                "code": 2033105,
+                "description": "出金申請已進入後台處理階段，暫無法修改收款銀行。提示 Client 後重新查詢出金詳情"
+              },
+              {
+                "code": 2031199,
+                "description": "收款銀行卡缺少必填的收款人地址。調用 `POST /v1/portfolio/withdraw/card/addresscheck` 取得需填欄位，經 `POST /v1/portfolio/withdraw/card/address` 補錄後重新提交"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/card/change/process": {
+      "post": {
+        "tags": [
+          "資產"
+        ],
+        "summary": "確認建議的收款銀行卡",
+        "description": "接受審核建議的收款銀行卡更換，用於出金詳情頁「確認修改」操作。出金詳情返回 `to_be_changed_card` 時，表示經審核建議 Client 更換為該銀行卡後繼續出金；Client 確認後調用本接口，出金申請的收款銀行卡更新為 `to_be_changed_card`。\n\n調用前先以 `to_be_changed_card.card_id` 調用 `POST /v1/portfolio/withdraw/card/addresscheck`；`address_needed` 為 `true` 時，先透過 `POST /v1/portfolio/withdraw/card/address` 儲存收款人地址。成功後重新查詢出金詳情。由 Client 自選新卡時請改用 `PUT /v1/portfolio/withdraw/member/change/card`。\n",
+        "operationId": "postV1PortfolioWithdrawCardChangeProcess",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "app_id": {
+                    "type": "string",
+                    "description": "出金申請 id（字串形式），取自出金詳情的 `id`",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "app_id"
+                ]
+              },
+              "example": {
+                "app_id": "<WITHDRAWAL_ID>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「確認建議的收款銀行卡」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "請求未通過業務規則或輸入校驗。重試前，請根據業務碼修正請求。",
+            "x-business-codes": [
+              {
+                "code": 2031199,
+                "description": "收款銀行卡缺少必填的收款人地址。調用 `POST /v1/portfolio/withdraw/card/addresscheck` 取得需填欄位，經 `POST /v1/portfolio/withdraw/card/address` 補錄後重新提交"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/card/addresscheck": {
+      "post": {
+        "tags": [
+          "資產"
+        ],
+        "summary": "檢查銀行卡收款人地址",
+        "description": "檢查指定銀行卡以指定幣種出金時是否需要收款人地址，並返回需填寫的地址欄位、該卡目前地址及可用於一鍵填入的預填地址。本接口只做查詢，不修改資料。\n\n調用時機：提現前置資訊的 `need_payee_address` 為 `true` 時、修改出金收款銀行卡前、確認建議的收款銀行卡前，以及提交出金或換卡返回業務碼 `2031199` 後。`address_needed` 為 `true` 時，按 `want_fields` 渲染地址表單並透過 `POST /v1/portfolio/withdraw/card/address` 儲存；`address_valid` 為 `false` 時須補充或修改地址後才能繼續出金。\n",
+        "operationId": "postV1PortfolioWithdrawCardAddresscheck",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "card_id": {
+                    "type": "integer",
+                    "description": "銀行卡 id",
+                    "format": "int64"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "description": "本次出金幣種，如 USD",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "card_id",
+                  "currency"
+                ]
+              },
+              "example": {
+                "card_id": 20381,
+                "currency": "USD"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「檢查銀行卡收款人地址」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "address_needed": {
+                              "type": "boolean",
+                              "description": "該卡本次出金是否需要收款人地址；為 `true` 時展示地址表單"
+                            },
+                            "address_valid": {
+                              "type": "boolean",
+                              "description": "目前地址是否有效：`true` 表示地址符合要求，Client 確認即可；`false` 表示地址缺失或不符合現行規則，須補充或修改後才能出金"
+                            },
+                            "want_fields": {
+                              "type": "array",
+                              "description": "該卡需要填寫的地址欄位，Broker App 按返回順序渲染表單",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "address",
+                                  "payee_building",
+                                  "payee_city",
+                                  "payee_country",
+                                  "payee_postcode",
+                                  "payee_state",
+                                  "payee_street"
+                                ]
+                              }
+                            },
+                            "now_address": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/WithdrawPayeeAddress"
+                                }
+                              ],
+                              "description": "該卡目前已儲存的收款人地址，用於回顯；未儲存時不返回或為空"
+                            },
+                            "prefill_address": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/WithdrawPayeeAddress"
+                                }
+                              ],
+                              "description": "Client 最近為其他銀行卡提交的收款人地址，用於一鍵填入；無可用地址時不返回或為空"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "address_needed": true,
+                    "address_valid": false,
+                    "want_fields": [
+                      "payee_country",
+                      "payee_state",
+                      "payee_city",
+                      "payee_street",
+                      "address",
+                      "payee_postcode"
+                    ],
+                    "prefill_address": {
+                      "payee_country": "HKG",
+                      "payee_state": "Kowloon",
+                      "payee_city": "Hong Kong",
+                      "payee_street": "8 Sample Street",
+                      "payee_building": "",
+                      "address": "Flat B, 5/F",
+                      "payee_postcode": "000000"
+                    }
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/card/countries": {
+      "get": {
+        "tags": [
+          "資產"
+        ],
+        "summary": "取得收款人國家／地區列表",
+        "description": "查詢收款人地址表單可選的國家／地區及其中英文名稱，用於渲染國家／地區選擇器，以及將出金詳情中 `payee_address.payee_country` 的代碼解析為名稱。儲存收款人地址時，`payee_country` 傳所選項的 `code2`。\n",
+        "operationId": "getV1PortfolioWithdrawCardCountries",
+        "parameters": [
+          {
+            "name": "bind_card_allowed",
+            "in": "query",
+            "required": false,
+            "description": "是否只返回允許綁卡的國家／地區：`true` 只返回允許綁卡的國家／地區，用於地址表單；不傳或為 `false` 返回全部，用於展示歷史地址",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「取得收款人國家／地區列表」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "list": {
+                              "type": "array",
+                              "description": "國家／地區列表",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "code1": {
+                                    "type": "string",
+                                    "description": "ISO 3166-1 alpha-2 代碼，如 `HK`"
+                                  },
+                                  "code2": {
+                                    "type": "string",
+                                    "description": "ISO 3166-1 alpha-3 代碼，如 `HKG`；儲存收款人地址時作為 `payee_country`"
+                                  },
+                                  "name_cn": {
+                                    "type": "string",
+                                    "description": "簡體中文名稱"
+                                  },
+                                  "name_tn": {
+                                    "type": "string",
+                                    "description": "繁體中文名稱"
+                                  },
+                                  "name_en": {
+                                    "type": "string",
+                                    "description": "英文名稱"
+                                  },
+                                  "bind_card_allowed": {
+                                    "type": "boolean",
+                                    "description": "該國家／地區是否允許綁卡"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "list": [
+                      {
+                        "code1": "HK",
+                        "code2": "HKG",
+                        "name_cn": "中国香港",
+                        "name_tn": "中國香港",
+                        "name_en": "Hong Kong, China",
+                        "bind_card_allowed": true
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/card/address": {
+      "post": {
+        "tags": [
+          "資產"
+        ],
+        "summary": "更新銀行卡收款人地址",
+        "description": "儲存指定銀行卡的收款人地址，用於出金頁、修改收款銀行卡及確認建議換卡流程中補錄地址。儲存即時生效、不進入審核；提交與已儲存值相同的地址不會產生變更。\n\n先調用 `POST /v1/portfolio/withdraw/card/addresscheck` 取得 `want_fields`。`address` 中 7 個欄位必須全部傳入，`want_fields` 以外的欄位傳空字串。儲存成功後再調用 `POST /v5/portfolio/withdraw` 提交出金，或繼續調用換卡接口；失敗時將 `message` 提示給 Client，修正後重試。\n",
+        "operationId": "postV1PortfolioWithdrawCardAddress",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "card_id": {
+                    "type": "integer",
+                    "description": "銀行卡 id",
+                    "format": "int64"
+                  },
+                  "address": {
+                    "type": "object",
+                    "description": "收款人地址；7 個欄位均須傳入，不需要的欄位傳空字串",
+                    "properties": {
+                      "payee_country": {
+                        "type": "string",
+                        "description": "國家／地區，ISO 3166-1 alpha-3 代碼，取自「取得收款人國家／地區列表」的 `code2`"
+                      },
+                      "payee_state": {
+                        "type": "string",
+                        "description": "省、州或行政區，最多 35 個字元",
+                        "maxLength": 35
+                      },
+                      "payee_city": {
+                        "type": "string",
+                        "description": "城市，最多 30 個字元",
+                        "maxLength": 30
+                      },
+                      "payee_street": {
+                        "type": "string",
+                        "description": "街道，最多 70 個字元",
+                        "maxLength": 70
+                      },
+                      "payee_building": {
+                        "type": "string",
+                        "description": "樓宇或大廈名稱，最多 35 個字元",
+                        "maxLength": 35
+                      },
+                      "address": {
+                        "type": "string",
+                        "description": "詳細地址，最多 70 個字元",
+                        "maxLength": 70
+                      },
+                      "payee_postcode": {
+                        "type": "string",
+                        "description": "郵政編碼，最多 16 個字元",
+                        "maxLength": 16
+                      }
+                    },
+                    "required": [
+                      "address",
+                      "payee_building",
+                      "payee_city",
+                      "payee_country",
+                      "payee_postcode",
+                      "payee_state",
+                      "payee_street"
+                    ]
+                  }
+                },
+                "required": [
+                  "card_id",
+                  "address"
+                ]
+              },
+              "example": {
+                "card_id": 20381,
+                "address": {
+                  "payee_country": "HKG",
+                  "payee_state": "Kowloon",
+                  "payee_city": "Hong Kong",
+                  "payee_street": "8 Sample Street",
+                  "payee_building": "",
+                  "address": "Flat B, 5/F",
+                  "payee_postcode": "000000"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「更新銀行卡收款人地址」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,4118 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "TradingAPI supplement",
+    "description": "在上游来源收录前，由本仓库维护的 TradingAPI 补充接口。",
+    "version": "1.0.0"
+  },
+  "tags": [],
+  "components": {
+    "schemas": {
+      "OrderPageBidSize": {
+        "type": "object",
+        "description": "价位表中的一个价格区间及其最小价格变动单位。价格大于 `str_proceed` 且不大于 `end_proceed` 时，使用该区间的 `bid_size`。",
+        "properties": {
+          "bid_size": {
+            "type": "string",
+            "description": "该区间的最小价格变动单位，如 \"0.01\""
+          },
+          "str_proceed": {
+            "type": "string",
+            "description": "区间起始价格（不含）"
+          },
+          "end_proceed": {
+            "type": "string",
+            "description": "区间结束价格（含）"
+          }
+        }
+      },
+      "OrderPageOrderTypeConfig": {
+        "type": "object",
+        "description": "单个订单类型支持的交易时段与有效期",
+        "properties": {
+          "support_sessions": {
+            "type": "array",
+            "description": "该订单类型支持的交易时段：\n- `1` - 仅盘中\n- `2` - 盘中及盘前盘后\n- `3` - 仅夜盘\n- `4` - 盘前（期权夜盘场景）\n\n为空时表示该订单类型没有时段选项，下单页应隐藏时段选择。\n",
+            "items": {
+              "type": "integer",
+              "format": "int32",
+              "enum": [
+                1,
+                2,
+                3,
+                4
+              ]
+            }
+          },
+          "support_time_in_forces": {
+            "type": "array",
+            "description": "该订单类型支持的有效期：\n- `0` - 当日有效（DAY）\n- `1` - 撤单前有效（GTC）\n- `3` - 部成剩余转撤（IOC）\n- `5` - 全成或撤单（FOK）\n- `6` - 自定义有效期（GTD）\n",
+            "items": {
+              "type": "integer",
+              "format": "int32",
+              "enum": [
+                0,
+                1,
+                3,
+                5,
+                6
+              ]
+            }
+          }
+        }
+      },
+      "OrderPageGrantedStatus": {
+        "type": "object",
+        "description": "一项交易资格、认证或风险声明的授权状态",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "description": "认证状态：\n- `0` - 未知\n- `1` - 已通过\n- `2` - 未通过\n- `3` - 审核中\n",
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ]
+          },
+          "expired": {
+            "type": "boolean",
+            "description": "授权或认证是否已过期；过期后需重新完成"
+          },
+          "url": {
+            "type": "string",
+            "description": "完成该授权或认证的页面链接"
+          }
+        }
+      },
+      "OrderPageChannelInfo": {
+        "type": "object",
+        "description": "当前账户在该标的上的交易配置。除下列字段外，还会返回若干 `*_granted` 布尔字段（是否已完成对应的授权、认证或风险声明）及配套的认证链接字段（`*_url`、`*_granted_url`），其中部分为特定市场或业务专属授权，具体字段以服务端下发为准。值为 `false` 时，应在提交订单前引导用户打开对应链接完成流程，完成后重新调用本接口刷新状态。",
+        "properties": {
+          "account_channel": {
+            "type": "string",
+            "description": "账户渠道；与 `org_id`、`aaid` 一起定位该配置所属的账户"
+          },
+          "org_id": {
+            "type": "string",
+            "description": "租户 ID"
+          },
+          "aaid": {
+            "type": "string",
+            "description": "资产账户 ID"
+          },
+          "currency": {
+            "type": "string",
+            "description": "标的行情货币，如 USD、HKD、GBX"
+          },
+          "settlement_currency": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "可选结算货币；第一项为默认交易币种，查询持仓与现金、购买力和预估费用时作为 `currency` 传入"
+          },
+          "order_type_config": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/OrderPageOrderTypeConfig"
+            },
+            "description": "当前标的与账户可用的订单类型配置。键为订单类型代码，如 `LO`（限价单）、`ELO`（增强限价单）、`MO`（市价单）、`LIT`（触价限价单）、`MIT`（触价市价单）；未出现的订单类型表示不可用。返回该对象时，时段与有效期以其中各订单类型的配置为准。"
+          },
+          "support_trade": {
+            "type": "boolean",
+            "description": "当前账户渠道是否支持交易；为 `false` 时不应提供下单入口"
+          },
+          "restricted": {
+            "type": "integer",
+            "format": "int32",
+            "description": "线上交易限制：\n- `1` - 不可线上买入\n- `2` - 不可线上卖出\n- `3` - 不可线上买入或卖出\n\n未返回或为其他值时表示无此限制。受限方向应引导用户联系 Broker 线下处理。\n",
+            "enum": [
+              1,
+              2,
+              3
+            ]
+          },
+          "support_rth": {
+            "type": "boolean",
+            "description": "是否支持盘前盘后交易；返回 `order_type_config` 时以其中的 `support_sessions` 为准"
+          },
+          "support_overnight": {
+            "type": "boolean",
+            "description": "是否支持夜盘交易；返回 `order_type_config` 时以其中的 `support_sessions` 为准"
+          },
+          "gtd_support_order_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "支持自定义有效期（GTD）的订单类型代码列表"
+          },
+          "support_attached_order_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "可附加附加单的订单类型代码列表"
+          },
+          "support_fractional_shares": {
+            "type": "boolean",
+            "description": "是否支持美股碎股交易"
+          },
+          "fractional_min_amount": {
+            "type": "string",
+            "description": "按金额下单碎股时的最低金额，单位为美元；低于该值不可下单"
+          },
+          "mo_avail_ratio": {
+            "type": "string",
+            "description": "市价单购买力系数。市价单（含未触发的市价条件单）可用购买力 = 「获取下单购买力」的 `buy_limit` × 该系数；为空时按 1 处理"
+          },
+          "finance_account_status": {
+            "type": "integer",
+            "format": "int32",
+            "description": "融资额度状态：\n- `0` - 正常\n- `1` - 融资额度为 0，调额申请审批中\n- `2` - 融资额度为 0，且未在审批中\n\n为 `1` 或 `2` 时，卖空开仓、期权卖出开仓等需要融资额度的交易无法进行，应提示用户等待审批或申请调整额度。\n",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "account_risk_level": {
+            "type": "integer",
+            "format": "int32",
+            "description": "账户风险等级：\n- `0` - 无需额外声明\n- `1` - 下单前需确认坚持交易声明\n- `2` - 下单前需确认重要通知\n",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "confirm_purchase_statement": {
+            "type": "boolean",
+            "description": "用户是否已确认坚持交易声明"
+          },
+          "confirm_important_notice": {
+            "type": "boolean",
+            "description": "用户是否已确认重要通知"
+          },
+          "granted_info": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/OrderPageGrantedStatus"
+            },
+            "description": "各项交易资格与风险声明的授权状态。键为资格类型代码，例如 `us_overnight_risk_agreement`（美股夜盘交易风险声明）、`fractional_shares_risk_agreement`（碎股交易风险声明）；其余键以服务端下发为准。"
+          }
+        }
+      },
+      "OrderPageStockContract": {
+        "type": "object",
+        "description": "期权合约信息，仅期权标的返回",
+        "properties": {
+          "contract_direction": {
+            "type": "string",
+            "description": "期权方向：`C` 为看涨期权，`P` 为看跌期权"
+          },
+          "underlying_counter_id": {
+            "type": "string",
+            "description": "正股的标的 ID"
+          },
+          "nearing_expire": {
+            "type": "boolean",
+            "description": "是否为临近到期的期权"
+          },
+          "contract_model": {
+            "type": "integer",
+            "format": "int32",
+            "description": "期权保证金模式：\n- `1` - 非保证金模式\n- `2` - 保证金模式\n",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "open_purchase_limit": {
+            "type": "object",
+            "description": "期权开仓的最低购买力门槛；`threshold` 为空或为 0 时无门槛",
+            "properties": {
+              "threshold": {
+                "type": "string",
+                "description": "门槛金额"
+              },
+              "currency": {
+                "type": "string",
+                "description": "门槛金额币种"
+              }
+            }
+          }
+        }
+      },
+      "OrderPageTradableButton": {
+        "type": "object",
+        "description": "可交易检查弹窗中的引导按钮",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "按钮文案"
+          },
+          "link": {
+            "type": "string",
+            "description": "跳转链接，`type` 为 `2` 时使用"
+          },
+          "type": {
+            "type": "integer",
+            "format": "int32",
+            "description": "点击后的动作：\n- `0` - 关闭弹窗，不进入下单\n- `1` - 进入该标的的下单页\n- `2` - 打开 `link` 指向的页面\n",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "direction": {
+            "type": "integer",
+            "format": "int32",
+            "description": "`type` 为 `1` 时进入下单页的买卖方向：\n- `0` - 不限定\n- `1` - 仅买入\n- `2` - 仅卖出\n",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          }
+        }
+      },
+      "TradeAuthToken": {
+        "type": "object",
+        "description": "交易令牌及其刷新令牌，按账户签发",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "交易令牌；传给 `WhaleCoreService.updateTradeToken(...)` 的 `tradeToken`"
+          },
+          "refresh_token": {
+            "type": "string",
+            "description": "刷新令牌；传给 `updateTradeToken` 的 `tradeRefreshToken`，也用于 `POST /v1/member/trade/refresh_token`"
+          },
+          "refresh_token_expires": {
+            "type": "integer",
+            "format": "int64",
+            "description": "刷新令牌有效时长，单位为秒，自签发时起算"
+          }
+        }
+      },
+      "SearchSecurityItem": {
+        "type": "object",
+        "description": "搜索结果中的单个证券候选项",
+        "properties": {
+          "counter_id": {
+            "type": "string",
+            "description": "标的 ID，格式为 `<品类>/<市场>/<代码>`，如 `ST/US/AAPL`；进入标的详情、加入自选等后续操作均以它标识标的"
+          },
+          "code": {
+            "type": "string",
+            "description": "证券代码，如 `AAPL`、`700`；翻页时作为 code 参数传入"
+          },
+          "name": {
+            "type": "string",
+            "description": "证券名称，按请求语言返回"
+          },
+          "market": {
+            "type": "string",
+            "description": "所属市场，如 `HK`、`US`；Broker App 据此展示市场标识"
+          },
+          "currency": {
+            "type": "string",
+            "description": "交易币种，如 `USD`、`HKD`；基金标的的结果中 Broker App 以币种代替市场标识展示"
+          },
+          "product": {
+            "type": "string",
+            "description": "证券品类代码，如 `ST`、`ETF`、`UT`"
+          },
+          "score": {
+            "type": "number",
+            "description": "结果排序分值；翻页时将上一页最后一条结果的该值作为 score 参数传入"
+          }
+        }
+      },
+      "CashFlowRecordItem": {
+        "type": "object",
+        "description": "单条资金记录",
+        "properties": {
+          "tx_type": {
+            "type": "string",
+            "description": "流水类型代码，如 `cash_in`、`cash_out`；面向 Client 展示时使用 type_name"
+          },
+          "type_name": {
+            "type": "string",
+            "description": "流水类型名称，按请求语言返回，作为记录标题展示"
+          },
+          "category": {
+            "type": "string",
+            "description": "金额方向前缀；Broker App 将其原样拼接在 amount 之前展示，为空时只展示金额"
+          },
+          "amount": {
+            "type": "string",
+            "description": "资金变动金额，十进制字符串；为空或为 0 时表示该记录只涉及股票数量变动"
+          },
+          "currency": {
+            "type": "string",
+            "description": "金额币种，如 `HKD`、`USD`"
+          },
+          "stock_quantity": {
+            "type": "string",
+            "description": "股票数量变动；非空时由 quantity_description 给出面向 Client 的说明"
+          },
+          "quantity_description": {
+            "type": "string",
+            "description": "股票数量变动说明，按请求语言返回；记录只有股票变动时作为主展示内容，与金额同时存在时作为副文案"
+          },
+          "description": {
+            "type": "string",
+            "description": "记录补充说明，按请求语言返回；非空时展示在日期之后"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "记录创建时间，Unix 时间戳（秒）；Broker App 按该时间所在年月对列表分组"
+          },
+          "done_at": {
+            "type": "string",
+            "description": "记录完成时间，Unix 时间戳（秒）；列表中展示的日期取该值"
+          }
+        }
+      },
+      "WithdrawRecordState": {
+        "type": "integer",
+        "format": "int32",
+        "description": "出金申请状态：\n- `0` - 已提交，正在处理\n- `1` - 处理中\n- `2` - 已驳回\n- `3` - 已撤销（Client 主动撤销）\n- `4` - 已汇出\n- `5` - 失败\n- `6` - 已退还\n- `7` - 审核通过，尚未汇出\n- `8` - 大额出金审核中\n- `9` - 修改待审批\n- `10` - 删除待审批\n- `11` - 已删除\n- `12` - 驳回待审批\n- `15` - 待确认：需 Client 确认更换收款银行卡后继续处理\n\n仅 `0` 和 `15` 状态的申请可以撤销。展示状态时优先使用接口返回的 `state_description`。\n",
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          15
+        ]
+      },
+      "WithdrawPayeeAddress": {
+        "type": "object",
+        "description": "银行卡收款人地址",
+        "properties": {
+          "payee_country": {
+            "type": "string",
+            "description": "收款人所在国家/地区，使用 ISO 3166-1 alpha-3 代码（如 `HKG`），取自「获取国家/地区列表」的 `code2`"
+          },
+          "payee_state": {
+            "type": "string",
+            "description": "省、州或行政区"
+          },
+          "payee_city": {
+            "type": "string",
+            "description": "城市"
+          },
+          "payee_street": {
+            "type": "string",
+            "description": "街道"
+          },
+          "payee_building": {
+            "type": "string",
+            "description": "楼宇或大厦名称，仅部分国家/地区需要"
+          },
+          "address": {
+            "type": "string",
+            "description": "详细地址"
+          },
+          "payee_postcode": {
+            "type": "string",
+            "description": "邮政编码"
+          }
+        }
+      },
+      "WithdrawBankCard": {
+        "type": "object",
+        "description": "已绑定的银行卡",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "银行卡 id，作为提现前置信息与提交出金申请的 `card_id`"
+          },
+          "bank_card_identity": {
+            "type": "string",
+            "description": "银行卡标识，与 `id` 共同确定一张银行卡；提交出金申请时随 `card_id` 一并传入"
+          },
+          "bank": {
+            "type": "string",
+            "description": "银行名称"
+          },
+          "bank_en": {
+            "type": "string",
+            "description": "银行英文名称"
+          },
+          "bank_code": {
+            "type": "string",
+            "description": "银行编码；`FPS` 表示转数快收款账户"
+          },
+          "account": {
+            "type": "string",
+            "description": "银行账号"
+          },
+          "account_type": {
+            "type": "string",
+            "description": "该卡支持出金的币种，如 `HKD`；`ALL` 表示支持全部币种。出金币种须与该值一致或该值为 `ALL`"
+          },
+          "region": {
+            "type": "string",
+            "description": "银行卡所在地区全称，如 `HONGKONG`"
+          },
+          "swift_code": {
+            "type": "string",
+            "description": "银行 SWIFT 代码"
+          },
+          "icon": {
+            "type": "string",
+            "description": "银行图标 URL"
+          },
+          "status": {
+            "type": "integer",
+            "description": "银行卡认证状态：\n- `0` - 未认证，需先完成银行卡认证\n- `1` - 认证审核中，不能发起出金\n- `2` - 已认证\n",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "witness_state": {
+            "type": "integer",
+            "description": "入金见证状态：\n- `1` - 无需见证\n- `2` - 待见证\n- `3` - 已见证\n\n现金开户验证方式下，只有 `1` 或 `3` 的银行卡可以出金。\n",
+            "format": "int32",
+            "enum": [
+              1,
+              2,
+              3
+            ]
+          },
+          "bind_state": {
+            "type": "integer",
+            "description": "绑定状态：\n- `0` - 绑定审核中\n- `1` - 已绑定\n- `2` - 绑定失败\n\n未返回时视为已绑定。只有已绑定的银行卡可以出金。\n",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/v5/orders/info": {
+      "get": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "获取标的下单配置",
+        "description": "进入下单页、切换标的或切换账户时，查询标的在当前账户下的下单规则与配置：每手股数、价位表、委托价格上下限、订单标签、各订单类型支持的交易时段与有效期、自定义有效期与附加单支持情况、美股碎股、可选结算货币、线上买卖限制、市价单购买力系数，以及下单前需完成的授权与声明状态。Broker 自建下单页据此确定可选订单类型、时段、有效期、数量步长与价格步长，并在提交前拦截未满足的授权。改单时传入原订单 ID，返回该订单对应的配置。用户完成授权或认证后，应重新调用以刷新状态。该接口还用于定投计划创建页（读取标的交易配置）和期权收益增强与保险策略页（读取策略风险协议的授权状态）。\n\nWhaleCore 的 `orderService()` 已通过 `getOrderInfo` 类型化封装该接口，使用 WhaleCore 时建议优先调用该方法。\n",
+        "operationId": "getV5OrdersInfo",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "标的 ID（counter_id），如 `ST/US/AAPL`、`ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "description": "改单时传入原订单 ID；下单时不传",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order_id_str",
+            "in": "query",
+            "required": false,
+            "description": "原订单 ID 的字符串形式；改单时与 `order_id` 传入相同的值",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“获取标的下单配置”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "counter_id": {
+                              "type": "string",
+                              "description": "标的 ID"
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "标的名称"
+                            },
+                            "last_done": {
+                              "type": "string",
+                              "description": "最新价，按行情货币计"
+                            },
+                            "lot_size": {
+                              "type": "string",
+                              "description": "每手股数；`buy_lot_size` 或 `sell_lot_size` 为空时使用该值作为数量步长"
+                            },
+                            "buy_lot_size": {
+                              "type": "string",
+                              "description": "买入方向的每手股数"
+                            },
+                            "sell_lot_size": {
+                              "type": "string",
+                              "description": "卖出方向的每手股数"
+                            },
+                            "upper_limit": {
+                              "type": "string",
+                              "description": "委托价格上限，委托价不能高于该值"
+                            },
+                            "lower_limit": {
+                              "type": "string",
+                              "description": "委托价格下限，委托价不能低于该值"
+                            },
+                            "tag": {
+                              "type": "integer",
+                              "format": "int32",
+                              "description": "订单标签，预估交易费用时作为 `order_tag` 传入：\n- `1` - 普通订单\n- `2` - 长期单\n- `3` - 暗盘订单\n",
+                              "enum": [
+                                1,
+                                2,
+                                3
+                              ]
+                            },
+                            "timestamp": {
+                              "type": "string",
+                              "description": "服务器当前时间，Unix 时间戳（秒）"
+                            },
+                            "bid_sizes": {
+                              "type": "array",
+                              "description": "价位表，用于按价格确定最小价格变动单位并校验、调整委托价；没有区间匹配时使用第一项",
+                              "items": {
+                                "$ref": "#/components/schemas/OrderPageBidSize"
+                              }
+                            },
+                            "is_connect": {
+                              "type": "boolean",
+                              "description": "是否为 A 股通标的"
+                            },
+                            "is_spac": {
+                              "type": "boolean",
+                              "description": "是否为 SPAC 标的"
+                            },
+                            "is_rights": {
+                              "type": "boolean",
+                              "description": "是否为供股权标的"
+                            },
+                            "channel_infos": {
+                              "$ref": "#/components/schemas/OrderPageChannelInfo"
+                            },
+                            "stock_contract": {
+                              "$ref": "#/components/schemas/OrderPageStockContract"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "counter_id": "ST/US/AAPL",
+                    "name": "Apple",
+                    "last_done": "228.52",
+                    "lot_size": "1",
+                    "buy_lot_size": "1",
+                    "sell_lot_size": "1",
+                    "upper_limit": "",
+                    "lower_limit": "",
+                    "tag": 1,
+                    "timestamp": "1760598000",
+                    "bid_sizes": [
+                      {
+                        "bid_size": "0.0001",
+                        "str_proceed": "0",
+                        "end_proceed": "1"
+                      },
+                      {
+                        "bid_size": "0.01",
+                        "str_proceed": "1",
+                        "end_proceed": "999999"
+                      }
+                    ],
+                    "is_connect": false,
+                    "is_spac": false,
+                    "is_rights": false,
+                    "channel_infos": {
+                      "account_channel": "<BROKER_CHANNEL>",
+                      "org_id": "<ORG_ID>",
+                      "aaid": "<AAID>",
+                      "currency": "USD",
+                      "settlement_currency": [
+                        "USD"
+                      ],
+                      "order_type_config": {
+                        "LO": {
+                          "support_sessions": [
+                            1,
+                            2,
+                            3
+                          ],
+                          "support_time_in_forces": [
+                            0,
+                            1,
+                            6
+                          ]
+                        },
+                        "MO": {
+                          "support_sessions": [],
+                          "support_time_in_forces": [
+                            0
+                          ]
+                        }
+                      },
+                      "support_trade": true,
+                      "support_rth": true,
+                      "support_overnight": true,
+                      "gtd_support_order_types": [
+                        "LO"
+                      ],
+                      "support_attached_order_types": [
+                        "LO"
+                      ],
+                      "support_fractional_shares": true,
+                      "fractional_min_amount": "5",
+                      "mo_avail_ratio": "0.95",
+                      "finance_account_status": 0,
+                      "account_risk_level": 0,
+                      "confirm_purchase_statement": false,
+                      "confirm_important_notice": false,
+                      "granted_info": {
+                        "us_overnight_risk_agreement": {
+                          "status": 1,
+                          "expired": false,
+                          "url": ""
+                        }
+                      }
+                    }
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v5/orders/tradable": {
+      "get": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "检查标的是否可交易",
+        "description": "用户在下单页切换或搜索选择标的时，检查该标的能否在当前账户交易，并返回提示文案和引导按钮。`is_alert` 为 `true` 时，应以弹窗展示 `msg` 与 `buttons`，不直接进入下单；`buttons` 为空时视为不可交易。`is_alert` 为 `false` 时可进入下单页，若 `is_toast` 为 `true`，再以轻提示展示 `msg`。\n\nWhaleCore 的 `orderService()` 已通过 `checkTradability` 类型化封装该接口，使用 WhaleCore 时建议优先调用该方法。\n",
+        "operationId": "getV5OrdersTradable",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "标的 ID（counter_id），如 `ST/US/AAPL`、`ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/HK/700"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“检查标的是否可交易”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "counter_id": {
+                              "type": "string",
+                              "description": "标的 ID"
+                            },
+                            "is_cnconnect": {
+                              "type": "boolean",
+                              "description": "是否为 A 股通标的"
+                            },
+                            "is_alert": {
+                              "type": "boolean",
+                              "description": "是否需要弹窗提示并阻止直接进入下单"
+                            },
+                            "is_toast": {
+                              "type": "boolean",
+                              "description": "可进入下单时，是否以轻提示展示 `msg`"
+                            },
+                            "msg": {
+                              "type": "string",
+                              "description": "提示文案"
+                            },
+                            "buttons": {
+                              "type": "array",
+                              "description": "弹窗中的引导按钮",
+                              "items": {
+                                "$ref": "#/components/schemas/OrderPageTradableButton"
+                              }
+                            },
+                            "support_regular_saving_plan": {
+                              "type": "boolean",
+                              "description": "该标的是否支持定投"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "counter_id": "ST/HK/700",
+                    "is_cnconnect": false,
+                    "is_alert": false,
+                    "is_toast": false,
+                    "msg": "",
+                    "buttons": [],
+                    "support_regular_saving_plan": true
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orders/is_next_day": {
+      "get": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "查询当日单是否顺延至下一交易日",
+        "description": "下单页加载时查询：如果此刻提交该标的的当日有效（DAY）订单，订单是否顺延到下一交易日。结果为 `true` 时，可在订单确认页的有效期旁提示「下一交易日收盘前有效」。该结果只适用于当日有效订单；订单仅在盘中交易时读取 `is_next_day`，允许盘前盘后交易时读取 `is_next_day_after`。仅夜盘时段的限价单按夜盘规则提示，不使用该结果。\n",
+        "operationId": "getV1OrdersIsNextDay",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "标的 ID（counter_id），如 `ST/US/AAPL`、`ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“查询当日单是否顺延至下一交易日”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "is_next_day": {
+                              "type": "boolean",
+                              "description": "订单仅在盘中交易时，当日有效订单是否顺延至下一交易日"
+                            },
+                            "is_next_day_after": {
+                              "type": "boolean",
+                              "description": "订单允许盘前盘后交易时，当日有效订单是否顺延至下一交易日"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "is_next_day": true,
+                    "is_next_day_after": false
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/asset/trade/detail": {
+      "get": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "获取下单页持仓与现金",
+        "description": "下单页加载时，查询当前账户在指定标的上的持仓数量、可用数量与成本，以及指定币种的现金，用于展示持仓与可卖数量。返回的 `quantity`、`average_cost`、`diluted_avg_cost` 是「预估成交后持仓成本」的入参；持仓方向（`quantity` 的正负）决定预估交易费用时的 `position_side`。经 WhaleCore `requestService()` 调用时，需将 `requiresTradeToken` 设为 `true`。\n\nWhaleCore 的 `orderService()` 已通过 `getTradeDetail` 类型化封装该接口，使用 WhaleCore 时建议优先调用该方法。\n",
+        "operationId": "getV1PortfolioAssetTradeDetail",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "标的 ID（counter_id），如 `ST/US/AAPL`、`ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "description": "交易（结算）币种，如 USD、HKD；取「获取标的下单配置」返回的 `channel_infos.settlement_currency` 的第一项",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "USD"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“获取下单页持仓与现金”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "counter_id": {
+                              "type": "string",
+                              "description": "标的 ID"
+                            },
+                            "currency": {
+                              "type": "string",
+                              "description": "币种"
+                            },
+                            "balance": {
+                              "type": "string",
+                              "description": "该币种的现金余额"
+                            },
+                            "available_cash": {
+                              "type": "string",
+                              "description": "账户可用现金"
+                            },
+                            "quantity": {
+                              "type": "string",
+                              "description": "持仓数量；负数表示空头持仓"
+                            },
+                            "available_quantity": {
+                              "type": "string",
+                              "description": "可用持仓数量"
+                            },
+                            "average_cost": {
+                              "type": "string",
+                              "description": "平均买入成本"
+                            },
+                            "diluted_avg_cost": {
+                              "type": "string",
+                              "description": "摊薄成本"
+                            },
+                            "underlying_available_quantity": {
+                              "type": "string",
+                              "description": "期权标的时，关联正股的可用持仓数量"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "counter_id": "ST/US/AAPL",
+                    "currency": "USD",
+                    "balance": "12500.00",
+                    "available_cash": "12500.00",
+                    "quantity": "20",
+                    "available_quantity": "20",
+                    "average_cost": "201.35",
+                    "diluted_avg_cost": "198.10",
+                    "underlying_available_quantity": "0"
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/app/stock_margin_ratios": {
+      "get": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "获取股票初始保证金系数",
+        "description": "股票（非期权）下单页在已持有交易 token 时，查询当前账户对该股票做多与做空开仓的初始保证金系数，用于在本地估算融资买入或卖空开仓的可交易数量与所需保证金：买入开仓使用 `long_im_factor`，卖出开仓使用 `short_im_factor`。期权下单不使用该接口。经 WhaleCore `requestService()` 调用时，需将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "getV1AppStockMarginRatios",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "标的 ID（counter_id），如 `ST/US/AAPL`、`ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“获取股票初始保证金系数”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "long_im_factor": {
+                              "type": "string",
+                              "description": "做多开仓的初始保证金系数，如 \"0.5\""
+                            },
+                            "short_im_factor": {
+                              "type": "string",
+                              "description": "做空开仓的初始保证金系数"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "long_im_factor": "0.5",
+                    "short_im_factor": "1.5"
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/app/risk/account_info/purchase": {
+      "get": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "获取下单购买力",
+        "description": "下单页加载、切换账户或切换结算币种时，查询当前账户在指定标的上的最大购买力，用于展示可买金额与校验委托金额。市价单（含未触发的市价条件单）的可用购买力为 `buy_limit` 乘以「获取标的下单配置」返回的 `channel_infos.mo_avail_ratio`。改单时传入原订单 ID；改单对象为未触发的条件单时不传 `order_id`。经 WhaleCore `requestService()` 调用时，需将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "getV1AppRiskAccountInfoPurchase",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "标的 ID（counter_id），如 `ST/US/AAPL`、`ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "description": "交易（结算）币种，如 USD、HKD；取「获取标的下单配置」返回的 `channel_infos.settlement_currency` 的第一项",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "USD"
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": true,
+            "description": "Broker 渠道",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "<BROKER_CHANNEL>"
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "description": "改单时传入原订单 ID；改单对象为未触发的条件单或下新单时不传",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“获取下单购买力”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "buy_limit": {
+                              "type": "string",
+                              "description": "最大购买力"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "buy_limit": "25000.00"
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v4/portfolio/current/estimatedcost": {
+      "get": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "预估交易费用",
+        "description": "用户在下单页修改价格或数量后，按标的、委托价格、数量与买卖方向估算本次交易的佣金、第三方收费和平台费，用于展示预估费用。三项之和可作为「预估成交后持仓成本」的 `fee_amount`。价格或数量为 0 时无需调用。经 WhaleCore `requestService()` 调用时，需将 `requiresTradeToken` 设为 `true`。\n\nWhaleCore 的 `orderService()` 已通过 `getEstimatedCost` 类型化封装该接口，使用 WhaleCore 时建议优先调用该方法。\n",
+        "operationId": "getV4PortfolioCurrentEstimatedcost",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "标的 ID（counter_id），如 `ST/US/AAPL`、`ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "description": "交易（结算）币种，如 USD、HKD；取「获取标的下单配置」返回的 `channel_infos.settlement_currency` 的第一项",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "USD"
+          },
+          {
+            "name": "price",
+            "in": "query",
+            "required": true,
+            "description": "委托单价，按交易币种计；英国市场标的行情货币为 GBX 而交易币种为 GBP 时，需先除以 100 换算为 GBP",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "228.50"
+          },
+          {
+            "name": "qty",
+            "in": "query",
+            "required": true,
+            "description": "委托数量（股数）",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "10"
+          },
+          {
+            "name": "dir",
+            "in": "query",
+            "required": true,
+            "description": "买卖方向：\n- `0` - 买入\n- `1` - 卖出\n",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "0",
+                "1"
+              ]
+            },
+            "example": "0"
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": true,
+            "description": "Broker 渠道",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "<BROKER_CHANNEL>"
+          },
+          {
+            "name": "order_tag",
+            "in": "query",
+            "required": false,
+            "description": "订单标签，取「获取标的下单配置」返回的 `tag`：\n- `1` - 普通订单\n- `2` - 长期单\n- `3` - 暗盘订单\n",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "enum": [
+                1,
+                2,
+                3
+              ]
+            }
+          },
+          {
+            "name": "order_type",
+            "in": "query",
+            "required": false,
+            "description": "订单类型代码，如 `LO`、`MO`",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "position_side",
+            "in": "query",
+            "required": false,
+            "description": "持仓方向：当前持仓大于 0 时传 `LONG`，小于 0 时传 `SHORT`；无持仓时，买入传 `LONG`，卖出传 `SHORT`",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LONG",
+                "SHORT"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“预估交易费用”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "commission": {
+                              "type": "string",
+                              "description": "预估佣金"
+                            },
+                            "third": {
+                              "type": "string",
+                              "description": "预估第三方收费"
+                            },
+                            "platform": {
+                              "type": "string",
+                              "description": "预估平台费"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "commission": "0.99",
+                    "third": "0.02",
+                    "platform": "1.00"
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v4/portfolio/stock/get_trading_stock_avgcost": {
+      "get": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "预估成交后持仓成本",
+        "description": "在预估交易费用成功后调用，按当前持仓数量与成本、本次委托价格与数量，计算本次成交后的平均买入成本和摊薄成本，用于下单页展示预估成本。需要将交易费用计入成本时，传入 `fee_amount`。经 WhaleCore `requestService()` 调用时，需将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "getV4PortfolioStockGetTradingStockAvgcost",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "标的 ID（counter_id），如 `ST/US/AAPL`、`ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          },
+          {
+            "name": "holding_quantity",
+            "in": "query",
+            "required": true,
+            "description": "当前持仓数量，取「获取下单页持仓与现金」返回的 `quantity`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "20"
+          },
+          {
+            "name": "side",
+            "in": "query",
+            "required": true,
+            "description": "买卖方向",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "BUY",
+                "SELL"
+              ]
+            },
+            "example": "BUY"
+          },
+          {
+            "name": "avg_cost",
+            "in": "query",
+            "required": true,
+            "description": "当前平均买入成本，取 `average_cost`；无持仓时传 `0`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "201.35"
+          },
+          {
+            "name": "diluted_avg_cost",
+            "in": "query",
+            "required": true,
+            "description": "当前摊薄成本，取 `diluted_avg_cost`；无持仓时传 `0`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "198.10"
+          },
+          {
+            "name": "price",
+            "in": "query",
+            "required": true,
+            "description": "委托单价，与预估交易费用时传入的 `price` 一致",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "228.50"
+          },
+          {
+            "name": "quantity",
+            "in": "query",
+            "required": true,
+            "description": "本次委托数量（股数）",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "10"
+          },
+          {
+            "name": "fee_amount",
+            "in": "query",
+            "required": false,
+            "description": "计入成本的交易费用，为预估交易费用返回的 `commission`、`third`、`platform` 之和；不传时成本不含费用",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“预估成交后持仓成本”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "avg_cost": {
+                              "type": "string",
+                              "description": "成交后的平均买入成本"
+                            },
+                            "diluted_avg_cost": {
+                              "type": "string",
+                              "description": "成交后的摊薄成本"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "avg_cost": "210.40",
+                    "diluted_avg_cost": "208.23"
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/member/trade/auth": {
+      "post": {
+        "tags": [
+          "账户"
+        ],
+        "summary": "验证交易密码",
+        "description": "校验客户输入的交易密码；校验通过且无需二次验证时，返回该账户的交易令牌。\n\nWhaleCore 默认自动处理交易鉴权，宿主无需调用本接口。初始化时设置 `tradePasswordEnabled: true` 后，SDK 不再自行取得交易令牌：交易类调用抛出 `tradeAuthFailed`（1006）或 `hasTradeToken()` 返回 `false` 时，由宿主引导客户输入交易密码并调用本接口，再把 `data.token.token` 作为 `tradeToken`、`data.token.refresh_token` 作为 `tradeRefreshToken` 传给 `WhaleCoreService.updateTradeToken(...)`，最后重新发起原操作。令牌按账户签发，`updateTradeToken` 的 `accountChannel` 应与本次请求所属账户一致。\n\n如果 `need_two_factors` 或 `need_totp_two_factors` 为 `true`，不要使用本次响应中的令牌，改为调用对应的二次验证接口，由二次验证接口返回令牌：短信验证码对应 `POST /v1/member/trade/auth_two_factors`，第三方身份验证器动态码对应 `POST /v1/member/trade/totp/auth_two_factors`。`need_device_totp_two_factors` 对应的设备令牌验证不在本文范围内。\n\n本接口还用于修改安全设置前校验客户当前的交易密码。\n\n密码错误时展示 `message` 并让客户重新输入；返回 402009 时不要继续重试。\n\n密码字段传 6 位数字交易密码的 MD5 摘要（32 位小写十六进制字符串），不要传明文。\n\n本接口用于取得交易令牌，经 WhaleCore `requestService()` 调用时不要将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "postV3MemberTradeAuth",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "trade_password": {
+                    "type": "string",
+                    "description": "交易密码的 MD5 摘要",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "校验场景。交易解锁时传 `trade`。"
+                  }
+                },
+                "required": [
+                  "trade_password",
+                  "type"
+                ]
+              },
+              "example": {
+                "trade_password": "d3786ec2413a8cd9413bfcb24be95a73",
+                "type": "trade"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“验证交易密码”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "need_two_factors": {
+                              "type": "boolean",
+                              "description": "是否还需完成短信验证码二次验证；为 `true` 时调用 `POST /v1/member/trade/auth_two_factors`"
+                            },
+                            "need_totp_two_factors": {
+                              "type": "boolean",
+                              "description": "是否还需完成第三方身份验证器动态码（TOTP）二次验证；为 `true` 时调用 `POST /v1/member/trade/totp/auth_two_factors`"
+                            },
+                            "need_device_totp_two_factors": {
+                              "type": "boolean",
+                              "description": "是否还需完成设备令牌二次验证；该验证方式不在本文范围内"
+                            },
+                            "tfa_guide": {
+                              "type": "boolean",
+                              "description": "为 `true` 时，短信二次验证页可提供“仅本次开启验证码校验”选项，所选结果通过 `POST /v1/member/trade/auth_two_factors` 的 `tfa_switch` 提交"
+                            },
+                            "token": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/TradeAuthToken"
+                                }
+                              ],
+                              "description": "交易令牌；仅在上述三个 `need_*` 字段均不为 `true` 时使用"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "need_two_factors": false,
+                    "need_totp_two_factors": false,
+                    "need_device_totp_two_factors": false,
+                    "tfa_guide": false,
+                    "token": {
+                      "token": "<TRADE_TOKEN>",
+                      "refresh_token": "<TRADE_REFRESH_TOKEN>",
+                      "refresh_token_expires": 1800
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求未通过业务规则或输入校验。重试前，请根据业务码修正请求。",
+            "x-business-codes": [
+              {
+                "code": 402009,
+                "description": "交易密码错误次数已达上限，账户交易解锁被冻结；展示 `message`，不要继续重试"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/auth_two_factors": {
+      "post": {
+        "tags": [
+          "账户"
+        ],
+        "summary": "提交交易解锁短信验证",
+        "description": "完成交易解锁的短信验证码二次验证。验证交易密码返回 `need_two_factors: true` 后，先向客户发送交易解锁短信验证码（发送验证码的接口不在本文范围内），再提交验证码与同一交易密码。验证通过后返回交易令牌：`data.token.token` 对应 `updateTradeToken` 的 `tradeToken`，`data.token.refresh_token` 对应 `tradeRefreshToken`。\n\n传入 `tfa_switch` 时，会同时修改该客户之后交易解锁是否需要短信验证码。验证失败时展示 `message`，让客户重新输入或重新获取验证码。\n\n密码字段传 6 位数字交易密码的 MD5 摘要（32 位小写十六进制字符串），不要传明文。\n\n本接口用于取得交易令牌，经 WhaleCore `requestService()` 调用时不要将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "postV1MemberTradeAuthTwoFactors",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "客户收到的短信验证码"
+                  },
+                  "trade_password": {
+                    "type": "string",
+                    "description": "交易密码的 MD5 摘要，与验证交易密码时提交的值相同",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  },
+                  "tfa_switch": {
+                    "type": "string",
+                    "enum": [
+                      "open",
+                      "close"
+                    ],
+                    "description": "调整之后交易解锁的短信验证要求；不传则不修改。仅在验证交易密码返回 `tfa_guide: true` 时提供该选项：\n\n- `close` - 仅本次进行短信验证，之后交易解锁不再要求短信验证码\n- `open` - 之后交易解锁继续要求短信验证码"
+                  },
+                  "verify_credentials": {
+                    "type": "string",
+                    "description": "短信验证码校验通过后取得的验证凭证；已单独校验过验证码时传入"
+                  }
+                },
+                "required": [
+                  "code",
+                  "trade_password"
+                ]
+              },
+              "example": {
+                "code": "<SMS_CODE>",
+                "trade_password": "d3786ec2413a8cd9413bfcb24be95a73"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“提交交易解锁短信验证”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "token": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/TradeAuthToken"
+                                }
+                              ],
+                              "description": "验证通过后签发的交易令牌"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "token": {
+                      "token": "<TRADE_TOKEN>",
+                      "refresh_token": "<TRADE_REFRESH_TOKEN>",
+                      "refresh_token_expires": 1800
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/totp/auth_two_factors": {
+      "post": {
+        "tags": [
+          "账户"
+        ],
+        "summary": "提交交易解锁动态码验证",
+        "description": "用客户绑定的第三方身份验证器（TOTP）生成的动态码完成交易解锁二次验证。须在验证交易密码返回 `need_totp_two_factors: true` 后，针对同一账户调用；请求中不再携带交易密码。验证通过后返回交易令牌：`data.token.token` 对应 `updateTradeToken` 的 `tradeToken`，`data.token.refresh_token` 对应 `tradeRefreshToken`。\n\n动态码错误或过期时展示 `message`，让客户输入新的动态码。\n\n本接口用于取得交易令牌，经 WhaleCore `requestService()` 调用时不要将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "postV1MemberTradeTotpAuthTwoFactors",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "verify_code": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 6,
+                    "description": "身份验证器当前显示的 6 位动态码"
+                  }
+                },
+                "required": [
+                  "verify_code"
+                ]
+              },
+              "example": {
+                "verify_code": "<TOTP_CODE>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“提交交易解锁动态码验证”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "token": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/TradeAuthToken"
+                                }
+                              ],
+                              "description": "验证通过后签发的交易令牌"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "token": {
+                      "token": "<TRADE_TOKEN>",
+                      "refresh_token": "<TRADE_REFRESH_TOKEN>",
+                      "refresh_token_expires": 1800
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/check_token": {
+      "get": {
+        "tags": [
+          "账户"
+        ],
+        "summary": "校验交易令牌",
+        "description": "校验请求携带的交易令牌是否仍被服务端认可，并返回剩余有效时长。`hasTradeToken()` 只反映本地是否持有令牌，进入交易页前可调用本接口确认令牌在服务端仍有效，避免客户填完订单才被要求验证交易密码。\n\n令牌失效时按业务码处理：402000 表示令牌已过期，可用刷新令牌续期；402001 表示令牌已失效（例如账户在其他设备登录），需重新验证交易密码。\n\n经 WhaleCore `requestService()` 调用时，需将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "getV1MemberTradeCheckToken",
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“校验交易令牌”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "token_expires": {
+                              "type": "integer",
+                              "format": "int64",
+                              "description": "交易令牌剩余有效时长，单位为秒；剩余时间过短时可先刷新令牌"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "token_expires": 1200
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求未通过业务规则或输入校验。重试前，请根据业务码修正请求。",
+            "x-business-codes": [
+              {
+                "code": 402000,
+                "description": "交易令牌已过期；调用 `POST /v1/member/trade/refresh_token` 续期，续期失败时重新验证交易密码"
+              },
+              {
+                "code": 402001,
+                "description": "交易令牌已失效（例如账户在其他设备登录）；重新验证交易密码"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/refresh_token": {
+      "post": {
+        "tags": [
+          "账户"
+        ],
+        "summary": "刷新交易令牌",
+        "description": "用刷新令牌换取新的交易令牌和刷新令牌，延长交易解锁时长。令牌所属账户由刷新令牌本身确定。\n\n通过 `updateTradeToken` 送入令牌后，WhaleCore 会用 `tradeRefreshToken` 自动续期，宿主通常无需调用本接口。若宿主自行刷新，需把返回的 `data.token.token` 和 `data.token.refresh_token` 再次通过 `updateTradeToken` 送入，使 SDK 持有的令牌与服务端一致。返回 402003 表示刷新令牌已过期，需重新验证交易密码。\n\n经 WhaleCore `requestService()` 调用时无需将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "postV1MemberTradeRefreshToken",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refresh_token": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "最近一次取得的刷新令牌（`tradeRefreshToken`）"
+                  }
+                },
+                "required": [
+                  "refresh_token"
+                ]
+              },
+              "example": {
+                "refresh_token": "<TRADE_REFRESH_TOKEN>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“刷新交易令牌”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "token": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/TradeAuthToken"
+                                }
+                              ],
+                              "description": "新的交易令牌与刷新令牌"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "token": {
+                      "token": "<TRADE_TOKEN>",
+                      "refresh_token": "<TRADE_REFRESH_TOKEN>",
+                      "refresh_token_expires": 1800
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求未通过业务规则或输入校验。重试前，请根据业务码修正请求。",
+            "x-business-codes": [
+              {
+                "code": 402003,
+                "description": "刷新令牌已过期；重新验证交易密码"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/change_password": {
+      "post": {
+        "tags": [
+          "账户"
+        ],
+        "summary": "修改交易密码",
+        "description": "将客户的交易密码改为新密码。调用前先通过 `POST /v3/member/trade/auth` 校验客户当前的交易密码，确保持有该账户有效的交易令牌；本接口凭交易令牌鉴权，请求中只提交新密码。修改成功后，后续交易解锁需使用新密码；失败时展示 `message`。\n\n密码字段传 6 位数字交易密码的 MD5 摘要（32 位小写十六进制字符串），不要传明文。\n\n经 WhaleCore `requestService()` 调用时，需将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "postV1MemberTradeChangePassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "new_password": {
+                    "type": "string",
+                    "description": "新交易密码的 MD5 摘要",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  }
+                },
+                "required": [
+                  "new_password"
+                ]
+              },
+              "example": {
+                "new_password": "63c7d0d6b2ffb8e081ed859d51177526"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“修改交易密码”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "无业务字段"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/member/trade/set_password": {
+      "post": {
+        "tags": [
+          "账户"
+        ],
+        "summary": "设置交易密码",
+        "description": "为尚未设置交易密码的客户设置交易密码。客户需先通过手机或邮箱验证码完成身份验证并取得 `verify_credentials`（获取凭证的接口不在本文范围内）。设置成功后，客户即可用该密码验证交易密码、取得交易令牌；失败时展示 `message`，凭证失效时让客户重新完成身份验证。\n\n密码字段传 6 位数字交易密码的 MD5 摘要（32 位小写十六进制字符串），不要传明文。\n",
+        "operationId": "postV2MemberTradeSetPassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "trade_password": {
+                    "type": "string",
+                    "description": "新交易密码的 MD5 摘要",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  },
+                  "verify_credentials": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "客户完成手机或邮箱身份验证后取得的验证凭证"
+                  }
+                },
+                "required": [
+                  "trade_password",
+                  "verify_credentials"
+                ]
+              },
+              "example": {
+                "trade_password": "d3786ec2413a8cd9413bfcb24be95a73",
+                "verify_credentials": "<VERIFY_CREDENTIALS>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“设置交易密码”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "无业务字段"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/member/trade/reset_password": {
+      "post": {
+        "tags": [
+          "账户"
+        ],
+        "summary": "重置交易密码",
+        "description": "客户忘记交易密码时，完成身份验证后设置新的交易密码，通常从交易解锁界面的“忘记密码”进入。客户需先完成开户证件号及联系手机或邮箱的验证并取得 `verify_credentials`（相关验证接口不在本文范围内）。重置成功后，后续交易解锁需使用新密码；失败时展示 `message`，凭证失效时让客户重新完成身份验证。\n\n密码字段传 6 位数字交易密码的 MD5 摘要（32 位小写十六进制字符串），不要传明文。\n",
+        "operationId": "postV2MemberTradeResetPassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "trade_password": {
+                    "type": "string",
+                    "description": "新交易密码的 MD5 摘要",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  },
+                  "verify_credentials": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "客户完成身份验证后取得的验证凭证"
+                  }
+                },
+                "required": [
+                  "trade_password",
+                  "verify_credentials"
+                ]
+              },
+              "example": {
+                "trade_password": "63c7d0d6b2ffb8e081ed859d51177526",
+                "verify_credentials": "<VERIFY_CREDENTIALS>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“重置交易密码”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "无业务字段"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/setting": {
+      "post": {
+        "tags": [
+          "账户"
+        ],
+        "summary": "更新查看资产验证设置",
+        "description": "开启或关闭账户的“查看资产需验证交易密码”设置。提交前需由客户输入当前交易密码，服务端校验通过后保存新值；当前值可从 `GET /v3/account/list` 的 `status[].setting.p_trade_auth` 读取。保存成功后重新获取账户信息以刷新展示；失败时展示 `message`。\n\n密码字段传 6 位数字交易密码的 MD5 摘要（32 位小写十六进制字符串），不要传明文。\n",
+        "operationId": "postV1MemberTradeSetting",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "enum": [
+                      "p_trade_auth"
+                    ],
+                    "description": "设置项：\n\n- `p_trade_auth` - 查看资产是否需要验证交易密码"
+                  },
+                  "value": {
+                    "type": "string",
+                    "enum": [
+                      "YES",
+                      "NO"
+                    ],
+                    "description": "设置值：\n\n- `YES` - 开启\n- `NO` - 关闭"
+                  },
+                  "trade_password": {
+                    "type": "string",
+                    "description": "当前交易密码的 MD5 摘要",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  }
+                },
+                "required": [
+                  "key",
+                  "value",
+                  "trade_password"
+                ]
+              },
+              "example": {
+                "key": "p_trade_auth",
+                "value": "YES",
+                "trade_password": "d3786ec2413a8cd9413bfcb24be95a73"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“更新查看资产验证设置”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "无业务字段"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/GetSecurities": {
+      "get": {
+        "tags": [
+          "行情"
+        ],
+        "summary": "搜索证券",
+        "description": "按关键字搜索证券，返回匹配的股票、ETF、指数、板块、基金等候选标的（counter_id、代码、名称、市场、币种、品类与排序分值），用于搜索框输入联想与搜索结果列表。可按市场和证券品类过滤；翻页时传入上一页最后一条结果的 score 与 code，返回其后的结果。\n\n该接口还用于交易下单页与订单列表切换标的、行情横屏页与 K 线叠加对比添加标的、发帖时选择股票，以及基金搜索（product 传 `UT`）。\n",
+        "operationId": "getV1GetSecurities",
+        "parameters": [
+          {
+            "name": "k",
+            "in": "query",
+            "required": true,
+            "description": "搜索关键字，可输入证券代码、名称、英文名或简称",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "AAPL"
+          },
+          {
+            "name": "search_src",
+            "in": "query",
+            "required": true,
+            "description": "搜索场景来源，用于区分调用场景，已知取值：\n\n- `main_search` - 主搜索页、基金搜索\n- `quote_horizontal` - 行情横屏页搜索\n- `security_vs` - K 线叠加对比、行业对比添加标的\n- `trade` - 交易下单页切换标的\n- `trade_order` - 订单列表切换标的\n- `post_topic` - 发帖时选择股票\n",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "main_search"
+          },
+          {
+            "name": "market",
+            "in": "query",
+            "required": false,
+            "description": "市场过滤，如 `HK`、`US`；不传时不按市场过滤",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "product",
+            "in": "query",
+            "required": false,
+            "description": "证券品类过滤，多个用英文逗号分隔，如 `ST,ETF`；只搜索基金时传 `UT`。Broker App 不展示窝轮、牛熊证等轮证类产品时传 `BK,DLC,ETF,IX,LB,MMF,ST,UT`；不传时不按品类过滤",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "is_ut",
+            "in": "query",
+            "required": false,
+            "description": "是否在结果中包含基金",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "score",
+            "in": "query",
+            "required": false,
+            "description": "翻页游标：上一页最后一条结果的 score；请求第一页时不传",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "required": false,
+            "description": "翻页游标：上一页最后一条结果的 code，需与 score 一同传入；请求第一页时不传",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": false,
+            "description": "Broker 渠道",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“搜索证券”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "product_list": {
+                              "type": "array",
+                              "description": "匹配的证券列表，按排序分值返回；无匹配结果时为空数组",
+                              "items": {
+                                "allOf": [
+                                  {
+                                    "$ref": "#/components/schemas/SearchSecurityItem"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "isin": {
+                                        "type": "string",
+                                        "description": "国际证券识别码（ISIN）；基金结果中 Broker App 以它代替证券代码展示，其他品类可能为空"
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "product_list": [
+                      {
+                        "counter_id": "ST/US/AAPL",
+                        "code": "AAPL",
+                        "name": "苹果",
+                        "market": "US",
+                        "currency": "USD",
+                        "product": "ST",
+                        "score": 98.6,
+                        "isin": ""
+                      },
+                      {
+                        "counter_id": "ETF/US/AAPU",
+                        "code": "AAPU",
+                        "name": "Apple 2x 做多 ETF",
+                        "market": "US",
+                        "currency": "USD",
+                        "product": "ETF",
+                        "score": 71.2,
+                        "isin": ""
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v5/portfolio/transactionhistory": {
+      "get": {
+        "tags": [
+          "资产"
+        ],
+        "summary": "获取资金记录",
+        "description": "分页查询当前账户的资金变动记录，返回每条记录的流水类型、金额与币种、方向前缀、股票数量变动说明、补充说明以及创建与完成时间，用于「资金记录」页列表展示。可按产品、资金方向、币种和时间范围筛选；流水类型名称等文案按请求的 `Accept-Language` 返回。\n\n未传 start、end 时按 page、size 分页，返回条数少于 size 即表示没有更多；传入 start、end 时返回该时间范围内的全部记录，page 不生效。部分 Broker 的定制资金记录页也使用该接口。\n\n通过 WhaleCore `requestService()` 调用时，需声明交易 token 要求（将 `requiresTradeToken` 设为 `true`）。\n",
+        "operationId": "getV5PortfolioTransactionhistory",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "description": "页码，从 1 开始；传入 start、end 时不生效",
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "example": "1"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": true,
+            "description": "每页条数；Broker App 传 15",
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "example": "15"
+          },
+          {
+            "name": "business_type",
+            "in": "query",
+            "required": false,
+            "description": "产品筛选，多个用英文逗号分隔，如 `1,2`；不筛选时传空字符串：\n\n- `1` - 现金\n- `2` - 股票\n- `5` - 基金\n- `7` - 加密货币\n",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "description": "资金方向筛选，多个用英文逗号分隔；不筛选时传空字符串：\n\n- `1` - 流出\n- `2` - 流入\n",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "currencies",
+            "in": "query",
+            "required": false,
+            "description": "币种筛选，多个用英文逗号分隔，如 `HKD,USD`；可选值取自「获取资金记录币种」的 currencies；不筛选时传空字符串",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "description": "开始时间，Unix 时间戳（秒）；Broker App 按月份查询时传该月 1 日 0 点。不按时间筛选时不传",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "description": "结束时间，Unix 时间戳（秒），需与 start 一同传入；Broker App 按月份查询时传下个月 1 日 0 点",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“获取资金记录”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "list": {
+                              "type": "array",
+                              "description": "资金记录列表，按接口返回顺序展示；无记录时为空数组",
+                              "items": {
+                                "$ref": "#/components/schemas/CashFlowRecordItem"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "list": [
+                      {
+                        "tx_type": "cash_in",
+                        "type_name": "入金",
+                        "category": "+",
+                        "amount": "10000.00",
+                        "currency": "HKD",
+                        "stock_quantity": "",
+                        "quantity_description": "",
+                        "description": "",
+                        "created_at": "1728964800",
+                        "done_at": "1728968400"
+                      },
+                      {
+                        "tx_type": "cash_out",
+                        "type_name": "出金",
+                        "category": "-",
+                        "amount": "2000.00",
+                        "currency": "USD",
+                        "stock_quantity": "",
+                        "quantity_description": "",
+                        "description": "",
+                        "created_at": "1728878400",
+                        "done_at": "1729051200"
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portfolio/transactionhistory/currencies": {
+      "get": {
+        "tags": [
+          "资产"
+        ],
+        "summary": "获取资金记录币种",
+        "description": "返回当前账户「资金记录」页可用于筛选的币种代码列表，用于生成币种筛选项；所选币种作为「获取资金记录」的 currencies 参数传入。部分 Broker 的定制资金记录页也使用该接口。\n",
+        "operationId": "getPortfolioTransactionhistoryCurrencies",
+        "parameters": [
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": true,
+            "description": "Broker 渠道",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "<BROKER_CHANNEL>"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“获取资金记录币种”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "currencies": {
+                              "type": "array",
+                              "description": "可筛选的币种代码，如 `HKD`、`USD`；缺失时 Broker App 不展示币种筛选项",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "currencies": [
+                      "HKD",
+                      "USD",
+                      "CNH"
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/portfolio/withdraw/cards": {
+      "get": {
+        "tags": [
+          "资产"
+        ],
+        "summary": "获取出金银行卡列表",
+        "description": "查询 Client 已绑定的银行卡，以及上次出金使用的银行卡和币种，用于出金页选择收款银行卡并设置默认银行卡与默认币种。\n\n这是出金流程的第一步。选定银行卡后，调用「获取提现前置信息」（`GET /v3/portfolio/withdraw/pre`，部分租户渠道使用 `GET /v4/portfolio/withdraw/pre`）查询可提金额与手续费，再调用 `POST /v5/portfolio/withdraw` 提交出金。只有 `bind_state` 为 `1`（或未返回）、`status` 不为 `1` 且 `account_type` 与出金币种匹配的银行卡可以发起出金。修改出金申请的收款银行卡时，也从本接口的列表中选择新卡。\n\n传 `withdraw=0` 时返回全部已绑定银行卡，该接口还用于银行卡管理页以及 ACH / 电汇入金、出金的银行卡选择。\n\n完整的出金流程依次为：获取出金银行卡列表（`GET /v3/portfolio/withdraw/cards`）→ 获取提现前置信息与可提金额（`GET /v3/portfolio/withdraw/pre`，部分租户渠道使用 `GET /v4/portfolio/withdraw/pre`；只需各币种可提余额时可调用 `GET /v1/rms_gateway/get_account_all_single_currency_withdraw`）→ 按需检查并补录收款人地址 → 提交出金申请（`POST /v5/portfolio/withdraw`）→ 查询出金记录与详情 → 按需撤销出金或修改收款银行卡。\n",
+        "operationId": "getV3PortfolioWithdrawCards",
+        "parameters": [
+          {
+            "name": "withdraw",
+            "in": "query",
+            "required": true,
+            "description": "使用场景：\n- `1` - 出金页选卡\n- `0` - 返回全部已绑定银行卡（银行卡管理、ACH / 电汇出入金）\n",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "0",
+                "1"
+              ]
+            },
+            "example": "1"
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": true,
+            "description": "筛选标记，Broker App 当前固定传 `0`",
+            "schema": {
+              "type": "string"
+            },
+            "example": "0"
+          },
+          {
+            "name": "from_app_page",
+            "in": "query",
+            "required": false,
+            "description": "出金场景来源，用于区分普通出金与南向 / 北向出金；仅部分租户渠道使用",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "withdraw",
+                "north_withdraw",
+                "south_withdraw"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“获取出金银行卡列表”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "last_bank_card_id": {
+                              "type": "string",
+                              "description": "上次出金使用的银行卡 id；为 `0` 或不在可用银行卡中时，Broker App 默认选择第一张可用银行卡"
+                            },
+                            "last_funding_currency": {
+                              "type": "string",
+                              "description": "上次出金使用的币种；为空时 Broker App 按第一张银行卡的 `account_type` 推荐默认币种"
+                            },
+                            "list": {
+                              "type": "array",
+                              "description": "已绑定的银行卡列表",
+                              "items": {
+                                "$ref": "#/components/schemas/WithdrawBankCard"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "last_bank_card_id": "20381",
+                    "last_funding_currency": "HKD",
+                    "list": [
+                      {
+                        "id": "20381",
+                        "bank_card_identity": "bc_7f3a9e21",
+                        "bank": "示例银行（香港）",
+                        "bank_en": "Example Bank (Hong Kong)",
+                        "bank_code": "012",
+                        "account": "012345678901",
+                        "account_type": "ALL",
+                        "region": "HONGKONG",
+                        "swift_code": "EXAMHKHH",
+                        "icon": "https://example.com/bank/icon.png",
+                        "status": 2,
+                        "witness_state": 3,
+                        "bind_state": 1
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/portfolio/withdraw/pre": {
+      "get": {
+        "tags": [
+          "资产"
+        ],
+        "summary": "获取通用渠道提现前置信息",
+        "description": "选定出金币种与收款银行卡后，查询可提现额度与提现配置，返回最大可提金额、现金可提金额、余额通可提金额、各币种可提明细、预计到账时间、按金额区间划分的手续费档位、可选出金方式，以及该卡本币种出金是否需要收款人地址，用于出金表单的额度展示、金额校验与费用提示。不传 `card_id` 时，可用于获取可选出金方式等与银行卡无关的信息。\n\n通用租户渠道使用本接口；部分租户渠道（含南向 / 北向出金场景）改用 `GET /v4/portfolio/withdraw/pre`，两者返回结构基本一致。本接口位于「获取出金银行卡列表」之后：`need_payee_address` 为 `true` 时先调用 `POST /v1/portfolio/withdraw/card/addresscheck`，再调用 `POST /v5/portfolio/withdraw` 提交出金。\n\n该接口还用于跨券商资金划转，以 `cash_amount` 作为可转出金额上限。\n\n经 WhaleCore `requestService()` 调用时，需将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "getV3PortfolioWithdrawPre",
+        "parameters": [
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "description": "提现币种，如 HKD、USD、CNH",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "HKD"
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": true,
+            "description": "Broker 渠道",
+            "schema": {
+              "type": "string"
+            },
+            "example": "<BROKER_CHANNEL>"
+          },
+          {
+            "name": "aaid",
+            "in": "query",
+            "required": true,
+            "description": "账户 aaid",
+            "schema": {
+              "type": "string"
+            },
+            "example": "<AAID>"
+          },
+          {
+            "name": "card_id",
+            "in": "query",
+            "required": false,
+            "description": "收款银行卡 id，取自「获取出金银行卡列表」的 `list[].id`；不传时不返回与银行卡相关的到账时间与手续费档位",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“获取通用渠道提现前置信息”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "list": {
+                              "type": "array",
+                              "description": "各币种可提金额明细，用于展示「最大可提预估」的构成；Broker App 不展示金额为 `0.00` 的币种",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "currency": {
+                                    "type": "string",
+                                    "description": "币种"
+                                  },
+                                  "amount": {
+                                    "type": "string",
+                                    "description": "该币种可提金额"
+                                  }
+                                }
+                              }
+                            },
+                            "cash_amount": {
+                              "type": "string",
+                              "description": "现金可提金额；提现金额不超过该值时走普通出金流程"
+                            },
+                            "max_amount": {
+                              "type": "string",
+                              "description": "最大可提金额，包含余额通部分；提现金额超过该值时不允许提交"
+                            },
+                            "mmf_amount": {
+                              "type": "string",
+                              "description": "余额通可提金额；提现金额介于 `cash_amount` 与 `max_amount` 之间时走余额通自动赎回出金"
+                            },
+                            "tip_time": {
+                              "type": "string",
+                              "description": "预计到账时间，单位为工作日，如 `1-2`；无配置时为空字符串"
+                            },
+                            "mmf_time": {
+                              "type": "string",
+                              "description": "使用余额通赎回出金时的预计到账时间，单位为工作日，如 `2-3`；无配置时为空字符串"
+                            },
+                            "currency_tip": {
+                              "type": "boolean",
+                              "description": "是否需要提示虚拟银行风险；为 `true` 时表示该卡为虚拟银行卡，以当前币种出金可能失败并被扣除手续费，Broker App 建议 Client 兑换为其他币种或更换银行卡"
+                            },
+                            "need_payee_address": {
+                              "type": "boolean",
+                              "description": "该卡以当前币种出金是否需要收款人地址；为 `true` 时调用 `POST /v1/portfolio/withdraw/card/addresscheck` 确认需填字段"
+                            },
+                            "bank_operation_type": {
+                              "type": "array",
+                              "description": "可选的出金方式列表，仅部分租户渠道返回；提交出金时将所选项的 `id` 作为 `bank_operation_type_id`",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "description": "出金方式 id"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "description": "出金方式名称"
+                                  }
+                                }
+                              }
+                            },
+                            "prompts": {
+                              "type": "array",
+                              "description": "按提现金额区间划分的手续费与到账时间档位，Broker App 按输入金额匹配对应档位展示费用提示",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "min_amount": {
+                                    "type": "string",
+                                    "description": "该档位适用的最小提现金额"
+                                  },
+                                  "max_amount": {
+                                    "type": "string",
+                                    "description": "该档位适用的最大提现金额"
+                                  },
+                                  "bank_fee": {
+                                    "type": "string",
+                                    "description": "银行手续费"
+                                  },
+                                  "plat_fee": {
+                                    "type": "string",
+                                    "description": "平台手续费"
+                                  },
+                                  "arrive_time": {
+                                    "type": "string",
+                                    "description": "该档位的预计到账时间，单位为工作日，如 `1-2`"
+                                  },
+                                  "mmf_time": {
+                                    "type": "string",
+                                    "description": "该档位使用余额通赎回出金时的预计到账时间，单位为工作日"
+                                  },
+                                  "fee_description": {
+                                    "type": "string",
+                                    "description": "银行手续费说明文案"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "list": [
+                      {
+                        "currency": "HKD",
+                        "amount": "12500.00"
+                      },
+                      {
+                        "currency": "USD",
+                        "amount": "800.00"
+                      }
+                    ],
+                    "cash_amount": "12500.00",
+                    "max_amount": "18740.00",
+                    "mmf_amount": "6240.00",
+                    "tip_time": "1-2",
+                    "mmf_time": "2-3",
+                    "currency_tip": false,
+                    "need_payee_address": false,
+                    "bank_operation_type": [],
+                    "prompts": [
+                      {
+                        "min_amount": "100",
+                        "max_amount": "1000000",
+                        "bank_fee": "0.00",
+                        "plat_fee": "0.00",
+                        "arrive_time": "1-2",
+                        "mmf_time": "2-3",
+                        "fee_description": ""
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v5/portfolio/withdraw": {
+      "post": {
+        "tags": [
+          "资产"
+        ],
+        "summary": "提交出金申请",
+        "description": "按所选币种、金额与收款银行卡提交一笔出金申请，受理后返回出金申请 id。`ok` 为 `true` 只表示申请已受理，资金是否汇出以出金记录状态为准。\n\n前置条件：已通过 `GET /v3/portfolio/withdraw/cards` 选定可用银行卡，并通过「获取提现前置信息」（`GET /v3/portfolio/withdraw/pre` 或 `GET /v4/portfolio/withdraw/pre`）确认金额不超过 `max_amount`、不低于币种最小出金金额；若该卡需要收款人地址，须先调用 `POST /v1/portfolio/withdraw/card/address` 保存地址。\n\n副作用：创建一笔出金申请。成功后可用返回的 `id` 调用 `GET /v7/portfolio/withdraw/detail` 查看详情，在 `GET /v6/portfolio/withdraw/record` 中查看记录；状态为 `0` 或 `15` 时可调用 `POST /v2/portfolio/withdraw/cancel` 撤销。失败时按业务码处理，其他业务码请将 `message` 提示给 Client，不要直接重复提交。\n\n经 WhaleCore `requestService()` 调用时，需将 `requiresTradeToken` 设为 `true`。\n\n完整的出金流程依次为：获取出金银行卡列表（`GET /v3/portfolio/withdraw/cards`）→ 获取提现前置信息与可提金额（`GET /v3/portfolio/withdraw/pre`，部分租户渠道使用 `GET /v4/portfolio/withdraw/pre`；只需各币种可提余额时可调用 `GET /v1/rms_gateway/get_account_all_single_currency_withdraw`）→ 按需检查并补录收款人地址 → 提交出金申请（`POST /v5/portfolio/withdraw`）→ 查询出金记录与详情 → 按需撤销出金或修改收款银行卡。\n",
+        "operationId": "postV5PortfolioWithdraw",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "currency": {
+                    "type": "string",
+                    "description": "出金币种，如 HKD",
+                    "minLength": 1
+                  },
+                  "amount": {
+                    "type": "string",
+                    "description": "出金金额，十进制字符串，须大于 0 且不超过提现前置信息中的 `max_amount`"
+                  },
+                  "card_id": {
+                    "type": "string",
+                    "description": "收款银行卡 id，取自「获取出金银行卡列表」的 `list[].id`"
+                  },
+                  "bank_card_identity": {
+                    "type": "string",
+                    "description": "收款银行卡标识，取自「获取出金银行卡列表」的 `list[].bank_card_identity`"
+                  },
+                  "account_channel": {
+                    "type": "string",
+                    "description": "Broker 渠道",
+                    "minLength": 1
+                  },
+                  "is_pad_funded": {
+                    "type": "string",
+                    "description": "余额通垫资方式，取值含义同提现前置信息中的 `is_pad_funded`：\n- `1` - 无需赎回，平台垫资出金\n- `2` - 需要赎回余额通后出金\n\nBroker App 当前固定传 `2`。\n",
+                    "enum": [
+                      "1",
+                      "2"
+                    ]
+                  },
+                  "bank_operation_type_id": {
+                    "type": "string",
+                    "description": "出金方式 id，取自提现前置信息的 `bank_operation_type[].id`；无可选出金方式时传 `null` 或不传",
+                    "nullable": true
+                  },
+                  "confirm": {
+                    "type": "integer",
+                    "description": "奖励作废确认。Client 参与的奖励锁定活动会因本次出金被取消资格或扣取手续费时，向 Client 展示受影响的奖励（`GET /rewards/lock_activities`）并取得同意后，传 `1` 重新提交；其他情况不传",
+                    "format": "int32",
+                    "enum": [
+                      1
+                    ]
+                  }
+                },
+                "required": [
+                  "currency",
+                  "amount",
+                  "card_id",
+                  "account_channel",
+                  "is_pad_funded"
+                ]
+              },
+              "example": {
+                "currency": "HKD",
+                "amount": "5000.00",
+                "card_id": "<CARD_ID>",
+                "bank_card_identity": "<BANK_CARD_IDENTITY>",
+                "account_channel": "<BROKER_CHANNEL>",
+                "is_pad_funded": "2",
+                "bank_operation_type_id": null
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“提交出金申请”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "ok": {
+                              "type": "boolean",
+                              "description": "申请是否已受理"
+                            },
+                            "id": {
+                              "type": "string",
+                              "description": "出金申请 id，用于查询出金详情、修改收款银行卡"
+                            },
+                            "tip_time": {
+                              "type": "string",
+                              "description": "预计到账时间，单位为工作日，如 `1-2`；用于出金结果页展示"
+                            },
+                            "disable_link": {
+                              "type": "boolean",
+                              "description": "是否隐藏出金详情入口；为 `true` 时出金结果页不提供查看详情入口"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "ok": true,
+                    "id": "881027",
+                    "tip_time": "1-2",
+                    "disable_link": false
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          },
+          "400": {
+            "description": "请求未通过业务规则或输入校验。重试前，请根据业务码修正请求。",
+            "x-business-codes": [
+              {
+                "code": 2031199,
+                "description": "收款银行卡缺少必填的收款人地址。调用 `POST /v1/portfolio/withdraw/card/addresscheck` 获取需填字段，经 `POST /v1/portfolio/withdraw/card/address` 补录后重新提交"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v6/portfolio/withdraw/record": {
+      "get": {
+        "tags": [
+          "资产"
+        ],
+        "summary": "获取出金记录",
+        "description": "分页查询当前账户的出金申请记录，支持按状态、币种与创建时间范围筛选，用于出金记录列表展示。可选状态取自 `GET /v1/portfolio/withdraw/historyinfo`；点击记录后用 `list[].id` 调用 `GET /v7/portfolio/withdraw/detail` 查看详情。\n\n分页：`page` 从 `1` 开始；当返回的 `list` 条数小于 `size` 时表示没有更多数据。部分租户渠道使用免交易密码校验的同数据版本 `GET /v6/portfolio/withdraw/record/no/trade/auth`，参数与返回结构相同。\n\n经 WhaleCore `requestService()` 调用时，需将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "getV6PortfolioWithdrawRecord",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "description": "每页条数，Broker App 使用 20",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": false,
+            "description": "Broker 渠道",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "states",
+            "in": "query",
+            "required": false,
+            "description": "按状态筛选，多个状态 key 以英文逗号分隔，取自 `GET /v1/portfolio/withdraw/historyinfo` 的 `states[].key`；不传或为空时不筛选",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "currencys",
+            "in": "query",
+            "required": false,
+            "description": "按币种筛选，多个币种以英文逗号分隔，如 `HKD,USD`；不传或为空时不筛选",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "begin",
+            "in": "query",
+            "required": false,
+            "description": "创建时间起点，Unix 时间戳（秒）；与 `end` 同时传入",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "description": "创建时间终点，Unix 时间戳（秒）；与 `begin` 同时传入",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“获取出金记录”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "list": {
+                              "type": "array",
+                              "description": "出金记录列表",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "description": "出金申请 id，用于查询出金详情",
+                                    "format": "int64"
+                                  },
+                                  "order_id": {
+                                    "type": "string",
+                                    "description": "出金订单号"
+                                  },
+                                  "amount": {
+                                    "type": "string",
+                                    "description": "出金金额"
+                                  },
+                                  "currency": {
+                                    "type": "string",
+                                    "description": "出金币种"
+                                  },
+                                  "fee": {
+                                    "type": "string",
+                                    "description": "出金手续费"
+                                  },
+                                  "bank_account": {
+                                    "type": "string",
+                                    "description": "收款银行账号"
+                                  },
+                                  "created_at": {
+                                    "type": "integer",
+                                    "description": "创建时间，Unix 时间戳（秒）",
+                                    "format": "int64"
+                                  },
+                                  "state": {
+                                    "$ref": "#/components/schemas/WithdrawRecordState"
+                                  },
+                                  "state_description": {
+                                    "type": "string",
+                                    "description": "状态展示文案；为空时按 `state` 展示"
+                                  },
+                                  "disable_link": {
+                                    "type": "boolean",
+                                    "description": "是否禁止进入详情；为 `true` 时该记录不提供详情入口"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "list": [
+                      {
+                        "id": 881027,
+                        "order_id": "WD20261015000123",
+                        "amount": "5000.00",
+                        "currency": "HKD",
+                        "fee": "0.00",
+                        "bank_account": "012345678901",
+                        "created_at": 1760500800,
+                        "state": 0,
+                        "state_description": "已提交",
+                        "disable_link": false
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/historyinfo": {
+      "get": {
+        "tags": [
+          "资产"
+        ],
+        "summary": "获取出金记录筛选项",
+        "description": "查询出金记录可用的状态筛选项及出现过的币种，用于出金记录页筛选面板。将所选状态的 `key` 以英文逗号拼接后，作为 `GET /v6/portfolio/withdraw/record` 的 `states` 参数。\n",
+        "operationId": "getV1PortfolioWithdrawHistoryinfo",
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“获取出金记录筛选项”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "states": {
+                              "type": "array",
+                              "description": "可选状态",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "key": {
+                                    "type": "string",
+                                    "description": "状态值，对应出金记录的 `state`（字符串形式）"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "description": "状态名称，按请求语言返回"
+                                  }
+                                }
+                              }
+                            },
+                            "currencys": {
+                              "type": "array",
+                              "description": "出金记录中出现过的币种",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "states": [
+                      {
+                        "key": "0",
+                        "name": "已提交"
+                      },
+                      {
+                        "key": "4",
+                        "name": "已汇出"
+                      },
+                      {
+                        "key": "3",
+                        "name": "已撤销"
+                      }
+                    ],
+                    "currencys": [
+                      "HKD",
+                      "USD"
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v7/portfolio/withdraw/detail": {
+      "get": {
+        "tags": [
+          "资产"
+        ],
+        "summary": "获取出金详情",
+        "description": "按出金申请 id 查询单笔出金的详情，包括金额、手续费、状态、订单号、创建与更新时间、收款人与收款银行信息、收款人地址、备注、收款银行卡修改记录，以及是否可修改收款银行卡、是否有待确认的换卡建议，用于出金结果页和出金详情页。\n\n后续操作：`state` 为 `0` 或 `15` 时可用 `order_id` 调用 `POST /v2/portfolio/withdraw/cancel` 撤销；`can_edit_card` 为 `true` 时可调用 `PUT /v1/portfolio/withdraw/member/change/card` 更换收款银行卡；返回 `to_be_changed_card` 时，Client 确认后调用 `POST /v1/portfolio/withdraw/card/change/process` 接受换卡。部分租户渠道使用免交易密码校验的同数据版本 `GET /v7/portfolio/withdraw/detail/no/trade/auth`，参数相同，但不返回 `card_id`、`payee_address` 与 `to_be_changed_card.card_id`。\n\n经 WhaleCore `requestService()` 调用时，需将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "getV7PortfolioWithdrawDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "description": "出金申请 id，取自提交出金申请返回的 `id` 或出金记录的 `list[].id`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "<WITHDRAWAL_ID>"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“获取出金详情”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "description": "出金申请 id；修改收款银行卡时作为 `app_id`",
+                              "format": "int64"
+                            },
+                            "order_id": {
+                              "type": "string",
+                              "description": "出金订单号；撤销出金时传入"
+                            },
+                            "state": {
+                              "$ref": "#/components/schemas/WithdrawRecordState"
+                            },
+                            "amount": {
+                              "type": "string",
+                              "description": "出金金额"
+                            },
+                            "currency": {
+                              "type": "string",
+                              "description": "出金币种"
+                            },
+                            "fee": {
+                              "type": "string",
+                              "description": "出金手续费"
+                            },
+                            "created_at": {
+                              "type": "integer",
+                              "description": "创建时间，Unix 时间戳（秒）",
+                              "format": "int64"
+                            },
+                            "updated_at": {
+                              "type": "integer",
+                              "description": "更新时间，Unix 时间戳（秒）；未更新时可能为空",
+                              "format": "int64"
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "银行账户姓名"
+                            },
+                            "bank": {
+                              "type": "string",
+                              "description": "收款银行名称"
+                            },
+                            "bank_en": {
+                              "type": "string",
+                              "description": "收款银行英文名称"
+                            },
+                            "account": {
+                              "type": "string",
+                              "description": "收款银行账号"
+                            },
+                            "swift_code": {
+                              "type": "string",
+                              "description": "收款银行 SWIFT 代码"
+                            },
+                            "card_id": {
+                              "type": "integer",
+                              "description": "当前收款银行卡 id；更换收款银行卡时，新卡须与该卡不同",
+                              "format": "int64"
+                            },
+                            "payee_address": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/WithdrawPayeeAddress"
+                                }
+                              ],
+                              "description": "收款人地址；未填写时可能不返回"
+                            },
+                            "admin_remark": {
+                              "type": "string",
+                              "description": "备注"
+                            },
+                            "statement_remark": {
+                              "type": "string",
+                              "description": "结单备注"
+                            },
+                            "can_edit_card": {
+                              "type": "boolean",
+                              "description": "是否允许 Client 更换收款银行卡；仅在 `state` 为 `0` 或 `15` 时有意义"
+                            },
+                            "to_be_changed_card": {
+                              "type": "object",
+                              "description": "经审核建议 Client 更换的收款银行卡；返回时需 Client 确认后调用 `POST /v1/portfolio/withdraw/card/change/process` 才能继续出金。无换卡建议时不返回",
+                              "properties": {
+                                "card_id": {
+                                  "type": "integer",
+                                  "description": "建议更换的收款银行卡 id",
+                                  "format": "int64"
+                                },
+                                "bank": {
+                                  "type": "string",
+                                  "description": "银行名称"
+                                },
+                                "bank_en": {
+                                  "type": "string",
+                                  "description": "银行英文名称"
+                                },
+                                "account": {
+                                  "type": "string",
+                                  "description": "银行账号"
+                                },
+                                "swift_code": {
+                                  "type": "string",
+                                  "description": "银行 SWIFT 代码"
+                                }
+                              }
+                            },
+                            "records": {
+                              "type": "array",
+                              "description": "收款银行卡修改记录；`reversion` 为 `0` 的记录的 `before` 为原收款银行卡",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "reversion": {
+                                    "type": "integer",
+                                    "description": "修改序号，从 `0` 开始递增",
+                                    "format": "int32"
+                                  },
+                                  "updated_at": {
+                                    "type": "integer",
+                                    "description": "变更时间，Unix 时间戳（秒）",
+                                    "format": "int64"
+                                  },
+                                  "before": {
+                                    "allOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "bank": {
+                                            "type": "string",
+                                            "description": "收款银行名称"
+                                          },
+                                          "account": {
+                                            "type": "string",
+                                            "description": "收款银行账号"
+                                          }
+                                        }
+                                      }
+                                    ],
+                                    "description": "变更前的收款银行卡"
+                                  },
+                                  "after": {
+                                    "allOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "bank": {
+                                            "type": "string",
+                                            "description": "收款银行名称"
+                                          },
+                                          "account": {
+                                            "type": "string",
+                                            "description": "收款银行账号"
+                                          }
+                                        }
+                                      }
+                                    ],
+                                    "description": "变更后的收款银行卡"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "id": 881027,
+                    "order_id": "WD20261015000123",
+                    "state": 0,
+                    "amount": "5000.00",
+                    "currency": "HKD",
+                    "fee": "0.00",
+                    "created_at": 1760500800,
+                    "updated_at": 1760504400,
+                    "name": "CHAN TAI MAN",
+                    "bank": "示例银行（香港）",
+                    "bank_en": "Example Bank (Hong Kong)",
+                    "account": "012345678901",
+                    "swift_code": "EXAMHKHH",
+                    "card_id": 20381,
+                    "payee_address": {
+                      "payee_country": "HKG",
+                      "payee_state": "Hong Kong Island",
+                      "payee_city": "Hong Kong",
+                      "payee_street": "1 Example Road",
+                      "payee_building": "Example Tower",
+                      "address": "Flat A, 10/F",
+                      "payee_postcode": "000000"
+                    },
+                    "admin_remark": "",
+                    "statement_remark": "",
+                    "can_edit_card": true,
+                    "records": []
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/portfolio/withdraw/cancel": {
+      "post": {
+        "tags": [
+          "资产"
+        ],
+        "summary": "撤销出金申请",
+        "description": "撤销一笔尚未处理完成的出金申请，用于出金详情页的「撤销」操作。仅 `state` 为 `0`（已提交）或 `15`（待确认）的申请可以撤销；撤销后状态变为 `3`（已撤销），且不可恢复，Broker App 应在调用前请 Client 二次确认。\n\n`order_id` 取自 `GET /v7/portfolio/withdraw/detail`。成功后重新查询出金详情以刷新状态；失败时将 `message` 提示给 Client，并重新查询详情确认当前状态。\n\n经 WhaleCore `requestService()` 调用时，需将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "postV2PortfolioWithdrawCancel",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "order_id": {
+                    "type": "string",
+                    "description": "出金订单号，取自出金详情的 `order_id`",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "order_id"
+                ]
+              },
+              "example": {
+                "order_id": "<ORDER_ID>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“撤销出金申请”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "ok": {
+                              "type": "boolean",
+                              "description": "是否撤销成功"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "ok": true
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/member/change/card": {
+      "put": {
+        "tags": [
+          "资产"
+        ],
+        "summary": "修改出金收款银行卡",
+        "description": "由 Client 为一笔处理中的出金申请更换收款银行卡，用于出金详情页的「修改收款银行」操作。成功后出金详情的收款银行信息更新，并在 `records` 中新增一条修改记录。\n\n前置条件：出金详情的 `can_edit_card` 为 `true` 且 `state` 为 `0` 或 `15`。新卡从 `GET /v3/portfolio/withdraw/cards` 中选择，须已认证（`status` 为 `2`）、入金见证状态为 `1` 或 `3`、`account_type` 与出金币种一致或为 `ALL`，且不同于当前收款银行卡。调用前先用新卡调用 `POST /v1/portfolio/withdraw/card/addresscheck`；`address_needed` 为 `true` 时，先通过 `POST /v1/portfolio/withdraw/card/address` 保存收款人地址。\n\n成功后重新查询出金详情。若详情返回的是后台建议的换卡（`to_be_changed_card`），请改用 `POST /v1/portfolio/withdraw/card/change/process`。\n",
+        "operationId": "putV1PortfolioWithdrawMemberChangeCard",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "app_id": {
+                    "type": "integer",
+                    "description": "出金申请 id，取自出金详情的 `id`",
+                    "format": "int64"
+                  },
+                  "card_id": {
+                    "type": "integer",
+                    "description": "新的收款银行卡 id，取自「获取出金银行卡列表」的 `list[].id`",
+                    "format": "int64"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "card_id"
+                ]
+              },
+              "example": {
+                "app_id": 881027,
+                "card_id": 20395
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“修改出金收款银行卡”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求未通过业务规则或输入校验。重试前，请根据业务码修正请求。",
+            "x-business-codes": [
+              {
+                "code": 2033105,
+                "description": "出金申请已进入后台处理阶段，暂无法修改收款银行。提示 Client 后重新查询出金详情"
+              },
+              {
+                "code": 2031199,
+                "description": "收款银行卡缺少必填的收款人地址。调用 `POST /v1/portfolio/withdraw/card/addresscheck` 获取需填字段，经 `POST /v1/portfolio/withdraw/card/address` 补录后重新提交"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/card/change/process": {
+      "post": {
+        "tags": [
+          "资产"
+        ],
+        "summary": "确认建议的收款银行卡",
+        "description": "接受审核建议的收款银行卡更换，用于出金详情页「确认修改」操作。出金详情返回 `to_be_changed_card` 时，表示经审核建议 Client 更换为该银行卡后继续出金；Client 确认后调用本接口，出金申请的收款银行卡更新为 `to_be_changed_card`。\n\n调用前先用 `to_be_changed_card.card_id` 调用 `POST /v1/portfolio/withdraw/card/addresscheck`；`address_needed` 为 `true` 时，先通过 `POST /v1/portfolio/withdraw/card/address` 保存收款人地址。成功后重新查询出金详情。由 Client 自选新卡时请改用 `PUT /v1/portfolio/withdraw/member/change/card`。\n",
+        "operationId": "postV1PortfolioWithdrawCardChangeProcess",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "app_id": {
+                    "type": "string",
+                    "description": "出金申请 id（字符串形式），取自出金详情的 `id`",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "app_id"
+                ]
+              },
+              "example": {
+                "app_id": "<WITHDRAWAL_ID>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“确认建议的收款银行卡”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求未通过业务规则或输入校验。重试前，请根据业务码修正请求。",
+            "x-business-codes": [
+              {
+                "code": 2031199,
+                "description": "收款银行卡缺少必填的收款人地址。调用 `POST /v1/portfolio/withdraw/card/addresscheck` 获取需填字段，经 `POST /v1/portfolio/withdraw/card/address` 补录后重新提交"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/card/addresscheck": {
+      "post": {
+        "tags": [
+          "资产"
+        ],
+        "summary": "检查银行卡收款人地址",
+        "description": "检查指定银行卡以指定币种出金时是否需要收款人地址，并返回需填写的地址字段、该卡当前地址及可用于一键填入的预填地址。本接口只做查询，不修改数据。\n\n调用时机：提现前置信息的 `need_payee_address` 为 `true` 时、修改出金收款银行卡前、确认建议的收款银行卡前，以及提交出金或改卡返回业务码 `2031199` 后。`address_needed` 为 `true` 时，按 `want_fields` 渲染地址表单并通过 `POST /v1/portfolio/withdraw/card/address` 保存；`address_valid` 为 `false` 时须补充或修改地址后才能继续出金。\n",
+        "operationId": "postV1PortfolioWithdrawCardAddresscheck",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "card_id": {
+                    "type": "integer",
+                    "description": "银行卡 id",
+                    "format": "int64"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "description": "本次出金币种，如 USD",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "card_id",
+                  "currency"
+                ]
+              },
+              "example": {
+                "card_id": 20381,
+                "currency": "USD"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“检查银行卡收款人地址”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "address_needed": {
+                              "type": "boolean",
+                              "description": "该卡本次出金是否需要收款人地址；为 `true` 时展示地址表单"
+                            },
+                            "address_valid": {
+                              "type": "boolean",
+                              "description": "当前地址是否有效：`true` 表示地址符合要求，Client 确认即可；`false` 表示地址缺失或不符合现行规则，须补充或修改后才能出金"
+                            },
+                            "want_fields": {
+                              "type": "array",
+                              "description": "该卡需要填写的地址字段，Broker App 按返回顺序渲染表单",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "address",
+                                  "payee_building",
+                                  "payee_city",
+                                  "payee_country",
+                                  "payee_postcode",
+                                  "payee_state",
+                                  "payee_street"
+                                ]
+                              }
+                            },
+                            "now_address": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/WithdrawPayeeAddress"
+                                }
+                              ],
+                              "description": "该卡当前已保存的收款人地址，用于回显；未保存时不返回或为空"
+                            },
+                            "prefill_address": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/WithdrawPayeeAddress"
+                                }
+                              ],
+                              "description": "Client 最近为其他银行卡提交的收款人地址，用于一键填入；无可用地址时不返回或为空"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "address_needed": true,
+                    "address_valid": false,
+                    "want_fields": [
+                      "payee_country",
+                      "payee_state",
+                      "payee_city",
+                      "payee_street",
+                      "address",
+                      "payee_postcode"
+                    ],
+                    "prefill_address": {
+                      "payee_country": "HKG",
+                      "payee_state": "Kowloon",
+                      "payee_city": "Hong Kong",
+                      "payee_street": "8 Sample Street",
+                      "payee_building": "",
+                      "address": "Flat B, 5/F",
+                      "payee_postcode": "000000"
+                    }
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/card/countries": {
+      "get": {
+        "tags": [
+          "资产"
+        ],
+        "summary": "获取收款人国家/地区列表",
+        "description": "查询收款人地址表单可选的国家/地区及其中英文名称，用于渲染国家/地区选择器，以及将出金详情中 `payee_address.payee_country` 的代码解析为名称。保存收款人地址时，`payee_country` 传所选项的 `code2`。\n",
+        "operationId": "getV1PortfolioWithdrawCardCountries",
+        "parameters": [
+          {
+            "name": "bind_card_allowed",
+            "in": "query",
+            "required": false,
+            "description": "是否只返回允许绑卡的国家/地区：`true` 只返回允许绑卡的国家/地区，用于地址表单；不传或为 `false` 返回全部，用于展示历史地址",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“获取收款人国家/地区列表”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "list": {
+                              "type": "array",
+                              "description": "国家/地区列表",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "code1": {
+                                    "type": "string",
+                                    "description": "ISO 3166-1 alpha-2 代码，如 `HK`"
+                                  },
+                                  "code2": {
+                                    "type": "string",
+                                    "description": "ISO 3166-1 alpha-3 代码，如 `HKG`；保存收款人地址时作为 `payee_country`"
+                                  },
+                                  "name_cn": {
+                                    "type": "string",
+                                    "description": "简体中文名称"
+                                  },
+                                  "name_tn": {
+                                    "type": "string",
+                                    "description": "繁体中文名称"
+                                  },
+                                  "name_en": {
+                                    "type": "string",
+                                    "description": "英文名称"
+                                  },
+                                  "bind_card_allowed": {
+                                    "type": "boolean",
+                                    "description": "该国家/地区是否允许绑卡"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "list": [
+                      {
+                        "code1": "HK",
+                        "code2": "HKG",
+                        "name_cn": "中国香港",
+                        "name_tn": "中國香港",
+                        "name_en": "Hong Kong, China",
+                        "bind_card_allowed": true
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/card/address": {
+      "post": {
+        "tags": [
+          "资产"
+        ],
+        "summary": "更新银行卡收款人地址",
+        "description": "保存指定银行卡的收款人地址，用于出金页、修改收款银行卡和确认建议换卡流程中补录地址。保存即时生效、不进入审核；提交与已保存值相同的地址不会产生变更。\n\n先调用 `POST /v1/portfolio/withdraw/card/addresscheck` 获取 `want_fields`。`address` 中 7 个字段必须全部传入，`want_fields` 之外的字段传空字符串。保存成功后再调用 `POST /v5/portfolio/withdraw` 提交出金，或继续调用改卡接口；失败时将 `message` 提示给 Client，修正后重试。\n",
+        "operationId": "postV1PortfolioWithdrawCardAddress",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "card_id": {
+                    "type": "integer",
+                    "description": "银行卡 id",
+                    "format": "int64"
+                  },
+                  "address": {
+                    "type": "object",
+                    "description": "收款人地址；7 个字段均须传入，不需要的字段传空字符串",
+                    "properties": {
+                      "payee_country": {
+                        "type": "string",
+                        "description": "国家/地区，ISO 3166-1 alpha-3 代码，取自「获取收款人国家/地区列表」的 `code2`"
+                      },
+                      "payee_state": {
+                        "type": "string",
+                        "description": "省、州或行政区，最多 35 个字符",
+                        "maxLength": 35
+                      },
+                      "payee_city": {
+                        "type": "string",
+                        "description": "城市，最多 30 个字符",
+                        "maxLength": 30
+                      },
+                      "payee_street": {
+                        "type": "string",
+                        "description": "街道，最多 70 个字符",
+                        "maxLength": 70
+                      },
+                      "payee_building": {
+                        "type": "string",
+                        "description": "楼宇或大厦名称，最多 35 个字符",
+                        "maxLength": 35
+                      },
+                      "address": {
+                        "type": "string",
+                        "description": "详细地址，最多 70 个字符",
+                        "maxLength": 70
+                      },
+                      "payee_postcode": {
+                        "type": "string",
+                        "description": "邮政编码，最多 16 个字符",
+                        "maxLength": 16
+                      }
+                    },
+                    "required": [
+                      "address",
+                      "payee_building",
+                      "payee_city",
+                      "payee_country",
+                      "payee_postcode",
+                      "payee_state",
+                      "payee_street"
+                    ]
+                  }
+                },
+                "required": [
+                  "card_id",
+                  "address"
+                ]
+              },
+              "example": {
+                "card_id": 20381,
+                "address": {
+                  "payee_country": "HKG",
+                  "payee_state": "Kowloon",
+                  "payee_city": "Hong Kong",
+                  "payee_street": "8 Sample Street",
+                  "payee_building": "",
+                  "address": "Flat B, 5/F",
+                  "payee_postcode": "000000"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“更新银行卡收款人地址”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

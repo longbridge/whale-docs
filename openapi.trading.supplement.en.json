@@ -1,0 +1,4118 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "TradingAPI supplement",
+    "description": "Supplementary TradingAPI operations maintained in this repository until they are available in the upstream source.",
+    "version": "1.0.0"
+  },
+  "tags": [],
+  "components": {
+    "schemas": {
+      "OrderPageBidSize": {
+        "type": "object",
+        "description": "One price band in the tick-size table and its minimum price increment. When a price is greater than `str_proceed` and not greater than `end_proceed`, use this band's `bid_size`.",
+        "properties": {
+          "bid_size": {
+            "type": "string",
+            "description": "Minimum price increment in this band, for example \"0.01\""
+          },
+          "str_proceed": {
+            "type": "string",
+            "description": "Lower bound of the band (exclusive)"
+          },
+          "end_proceed": {
+            "type": "string",
+            "description": "Upper bound of the band (inclusive)"
+          }
+        }
+      },
+      "OrderPageOrderTypeConfig": {
+        "type": "object",
+        "description": "Trading sessions and time-in-force values supported by one order type",
+        "properties": {
+          "support_sessions": {
+            "type": "array",
+            "description": "Trading sessions supported by this order type:\n- `1` - Regular trading hours only\n- `2` - Regular trading hours plus pre-market and after-hours\n- `3` - Overnight session only\n- `4` - Pre-market (used for overnight options trading)\n\nAn empty list means the order type has no session option, and the order page should hide session selection.\n",
+            "items": {
+              "type": "integer",
+              "format": "int32",
+              "enum": [
+                1,
+                2,
+                3,
+                4
+              ]
+            }
+          },
+          "support_time_in_forces": {
+            "type": "array",
+            "description": "Time-in-force values supported by this order type:\n- `0` - Day (DAY)\n- `1` - Good till canceled (GTC)\n- `3` - Immediate or cancel (IOC)\n- `5` - Fill or kill (FOK)\n- `6` - Good till date (GTD)\n",
+            "items": {
+              "type": "integer",
+              "format": "int32",
+              "enum": [
+                0,
+                1,
+                3,
+                5,
+                6
+              ]
+            }
+          }
+        }
+      },
+      "OrderPageGrantedStatus": {
+        "type": "object",
+        "description": "Authorization status of one trading qualification, certification, or risk statement",
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Certification status:\n- `0` - Unknown\n- `1` - Passed\n- `2` - Not passed\n- `3` - Pending review\n",
+            "enum": [
+              0,
+              1,
+              2,
+              3
+            ]
+          },
+          "expired": {
+            "type": "boolean",
+            "description": "Whether the authorization or certification has expired. If it has, the user must complete it again."
+          },
+          "url": {
+            "type": "string",
+            "description": "URL of the page where the user completes this authorization or certification"
+          }
+        }
+      },
+      "OrderPageChannelInfo": {
+        "type": "object",
+        "description": "Trading configuration of the current account for this security. In addition to the fields below, the response contains several `*_granted` booleans (whether the corresponding authorization, certification, or risk statement is complete) with matching certification URL fields (`*_url`, `*_granted_url`). Some apply only to specific markets or businesses, and the server determines which fields are present. When a value is `false`, guide the user to the matching URL before submitting the order, and call this endpoint again afterward to refresh the status.",
+        "properties": {
+          "account_channel": {
+            "type": "string",
+            "description": "Account channel. Together with `org_id` and `aaid`, it identifies the account this configuration belongs to."
+          },
+          "org_id": {
+            "type": "string",
+            "description": "Tenant ID"
+          },
+          "aaid": {
+            "type": "string",
+            "description": "Asset account ID"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Quote currency of the security, for example USD, HKD, or GBX"
+          },
+          "settlement_currency": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Available settlement currencies. The first item is the default trading currency; pass it as `currency` when you query positions and cash, buying power, and estimated fees."
+          },
+          "order_type_config": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/OrderPageOrderTypeConfig"
+            },
+            "description": "Order type configuration available for this security and account. Keys are order type codes, for example `LO` (limit order), `ELO` (enhanced limit order), `MO` (market order), `LIT` (limit-if-touched), and `MIT` (market-if-touched). An order type that does not appear is unavailable. When this object is returned, use the per-order-type configuration for sessions and time in force."
+          },
+          "support_trade": {
+            "type": "boolean",
+            "description": "Whether the current account channel supports trading. When `false`, do not offer order entry."
+          },
+          "restricted": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Online trading restriction:\n- `1` - Online buying is not allowed\n- `2` - Online selling is not allowed\n- `3` - Neither online buying nor online selling is allowed\n\nIf the field is absent or has another value, no such restriction applies. For a restricted direction, direct the user to contact the Broker offline.\n",
+            "enum": [
+              1,
+              2,
+              3
+            ]
+          },
+          "support_rth": {
+            "type": "boolean",
+            "description": "Whether pre-market and after-hours trading is supported. When `order_type_config` is returned, `support_sessions` in it takes precedence."
+          },
+          "support_overnight": {
+            "type": "boolean",
+            "description": "Whether overnight trading is supported. When `order_type_config` is returned, `support_sessions` in it takes precedence."
+          },
+          "gtd_support_order_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Order type codes that support good-till-date (GTD) orders"
+          },
+          "support_attached_order_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Order type codes that accept attached orders"
+          },
+          "support_fractional_shares": {
+            "type": "boolean",
+            "description": "Whether US fractional-share trading is supported"
+          },
+          "fractional_min_amount": {
+            "type": "string",
+            "description": "Minimum amount, in USD, for a fractional-share order placed by amount. Orders below this amount are rejected."
+          },
+          "mo_avail_ratio": {
+            "type": "string",
+            "description": "Buying-power factor for market orders. Available buying power for a market order (including an untriggered market conditional order) equals `buy_limit` from Get Buying Power for Order Entry multiplied by this factor. Treat an empty value as 1."
+          },
+          "finance_account_status": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Margin credit status:\n- `0` - Normal\n- `1` - Credit limit is 0 and an adjustment request is under review\n- `2` - Credit limit is 0 and no request is under review\n\nWhen the value is `1` or `2`, trades that require margin credit, such as opening a short stock position or selling to open options, cannot proceed. Tell the user to wait for review or request a limit adjustment.\n",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "account_risk_level": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Account risk level:\n- `0` - No additional statement is required\n- `1` - The user must confirm the trade-anyway statement before ordering\n- `2` - The user must confirm the important notice before ordering\n",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "confirm_purchase_statement": {
+            "type": "boolean",
+            "description": "Whether the user has confirmed the trade-anyway statement"
+          },
+          "confirm_important_notice": {
+            "type": "boolean",
+            "description": "Whether the user has confirmed the important notice"
+          },
+          "granted_info": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/OrderPageGrantedStatus"
+            },
+            "description": "Authorization status of each trading qualification and risk statement. Keys are qualification type codes, for example `us_overnight_risk_agreement` (US overnight trading risk statement) and `fractional_shares_risk_agreement` (fractional-share trading risk statement). The server determines the other keys."
+          }
+        }
+      },
+      "OrderPageStockContract": {
+        "type": "object",
+        "description": "Option contract information, returned only for options",
+        "properties": {
+          "contract_direction": {
+            "type": "string",
+            "description": "Option type: `C` for a call, `P` for a put"
+          },
+          "underlying_counter_id": {
+            "type": "string",
+            "description": "Security ID of the underlying stock"
+          },
+          "nearing_expire": {
+            "type": "boolean",
+            "description": "Whether the option is close to expiry"
+          },
+          "contract_model": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Option margin mode:\n- `1` - Non-margin mode\n- `2` - Margin mode\n",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "open_purchase_limit": {
+            "type": "object",
+            "description": "Minimum buying power required to open an option position. No threshold applies when `threshold` is empty or 0.",
+            "properties": {
+              "threshold": {
+                "type": "string",
+                "description": "Threshold amount"
+              },
+              "currency": {
+                "type": "string",
+                "description": "Currency of the threshold amount"
+              }
+            }
+          }
+        }
+      },
+      "OrderPageTradableButton": {
+        "type": "object",
+        "description": "Guidance button in the tradability dialog",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Button label"
+          },
+          "link": {
+            "type": "string",
+            "description": "Target link, used when `type` is `2`"
+          },
+          "type": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Action on tap:\n- `0` - Close the dialog without entering order entry\n- `1` - Open the order page for this security\n- `2` - Open the page that `link` points to\n",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "direction": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Order direction when `type` is `1`:\n- `0` - Not restricted\n- `1` - Buy only\n- `2` - Sell only\n",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          }
+        }
+      },
+      "TradeAuthToken": {
+        "type": "object",
+        "description": "Trade token and its refresh token, issued per account",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Trade token. Pass it as `tradeToken` to `WhaleCoreService.updateTradeToken(...)`"
+          },
+          "refresh_token": {
+            "type": "string",
+            "description": "Refresh token. Pass it as `tradeRefreshToken` to `updateTradeToken`; it is also the input of `POST /v1/member/trade/refresh_token`"
+          },
+          "refresh_token_expires": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Lifetime of the refresh token, in seconds, counted from issuance"
+          }
+        }
+      },
+      "SearchSecurityItem": {
+        "type": "object",
+        "description": "A single security candidate in search results",
+        "properties": {
+          "counter_id": {
+            "type": "string",
+            "description": "Security ID in the format `<product>/<market>/<code>`, such as `ST/US/AAPL`. Use it to identify the security in follow-up actions such as opening the security detail page or adding it to a watchlist"
+          },
+          "code": {
+            "type": "string",
+            "description": "Security code, such as `AAPL` or `700`. Pass it as the `code` parameter when you load the next page"
+          },
+          "name": {
+            "type": "string",
+            "description": "Security name in the request language"
+          },
+          "market": {
+            "type": "string",
+            "description": "Market of the security, such as `HK` or `US`. Broker App uses it to display the market badge"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Trading currency, such as `USD` or `HKD`. For fund results, Broker App displays the currency instead of the market badge"
+          },
+          "product": {
+            "type": "string",
+            "description": "Security product code, such as `ST`, `ETF`, or `UT`"
+          },
+          "score": {
+            "type": "number",
+            "description": "Ranking score of the result. To load the next page, pass the value from the last result of the previous page as the `score` parameter"
+          }
+        }
+      },
+      "CashFlowRecordItem": {
+        "type": "object",
+        "description": "A single cash flow record",
+        "properties": {
+          "tx_type": {
+            "type": "string",
+            "description": "Record type code, such as `cash_in` or `cash_out`. Use `type_name` for Client-facing display"
+          },
+          "type_name": {
+            "type": "string",
+            "description": "Localized record type name in the request language. Broker App displays it as the record title"
+          },
+          "category": {
+            "type": "string",
+            "description": "Direction prefix for the amount. Broker App prepends it to `amount` as is; when it is empty, only the amount is displayed"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Cash change amount as a decimal string. An empty value or `0` means the record only involves a change in share quantity"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency of the amount, such as `HKD` or `USD`"
+          },
+          "stock_quantity": {
+            "type": "string",
+            "description": "Change in share quantity. When it is not empty, `quantity_description` provides the Client-facing text"
+          },
+          "quantity_description": {
+            "type": "string",
+            "description": "Localized description of the share quantity change. Broker App shows it as the main value when the record only changes shares, and as secondary text when an amount is also present"
+          },
+          "description": {
+            "type": "string",
+            "description": "Localized supplementary text for the record. Broker App shows it after the date when it is not empty"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Record creation time as a Unix timestamp in seconds. Broker App groups the list by the year and month of this time"
+          },
+          "done_at": {
+            "type": "string",
+            "description": "Record completion time as a Unix timestamp in seconds. Broker App displays this date in the list"
+          }
+        }
+      },
+      "WithdrawRecordState": {
+        "type": "integer",
+        "format": "int32",
+        "description": "Withdrawal request status:\n- `0` - Submitted and being processed\n- `1` - Processing\n- `2` - Rejected\n- `3` - Cancelled by the Client\n- `4` - Remitted\n- `5` - Failed\n- `6` - Refunded\n- `7` - Approved but not yet remitted\n- `8` - Under large-amount withdrawal review\n- `9` - Modification pending approval\n- `10` - Deletion pending approval\n- `11` - Deleted\n- `12` - Rejection pending approval\n- `15` - To be confirmed: the Client must confirm a change of the receiving bank card before processing continues\n\nOnly requests in status `0` or `15` can be cancelled. When displaying the status, prefer the returned `state_description`.\n",
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          15
+        ]
+      },
+      "WithdrawPayeeAddress": {
+        "type": "object",
+        "description": "Payee address of a bank card",
+        "properties": {
+          "payee_country": {
+            "type": "string",
+            "description": "Payee country or region as an ISO 3166-1 alpha-3 code (for example, `HKG`), taken from `code2` of “Get Payee Countries and Regions”"
+          },
+          "payee_state": {
+            "type": "string",
+            "description": "State, province, or administrative region"
+          },
+          "payee_city": {
+            "type": "string",
+            "description": "City"
+          },
+          "payee_street": {
+            "type": "string",
+            "description": "Street"
+          },
+          "payee_building": {
+            "type": "string",
+            "description": "Building name; required only for some countries or regions"
+          },
+          "address": {
+            "type": "string",
+            "description": "Detailed address"
+          },
+          "payee_postcode": {
+            "type": "string",
+            "description": "Postal code"
+          }
+        }
+      },
+      "WithdrawBankCard": {
+        "type": "object",
+        "description": "A bound bank card",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Bank card id, used as `card_id` for the pre-check and the withdrawal request"
+          },
+          "bank_card_identity": {
+            "type": "string",
+            "description": "Bank card identity. Together with `id`, it identifies one bank card; pass it with `card_id` when submitting a withdrawal request"
+          },
+          "bank": {
+            "type": "string",
+            "description": "Bank name"
+          },
+          "bank_en": {
+            "type": "string",
+            "description": "Bank name in English"
+          },
+          "bank_code": {
+            "type": "string",
+            "description": "Bank code; `FPS` indicates a Faster Payment System (FPS) receiving account"
+          },
+          "account": {
+            "type": "string",
+            "description": "Bank account number"
+          },
+          "account_type": {
+            "type": "string",
+            "description": "Currency the card supports for withdrawals, for example `HKD`; `ALL` means all currencies. The withdrawal currency must match this value unless it is `ALL`"
+          },
+          "region": {
+            "type": "string",
+            "description": "Full name of the region where the bank card is issued, for example `HONGKONG`"
+          },
+          "swift_code": {
+            "type": "string",
+            "description": "Bank SWIFT code"
+          },
+          "icon": {
+            "type": "string",
+            "description": "Bank icon URL"
+          },
+          "status": {
+            "type": "integer",
+            "description": "Bank card verification status:\n- `0` - Not verified; the card must be verified first\n- `1` - Under verification review; withdrawals cannot be submitted\n- `2` - Verified\n",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          },
+          "witness_state": {
+            "type": "integer",
+            "description": "Deposit witness status:\n- `1` - No witness required\n- `2` - Witness pending\n- `3` - Witnessed\n\nFor accounts opened with cash verification, only cards in status `1` or `3` can be used for withdrawals.\n",
+            "format": "int32",
+            "enum": [
+              1,
+              2,
+              3
+            ]
+          },
+          "bind_state": {
+            "type": "integer",
+            "description": "Binding status:\n- `0` - Binding under review\n- `1` - Bound\n- `2` - Binding failed\n\nTreat a missing value as bound. Only bound cards can be used for withdrawals.\n",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2
+            ]
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/v5/orders/info": {
+      "get": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Get Order Configuration",
+        "description": "Retrieves the order rules and configuration for a security under the current account when the user opens the order page, switches securities, or switches accounts: lot size, tick-size table, order price limits, order tag, the trading sessions and time-in-force values supported by each order type, support for good-till-date and attached orders, US fractional shares, available settlement currencies, online buy and sell restrictions, the market order buying-power factor, and the status of authorizations and statements required before ordering. A Broker-built order page uses this response to determine the available order types, sessions, time in force, quantity step, and price step, and to block submission when an authorization is missing. When amending an order, pass the original order ID to get the configuration for that order. After the user completes an authorization or certification, call this endpoint again to refresh the status. This endpoint is also used by the recurring investment plan creation page (to read the trading configuration of the security) and by the options income and protection strategy pages (to read the authorization status of the strategy risk agreement).\n\nWhaleCore's `orderService()` wraps this endpoint as the typed method `getOrderInfo`. If you use WhaleCore, prefer that method.\n",
+        "operationId": "getV5OrdersInfo",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "Security ID (counter_id), for example `ST/US/AAPL` or `ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "description": "Original order ID when amending an order. Omit it for a new order.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order_id_str",
+            "in": "query",
+            "required": false,
+            "description": "String form of the original order ID. When amending an order, pass the same value as `order_id`.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get Order Configuration” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "counter_id": {
+                              "type": "string",
+                              "description": "Security ID"
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Security name"
+                            },
+                            "last_done": {
+                              "type": "string",
+                              "description": "Latest price in the quote currency"
+                            },
+                            "lot_size": {
+                              "type": "string",
+                              "description": "Lot size. Use it as the quantity step when `buy_lot_size` or `sell_lot_size` is empty."
+                            },
+                            "buy_lot_size": {
+                              "type": "string",
+                              "description": "Lot size for buy orders"
+                            },
+                            "sell_lot_size": {
+                              "type": "string",
+                              "description": "Lot size for sell orders"
+                            },
+                            "upper_limit": {
+                              "type": "string",
+                              "description": "Upper price limit. The order price cannot exceed this value."
+                            },
+                            "lower_limit": {
+                              "type": "string",
+                              "description": "Lower price limit. The order price cannot be below this value."
+                            },
+                            "tag": {
+                              "type": "integer",
+                              "format": "int32",
+                              "description": "Order tag. Pass it as `order_tag` when estimating trading fees:\n- `1` - Regular order\n- `2` - Long-term order\n- `3` - Grey market order\n",
+                              "enum": [
+                                1,
+                                2,
+                                3
+                              ]
+                            },
+                            "timestamp": {
+                              "type": "string",
+                              "description": "Current server time as a Unix timestamp in seconds"
+                            },
+                            "bid_sizes": {
+                              "type": "array",
+                              "description": "Tick-size table used to determine the minimum price increment for a price and to validate or adjust the order price. When no band matches, use the first item.",
+                              "items": {
+                                "$ref": "#/components/schemas/OrderPageBidSize"
+                              }
+                            },
+                            "is_connect": {
+                              "type": "boolean",
+                              "description": "Whether the security is traded through China Connect"
+                            },
+                            "is_spac": {
+                              "type": "boolean",
+                              "description": "Whether the security is a SPAC"
+                            },
+                            "is_rights": {
+                              "type": "boolean",
+                              "description": "Whether the security is a rights issue"
+                            },
+                            "channel_infos": {
+                              "$ref": "#/components/schemas/OrderPageChannelInfo"
+                            },
+                            "stock_contract": {
+                              "$ref": "#/components/schemas/OrderPageStockContract"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "counter_id": "ST/US/AAPL",
+                    "name": "Apple",
+                    "last_done": "228.52",
+                    "lot_size": "1",
+                    "buy_lot_size": "1",
+                    "sell_lot_size": "1",
+                    "upper_limit": "",
+                    "lower_limit": "",
+                    "tag": 1,
+                    "timestamp": "1760598000",
+                    "bid_sizes": [
+                      {
+                        "bid_size": "0.0001",
+                        "str_proceed": "0",
+                        "end_proceed": "1"
+                      },
+                      {
+                        "bid_size": "0.01",
+                        "str_proceed": "1",
+                        "end_proceed": "999999"
+                      }
+                    ],
+                    "is_connect": false,
+                    "is_spac": false,
+                    "is_rights": false,
+                    "channel_infos": {
+                      "account_channel": "<BROKER_CHANNEL>",
+                      "org_id": "<ORG_ID>",
+                      "aaid": "<AAID>",
+                      "currency": "USD",
+                      "settlement_currency": [
+                        "USD"
+                      ],
+                      "order_type_config": {
+                        "LO": {
+                          "support_sessions": [
+                            1,
+                            2,
+                            3
+                          ],
+                          "support_time_in_forces": [
+                            0,
+                            1,
+                            6
+                          ]
+                        },
+                        "MO": {
+                          "support_sessions": [],
+                          "support_time_in_forces": [
+                            0
+                          ]
+                        }
+                      },
+                      "support_trade": true,
+                      "support_rth": true,
+                      "support_overnight": true,
+                      "gtd_support_order_types": [
+                        "LO"
+                      ],
+                      "support_attached_order_types": [
+                        "LO"
+                      ],
+                      "support_fractional_shares": true,
+                      "fractional_min_amount": "5",
+                      "mo_avail_ratio": "0.95",
+                      "finance_account_status": 0,
+                      "account_risk_level": 0,
+                      "confirm_purchase_statement": false,
+                      "confirm_important_notice": false,
+                      "granted_info": {
+                        "us_overnight_risk_agreement": {
+                          "status": 1,
+                          "expired": false,
+                          "url": ""
+                        }
+                      }
+                    }
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v5/orders/tradable": {
+      "get": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Check Security Tradability",
+        "description": "Checks whether a security can be traded in the current account when the user switches or searches for a security on the order page, and returns a prompt and guidance buttons. When `is_alert` is `true`, show `msg` and `buttons` in a dialog instead of opening order entry directly; if `buttons` is empty, treat the security as not tradable. When `is_alert` is `false`, the order page can open; if `is_toast` is also `true`, show `msg` as a brief toast.\n\nWhaleCore's `orderService()` wraps this endpoint as the typed method `checkTradability`. If you use WhaleCore, prefer that method.\n",
+        "operationId": "getV5OrdersTradable",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "Security ID (counter_id), for example `ST/US/AAPL` or `ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/HK/700"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Check Security Tradability” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "counter_id": {
+                              "type": "string",
+                              "description": "Security ID"
+                            },
+                            "is_cnconnect": {
+                              "type": "boolean",
+                              "description": "Whether the security is traded through China Connect"
+                            },
+                            "is_alert": {
+                              "type": "boolean",
+                              "description": "Whether to show a dialog and block direct order entry"
+                            },
+                            "is_toast": {
+                              "type": "boolean",
+                              "description": "When order entry is allowed, whether to show `msg` as a toast"
+                            },
+                            "msg": {
+                              "type": "string",
+                              "description": "Prompt text"
+                            },
+                            "buttons": {
+                              "type": "array",
+                              "description": "Guidance buttons in the dialog",
+                              "items": {
+                                "$ref": "#/components/schemas/OrderPageTradableButton"
+                              }
+                            },
+                            "support_regular_saving_plan": {
+                              "type": "boolean",
+                              "description": "Whether the security supports recurring investment plans"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "counter_id": "ST/HK/700",
+                    "is_cnconnect": false,
+                    "is_alert": false,
+                    "is_toast": false,
+                    "msg": "",
+                    "buttons": [],
+                    "support_regular_saving_plan": true
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orders/is_next_day": {
+      "get": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Check Next-Trading-Day Rollover",
+        "description": "Checks, when the order page loads, whether a day (DAY) order for this security submitted now would roll to the next trading day. When the result is `true`, you can show \"Valid until the close of the next trading day\" next to the time in force on the order confirmation page. The result applies only to day orders: read `is_next_day` when the order trades during regular hours only, and `is_next_day_after` when it also trades pre-market and after-hours. A limit order for the overnight session only follows the overnight session rules and does not use this result.\n",
+        "operationId": "getV1OrdersIsNextDay",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "Security ID (counter_id), for example `ST/US/AAPL` or `ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Check Next-Trading-Day Rollover” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "is_next_day": {
+                              "type": "boolean",
+                              "description": "Whether a day order that trades during regular hours only rolls to the next trading day"
+                            },
+                            "is_next_day_after": {
+                              "type": "boolean",
+                              "description": "Whether a day order that also trades pre-market and after-hours rolls to the next trading day"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "is_next_day": true,
+                    "is_next_day_after": false
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/asset/trade/detail": {
+      "get": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Get Position and Cash for Order Entry",
+        "description": "Retrieves, when the order page loads, the position quantity, available quantity, and cost of the current account in a security, together with the cash in the specified currency, to show the position and the quantity available to sell. The returned `quantity`, `average_cost`, and `diluted_avg_cost` are inputs to Estimate Post-Trade Average Cost, and the sign of `quantity` determines `position_side` when estimating trading fees. When you call this endpoint through WhaleCore `requestService()`, set `requiresTradeToken` to `true`.\n\nWhaleCore's `orderService()` wraps this endpoint as the typed method `getTradeDetail`. If you use WhaleCore, prefer that method.\n",
+        "operationId": "getV1PortfolioAssetTradeDetail",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "Security ID (counter_id), for example `ST/US/AAPL` or `ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "description": "Trading (settlement) currency, for example USD or HKD. Use the first item of `channel_infos.settlement_currency` returned by Get Order Configuration.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "USD"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get Position and Cash for Order Entry” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "counter_id": {
+                              "type": "string",
+                              "description": "Security ID"
+                            },
+                            "currency": {
+                              "type": "string",
+                              "description": "Currency"
+                            },
+                            "balance": {
+                              "type": "string",
+                              "description": "Cash balance in this currency"
+                            },
+                            "available_cash": {
+                              "type": "string",
+                              "description": "Available cash of the account"
+                            },
+                            "quantity": {
+                              "type": "string",
+                              "description": "Position quantity. A negative value indicates a short position."
+                            },
+                            "available_quantity": {
+                              "type": "string",
+                              "description": "Available position quantity"
+                            },
+                            "average_cost": {
+                              "type": "string",
+                              "description": "Average purchase cost"
+                            },
+                            "diluted_avg_cost": {
+                              "type": "string",
+                              "description": "Diluted cost"
+                            },
+                            "underlying_available_quantity": {
+                              "type": "string",
+                              "description": "For an option, the available position quantity of the underlying stock"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "counter_id": "ST/US/AAPL",
+                    "currency": "USD",
+                    "balance": "12500.00",
+                    "available_cash": "12500.00",
+                    "quantity": "20",
+                    "available_quantity": "20",
+                    "average_cost": "201.35",
+                    "diluted_avg_cost": "198.10",
+                    "underlying_available_quantity": "0"
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/app/stock_margin_ratios": {
+      "get": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Get Stock Initial Margin Factors",
+        "description": "Retrieves, on a stock (non-option) order page that already holds a trade token, the initial margin factors of the current account for opening long and short positions in the stock. Use them to estimate locally the tradable quantity and the required margin for a margin buy or a short sale: use `long_im_factor` to open by buying and `short_im_factor` to open by selling. Option orders do not use this endpoint. When you call this endpoint through WhaleCore `requestService()`, set `requiresTradeToken` to `true`.\n",
+        "operationId": "getV1AppStockMarginRatios",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "Security ID (counter_id), for example `ST/US/AAPL` or `ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get Stock Initial Margin Factors” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "long_im_factor": {
+                              "type": "string",
+                              "description": "Initial margin factor for opening a long position, for example \"0.5\""
+                            },
+                            "short_im_factor": {
+                              "type": "string",
+                              "description": "Initial margin factor for opening a short position"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "long_im_factor": "0.5",
+                    "short_im_factor": "1.5"
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/app/risk/account_info/purchase": {
+      "get": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Get Buying Power for Order Entry",
+        "description": "Retrieves the maximum buying power of the current account for a security when the order page loads or the user switches accounts or settlement currencies, to show the amount available to buy and to validate the order amount. For a market order (including an untriggered market conditional order), available buying power equals `buy_limit` multiplied by `channel_infos.mo_avail_ratio` from Get Order Configuration. When amending an order, pass the original order ID; omit `order_id` when the order being amended is an untriggered conditional order. When you call this endpoint through WhaleCore `requestService()`, set `requiresTradeToken` to `true`.\n",
+        "operationId": "getV1AppRiskAccountInfoPurchase",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "Security ID (counter_id), for example `ST/US/AAPL` or `ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "description": "Trading (settlement) currency, for example USD or HKD. Use the first item of `channel_infos.settlement_currency` returned by Get Order Configuration.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "USD"
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": true,
+            "description": "Broker channel",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "<BROKER_CHANNEL>"
+          },
+          {
+            "name": "order_id",
+            "in": "query",
+            "required": false,
+            "description": "Original order ID when amending an order. Omit it for a new order or when amending an untriggered conditional order.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get Buying Power for Order Entry” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "buy_limit": {
+                              "type": "string",
+                              "description": "Maximum buying power"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "buy_limit": "25000.00"
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v4/portfolio/current/estimatedcost": {
+      "get": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Estimate Trading Fees",
+        "description": "Estimates the commission, third-party charges, and platform fee of a trade from the security, order price, quantity, and direction after the user changes the price or quantity on the order page, to show the estimated fees. The sum of the three can be passed as `fee_amount` to Estimate Post-Trade Average Cost. Do not call this endpoint when the price or quantity is 0. When you call this endpoint through WhaleCore `requestService()`, set `requiresTradeToken` to `true`.\n\nWhaleCore's `orderService()` wraps this endpoint as the typed method `getEstimatedCost`. If you use WhaleCore, prefer that method.\n",
+        "operationId": "getV4PortfolioCurrentEstimatedcost",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "Security ID (counter_id), for example `ST/US/AAPL` or `ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "description": "Trading (settlement) currency, for example USD or HKD. Use the first item of `channel_infos.settlement_currency` returned by Get Order Configuration.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "USD"
+          },
+          {
+            "name": "price",
+            "in": "query",
+            "required": true,
+            "description": "Order unit price in the trading currency. For a UK security quoted in GBX and traded in GBP, divide by 100 to convert to GBP first.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "228.50"
+          },
+          {
+            "name": "qty",
+            "in": "query",
+            "required": true,
+            "description": "Order quantity in shares",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "10"
+          },
+          {
+            "name": "dir",
+            "in": "query",
+            "required": true,
+            "description": "Order direction:\n- `0` - Buy\n- `1` - Sell\n",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "0",
+                "1"
+              ]
+            },
+            "example": "0"
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": true,
+            "description": "Broker channel",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "<BROKER_CHANNEL>"
+          },
+          {
+            "name": "order_tag",
+            "in": "query",
+            "required": false,
+            "description": "Order tag. Use `tag` from Get Order Configuration:\n- `1` - Regular order\n- `2` - Long-term order\n- `3` - Grey market order\n",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "enum": [
+                1,
+                2,
+                3
+              ]
+            }
+          },
+          {
+            "name": "order_type",
+            "in": "query",
+            "required": false,
+            "description": "Order type code, for example `LO` or `MO`",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "position_side",
+            "in": "query",
+            "required": false,
+            "description": "Position side. Pass `LONG` when the current position is greater than 0 and `SHORT` when it is less than 0. With no position, pass `LONG` to buy and `SHORT` to sell.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LONG",
+                "SHORT"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Estimate Trading Fees” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "commission": {
+                              "type": "string",
+                              "description": "Estimated commission"
+                            },
+                            "third": {
+                              "type": "string",
+                              "description": "Estimated third-party charges"
+                            },
+                            "platform": {
+                              "type": "string",
+                              "description": "Estimated platform fee"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "commission": "0.99",
+                    "third": "0.02",
+                    "platform": "1.00"
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v4/portfolio/stock/get_trading_stock_avgcost": {
+      "get": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Estimate Post-Trade Average Cost",
+        "description": "Calculates the average purchase cost and the diluted cost after the trade from the current position quantity and cost and the order price and quantity. Call it after Estimate Trading Fees succeeds, and show the result as the estimated cost on the order page. To include trading fees in the cost, pass `fee_amount`. When you call this endpoint through WhaleCore `requestService()`, set `requiresTradeToken` to `true`.\n",
+        "operationId": "getV4PortfolioStockGetTradingStockAvgcost",
+        "parameters": [
+          {
+            "name": "counter_id",
+            "in": "query",
+            "required": true,
+            "description": "Security ID (counter_id), for example `ST/US/AAPL` or `ST/HK/700`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "ST/US/AAPL"
+          },
+          {
+            "name": "holding_quantity",
+            "in": "query",
+            "required": true,
+            "description": "Current position quantity. Use `quantity` from Get Position and Cash for Order Entry.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "20"
+          },
+          {
+            "name": "side",
+            "in": "query",
+            "required": true,
+            "description": "Order direction",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "BUY",
+                "SELL"
+              ]
+            },
+            "example": "BUY"
+          },
+          {
+            "name": "avg_cost",
+            "in": "query",
+            "required": true,
+            "description": "Current average purchase cost. Use `average_cost`; pass `0` when there is no position.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "201.35"
+          },
+          {
+            "name": "diluted_avg_cost",
+            "in": "query",
+            "required": true,
+            "description": "Current diluted cost. Use `diluted_avg_cost`; pass `0` when there is no position.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "198.10"
+          },
+          {
+            "name": "price",
+            "in": "query",
+            "required": true,
+            "description": "Order unit price, the same as `price` passed to Estimate Trading Fees",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "228.50"
+          },
+          {
+            "name": "quantity",
+            "in": "query",
+            "required": true,
+            "description": "Order quantity in shares",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "10"
+          },
+          {
+            "name": "fee_amount",
+            "in": "query",
+            "required": false,
+            "description": "Trading fees to include in the cost: the sum of `commission`, `third`, and `platform` from Estimate Trading Fees. When omitted, the cost excludes fees.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Estimate Post-Trade Average Cost” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "avg_cost": {
+                              "type": "string",
+                              "description": "Average purchase cost after the trade"
+                            },
+                            "diluted_avg_cost": {
+                              "type": "string",
+                              "description": "Diluted cost after the trade"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "avg_cost": "210.40",
+                    "diluted_avg_cost": "208.23"
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/member/trade/auth": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Verify Trade Password",
+        "description": "Verifies the trade password entered by the Client. If verification succeeds and no second-factor verification is required, returns the trade token for the account.\n\nWhaleCore handles trade authentication automatically by default, so the host app does not need this operation. When WhaleCore is initialized with `tradePasswordEnabled: true`, the SDK no longer obtains trade tokens itself. When a trading call throws `tradeAuthFailed` (1006) or `hasTradeToken()` returns `false`, the host app asks the Client for the trade password, calls this operation, passes `data.token.token` as `tradeToken` and `data.token.refresh_token` as `tradeRefreshToken` to `WhaleCoreService.updateTradeToken(...)`, and then retries the original operation. Tokens are issued per account, so the `accountChannel` passed to `updateTradeToken` must match the account of this request.\n\nIf `need_two_factors` or `need_totp_two_factors` is `true`, do not use any token in this response. Call the matching second-factor operation instead, which returns the token: `POST /v1/member/trade/auth_two_factors` for an SMS verification code, or `POST /v1/member/trade/totp/auth_two_factors` for a third-party authenticator code. Device-token verification, indicated by `need_device_totp_two_factors`, is outside the scope of this document.\n\nThis operation is also used to verify the Client’s current trade password before security settings are changed.\n\nIf the password is wrong, show `message` and let the Client enter it again. If 402009 is returned, stop retrying.\n\nPassword fields carry the MD5 digest of the 6-digit trade password as a 32-character lowercase hexadecimal string. Never send the plaintext password.\n\nThis operation obtains the trade token, so do not set `requiresTradeToken` to `true` when you call it through WhaleCore `requestService()`.\n",
+        "operationId": "postV3MemberTradeAuth",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "trade_password": {
+                    "type": "string",
+                    "description": "MD5 digest of the trade password",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Verification scenario. Pass `trade` to unlock trading."
+                  }
+                },
+                "required": [
+                  "trade_password",
+                  "type"
+                ]
+              },
+              "example": {
+                "trade_password": "d3786ec2413a8cd9413bfcb24be95a73",
+                "type": "trade"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Verify Trade Password” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "need_two_factors": {
+                              "type": "boolean",
+                              "description": "Whether SMS second-factor verification is still required. If `true`, call `POST /v1/member/trade/auth_two_factors`"
+                            },
+                            "need_totp_two_factors": {
+                              "type": "boolean",
+                              "description": "Whether third-party authenticator (TOTP) second-factor verification is still required. If `true`, call `POST /v1/member/trade/totp/auth_two_factors`"
+                            },
+                            "need_device_totp_two_factors": {
+                              "type": "boolean",
+                              "description": "Whether device-token second-factor verification is still required. This verification method is outside the scope of this document"
+                            },
+                            "tfa_guide": {
+                              "type": "boolean",
+                              "description": "If `true`, the SMS second-factor page can offer an option to require the verification code for this unlock only. Submit the choice through `tfa_switch` of `POST /v1/member/trade/auth_two_factors`"
+                            },
+                            "token": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/TradeAuthToken"
+                                }
+                              ],
+                              "description": "Trade token. Use it only when none of the three `need_*` fields is `true`"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "need_two_factors": false,
+                    "need_totp_two_factors": false,
+                    "need_device_totp_two_factors": false,
+                    "tfa_guide": false,
+                    "token": {
+                      "token": "<TRADE_TOKEN>",
+                      "refresh_token": "<TRADE_REFRESH_TOKEN>",
+                      "refresh_token_expires": 1800
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The service rejected the request because a business rule or input validation failed. Review the business codes and correct the request before retrying.",
+            "x-business-codes": [
+              {
+                "code": 402009,
+                "description": "The trade password retry limit has been reached and trade unlock for the account is frozen. Show `message` and do not retry"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/auth_two_factors": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Submit SMS Verification for Trade Unlock",
+        "description": "Completes SMS second-factor verification for trade unlock. After Verify Trade Password returns `need_two_factors: true`, send a trade-unlock SMS verification code to the Client (the send-code operation is outside the scope of this document), and then submit the code with the same trade password. On success, returns the trade token: `data.token.token` maps to `tradeToken` and `data.token.refresh_token` maps to `tradeRefreshToken` of `updateTradeToken`.\n\nIf `tfa_switch` is provided, this call also changes whether later trade unlocks for the Client require an SMS verification code. If verification fails, show `message` and let the Client re-enter the code or request a new one.\n\nPassword fields carry the MD5 digest of the 6-digit trade password as a 32-character lowercase hexadecimal string. Never send the plaintext password.\n\nThis operation obtains the trade token, so do not set `requiresTradeToken` to `true` when you call it through WhaleCore `requestService()`.\n",
+        "operationId": "postV1MemberTradeAuthTwoFactors",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "SMS verification code received by the Client"
+                  },
+                  "trade_password": {
+                    "type": "string",
+                    "description": "MD5 digest of the trade password, identical to the value submitted to Verify Trade Password",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  },
+                  "tfa_switch": {
+                    "type": "string",
+                    "enum": [
+                      "open",
+                      "close"
+                    ],
+                    "description": "Changes the SMS verification requirement for later trade unlocks. Omit it to keep the current setting. Offer this choice only when Verify Trade Password returns `tfa_guide: true`:\n\n- `close` - Require SMS verification for this unlock only; later trade unlocks no longer require an SMS code\n- `open` - Later trade unlocks continue to require an SMS code"
+                  },
+                  "verify_credentials": {
+                    "type": "string",
+                    "description": "Verification credential returned after the SMS code is checked. Pass it when the code has already been checked separately"
+                  }
+                },
+                "required": [
+                  "code",
+                  "trade_password"
+                ]
+              },
+              "example": {
+                "code": "<SMS_CODE>",
+                "trade_password": "d3786ec2413a8cd9413bfcb24be95a73"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Submit SMS Verification for Trade Unlock” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "token": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/TradeAuthToken"
+                                }
+                              ],
+                              "description": "Trade token issued after successful verification"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "token": {
+                      "token": "<TRADE_TOKEN>",
+                      "refresh_token": "<TRADE_REFRESH_TOKEN>",
+                      "refresh_token_expires": 1800
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/totp/auth_two_factors": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Submit Authenticator Code for Trade Unlock",
+        "description": "Completes second-factor verification for trade unlock with a code generated by the third-party authenticator (TOTP) app bound by the Client. Call it for the same account after Verify Trade Password returns `need_totp_two_factors: true`. The request does not carry the trade password. On success, returns the trade token: `data.token.token` maps to `tradeToken` and `data.token.refresh_token` maps to `tradeRefreshToken` of `updateTradeToken`.\n\nIf the code is wrong or expired, show `message` and let the Client enter a new code.\n\nThis operation obtains the trade token, so do not set `requiresTradeToken` to `true` when you call it through WhaleCore `requestService()`.\n",
+        "operationId": "postV1MemberTradeTotpAuthTwoFactors",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "verify_code": {
+                    "type": "string",
+                    "minLength": 6,
+                    "maxLength": 6,
+                    "description": "Current 6-digit code shown in the authenticator app"
+                  }
+                },
+                "required": [
+                  "verify_code"
+                ]
+              },
+              "example": {
+                "verify_code": "<TOTP_CODE>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Submit Authenticator Code for Trade Unlock” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "token": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/TradeAuthToken"
+                                }
+                              ],
+                              "description": "Trade token issued after successful verification"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "token": {
+                      "token": "<TRADE_TOKEN>",
+                      "refresh_token": "<TRADE_REFRESH_TOKEN>",
+                      "refresh_token_expires": 1800
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/check_token": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Check Trade Token",
+        "description": "Checks whether the trade token carried by the request is still accepted by the server and returns its remaining lifetime. `hasTradeToken()` only reflects whether a token is held locally, so you can call this operation before opening a trading page to confirm that the server still accepts the token and avoid interrupting the Client after the order form is filled in.\n\nHandle an invalid token by business code: 402000 means the token has expired and can be renewed with the refresh token; 402001 means the token has been invalidated, for example because the account signed in on another device, and the trade password must be verified again.\n\nWhen you call this operation through WhaleCore `requestService()`, set `requiresTradeToken` to `true`.\n",
+        "operationId": "getV1MemberTradeCheckToken",
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Check Trade Token” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "token_expires": {
+                              "type": "integer",
+                              "format": "int64",
+                              "description": "Remaining lifetime of the trade token, in seconds. If little time remains, refresh the token first"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "token_expires": 1200
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The service rejected the request because a business rule or input validation failed. Review the business codes and correct the request before retrying.",
+            "x-business-codes": [
+              {
+                "code": 402000,
+                "description": "The trade token has expired. Renew it with `POST /v1/member/trade/refresh_token`; if renewal fails, verify the trade password again"
+              },
+              {
+                "code": 402001,
+                "description": "The trade token has been invalidated, for example because the account signed in on another device. Verify the trade password again"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/refresh_token": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Refresh Trade Token",
+        "description": "Exchanges a refresh token for a new trade token and refresh token to extend the trade unlock period. The account is determined by the refresh token itself.\n\nAfter tokens are passed in through `updateTradeToken`, WhaleCore renews them automatically with `tradeRefreshToken`, so the host app usually does not need this operation. If the host app refreshes tokens itself, pass the returned `data.token.token` and `data.token.refresh_token` to `updateTradeToken` again so that the tokens held by the SDK match the server. A 402003 response means the refresh token has expired and the trade password must be verified again.\n\nWhen you call this operation through WhaleCore `requestService()`, you do not need to set `requiresTradeToken` to `true`.\n",
+        "operationId": "postV1MemberTradeRefreshToken",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refresh_token": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Most recently obtained refresh token (`tradeRefreshToken`)"
+                  }
+                },
+                "required": [
+                  "refresh_token"
+                ]
+              },
+              "example": {
+                "refresh_token": "<TRADE_REFRESH_TOKEN>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Refresh Trade Token” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "token": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/TradeAuthToken"
+                                }
+                              ],
+                              "description": "New trade token and refresh token"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "token": {
+                      "token": "<TRADE_TOKEN>",
+                      "refresh_token": "<TRADE_REFRESH_TOKEN>",
+                      "refresh_token_expires": 1800
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The service rejected the request because a business rule or input validation failed. Review the business codes and correct the request before retrying.",
+            "x-business-codes": [
+              {
+                "code": 402003,
+                "description": "The refresh token has expired. Verify the trade password again"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/change_password": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Change Trade Password",
+        "description": "Changes the Client’s trade password. Before calling it, verify the Client’s current trade password with `POST /v3/member/trade/auth` so that a valid trade token is held for the account. This operation is authorized by the trade token and the request carries only the new password. After a successful change, later trade unlocks must use the new password. If the call fails, show `message`.\n\nPassword fields carry the MD5 digest of the 6-digit trade password as a 32-character lowercase hexadecimal string. Never send the plaintext password.\n\nWhen you call this operation through WhaleCore `requestService()`, set `requiresTradeToken` to `true`.\n",
+        "operationId": "postV1MemberTradeChangePassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "new_password": {
+                    "type": "string",
+                    "description": "MD5 digest of the new trade password",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  }
+                },
+                "required": [
+                  "new_password"
+                ]
+              },
+              "example": {
+                "new_password": "63c7d0d6b2ffb8e081ed859d51177526"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Change Trade Password” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "No business fields"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/member/trade/set_password": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Set Trade Password",
+        "description": "Sets a trade password for a Client who has not set one. The Client must first complete identity verification with a phone or email verification code to obtain `verify_credentials` (the operation that issues the credential is outside the scope of this document). After a successful call, the Client can use the password to verify the trade password and obtain trade tokens. If the call fails, show `message`; if the credential is no longer valid, ask the Client to complete identity verification again.\n\nPassword fields carry the MD5 digest of the 6-digit trade password as a 32-character lowercase hexadecimal string. Never send the plaintext password.\n",
+        "operationId": "postV2MemberTradeSetPassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "trade_password": {
+                    "type": "string",
+                    "description": "MD5 digest of the new trade password",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  },
+                  "verify_credentials": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Verification credential obtained after the Client completes phone or email identity verification"
+                  }
+                },
+                "required": [
+                  "trade_password",
+                  "verify_credentials"
+                ]
+              },
+              "example": {
+                "trade_password": "d3786ec2413a8cd9413bfcb24be95a73",
+                "verify_credentials": "<VERIFY_CREDENTIALS>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Set Trade Password” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "No business fields"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/member/trade/reset_password": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Reset Trade Password",
+        "description": "Sets a new trade password after identity verification when the Client has forgotten it, usually entered from **Forgot password** on the trade unlock screen. The Client must first verify the account-opening ID number and the contact phone or email to obtain `verify_credentials` (the related verification operations are outside the scope of this document). After a successful reset, later trade unlocks must use the new password. If the call fails, show `message`; if the credential is no longer valid, ask the Client to complete identity verification again.\n\nPassword fields carry the MD5 digest of the 6-digit trade password as a 32-character lowercase hexadecimal string. Never send the plaintext password.\n",
+        "operationId": "postV2MemberTradeResetPassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "trade_password": {
+                    "type": "string",
+                    "description": "MD5 digest of the new trade password",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  },
+                  "verify_credentials": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Verification credential obtained after the Client completes identity verification"
+                  }
+                },
+                "required": [
+                  "trade_password",
+                  "verify_credentials"
+                ]
+              },
+              "example": {
+                "trade_password": "63c7d0d6b2ffb8e081ed859d51177526",
+                "verify_credentials": "<VERIFY_CREDENTIALS>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Reset Trade Password” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "No business fields"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/trade/setting": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Update Asset View Verification Setting",
+        "description": "Turns the account’s “verify trade password to view assets” setting on or off. The Client must enter the current trade password; the server saves the new value after the password is verified. Read the current value from `status[].setting.p_trade_auth` of `GET /v3/account/list`. After a successful save, fetch the account information again to refresh the display. If the call fails, show `message`.\n\nPassword fields carry the MD5 digest of the 6-digit trade password as a 32-character lowercase hexadecimal string. Never send the plaintext password.\n",
+        "operationId": "postV1MemberTradeSetting",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "enum": [
+                      "p_trade_auth"
+                    ],
+                    "description": "Setting key:\n\n- `p_trade_auth` - Whether viewing assets requires trade password verification"
+                  },
+                  "value": {
+                    "type": "string",
+                    "enum": [
+                      "YES",
+                      "NO"
+                    ],
+                    "description": "Setting value:\n\n- `YES` - On\n- `NO` - Off"
+                  },
+                  "trade_password": {
+                    "type": "string",
+                    "description": "MD5 digest of the current trade password",
+                    "minLength": 32,
+                    "maxLength": 32,
+                    "pattern": "^[0-9a-f]{32}$"
+                  }
+                },
+                "required": [
+                  "key",
+                  "value",
+                  "trade_password"
+                ]
+              },
+              "example": {
+                "key": "p_trade_auth",
+                "value": "YES",
+                "trade_password": "d3786ec2413a8cd9413bfcb24be95a73"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Update Asset View Verification Setting” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "No business fields"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/GetSecurities": {
+      "get": {
+        "tags": [
+          "Market data"
+        ],
+        "summary": "Search Securities",
+        "description": "Searches securities by keyword and returns matching candidates such as stocks, ETFs, indexes, sectors, and funds, including `counter_id`, code, name, market, currency, product, and ranking score. Use it for search-as-you-type suggestions and search result lists. You can filter by market and product. To load the next page, pass the `score` and `code` of the last result on the previous page.\n\nThe same operation also serves security switching on the order entry page and the order list, adding securities in the landscape quote view and K-line comparison overlay, choosing stocks when composing a post, and fund search (pass `UT` as `product`).\n",
+        "operationId": "getV1GetSecurities",
+        "parameters": [
+          {
+            "name": "k",
+            "in": "query",
+            "required": true,
+            "description": "Search keyword. Enter a security code, name, English name, or short name",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "AAPL"
+          },
+          {
+            "name": "search_src",
+            "in": "query",
+            "required": true,
+            "description": "Source scenario of the search, used to distinguish callers. Known values:\n\n- `main_search` - Main search page and fund search\n- `quote_horizontal` - Search in the landscape quote view\n- `security_vs` - Adding securities to K-line comparison or industry comparison\n- `trade` - Switching securities on the order entry page\n- `trade_order` - Switching securities in the order list\n- `post_topic` - Choosing stocks when composing a post\n",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "main_search"
+          },
+          {
+            "name": "market",
+            "in": "query",
+            "required": false,
+            "description": "Market filter, such as `HK` or `US`. Omit it to search all markets",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "product",
+            "in": "query",
+            "required": false,
+            "description": "Product filter. Separate multiple values with commas, such as `ST,ETF`. Pass `UT` to search funds only. Broker App passes `BK,DLC,ETF,IX,LB,MMF,ST,UT` when it does not show warrants or callable bull/bear contracts. Omit it to search all products",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "is_ut",
+            "in": "query",
+            "required": false,
+            "description": "Whether to include funds in the results",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "score",
+            "in": "query",
+            "required": false,
+            "description": "Pagination cursor: the `score` of the last result on the previous page. Omit it for the first page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "code",
+            "in": "query",
+            "required": false,
+            "description": "Pagination cursor: the `code` of the last result on the previous page. Pass it together with `score`. Omit it for the first page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": false,
+            "description": "Broker channel",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Search securities” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "product_list": {
+                              "type": "array",
+                              "description": "Matching securities in ranking order. It is an empty array when nothing matches",
+                              "items": {
+                                "allOf": [
+                                  {
+                                    "$ref": "#/components/schemas/SearchSecurityItem"
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "isin": {
+                                        "type": "string",
+                                        "description": "International Securities Identification Number (ISIN). For fund results, Broker App displays it instead of the security code; it may be empty for other products"
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "product_list": [
+                      {
+                        "counter_id": "ST/US/AAPL",
+                        "code": "AAPL",
+                        "name": "Apple Inc.",
+                        "market": "US",
+                        "currency": "USD",
+                        "product": "ST",
+                        "score": 98.6,
+                        "isin": ""
+                      },
+                      {
+                        "counter_id": "ETF/US/AAPU",
+                        "code": "AAPU",
+                        "name": "Apple 2x Long ETF",
+                        "market": "US",
+                        "currency": "USD",
+                        "product": "ETF",
+                        "score": 71.2,
+                        "isin": ""
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v5/portfolio/transactionhistory": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Get Cash Flow Records",
+        "description": "Queries the cash flow records of the current account with pagination. Each record includes the record type, amount and currency, direction prefix, share quantity change text, supplementary text, and creation and completion times. Use it for the list on the **Funds Details** page. You can filter by product, cash direction, currency, and time range. Localized text such as the record type name follows the request's `Accept-Language`.\n\nWithout `start` and `end`, results are paged by `page` and `size`; fewer than `size` records means there are no more pages. With `start` and `end`, the operation returns all records in that range and ignores `page`. Some Brokers' customized cash flow record pages also use this operation.\n\nWhen you call it through WhaleCore `requestService()`, declare the trade token requirement by setting `requiresTradeToken` to `true`.\n",
+        "operationId": "getV5PortfolioTransactionhistory",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "description": "Page number, starting from 1. It is ignored when `start` and `end` are passed",
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "example": "1"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": true,
+            "description": "Number of records per page. Broker App passes 15",
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$"
+            },
+            "example": "15"
+          },
+          {
+            "name": "business_type",
+            "in": "query",
+            "required": false,
+            "description": "Product filter. Separate multiple values with commas, such as `1,2`. Pass an empty string for no filter:\n\n- `1` - Cash\n- `2` - Stock\n- `5` - Fund\n- `7` - Crypto\n",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "description": "Cash direction filter. Separate multiple values with commas. Pass an empty string for no filter:\n\n- `1` - Outflow\n- `2` - Inflow\n",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "currencies",
+            "in": "query",
+            "required": false,
+            "description": "Currency filter. Separate multiple values with commas, such as `HKD,USD`. Use values from `currencies` returned by Get Cash Flow Record Currencies. Pass an empty string for no filter",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "description": "Start time as a Unix timestamp in seconds. When Broker App queries by month, it passes 00:00 on the first day of that month. Omit it for no time filter",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "description": "End time as a Unix timestamp in seconds. Pass it together with `start`. When Broker App queries by month, it passes 00:00 on the first day of the next month",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get cash flow records” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "list": {
+                              "type": "array",
+                              "description": "Cash flow records in the returned order. It is an empty array when there are no records",
+                              "items": {
+                                "$ref": "#/components/schemas/CashFlowRecordItem"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "list": [
+                      {
+                        "tx_type": "cash_in",
+                        "type_name": "Deposit",
+                        "category": "+",
+                        "amount": "10000.00",
+                        "currency": "HKD",
+                        "stock_quantity": "",
+                        "quantity_description": "",
+                        "description": "",
+                        "created_at": "1728964800",
+                        "done_at": "1728968400"
+                      },
+                      {
+                        "tx_type": "cash_out",
+                        "type_name": "Withdrawal",
+                        "category": "-",
+                        "amount": "2000.00",
+                        "currency": "USD",
+                        "stock_quantity": "",
+                        "quantity_description": "",
+                        "description": "",
+                        "created_at": "1728878400",
+                        "done_at": "1729051200"
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portfolio/transactionhistory/currencies": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Get Cash Flow Record Currencies",
+        "description": "Returns the currency codes available as filters on the current account's **Funds Details** page. Use it to build the currency filter options, and pass the selected codes as `currencies` to Get Cash Flow Records. Some Brokers' customized cash flow record pages also use this operation.\n",
+        "operationId": "getPortfolioTransactionhistoryCurrencies",
+        "parameters": [
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": true,
+            "description": "Broker channel",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "<BROKER_CHANNEL>"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get cash flow record currencies” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "currencies": {
+                              "type": "array",
+                              "description": "Currency codes available as filters, such as `HKD` or `USD`. When the field is missing, Broker App does not show currency filter options",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "currencies": [
+                      "HKD",
+                      "USD",
+                      "CNH"
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/portfolio/withdraw/cards": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Get Withdrawal Bank Cards",
+        "description": "Queries the bank cards the Client has bound, together with the bank card and currency used for the last withdrawal. Used on the withdrawal page to select the receiving bank card and to set the default card and currency.\n\nThis is the first step of the withdrawal flow. After selecting a card, call “Get withdrawal pre-check information” (`GET /v3/portfolio/withdraw/pre`; some tenant channels use `GET /v4/portfolio/withdraw/pre`) for the withdrawable amount and fees, then call `POST /v5/portfolio/withdraw` to submit the withdrawal. Only cards whose `bind_state` is `1` (or absent), whose `status` is not `1`, and whose `account_type` matches the withdrawal currency can be used. When changing the receiving card of a withdrawal request, also pick the new card from this list.\n\nWith `withdraw=0`, it returns all bound bank cards; the endpoint is also used by the bank card management page and for selecting bank cards in ACH and wire deposits and withdrawals.\n\nA complete withdrawal flow runs in this order: get the withdrawal bank cards (`GET /v3/portfolio/withdraw/cards`) → get the withdrawal pre-check information and withdrawable amount (`GET /v3/portfolio/withdraw/pre`; some tenant channels use `GET /v4/portfolio/withdraw/pre`; to get only the withdrawable balance by currency, call `GET /v1/rms_gateway/get_account_all_single_currency_withdraw`) → check and add the payee address when required → submit the withdrawal request (`POST /v5/portfolio/withdraw`) → query withdrawal records and details → cancel the withdrawal or change the receiving bank card when needed.\n",
+        "operationId": "getV3PortfolioWithdrawCards",
+        "parameters": [
+          {
+            "name": "withdraw",
+            "in": "query",
+            "required": true,
+            "description": "Usage scenario:\n- `1` - Select a card on the withdrawal page\n- `0` - Return all bound bank cards (bank card management, ACH and wire deposits and withdrawals)\n",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "0",
+                "1"
+              ]
+            },
+            "example": "1"
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": true,
+            "description": "Filter flag. The Broker App currently always passes `0`",
+            "schema": {
+              "type": "string"
+            },
+            "example": "0"
+          },
+          {
+            "name": "from_app_page",
+            "in": "query",
+            "required": false,
+            "description": "Withdrawal scenario source, used to distinguish regular withdrawals from southbound and northbound withdrawals; used only by some tenant channels",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "withdraw",
+                "north_withdraw",
+                "south_withdraw"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get Withdrawal Bank Cards” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "last_bank_card_id": {
+                              "type": "string",
+                              "description": "Id of the bank card used for the last withdrawal. When it is `0` or not among the usable cards, the Broker App selects the first usable card by default"
+                            },
+                            "last_funding_currency": {
+                              "type": "string",
+                              "description": "Currency used for the last withdrawal. When empty, the Broker App recommends a default currency from the first card’s `account_type`"
+                            },
+                            "list": {
+                              "type": "array",
+                              "description": "Bound bank cards",
+                              "items": {
+                                "$ref": "#/components/schemas/WithdrawBankCard"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "last_bank_card_id": "20381",
+                    "last_funding_currency": "HKD",
+                    "list": [
+                      {
+                        "id": "20381",
+                        "bank_card_identity": "bc_7f3a9e21",
+                        "bank": "示例银行（香港）",
+                        "bank_en": "Example Bank (Hong Kong)",
+                        "bank_code": "012",
+                        "account": "012345678901",
+                        "account_type": "ALL",
+                        "region": "HONGKONG",
+                        "swift_code": "EXAMHKHH",
+                        "icon": "https://example.com/bank/icon.png",
+                        "status": 2,
+                        "witness_state": 3,
+                        "bind_state": 1
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/portfolio/withdraw/pre": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Get Withdrawal Pre-Check Information for General Channels",
+        "description": "After the withdrawal currency and receiving bank card are selected, queries the withdrawable limits and withdrawal configuration. It returns the maximum withdrawable amount, the cash amount, the money market fund (MMF) amount, the per-currency breakdown, estimated arrival times, fee tiers by amount range, the available payout methods, and whether withdrawing this currency to this card requires a payee address. Used for the amount display, validation, and fee notices on the withdrawal form. Without `card_id`, it can be used to get card-independent information such as the available payout methods.\n\nGeneral tenant channels use this endpoint; some tenant channels (including southbound and northbound withdrawal scenarios) use `GET /v4/portfolio/withdraw/pre` instead, and the two return largely the same structure. Call it after “Get Withdrawal Bank Cards”. When `need_payee_address` is `true`, call `POST /v1/portfolio/withdraw/card/addresscheck` first, then call `POST /v5/portfolio/withdraw` to submit the withdrawal.\n\nThe endpoint is also used for cross-broker fund transfers, where `cash_amount` is the upper limit of the transferable amount.\n\nWhen calling through WhaleCore `requestService()`, set `requiresTradeToken` to `true`.\n",
+        "operationId": "getV3PortfolioWithdrawPre",
+        "parameters": [
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "description": "Withdrawal currency, for example HKD, USD, or CNH",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "HKD"
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": true,
+            "description": "Broker channel",
+            "schema": {
+              "type": "string"
+            },
+            "example": "<BROKER_CHANNEL>"
+          },
+          {
+            "name": "aaid",
+            "in": "query",
+            "required": true,
+            "description": "Account aaid",
+            "schema": {
+              "type": "string"
+            },
+            "example": "<AAID>"
+          },
+          {
+            "name": "card_id",
+            "in": "query",
+            "required": false,
+            "description": "Receiving bank card id from `list[].id` of “Get Withdrawal Bank Cards”. When omitted, card-specific arrival times and fee tiers are not returned",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get Withdrawal Pre-Check Information for General Channels” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "list": {
+                              "type": "array",
+                              "description": "Withdrawable amount by currency, showing how the estimated maximum is composed. The Broker App hides currencies whose amount is `0.00`",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "currency": {
+                                    "type": "string",
+                                    "description": "Currency"
+                                  },
+                                  "amount": {
+                                    "type": "string",
+                                    "description": "Withdrawable amount in this currency"
+                                  }
+                                }
+                              }
+                            },
+                            "cash_amount": {
+                              "type": "string",
+                              "description": "Cash withdrawable amount. A withdrawal not exceeding this value follows the regular withdrawal flow"
+                            },
+                            "max_amount": {
+                              "type": "string",
+                              "description": "Maximum withdrawable amount, including the MMF portion. A withdrawal above this value cannot be submitted"
+                            },
+                            "mmf_amount": {
+                              "type": "string",
+                              "description": "MMF withdrawable amount. A withdrawal between `cash_amount` and `max_amount` redeems the MMF automatically"
+                            },
+                            "tip_time": {
+                              "type": "string",
+                              "description": "Estimated arrival time in business days, for example `1-2`; an empty string when not configured"
+                            },
+                            "mmf_time": {
+                              "type": "string",
+                              "description": "Estimated arrival time in business days when the withdrawal redeems the MMF, for example `2-3`; an empty string when not configured"
+                            },
+                            "currency_tip": {
+                              "type": "boolean",
+                              "description": "Whether to show a virtual bank warning. `true` means the card belongs to a virtual bank and a withdrawal in this currency may fail with fees deducted; the Broker App suggests that the Client converts to another currency or changes the card"
+                            },
+                            "need_payee_address": {
+                              "type": "boolean",
+                              "description": "Whether withdrawing this currency to this card requires a payee address. When `true`, call `POST /v1/portfolio/withdraw/card/addresscheck` to get the required fields"
+                            },
+                            "bank_operation_type": {
+                              "type": "array",
+                              "description": "Available payout methods, returned only for some tenant channels. Pass the selected `id` as `bank_operation_type_id` when submitting a withdrawal",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "string",
+                                    "description": "Payout method id"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "description": "Payout method name"
+                                  }
+                                }
+                              }
+                            },
+                            "prompts": {
+                              "type": "array",
+                              "description": "Fee and arrival-time tiers by withdrawal amount range. The Broker App matches the entered amount to a tier to show fee notices",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "min_amount": {
+                                    "type": "string",
+                                    "description": "Minimum withdrawal amount of the tier"
+                                  },
+                                  "max_amount": {
+                                    "type": "string",
+                                    "description": "Maximum withdrawal amount of the tier"
+                                  },
+                                  "bank_fee": {
+                                    "type": "string",
+                                    "description": "Bank fee"
+                                  },
+                                  "plat_fee": {
+                                    "type": "string",
+                                    "description": "Platform fee"
+                                  },
+                                  "arrive_time": {
+                                    "type": "string",
+                                    "description": "Estimated arrival time of the tier in business days, for example `1-2`"
+                                  },
+                                  "mmf_time": {
+                                    "type": "string",
+                                    "description": "Estimated arrival time of the tier in business days when the withdrawal redeems the money market fund (MMF)"
+                                  },
+                                  "fee_description": {
+                                    "type": "string",
+                                    "description": "Bank fee description"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "list": [
+                      {
+                        "currency": "HKD",
+                        "amount": "12500.00"
+                      },
+                      {
+                        "currency": "USD",
+                        "amount": "800.00"
+                      }
+                    ],
+                    "cash_amount": "12500.00",
+                    "max_amount": "18740.00",
+                    "mmf_amount": "6240.00",
+                    "tip_time": "1-2",
+                    "mmf_time": "2-3",
+                    "currency_tip": false,
+                    "need_payee_address": false,
+                    "bank_operation_type": [],
+                    "prompts": [
+                      {
+                        "min_amount": "100",
+                        "max_amount": "1000000",
+                        "bank_fee": "0.00",
+                        "plat_fee": "0.00",
+                        "arrive_time": "1-2",
+                        "mmf_time": "2-3",
+                        "fee_description": ""
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v5/portfolio/withdraw": {
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Submit Withdrawal Request",
+        "description": "Submits a withdrawal request with the selected currency, amount, and receiving bank card, and returns the withdrawal request id once accepted. `ok` set to `true` means only that the request was accepted; whether the funds are remitted is determined by the withdrawal record status.\n\nPreconditions: a usable card has been selected through `GET /v3/portfolio/withdraw/cards`, and “Get withdrawal pre-check information” (`GET /v3/portfolio/withdraw/pre` or `GET /v4/portfolio/withdraw/pre`) has confirmed that the amount does not exceed `max_amount` and is not below the currency’s minimum withdrawal amount. If the card requires a payee address, save it first with `POST /v1/portfolio/withdraw/card/address`.\n\nSide effects: creates a withdrawal request. On success, use the returned `id` to call `GET /v7/portfolio/withdraw/detail`, and find the request in `GET /v6/portfolio/withdraw/record`. While the status is `0` or `15`, it can be cancelled with `POST /v2/portfolio/withdraw/cancel`. On failure, handle the business code; for other codes, show `message` to the Client instead of resubmitting immediately.\n\nWhen calling through WhaleCore `requestService()`, set `requiresTradeToken` to `true`.\n\nA complete withdrawal flow runs in this order: get the withdrawal bank cards (`GET /v3/portfolio/withdraw/cards`) → get the withdrawal pre-check information and withdrawable amount (`GET /v3/portfolio/withdraw/pre`; some tenant channels use `GET /v4/portfolio/withdraw/pre`; to get only the withdrawable balance by currency, call `GET /v1/rms_gateway/get_account_all_single_currency_withdraw`) → check and add the payee address when required → submit the withdrawal request (`POST /v5/portfolio/withdraw`) → query withdrawal records and details → cancel the withdrawal or change the receiving bank card when needed.\n",
+        "operationId": "postV5PortfolioWithdraw",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "currency": {
+                    "type": "string",
+                    "description": "Withdrawal currency, for example HKD",
+                    "minLength": 1
+                  },
+                  "amount": {
+                    "type": "string",
+                    "description": "Withdrawal amount as a decimal string; must be greater than 0 and not exceed `max_amount` from the pre-check"
+                  },
+                  "card_id": {
+                    "type": "string",
+                    "description": "Receiving bank card id from `list[].id` of “Get Withdrawal Bank Cards”"
+                  },
+                  "bank_card_identity": {
+                    "type": "string",
+                    "description": "Receiving bank card identity from `list[].bank_card_identity` of “Get Withdrawal Bank Cards”"
+                  },
+                  "account_channel": {
+                    "type": "string",
+                    "description": "Broker channel",
+                    "minLength": 1
+                  },
+                  "is_pad_funded": {
+                    "type": "string",
+                    "description": "MMF advance mode, with the same meaning as `is_pad_funded` in the pre-check:\n- `1` - No redemption; the platform advances the funds\n- `2` - Redeem the MMF before withdrawing\n\nThe Broker App currently always passes `2`.\n",
+                    "enum": [
+                      "1",
+                      "2"
+                    ]
+                  },
+                  "bank_operation_type_id": {
+                    "type": "string",
+                    "description": "Payout method id from `bank_operation_type[].id` in the pre-check; pass `null` or omit it when no payout method is offered",
+                    "nullable": true
+                  },
+                  "confirm": {
+                    "type": "integer",
+                    "description": "Reward forfeiture confirmation. When this withdrawal disqualifies the Client from a reward-lock campaign or incurs a fee, show the affected rewards (`GET /rewards/lock_activities`) to the Client, obtain consent, and resubmit with `1`; omit it otherwise",
+                    "format": "int32",
+                    "enum": [
+                      1
+                    ]
+                  }
+                },
+                "required": [
+                  "currency",
+                  "amount",
+                  "card_id",
+                  "account_channel",
+                  "is_pad_funded"
+                ]
+              },
+              "example": {
+                "currency": "HKD",
+                "amount": "5000.00",
+                "card_id": "<CARD_ID>",
+                "bank_card_identity": "<BANK_CARD_IDENTITY>",
+                "account_channel": "<BROKER_CHANNEL>",
+                "is_pad_funded": "2",
+                "bank_operation_type_id": null
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Submit Withdrawal Request” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "ok": {
+                              "type": "boolean",
+                              "description": "Whether the request was accepted"
+                            },
+                            "id": {
+                              "type": "string",
+                              "description": "Withdrawal request id, used to query the withdrawal details and to change the receiving bank card"
+                            },
+                            "tip_time": {
+                              "type": "string",
+                              "description": "Estimated arrival time in business days, for example `1-2`; shown on the withdrawal result page"
+                            },
+                            "disable_link": {
+                              "type": "boolean",
+                              "description": "Whether to hide the withdrawal details entry. When `true`, the result page does not link to the details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "ok": true,
+                    "id": "881027",
+                    "tip_time": "1-2",
+                    "disable_link": false
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          },
+          "400": {
+            "description": "The service rejected the request because a business rule or input validation failed. Review the business codes and correct the request before retrying.",
+            "x-business-codes": [
+              {
+                "code": 2031199,
+                "description": "The receiving bank card lacks a required payee address. Call `POST /v1/portfolio/withdraw/card/addresscheck` for the required fields, add the address through `POST /v1/portfolio/withdraw/card/address`, then resubmit"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v6/portfolio/withdraw/record": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Get Withdrawal Records",
+        "description": "Queries the withdrawal request records of the current account with pagination, with filters for status, currency, and creation time range. Used to display the withdrawal record list. Get the selectable statuses from `GET /v1/portfolio/withdraw/historyinfo`; when the Client selects a record, call `GET /v7/portfolio/withdraw/detail` with `list[].id`.\n\nPagination: `page` starts at `1`; when `list` contains fewer items than `size`, there is no more data. Some tenant channels use `GET /v6/portfolio/withdraw/record/no/trade/auth`, a version that returns the same data without trading password verification and takes the same parameters.\n\nWhen calling through WhaleCore `requestService()`, set `requiresTradeToken` to `true`.\n",
+        "operationId": "getV6PortfolioWithdrawRecord",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Page number, starting from 1",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "description": "Items per page; the Broker App uses 20",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": false,
+            "description": "Broker channel",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "states",
+            "in": "query",
+            "required": false,
+            "description": "Status filter: comma-separated status keys from `states[].key` of `GET /v1/portfolio/withdraw/historyinfo`. Omit or leave empty for no filter",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "currencys",
+            "in": "query",
+            "required": false,
+            "description": "Currency filter, comma-separated, for example `HKD,USD`. Omit or leave empty for no filter",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "begin",
+            "in": "query",
+            "required": false,
+            "description": "Start of the creation time range as a Unix timestamp in seconds; pass it together with `end`",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "description": "End of the creation time range as a Unix timestamp in seconds; pass it together with `begin`",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get Withdrawal Records” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "list": {
+                              "type": "array",
+                              "description": "Withdrawal records",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "description": "Withdrawal request id, used to query the details",
+                                    "format": "int64"
+                                  },
+                                  "order_id": {
+                                    "type": "string",
+                                    "description": "Withdrawal order number"
+                                  },
+                                  "amount": {
+                                    "type": "string",
+                                    "description": "Withdrawal amount"
+                                  },
+                                  "currency": {
+                                    "type": "string",
+                                    "description": "Withdrawal currency"
+                                  },
+                                  "fee": {
+                                    "type": "string",
+                                    "description": "Withdrawal fee"
+                                  },
+                                  "bank_account": {
+                                    "type": "string",
+                                    "description": "Receiving bank account number"
+                                  },
+                                  "created_at": {
+                                    "type": "integer",
+                                    "description": "Creation time as a Unix timestamp in seconds",
+                                    "format": "int64"
+                                  },
+                                  "state": {
+                                    "$ref": "#/components/schemas/WithdrawRecordState"
+                                  },
+                                  "state_description": {
+                                    "type": "string",
+                                    "description": "Display text of the status; when empty, display by `state`"
+                                  },
+                                  "disable_link": {
+                                    "type": "boolean",
+                                    "description": "Whether opening the details is disabled. When `true`, the record has no details entry"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "list": [
+                      {
+                        "id": 881027,
+                        "order_id": "WD20261015000123",
+                        "amount": "5000.00",
+                        "currency": "HKD",
+                        "fee": "0.00",
+                        "bank_account": "012345678901",
+                        "created_at": 1760500800,
+                        "state": 0,
+                        "state_description": "已提交",
+                        "disable_link": false
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/historyinfo": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Get Withdrawal Record Filters",
+        "description": "Queries the status filters available for withdrawal records and the currencies that have appeared. Used for the filter panel on the withdrawal record page. Join the selected status `key` values with commas and pass them as `states` to `GET /v6/portfolio/withdraw/record`.\n",
+        "operationId": "getV1PortfolioWithdrawHistoryinfo",
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get Withdrawal Record Filters” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "states": {
+                              "type": "array",
+                              "description": "Selectable statuses",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "key": {
+                                    "type": "string",
+                                    "description": "Status value, matching `state` of withdrawal records (as a string)"
+                                  },
+                                  "name": {
+                                    "type": "string",
+                                    "description": "Status name in the request language"
+                                  }
+                                }
+                              }
+                            },
+                            "currencys": {
+                              "type": "array",
+                              "description": "Currencies that appear in the withdrawal records",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "states": [
+                      {
+                        "key": "0",
+                        "name": "已提交"
+                      },
+                      {
+                        "key": "4",
+                        "name": "已汇出"
+                      },
+                      {
+                        "key": "3",
+                        "name": "已撤销"
+                      }
+                    ],
+                    "currencys": [
+                      "HKD",
+                      "USD"
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v7/portfolio/withdraw/detail": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Get Withdrawal Details",
+        "description": "Queries one withdrawal by withdrawal request id, including the amount, fee, status, order number, creation and update times, payee and receiving bank information, payee address, remarks, the history of receiving card changes, whether the receiving card can be changed, and any card change awaiting confirmation. Used on the withdrawal result and details pages.\n\nNext steps: when `state` is `0` or `15`, cancel with `POST /v2/portfolio/withdraw/cancel` using `order_id`. When `can_edit_card` is `true`, change the receiving card with `PUT /v1/portfolio/withdraw/member/change/card`. When `to_be_changed_card` is returned, call `POST /v1/portfolio/withdraw/card/change/process` after the Client confirms, to accept the card change. Some tenant channels use `GET /v7/portfolio/withdraw/detail/no/trade/auth`, a version that returns the same data without trading password verification and takes the same parameter, but does not return `card_id`, `payee_address`, or `to_be_changed_card.card_id`.\n\nWhen calling through WhaleCore `requestService()`, set `requiresTradeToken` to `true`.\n",
+        "operationId": "getV7PortfolioWithdrawDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "description": "Withdrawal request id, from `id` returned by the withdrawal submission or `list[].id` of the withdrawal records",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "<WITHDRAWAL_ID>"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get Withdrawal Details” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "description": "Withdrawal request id; used as `app_id` when changing the receiving card",
+                              "format": "int64"
+                            },
+                            "order_id": {
+                              "type": "string",
+                              "description": "Withdrawal order number; pass it when cancelling the withdrawal"
+                            },
+                            "state": {
+                              "$ref": "#/components/schemas/WithdrawRecordState"
+                            },
+                            "amount": {
+                              "type": "string",
+                              "description": "Withdrawal amount"
+                            },
+                            "currency": {
+                              "type": "string",
+                              "description": "Withdrawal currency"
+                            },
+                            "fee": {
+                              "type": "string",
+                              "description": "Withdrawal fee"
+                            },
+                            "created_at": {
+                              "type": "integer",
+                              "description": "Creation time as a Unix timestamp in seconds",
+                              "format": "int64"
+                            },
+                            "updated_at": {
+                              "type": "integer",
+                              "description": "Update time as a Unix timestamp in seconds; may be empty if never updated",
+                              "format": "int64"
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Bank account holder name"
+                            },
+                            "bank": {
+                              "type": "string",
+                              "description": "Receiving bank name"
+                            },
+                            "bank_en": {
+                              "type": "string",
+                              "description": "Receiving bank name in English"
+                            },
+                            "account": {
+                              "type": "string",
+                              "description": "Receiving bank account number"
+                            },
+                            "swift_code": {
+                              "type": "string",
+                              "description": "SWIFT code of the receiving bank"
+                            },
+                            "card_id": {
+                              "type": "integer",
+                              "description": "Current receiving bank card id; a replacement card must differ from it",
+                              "format": "int64"
+                            },
+                            "payee_address": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/WithdrawPayeeAddress"
+                                }
+                              ],
+                              "description": "Payee address; may be absent when not provided"
+                            },
+                            "admin_remark": {
+                              "type": "string",
+                              "description": "Remarks"
+                            },
+                            "statement_remark": {
+                              "type": "string",
+                              "description": "Statement remarks"
+                            },
+                            "can_edit_card": {
+                              "type": "boolean",
+                              "description": "Whether the Client may change the receiving bank card; meaningful only when `state` is `0` or `15`"
+                            },
+                            "to_be_changed_card": {
+                              "type": "object",
+                              "description": "Receiving bank card the review suggests the Client switch to. When returned, the Client must confirm and `POST /v1/portfolio/withdraw/card/change/process` must be called before the withdrawal continues. Absent when there is no suggestion",
+                              "properties": {
+                                "card_id": {
+                                  "type": "integer",
+                                  "description": "Id of the suggested receiving bank card",
+                                  "format": "int64"
+                                },
+                                "bank": {
+                                  "type": "string",
+                                  "description": "Bank name"
+                                },
+                                "bank_en": {
+                                  "type": "string",
+                                  "description": "Bank name in English"
+                                },
+                                "account": {
+                                  "type": "string",
+                                  "description": "Bank account number"
+                                },
+                                "swift_code": {
+                                  "type": "string",
+                                  "description": "Bank SWIFT code"
+                                }
+                              }
+                            },
+                            "records": {
+                              "type": "array",
+                              "description": "History of receiving card changes. The `before` of the record whose `reversion` is `0` is the original receiving card",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "reversion": {
+                                    "type": "integer",
+                                    "description": "Change sequence number, increasing from `0`",
+                                    "format": "int32"
+                                  },
+                                  "updated_at": {
+                                    "type": "integer",
+                                    "description": "Change time as a Unix timestamp in seconds",
+                                    "format": "int64"
+                                  },
+                                  "before": {
+                                    "allOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "bank": {
+                                            "type": "string",
+                                            "description": "Receiving bank name"
+                                          },
+                                          "account": {
+                                            "type": "string",
+                                            "description": "Receiving bank account number"
+                                          }
+                                        }
+                                      }
+                                    ],
+                                    "description": "Receiving card before the change"
+                                  },
+                                  "after": {
+                                    "allOf": [
+                                      {
+                                        "type": "object",
+                                        "properties": {
+                                          "bank": {
+                                            "type": "string",
+                                            "description": "Receiving bank name"
+                                          },
+                                          "account": {
+                                            "type": "string",
+                                            "description": "Receiving bank account number"
+                                          }
+                                        }
+                                      }
+                                    ],
+                                    "description": "Receiving card after the change"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "id": 881027,
+                    "order_id": "WD20261015000123",
+                    "state": 0,
+                    "amount": "5000.00",
+                    "currency": "HKD",
+                    "fee": "0.00",
+                    "created_at": 1760500800,
+                    "updated_at": 1760504400,
+                    "name": "CHAN TAI MAN",
+                    "bank": "示例银行（香港）",
+                    "bank_en": "Example Bank (Hong Kong)",
+                    "account": "012345678901",
+                    "swift_code": "EXAMHKHH",
+                    "card_id": 20381,
+                    "payee_address": {
+                      "payee_country": "HKG",
+                      "payee_state": "Hong Kong Island",
+                      "payee_city": "Hong Kong",
+                      "payee_street": "1 Example Road",
+                      "payee_building": "Example Tower",
+                      "address": "Flat A, 10/F",
+                      "payee_postcode": "000000"
+                    },
+                    "admin_remark": "",
+                    "statement_remark": "",
+                    "can_edit_card": true,
+                    "records": []
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/portfolio/withdraw/cancel": {
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Cancel Withdrawal Request",
+        "description": "Cancels a withdrawal request that has not finished processing. Used for the “Cancel” action on the withdrawal details page. Only requests whose `state` is `0` (submitted) or `15` (to be confirmed) can be cancelled. After cancellation the status becomes `3` (cancelled) and cannot be restored, so the Broker App should ask the Client to confirm before calling.\n\nGet `order_id` from `GET /v7/portfolio/withdraw/detail`. On success, query the details again to refresh the status. On failure, show `message` to the Client and query the details again to confirm the current status.\n\nWhen calling through WhaleCore `requestService()`, set `requiresTradeToken` to `true`.\n",
+        "operationId": "postV2PortfolioWithdrawCancel",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "order_id": {
+                    "type": "string",
+                    "description": "Withdrawal order number from `order_id` of the withdrawal details",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "order_id"
+                ]
+              },
+              "example": {
+                "order_id": "<ORDER_ID>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Cancel Withdrawal Request” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "ok": {
+                              "type": "boolean",
+                              "description": "Whether the cancellation succeeded"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "ok": true
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/member/change/card": {
+      "put": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Change Withdrawal Receiving Card",
+        "description": "Lets the Client replace the receiving bank card of a withdrawal request in progress. Used for the “Update Bank Info” action on the withdrawal details page. On success, the receiving bank information in the details is updated and a new entry is added to `records`.\n\nPreconditions: `can_edit_card` in the withdrawal details is `true` and `state` is `0` or `15`. Pick the new card from `GET /v3/portfolio/withdraw/cards`; it must be verified (`status` is `2`), have a deposit witness status of `1` or `3`, have an `account_type` that matches the withdrawal currency or is `ALL`, and differ from the current receiving card. Before calling, call `POST /v1/portfolio/withdraw/card/addresscheck` with the new card; when `address_needed` is `true`, save the payee address with `POST /v1/portfolio/withdraw/card/address` first.\n\nOn success, query the details again. If the details contain a card change suggested by the review (`to_be_changed_card`), use `POST /v1/portfolio/withdraw/card/change/process` instead.\n",
+        "operationId": "putV1PortfolioWithdrawMemberChangeCard",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "app_id": {
+                    "type": "integer",
+                    "description": "Withdrawal request id from `id` of the withdrawal details",
+                    "format": "int64"
+                  },
+                  "card_id": {
+                    "type": "integer",
+                    "description": "New receiving bank card id from `list[].id` of “Get Withdrawal Bank Cards”",
+                    "format": "int64"
+                  }
+                },
+                "required": [
+                  "app_id",
+                  "card_id"
+                ]
+              },
+              "example": {
+                "app_id": 881027,
+                "card_id": 20395
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Change Withdrawal Receiving Card” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The service rejected the request because a business rule or input validation failed. Review the business codes and correct the request before retrying.",
+            "x-business-codes": [
+              {
+                "code": 2033105,
+                "description": "The withdrawal request has entered back-office processing, so the receiving bank cannot be changed. Inform the Client and query the details again"
+              },
+              {
+                "code": 2031199,
+                "description": "The receiving bank card lacks a required payee address. Call `POST /v1/portfolio/withdraw/card/addresscheck` for the required fields, add the address through `POST /v1/portfolio/withdraw/card/address`, then resubmit"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/card/change/process": {
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Confirm Suggested Receiving Card",
+        "description": "Accepts the receiving card change suggested by the review. Used for the “Confirm & update” action on the withdrawal details page. When the withdrawal details return `to_be_changed_card`, the review suggests that the Client switch to that card to continue the withdrawal; after the Client confirms, call this endpoint and the request’s receiving card becomes `to_be_changed_card`.\n\nBefore calling, call `POST /v1/portfolio/withdraw/card/addresscheck` with `to_be_changed_card.card_id`; when `address_needed` is `true`, save the payee address with `POST /v1/portfolio/withdraw/card/address` first. On success, query the details again. When the Client picks a new card themselves, use `PUT /v1/portfolio/withdraw/member/change/card` instead.\n",
+        "operationId": "postV1PortfolioWithdrawCardChangeProcess",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "app_id": {
+                    "type": "string",
+                    "description": "Withdrawal request id as a string, from `id` of the withdrawal details",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "app_id"
+                ]
+              },
+              "example": {
+                "app_id": "<WITHDRAWAL_ID>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Confirm Suggested Receiving Card” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The service rejected the request because a business rule or input validation failed. Review the business codes and correct the request before retrying.",
+            "x-business-codes": [
+              {
+                "code": 2031199,
+                "description": "The receiving bank card lacks a required payee address. Call `POST /v1/portfolio/withdraw/card/addresscheck` for the required fields, add the address through `POST /v1/portfolio/withdraw/card/address`, then resubmit"
+              }
+            ],
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/card/addresscheck": {
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Check Payee Address of Bank Card",
+        "description": "Checks whether withdrawing the given currency to the given bank card requires a payee address, and returns the address fields to fill, the card’s current address, and a prefill address for one-tap filling. This endpoint only reads data.\n\nWhen to call: when `need_payee_address` in the pre-check is `true`, before changing the receiving card of a withdrawal, before confirming a suggested receiving card, and after a withdrawal submission or card change returns business code `2031199`. When `address_needed` is `true`, render the address form from `want_fields` and save it with `POST /v1/portfolio/withdraw/card/address`. When `address_valid` is `false`, the address must be completed or corrected before the withdrawal can continue.\n",
+        "operationId": "postV1PortfolioWithdrawCardAddresscheck",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "card_id": {
+                    "type": "integer",
+                    "description": "Bank card id",
+                    "format": "int64"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "description": "Currency of this withdrawal, for example USD",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "card_id",
+                  "currency"
+                ]
+              },
+              "example": {
+                "card_id": 20381,
+                "currency": "USD"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Check Payee Address of Bank Card” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "address_needed": {
+                              "type": "boolean",
+                              "description": "Whether this withdrawal to the card requires a payee address; when `true`, show the address form"
+                            },
+                            "address_valid": {
+                              "type": "boolean",
+                              "description": "Whether the current address is valid: `true` means it meets the requirements and the Client only needs to confirm; `false` means it is missing or no longer meets the rules and must be completed or corrected before withdrawing"
+                            },
+                            "want_fields": {
+                              "type": "array",
+                              "description": "Address fields required for the card; the Broker App renders the form in the returned order",
+                              "items": {
+                                "type": "string",
+                                "enum": [
+                                  "address",
+                                  "payee_building",
+                                  "payee_city",
+                                  "payee_country",
+                                  "payee_postcode",
+                                  "payee_state",
+                                  "payee_street"
+                                ]
+                              }
+                            },
+                            "now_address": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/WithdrawPayeeAddress"
+                                }
+                              ],
+                              "description": "Payee address currently saved for the card, for display; absent or empty when none is saved"
+                            },
+                            "prefill_address": {
+                              "allOf": [
+                                {
+                                  "$ref": "#/components/schemas/WithdrawPayeeAddress"
+                                }
+                              ],
+                              "description": "Payee address the Client most recently submitted for another card, for one-tap filling; absent or empty when unavailable"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "address_needed": true,
+                    "address_valid": false,
+                    "want_fields": [
+                      "payee_country",
+                      "payee_state",
+                      "payee_city",
+                      "payee_street",
+                      "address",
+                      "payee_postcode"
+                    ],
+                    "prefill_address": {
+                      "payee_country": "HKG",
+                      "payee_state": "Kowloon",
+                      "payee_city": "Hong Kong",
+                      "payee_street": "8 Sample Street",
+                      "payee_building": "",
+                      "address": "Flat B, 5/F",
+                      "payee_postcode": "000000"
+                    }
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/card/countries": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Get Payee Countries and Regions",
+        "description": "Queries the countries and regions available in the payee address form, with their Chinese and English names. Used to render the country or region picker and to resolve the `payee_address.payee_country` code in the withdrawal details to a name. When saving a payee address, pass the selected item’s `code2` as `payee_country`.\n",
+        "operationId": "getV1PortfolioWithdrawCardCountries",
+        "parameters": [
+          {
+            "name": "bind_card_allowed",
+            "in": "query",
+            "required": false,
+            "description": "Whether to return only countries and regions where binding a card is allowed: `true` returns only those, for the address form; omit it or pass `false` to return all, for displaying historical addresses",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get Payee Countries and Regions” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "list": {
+                              "type": "array",
+                              "description": "Countries and regions",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "code1": {
+                                    "type": "string",
+                                    "description": "ISO 3166-1 alpha-2 code, for example `HK`"
+                                  },
+                                  "code2": {
+                                    "type": "string",
+                                    "description": "ISO 3166-1 alpha-3 code, for example `HKG`; used as `payee_country` when saving a payee address"
+                                  },
+                                  "name_cn": {
+                                    "type": "string",
+                                    "description": "Simplified Chinese name"
+                                  },
+                                  "name_tn": {
+                                    "type": "string",
+                                    "description": "Traditional Chinese name"
+                                  },
+                                  "name_en": {
+                                    "type": "string",
+                                    "description": "English name"
+                                  },
+                                  "bind_card_allowed": {
+                                    "type": "boolean",
+                                    "description": "Whether binding a card is allowed for this country or region"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "list": [
+                      {
+                        "code1": "HK",
+                        "code2": "HKG",
+                        "name_cn": "中国香港",
+                        "name_tn": "中國香港",
+                        "name_en": "Hong Kong, China",
+                        "bind_card_allowed": true
+                      }
+                    ]
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/withdraw/card/address": {
+      "post": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Update Payee Address of Bank Card",
+        "description": "Saves the payee address of the given bank card. Used to add the address in the withdrawal page, the receiving card change flow, and the suggested card change flow. The change takes effect immediately without review; submitting the same address as the saved one changes nothing.\n\nCall `POST /v1/portfolio/withdraw/card/addresscheck` first to get `want_fields`. All 7 fields of `address` must be present; pass an empty string for fields not in `want_fields`. After saving, call `POST /v5/portfolio/withdraw` to submit the withdrawal, or continue with the card change endpoint. On failure, show `message` to the Client and retry after correcting the input.\n",
+        "operationId": "postV1PortfolioWithdrawCardAddress",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "card_id": {
+                    "type": "integer",
+                    "description": "Bank card id",
+                    "format": "int64"
+                  },
+                  "address": {
+                    "type": "object",
+                    "description": "Payee address; all 7 fields are required, with an empty string for fields that are not needed",
+                    "properties": {
+                      "payee_country": {
+                        "type": "string",
+                        "description": "Country or region as an ISO 3166-1 alpha-3 code, from `code2` of “Get Payee Countries and Regions”"
+                      },
+                      "payee_state": {
+                        "type": "string",
+                        "description": "State, province, or administrative region; up to 35 characters",
+                        "maxLength": 35
+                      },
+                      "payee_city": {
+                        "type": "string",
+                        "description": "City; up to 30 characters",
+                        "maxLength": 30
+                      },
+                      "payee_street": {
+                        "type": "string",
+                        "description": "Street; up to 70 characters",
+                        "maxLength": 70
+                      },
+                      "payee_building": {
+                        "type": "string",
+                        "description": "Building name; up to 35 characters",
+                        "maxLength": 35
+                      },
+                      "address": {
+                        "type": "string",
+                        "description": "Detailed address; up to 70 characters",
+                        "maxLength": 70
+                      },
+                      "payee_postcode": {
+                        "type": "string",
+                        "description": "Postal code; up to 16 characters",
+                        "maxLength": 16
+                      }
+                    },
+                    "required": [
+                      "address",
+                      "payee_building",
+                      "payee_city",
+                      "payee_country",
+                      "payee_postcode",
+                      "payee_state",
+                      "payee_street"
+                    ]
+                  }
+                },
+                "required": [
+                  "card_id",
+                  "address"
+                ]
+              },
+              "example": {
+                "card_id": 20381,
+                "address": {
+                  "payee_country": "HKG",
+                  "payee_state": "Kowloon",
+                  "payee_city": "Hong Kong",
+                  "payee_street": "8 Sample Street",
+                  "payee_building": "",
+                  "address": "Flat B, 5/F",
+                  "payee_postcode": "000000"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Update Payee Address of Bank Card” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
