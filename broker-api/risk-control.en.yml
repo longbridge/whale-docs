@@ -55,7 +55,10 @@ paths:
               properties:
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 credit_limit:
                   type: number
                   description: Credit Limit
@@ -161,10 +164,16 @@ paths:
               properties:
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 member_id:
                   type: string
-                  description: Member ID
+                  description: |-
+                    Member ID
+
+                    `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                 credit_currency:
                   type: string
                   description: Credit Currency
@@ -222,12 +231,12 @@ paths:
   /risk/v1/delete_canceled_account_credit:
     post:
       operationId: delete_canceled_account_credit
-      summary: Delete Canceled Account Credit
+      summary: Delete Credit of Closed Account
       tags:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Deletes customer credit-limit records that are in the canceled state.
+        Deletes the customer credit-limit records of closed (cancelled) securities accounts.
 
         ### Request parameters
 
@@ -236,7 +245,9 @@ paths:
 
         ### Business notes
 
-        Only credit-limit records already in the canceled state can be deleted; multiple accounts can be deleted in one call.
+        - The account must be closed first (for example with `whale_close_account`), or the call returns `账户未注销` (account not closed).
+        - The account must have a credit record; without one the endpoint returns `400 系统错误` (system error).
+        - Multiple accounts can be deleted in one call.
 
         ### Risk warning
 
@@ -328,7 +339,7 @@ paths:
       x-mint:
         href: /en/api-reference/delete_canceled_account_credit
         metadata:
-          sidebarTitle: Delete Canceled Account Credit
+          sidebarTitle: Delete Credit of Closed Account
   /risk/v1/admin_credit_adjust/review_flow_ticket:
     post:
       operationId: admin_credit_adjust_review_flow_ticket
@@ -411,7 +422,10 @@ paths:
         - name: aaid
           in: query
           required: true
-          description: A/C No.
+          description: |-
+            A/C No.
+
+            Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
           schema:
             type: string
       responses:
@@ -759,7 +773,10 @@ paths:
                   description: Credit group ID
                 aaid:
                   type: string
-                  description: Account
+                  description: |-
+                    Account
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 account_credit:
                   type: number
                   description: Adjusted credit
@@ -843,7 +860,10 @@ paths:
                     properties:
                       aaid:
                         type: string
-                        description: Account
+                        description: |-
+                          Account
+
+                          Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                       account_credit:
                         type: string
                         description: Financing credit
@@ -927,7 +947,10 @@ paths:
                   description: Group ID
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
             example:
               group_id: '1'
               aaid: H00000000
@@ -1113,6 +1136,8 @@ paths:
                   description: |-
                     Account AAID. The customer fund account selected via the request field member_query_aaid component;
                     disabled and unchangeable when editing.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 trade_credit_type:
                   type: string
                   description: |-
@@ -1275,7 +1300,10 @@ paths:
               properties:
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
             example:
               aaid: H00000000
       responses:
@@ -1548,13 +1576,15 @@ paths:
 
         ### Request parameters
 
-        - Required: `aaid` (account ID), `exchange_books` (list of exchange entries), `exchange_books.from_currency` (currency to convert from), `exchange_books.to_currency` (currency to convert to)
-        - Optional: `exchange_books.from_amount` (amount converted from), `exchange_books.to_amount` (amount converted to)
+        - Required: `aaid` (account ID), `exchange_books` (list of exchange entries). Each entry requires `from_currency` and `to_currency`, plus exactly one of `from_amount` or `to_amount`.
+        - Body shape: `{"aaid": 57036919, "exchange_books": [{"from_currency": "USD", "to_currency": "HKD", "from_amount": "100.00"}]}`.
         - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Business notes
 
         Executes currency conversion entry by entry to repay the customer's borrowing; each entry specifies the from/to currencies and amounts.
+
+        Prerequisite: the account must have an FX repayment reminder (swap-remind) record under margin-call debt info (`risk_debt_info`); otherwise the call fails with `30020049`. Use `query_exchange_v2` with the same `aaid` to check the debt amount and available cash books first.
 
         ### Risk warning
 
@@ -1574,36 +1604,36 @@ paths:
               required:
                 - aaid
                 - exchange_books
-                - exchange_books.from_currency
-                - exchange_books.to_currency
               properties:
                 aaid:
-                  type: number
-                  description: Account ID. Programmatically derived by the client from the selected record's record.aaid_val; not a form-editable field.
+                  type: integer
+                  description: |-
+                    Account ID. Programmatically derived by the client from the selected record's record.aaid_val; not a form-editable field.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 exchange_books:
                   type: array
-                  description: |-
-                    Exchange Books. Array of dynamic FX rows; multiple exchange records can be added. See the sub-fields
-                    of exchange_books (from_currency, etc.) for each row's structure.
+                  description: Exchange Books. Array of exchange entries; multiple entries can be submitted. Each entry is an object with `from_currency`, `to_currency`, and exactly one of `from_amount` / `to_amount`.
                   items:
-                    type: string
-                exchange_books.from_currency:
-                  type: string
-                  description: From Currency. Currency dropdown populated from currencies held in the client's cash ledger.
-                exchange_books.to_currency:
-                  type: string
-                  description: |-
-                    Target currency to be exchanged. Options come from the backend data dictionary of exchange-supported currencies; use the options the service returns.
-                exchange_books.from_amount:
-                  type: string
-                  description: |-
-                    From Amount. Submit either from_amount or to_amount: the field the user edited last is kept, while
-                    the other is computed from the exchange rate and dropped by the client.
-                exchange_books.to_amount:
-                  type: string
-                  description: To Amount. Same as from_amount; the two are mutually exclusive and only one is submitted.
+                    type: object
+                    required:
+                      - from_currency
+                      - to_currency
+                    properties:
+                      from_currency:
+                        type: string
+                        description: From Currency. Currency to convert from; choose one of the currencies held in the customer's cash books.
+                      to_currency:
+                        type: string
+                        description: To Currency. Currency to convert to. Options come from the backend data dictionary of exchange-supported currencies; use the options the service returns.
+                      from_amount:
+                        type: string
+                        description: From Amount. Amount of `from_currency` to convert. Submit either `from_amount` or `to_amount`, not both; the other side is computed from the exchange rate.
+                      to_amount:
+                        type: string
+                        description: To Amount. Amount of `to_currency` to receive. Mutually exclusive with `from_amount`; submit only one of them.
             example:
-              aaid: H00000000
+              aaid: 57036919
               exchange_books:
                 - from_currency: USD
                   to_currency: HKD
@@ -1696,7 +1726,10 @@ paths:
               properties:
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
             example:
               aaid: H00000000
       responses:
@@ -1743,13 +1776,27 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field definitions below for the request fields.
+        - Required: `id` (message ID). Use the `post_id` of a pushed message returned by `get_push_msg_history`.
 
         ### Returns
 
         On success, returns the risk-control message details. See the response definition for field meanings.
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+              properties:
+                id:
+                  type: integer
+                  description: Message ID. The `post_id` of a pushed message returned by `get_push_msg_history`, passed as a number.
+            example:
+              id: 1001
       responses:
         '200':
           content:
@@ -1820,7 +1867,10 @@ paths:
                   description: Risk Monitoring Log ID
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
             example:
               risk_monitoring_log_id: 1
               aaid: H00000000
@@ -1921,7 +1971,10 @@ paths:
                   description: Risk Monitoring Log ID
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
             example:
               risk_monitoring_log_id: 1
               aaid: H00000000
@@ -2042,7 +2095,10 @@ paths:
               properties:
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 risk_monitoring_log_id:
                   type: string
                   description: Risk Monitoring Log ID
@@ -2113,7 +2169,10 @@ paths:
               properties:
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
             example:
               aaid: H00000000
       responses:
@@ -2197,7 +2256,10 @@ paths:
                   description: Risk Monitoring Log ID
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
             example:
               risk_monitoring_log_id: 1
               aaid: H00000000
@@ -2316,7 +2378,10 @@ paths:
               properties:
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
             example:
               aaid: H00000000
       responses:
@@ -2378,13 +2443,19 @@ paths:
         - name: member_id
           in: query
           required: true
-          description: Member ID
+          description: |-
+            Member ID
+
+            `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
           schema:
             type: string
         - name: aaid
           in: query
           required: true
-          description: A/C No.
+          description: |-
+            A/C No.
+
+            Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
           schema:
             type: string
       responses:
@@ -2560,7 +2631,10 @@ paths:
                     type: string
                 push_msg_type:
                   type: string
-                  description: Push Msg Type. Specifies Push Msg Type. This field is required.
+                  description: |-
+                    Push Msg Type. Specifies Push Msg Type. This field is required.
+
+                    **Allowed values:** `1` APP message, `2` Email message
                   enum:
                     - '1'
                     - '2'
@@ -2691,7 +2765,7 @@ paths:
                   description: Op User. This field is required.
                 counter_id:
                   type: string
-                  description: Counter ID. Counter ID associated with this request.
+                  description: Counter ID. Counter ID associated with this request. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 is_intraday_credit:
                   type: boolean
                   description: |-
@@ -2920,7 +2994,10 @@ paths:
                   description: Risk Monitoring Log ID. The alert record ID, taken from the selected record.
                 status:
                   type: integer
-                  description: Status. Alert status, an enumerated value.
+                  description: |-
+                    Status. Alert status, an enumerated value.
+
+                    **Allowed values:** `0` Pending, `1` Follow Up - Pending, `2` Completed - Deposit Fund, `3` Completed - Sell Stocks, `4` Contacted/ Notified, `5` Auto Ended/Completed (System), `6` Ended/Completed (User), `7` Auto Forcesold (Sytem) - Pending, `8` Auto Forcesold (Sytem) - Failed, `10` Exception, `11` Auto Forcesold (Sytem) - Time-out Error
                   enum:
                     - '0'
                     - '1'
@@ -2936,7 +3013,10 @@ paths:
                   example: '0'
                 reason:
                   type: integer
-                  description: Reason. Handling reason, an enumerated value.
+                  description: |-
+                    Reason. Handling reason, an enumerated value.
+
+                    **Allowed values:** `0` Other, `1` Stock price movement, `2` IPO, `3` Financing interest, `4` Insufficient stock, `5` Insufficient cash for option exercise
                   enum:
                     - '0'
                     - '1'
@@ -3024,7 +3104,9 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field definitions below for the request fields.
+        - Required: `aaid` (securities account ID), `counter_id` (security), `order_type` (order type), `submitted_quantity` (buy-back quantity).
+        - `price` is required unless `order_type` is `MO` (market order); `rth` (trading session) applies to limit orders (`LO`).
+        - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Business notes
 
@@ -3039,6 +3121,43 @@ paths:
         On success the short-sell forced liquidation is submitted; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - counter_id
+                - order_type
+                - submitted_quantity
+              properties:
+                aaid:
+                  type: string
+                  description: Securities account ID (`aaid`) of the short-sell position, taken from the position row. Pass the internal numeric ID, not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`.
+                counter_id:
+                  type: string
+                  description: Security counter ID of the short-sell position, e.g. `ST/HK/700`, taken from the position row.
+                order_type:
+                  type: string
+                  description: Order type, from data dictionary `option_force_close_order_type`, e.g. `MO` (market order, the frontend default) or `LO` (limit order).
+                price:
+                  type: number
+                  description: Order price. Required unless `order_type` is `MO`; must be ≥ 0.
+                submitted_quantity:
+                  type: number
+                  description: Buy-back quantity to submit (shares); must be ≥ 0.
+                rth:
+                  type: integer
+                  description: Trading session, from data dictionary `rth`; only applies when `order_type` is `LO`. The frontend default is `1`.
+            example:
+              aaid: '57036919'
+              counter_id: ST/HK/700
+              order_type: LO
+              price: 400
+              submitted_quantity: 100
+              rth: 1
       responses:
         '200':
           content:
@@ -3079,7 +3198,9 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field definitions below for the request fields.
+        - Required: `aaid` (securities account ID), `counter_id` (security), `push_msg_type` (`1` App message, `2` Email message).
+        - The frontend calls this once per selected message type.
+        - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Business notes
 
@@ -3094,6 +3215,41 @@ paths:
         On success the short-sell liquidation push notification is sent; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - counter_id
+                - push_msg_type
+              properties:
+                aaid:
+                  type: string
+                  description: Securities account ID (`aaid`) of the short-sell position, taken from the position row. Pass the internal numeric ID, not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`.
+                counter_id:
+                  type: string
+                  description: Security counter ID of the short-sell position, e.g. `ST/HK/700`, taken from the position row.
+                push_msg_type:
+                  type: integer
+                  description: |-
+                    Push message type.
+
+                    **Allowed values:** `1` App message, `2` Email message
+                  enum:
+                    - 1
+                    - 2
+                  x-enum-details:
+                    - value: 1
+                      label: App Message
+                    - value: 2
+                      label: Email Message
+            example:
+              aaid: '57036919'
+              counter_id: ST/HK/700
+              push_msg_type: 1
       responses:
         '200':
           content:
@@ -3134,7 +3290,9 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field definitions below for the request fields.
+        - Required: `aaid` (securities account ID), `counter_id` (security), `push_msg_type` (`1` App message, `2` Email message).
+        - The frontend calls this once per selected message type.
+        - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Business notes
 
@@ -3145,6 +3303,41 @@ paths:
         On success, returns the preview content of the short-sell liquidation push notification. See the response definition for field meanings.
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - counter_id
+                - push_msg_type
+              properties:
+                aaid:
+                  type: string
+                  description: Securities account ID (`aaid`) of the short-sell position, taken from the position row. Pass the internal numeric ID, not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`.
+                counter_id:
+                  type: string
+                  description: Security counter ID of the short-sell position, e.g. `ST/HK/700`, taken from the position row.
+                push_msg_type:
+                  type: integer
+                  description: |-
+                    Push message type.
+
+                    **Allowed values:** `1` App message, `2` Email message
+                  enum:
+                    - 1
+                    - 2
+                  x-enum-details:
+                    - value: 1
+                      label: App Message
+                    - value: 2
+                      label: Email Message
+            example:
+              aaid: '57036919'
+              counter_id: ST/HK/700
+              push_msg_type: 1
       responses:
         '200':
           content:
@@ -3215,10 +3408,13 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: Counter ID. A hidden field derived programmatically from the selected record; not editable by the user.
+                  description: Counter ID. A hidden field derived programmatically from the selected record; not editable by the user. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 status:
                   type: string
-                  description: Status. Short-selling holding status to set. Only one value is supported; see the option definitions below.
+                  description: |-
+                    Status. Short-selling holding status to set. Only one value is supported; see the option definitions below.
+
+                    **Allowed values:** `0` Normal, `1` Close-out Warning, `2` Position Closed
                   enum:
                     - '0'
                     - '1'
@@ -3391,8 +3587,8 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field definitions for optional ones.
-        - Pass `aaid` to filter by a given securities account.
+        - Required: `record_id` (margin-call record ID). Use the `id` of a record returned by `risk_option_stock_margin_call_records`.
+        - The admin console queries this endpoint by `record_id` only.
 
         ### Returns
 
@@ -3400,10 +3596,19 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - name: record_id
+          in: query
+          required: true
+          description: Margin-call record ID. The `id` of an option covered-stock margin-call record returned by `risk_option_stock_margin_call_records`.
+          schema:
+            type: string
         - name: aaid
           in: query
           required: false
-          description: A/C No.
+          description: |-
+            A/C No.
+
+            Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
           schema:
             type: string
       responses:
@@ -3581,8 +3786,9 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field definitions for optional ones.
-        - Pass `aaid` to filter by a given securities account.
+        - Required: `aaid` (securities account ID) and `log_id` (short-stock recall record ID). The frontend always sends both.
+        - `log_id` is the `id` of a row returned by `holding_short_stock_margin_logs`; pass that row's `aaid` with it.
+        - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Returns
 
@@ -3595,12 +3801,23 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - aaid
+                - log_id
               properties:
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
+                log_id:
+                  type: integer
+                  description: |-
+                    Short-stock recall record ID: the `id` of the row returned by `holding_short_stock_margin_logs` (short-stock margin recall logs). Pass it together with the same row's `aaid`; without it the backend cannot locate the recall record and returns `30020049`.
             example:
-              aaid: H00000000
+              aaid: '57036919'
+              log_id: 123
       responses:
         '200':
           content:
@@ -3657,8 +3874,9 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field definitions for optional ones.
-        - Pass `aaid` to filter by a given securities account.
+        - Required: `aaid` (securities account ID) and `log_id` (short-stock recall record ID). The frontend always sends both.
+        - `log_id` is the `id` of a row returned by `holding_short_stock_margin_logs`; pass that row's `aaid` with it.
+        - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Returns
 
@@ -3671,12 +3889,23 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - aaid
+                - log_id
               properties:
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
+                log_id:
+                  type: integer
+                  description: |-
+                    Short-stock recall record ID: the `id` of the row returned by `holding_short_stock_margin_logs` (short-stock margin recall logs). Pass it together with the same row's `aaid`; without it the backend cannot locate the recall record and returns `30020049`.
             example:
-              aaid: H00000000
+              aaid: '57036919'
+              log_id: 123
       responses:
         '200':
           content:
@@ -3759,7 +3988,10 @@ paths:
               properties:
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
             example:
               aaid: H00000000
       responses:
@@ -3800,8 +4032,9 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; use `aaid` (account ID) to target a specific account.
-        - See the field descriptions for the format, value range, and business meaning of each field.
+        - Required: `aaid` (securities account ID) and `log_id` (short-stock recall record ID). The frontend always sends both.
+        - `log_id` is the `id` of a row returned by `holding_short_stock_margin_logs`; pass that row's `aaid` with it.
+        - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Returns
 
@@ -3814,12 +4047,23 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - aaid
+                - log_id
               properties:
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
+                log_id:
+                  type: integer
+                  description: |-
+                    Short-stock recall record ID: the `id` of the row returned by `holding_short_stock_margin_logs` (short-stock margin recall logs). Pass it together with the same row's `aaid`; without it the backend cannot locate the recall record and returns `30020049`.
             example:
-              aaid: H00000000
+              aaid: '57036919'
+              log_id: 123
       responses:
         '200':
           content:
@@ -4007,7 +4251,7 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: Security code
+                  description: Security code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 im_factor:
                   type: string
                   description: Initial margin ratio
@@ -4103,7 +4347,7 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: Counter ID. The counter_id of the margin-ratio record to delete, used as the unique identifier.
+                  description: Counter ID. The counter_id of the margin-ratio record to delete, used as the unique identifier. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 operator:
                   type: string
                   description: Operator. Username of the authenticated operator. Required only for the intraday real-time margin workflow.
@@ -4233,6 +4477,8 @@ paths:
                   type: integer
                   description: |-
                     File Type.
+
+                    **Allowed values:** `0` Long stock margin ratio
                   enum:
                     - 0
                   x-enum-details:
@@ -4542,16 +4788,15 @@ paths:
                     Audit Context. A caller-provided audit-tracking object: $behavior is the operation description, and ids is
                     the list of pending-task IDs involved in this batch trigger (taken from the
                     waitting_stock_margin_ratio_task_count query result).
-                audit_frontend_resource.$behavior:
-                  type: string
-                  description: Behavior Description. Localized text describing the batch sync action currently triggered.
-                audit_frontend_resource.ids:
-                  type: array
-                  description: |-
-                    Task ID List. The set of margin-adjustment task IDs to batch-trigger; used only for audit records,
-                    not for filtering (the interface semantics are to trigger all pending tasks).
-                  items:
-                    type: string
+                    The key `$behavior` contains `$` and is passed literally; its value is the localized action description.
+                  properties:
+                    ids:
+                      type: array
+                      description: |-
+                        Task ID List. The set of margin-adjustment task IDs to batch-trigger; used only for audit records,
+                        not for filtering (the interface semantics are to trigger all pending tasks).
+                      items:
+                        type: string
             example:
               audit_frontend_resource:
                 $behavior: 批量同步保证金任务
@@ -4773,7 +5018,7 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: Security code
+                  description: Security code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 im_factor:
                   type: string
                   description: Initial margin ratio
@@ -4880,7 +5125,10 @@ paths:
                           description: Less Than or Equal. Inclusive upper bound of the filter range.
                     state:
                       type: string
-                      description: A/C Status. Filters results by A/C Status.
+                      description: |-
+                        A/C Status. Filters results by A/C Status.
+
+                        **Allowed values:** `-1` Logged Out, `1` Active
                       enum:
                         - '-1'
                         - '1'
@@ -4892,7 +5140,10 @@ paths:
                       example: Active
                     member_account_type:
                       type: string
-                      description: Account Type. Filters results by Account Type.
+                      description: |-
+                        Account Type. Filters results by Account Type.
+
+                        **Allowed values:** `M` Margin, `C` Cash, `F` Futures
                       enum:
                         - M
                         - C
@@ -4907,7 +5158,10 @@ paths:
                       example: M
                     account_mark:
                       type: string
-                      description: Account Tag. Filters results by Account Tag.
+                      description: |-
+                        Account Tag. Filters results by Account Tag.
+
+                        **Allowed values:** `dt` Day Trade
                       enum:
                         - dt
                       x-enum-details:
@@ -4916,7 +5170,10 @@ paths:
                       example: dt
                     member_id:
                       type: string
-                      description: Member. Filters results by Member.
+                      description: |-
+                        Member. Filters results by Member.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     credit_group_name:
                       type: string
                       description: Credit Group Name. Filters results by Credit Group Name.
@@ -5161,10 +5418,16 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: Member ID. Filters results by Member ID.
+                      description: |-
+                        Member ID. Filters results by Member ID.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     review_status:
                       type: string
-                      description: Application Status. Filters results by Application Status.
+                      description: |-
+                        Application Status. Filters results by Application Status.
+
+                        **Allowed values:** `0` Not Submitted, `1` Rejected, `2` Approved, `3` Pending Approval, `4` Cancelled
                       enum:
                         - '0'
                         - '1'
@@ -5185,7 +5448,10 @@ paths:
                       example: Not Submitted
                     account_type:
                       type: string
-                      description: Account Type. Filters results by Account Type.
+                      description: |-
+                        Account Type. Filters results by Account Type.
+
+                        **Allowed values:** `M` Margin, `C` Cash, `F` Futures
                       enum:
                         - M
                         - C
@@ -5200,7 +5466,10 @@ paths:
                       example: Margin
                     mark:
                       type: string
-                      description: Account Tag. Filters results by Account Tag.
+                      description: |-
+                        Account Tag. Filters results by Account Tag.
+
+                        **Allowed values:** `dt` Day Trade
                       enum:
                         - dt
                       x-enum-details:
@@ -5626,7 +5895,10 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: AAID. Filters results by AAID.
+                      description: |-
+                        AAID. Filters results by AAID.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     name:
                       type: string
                       description: Group Name. Filters results by Group Name.
@@ -5798,7 +6070,10 @@ paths:
                       description: GroupId
                     account_type:
                       type: string
-                      description: Account Type
+                      description: |-
+                        Account Type
+
+                        **Allowed values:** `M` Margin, `C` Cash, `F` Futures
                       enum:
                         - M
                         - C
@@ -5806,7 +6081,10 @@ paths:
                       example: M
                     mark:
                       type: string
-                      description: Account Tag
+                      description: |-
+                        Account Tag
+
+                        **Allowed values:** `dt` Day Trade
                       enum:
                         - dt
                       example: dt
@@ -5998,10 +6276,16 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: Member ID. Filters results by Member ID.
+                      description: |-
+                        Member ID. Filters results by Member ID.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     origin:
                       type: string
-                      description: Source. Filters results by Source.
+                      description: |-
+                        Source. Filters results by Source.
+
+                        **Allowed values:** `auto_credit` Auto assigned (System), `credit_audit` Manual adjustment (User), `app_auto` Submitted by client through APP (Auto Approved by System), `rule_change` Adjusted by credit limit rule (User), `batch_change` Batch Adjustment (User), `credit_group` Group Default Credit Limit, `manual_add` Manual adjustment (User), `credit_blacklist` Included inside blacklist, `manual_adjust` Manual adjustment (User), `dynamic_credit_limit_adjustment` Dynamic Credit Limit Adjustment
                       enum:
                         - auto_credit
                         - credit_audit
@@ -6063,7 +6347,10 @@ paths:
                           description: Less Than or Equal. Inclusive upper bound of the filter range.
                     account_type:
                       type: string
-                      description: Account Type. Filters results by Account Type.
+                      description: |-
+                        Account Type. Filters results by Account Type.
+
+                        **Allowed values:** `M` Margin, `C` Cash, `F` Futures
                       enum:
                         - M
                         - C
@@ -6078,7 +6365,10 @@ paths:
                       example: Margin
                     mark:
                       type: string
-                      description: Account Tag. Filters results by Account Tag.
+                      description: |-
+                        Account Tag. Filters results by Account Tag.
+
+                        **Allowed values:** `dt` Day Trade
                       enum:
                         - dt
                       x-enum-details:
@@ -6309,7 +6599,10 @@ paths:
                       example: '10830'
                     status:
                       type: string
-                      description: Status. Filters results by Status.
+                      description: |-
+                        Status. Filters results by Status.
+
+                        **Allowed values:** `0` Validating, `1` Processing, `2` Completed, `-2` Importing, `-1` ImportException
                       enum:
                         - '0'
                         - '1'
@@ -6496,10 +6789,16 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Client
+                      description: |-
+                        Client
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     status:
                       type: string
-                      description: Status
+                      description: |-
+                        Status
+
+                        **Allowed values:** `0` Validating, `1` Completed, `2` Failed
                       enum:
                         - '0'
                         - '1'
@@ -6507,7 +6806,10 @@ paths:
                       example: '0'
                     account_type:
                       type: string
-                      description: Account Type
+                      description: |-
+                        Account Type
+
+                        **Allowed values:** `M` Margin, `C` Cash, `F` Futures
                       enum:
                         - M
                         - C
@@ -6515,7 +6817,10 @@ paths:
                       example: M
                     mark:
                       type: string
-                      description: Account Remark
+                      description: |-
+                        Account Remark
+
+                        **Allowed values:** `dt` Day Trade
                       enum:
                         - dt
                       example: dt
@@ -6711,7 +7016,10 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: AAID. Filters results by AAID.
+                      description: |-
+                        AAID. Filters results by AAID.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     currency:
                       type: string
                       description: |-
@@ -6723,7 +7031,10 @@ paths:
                       example: USD
                     account_type:
                       type: string
-                      description: Account Type. Filters results by Account Type.
+                      description: |-
+                        Account Type. Filters results by Account Type.
+
+                        **Allowed values:** `M` Margin, `C` Cash, `F` Futures
                       enum:
                         - M
                         - C
@@ -6738,7 +7049,10 @@ paths:
                       example: Margin
                     mark:
                       type: string
-                      description: Account Tag. Filters results by Account Tag.
+                      description: |-
+                        Account Tag. Filters results by Account Tag.
+
+                        **Allowed values:** `dt` Day Trade
                       enum:
                         - dt
                       x-enum-details:
@@ -6925,7 +7239,10 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: AAID. Filters results by AAID.
+                      description: |-
+                        AAID. Filters results by AAID.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     finance_amount:
                       type: object
                       description: Financing Amt. Filters results by Financing Amt.
@@ -6948,7 +7265,10 @@ paths:
                           description: Less Than or Equal. Inclusive upper bound of the filter range.
                     account_type:
                       type: string
-                      description: Account Type. Filters results by Account Type.
+                      description: |-
+                        Account Type. Filters results by Account Type.
+
+                        **Allowed values:** `M` Margin, `C` Cash, `F` Futures
                       enum:
                         - M
                         - C
@@ -6963,7 +7283,10 @@ paths:
                       example: M
                     mark:
                       type: string
-                      description: Account Tag. Filters results by Account Tag.
+                      description: |-
+                        Account Tag. Filters results by Account Tag.
+
+                        **Allowed values:** `dt` Day Trade
                       enum:
                         - dt
                       x-enum-details:
@@ -7182,10 +7505,16 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     status:
                       type: string
-                      description: Status. Filters results by Status.
+                      description: |-
+                        Status. Filters results by Status.
+
+                        **Allowed values:** `0` Working, `1` Expired, `3` Pending
                       enum:
                         - '0'
                         - '1'
@@ -7200,7 +7529,10 @@ paths:
                       example: Working
                     trade_credit_type:
                       type: string
-                      description: Type. Filters results by Type.
+                      description: |-
+                        Type. Filters results by Type.
+
+                        **Allowed values:** `0` Global, `1` Single Currency
                       enum:
                         - '0'
                         - '1'
@@ -7430,10 +7762,16 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     review_status:
                       type: string
-                      description: Review Status. Filters results by Review Status.
+                      description: |-
+                        Review Status. Filters results by Review Status.
+
+                        **Allowed values:** `0` Reviewing, `1` Pass, `2` Rejected, `3` Closed
                       enum:
                         - '0'
                         - '1'
@@ -7451,7 +7789,10 @@ paths:
                       example: Reviewing
                     trade_credit_type:
                       type: string
-                      description: Type. Filters results by Type.
+                      description: |-
+                        Type. Filters results by Type.
+
+                        **Allowed values:** `0` Global, `1` Single Currency
                       enum:
                         - '0'
                         - '1'
@@ -7677,7 +8018,10 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     alert_time:
                       type: string
                       description: Triggered At. Filters results by Triggered At.
@@ -7690,7 +8034,10 @@ paths:
                       example: '1780654926'
                     is_auto:
                       type: string
-                      description: Auto Convert. Filters results by Auto Convert.
+                      description: |-
+                        Auto Convert. Filters results by Auto Convert.
+
+                        **Allowed values:** `true` Open, `false` Closed
                       enum:
                         - 'true'
                         - 'false'
@@ -7702,7 +8049,10 @@ paths:
                       example: Closed
                     status:
                       type: string
-                      description: Status. Filters results by Status.
+                      description: |-
+                        Status. Filters results by Status.
+
+                        **Allowed values:** `0` Pending, `5` Closed/ Completed, `2` FX - PENDING, `1` FX - PENDING APPROVAL, `3` FX - FAIL
                       enum:
                         - '0'
                         - '5'
@@ -8053,7 +8403,10 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Please Select A/C. Filters results by Please Select A/C.
+                      description: |-
+                        Please Select A/C. Filters results by Please Select A/C.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     alert_time:
                       type: string
                       description: Triggered At. Filters results by Triggered At.
@@ -8066,7 +8419,10 @@ paths:
                       example: '1776616001'
                     status:
                       type: string
-                      description: Stauts. Filters results by Stauts.
+                      description: |-
+                        Stauts. Filters results by Stauts.
+
+                        **Allowed values:** `5` Auto Completed (System), `6` Manual FX (User), `7` Auto FX
                       enum:
                         - '5'
                         - '6'
@@ -8278,13 +8634,18 @@ paths:
                       example: '1780293618'
                     aaid:
                       type: string
-                      description: Account No.. Filters results by Account No..
+                      description: |-
+                        Account No.. Filters results by Account No..
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     backup_origin:
                       type: string
                       description: |-
                         Backup Origin. Filters results by Backup Origin.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `0` Auto Conversion, `1` Auto Notification, `2` Auto Redemption, `3` MMF-trigger Conversion, `4` Completed, `5` Manual Conversion
                       example: Auto Conversion
                       enum:
                         - '0'
@@ -8613,10 +8974,16 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Select Customers. Filters results by Select Customers.
+                      description: |-
+                        Select Customers. Filters results by Select Customers.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     is_auto:
                       type: string
-                      description: Is Auto. Filters results by Is Auto.
+                      description: |-
+                        Is Auto. Filters results by Is Auto.
+
+                        **Allowed values:** `true` Open, `false` Closed
                       enum:
                         - 'true'
                         - 'false'
@@ -8798,7 +9165,10 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Client
+                      description: |-
+                        Client
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     alert_date:
                       type: string
                       description: Triggered At
@@ -8836,7 +9206,10 @@ paths:
                       description: Holdings
                     is_contain_doom_option:
                       type: string
-                      description: Include Exercise Date Option
+                      description: |-
+                        Include Exercise Date Option
+
+                        **Allowed values:** `true` Yes, `false` No
                       enum:
                         - 'true'
                         - 'false'
@@ -8846,7 +9219,10 @@ paths:
                       description: Exclude Underlying Shares
                     counter_id_list_v3:
                       type: string
-                      description: Holding Type
+                      description: |-
+                        Holding Type
+
+                        **Allowed values:** `HK` HK stocks, `US` US stocks, `OP/US` US options, `SG` Singapore stocks
                       enum:
                         - HK
                         - US
@@ -8992,7 +9368,10 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     alert_date:
                       type: string
                       description: Triggered At. Filters results by Triggered At.
@@ -9003,6 +9382,8 @@ paths:
                         Alert Type. Filters results by Alert Type.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `MarginCall` Margin Call, `ForceCall` Forceselling Call, `OverFinancingCall` Over Financing Call (Financing > Credit Limit), `OptionExerciseCall` Option Exercise Force Call, `OptionExerciseMarginCall` Option Exercise Margin Call, `DebtMarginCall` Debt MarginCall, `OptionOverFinancingCall` Option Over Financing Call (Financing > Credit Limit)
                       example: MarginCall,ForceCall
                       enum:
                         - MarginCall
@@ -9033,6 +9414,8 @@ paths:
                         Status. Filters results by Status.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `0` Pending, `1` Follow Up - Pending, `2` Completed - Deposit Fund, `3` Completed - Sell Stocks, `4` Contacted/ Notified, `5` Auto Ended/Completed (System), `6` Ended/Completed (User), `7` Auto Forcesold (Sytem) - Pending, `8` Auto Forcesold (Sytem) - Failed, `10` Exception, `11` Auto Forcesold (Sytem) - Time-out Error
                       example: 0,1
                       enum:
                         - '0'
@@ -9074,7 +9457,10 @@ paths:
                       description: Holdings. Filters results by Holdings.
                     is_contain_doom_option:
                       type: string
-                      description: Include Exercise Date Option. Filters results by Include Exercise Date Option.
+                      description: |-
+                        Include Exercise Date Option. Filters results by Include Exercise Date Option.
+
+                        **Allowed values:** `true` Yes, `false` No
                       enum:
                         - 'true'
                         - 'false'
@@ -9089,7 +9475,10 @@ paths:
                       description: Exclude Underlying Shares. Filters results by Exclude Underlying Shares.
                     counter_id_list_v3:
                       type: string
-                      description: Holding Type. Filters results by Holding Type.
+                      description: |-
+                        Holding Type. Filters results by Holding Type.
+
+                        **Allowed values:** `HK` HK - Stock, `US` US - Stock, `OP/US` US - Option, `SG` SG - Stock
                       enum:
                         - HK
                         - US
@@ -9115,6 +9504,8 @@ paths:
                         Account Type. Filters results by Account Type.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `C` Cash Client, `M` Margin Client, `H` House
                       example: C,M
                       enum:
                         - C
@@ -9493,7 +9884,7 @@ paths:
                       description: Order ID
                     counter_id:
                       type: string
-                      description: Counter ID
+                      description: Counter ID. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 page:
                   type: integer
                   description: Page
@@ -9794,14 +10185,20 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Client
+                      description: |-
+                        Client
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     alert_date:
                       type: string
                       description: Alert Date
                       format: date
                     alert_type:
                       type: string
-                      description: Alert Type
+                      description: |-
+                        Alert Type
+
+                        **Allowed values:** `MarginCall` Margin call alert, `ForceCall` Forced liquidation alert, `OverFinancingCall` Over-financing alert, `OptionExerciseCall` Option exercise alert (liquidation), `OptionExerciseMarginCall` Option exercise alert (margin call), `DebtMarginCall` Borrowed-coin margin call (or other), `OptionOverFinancingCall` Option exercise alert (over-financing)
                       enum:
                         - MarginCall
                         - ForceCall
@@ -9829,7 +10226,7 @@ paths:
                       example: '0'
                     counter_id:
                       type: string
-                      description: Counter Id
+                      description: Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 page:
                   type: integer
                   description: Page
@@ -10058,7 +10455,10 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     alert_date:
                       type: string
                       description: Triggered At. Filters results by Triggered At.
@@ -10066,7 +10466,10 @@ paths:
                       example: '1781263172'
                     alert_type:
                       type: string
-                      description: Alert Type. Filters results by Alert Type.
+                      description: |-
+                        Alert Type. Filters results by Alert Type.
+
+                        **Allowed values:** `MarginCall` Margin Call, `ForceCall` Forceselling Call, `OverFinancingCall` Over Financing Call (Financing > Credit Limit), `OptionExerciseCall` Option Exercise Force Call, `OptionExerciseMarginCall` Option Exercise Margin Call, `DebtMarginCall` Debt MarginCall, `OptionOverFinancingCall` Option Over Financing Call (Financing > Credit Limit)
                       enum:
                         - MarginCall
                         - ForceCall
@@ -10097,6 +10500,8 @@ paths:
                         Status. Filters results by Status.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `0` Pending, `1` Follow Up - Pending, `2` Completed - Deposit Fund, `3` Completed - Sell Stocks, `4` Contacted/ Notified, `5` Auto Ended/Completed (System), `6` Ended/Completed (User), `7` Auto Forcesold (Sytem) - Pending, `8` Auto Forcesold (Sytem) - Failed, `10` Exception, `11` Auto Forcesold (Sytem) - Time-out Error
                       example: Pending
                       enum:
                         - '0'
@@ -10138,7 +10543,10 @@ paths:
                       description: Holdings. Filters results by Holdings.
                     is_contain_doom_option:
                       type: string
-                      description: Include 0DTR Option?. Filters results by Include 0DTR Option?.
+                      description: |-
+                        Include 0DTR Option?. Filters results by Include 0DTR Option?.
+
+                        **Allowed values:** `true` Yes, `false` No
                       enum:
                         - 'true'
                         - 'false'
@@ -10158,6 +10566,8 @@ paths:
                         Product. Filters results by Product.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `HK` HK - Stock, `US` US - Stock, `OP/US` US - Option, `SG` SG - Stock
                       example: HK,US
                       enum:
                         - HK
@@ -10469,7 +10879,10 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     alert_date:
                       type: string
                       description: Triggered At. Filters results by Triggered At.
@@ -10481,6 +10894,8 @@ paths:
                         Alert Type. Filters results by Alert Type.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `MarginCall` Margin Call, `ForceCall` Forceselling Call, `OverFinancingCall` Over Financing Call (Financing > Credit Limit), `OptionExerciseCall` Option Exercise Force Call, `OptionExerciseMarginCall` Option Exercise Margin Call, `DebtMarginCall` Debt MarginCall, `OptionOverFinancingCall` Option Over Financing Call (Financing > Credit Limit)
                       example: Margin Call
                       enum:
                         - MarginCall
@@ -10507,7 +10922,10 @@ paths:
                           label: Option Over Financing Call (Financing > Credit Limit)
                     status:
                       type: string
-                      description: Status. Filters results by Status.
+                      description: |-
+                        Status. Filters results by Status.
+
+                        **Allowed values:** `0` Pending, `1` Follow Up - Pending, `2` Completed - Deposit Fund, `3` Completed - Sell Stocks, `4` Contacted/ Notified, `5` Auto Ended/Completed (System), `6` Ended/Completed (User), `7` Auto Forcesold (Sytem) - Pending, `8` Auto Forcesold (Sytem) - Failed, `10` Exception, `11` Auto Forcesold (Sytem) - Time-out Error
                       enum:
                         - '0'
                         - '1'
@@ -10769,10 +11187,16 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     backup_reason:
                       type: string
-                      description: Backup Reason. Filters results by Backup Reason.
+                      description: |-
+                        Backup Reason. Filters results by Backup Reason.
+
+                        **Allowed values:** `FirstMarginCall` First Day Margin Call, `FirstForceCall` First Day Forceselling Call, `EndMarginCall` End Day Margin Call, `EndForceCall` End Day Forceselling Call, `DailyRecord` Daily Record, `PushAppMsg` App Push Notif, `PushEmailMsg` Email Notif, `PushSmsMsg` SMS Notif, `ForceCallToMarginCall` Turn to Margin Call (From Forceselling Call), `MarginCallToForceCall` Turn to Forceselling Call (From Margin Call)
                       enum:
                         - FirstMarginCall
                         - FirstForceCall
@@ -10812,7 +11236,10 @@ paths:
                       example: '834619'
                     is_day_of_overdue:
                       type: string
-                      description: Overdue. Filters results by Overdue.
+                      description: |-
+                        Overdue. Filters results by Overdue.
+
+                        **Allowed values:** `true`, `false`
                       enum:
                         - 'true'
                         - 'false'
@@ -11066,7 +11493,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Stock Code. Filters results by Stock Code.
+                      description: Stock Code. Filters results by Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ETF/HK/2800
                     market:
                       type: string
@@ -11393,10 +11820,16 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     risk_status:
                       type: string
-                      description: Margin Call Status. Filters results by Margin Call Status.
+                      description: |-
+                        Margin Call Status. Filters results by Margin Call Status.
+
+                        **Allowed values:** `Y` Yes, `N` No
                       enum:
                         - Y
                         - N
@@ -11408,7 +11841,10 @@ paths:
                       example: Y
                     history_bad_record_status:
                       type: string
-                      description: Historical Bad Loan Status. Filters results by Historical Bad Loan Status.
+                      description: |-
+                        Historical Bad Loan Status. Filters results by Historical Bad Loan Status.
+
+                        **Allowed values:** `Y` Yes, `N` No
                       enum:
                         - Y
                         - N
@@ -11420,7 +11856,10 @@ paths:
                       example: Y
                     bad_record_status:
                       type: string
-                      description: Current Bad Loan Status. Filters results by Current Bad Loan Status.
+                      description: |-
+                        Current Bad Loan Status. Filters results by Current Bad Loan Status.
+
+                        **Allowed values:** `Y` Yes, `N` No
                       enum:
                         - Y
                         - N
@@ -11626,7 +12065,10 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Aaid
+                      description: |-
+                        Aaid
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 page:
                   type: integer
                   description: Page
@@ -11780,10 +12222,13 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Stock Code. Filters results by Stock Code.
+                      description: Stock Code. Filters results by Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                     has_short_holding:
                       type: string
-                      description: Exist Short Position. Filters results by Exist Short Position.
+                      description: |-
+                        Exist Short Position. Filters results by Exist Short Position.
+
+                        **Allowed values:** `true` Y, `false` N
                       enum:
                         - 'true'
                         - 'false'
@@ -12083,13 +12528,19 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     stock_counter_id:
                       type: string
                       description: Stock Code. Filters results by Stock Code.
                     status:
                       type: string
-                      description: Status. Filters results by Status.
+                      description: |-
+                        Status. Filters results by Status.
+
+                        **Allowed values:** `0` Pending, `1` Follow Up - Pending, `2` Completed - Deposit Fund, `3` Completed - Sell Stocks, `4` Contacted/ Notified, `5` Auto Ended/Completed (System), `6` Ended/Completed (User), `7` Auto Forcesold (Sytem) - Pending, `8` Auto Forcesold (Sytem) - Failed, `10` Exception, `11` Auto Forcesold (Sytem) - Time-out Error
                       enum:
                         - '0'
                         - '1'
@@ -12333,7 +12784,10 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: A/C No.
+                      description: |-
+                        A/C No.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     underlying_counter_id:
                       type: string
                       description: Stock Code
@@ -12487,20 +12941,25 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     alert_date:
                       type: string
                       description: Triggered At. Filters results by Triggered At.
                       format: date
                     counter_id:
                       type: string
-                      description: Stock Code. Filters results by Stock Code.
+                      description: Stock Code. Filters results by Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                     message_status:
                       type: string
                       description: |-
                         Message Status. Filters results by Message Status.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `0` Sent, `1` Not Yet Sent
                       example: 0,1
                       enum:
                         - '0'
@@ -12516,6 +12975,8 @@ paths:
                         Remark. Filters results by Remark.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `2` Insufficient short-selling pool, `1` Client's account doesn't support shortselling, `3` Day Trade Account, `4` Stocks cannot be sold short, `5` HKEX short selling prohibited
                       example: 2,1
                       enum:
                         - '2'
@@ -12750,7 +13211,10 @@ paths:
                           format: date
                     aaid:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     order_id:
                       type: string
                       description: Order Id. Filters results by Order Id.
@@ -12761,7 +13225,10 @@ paths:
                       example: '0'
                     force_type:
                       type: string
-                      description: Force Type. Filters results by Force Type.
+                      description: |-
+                        Force Type. Filters results by Force Type.
+
+                        **Allowed values:** `force`, `batch_force` BatchForce
                       enum:
                         - force
                         - batch_force
@@ -12773,7 +13240,10 @@ paths:
                       example: BatchForce
                     type:
                       type: string
-                      description: Reason. Filters results by Reason.
+                      description: |-
+                        Reason. Filters results by Reason.
+
+                        **Allowed values:** `0` Margin Call, `1` Call Back
                       enum:
                         - '0'
                         - '1'
@@ -12785,7 +13255,7 @@ paths:
                       example: Margin Call
                     counter_id:
                       type: string
-                      description: Counter ID. Filters results by Counter ID.
+                      description: Counter ID. Filters results by Counter ID. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/HK/1211
                 page:
                   type: integer
@@ -13039,11 +13509,14 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Stock Code. Filters results by Stock Code.
+                      description: Stock Code. Filters results by Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ETF/US/YANG
                     market:
                       type: string
-                      description: Market. Filters results by Market.
+                      description: |-
+                        Market. Filters results by Market.
+
+                        **Allowed values:** `/US/` US, `/HK/` HK
                       enum:
                         - /US/
                         - /HK/
@@ -13055,7 +13528,10 @@ paths:
                       example: US
                     stock_status:
                       type: string
-                      description: Trading Status. Filters results by Trading Status.
+                      description: |-
+                        Trading Status. Filters results by Trading Status.
+
+                        **Allowed values:** `0` Active, `1` Error/ Invalid, `2` Suspended/Delisted
                       enum:
                         - '0'
                         - '1'
@@ -13402,7 +13878,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Stock Code. Filters results by Stock Code.
+                      description: Stock Code. Filters results by Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/US/IMA
                     market:
                       type: string
@@ -13451,7 +13927,10 @@ paths:
                       example: Batch adjust
                     trigger_status:
                       type: string
-                      description: Setup Status. Filters results by Setup Status.
+                      description: |-
+                        Setup Status. Filters results by Setup Status.
+
+                        **Allowed values:** `0` Not Triggered, `1` Triggered, `2` Cancelled
                       enum:
                         - '0'
                         - '1'
@@ -13466,7 +13945,10 @@ paths:
                       example: Triggered
                     source:
                       type: string
-                      description: Source. Filters results by Source.
+                      description: |-
+                        Source. Filters results by Source.
+
+                        **Allowed values:** `stock margin ratio` Stock Margin Factor, `daytrade margin ratio` Day Trade Factor
                       enum:
                         - stock margin ratio
                         - daytrade margin ratio
@@ -13692,7 +14174,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Stock Code. Filters results by Stock Code.
+                      description: Stock Code. Filters results by Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/US/IMA
                     market:
                       type: string
@@ -13931,10 +14413,13 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Stock Code
+                      description: Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                     market:
                       type: string
-                      description: Market
+                      description: |-
+                        Market
+
+                        **Allowed values:** `US` US market, `HK` Hong Kong market, `UK` UK market, `SH` Shanghai market, `SZ` Shenzhen market, `SG` Singapore market, `KR` Korea market, `JP` Japan market, `AU` Australia market, `DE` Germany market, `CA` Canada market, `TH` Thailand market, `ID` Indonesia market, `MY` Malaysia market, `TR` Turkey market, `NA` Unknown market, `OSL`, `HAS`, `EU` Europe market, `UT`, `GTMMF`
                       enum:
                         - US
                         - HK
@@ -14157,7 +14642,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -14184,7 +14672,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -14211,7 +14702,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -14326,7 +14820,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -14353,7 +14850,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -14380,7 +14880,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -14496,7 +14999,10 @@ paths:
                       example: LBtaiyang
                     is_apply:
                       type: string
-                      description: Is Apply. Filters results by Is Apply.
+                      description: |-
+                        Is Apply. Filters results by Is Apply.
+
+                        **Allowed values:** `true` Effective, `false` Invalid
                       enum:
                         - 'true'
                         - 'false'
@@ -14976,7 +15482,10 @@ paths:
                   properties:
                     type:
                       type: string
-                      description: Type. Filters results by Type.
+                      description: |-
+                        Type. Filters results by Type.
+
+                        **Allowed values:** `client`, `company`, `stock`, `user`, `other`, `multiple`
                       enum:
                         - client
                         - company
@@ -15000,7 +15509,10 @@ paths:
                       example: User
                     enable:
                       type: string
-                      description: Enable. Filters results by Enable.
+                      description: |-
+                        Enable. Filters results by Enable.
+
+                        **Allowed values:** `true` Activated, `false` Not Activated
                       enum:
                         - 'true'
                         - 'false'
@@ -15234,7 +15746,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -15261,7 +15776,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -15288,7 +15806,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -15364,6 +15885,8 @@ paths:
 
         Each entry in `list` identifies an existing limit configuration. This endpoint only toggles the effective state in bulk; it does not change the limits' thresholds.
 
+        If the backend is slow, the gateway may return `504` after 5 seconds while the request is still running; re-query the list to confirm the effective state before retrying.
+
         ### Risk warning
 
         This operation changes the effective state of live trading limits and directly affects whether subsequent trades pass risk checks. Verify the target record list and the `is_apply` value before calling.
@@ -15386,12 +15909,35 @@ paths:
                 list:
                   type: array
                   description: |-
-                    Multi-dimension Limit Record List. The batch-selected (or single) limit records; element fields: counter_id (counter ID),
-                    aaid (account AAID), code (instrument code), trader (trader account), trader_name
-                    (trader name), client_group (client group ID), client_group_name (client group name),
-                    stock_group (securities group ID).
+                    Multi-dimension limit record list. The batch-selected (or single) limit records. Each element is an object (not a string) built from the limit list row:
+                    `counter_id` (counter ID), `aaid` (account AAID; the row's `aaid_val`, falling back to `aaid`), `code` (instrument code), `trader` (trader account; the row's `trader_val`), `trader_name` (trader name; the row's `trader`), `client_group` (client group ID; the row's `client_group_val`), `client_group_name` (client group name; the row's `client_group`), `stock_group` (securities group ID; the row's `stock_group_id_val`).
                   items:
-                    type: string
+                    type: object
+                    properties:
+                      counter_id:
+                        type: string
+                        description: Counter ID
+                      aaid:
+                        type: string
+                        description: Account AAID
+                      code:
+                        type: string
+                        description: Instrument code
+                      trader:
+                        type: string
+                        description: Trader account
+                      trader_name:
+                        type: string
+                        description: Trader name
+                      client_group:
+                        type: string
+                        description: Client group ID
+                      client_group_name:
+                        type: string
+                        description: Client group name
+                      stock_group:
+                        type: string
+                        description: Securities group ID
                 is_apply:
                   type: boolean
                   description: Is Apply. true = batch activate (apply to enable limits), false = batch deactivate (revoke/disable limits).
@@ -15520,10 +16066,13 @@ paths:
               properties:
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 counter_id:
                   type: string
-                  description: Counter ID
+                  description: Counter ID. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 code:
                   type: string
                   description: Limit Type. Limit-type identifier.
@@ -15539,7 +16088,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -15566,7 +16118,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -15593,7 +16148,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -15704,10 +16262,13 @@ paths:
               properties:
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 counter_id:
                   type: string
-                  description: Counter ID
+                  description: Counter ID. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 code:
                   type: string
                   description: Limit Type. Limit-type identifier.
@@ -15723,7 +16284,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -15750,7 +16314,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -15777,7 +16344,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -15923,10 +16493,13 @@ paths:
                       example: US
                     counter_id:
                       type: string
-                      description: CounterID. Filters results by CounterID.
+                      description: CounterID. Filters results by CounterID. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                     is_apply:
                       type: string
-                      description: Is Apply. Filters results by Is Apply.
+                      description: |-
+                        Is Apply. Filters results by Is Apply.
+
+                        **Allowed values:** `true` Effective, `false` Invalid
                       enum:
                         - 'true'
                         - 'false'
@@ -15938,7 +16511,10 @@ paths:
                       example: Invalid
                     aaid:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 page:
                   type: integer
                   description: Page. Page number to retrieve, starting from `1`.
@@ -16325,7 +16901,10 @@ paths:
                       example: CBB
                     is_apply:
                       type: string
-                      description: Is Apply. Filters results by Is Apply.
+                      description: |-
+                        Is Apply. Filters results by Is Apply.
+
+                        **Allowed values:** `true` Effective, `false` Invalid
                       enum:
                         - 'true'
                         - 'false'
@@ -16550,7 +17129,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -16577,7 +17159,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -16604,7 +17189,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -16719,7 +17307,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -16746,7 +17337,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -16773,7 +17367,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -17023,10 +17620,16 @@ paths:
                       example: CBB
                     aaid:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     is_apply:
                       type: string
-                      description: Is Apply. Filters results by Is Apply.
+                      description: |-
+                        Is Apply. Filters results by Is Apply.
+
+                        **Allowed values:** `true` Effective, `false` Invalid
                       enum:
                         - 'true'
                         - 'false'
@@ -17239,7 +17842,10 @@ paths:
               properties:
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 code:
                   type: string
                   description: Limit Type. Limit-type identifier.
@@ -17255,7 +17861,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -17282,7 +17891,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -17309,7 +17921,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -17411,7 +18026,10 @@ paths:
               properties:
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 code:
                   type: string
                   description: Limit Type. Limit-type identifier.
@@ -17427,7 +18045,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -17454,7 +18075,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -17481,7 +18105,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -17583,7 +18210,7 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: Counter ID
+                  description: Counter ID. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 code:
                   type: string
                   description: Limit Type. Limit-type identifier.
@@ -17599,7 +18226,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -17626,7 +18256,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -17653,7 +18286,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -17755,7 +18391,7 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: Counter ID
+                  description: Counter ID. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 code:
                   type: string
                   description: Limit Type. Limit-type identifier.
@@ -17771,7 +18407,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -17798,7 +18437,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -17825,7 +18467,10 @@ paths:
                   properties:
                     operator:
                       type: string
-                      description: Comparison operator.
+                      description: |-
+                        Comparison operator.
+
+                        **Allowed values:** `0` >=, `1` >, `2` <=, `3` <, `4` Unlimited
                       enum:
                         - '0'
                         - '1'
@@ -17963,11 +18608,14 @@ paths:
                       example: US
                     counter_id:
                       type: string
-                      description: CounterID. Filters results by CounterID.
+                      description: CounterID. Filters results by CounterID. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/US/BABA
                     is_apply:
                       type: string
-                      description: Is Apply. Filters results by Is Apply.
+                      description: |-
+                        Is Apply. Filters results by Is Apply.
+
+                        **Allowed values:** `true` Effective, `false` Invalid
                       enum:
                         - 'true'
                         - 'false'
@@ -18334,10 +18982,13 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Stock Code
+                      description: Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                     market:
                       type: string
-                      description: Market
+                      description: |-
+                        Market
+
+                        **Allowed values:** `US` US market, `HK` Hong Kong market, `UK` UK market, `SH` Shanghai market, `SZ` Shenzhen market, `SG` Singapore market, `KR` Korea market, `JP` Japan market, `AU` Australia market, `DE` Germany market, `CA` Canada market, `TH` Thailand market, `ID` Indonesia market, `MY` Malaysia market, `TR` Turkey market, `NA` Unknown market, `OSL`, `HAS`, `EU` Europe market, `UT`, `GTMMF`
                       enum:
                         - US
                         - HK
@@ -18363,17 +19014,26 @@ paths:
                       example: US
                     member_id:
                       type: string
-                      description: Member ID
+                      description: |-
+                        Member ID
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     status:
                       type: string
-                      description: Status
+                      description: |-
+                        Status
+
+                        **Allowed values:** `0` Active, `1` Invalidated
                       enum:
                         - '0'
                         - '1'
                       example: '0'
                     account_type:
                       type: string
-                      description: Account Type
+                      description: |-
+                        Account Type
+
+                        **Allowed values:** `M` Margin account, `C` Cash account, `F` Futures account
                       enum:
                         - M
                         - C
@@ -18381,7 +19041,10 @@ paths:
                       example: M
                     mark:
                       type: string
-                      description: Account Tag
+                      description: |-
+                        Account Tag
+
+                        **Allowed values:** `dt` Day Trade
                       enum:
                         - dt
                       example: dt
@@ -18715,10 +19378,13 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: Security code
+                  description: Security code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 aaid:
                   type: string
-                  description: Securities account
+                  description: |-
+                    Securities account
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 im_factor:
                   type: number
                   description: Initial margin ratio
@@ -18823,7 +19489,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Stock Code. Filters results by Stock Code.
+                      description: Stock Code. Filters results by Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/US/M
                     market:
                       type: string
@@ -18856,10 +19522,16 @@ paths:
                       example: US
                     member_id:
                       type: string
-                      description: Member ID. Filters results by Member ID.
+                      description: |-
+                        Member ID. Filters results by Member ID.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     status:
                       type: string
-                      description: Status. Filters results by Status.
+                      description: |-
+                        Status. Filters results by Status.
+
+                        **Allowed values:** `0` Active, `1` Expired
                       enum:
                         - '0'
                         - '1'
@@ -18871,7 +19543,10 @@ paths:
                       example: Active
                     account_type:
                       type: string
-                      description: Account Type. Filters results by Account Type.
+                      description: |-
+                        Account Type. Filters results by Account Type.
+
+                        **Allowed values:** `M` Margin, `C` Cash, `F` Futures
                       enum:
                         - M
                         - C
@@ -18886,7 +19561,10 @@ paths:
                       example: Margin
                     mark:
                       type: string
-                      description: Account Tag. Filters results by Account Tag.
+                      description: |-
+                        Account Tag. Filters results by Account Tag.
+
+                        **Allowed values:** `dt` Day Trade
                       enum:
                         - dt
                       x-enum-details:
@@ -19250,10 +19928,13 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: Security code
+                  description: Security code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 aaid:
                   type: string
-                  description: Securities account
+                  description: |-
+                    Securities account
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 im_factor:
                   type: number
                   description: Initial margin ratio
@@ -19358,10 +20039,13 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Stock Code
+                      description: Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                     market:
                       type: string
-                      description: Market
+                      description: |-
+                        Market
+
+                        **Allowed values:** `US` US market, `HK` Hong Kong market, `UK` UK market, `SH` Shanghai market, `SZ` Shenzhen market, `SG` Singapore market, `KR` Korea market, `JP` Japan market, `AU` Australia market, `DE` Germany market, `CA` Canada market, `TH` Thailand market, `ID` Indonesia market, `MY` Malaysia market, `TR` Turkey market, `NA` Unknown market, `OSL`, `HAS`, `EU` Europe market, `UT`, `GTMMF`
                       enum:
                         - US
                         - HK
@@ -19387,17 +20071,26 @@ paths:
                       example: US
                     member_id:
                       type: string
-                      description: Member ID
+                      description: |-
+                        Member ID
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     status:
                       type: string
-                      description: Status
+                      description: |-
+                        Status
+
+                        **Allowed values:** `0` Active, `1` Invalidated
                       enum:
                         - '0'
                         - '1'
                       example: '0'
                     account_type:
                       type: string
-                      description: Account Type
+                      description: |-
+                        Account Type
+
+                        **Allowed values:** `M` Margin account, `C` Cash account, `F` Futures account
                       enum:
                         - M
                         - C
@@ -19405,7 +20098,10 @@ paths:
                       example: M
                     mark:
                       type: string
-                      description: Account Tag
+                      description: |-
+                        Account Tag
+
+                        **Allowed values:** `dt` Day Trade
                       enum:
                         - dt
                       example: dt
@@ -19635,7 +20331,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Stock Code. Filters results by Stock Code.
+                      description: Stock Code. Filters results by Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/US/IMA
                     market:
                       type: string
@@ -19668,10 +20364,16 @@ paths:
                       example: US
                     member_id:
                       type: string
-                      description: Member ID. Filters results by Member ID.
+                      description: |-
+                        Member ID. Filters results by Member ID.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     status:
                       type: string
-                      description: Status. Filters results by Status.
+                      description: |-
+                        Status. Filters results by Status.
+
+                        **Allowed values:** `0` Active, `1` Expired
                       enum:
                         - '0'
                         - '1'
@@ -19683,7 +20385,10 @@ paths:
                       example: Active
                     account_type:
                       type: string
-                      description: Account Type. Filters results by Account Type.
+                      description: |-
+                        Account Type. Filters results by Account Type.
+
+                        **Allowed values:** `M` Margin, `C` Cash, `F` Futures
                       enum:
                         - M
                         - C
@@ -19698,7 +20403,10 @@ paths:
                       example: Margin
                     mark:
                       type: string
-                      description: Account Tag. Filters results by Account Tag.
+                      description: |-
+                        Account Tag. Filters results by Account Tag.
+
+                        **Allowed values:** `dt` Day Trade
                       enum:
                         - dt
                       x-enum-details:
@@ -19998,7 +20706,9 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field descriptions for optional parameters.
+        - Required: `user_stock_opt_margin_ratios` (the client-level stock-option margin configurations to delete; at least 1 item). Each item requires `counter_id` (the underlying, in `{type}/{market}/{code}` format, such as `ST/US/AAPL`) and `aaid` (the internal securities-account ID; use the `aaid_val` of a row returned by `POST /v1/datasets/risk_member_option_margin_ratios`, not `account_no`).
+        - Optional: `audit_frontend_resource` (audit context submitted by the caller).
+        - Example: `{"user_stock_opt_margin_ratios":[{"counter_id":"ST/US/AAPL","aaid":"50208322"}]}`.
         - See the field descriptions for the format, value range, and business meaning of each field.
 
         ### Business notes
@@ -20014,6 +20724,40 @@ paths:
         On success, the record is deleted; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_stock_opt_margin_ratios
+              properties:
+                user_stock_opt_margin_ratios:
+                  type: array
+                  minItems: 1
+                  description: Client-level stock-option margin configurations to delete; at least 1 item. Each item comes from a row returned by `POST /v1/datasets/risk_member_option_margin_ratios`.
+                  items:
+                    type: object
+                    required:
+                      - counter_id
+                      - aaid
+                    properties:
+                      counter_id:
+                        type: string
+                        description: Underlying in `{type}/{market}/{code}` format, such as `ST/US/AAPL`; use the row's `counter_id`.
+                        example: ST/US/AAPL
+                      aaid:
+                        type: string
+                        description: Internal securities-account ID; use the row's `aaid_val`, not the securities account number `account_no`.
+                        example: '50208322'
+                audit_frontend_resource:
+                  type: object
+                  description: Audit context submitted by the caller to record this operation.
+            example:
+              user_stock_opt_margin_ratios:
+                - counter_id: ST/US/AAPL
+                  aaid: '50208322'
       responses:
         '200':
           content:
@@ -20085,10 +20829,13 @@ paths:
               properties:
                 aaid:
                   type: string
-                  description: Customer
+                  description: |-
+                    Customer
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 counter_id:
                   type: string
-                  description: Security code
+                  description: Security code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 max_im_factor:
                   type: string
                   description: Option margin upper bound IM
@@ -20184,11 +20931,14 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter id. Filters results by Counter id.
+                      description: Counter id. Filters results by Counter id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/US/RLX
                     aaid:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     max_im_factor:
                       type: object
                       description: IM Max. Filters results by IM Max.
@@ -20405,7 +21155,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter id. Filters results by Counter id.
+                      description: Counter id. Filters results by Counter id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/HK/1
                     max_im_factor:
                       type: object
@@ -20646,7 +21396,9 @@ paths:
 
         ### Request parameters
 
-        - This endpoint has no required parameters; see the field descriptions for optional parameters.
+        - Required: `counter_ids` (underlyings whose global option margin configuration should be deleted; at least 1 item; `{type}/{market}/{code}` format such as `ST/US/AAPL`; use the `counter_id` of rows returned by `POST /v1/datasets/risk_option_margin_ratio_configs`).
+        - Optional: `audit_frontend_resource` (audit context submitted by the caller).
+        - Example: `{"counter_ids":["ST/US/AAPL"]}`.
         - See the field descriptions for the format, value range, and business meaning of each field.
 
         ### Business notes
@@ -20662,6 +21414,28 @@ paths:
         On success, the record is deleted; subsequent state and returned data follow the `200` response definition.
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - counter_ids
+              properties:
+                counter_ids:
+                  type: array
+                  minItems: 1
+                  description: Underlyings whose global option margin configuration should be deleted; at least 1 item. Format `{type}/{market}/{code}`, such as `ST/US/AAPL`; use the `counter_id` of rows returned by `POST /v1/datasets/risk_option_margin_ratio_configs`.
+                  items:
+                    type: string
+                    example: ST/US/AAPL
+                audit_frontend_resource:
+                  type: object
+                  description: Audit context submitted by the caller to record this operation.
+            example:
+              counter_ids:
+                - ST/US/AAPL
       responses:
         '200':
           content:
@@ -20732,7 +21506,7 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: Security code
+                  description: Security code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 max_im_factor:
                   type: string
                   description: Option margin upper bound IM
@@ -20831,7 +21605,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Product ID. Filters results by Product ID.
+                      description: Product ID. Filters results by Product ID. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: UT/FD/HK0000311842
                 page:
                   type: integer
@@ -21164,7 +21938,10 @@ paths:
                       example: '{}'
                     include_exchanges:
                       type: string
-                      description: Inclusion Exchange. Filters results by Inclusion Exchange.
+                      description: |-
+                        Inclusion Exchange. Filters results by Inclusion Exchange.
+
+                        **Allowed values:** `NASD` NASDAQ
                       enum:
                         - NASD
                       x-enum-details:
@@ -21173,7 +21950,10 @@ paths:
                       example: '{NASD}'
                     exclude_exchanges:
                       type: string
-                      description: Exclusion Exchange. Filters results by Exclusion Exchange.
+                      description: |-
+                        Exclusion Exchange. Filters results by Exclusion Exchange.
+
+                        **Allowed values:** `NASD` NASDAQ
                       enum:
                         - NASD
                       x-enum-details:
@@ -21342,7 +22122,9 @@ paths:
 
         ### Request parameters
 
-        - Required: `id` (configuration ID), `counter_id` (security code), `haircut` (haircut rate).
+        - Required: `id` (configuration ID), `name` (rule name), `security_type` (security type), `haircut` (haircut rate).
+        - When `security_type` is `Stock`, also pass `market`, and optionally scope the rule with `include_indexes` or `exclude_indexes` and `include_exchanges` or `exclude_exchanges`.
+        - `risk_index_haircut_configs` does not document a record ID column, so confirm the `id` of the target rule before calling.
         - See the field descriptions for the format, value range, default behavior, and business meaning of each field.
 
         ### Business notes
@@ -21366,17 +22148,52 @@ paths:
               type: object
               required:
                 - id
+                - name
+                - security_type
                 - haircut
               properties:
                 id:
                   type: number
-                  description: Config ID. Config ID associated with this request.
+                  description: Config ID. The ID of the index Haircut rule to edit.
+                name:
+                  type: string
+                  description: Rule Name. Name of the index Haircut rule.
+                security_type:
+                  type: string
+                  description: Security Type. Values follow the `haircut_rule_security_type` enumeration. When the value is `Stock`, `market` is required and the index and exchange scopes apply.
+                market:
+                  type: string
+                  description: Market. Values follow the `haircut_market_list` enumeration. Required when `security_type` is `Stock`.
+                include_indexes:
+                  type: array
+                  description: Include Indexes. Index `counter_id` values (such as `IX/SH/000011`) whose constituents the rule applies to. Pass either `include_indexes` or `exclude_indexes`.
+                  items:
+                    type: string
+                exclude_indexes:
+                  type: array
+                  description: Exclude Indexes. Index `counter_id` values whose constituents the rule excludes.
+                  items:
+                    type: string
+                include_exchanges:
+                  type: array
+                  description: Include Exchanges. Values follow the `haircut_exchange_list` enumeration. Pass either `include_exchanges` or `exclude_exchanges`.
+                  items:
+                    type: string
+                exclude_exchanges:
+                  type: array
+                  description: Exclude Exchanges. Values follow the `haircut_exchange_list` enumeration.
+                  items:
+                    type: string
                 haircut:
                   type: string
-                  description: Haircut. This field is required.
+                  description: Haircut. A decimal string greater than 0 and at most 1, for example `0.5` for 50%.
             example:
               id: 1
-              counter_id: ST/US/AAPL
+              name: Stock Test
+              security_type: Stock
+              market: HK
+              include_indexes:
+                - IX/HK/HSI
               haircut: '0.5'
       responses:
         '200':
@@ -21482,7 +22299,7 @@ paths:
                     properties:
                       counter_id:
                         type: string
-                        description: Security code
+                        description: Security code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       haircut:
                         type: string
                         description: 1 - HairCut (%)
@@ -21585,7 +22402,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Product ID. Filters results by Product ID.
+                      description: Product ID. Filters results by Product ID. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/SZ/002700
                 page:
                   type: integer
@@ -21770,7 +22587,7 @@ paths:
                     properties:
                       counter_id:
                         type: string
-                        description: Security code
+                        description: Security code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       haircut:
                         type: string
                         description: 1 - HairCut (%)
@@ -22059,7 +22876,10 @@ paths:
                       example: 8b1123b0-4838-4a9d-99df-49d4d3251872
                     status:
                       type: string
-                      description: Status. Filters results by Status.
+                      description: |-
+                        Status. Filters results by Status.
+
+                        **Allowed values:** `1` Success, `2` Failed, `3` Pending, `6` Success
                       enum:
                         - '1'
                         - '2'
@@ -22275,10 +23095,9 @@ paths:
                 simulate_cal_type:
                   type: integer
                   description: |-
-                    Simulate Cal Type. `SimulateCalType` determines which dependent field applies: `0` by batch number, `1`
-                    by stock group, `2` by market, `3` by stock, or `4` by index level. The dependent
-                    fields are `task_id`, `stock_group_id`, `market`, `counter_id`, and
-                    `index_price_limit_info`.
+                    Simulate Cal Type. Determines which of `task_id`, `stock_group_id`, `market`, `counter_id` and `index_price_limit_info` takes effect.
+
+                    **Allowed values:** `0` By batch number, `1` By stock group, `2` By market, `3` By single stock, `4` By index level
                   enum:
                     - '0'
                     - '1'
@@ -22308,7 +23127,7 @@ paths:
                   description: Stock Group ID. Used only when simulate_cal_type=1.
                 counter_id:
                   type: string
-                  description: Counter ID. Used only when simulate_cal_type=3.
+                  description: Counter ID. Used only when simulate_cal_type=3. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 price_limit:
                   type: string
                   description: Price Limit. The assumed price-change percentage, e.g. -10 means a 10% drop.
@@ -22322,6 +23141,8 @@ paths:
                   type: integer
                   description: |-
                     Calculation Type.
+
+                    **Allowed values:** `0` Full calculation, `1` Margin call calculation, `2` Non-frozen fund surplus calculation
                   enum:
                     - 0
                     - 1
@@ -22568,7 +23389,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Stock Code
+                      description: Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 page:
                   type: integer
                   description: Page
@@ -23251,7 +24072,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter Id. Filters results by Counter Id.
+                      description: Counter Id. Filters results by Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/UK/LGEN
                     s.index_code:
                       type: string
@@ -23678,10 +24499,13 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: A/C No.
+                      description: |-
+                        A/C No.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     counter_id:
                       type: string
-                      description: Stock Code
+                      description: Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 page:
                   type: integer
                   description: Page
@@ -23953,7 +24777,10 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: A/C No.
+                      description: |-
+                        A/C No.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 page:
                   type: integer
                   description: Page
@@ -24260,6 +25087,8 @@ paths:
                         Result. Filters results by Result.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `1` Handling, `2` Fail, `3` Success
                       example: Success
                       enum:
                         - '1'
@@ -24632,7 +25461,8 @@ paths:
 
         ### Request parameters
 
-        - Required: `aaids` (list of securities accounts).
+        - Required: `client_group_id` (client group ID), `aaids` (list of securities accounts).
+        - Use the `id` of a client group returned by `risk_member_groups` as `client_group_id`.
         - See the field descriptions for the format, value range, and business meaning of each field.
 
         ### Business notes
@@ -24655,14 +25485,19 @@ paths:
             schema:
               type: object
               required:
+                - client_group_id
                 - aaids
               properties:
+                client_group_id:
+                  type: string
+                  description: Client Group ID. The `id` of the target client group returned by `risk_member_groups`.
                 aaids:
                   type: array
                   description: A/C No. List. Array of securities account numbers to remove.
                   items:
                     type: string
             example:
+              client_group_id: '1139'
               aaids:
                 - H00000000
       responses:
@@ -24706,7 +25541,8 @@ paths:
 
         ### Request parameters
 
-        - Required: `aaid` (securities account).
+        - Required: `client_group_id` (client group ID), `aaid` (securities account).
+        - Use the `id` of a client group returned by `risk_member_groups` as `client_group_id`.
         - See the field descriptions for the format, value range, and business meaning of each field.
 
         ### Business notes
@@ -24729,12 +25565,20 @@ paths:
             schema:
               type: object
               required:
+                - client_group_id
                 - aaid
               properties:
+                client_group_id:
+                  type: string
+                  description: Client Group ID. The `id` of the target client group returned by `risk_member_groups`.
                 aaid:
                   type: string
-                  description: A/C No.
+                  description: |-
+                    A/C No.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
             example:
+              client_group_id: '1139'
               aaid: H00000000
       responses:
         '200':
@@ -24880,7 +25724,10 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Client
+                      description: |-
+                        Client
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 page:
                   type: integer
                   description: Page
@@ -25020,7 +25867,10 @@ paths:
                       description: A/C No.. Filters results by A/C No..
                     business_type:
                       type: string
-                      description: Business Type. Filters results by Business Type.
+                      description: |-
+                        Business Type. Filters results by Business Type.
+
+                        **Allowed values:** `1` Margin, `2` Report, `3` Risk Control Parameters
                       enum:
                         - '1'
                         - '2'
@@ -25206,7 +26056,10 @@ paths:
               properties:
                 dimension:
                   type: integer
-                  description: Dimension Type. List dimension. See the options below.
+                  description: |-
+                    Dimension Type. List dimension.
+
+                    **Allowed values:** `0` A/C No., `1` Member ID
                   enum:
                     - '0'
                     - '1'
@@ -25225,6 +26078,8 @@ paths:
                   type: array
                   description: |-
                     Block Type List. Values come from a backend data dictionary (maintained dynamically), not a fixed enum; use the options the service actually returns.
+
+                    **Allowed values:** `1` Credit, `2` Asset transfer, `3` Dynamic credit adjustment, `4` Auto close-out
                   enum:
                     - '1'
                     - '2'
@@ -25471,7 +26326,10 @@ paths:
                   properties:
                     dimension:
                       type: string
-                      description: Parameter. Filters results by Parameter.
+                      description: |-
+                        Parameter. Filters results by Parameter.
+
+                        **Allowed values:** `0` A/C No, `1` Member ID
                       enum:
                         - '0'
                         - '1'
@@ -25487,7 +26345,10 @@ paths:
                       example: '2077584585014521856'
                     block_type:
                       type: string
-                      description: Business Tag. Filters results by Business Tag.
+                      description: |-
+                        Business Tag. Filters results by Business Tag.
+
+                        **Allowed values:** `1` Credit, `2` Assets Transfer, `3` Dynamic Credit Limit Adjustment, `4` Auto Forcesell
                       enum:
                         - '1'
                         - '2'
@@ -25505,7 +26366,10 @@ paths:
                       example: Credit
                     status:
                       type: string
-                      description: Status. Filters results by Status.
+                      description: |-
+                        Status. Filters results by Status.
+
+                        **Allowed values:** `0` Enabled, `1` Disabled
                       enum:
                         - '0'
                         - '1'
@@ -25996,17 +26860,23 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Option Code
+                      description: Option Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                     direction:
                       type: string
-                      description: Position Side
+                      description: |-
+                        Position Side
+
+                        **Allowed values:** `1` Long, `2` Short
                       enum:
                         - '1'
                         - '2'
                       example: '1'
                     status:
                       type: string
-                      description: Status
+                      description: |-
+                        Status
+
+                        **Allowed values:** `Init` Initialized, `HoldingPulling` Pulling holding data, `HoldingPulled` Holding data pulled, `HoldingLoaded` Holding data loaded, `Exercising`, `PartiallyExercised` Partially exercised, `Exercised`, `ExerciseFailed` Exercise interrupted, `ToInit` Pending generation, `ExerciseCallBacking` Withdrawing, `CallBackFailed` Revocation failed
                       enum:
                         - Init
                         - HoldingPulling
@@ -26025,7 +26895,10 @@ paths:
                       description: Underlying Code
                     option_fields_match:
                       type: string
-                      description: Exercise Reconciliation Status
+                      description: |-
+                        Exercise Reconciliation Status
+
+                        **Allowed values:** `1` Yes, `2` No, `3` Manual handling
                       enum:
                         - '1'
                         - '2'
@@ -26033,7 +26906,10 @@ paths:
                       example: '1'
                     stock_fields_match:
                       type: string
-                      description: Trade Reconciliation Status
+                      description: |-
+                        Trade Reconciliation Status
+
+                        **Allowed values:** `1` Yes, `2` No, `3` Manual handling
                       enum:
                         - '1'
                         - '2'
@@ -26366,6 +27242,8 @@ paths:
                   type: string
                   description: |-
                     Check Type.
+
+                    **Allowed values:** `1` Reconcile with upstream statement data, `2` Reconcile with imported trade result data, `3` Auto-generate exercise data from option positions and ITM/OTM status, `4` Fetch exercise data via API, `5` Reconcile with imported LBHK omnibus account exercise results
                   enum:
                     - '1'
                     - '2'
@@ -26494,7 +27372,10 @@ paths:
                       example: '2026-07-14'
                     status:
                       type: string
-                      description: Status. Filters results by Status.
+                      description: |-
+                        Status. Filters results by Status.
+
+                        **Allowed values:** `handled` Processed, `waittohandle` Pending, `waittocheck` Waittocheck
                       enum:
                         - handled
                         - waittohandle
@@ -26509,7 +27390,10 @@ paths:
                       example: Processed
                     settlement_channel_code:
                       type: string
-                      description: Settlement Channel. Filters results by Settlement Channel.
+                      description: |-
+                        Settlement Channel. Filters results by Settlement Channel.
+
+                        **Allowed values:** `3` Ib, `26` Atomic
                       enum:
                         - '3'
                         - '26'
@@ -26814,13 +27698,18 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Aaid. Filters results by Aaid.
+                      description: |-
+                        Aaid. Filters results by Aaid.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     trading_direction:
                       type: string
                       description: |-
                         Position Direction. Filters results by Position Direction.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `long call`, `short call`, `long put`, `short put`
                       example: Long Put
                       enum:
                         - long call
@@ -26846,6 +27735,8 @@ paths:
                         Price Status. Filters results by Price Status.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `1` In the money, `2` Out of the money, `0` All
                       example: OTM
                       enum:
                         - '1'
@@ -26864,6 +27755,8 @@ paths:
                         Margin Call Status. Filters results by Margin Call Status.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `0` Not Triggered, `1` Margin Call, `2` Forceselling Call, `5` Over Financing Call (Financing > Credit Limit), `7` Option Exercise Force Call, `8` Option Exercise Margin Call
                       example: Not Triggered
                       enum:
                         - '0'
@@ -26891,6 +27784,8 @@ paths:
                         Cover Status. Filters results by Cover Status.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `1` Covered, `2` Not Covered
                       example: Not Covered
                       enum:
                         - '1'
@@ -27115,10 +28010,16 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Aaid. Filters results by Aaid.
+                      description: |-
+                        Aaid. Filters results by Aaid.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     direction:
                       type: string
-                      description: Position Side. Filters results by Position Side.
+                      description: |-
+                        Position Side. Filters results by Position Side.
+
+                        **Allowed values:** `1` Long, `2` Short
                       enum:
                         - '1'
                         - '2'
@@ -27130,14 +28031,14 @@ paths:
                       example: '1'
                     counter_id:
                       type: string
-                      description: Option Counter Id. Filters results by Option Counter Id.
+                      description: Option Counter Id. Filters results by Option Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: OP/US/QQQ251103C634000
                     status:
                       type: string
                       description: |-
                         Status. Filters results by Status.
 
-                        **Allowed values:** `Init`, `Exercising`, `PartiallyExercised`, `Exercised`, `ExerciseFailed` (ExerciseAborted)
+                        **Allowed values:** `Init` Pending exercise, `Exercising`, `PartiallyExercised` Partially exercised, `Exercised`, `ExerciseFailed` Exercise interrupted
                       enum:
                         - Init
                         - Exercising
@@ -27355,10 +28256,16 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: User. Filters results by User.
+                      description: |-
+                        User. Filters results by User.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     operation_types:
                       type: string
-                      description: Operation Type. Filters results by Operation Type.
+                      description: |-
+                        Operation Type. Filters results by Operation Type.
+
+                        **Allowed values:** `billing-system` Settlement & Interest, `lb.portfolio.atm` Transfer In/Out, `lb.order.tube` Trading, `option-exercise` Option Exercise, `option-exercise-manager` Option Exercise Management, `lb.portfolio.corporate-action` Corporate Action, `lb.portfolio.funds` Funds Portfolio, `ut-service` Fund & Wealth Trading, `lb.reward.center` Reward Center, `lb.ipo.service` IPO Service, `risk-event-api` Manual Adjustment / Freeze
                       enum:
                         - billing-system
                         - lb.portfolio.atm
@@ -27409,7 +28316,10 @@ paths:
                           format: date
                     snap_source:
                       type: string
-                      description: Data Source. Filters results by Data Source.
+                      description: |-
+                        Data Source. Filters results by Data Source.
+
+                        **Allowed values:** `AUTO` Snapshot, `ATM`, `MANUAL`
                       enum:
                         - AUTO
                         - ATM

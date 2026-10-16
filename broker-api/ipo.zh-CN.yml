@@ -39,7 +39,7 @@ paths:
         - name: counter_id
           in: query
           required: true
-          description: 用于指定「标的 ID」。此字段为必填项。
+          description: 用于指定「标的 ID」。此字段为必填项。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
           schema:
             type: string
       responses:
@@ -260,7 +260,7 @@ paths:
         - name: counter_id
           in: query
           required: true
-          description: 用于指定「标的 ID」。此字段为必填项。
+          description: 用于指定「标的 ID」。此字段为必填项。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
           schema:
             type: string
         - name: account_channels
@@ -448,7 +448,7 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: 标的 ID. 用于指定「标的 ID」。此字段为必填项。
+                  description: 标的 ID. 用于指定「标的 ID」。此字段为必填项。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 tags:
                   type: object
                   description: 标签. 用于指定「标签」。
@@ -863,7 +863,7 @@ paths:
                   description: 渠道号. 用于指定「渠道号」。此字段为必填项。
                 counter_id:
                   type: string
-                  description: 标的 ID. 用于指定「标的 ID」。此字段为必填项。
+                  description: 标的 ID. 用于指定「标的 ID」。此字段为必填项。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 amount:
                   type: string
                   description: 调增额度. 用于指定「调增额度」。
@@ -878,7 +878,10 @@ paths:
                   description: 启动时间. 用于指定「启动时间」。
                 type:
                   type: integer
-                  description: 融资池类型. 用于指定「融资池类型」。
+                  description: |-
+                    融资池类型. 用于指定「融资池类型」。
+
+                    **可选值：** `0` 融资认购、`3` 0 本金认购
                   enum:
                     - 0
                     - 1
@@ -1173,7 +1176,7 @@ paths:
                   description: 认购列表项 ID. 用于指定「认购列表项 ID」。
                 counter_id:
                   type: string
-                  description: 标的 ID. 用于指定「标的 ID」。此字段为必填项。
+                  description: 标的 ID. 用于指定「标的 ID」。此字段为必填项。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 apply_num_sub:
                   type: string
                   description: 股数. 用于指定「股数」。此字段为必填项。
@@ -1288,7 +1291,7 @@ paths:
                   description: 认购列表项 ID. 用于指定「认购列表项 ID」。此字段为必填项。
                 counter_id:
                   type: string
-                  description: 标的 ID. 用于指定「标的 ID」。此字段为必填项。
+                  description: 标的 ID. 用于指定「标的 ID」。此字段为必填项。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
             example:
               id: 0
               counter_id: ''
@@ -1365,7 +1368,11 @@ paths:
 
         ### 业务说明
 
-        按 `file_path` 指向的文件解析并批量写入该标的的认购列表项。
+        按 `file_path` 指向的文件批量写入该标的的认购列表项。导入分三步：
+
+        1. 调用 `GET /file/upload_url?service=lb.ipo.service` 获取预签名上传地址和 `key`，再用 PUT 上传 CSV 文件；该 `key` 即 `file_path`。
+        2. 用同一 `counter_id` 和 `file_path` 调用 `POST /v1/ipo/payable/parse` 生成解析批次。
+        3. 调用本接口导入。未先解析时返回 400 `解析批次已失效`。
 
         ### 风险提示
 
@@ -1388,10 +1395,11 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: 标的 ID. 用于指定「标的 ID」。此字段为必填项。
+                  description: 标的 ID. 用于指定「标的 ID」。此字段为必填项。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 file_path:
                   type: string
-                  description: 文件地址. 用于指定「文件地址」。此字段为必填项。
+                  description: |-
+                    文件地址。`GET /file/upload_url?service=lb.ipo.service` 返回的 `key`；须先用同一 `counter_id` 和 `file_path` 调用 `POST /v1/ipo/payable/parse`，否则返回 400 `解析批次已失效`。此字段为必填项。
             example:
               counter_id: ''
               file_path: ''
@@ -1491,13 +1499,16 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: 标的 ID. 用于指定「标的 ID」。此字段为必填项。
+                  description: 标的 ID. 用于指定「标的 ID」。此字段为必填项。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 account_channel:
                   type: string
                   description: 账户渠道. 用于指定「账户渠道」。
                 status:
                   type: integer
-                  description: 订单状态. 用于指定「订单状态」。
+                  description: |-
+                    订单状态. 用于指定「订单状态」。
+
+                    **可选值：** `1` 待扣款（资金冻结中）、`3` 已扣款（待公布中签）、`4` 已公布（中签）、`5` 已公布（未中签）
                   enum:
                     - 1
                     - 3
@@ -1598,7 +1609,7 @@ paths:
         - name: counter_id
           in: query
           required: true
-          description: 用于指定「标的 ID」。此字段为必填项。
+          description: 用于指定「标的 ID」。此字段为必填项。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
           schema:
             type: string
       responses:
@@ -1811,7 +1822,7 @@ paths:
         - name: counter_id
           in: query
           required: true
-          description: 用于指定「标的 ID」。此字段为必填项。
+          description: 用于指定「标的 ID」。此字段为必填项。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
           schema:
             type: string
         - name: market
@@ -1829,7 +1840,10 @@ paths:
         - name: flag
           in: query
           required: false
-          description: 用于指定「认购类型」。
+          description: |-
+            用于指定「认购类型」。
+
+            **可选值：** `0` 普通认购、`2` 国配
           schema:
             type: integer
             enum:
@@ -1975,7 +1989,7 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: 标的 ID. 用于指定「标的 ID」。此字段为必填项。
+                  description: 标的 ID. 用于指定「标的 ID」。此字段为必填项。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 tags:
                   type: object
                   description: 标签. 用于指定「标签」。
@@ -2181,7 +2195,7 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: 标的代码. 证券或基金标的代码，用于定位本次请求处理的标的。此字段为必填项。
+                  description: 标的代码. 证券或基金标的代码，用于定位本次请求处理的标的。此字段为必填项。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
             example:
               counter_id: 'ST/US/AAPL'
       responses:
@@ -2264,7 +2278,7 @@ paths:
         - name: counter_id
           in: query
           required: true
-          description: 用于指定「标的 ID」。此字段为必填项。
+          description: 用于指定「标的 ID」。此字段为必填项。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
           schema:
             type: string
       responses:
@@ -2490,7 +2504,7 @@ paths:
         - name: counter_id
           in: query
           required: true
-          description: 用于指定「标的 ID」。此字段为必填项。
+          description: 用于指定「标的 ID」。此字段为必填项。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
           schema:
             type: string
         - name: market
@@ -2508,7 +2522,10 @@ paths:
         - name: flag
           in: query
           required: false
-          description: 用于指定「认购类型」。
+          description: |-
+            用于指定「认购类型」。
+
+            **可选值：** `0` 普通认购、`2` 国配
           schema:
             type: integer
             enum:
@@ -2654,11 +2671,13 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: 标的 ID. 用于指定「标的 ID」。此字段为必填项。
+                  description: 标的 ID. 用于指定「标的 ID」。此字段为必填项。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 can_subscribe:
                   type: integer
                   description: |-
                     是否可认购。
+
+                    **可选值：** `1` 可认购、`0` 不可认购
                   enum:
                     - 1
                     - 0
@@ -2906,6 +2925,7 @@ paths:
         ### 请求参数
 
         - 必填：`counter_id`（标的代码）、`records`（同步记录列表）、`records[].channel`（原渠道）、`records[].method`（认购方式）、`records[].ratio`（认购比例）、`records[].target_method`（目标认购方式）、`records[].target_ratio`（目标认购比例）、`is_retry`（是否重试）
+        - `records[].channel` 须取自该标的已有申购记录的 `origin_channel`，不是固定值 `lb`。
         - 各字段的格式、取值范围、默认行为和业务含义见对应字段说明。
 
         ### 业务说明
@@ -2930,56 +2950,62 @@ paths:
               required:
                 - counter_id
                 - records
-                - records[].channel
-                - records[].method
-                - records[].ratio
-                - records[].target_method
-                - records[].target_ratio
                 - is_retry
               properties:
                 counter_id:
                   type: string
-                  description: 标的代码. 证券或基金标的代码，用于定位本次请求处理的标的。此字段为必填项。
+                  description: 标的代码. 证券或基金标的代码，用于定位本次请求处理的标的。此字段为必填项。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 records:
                   type: array
                   description: 同步记录列表. 每项为一条渠道同步配置；新建时为勾选的记录（过滤掉渠道为空的行），重试时为当前行数据组成的单元素数组
                   items:
-                    type: string
-                records[].channel:
-                  type: string
-                  description: 原渠道. 用于指定「原渠道」。此字段为必填项。
-                records[].method:
-                  type: integer
-                  description: |-
-                    认购方式。
-                  enum:
-                    - 1
-                    - 2
-                  x-enum-details:
-                    - value: 1
-                      label: 融资
-                    - value: 2
-                      label: 现金
-                  example: 1
-                records[].ratio:
-                  type: string
-                  description: 认购比例. 百分比数值，去掉 % 符号后传字符串，如 "100" 表示 100%
-                records[].target_method:
-                  type: integer
-                  description: |-
-                    目标认购方式。
-                  enum:
-                    - 1
-                    - 2
-                  x-enum-details:
-                    - value: 1
-                      label: 融资
-                    - value: 2
-                      label: 现金
-                  example: 1
-                records[].target_ratio:
-                  type: string
-                  description: 目标认购比例. 目标认购比例，百分比数值，去掉 % 符号后传字符串
+                    type: object
+                    required:
+                      - channel
+                      - method
+                      - ratio
+                      - target_method
+                      - target_ratio
+                    properties:
+                      channel:
+                        type: string
+                        description: 原渠道. 此字段为必填项。须为该标的申购记录的 `origin_channel`（来自 OB 申购同步记录列表中按 `counter_id` 筛选出的行），不是固定值（如 `lb`）。
+                      method:
+                        type: integer
+                        description: |-
+                          认购方式。
+
+                          **可选值：** `1` 融资、`2` 现金
+                        enum:
+                          - 1
+                          - 2
+                        x-enum-details:
+                          - value: 1
+                            label: 融资
+                          - value: 2
+                            label: 现金
+                        example: 1
+                      ratio:
+                        type: string
+                        description: 认购比例. 百分比数值，去掉 % 符号后传字符串，如 "100" 表示 100%
+                      target_method:
+                        type: integer
+                        description: |-
+                          目标认购方式。
+
+                          **可选值：** `1` 融资、`2` 现金
+                        enum:
+                          - 1
+                          - 2
+                        x-enum-details:
+                          - value: 1
+                            label: 融资
+                          - value: 2
+                            label: 现金
+                        example: 1
+                      target_ratio:
+                        type: string
+                        description: 目标认购比例. 目标认购比例，百分比数值，去掉 % 符号后传字符串
                 is_retry:
                   type: boolean
                   description: 是否重试. 新建操作传 false；「重试」操作传 true
@@ -3088,7 +3114,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 证券代码. 用于按「证券代码」筛选结果。
+                      description: 证券代码. 用于按「证券代码」筛选结果。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                       example: ST/HK/1377
                 page:
                   type: integer
@@ -3286,14 +3312,20 @@ paths:
                           format: date
                     aaid:
                       type: string
-                      description: 客户. 用于按「客户」筛选结果。
+                      description: |-
+                        客户. 用于按「客户」筛选结果。
+
+                        此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
                     counter_id:
                       type: string
-                      description: 股票. 用于按「股票」筛选结果。
+                      description: 股票. 用于按「股票」筛选结果。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                       example: ST/HK/1377
                     success:
                       type: string
-                      description: FINI 状态. 用于按「FINI 状态」筛选结果。
+                      description: |-
+                        FINI 状态. 用于按「FINI 状态」筛选结果。
+
+                        **可选值：** `false` 失败、`true` 成功、`=*`
                       enum:
                         - 'false'
                         - 'true'
@@ -3308,7 +3340,10 @@ paths:
                       example: 'false'
                     status:
                       type: string
-                      description: 本地订单状态. 用于按「本地订单状态」筛选结果。
+                      description: |-
+                        本地订单状态. 用于按「本地订单状态」筛选结果。
+
+                        **可选值：** `1` 待扣款，资金冻结中、`2` 扣款失败、`3` 已扣款，待公布中签、`4` 已公布，中签、`5` 已公布，未中签、`6` 已撤销、`7` 取消、`8` 已拒绝、`100`
                       enum:
                         - '1'
                         - '2'
@@ -3370,7 +3405,10 @@ paths:
                       example: HK
                     mark:
                       type: string
-                      description: 认购方式. 用于按「认购方式」筛选结果。
+                      description: |-
+                        认购方式. 用于按「认购方式」筛选结果。
+
+                        **可选值：** `0` 普通订单
                       enum:
                         - '0'
                       x-enum-details:
@@ -3392,6 +3430,8 @@ paths:
                         类型. 用于按「类型」筛选结果。
 
                         支持多选；提交时使用英文逗号（`,`）拼接多个值。不传时不按此字段筛选。
+
+                        **可选值：** `1` 融资、`2` 现金、`4` 国配、`5` 0 成本打新
                       example: Cash
                       enum:
                         - '1'
@@ -3642,7 +3682,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 证券代码. 用于按「证券代码」筛选结果。
+                      description: 证券代码. 用于按「证券代码」筛选结果。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                       example: ST/HK/2652
                 page:
                   type: integer
@@ -3803,11 +3843,14 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 证券代码. 用于按「证券代码」筛选结果。
+                      description: 证券代码. 用于按「证券代码」筛选结果。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                       example: ST/HK/2523
                     state:
                       type: string
-                      description: 审批状态. 用于按「审批状态」筛选结果。
+                      description: |-
+                        审批状态. 用于按「审批状态」筛选结果。
+
+                        **可选值：** `0` 审批中、`1` 已通过、`2` 已拒绝
                       enum:
                         - '0'
                         - '1'
@@ -4035,7 +4078,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 证券代码. 用于按「证券代码」筛选结果。
+                      description: 证券代码. 用于按「证券代码」筛选结果。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                       example: ST/US/CRAN
                 page:
                   type: integer
@@ -4208,11 +4251,14 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 股票代码. 用于按「股票代码」筛选结果。
+                      description: 股票代码. 用于按「股票代码」筛选结果。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                       example: ST/HK/1377
                     status:
                       type: string
-                      description: 审核状态. 用于按「审核状态」筛选结果。
+                      description: |-
+                        审核状态. 用于按「审核状态」筛选结果。
+
+                        **可选值：** `1` 审核中、`2` 通过、`3` 拒绝、`4` 关闭
                       enum:
                         - '1'
                         - '2'
@@ -4419,11 +4465,14 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 证券代码. 用于按「证券代码」筛选结果。
+                      description: 证券代码. 用于按「证券代码」筛选结果。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                       example: ST/HK/1377
                     status:
                       type: string
-                      description: 审核状态. 用于按「审核状态」筛选结果。
+                      description: |-
+                        审核状态. 用于按「审核状态」筛选结果。
+
+                        **可选值：** `1` 审核中、`2` 通过、`3` 拒绝、`4` 关闭
                       enum:
                         - '1'
                         - '2'
@@ -4811,7 +4860,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 股票. 用于按「股票」筛选结果。
+                      description: 股票. 用于按「股票」筛选结果。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                       example: ST/HK/1377
                     subscription_method:
                       type: string
@@ -4819,6 +4868,8 @@ paths:
                         认购类型. 用于按「认购类型」筛选结果。
 
                         支持多选；提交时使用英文逗号（`,`）拼接多个值。不传时不按此字段筛选。
+
+                        **可选值：** `1` 融资、`2` 现金、`4` 国配、`5` 0 成本打新
                       example: Cash
                       enum:
                         - '1'
@@ -5037,7 +5088,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 股票代码. 用于按「股票代码」筛选结果。
+                      description: 股票代码. 用于按「股票代码」筛选结果。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                       example: ST/HK/2672
                     batch_no:
                       type: string
@@ -5387,7 +5438,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 股票. 用于按「股票」筛选结果。
+                      description: 股票. 用于按「股票」筛选结果。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 page:
                   type: integer
                   description: 页码. 要查询的页码，从 `1` 开始。
@@ -5555,11 +5606,14 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 股票代码. 用于按「股票代码」筛选结果。
+                      description: 股票代码. 用于按「股票代码」筛选结果。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                       example: ST/HK/2652
                     state:
                       type: string
-                      description: 同步状态. 用于按「同步状态」筛选结果。
+                      description: |-
+                        同步状态. 用于按「同步状态」筛选结果。
+
+                        **可选值：** `1,2` 待同步、`3,4` 已同步，待返回结果、`5` 同步失败，请重试、`6,7` 已返回结果
                       enum:
                         - 1,2
                         - 3,4
@@ -5929,7 +5983,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 股票代码. 用于按「股票代码」筛选结果。
+                      description: 股票代码. 用于按「股票代码」筛选结果。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                       example: ST/HK/3388
                     ob_channel:
                       type: string
@@ -5937,7 +5991,10 @@ paths:
                       example: lb_sg
                     status:
                       type: string
-                      description: 状态. 用于按「状态」筛选结果。
+                      description: |-
+                        状态. 用于按「状态」筛选结果。
+
+                        **可选值：** `1` 待生成订单、`3` 生成失败，待同步、`4` 生成成功，待同步、`2,5` 生成失败，已同步、`6` 生成成功，已同步
                       enum:
                         - '1'
                         - '3'
@@ -6137,7 +6194,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 股票代码. 用于按「股票代码」筛选结果。
+                      description: 股票代码. 用于按「股票代码」筛选结果。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                       example: ST/HK/3625
                     ob_channel:
                       type: string
@@ -6326,7 +6383,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 股票代码
+                      description: 股票代码。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 page:
                   type: integer
                   description: 页码
@@ -6481,7 +6538,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 代码
+                      description: 代码。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 page:
                   type: integer
                   description: 页码
@@ -6611,7 +6668,10 @@ paths:
                       description: 客户
                     method:
                       type: string
-                      description: 认购方式
+                      description: |-
+                        认购方式
+
+                        **可选值：** `1` 融资、`2` 现金、`4` 国配、`5` 0 成本打新
                       enum:
                         - '1'
                         - '2'
@@ -6620,7 +6680,10 @@ paths:
                       example: '1'
                     status:
                       type: string
-                      description: 认购状态
+                      description: |-
+                        认购状态
+
+                        **可选值：** `1` 处理中、`2` 认购成功、`3` 认购失败
                       enum:
                         - '1'
                         - '2'
@@ -6784,7 +6847,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 股票代码
+                      description: 股票代码。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 page:
                   type: integer
                   description: 页码
@@ -6915,7 +6978,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 股票代码
+                      description: 股票代码。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 page:
                   type: integer
                   description: 页码
@@ -7082,7 +7145,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 股票代码
+                      description: 股票代码。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 page:
                   type: integer
                   description: 页码
@@ -7253,7 +7316,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 股票代码
+                      description: 股票代码。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 page:
                   type: integer
                   description: 页码
@@ -7789,10 +7852,16 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: 客户
+                      description: |-
+                        客户
+
+                        此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
                     status:
                       type: string
-                      description: 订单状态
+                      description: |-
+                        订单状态
+
+                        **可选值：** `1` 待扣款，资金冻结中、`2` 扣款失败、`3` 已扣款，待公布中签、`4` 已公布，中签、`5` 已公布，未中签、`6` 已撤销、`7` 取消、`8` 已拒绝、`100`
                       enum:
                         - '1'
                         - '2'
@@ -8018,10 +8087,16 @@ paths:
                           format: date
                     aaid:
                       type: string
-                      description: 客户
+                      description: |-
+                        客户
+
+                        此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
                     status:
                       type: string
-                      description: 本地订单状态
+                      description: |-
+                        本地订单状态
+
+                        **可选值：** `1` 资金冻结中，待公布中签、`4` 已公布，中签、`5` 已公布，未中签、`6` 已撤销、`7` 取消、`8` 已拒绝
                       enum:
                         - '1'
                         - '4'
@@ -8351,7 +8426,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 股票代码
+                      description: 股票代码。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 page:
                   type: integer
                   description: 页码
@@ -8498,7 +8573,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 股票代码
+                      description: 股票代码。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 page:
                   type: integer
                   description: 页码
@@ -8657,7 +8732,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 股票代码
+                      description: 股票代码。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                     status:
                       type: string
                       description: status. 不传时默认按 '1' 过滤，即不显式传此过滤条件时接口只返回该值对应的数据
@@ -8917,7 +8992,7 @@ paths:
                       description: Ob 租户.
                     counter_id:
                       type: string
-                      description: 股票代码
+                      description: 股票代码。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 page:
                   type: integer
                   description: 页码
@@ -9073,7 +9148,7 @@ paths:
                       description: Ob 租户.
                     counter_id:
                       type: string
-                      description: 股票代码
+                      description: 股票代码。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 page:
                   type: integer
                   description: 页码
@@ -9394,7 +9469,7 @@ paths:
                       description: OB 租户
                     counter_id:
                       type: string
-                      description: 股票代码
+                      description: 股票代码。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 page:
                   type: integer
                   description: 页码
