@@ -2902,23 +2902,26 @@ paths:
   /v2/atm/withdraw/audit:
     post:
       operationId: withdraw_audit
-      summary: 單筆審核出金申請
+      summary: 單筆審核通過出金申請
       tags:
         - 款项管理
       x-permission-key:
         - atm.withdraw_audit
       x-lbonly: false
       description: |-
-        對單筆出金申請進行審核，通過或駁回該申請。
+        審核通過單筆出金申請。駁回出金申請使用另一接口 `POST /v1/atm/withdraw/reject`（本接口不處理駁回）。
 
         ### 請求參數
 
-        - 必填：`id`（申請 ID）、`state`（審核結果）
+        - 必填：`id`（申請 ID）、`status`（審核結果，固定傳 `1` 通過）
+        - 可選：`desc`（審核備註）、`admin_remark_config_type`（備註類型配置）、`audit_frontend_resource`（調用方審計上下文）
         - 各字段的格式、取值範圍和業務含義見對應字段說明。
 
         ### 業務說明
 
-        通過或駁回該申請，審核通過將放行真實資金出金，請務必核對申請資訊。
+        審核通過將放行真實資金出金，請務必核對申請資訊。
+
+        可審核的記錄：出金申請列表中 `status_val` 為 `0`（待審核）且風控（反作弊）檢查不處於「風控處理中」的申請。請求體字段名是 `status`，不是 `state`；傳 `state` 會返回 `203400`。
 
         ### 風險提示
 
@@ -2937,29 +2940,36 @@ paths:
               type: object
               required:
                 - id
-                - state
+                - status
               properties:
                 id:
                   type: string
                   description: 申請ID. 申請ID，用於標識本次請求關聯的業務對象。此字段為必填項。
-                state:
+                status:
                   type: integer
                   description: |-
-                    審核結果。
+                    審核結果。本接口只用於審核通過，固定傳 `1`；駁回請使用 `POST /v1/atm/withdraw/reject`。
 
-                    **可選值：** `1` 通過、`2` 拒絕
+                    **可選值：** `1` 通過
                   enum:
                     - 1
-                    - 2
                   x-enum-details:
                     - value: 1
                       label: 通過
-                    - value: 2
-                      label: 拒絕
                   example: 1
+                desc:
+                  type: string
+                  description: 審核備註。可選。
+                admin_remark_config_type:
+                  type: string
+                  description: 備註類型配置。可選，通常不傳。
+                audit_frontend_resource:
+                  type: object
+                  description: |-
+                    調用方提交的審計上下文，例如 `{"$behavior": "審核通過", "$action": "add"}`。
             example:
               id: '123'
-              state: 1
+              status: 1
       responses:
         '200':
           description: 請求處理成功。響應的 `data` 不包含額外業務字段。
@@ -3013,7 +3023,7 @@ paths:
       x-mint:
         href: /zh-HK/api-reference/withdraw_audit
         metadata:
-          sidebarTitle: 單筆審核出金申請
+          sidebarTitle: 單筆審核通過出金申請
   /v1/portfolio/atm/direct/withdraw:
     post:
       operationId: atm_direct_withdraw

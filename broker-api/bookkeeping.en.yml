@@ -812,13 +812,15 @@ paths:
 
         ### Request parameters
 
-        - Required: `id` (record ID; use the `id` of a row returned by `POST /v1/datasets/booking_deposit_in_transit`), `ref_no` (related reference number; not returned by the dataset — the admin console computes it from the row as `dit-{reconciliation_at}-{currency}-{bank_account}-{simple_name}`), `begin_amount` (opening balance), `statement_adjustment` (statement adjustment), `in_transit_adjustment` (in-transit adjustment), and `remarks` (remark content).
+        - Required: `id` (record ID; use the `id` of a row returned by `POST /v1/datasets/booking_deposit_in_transit`), `ref_no` (related reference number; the list row's `ref_no`, formatted `dit-{reconciliation_at}-{currency}-{bank_account}-{simple_name}`), `begin_amount` (opening balance), `statement_adjustment` (statement adjustment), `in_transit_adjustment` (in-transit adjustment), and `remarks` (remark content).
         - Optional: `remark` (remark; the admin console does not send this field).
         - See the individual field docs for each field's format, allowed values, and meaning.
 
         ### Business notes
 
         Used to make manual adjustments to the deposit-in-transit summary reconciliation result. This affects real accounting reconciliation data.
+
+        When looking up the target row, filter by a single ledger date (`reconciliation_at` start and end on the same day) plus `currency`; wider date ranges time out on the large table (about 2.38 million rows).
 
         ### Risk warning
 
@@ -851,7 +853,8 @@ paths:
                   description: Remark saved with this operation. Optional; the admin console does not send this field.
                 ref_no:
                   type: string
-                  description: Related reference number. `POST /v1/datasets/booking_deposit_in_transit` does not return `ref_no`; the admin console computes it from the row as `dit-{reconciliation_at}-{currency}-{bank_account}-{simple_name}`. This field is required.
+                  description: |-
+                    Related reference number. Use the list row's `ref_no` (returned directly by the data-porter template `pg_portfolio_bookkeeping_deposit_in_transit`), formatted `dit-{reconciliation_at}-{currency}-{bank_account}-{simple_name}`. This field is required.
                 begin_amount:
                   type: number
                   description: This field is required.
@@ -3108,6 +3111,9 @@ paths:
 
         - Each record is aggregated by bank account, currency, and accounting date, carrying opening/closing amounts, deposit amount, received amount, in-transit amount, in-transit discrepancy, in-transit and statement adjustments, reconciliation result (consistent / inconsistent), and remarks.
         - Typically used for finance reconciliation to spot in-transit discrepancies and follow up on adjustments until the result is consistent.
+
+        - The table is large (about 2.38 million rows). Filter by a single ledger date (`reconciliation_at` with equal `gte` and `lte`) plus `currency`; wider date ranges time out (504/500).
+        - Rows include `ref_no` (formatted `dit-{reconciliation_at}-{currency}-{bank_account}-{simple_name}`), which can be passed directly to `modify_summary_recon_items`.
 
         ### Returns
 

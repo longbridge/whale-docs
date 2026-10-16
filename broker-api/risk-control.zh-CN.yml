@@ -231,12 +231,12 @@ paths:
   /risk/v1/delete_canceled_account_credit:
     post:
       operationId: delete_canceled_account_credit
-      summary: 删除已取消的客户授信额度
+      summary: 删除已注销账户的授信额度
       tags:
         - 风控管理
       x-lbonly: false
       description: |-
-        删除已取消状态的客户授信额度记录。
+        删除已注销（销户）证券账户的客户授信额度记录。
 
         ### 请求参数
 
@@ -245,7 +245,9 @@ paths:
 
         ### 业务说明
 
-        仅可删除处于已取消状态的授信额度记录，支持按账号列表批量删除。
+        - 账户必须先完成注销（如通过 `whale_close_account`），否则返回 `账户未注销`。
+        - 该账户必须存在授信记录；没有授信记录时接口返回 `400 系统错误`。
+        - 支持按账号列表批量删除。
 
         ### 风险提示
 
@@ -334,7 +336,7 @@ paths:
       x-mint:
         href: /zh-CN/api-reference/delete_canceled_account_credit
         metadata:
-          sidebarTitle: 删除已取消的客户授信额度
+          sidebarTitle: 删除已注销账户的授信额度
   /risk/v1/admin_credit_adjust/review_flow_ticket:
     post:
       operationId: admin_credit_adjust_review_flow_ticket
@@ -15690,6 +15692,8 @@ paths:
 
         `list` 中的每条记录标识一条已存在的限额配置。此接口只批量切换生效状态，不修改各限额的阈值。
 
+        后端处理较慢时网关可能在 5 秒后返回 `504`，此时请求可能仍在执行，请重新查询列表确认生效状态后再决定是否重试。
+
         ### 风险提示
 
         此操作会更改真实交易限额的生效状态，直接影响后续交易能否通过风控校验。调用前请核对目标记录列表和 `is_apply` 取值。
@@ -15712,10 +15716,35 @@ paths:
                 list:
                   type: array
                   description: |-
-                    多维度限额记录列表. 批量勾选（或单条）的限额记录，元素字段：counter_id(柜台ID)、aaid(账户AAID)、code(标的代码)、trader(交易员账号)、trader_name(交易员名称)、
-                    client_group(客户分组ID)、client_group_name(客户分组名称)、stock_group(证券分组ID)
+                    多维度限额记录列表。批量勾选（或单条）的限额记录，每个元素是对象（不是字符串），字段取自限额列表行：
+                    `counter_id`（柜台 ID）、`aaid`（账户 AAID，取行的 `aaid_val`，无则取 `aaid`）、`code`（标的代码）、`trader`（交易员账号，取行的 `trader_val`）、`trader_name`（交易员名称，取行的 `trader`）、`client_group`（客户分组 ID，取行的 `client_group_val`）、`client_group_name`（客户分组名称，取行的 `client_group`）、`stock_group`（证券分组 ID，取行的 `stock_group_id_val`）。
                   items:
-                    type: string
+                    type: object
+                    properties:
+                      counter_id:
+                        type: string
+                        description: 柜台 ID
+                      aaid:
+                        type: string
+                        description: 账户 AAID
+                      code:
+                        type: string
+                        description: 标的代码
+                      trader:
+                        type: string
+                        description: 交易员账号
+                      trader_name:
+                        type: string
+                        description: 交易员名称
+                      client_group:
+                        type: string
+                        description: 客户分组 ID
+                      client_group_name:
+                        type: string
+                        description: 客户分组名称
+                      stock_group:
+                        type: string
+                        description: 证券分组 ID
                 is_apply:
                   type: boolean
                   description: 是否生效. true=批量生效（申请启用限额），false=批量失效（撤销/停用限额）

@@ -11581,14 +11581,14 @@ paths:
   /v1/ann/revoke/restart:
     post:
       operationId: restart_revoke_announcement
-      summary: 重啓撤銷（撤銷失敗後重試）
+      summary: 撤銷並重新開始企業行動（撤銷已執行的公告並複製生成新公告）
       tags:
         - 公司行动 (Corporate Action)
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        重啟撤銷：在企業行動撤銷失敗後，對指定公告重試撤銷流程。
+        撤銷一條已執行的公告，並複製生成一條新公告（管理後台「撤銷並複製」），返回新公告的 `id`。
 
         ### 請求參數
 
@@ -11598,7 +11598,8 @@ paths:
 
         ### 業務說明
 
-        僅用於此前撤銷失敗的公司行動，觸發撤銷流程重試，涉及執行後撤銷，風險極高。
+        - 僅適用於已執行的公告，且其支付日期在最近 30 天內；支付日期在未來或早於 30 天時返回 `90501`（只支持撤銷支付日期為 30 天內的公告）。
+        - 會撤銷原公告已執行的權益處理（涉及真實持倉或資金回退），並生成新公告供重新處理，風險極高。
 
         ### 風險提示
 
@@ -11606,7 +11607,7 @@ paths:
 
         ### 處理結果
 
-        成功時重新觸發撤銷流程；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時原公告被撤銷，`data.id` 為新生成公告的 ID。
       security:
         - bearerAuth: []
       requestBody:
@@ -11629,7 +11630,7 @@ paths:
               audit_frontend_resource: {}
       responses:
         '200':
-          description: 請求處理成功。響應的 `data` 不包含額外業務字段。
+          description: 請求處理成功。響應的 `data.id` 為新公告 ID。
           content:
             application/json:
               schema:
@@ -11651,10 +11652,15 @@ paths:
                     type: string
                   data:
                     type: object
+                    properties:
+                      id:
+                        type: string
+                        description: 撤銷後複製生成的新公告 ID。
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  id: '141600'
         '400':
           description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
           content:
@@ -11778,14 +11784,14 @@ paths:
   /v1/portfolio/corpaction/tm/stock_exec:
     post:
       operationId: stock_exec
-      summary: 權益執行（持倉變更執行）
+      summary: 貨執行（公司行動股票腿執行）
       tags:
         - 公司行动 (Corporate Action)
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        權益執行：對指定公告觸發實際持倉變更處理。
+        貨執行：對指定公告執行股票腿（TM stock leg）的持倉變更，成功後公告階段變為 `14`（貨執行成功）。
 
         ### 請求參數
 
@@ -11794,7 +11800,10 @@ paths:
 
         ### 業務說明
 
-        觸發真實持倉變更，風險極高。
+        觸發真實持倉變更，風險極高。前置條件：
+
+        - 公告已登記（如透過 `register_announcements`）且有客戶持倉，否則返回 `99005`。
+        - 公告的 CCASS 支付日期（`effective_date`）必須等於當前賬務日期，否則返回 `90507`；該日期為空時返回 `90107`。
 
         ### 風險提示
 
@@ -11802,7 +11811,7 @@ paths:
 
         ### 處理結果
 
-        成功時完成權益執行（持倉變更）；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時完成貨執行，公告階段變為 `14`（貨執行成功）；返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
       requestBody:

@@ -11589,14 +11589,14 @@ paths:
   /v1/ann/revoke/restart:
     post:
       operationId: restart_revoke_announcement
-      summary: Restart Revoke Announcement
+      summary: Revoke and Restart Corporate Action (revoke an executed announcement and copy it)
       tags:
         - 公司行动 (Corporate Action)
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Restarts revocation: retries the revocation flow for the specified announcement after a prior revocation failed.
+        Revokes an executed announcement and copies it into a new announcement (the admin console's "revoke and copy"), returning the new announcement `id`.
 
         ### Request parameters
 
@@ -11606,7 +11606,8 @@ paths:
 
         ### Business notes
 
-        Use only for corporate actions whose revocation previously failed. It retries the revocation flow, which reverses an already-executed action and is high-risk.
+        - Only for announcements that have been executed and whose payable date is within the last 30 days; a payable date in the future or more than 30 days ago returns `90501` (only announcements with a payable date within 30 days can be revoked).
+        - It reverses the executed entitlement processing of the original announcement (real position or cash rollback) and creates a new announcement for reprocessing. This is high-risk.
 
         ### Risk warning
 
@@ -11614,7 +11615,7 @@ paths:
 
         ### Result
 
-        On success the revocation flow is retriggered; see the `200` response for the resulting state and data.
+        On success the original announcement is revoked and `data.id` is the ID of the newly created announcement.
       security:
         - bearerAuth: []
       requestBody:
@@ -11637,7 +11638,7 @@ paths:
               audit_frontend_resource: {}
       responses:
         '200':
-          description: The request was processed successfully. The response `data` does not contain additional business fields.
+          description: The request was processed successfully. The response `data.id` is the new announcement ID.
           content:
             application/json:
               schema:
@@ -11659,10 +11660,15 @@ paths:
                     type: string
                   data:
                     type: object
+                    properties:
+                      id:
+                        type: string
+                        description: ID of the new announcement copied after the revocation.
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  id: '141600'
         '400':
           description: Bad request. Check the business error code in `code` and the error details in `message`.
           content:
@@ -11786,14 +11792,14 @@ paths:
   /v1/portfolio/corpaction/tm/stock_exec:
     post:
       operationId: stock_exec
-      summary: Stock Execute
+      summary: Stock Leg Execution (corporate action)
       tags:
         - 公司行动 (Corporate Action)
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        Entitlement execution: triggers the actual position-change processing for the specified announcement.
+        Stock execution: runs the stock leg (TM stock leg) position changes for the given announcement; on success the announcement stage becomes `14` (stock execution succeeded).
 
         ### Request parameters
 
@@ -11802,7 +11808,10 @@ paths:
 
         ### Business notes
 
-        This triggers real position changes and is high-risk.
+        This triggers real position changes and is high-risk. Prerequisites:
+
+        - The announcement is registered (for example via `register_announcements`) and has client holdings; otherwise the call returns `99005`.
+        - The announcement's CCASS payment date (`effective_date`) must equal the current ledger date; otherwise the call returns `90507`, or `90107` when the date is empty.
 
         ### Risk warning
 
@@ -11810,7 +11819,7 @@ paths:
 
         ### Result
 
-        On success the entitlement execution (position change) completes; see the `200` response for the resulting state and data.
+        On success the stock execution completes and the announcement stage becomes `14` (stock execution succeeded); see the `200` response for the returned data.
       security:
         - bearerAuth: []
       requestBody:

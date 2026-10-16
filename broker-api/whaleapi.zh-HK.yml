@@ -17145,6 +17145,13 @@ paths:
         - ipo.batch_ipo_order
       x-lbonly: false
       x-source: WhaleAPI
+      description: |-
+        為指定證券賬號提交新股（IPO）申購。
+
+        ### 業務說明
+
+        - 僅支持港股 IPO；美股等其他市場返回 400 `暫不支持該市場`（mkt not support）。
+        - 只能在該 IPO 的認購期內提交，未開始時返回 400 `申購暫未開始`。
       requestBody:
         required: true
         content:
@@ -17154,7 +17161,8 @@ paths:
               properties:
                 symbol:
                   type: string
-                  description: 股票代碼，使用 ticker.region 格式
+                  description: |-
+                    股票代碼，使用 ticker.region 格式。僅支持港股（如 `02511.HK`）。
                 sub_qty:
                   type: string
                   description: 申購股數
@@ -19412,6 +19420,24 @@ paths:
         - cmbc.user_withdraw_application
       x-lbonly: false
       x-source: WhaleAPI
+      description: |-
+        為指定證券賬號提交出金申請。
+
+        ### 請求參數
+
+        - 必填：`account_no`、`currency`、`amount`、`card_id`、`is_pad_funded`
+        - 可選：`confirm`、`external_order_no`
+
+        ### 業務說明
+
+        - `card_id` 必須是該賬戶名下已認證（`status=2`）的出金銀行卡。
+        - 當 `withdraw_pre_v3_v2` 返回 `need_payee_address=true` 時，銀行卡須有完整的結構化收款人地址（`payee_country`、`payee_state`、`payee_city`、`payee_street`、`payee_building`、`payee_postcode`）。
+
+        ### 常見錯誤
+
+        - `2031034`：銀行卡未認證（Please authenticate the current card first）。
+        - `2031199`：銀行卡的結構化收款人地址不完整（payee structured address incomplete）。
+        - `2036001`：銀行卡不存在或不屬於該賬戶（withdraw card not found）。
       requestBody:
         required: true
         content:
@@ -19427,7 +19453,8 @@ paths:
                   description: 金額
                 card_id:
                   type: integer
-                  description: 用戶銀行卡ID
+                  description: |-
+                    用戶銀行卡ID。須為該賬戶名下已認證（`status=2`）的出金銀行卡。
                 confirm:
                   type: integer
                   description: 風控參數
@@ -19555,7 +19582,8 @@ paths:
               properties:
                 order_id:
                   type: string
-                  description: 訂單號
+                  description: |-
+                    訂單號。取 `withdraw_record_v5` 返回的 `list[].order_id`（如 `w0a2…`），不是數字型的出金申請 ID；傳數字 ID 會返回 500 `2031000`（記錄不存在）。
                 account_no:
                   type: string
                   description: |-
@@ -20072,10 +20100,12 @@ paths:
                   description: 銀行名稱，最長 30 個字符
                 name:
                   type: string
-                  description: 用戶姓名
+                  description: |-
+                    用戶姓名。必須與賬戶持有人 KYC 真實姓名（`real_name`）完全一致，否則返回 `2031041`（name not match）。
                 name_en:
                   type: string
-                  description: 用戶英文姓名
+                  description: |-
+                    用戶英文姓名。必須與賬戶持有人 KYC 英文姓名（`en_name`）完全一致。
                 account:
                   type: string
                   description: 用戶銀行賬號，最長 20 個字符
@@ -20108,6 +20138,30 @@ paths:
                   items:
                     type: string
                   description: 認證資料文件 key 列表。通過文件上傳接口獲得的認證圖片 key；`need_certification` 為 `true` 時應傳入非空列表。
+                payee_country:
+                  type: string
+                  description: |-
+                    收款人國家/地區，可選值來自後端數據字典
+                payee_state:
+                  type: string
+                  description: |-
+                    收款人省/州
+                payee_city:
+                  type: string
+                  description: |-
+                    收款人城市
+                payee_street:
+                  type: string
+                  description: |-
+                    收款人街道地址
+                payee_building:
+                  type: string
+                  description: |-
+                    收款人樓宇，收款國家為菲律賓時必填
+                payee_postcode:
+                  type: string
+                  description: |-
+                    收款人郵政編碼
                 account_no:
                   type: string
                   description: |-
@@ -20130,8 +20184,8 @@ paths:
               region: HONGKONG
               bank_en: MOX Bank
               bank_code: '389'
-              name: AUTO TEST
-              name_en: AUTO TEST
+              name: '<KYC real_name>'
+              name_en: '<KYC en_name>'
               account: '987654321012345'
               swift_code: MOXBHKHK
               account_type: HKD
@@ -20139,6 +20193,12 @@ paths:
               need_certification: false
               fps_id: ''
               review_urls: []
+              payee_country: HK
+              payee_state: Hong Kong
+              payee_city: Hong Kong
+              payee_street: 1 Example Road
+              payee_building: Example Building
+              payee_postcode: '000000'
       responses:
         '200':
           content:
@@ -20190,13 +20250,19 @@ paths:
                 $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
           description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
       description: |-
-        新增銀行卡。
+        為指定證券賬號新增出金銀行卡。
 
         ### 請求參數
 
-        - 必填：`bank_id`、`region`、`bank_en`、`name`、`name_en`、`account`、`account_type`、`country`、`account_no`
-        - 可選：`swift_code`、`need_certification`、`fps_id`、`review_urls`、`address`、`remark`、`bank_code`
+        - 必填：`account_no`、`bank_id`、`region`、`bank_en`、`name`、`name_en`、`account`、`account_type`、`country`
+        - 可選：`swift_code`、`address`、`remark`、`bank_code`、`need_certification`、`fps_id`、`review_urls`，以及結構化收款人地址 `payee_country`、`payee_state`、`payee_city`、`payee_street`、`payee_building`、`payee_postcode`
         - 需要認證時，`review_urls` 傳入通過文件上傳接口獲得的認證圖片 key。
+
+        ### 業務說明
+
+        - `name` / `name_en` 必須與該賬戶持有人 KYC 的真實姓名 / 英文姓名完全一致，否則返回 500 `2031041`（name not match）。
+        - 若 `withdraw_pre_v3_v2` 返回 `need_payee_address=true`，出金時銀行卡必須帶完整的結構化收款人地址（6 個 `payee_*` 欄位，含 `payee_building`），否則 `withdraw_apply_v5_v2` 返回 `2031199`。新增銀行卡時請一併傳入這些欄位。
+        - 新卡需完成認證（`status=2`）後才能用於出金。
       x-mint:
         href: /zh-HK/api-reference/create_withdraw_card_v2
         metadata:
@@ -23050,6 +23116,12 @@ paths:
         - account.last_approve_account_cancellation
       x-lbonly: false
       x-source: WhaleAPI
+      description: |-
+        註銷指定證券賬號。
+
+        ### 常見錯誤
+
+        - `404089`（ASSETS_CHANGED）：該賬戶當天有資產變動，當天不能註銷；請在下一個賬務日再試。該錯誤碼以 404 開頭，但不是接口路徑不存在。
       requestBody:
         required: true
         content:

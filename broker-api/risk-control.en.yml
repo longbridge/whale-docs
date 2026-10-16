@@ -231,12 +231,12 @@ paths:
   /risk/v1/delete_canceled_account_credit:
     post:
       operationId: delete_canceled_account_credit
-      summary: Delete Canceled Account Credit
+      summary: Delete Credit of Closed Account
       tags:
         - Risk Control Compliance
       x-lbonly: false
       description: |-
-        Deletes customer credit-limit records that are in the canceled state.
+        Deletes the customer credit-limit records of closed (cancelled) securities accounts.
 
         ### Request parameters
 
@@ -245,7 +245,9 @@ paths:
 
         ### Business notes
 
-        Only credit-limit records already in the canceled state can be deleted; multiple accounts can be deleted in one call.
+        - The account must be closed first (for example with `whale_close_account`), or the call returns `账户未注销` (account not closed).
+        - The account must have a credit record; without one the endpoint returns `400 系统错误` (system error).
+        - Multiple accounts can be deleted in one call.
 
         ### Risk warning
 
@@ -337,7 +339,7 @@ paths:
       x-mint:
         href: /en/api-reference/delete_canceled_account_credit
         metadata:
-          sidebarTitle: Delete Canceled Account Credit
+          sidebarTitle: Delete Credit of Closed Account
   /risk/v1/admin_credit_adjust/review_flow_ticket:
     post:
       operationId: admin_credit_adjust_review_flow_ticket
@@ -15883,6 +15885,8 @@ paths:
 
         Each entry in `list` identifies an existing limit configuration. This endpoint only toggles the effective state in bulk; it does not change the limits' thresholds.
 
+        If the backend is slow, the gateway may return `504` after 5 seconds while the request is still running; re-query the list to confirm the effective state before retrying.
+
         ### Risk warning
 
         This operation changes the effective state of live trading limits and directly affects whether subsequent trades pass risk checks. Verify the target record list and the `is_apply` value before calling.
@@ -15905,12 +15909,35 @@ paths:
                 list:
                   type: array
                   description: |-
-                    Multi-dimension Limit Record List. The batch-selected (or single) limit records; element fields: counter_id (counter ID),
-                    aaid (account AAID), code (instrument code), trader (trader account), trader_name
-                    (trader name), client_group (client group ID), client_group_name (client group name),
-                    stock_group (securities group ID).
+                    Multi-dimension limit record list. The batch-selected (or single) limit records. Each element is an object (not a string) built from the limit list row:
+                    `counter_id` (counter ID), `aaid` (account AAID; the row's `aaid_val`, falling back to `aaid`), `code` (instrument code), `trader` (trader account; the row's `trader_val`), `trader_name` (trader name; the row's `trader`), `client_group` (client group ID; the row's `client_group_val`), `client_group_name` (client group name; the row's `client_group`), `stock_group` (securities group ID; the row's `stock_group_id_val`).
                   items:
-                    type: string
+                    type: object
+                    properties:
+                      counter_id:
+                        type: string
+                        description: Counter ID
+                      aaid:
+                        type: string
+                        description: Account AAID
+                      code:
+                        type: string
+                        description: Instrument code
+                      trader:
+                        type: string
+                        description: Trader account
+                      trader_name:
+                        type: string
+                        description: Trader name
+                      client_group:
+                        type: string
+                        description: Client group ID
+                      client_group_name:
+                        type: string
+                        description: Client group name
+                      stock_group:
+                        type: string
+                        description: Securities group ID
                 is_apply:
                   type: boolean
                   description: Is Apply. true = batch activate (apply to enable limits), false = batch deactivate (revoke/disable limits).

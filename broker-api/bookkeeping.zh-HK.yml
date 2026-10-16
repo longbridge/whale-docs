@@ -778,13 +778,15 @@ paths:
 
         ### 請求參數
 
-        - 必填：`id`（記錄 ID，取 `POST /v1/datasets/booking_deposit_in_transit` 列表行的 `id`）、`ref_no`（關聯單號；數據集不返回，管理後台按該行數據拼接為 `dit-{reconciliation_at}-{currency}-{bank_account}-{simple_name}`）、`begin_amount`（期初金額）、`statement_adjustment`（賬單調整額）、`in_transit_adjustment`（在途調整額）、`remarks`（備註內容）
+        - 必填：`id`（記錄 ID，取 `POST /v1/datasets/booking_deposit_in_transit` 列表行的 `id`）、`ref_no`（關聯單號，取列表行的 `ref_no`，格式 `dit-{reconciliation_at}-{currency}-{bank_account}-{simple_name}`）、`begin_amount`（期初金額）、`statement_adjustment`（賬單調整額）、`in_transit_adjustment`（在途調整額）、`remarks`（備註內容）
         - 可選：`remark`（備註；管理後台不傳此欄位）
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
 
         用於對入金在途的匯總核對結果做人工調整，涉及真實會計核對數據。
+
+        查詢目標行時請按單個賬務日期（`reconciliation_at` 起止為同一天）加 `currency` 過濾；日期範圍過寬會因數據量大（約 238 萬行）超時。
 
         ### 風險提示
 
@@ -817,7 +819,8 @@ paths:
                   description: 隨本次操作保存的備註。可選，管理後台不傳此欄位。
                 ref_no:
                   type: string
-                  description: 關聯單號。`POST /v1/datasets/booking_deposit_in_transit` 不返回 `ref_no`；管理後台按該行數據拼接為 `dit-{reconciliation_at}-{currency}-{bank_account}-{simple_name}`。此字段為必填項。
+                  description: |-
+                    關聯單號。取列表行的 `ref_no`（data-porter 模板 `pg_portfolio_bookkeeping_deposit_in_transit` 直接返回），格式為 `dit-{reconciliation_at}-{currency}-{bank_account}-{simple_name}`。此字段為必填項。
                 begin_amount:
                   type: number
                   description: 用於指定「期初金額」。此字段為必填項。
@@ -3024,6 +3027,9 @@ paths:
 
         - 每條記錄按銀行賬號、幣種與賬務日期彙總，包含期初/期末金額、入金金額、已到賬金額、在途金額、在途差異、在途調整與賬單調整、核對結果（一致 / 不一致）及備註等。
         - 常用於財務對賬，識別在途差異並跟進調整，直至核對結果一致。
+
+        - 數據量很大（約 238 萬行），請用單個賬務日期（`reconciliation_at` 的 `gte` 與 `lte` 相同）加 `currency` 過濾；日期範圍過寬會超時（504/500）。
+        - 行數據包含 `ref_no`（格式 `dit-{reconciliation_at}-{currency}-{bank_account}-{simple_name}`），可直接用於 `modify_summary_recon_items`。
 
         ### 返回結果
 

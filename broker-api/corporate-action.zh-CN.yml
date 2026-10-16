@@ -11581,14 +11581,14 @@ paths:
   /v1/ann/revoke/restart:
     post:
       operationId: restart_revoke_announcement
-      summary: 重启撤销（撤销失败后重试）
+      summary: 撤销并重新开始企业行动（撤销已执行的公告并复制生成新公告）
       tags:
         - 公司行动 (Corporate Action)
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        重启撤销：在企业行动撤销失败后，对指定公告重试撤销流程。
+        撤销一条已执行的公告，并复制生成一条新公告（管理后台「撤销并复制」），返回新公告的 `id`。
 
         ### 请求参数
 
@@ -11598,7 +11598,8 @@ paths:
 
         ### 业务说明
 
-        仅用于此前撤销失败的公司行动，触发撤销流程重试，涉及执行后撤销，风险极高。
+        - 仅适用于已执行的公告，且其支付日期在最近 30 天内；支付日期在未来或早于 30 天时返回 `90501`（只支持撤销支付日期为 30 天内的公告）。
+        - 会撤销原公告已执行的权益处理（涉及真实持仓或资金回退），并生成新公告供重新处理，风险极高。
 
         ### 风险提示
 
@@ -11606,7 +11607,7 @@ paths:
 
         ### 处理结果
 
-        成功时重新触发撤销流程；后续状态和返回数据以 `200` 响应定义为准。
+        成功时原公告被撤销，`data.id` 为新生成公告的 ID。
       security:
         - bearerAuth: []
       requestBody:
@@ -11629,7 +11630,7 @@ paths:
               audit_frontend_resource: {}
       responses:
         '200':
-          description: 请求处理成功。响应的 `data` 不包含额外业务字段。
+          description: 请求处理成功。响应的 `data.id` 为新公告 ID。
           content:
             application/json:
               schema:
@@ -11651,10 +11652,15 @@ paths:
                     type: string
                   data:
                     type: object
+                    properties:
+                      id:
+                        type: string
+                        description: 撤销后复制生成的新公告 ID。
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  id: '141600'
         '400':
           description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
           content:
@@ -11778,14 +11784,14 @@ paths:
   /v1/portfolio/corpaction/tm/stock_exec:
     post:
       operationId: stock_exec
-      summary: 权益执行（持仓变更执行）
+      summary: 货执行（公司行动股票腿执行）
       tags:
         - 公司行动 (Corporate Action)
       x-permission-key:
         - lb_hk_corporate.corporate_query
       x-lbonly: false
       description: |-
-        权益执行：对指定公告触发实际持仓变更处理。
+        货执行：对指定公告执行股票腿（TM stock leg）的持仓变更，成功后公告阶段变为 `14`（货执行成功）。
 
         ### 请求参数
 
@@ -11794,7 +11800,10 @@ paths:
 
         ### 业务说明
 
-        触发真实持仓变更，风险极高。
+        触发真实持仓变更，风险极高。前置条件：
+
+        - 公告已登记（如通过 `register_announcements`）且有客户持仓，否则返回 `99005`。
+        - 公告的 CCASS 支付日期（`effective_date`）必须等于当前账务日期，否则返回 `90507`；该日期为空时返回 `90107`。
 
         ### 风险提示
 
@@ -11802,7 +11811,7 @@ paths:
 
         ### 处理结果
 
-        成功时完成权益执行（持仓变更）；后续状态和返回数据以 `200` 响应定义为准。
+        成功时完成货执行，公告阶段变为 `14`（货执行成功）；返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:

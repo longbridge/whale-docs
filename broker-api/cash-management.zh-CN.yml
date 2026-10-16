@@ -2902,23 +2902,26 @@ paths:
   /v2/atm/withdraw/audit:
     post:
       operationId: withdraw_audit
-      summary: 单笔审核出金申请
+      summary: 单笔审核通过出金申请
       tags:
         - 款项管理
       x-permission-key:
         - atm.withdraw_audit
       x-lbonly: false
       description: |-
-        对单笔出金申请进行审核，通过或驳回该申请。
+        审核通过单笔出金申请。驳回出金申请使用另一接口 `POST /v1/atm/withdraw/reject`（本接口不处理驳回）。
 
         ### 请求参数
 
-        - 必填：`id`（申请 ID）、`state`（审核结果）
+        - 必填：`id`（申请 ID）、`status`（审核结果，固定传 `1` 通过）
+        - 可选：`desc`（审核备注）、`admin_remark_config_type`（备注类型配置）、`audit_frontend_resource`（调用方审计上下文）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 业务说明
 
-        通过或驳回该申请，审核通过将放行真实资金出金，请务必核对申请信息。
+        审核通过将放行真实资金出金，请务必核对申请信息。
+
+        可审核的记录：出金申请列表中 `status_val` 为 `0`（待审核）且风控（反作弊）检查不处于「风控处理中」的申请。请求体字段名是 `status`，不是 `state`；传 `state` 会返回 `203400`。
 
         ### 风险提示
 
@@ -2937,29 +2940,36 @@ paths:
               type: object
               required:
                 - id
-                - state
+                - status
               properties:
                 id:
                   type: string
                   description: 申请ID. 申请ID，用于标识本次请求关联的业务对象。此字段为必填项。
-                state:
+                status:
                   type: integer
                   description: |-
-                    审核结果。
+                    审核结果。本接口只用于审核通过，固定传 `1`；驳回请使用 `POST /v1/atm/withdraw/reject`。
 
-                    **可选值：** `1` 通过、`2` 拒绝
+                    **可选值：** `1` 通过
                   enum:
                     - 1
-                    - 2
                   x-enum-details:
                     - value: 1
                       label: 通过
-                    - value: 2
-                      label: 拒绝
                   example: 1
+                desc:
+                  type: string
+                  description: 审核备注。可选。
+                admin_remark_config_type:
+                  type: string
+                  description: 备注类型配置。可选，通常不传。
+                audit_frontend_resource:
+                  type: object
+                  description: |-
+                    调用方提交的审计上下文，例如 `{"$behavior": "审核通过", "$action": "add"}`。
             example:
               id: '123'
-              state: 1
+              status: 1
       responses:
         '200':
           description: 请求处理成功。响应的 `data` 不包含额外业务字段。
@@ -3013,7 +3023,7 @@ paths:
       x-mint:
         href: /zh-CN/api-reference/withdraw_audit
         metadata:
-          sidebarTitle: 单笔审核出金申请
+          sidebarTitle: 单笔审核通过出金申请
   /v1/portfolio/atm/direct/withdraw:
     post:
       operationId: atm_direct_withdraw

@@ -233,12 +233,12 @@ paths:
   /risk/v1/delete_canceled_account_credit:
     post:
       operationId: delete_canceled_account_credit
-      summary: 刪除已取消的客戶授信額度
+      summary: 刪除已註銷賬戶的授信額度
       tags:
         - 風控管理
       x-lbonly: false
       description: |-
-        刪除已取消狀態的客戶授信額度記錄。
+        刪除已註銷（銷戶）證券賬戶的客戶授信額度記錄。
 
         ### 請求參數
 
@@ -247,7 +247,9 @@ paths:
 
         ### 業務說明
 
-        僅可刪除處於已取消狀態的授信額度記錄，支持按賬號列表批量刪除。
+        - 賬戶必須先完成註銷（如透過 `whale_close_account`），否則返回 `賬戶未註銷`。
+        - 該賬戶必須存在授信記錄；沒有授信記錄時接口返回 `400 系統錯誤`。
+        - 支持按賬號列表批量刪除。
 
         ### 風險提示
 
@@ -336,7 +338,7 @@ paths:
       x-mint:
         href: /zh-HK/api-reference/delete_canceled_account_credit
         metadata:
-          sidebarTitle: 刪除已取消的客戶授信額度
+          sidebarTitle: 刪除已註銷賬戶的授信額度
   /risk/v1/admin_credit_adjust/review_flow_ticket:
     post:
       operationId: admin_credit_adjust_review_flow_ticket
@@ -15724,6 +15726,8 @@ paths:
 
         `list` 中的每條記錄標識一條已存在的限額設定。此接口只批量切換生效狀態，不修改各限額的閾值。
 
+        後端處理較慢時網關可能在 5 秒後返回 `504`，此時請求可能仍在執行，請重新查詢列表確認生效狀態後再決定是否重試。
+
         ### 風險提示
 
         此操作會更改真實交易限額的生效狀態，直接影響後續交易能否通過風控校驗。調用前請核對目標記錄列表和 `is_apply` 取值。
@@ -15746,10 +15750,35 @@ paths:
                 list:
                   type: array
                   description: |-
-                    多維度限額記錄列表. 批量勾選（或單條）的限額記錄，元素字段：counter_id(櫃檯ID)、aaid(賬戶AAID)、code(標的代碼)、trader(交易員賬號)、trader_name(交易員名稱)、
-                    client_group(客戶分組ID)、client_group_name(客戶分組名稱)、stock_group(證券分組ID)
+                    多維度限額記錄列表。批量勾選（或單條）的限額記錄，每個元素是物件（不是字串），欄位取自限額列表行：
+                    `counter_id`（櫃檯 ID）、`aaid`（賬戶 AAID，取行的 `aaid_val`，無則取 `aaid`）、`code`（標的代碼）、`trader`（交易員賬號，取行的 `trader_val`）、`trader_name`（交易員名稱，取行的 `trader`）、`client_group`（客戶分組 ID，取行的 `client_group_val`）、`client_group_name`（客戶分組名稱，取行的 `client_group`）、`stock_group`（證券分組 ID，取行的 `stock_group_id_val`）。
                   items:
-                    type: string
+                    type: object
+                    properties:
+                      counter_id:
+                        type: string
+                        description: 櫃檯 ID
+                      aaid:
+                        type: string
+                        description: 賬戶 AAID
+                      code:
+                        type: string
+                        description: 標的代碼
+                      trader:
+                        type: string
+                        description: 交易員賬號
+                      trader_name:
+                        type: string
+                        description: 交易員名稱
+                      client_group:
+                        type: string
+                        description: 客戶分組 ID
+                      client_group_name:
+                        type: string
+                        description: 客戶分組名稱
+                      stock_group:
+                        type: string
+                        description: 證券分組 ID
                 is_apply:
                   type: boolean
                   description: 是否生效. true=批量生效（申請啓用限額），false=批量失效（撤銷/停用限額）

@@ -17627,6 +17627,13 @@ paths:
         - ipo.batch_ipo_order
       x-lbonly: false
       x-source: WhaleAPI
+      description: |-
+        Submits an IPO subscription for the given securities account.
+
+        ### Business notes
+
+        - Only Hong Kong IPOs are supported; US and other markets return 400 `暂不支持该市场` (mkt not support).
+        - Orders can only be submitted within the IPO's subscription period; before it opens the call returns 400 `申购暂未开始`.
       requestBody:
         required: true
         content:
@@ -17636,7 +17643,8 @@ paths:
               properties:
                 symbol:
                   type: string
-                  description: Stock Symbol, in ticker.region format
+                  description: |-
+                    Stock symbol in ticker.region format. Hong Kong only (for example `02511.HK`).
                 sub_qty:
                   type: string
                   description: Subscribe quantity
@@ -19921,13 +19929,31 @@ paths:
   /v2/whaleapi/portfolio/withdraw:
     post:
       operationId: withdraw_apply_v5_v2
-      summary: Submit Withdrawal Applylication
+      summary: Submit Withdrawal Application
       tags:
         - Cash Management
       x-permission-key:
         - cmbc.user_withdraw_application
       x-lbonly: false
       x-source: WhaleAPI
+      description: |-
+        Submits a withdrawal application for the given securities account.
+
+        ### Request parameters
+
+        - Required: `account_no`, `currency`, `amount`, `card_id`, `is_pad_funded`
+        - Optional: `confirm`, `external_order_no`
+
+        ### Business notes
+
+        - `card_id` must be a certified (`status=2`) withdrawal card of this account.
+        - When `withdraw_pre_v3_v2` returns `need_payee_address=true`, the card must have a complete structured payee address (`payee_country`, `payee_state`, `payee_city`, `payee_street`, `payee_building`, `payee_postcode`).
+
+        ### Common errors
+
+        - `2031034`: the card is not certified (Please authenticate the current card first).
+        - `2031199`: the card's structured payee address is incomplete (payee structured address incomplete).
+        - `2036001`: the card does not exist or does not belong to this account (withdraw card not found).
       requestBody:
         required: true
         content:
@@ -19943,7 +19969,8 @@ paths:
                   description: Amount
                 card_id:
                   type: integer
-                  description: User BankCard Id
+                  description: |-
+                    User bank card ID. Must be a certified (`status=2`) withdrawal card of this account.
                 confirm:
                   type: integer
                   description: Risk control parameters
@@ -20054,7 +20081,7 @@ paths:
       x-mint:
         href: /en/api-reference/withdraw_apply_v5_v2
         metadata:
-          sidebarTitle: Submit Withdrawal Applylication
+          sidebarTitle: Submit Withdrawal Application
   /v1/whaleapi/portfolio/withdraw/cancel:
     post:
       operationId: withdraw_cancel
@@ -20074,7 +20101,8 @@ paths:
               properties:
                 order_id:
                   type: string
-                  description: Order No
+                  description: |-
+                    Order number. Use `list[].order_id` from `withdraw_record_v5` (for example `w0a2…`), not the numeric withdrawal application ID; the numeric ID returns 500 `2031000` (record not found).
                 account_no:
                   type: string
                   description: |-
@@ -20597,10 +20625,12 @@ paths:
                   description: Bank name ,maximum of 30 characters
                 name:
                   type: string
-                  description: User Name
+                  description: |-
+                    User name. Must exactly match the account holder's KYC real name (`real_name`), or the call returns `2031041` (name not match).
                 name_en:
                   type: string
-                  description: User Name En
+                  description: |-
+                    User English name. Must exactly match the account holder's KYC English name (`en_name`).
                 account:
                   type: string
                   description: User Bank Account ,maximum of 20 characters
@@ -20633,6 +20663,30 @@ paths:
                   items:
                     type: string
                   description: Certification file keys. The keys of certification images obtained from the file upload API; pass a non-empty list when `need_certification` is `true`.
+                payee_country:
+                  type: string
+                  description: |-
+                    Payee country/region; options come from a backend data dictionary
+                payee_state:
+                  type: string
+                  description: |-
+                    Payee state or province
+                payee_city:
+                  type: string
+                  description: |-
+                    Payee city
+                payee_street:
+                  type: string
+                  description: |-
+                    Payee street address
+                payee_building:
+                  type: string
+                  description: |-
+                    Payee building; required when the payee country is the Philippines
+                payee_postcode:
+                  type: string
+                  description: |-
+                    Payee postal code
                 account_no:
                   type: string
                   description: |-
@@ -20655,8 +20709,8 @@ paths:
               region: HONGKONG
               bank_en: MOX Bank
               bank_code: '389'
-              name: AUTO TEST
-              name_en: AUTO TEST
+              name: '<KYC real_name>'
+              name_en: '<KYC en_name>'
               account: '987654321012345'
               swift_code: MOXBHKHK
               account_type: HKD
@@ -20664,6 +20718,12 @@ paths:
               need_certification: false
               fps_id: ''
               review_urls: []
+              payee_country: HK
+              payee_state: Hong Kong
+              payee_city: Hong Kong
+              payee_street: 1 Example Road
+              payee_building: Example Building
+              payee_postcode: '000000'
       responses:
         '200':
           content:
@@ -20718,13 +20778,19 @@ paths:
                 $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
           description: The request timed out. Check the business error code in `code` and the error details in `message`.
       description: |-
-        Adds a bank card.
+        Adds a withdrawal bank card for the given securities account.
 
         ### Request parameters
 
-        - Required: `bank_id`, `region`, `bank_en`, `name`, `name_en`, `account`, `account_type`, `country`, `account_no`
-        - Optional: `swift_code`, `need_certification`, `fps_id`, `review_urls`, `address`, `remark`, `bank_code`
+        - Required: `account_no`, `bank_id`, `region`, `bank_en`, `name`, `name_en`, `account`, `account_type`, `country`
+        - Optional: `swift_code`, `address`, `remark`, `bank_code`, `need_certification`, `fps_id`, `review_urls`, and the structured payee address `payee_country`, `payee_state`, `payee_city`, `payee_street`, `payee_building`, `payee_postcode`
         - When certification is needed, pass the certification image keys from the file upload API in `review_urls`.
+
+        ### Business notes
+
+        - `name` / `name_en` must exactly match the account holder's KYC real name / English name, or the call returns 500 `2031041` (name not match).
+        - If `withdraw_pre_v3_v2` returns `need_payee_address=true`, the card used for a withdrawal must carry a complete structured payee address (all six `payee_*` fields, including `payee_building`), or `withdraw_apply_v5_v2` returns `2031199`. Pass these fields when adding the card.
+        - A new card must be certified (`status=2`) before it can be used for withdrawals.
       x-mint:
         href: /en/api-reference/create_withdraw_card_v2
         metadata:
@@ -23629,6 +23695,12 @@ paths:
         - account.last_approve_account_cancellation
       x-lbonly: false
       x-source: WhaleAPI
+      description: |-
+        Closes the given securities account.
+
+        ### Common errors
+
+        - `404089` (ASSETS_CHANGED): the account had asset changes today and cannot be closed today; retry on the next ledger day. The code starts with 404 but does not mean the endpoint path is missing.
       requestBody:
         required: true
         content:
