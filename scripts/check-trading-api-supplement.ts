@@ -40,6 +40,20 @@ function collectTradingPages(node: unknown, pages: Set<string>[]): void {
   for (const value of Object.values(record)) collectTradingPages(value, pages);
 }
 
+function collectTradingTabs(node: unknown, visit: (tab: { groups: unknown[] }) => void): void {
+  if (Array.isArray(node)) {
+    for (const child of node) collectTradingTabs(child, visit);
+    return;
+  }
+  if (!node || typeof node !== "object") return;
+  const record = node as Record<string, unknown>;
+  if (record.tab === "TradingAPI") {
+    visit(record as { groups: unknown[] });
+    return;
+  }
+  for (const value of Object.values(record)) collectTradingTabs(value, visit);
+}
+
 function collectPages(node: unknown, set: Set<string>): void {
   if (Array.isArray(node)) {
     for (const child of node) {
@@ -117,6 +131,28 @@ collectTradingPages(await readJson<unknown>("docs.json"), tradingTabs);
 if (tradingTabs.length !== LOCALES.length) {
   errors.push(`expected ${LOCALES.length} TradingAPI tabs in docs.json, found ${tradingTabs.length}`);
 }
+// Each locale must group the same operations under the same sidebar groups and sub-groups.
+const OPERATION_ENTRY = /^(GET|POST|PUT|PATCH|DELETE) \//;
+function groupShape(node: unknown): unknown {
+  if (Array.isArray(node)) return node.map(groupShape).filter((entry) => entry !== null);
+  if (typeof node === "string") return OPERATION_ENTRY.test(node) ? node : null;
+  if (node && typeof node === "object" && "pages" in node) {
+    return groupShape((node as { pages: unknown }).pages);
+  }
+  return null;
+}
+const tabShapes: string[][] = [];
+collectTradingTabs(await readJson<unknown>("docs.json"), (tab) => {
+  tabShapes.push(tab.groups.map((group) => JSON.stringify(groupShape(group))));
+});
+tabShapes.slice(1).forEach((shape, index) => {
+  shape.forEach((group, groupIndex) => {
+    if (group !== tabShapes[0][groupIndex]) {
+      errors.push(`docs.json TradingAPI tab #${index + 2} group #${groupIndex + 1} is not aligned with tab #1`);
+    }
+  });
+});
+
 tradingTabs.forEach((pages, index) => {
   for (const key of reference) {
     if (!pages.has(key)) errors.push(`docs.json TradingAPI tab #${index + 1} does not list ${key}`);
