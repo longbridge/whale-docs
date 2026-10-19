@@ -16354,6 +16354,47 @@
             }
           }
         }
+      },
+      "R1DepositConfig": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Deposit configuration id. Submitted as the deposit configuration id with the account opening deposit request"
+          },
+          "bank_operation_id": {
+            "type": "integer",
+            "description": "Transfer method id. Common values: `3` online banking transfer (local), `4` online banking transfer (wire), `5` bank-securities transfer, `6` sub-account, `7` eDDA, `8` FPS, `20` cheque, `21` ATM or counter transfer, `23` PayNow (Singapore)"
+          },
+          "lb_bank_name": {
+            "type": "string",
+            "description": "Receiving bank name"
+          },
+          "lb_account_name": {
+            "type": "string",
+            "description": "Receiving account name"
+          },
+          "lb_bank_account": {
+            "type": "string",
+            "description": "Receiving bank account number"
+          },
+          "lb_bank_addr": {
+            "type": "string",
+            "description": "Receiving bank address. Returned for transfer methods that need a bank address, such as wire transfers"
+          },
+          "fps_account": {
+            "type": "string",
+            "description": "FPS receiving account (FPS identifier). Only populated when `bank_operation_id` is `8`"
+          },
+          "currencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Currencies supported by this deposit method"
+          }
+        }
       }
     }
   },
@@ -76080,7 +76121,7 @@
                           "properties": {
                             "application_id": {
                               "type": "integer",
-                              "description": "Account-opening application ID. Pass it as `application_id` to `POST /v1/member/account/update_application_info` or as `request_id` to `PUT /v2/member/account/update_application_info` when changing the profile."
+                              "description": "Account-opening application ID. Pass it as `application_id` to `POST /v1/member/account/update_application_info` when changing the profile."
                             },
                             "state": {
                               "type": "integer",
@@ -78724,7 +78765,7 @@
           "Rewards"
         ],
         "summary": "Get Card Offset Orders",
-        "description": "Returns orders where the specified card offset fees, queried separately for locked and settled records, for the usage records on the card details page. Applies to cards with usage records, such as commission-free cards (except lifetime commission-free cards), platform-fee offset cards, and fractional-share cards. For coffee voucher records, call `GET /v1/rewards/coffee_coupon_use_list`.\n",
+        "description": "Returns orders where the specified card offset fees, queried separately for locked and settled records, for the usage records on the card details page. Applies to cards with usage records, such as commission-free cards (except lifetime commission-free cards), platform-fee offset cards, and fractional-share cards.\n",
         "operationId": "getV1RewardCardOrders",
         "parameters": [
           {
@@ -79661,6 +79702,275 @@
                   }
                 },
                 "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v4/member/account/open_info": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Get Account-Opening Application Progress",
+        "description": "Returns the current user's account-opening application under a Broker channel, including the information filled in so far, the application status, and the next step issued by the server. Use it when the user enters the account-opening flow to restore filled-in information and go to the pending step given by `open_info.next_step`, and on the result page to read the securities account number.\n\nThe information modules match `GET /v3/member/account/open_info`: `v3` serves the **Personal profile** page and profile edit pages, while this operation serves the account-opening application flow.\n\nIt is also used at the risk assessment entry: check `state` to tell whether the client already has an open account, then send opened clients to the profile edit page and others to the account-opening application flow.\n",
+        "operationId": "getV4MemberAccountOpenInfo",
+        "parameters": [
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": true,
+            "description": "Broker channel of the current account. Use `account_channel` returned by `GET /v3/account/list`.",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "<BROKER_CHANNEL>"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get Account-Opening Application Progress” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "application_id": {
+                              "type": "integer",
+                              "description": "Account-opening application ID"
+                            },
+                            "state": {
+                              "type": "integer",
+                              "description": "Account-opening application status. Values match `state` in `GET /v3/account/list`; `9` means the account is open."
+                            },
+                            "client_type": {
+                              "type": "integer",
+                              "description": "Client type:\n- `1` - Individual\n- `2` - Corporate\n- `3` - Joint\n",
+                              "enum": [
+                                1,
+                                2,
+                                3
+                              ]
+                            },
+                            "origin_id": {
+                              "type": "string",
+                              "description": "Securities account number assigned after the account is opened. Used on the result page and when submitting the e-signature. Empty before the account is opened."
+                            },
+                            "assets_map": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Map from file ID to preview URL, used to display images referenced by `*_assets_id` fields such as ID documents and proof of address"
+                            },
+                            "open_info": {
+                              "type": "object",
+                              "description": "Account-opening information grouped by module; modules that have not been filled in are omitted",
+                              "properties": {
+                                "next_step": {
+                                  "type": "string",
+                                  "description": "Next pending account-opening step issued by the server, for example `upload` (ID document upload), `base` (basic information), `employ` (employment information), `finance` (financial status), `compliance` (compliance declarations), `risk` (risk assessment), `verify` (identity verification), or `signature` (e-signature). Callers go to the matching step."
+                                },
+                                "upload": {
+                                  "$ref": "#/components/schemas/AccountB34OpenInfoIdentity"
+                                },
+                                "bcan": {
+                                  "$ref": "#/components/schemas/AccountB34OpenInfoIdentity"
+                                },
+                                "base": {
+                                  "$ref": "#/components/schemas/AccountB34OpenInfoBase"
+                                },
+                                "employ": {
+                                  "$ref": "#/components/schemas/AccountB34OpenInfoEmploy"
+                                },
+                                "finance": {
+                                  "$ref": "#/components/schemas/AccountB34OpenInfoFinance"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "application_id": 100001,
+                    "state": 3,
+                    "client_type": 1,
+                    "origin_id": "",
+                    "assets_map": {
+                      "<ASSET_ID>": "https://example.com/assets/id-front.png"
+                    },
+                    "open_info": {
+                      "next_step": "employ",
+                      "upload": {
+                        "region": "HK",
+                        "card_country": "HK",
+                        "card_type": 0,
+                        "card_id": "A123***(7)",
+                        "first_name": "TAI MAN",
+                        "last_name": "CHAN",
+                        "valid_date_end": "",
+                        "ic_front_assets_id": "<ASSET_ID>",
+                        "ic_back_assets_id": "<ASSET_ID>"
+                      },
+                      "base": {
+                        "name": "Chan Tai Man",
+                        "first_name": "TAI MAN",
+                        "last_name": "CHAN",
+                        "birth_date": "1990-01-01",
+                        "gender": "male",
+                        "residence_country": "HK"
+                      }
+                    }
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/deposit/config": {
+      "get": {
+        "tags": [
+          "Assets"
+        ],
+        "summary": "Get Deposit Instructions",
+        "description": "Queries the deposit instruction configuration by receiving region, currency, remitting bank, and transfer method. Returns what the Client needs to transfer funds to the securities account: the receiving bank name, receiving account name, receiving account number, receiving bank address, FPS receiving account, and supported currencies. Used to show the receiving account on the deposit instructions page so the Client can copy the details and make the transfer at their bank.\n\nAlso used for transfer verification during account opening: the verification page calls this operation with the remitting bank and currency the Client selected, passing `0` for `bank_opeartion_type_id` and `1` for `rule`, then picks the online banking transfer (`3`) and FPS (`8`) entries from `deposit_configs` by `bank_operation_id`. When the account opening deposit request is submitted, the `id` of the selected entry is submitted as the deposit configuration id.\n\nAn empty `deposit_configs` means no deposit method is available for the combination. The Broker App should ask the Client to choose another currency or remitting bank.\n",
+        "operationId": "getV1PortfolioDepositConfig",
+        "parameters": [
+          {
+            "name": "region",
+            "in": "query",
+            "required": true,
+            "description": "Receiving region, such as `HONGKONG` (Hong Kong) or `USA` (United States)",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "HONGKONG"
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "description": "Deposit currency, such as `HKD` or `USD`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "HKD"
+          },
+          {
+            "name": "bank_id",
+            "in": "query",
+            "required": false,
+            "description": "Id of the Client's remitting bank. When provided, only configurations that apply to that bank are returned",
+            "schema": {
+              "type": "string"
+            },
+            "example": "<BANK_ID>"
+          },
+          {
+            "name": "bank_opeartion_type_id",
+            "in": "query",
+            "required": false,
+            "description": "Transfer method id, using the same values as `bank_operation_id` in the response. For transfer verification during account opening, pass `0` and filter the results by `bank_operation_id`. Note that the parameter name is spelled `bank_opeartion_type_id`",
+            "schema": {
+              "type": "string"
+            },
+            "example": "0"
+          },
+          {
+            "name": "rule",
+            "in": "query",
+            "required": false,
+            "description": "Configuration matching rule. For transfer verification during account opening, pass `1`",
+            "schema": {
+              "type": "string"
+            },
+            "example": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get Deposit Instructions” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "deposit_configs": {
+                              "type": "array",
+                              "description": "Deposit configurations",
+                              "items": {
+                                "$ref": "#/components/schemas/R1DepositConfig"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "deposit_configs": [
+                      {
+                        "id": 1203,
+                        "bank_operation_id": 3,
+                        "lb_bank_name": "Example Bank (Hong Kong) Limited",
+                        "lb_account_name": "Example Securities Limited - Client Account",
+                        "lb_bank_account": "012-345-6-789012",
+                        "lb_bank_addr": "1 Example Road, Central, Hong Kong",
+                        "fps_account": "",
+                        "currencies": [
+                          "HKD",
+                          "USD"
+                        ]
+                      },
+                      {
+                        "id": 1208,
+                        "bank_operation_id": 8,
+                        "lb_bank_name": "Example Bank (Hong Kong) Limited",
+                        "lb_account_name": "Example Securities Limited - Client Account",
+                        "lb_bank_account": "",
+                        "lb_bank_addr": "",
+                        "fps_account": "1234567",
+                        "currencies": [
+                          "HKD"
+                        ]
+                      }
+                    ]
+                  }
+                }
               }
             }
           }

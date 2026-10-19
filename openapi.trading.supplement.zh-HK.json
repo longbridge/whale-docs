@@ -16354,6 +16354,47 @@
             }
           }
         }
+      },
+      "R1DepositConfig": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "入金配置 id；提交開戶入金申請時作為入金配置 id 提交"
+          },
+          "bank_operation_id": {
+            "type": "integer",
+            "description": "轉賬方式 id。常見取值：`3` 網上銀行轉賬（本地）、`4` 網上銀行轉賬（電匯）、`5` 銀證轉賬、`6` 子帳戶、`7` eDDA、`8` FPS 轉數快、`20` 支票轉賬、`21` ATM / 櫃位轉賬、`23` PayNow（新加坡）"
+          },
+          "lb_bank_name": {
+            "type": "string",
+            "description": "收款銀行名稱"
+          },
+          "lb_account_name": {
+            "type": "string",
+            "description": "收款帳戶名"
+          },
+          "lb_bank_account": {
+            "type": "string",
+            "description": "收款銀行帳號"
+          },
+          "lb_bank_addr": {
+            "type": "string",
+            "description": "收款銀行地址；電匯等需要銀行地址的轉賬方式會返回"
+          },
+          "fps_account": {
+            "type": "string",
+            "description": "FPS 收款帳號（轉數快識別碼）；僅 `bank_operation_id` 為 `8` 時有值"
+          },
+          "currencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "該入金方式支援的幣種"
+          }
+        }
       }
     }
   },
@@ -76080,7 +76121,7 @@
                           "properties": {
                             "application_id": {
                               "type": "integer",
-                              "description": "開戶申請單 ID。修改資料時作為 `POST /v1/member/account/update_application_info` 的 `application_id` 或 `PUT /v2/member/account/update_application_info` 的 `request_id` 傳入"
+                              "description": "開戶申請單 ID。修改資料時作為 `POST /v1/member/account/update_application_info` 的 `application_id` 傳入"
                             },
                             "state": {
                               "type": "integer",
@@ -78724,7 +78765,7 @@
           "活動"
         ],
         "summary": "取得卡券抵扣訂單",
-        "description": "返回使用指定卡券抵扣費用的訂單記錄，按鎖定中和已結算分別查詢，用於卡券詳情頁的使用記錄。適用於免佣卡（終生免佣卡除外）、平台費抵扣卡和碎股卡等有使用記錄的卡券；咖啡券的使用記錄請調用 `GET /v1/rewards/coffee_coupon_use_list`。\n",
+        "description": "返回使用指定卡券抵扣費用的訂單記錄，按鎖定中和已結算分別查詢，用於卡券詳情頁的使用記錄。適用於免佣卡（終生免佣卡除外）、平台費抵扣卡和碎股卡等有使用記錄的卡券。\n",
         "operationId": "getV1RewardCardOrders",
         "parameters": [
           {
@@ -79661,6 +79702,275 @@
                   }
                 },
                 "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v4/member/account/open_info": {
+      "get": {
+        "tags": [
+          "帳戶"
+        ],
+        "summary": "取得開戶申請進度",
+        "description": "查詢目前用戶在指定 Broker 渠道下的開戶申請單，返回已填寫的開戶資料、申請狀態和服務端下發的下一步驟。進入開戶流程時用它恢復已填資料，並按 `open_info.next_step` 跳轉到待完成的步驟；開戶結果頁用它讀取證券帳號。\n\n資料模組與 `GET /v3/member/account/open_info` 一致：`v3` 用於「個人資料」頁和資料修改頁，本接口用於開戶申請流程。\n\n亦用於風險評估入口：按 `state` 判斷客戶是否已開戶，已開戶時引導至資料修改頁，未開戶或開戶中時引導至開戶申請流程。\n",
+        "operationId": "getV4MemberAccountOpenInfo",
+        "parameters": [
+          {
+            "name": "account_channel",
+            "in": "query",
+            "required": true,
+            "description": "目前帳戶所屬的 Broker 渠道，取帳戶列表 `GET /v3/account/list` 返回的 `account_channel`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "<BROKER_CHANNEL>"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「取得開戶申請進度」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "application_id": {
+                              "type": "integer",
+                              "description": "開戶申請單 ID"
+                            },
+                            "state": {
+                              "type": "integer",
+                              "description": "開戶申請狀態，取值與帳戶列表 `GET /v3/account/list` 的 `state` 一致，`9` 表示開戶成功"
+                            },
+                            "client_type": {
+                              "type": "integer",
+                              "description": "客戶類型：\n- `1` - 個人\n- `2` - 企業\n- `3` - 聯名\n",
+                              "enum": [
+                                1,
+                                2,
+                                3
+                              ]
+                            },
+                            "origin_id": {
+                              "type": "string",
+                              "description": "開戶成功後的證券帳號，開戶結果頁和提交電子簽名時使用；未開戶時為空"
+                            },
+                            "assets_map": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "文件 ID 到預覽 URL 的映射，用於展示 `*_assets_id` 對應的證件、住址證明等影像"
+                            },
+                            "open_info": {
+                              "type": "object",
+                              "description": "開戶資料，按模組組織；未填寫的模組不返回",
+                              "properties": {
+                                "next_step": {
+                                  "type": "string",
+                                  "description": "服務端下發的下一個待完成開戶步驟，例如 `upload`（證件上傳）、`base`（基本資料）、`employ`（職業資料）、`finance`（財務狀況）、`compliance`（合規聲明）、`risk`（風險評估）、`verify`（身份驗證）、`signature`（電子簽名）。調用方按該值跳轉到對應步驟"
+                                },
+                                "upload": {
+                                  "$ref": "#/components/schemas/AccountB34OpenInfoIdentity"
+                                },
+                                "bcan": {
+                                  "$ref": "#/components/schemas/AccountB34OpenInfoIdentity"
+                                },
+                                "base": {
+                                  "$ref": "#/components/schemas/AccountB34OpenInfoBase"
+                                },
+                                "employ": {
+                                  "$ref": "#/components/schemas/AccountB34OpenInfoEmploy"
+                                },
+                                "finance": {
+                                  "$ref": "#/components/schemas/AccountB34OpenInfoFinance"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "application_id": 100001,
+                    "state": 3,
+                    "client_type": 1,
+                    "origin_id": "",
+                    "assets_map": {
+                      "<ASSET_ID>": "https://example.com/assets/id-front.png"
+                    },
+                    "open_info": {
+                      "next_step": "employ",
+                      "upload": {
+                        "region": "HK",
+                        "card_country": "HK",
+                        "card_type": 0,
+                        "card_id": "A123***(7)",
+                        "first_name": "TAI MAN",
+                        "last_name": "CHAN",
+                        "valid_date_end": "",
+                        "ic_front_assets_id": "<ASSET_ID>",
+                        "ic_back_assets_id": "<ASSET_ID>"
+                      },
+                      "base": {
+                        "name": "陳大文",
+                        "first_name": "TAI MAN",
+                        "last_name": "CHAN",
+                        "birth_date": "1990-01-01",
+                        "gender": "male",
+                        "residence_country": "HK"
+                      }
+                    }
+                  }
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/portfolio/deposit/config": {
+      "get": {
+        "tags": [
+          "資產"
+        ],
+        "summary": "取得入金指引配置",
+        "description": "按收款地區、幣種、匯款銀行和轉賬方式查詢入金指引配置，返回 Client 向證券帳戶轉賬時需要的收款銀行名稱、收款帳戶名、收款帳號、收款銀行地址、FPS 收款帳號和支援的幣種，用於在入金指引頁展示收款帳戶資料，供 Client 複製後到銀行辦理轉賬。\n\n亦用於開戶流程中的轉賬驗證：開戶驗證頁按 Client 選擇的匯款銀行和幣種調用本接口，`bank_opeartion_type_id` 傳 `0`、`rule` 傳 `1`，再從 `deposit_configs` 中按 `bank_operation_id` 選出網上銀行轉賬（`3`）和 FPS 轉數快（`8`）兩條配置展示；提交開戶入金申請時，把所選配置的 `id` 作為入金配置 id 一併提交。\n\n`deposit_configs` 為空時表示該組合下沒有可用的入金方式，Broker App 應提示 Client 更換幣種或匯款銀行。\n",
+        "operationId": "getV1PortfolioDepositConfig",
+        "parameters": [
+          {
+            "name": "region",
+            "in": "query",
+            "required": true,
+            "description": "收款地區，如 `HONGKONG`（香港）、`USA`（美國）",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "HONGKONG"
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "description": "入金幣種，如 `HKD`、`USD`",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "HKD"
+          },
+          {
+            "name": "bank_id",
+            "in": "query",
+            "required": false,
+            "description": "Client 的匯款銀行 id；傳入後只返回適用於該銀行的入金配置",
+            "schema": {
+              "type": "string"
+            },
+            "example": "<BANK_ID>"
+          },
+          {
+            "name": "bank_opeartion_type_id",
+            "in": "query",
+            "required": false,
+            "description": "轉賬方式 id，取值同響應中的 `bank_operation_id`；開戶轉賬驗證場景傳 `0`，並在返回結果中按 `bank_operation_id` 篩選。注意參數名拼寫為 `bank_opeartion_type_id`",
+            "schema": {
+              "type": "string"
+            },
+            "example": "0"
+          },
+          {
+            "name": "rule",
+            "in": "query",
+            "required": false,
+            "description": "配置匹配規則；開戶轉賬驗證場景傳 `1`",
+            "schema": {
+              "type": "string"
+            },
+            "example": "1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「取得入金指引配置」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "deposit_configs": {
+                              "type": "array",
+                              "description": "入金配置列表",
+                              "items": {
+                                "$ref": "#/components/schemas/R1DepositConfig"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "deposit_configs": [
+                      {
+                        "id": 1203,
+                        "bank_operation_id": 3,
+                        "lb_bank_name": "示例銀行（香港）有限公司",
+                        "lb_account_name": "示例證券有限公司 - 客戶帳戶",
+                        "lb_bank_account": "012-345-6-789012",
+                        "lb_bank_addr": "香港中環示例道 1 號",
+                        "fps_account": "",
+                        "currencies": [
+                          "HKD",
+                          "USD"
+                        ]
+                      },
+                      {
+                        "id": 1208,
+                        "bank_operation_id": 8,
+                        "lb_bank_name": "示例銀行（香港）有限公司",
+                        "lb_account_name": "示例證券有限公司 - 客戶帳戶",
+                        "lb_bank_account": "",
+                        "lb_bank_addr": "",
+                        "fps_account": "1234567",
+                        "currencies": [
+                          "HKD"
+                        ]
+                      }
+                    ]
+                  }
+                }
               }
             }
           }
