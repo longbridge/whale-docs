@@ -185,7 +185,19 @@ paths:
                     - `field`: the condition-item ID (rate-condition field) identifying which business dimension the condition applies to, e.g. `'3'` for an account/counter condition.
                     - `value`: the array of selected values (strings) for that condition item.
                   items:
-                    type: string
+                    type: object
+                    required:
+                      - field
+                      - value
+                    properties:
+                      field:
+                        type: string
+                        description: Condition-item ID (rate-condition field). For example, `3` is the security (counter ID) condition.
+                      value:
+                        type: array
+                        description: Selected values for the condition item, as an array of strings. A single selection is still sent as a one-element array.
+                        items:
+                          type: string
             example:
               tab: hk_stock
               name:
@@ -273,6 +285,7 @@ paths:
         - Required: `default_id` (record ID identifying the org package reference to delete)
         - Optional: `audit_frontend_resource` (caller-provided audit context)
         - See the field descriptions for the format, value range, and business meaning of each field.
+        - `default_id` is the record ID of the org package reference. Take `id` from a row of `POST /v1/datasets/booking_org_package_refs`.
 
         ### Risk warning
 
@@ -294,12 +307,12 @@ paths:
               properties:
                 default_id:
                   type: string
-                  description: Default ID associated with this request.
+                  description: Org package reference record ID. Take `id` from a row of `POST /v1/datasets/booking_org_package_refs`. This field is required.
                 audit_frontend_resource:
                   type: object
                   description: Provides audit context for this operation.
             example:
-              default_id: '123'
+              default_id: '17'
               audit_frontend_resource: {}
       responses:
         '200':
@@ -367,12 +380,14 @@ paths:
         - lb_hk_charging.lb_hk_billing_org_package_ref_list
       x-lbonly: false
       description: |-
-        Retrieves the package-reference configuration of an organization by `org_id`.
+        Retrieves one org package-reference configuration by its record ID `default_id`.
 
         ### Request parameters
 
-        - Required: `org_id` (organization ID), passed as a query parameter.
+        - Required: `default_id` (org package reference record ID), passed as a query parameter.
+        - Take `id` from a row of `POST /v1/datasets/booking_org_package_refs`.
         - See the field descriptions for the format and business meaning of each field.
+        - The admin console does not call this endpoint.
 
         ### Returns
 
@@ -380,13 +395,13 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - name: org_id
+        - name: default_id
           in: query
           required: true
           schema:
             type: string
-          description: Organization id.
-          example: '3'
+          description: Org package reference record ID. Take `id` from a row of `POST /v1/datasets/booking_org_package_refs`.
+          example: '17'
       responses:
         '200':
           description: The request was processed successfully. `data` contains the organization's package reference configuration.
@@ -554,7 +569,7 @@ paths:
                   type: array
                   description: Submit Personal Allow Item IDs as a JSON array.
                   items:
-                    type: string
+                    type: integer
             example:
               org_id: ''
               default_package_id: ''
@@ -636,6 +651,7 @@ paths:
         - Required: `default_id` (record ID), `default_package_id` (default package ID)
         - Optional: `cash_package_id`, `financing_package_id`, `bo_package_id`, `allow_package_ids` (allowed package ID list), `personal_allow_item_ids` (allowed personalized fee-item ID list)
         - See the field descriptions for the format, value range, and business meaning of each field.
+        - `default_id` is the record ID of the org package reference. Take `id` from a row of `POST /v1/datasets/booking_org_package_refs`.
 
         ### Risk warning
 
@@ -657,7 +673,7 @@ paths:
               properties:
                 default_id:
                   type: string
-                  description: The primary key of the institutional package record being edited (the id of the corresponding list row).
+                  description: Record ID of the org package reference being edited. Take `id` from a row of `POST /v1/datasets/booking_org_package_refs`. This field is required.
                 default_package_id:
                   type: string
                   description: |-
@@ -704,7 +720,7 @@ paths:
                   type: array
                   description: Submit Personal Allow Item IDs as a JSON array.
                   items:
-                    type: string
+                    type: integer
                 audit_frontend_resource:
                   type: object
                   properties: {}
@@ -720,7 +736,7 @@ paths:
                 - '14'
                 - '15'
               personal_allow_item_ids:
-                - '20'
+                - 20
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.
@@ -915,7 +931,10 @@ paths:
                   description: Single item package name.
                 aaid:
                   type: string
-                  description: Associated securities account (optional).
+                  description: |-
+                    Associated securities account (optional).
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 fee:
                   type: object
                   description: Fee detail. Same structure as the `fee` returned by "Single Item Package Detail" (`billing_item_id`, `currency`, `min` / `max` / `threshold`, `rates`, `special_fees`, `metric_type`, `granularity`, etc.).
@@ -1171,7 +1190,10 @@ paths:
                   description: This field is required.
                 aaid:
                   type: string
-                  description: Specifies A/C No..
+                  description: |-
+                    Specifies A/C No..
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 fee:
                   type: object
                   description: This field is required.
@@ -1391,6 +1413,8 @@ paths:
                     `basis_type` values (market, currency, or instrument). For `basis`, use
                     `global_market` reference data for markets, `tenant_currencies_by_channel` reference
                     data for currencies, or free text for instruments.
+
+                    **Allowed values:** `1` Market, `2` Currency, `3` Instrument (for `basis_type`)
                   enum:
                     - '1'
                     - '2'
@@ -1414,6 +1438,8 @@ paths:
                     Value from the `billing_item_direction` reference data. The allowed values are
                     determined by the field rules returned by `GET /billing/item_fields` for the selected
                     `biz_type`.
+
+                    **Allowed values:** `1` Matches buy orders / transfer-out / no direction, `2` Matches sell orders / transfer-in, `3` Matches all
                   enum:
                     - '1'
                     - '2'
@@ -1436,6 +1462,8 @@ paths:
                   description: |-
                     Value from the `billing_metric_type` reference data. The allowed values are determined
                     by the field rules returned by `GET /billing/item_fields` for the selected `biz_type`.
+
+                    **Allowed values:** `1` Traded quantity (fractional shares supported), `2` Traded amount / other amount, `3` Single charge per billing granularity, `4` Option contracts, `5` Unexpected upstream return fee, `6` Billed contract quantity, `7` Order count, `8` Execution count, `9` Position market value, `10` Secondary charge based on existing scenarios, `11` Securities lending market value, `13` Traded lots (transfer), `14` Market value (transfer), `15` EMS order count
                   enum:
                     - '1'
                     - '2'
@@ -1492,6 +1520,8 @@ paths:
                   description: |-
                     Value from the `billing_granularity` reference data. The allowed values are determined
                     by the field rules returned by `GET /billing/item_fields` for the selected `biz_type`.
+
+                    **Allowed values:** `1` Calculated per contract (merged), `2` Calculated per order, `3` Calculated per execution record, `4` Calculated per EMS order
                   enum:
                     - '1'
                     - '2'
@@ -1518,6 +1548,8 @@ paths:
                   description: |-
                     Structured object in the form `{ cutoff_method, cutoff_digits }`. See `x-enum-details`
                     for the `cutoff_method` values.
+
+                    **Allowed values:** `1` Round to nearest, `2` Round up, `3` Round down (for `cutoff_method`)
                   enum:
                     - '1'
                     - '2'
@@ -1768,6 +1800,8 @@ paths:
                     `basis_type` values (market, currency, or instrument). For `basis`, use
                     `global_market` reference data for markets, `tenant_currencies_by_channel` reference
                     data for currencies, or free text for instruments.
+
+                    **Allowed values:** `1` Market, `2` Currency, `3` Instrument (for `basis_type`)
                   enum:
                     - '1'
                     - '2'
@@ -1791,6 +1825,8 @@ paths:
                     Value from the `billing_item_direction` reference data. The allowed values are
                     determined by the field rules returned by `GET /billing/item_fields` for the selected
                     `biz_type`.
+
+                    **Allowed values:** `1` Matches buy orders / transfer-out / no direction, `2` Matches sell orders / transfer-in, `3` Matches all
                   enum:
                     - '1'
                     - '2'
@@ -1813,6 +1849,8 @@ paths:
                   description: |-
                     Value from the `billing_metric_type` reference data. The allowed values are determined
                     by the field rules returned by `GET /billing/item_fields` for the selected `biz_type`.
+
+                    **Allowed values:** `1` Traded quantity (fractional shares supported), `2` Traded amount / other amount, `3` Single charge per billing granularity, `4` Option contracts, `5` Unexpected upstream return fee, `6` Billed contract quantity, `7` Order count, `8` Execution count, `9` Position market value, `10` Secondary charge based on existing scenarios, `11` Securities lending market value, `13` Traded lots (transfer), `14` Market value (transfer), `15` EMS order count
                   enum:
                     - '1'
                     - '2'
@@ -1869,6 +1907,8 @@ paths:
                   description: |-
                     Value from the `billing_granularity` reference data. The allowed values are determined
                     by the field rules returned by `GET /billing/item_fields` for the selected `biz_type`.
+
+                    **Allowed values:** `1` Calculated per contract (merged), `2` Calculated per order, `3` Calculated per execution record, `4` Calculated per EMS order
                   enum:
                     - '1'
                     - '2'
@@ -1895,6 +1935,8 @@ paths:
                   description: |-
                     Structured object in the form `{ cutoff_method, cutoff_digits }`. See `x-enum-details`
                     for the `cutoff_method` values.
+
+                    **Allowed values:** `1` Round to nearest, `2` Round up, `3` Round down (for `cutoff_method`)
                   enum:
                     - '1'
                     - '2'
@@ -2927,7 +2969,10 @@ paths:
           required: true
           schema:
             type: string
-          description: Customer account identifier (aaid).
+          description: |-
+            Customer account identifier (aaid).
+
+            Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
           example: '50102245'
         - name: policy_version
           in: query
@@ -3739,6 +3784,10 @@ paths:
                   description: A billing-item object, containing fields such as id/name_loc.
                 metric_type:
                   type: string
+                  description: |-
+                    Measurement type.
+
+                    **Allowed values:** `1` Traded quantity (fractional shares supported), `2` Traded amount, `3` Single charge per billing granularity, `4` Option contracts, `5` Unexpected upstream return fee, `6` Billed contract quantity, `7` Order count, `8` Execution count, `9` Position market value, `10` Secondary charge based on existing scenarios, `11` Securities lending market value, `13` Traded lots (transfer), `14` Market value (transfer), `15` EMS order count
                   enum:
                     - '1'
                     - '2'
@@ -3855,6 +3904,10 @@ paths:
                   description: The rate value when the maximum-ratio limit is enabled; divided by 100 before submission.
                 granularity:
                   type: string
+                  description: |-
+                    Billing granularity.
+
+                    **Allowed values:** `1` Calculated per contract (merged), `2` Calculated per order, `3` Calculated per execution record, `4` Calculated per EMS order
                   enum:
                     - '1'
                     - '2'
@@ -3881,6 +3934,10 @@ paths:
                   description: Expanded from min_metric.min_metric_rate.
                 cutoff_method:
                   type: string
+                  description: |-
+                    Rounding method.
+
+                    **Allowed values:** `1` Round to nearest, `2` Round up, `3` Round down
                   enum:
                     - '1'
                     - '2'
@@ -4085,7 +4142,10 @@ paths:
                     with the selected billing scenario.
                 metric_type:
                   type: string
-                  description: The measurement type, filtered by the selected billing item.
+                  description: |-
+                    The measurement type, filtered by the selected billing item.
+
+                    **Allowed values:** `1` Traded quantity (fractional shares supported), `2` Traded amount, `3` Single charge per billing granularity, `4` Option contracts, `5` Unexpected upstream return fee, `6` Billed contract quantity, `7` Order count, `8` Execution count, `9` Position market value, `10` Secondary charge based on existing scenarios, `11` Securities lending market value, `13` Traded lots (transfer), `14` Market value (transfer), `15` EMS order count
                   enum:
                     - '1'
                     - '2'
@@ -4140,6 +4200,8 @@ paths:
                   type: string
                   description: |-
                     Rate type.
+
+                    **Allowed values:** `1` Fixed rate, `2` Single-trade tiered rate, `3` Monthly tiered rate, `4` Floating rate, `5` Floating rate (single-trade tiered)
 
                     > Agent billing does not support monthly-tiered type `3`.
                   enum:
@@ -4219,6 +4281,8 @@ paths:
                   description: |-
                     Billing granularity, shown
                     only in scenarios such as filled quantity / filled amount.
+
+                    **Allowed values:** `1` Calculated per contract (merged), `2` Calculated per order, `3` Calculated per execution record, `4` Calculated per EMS order
                   enum:
                     - '1'
                     - '2'
@@ -4245,7 +4309,10 @@ paths:
                   description: Expanded from min_metric.min_metric_rate.
                 cutoff_method:
                   type: string
-                  description: Rounding method.
+                  description: |-
+                    Rounding method.
+
+                    **Allowed values:** `1` Round to nearest, `2` Round up, `3` Round down
                   enum:
                     - '1'
                     - '2'
@@ -4508,7 +4575,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When an export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -4637,8 +4703,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -4775,6 +4840,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             name:
                               type: string
                               description: '**Returned value:** Name.'
@@ -4804,7 +4872,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - name: '{"en": "Normal Order", "zh-CN": "普通订单", "zh-HK": "普通訂單"}'
+                    - id: '123'
+                      name: '{"en": "Normal Order", "zh-CN": "普通订单", "zh-HK": "普通訂單"}'
                       desc: '{"en": "", "zh-CN": "", "zh-HK": ""}'
                       conditions_spec: Buy/sell = buy
                       state: 'Off'
@@ -4856,7 +4925,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When an export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -4989,8 +5057,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -5127,6 +5194,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             billing_item_id:
                               type: string
                               description: '**Returned value:** Fee Type.'
@@ -5168,7 +5238,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - billing_item_id: '{"zh-CN":"消费税","zh-HK":"消費稅","en":"GST"}'
+                    - id: '123'
+                      billing_item_id: '{"zh-CN":"消费税","zh-HK":"消費稅","en":"GST"}'
                       billing_item_id_val: '32338'
                       biz_type: Options Trade
                       biz_type_val: '5'
@@ -5224,7 +5295,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When an export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -5366,8 +5436,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -5505,6 +5574,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             org_id:
                               type: string
                               description: '**Returned value:** Org ID.'
@@ -5558,7 +5630,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - org_id: '1'
+                    - id: '123'
+                      org_id: '1'
                       org_id_name: Standard A/C1
                       org_id_name_val: '1'
                       default_package_id: 自动化套餐收费20260112111710
@@ -5618,7 +5691,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When an export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -5637,7 +5709,10 @@ paths:
                       description: Filters results by Item ID.
                     aaid:
                       type: string
-                      description: Filters results by Client.
+                      description: |-
+                        Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     biz_type:
                       type: string
                       description: |-
@@ -5832,8 +5907,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -5916,7 +5990,10 @@ paths:
                       example: '38352'
                     aaid:
                       type: string
-                      description: Filters results by Client.
+                      description: |-
+                        Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     biz_type:
                       type: string
                       description: |-
@@ -5936,7 +6013,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/billing_business_type_code
                     state:
                       type: string
-                      description: Filters results by State.
+                      description: |-
+                        Filters results by State.
+
+                        **Allowed values:** `0` Effective, `1` Not Effective
                       enum:
                         - '0'
                         - '1'
@@ -5952,7 +6032,10 @@ paths:
                       example: HK
                     pending:
                       type: string
-                      description: Filters results by Pending.
+                      description: |-
+                        Filters results by Pending.
+
+                        **Allowed values:** `0` Approval Completed, `1` Pending Approvals
                       enum:
                         - '0'
                         - '1'
@@ -6226,7 +6309,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When an export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -6414,8 +6496,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -6519,7 +6600,10 @@ paths:
                       example: '37514'
                     State:
                       type: string
-                      description: Filters results by State.
+                      description: |-
+                        Filters results by State.
+
+                        **Allowed values:** `0` Effective, `1` Not Effective
                       enum:
                         - '0'
                         - '1'
@@ -6531,7 +6615,10 @@ paths:
                       example: '0'
                     approved:
                       type: string
-                      description: Filters results by Approved.
+                      description: |-
+                        Filters results by Approved.
+
+                        **Allowed values:** `0` Approval Completed, `1` Pending Approvals
                       enum:
                         - '0'
                         - '1'
@@ -6738,7 +6825,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - When an export record is no longer needed, call `DELETE /v1/datasets/download/{id}` to remove it.
       security:
         - bearerAuth: []
       requestBody:
@@ -6757,7 +6843,10 @@ paths:
                       description: Filters results by Package.
                     aaid:
                       type: string
-                      description: Filters results by Client.
+                      description: |-
+                        Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     org_id:
                       type: string
                       description: |-
@@ -6936,8 +7025,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -7020,7 +7108,10 @@ paths:
                       example: 自动化套餐收费20260112111529
                     aaid:
                       type: string
-                      description: Filters results by Client.
+                      description: |-
+                        Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     org_id:
                       type: string
                       description: |-
@@ -7032,7 +7123,10 @@ paths:
                       example: autotest1
                     type:
                       type: string
-                      description: Filters results by Package Type.
+                      description: |-
+                        Filters results by Package Type.
+
+                        **Allowed values:** `1` Global Package, `2` General Package
                       enum:
                         - '1'
                         - '2'
@@ -7059,7 +7153,10 @@ paths:
                       description: Filters results by Client Group ID.
                     state:
                       type: string
-                      description: Filters results by State.
+                      description: |-
+                        Filters results by State.
+
+                        **Allowed values:** `0` Effective, `1` Not Effective
                       enum:
                         - '0'
                         - '1'
@@ -7071,7 +7168,10 @@ paths:
                       example: Effective
                     pending:
                       type: string
-                      description: Filters results by Approved.
+                      description: |-
+                        Filters results by Approved.
+
+                        **Allowed values:** `0` Approval Completed, `1` Pending Approvals
                       enum:
                         - '0'
                         - '1'
@@ -7244,7 +7344,6 @@ paths:
 
         - `mode: 0`: Synchronous export; the download URL is returned directly on success.
         - `mode: 1`: Asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record when it is no longer needed.
 
         ### Returns
 
@@ -7421,8 +7520,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -7537,6 +7635,8 @@ paths:
                         Filters results by State.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `0` Effective, `2` Not Effective
                       example: Effective
                       enum:
                         - '0'
@@ -7689,7 +7789,6 @@ paths:
 
         - `mode: 0`: Synchronous export; the download URL is returned directly on success.
         - `mode: 1`: Asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record when it is no longer needed.
 
         ### Returns
 
@@ -7862,8 +7961,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -8287,6 +8385,8 @@ paths:
 
         - Required: `name` (multilingual name object keyed by `zh-CN`/`zh-HK`/`en`), `conditions` (array of `{ field, value }` applicability conditions).
         - `id` is supplied in the path; `desc` is an optional description. See the field descriptions for each field's format, value range, and business meaning.
+        - The path `id` is the record ID of the fee-display item. Take `id` from a row of `POST /v1/datasets/booking_account_fee_info_items`.
+        - An item with a pending approval ticket (non-zero `ticket_id`) cannot be edited, enabled, or disabled until the ticket is processed.
 
         ### Business notes
 
@@ -8332,7 +8432,19 @@ paths:
                     - `field`: the condition-item ID (rate-condition field) identifying which business dimension the condition applies to, e.g. `'3'` for an account/counter condition.
                     - `value`: the array of selected values (strings) for that condition item.
                   items:
-                    type: string
+                    type: object
+                    required:
+                      - field
+                      - value
+                    properties:
+                      field:
+                        type: string
+                        description: Condition-item ID (rate-condition field). For example, `3` is the security (counter ID) condition.
+                      value:
+                        type: array
+                        description: Selected values for the condition item, as an array of strings. A single selection is still sent as a one-element array.
+                        items:
+                          type: string
             example:
               name:
                 zh-CN: Zhang San
@@ -8418,6 +8530,8 @@ paths:
 
         - Required: `state` (the target state to set in this request), `id` (record id, supplied in the path).
         - See the field descriptions for each field's format, value range, and business meaning.
+        - The path `id` is the record ID of the fee-display item. Take `id` from a row of `POST /v1/datasets/booking_account_fee_info_items`.
+        - An item with a pending approval ticket (non-zero `ticket_id`) cannot be edited, enabled, or disabled until the ticket is processed.
 
         ### Business notes
 
@@ -8453,7 +8567,10 @@ paths:
                   enum:
                     - '1'
                     - '2'
-                  description: Target display state to set (enable / disable). Required.
+                  description: |-
+                    Target display state to set (enable / disable). Required.
+
+                    **Allowed values:** `1` Enabled, `2` Disabled
                   x-enum-details:
                     - value: '1'
                       label: Enabled
@@ -8536,6 +8653,8 @@ paths:
 
         - This endpoint has no required body parameters; see the field descriptions below. `id` is supplied in the path.
         - `billing_item_id` links the billing item, `content` is the copy text, `merchant` sets the applicable merchant, and `remark` is a note. See the field descriptions for each field's format, value range, and business meaning.
+        - The path `id` is the record ID of the billing scenario copy entry. Take `id` from a row of `POST /v1/datasets/booking_item_copywritings`.
+        - An entry with a pending approval ticket (non-zero `ticket_id`) cannot be edited, enabled, or disabled until the ticket is processed.
 
         ### Business notes
 
@@ -8662,6 +8781,8 @@ paths:
 
         - Required: `state` (the target state to set in this request), `id` (record id, supplied in the path).
         - See the field descriptions for each field's format, value range, and business meaning.
+        - The path `id` is the record ID of the billing scenario copy entry. Take `id` from a row of `POST /v1/datasets/booking_item_copywritings`.
+        - An entry with a pending approval ticket (non-zero `ticket_id`) cannot be edited, enabled, or disabled until the ticket is processed.
 
         ### Business notes
 
@@ -8697,7 +8818,10 @@ paths:
                   enum:
                     - '1'
                     - '2'
-                  description: Target display state to set (enable / disable). Required.
+                  description: |-
+                    Target display state to set (enable / disable). Required.
+
+                    **Allowed values:** `1` Enabled, `2` Disabled
                   x-enum-details:
                     - value: '1'
                       label: Enabled
@@ -9323,219 +9447,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
-      x-dataset-download:
-        method: POST
-        path: /v1/datasets/billing_item_for_secondary_item/download
-        operationId: billing_item_for_secondary_item_download
-  /v1/datasets/billing_item_for_secondary_item/download:
-    post:
-      operationId: billing_item_for_secondary_item_download
-      summary: Fee Scenario List Export
-      tags:
-        - Service Parameter
-      x-permission-key:
-        - lb_hk_charging.lb_hk_scene_query
-      x-lbonly: false
-      description: |-
-        Export the `billing scenario list` dataset to a file. `filters` determines the export scope, and `down_fields` limits which columns are exported.
-
-        A billing scenario (billing item) describes under which business conditions and by which rules a charge applies.
-
-        ### Export modes
-
-        - `mode: 0`: Synchronous export; the download URL is returned directly on success.
-        - `mode: 1`: Asynchronous export; a `file_download_id` is returned first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record when it is no longer needed.
-
-        ### Returns
-
-        On success, returns the download URL or `file_download_id` according to the selected mode.
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                filters:
-                  type: object
-                  description: Combines business filters. Omit a filter field to disable that filter.
-                  properties:
-                    biz_type_code:
-                      type: string
-                      description: |-
-                        Filters results by Fee Type.
-
-                        Values are dynamic. Call `GET /v1/datasets/refs/billing_business_type_code` to retrieve the current data dictionary, and use the returned entry's `key` as this parameter's value.
-                      x-value-source:
-                        endpoint: GET /v1/datasets/refs/billing_business_type_code
-                mode:
-                  type: integer
-                  default: 0
-                  description: Defaults to `0` (synchronous mode) when omitted.
-                  enum:
-                    - 0
-                    - 1
-                  x-enum-details:
-                    - value: 0
-                      label: Sync
-                    - value: 1
-                      label: Async
-                  example: 0
-                ext:
-                  type: string
-                  description: Download file format. Defaults to `csv` when omitted.
-                  enum:
-                    - csv
-                    - xlsx
-                  x-enum-details:
-                    - value: csv
-                      label: CSV
-                    - value: xlsx
-                      label: Excel
-                  example: csv
-                file_name:
-                  type: string
-                  description: Export file name. The server generates a name when omitted.
-                down_fields:
-                  type: array
-                  description: |-
-                    When omitted, all fields are exported; allowed values are listed under items.enum (the
-                    same field list as the query endpoint's data.list.items).
-                  items:
-                    type: string
-                    enum:
-                      - id
-                      - biz_type
-                      - biz_type_val
-                      - name_id
-                      - name_id_val
-                      - basis_type
-                      - basis_type_val
-                      - basis
-                      - metric_type
-                      - metric_type_val
-                      - benchmark_rate_show
-                      - granularity
-                      - granularity_val
-                      - coefficient
-                      - divisor
-                      - direction
-                      - direction_val
-                      - cutoff_method
-                      - cutoff_method_val
-                      - cutoff_digits
-                    example: id
-                ticket_content:
-                  type: string
-                  description: Information shown to the approver when download approval is enabled for the template.
-                ticket_preview_url:
-                  type: string
-                  description: Export approval detail URL. Used only when the export requires approval.
-                hide:
-                  type: integer
-                  description: Whether to hide this export from the download-record list.
-                  enum:
-                    - 0
-                    - 1
-                  x-enum-details:
-                    - value: 0
-                      label: Not Hidden
-                    - value: 1
-                      label: Hidden
-                  example: 0
-            example:
-              filters: {}
-              mode: 0
-              ext: csv
-              file_name: ''
-              remark: ''
-              down_fields: []
-              ticket_content: ''
-              ticket_preview_url: ''
-              hide: 0
-      responses:
-        '200':
-          description: On success, returns information about the Fee Scenario List export task. Synchronous exports provide a download URL directly; asynchronous exports provide `file_download_id` for subsequent status queries.
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - code
-                  - message
-                  - data
-                properties:
-                  code:
-                    type: integer
-                    description: |-
-                      `0` indicates success. A non-zero value is a business error code, in which case
-                      `data` is usually empty.
-
-                      HTTP status codes use their standard semantics. A successful request normally
-                      returns `200`; errors may return `400`, `401`, `403`, `408`, or another applicable
-                      status. Interpret the HTTP status together with the business `code`.
-
-                      - `401`: The user is not authenticated.
-                      - `403`: The current account is not authorized to use this function. Grant access
-                        through User Permission.
-                    x-enum-details:
-                      - value: 0
-                        label: Success
-                  message:
-                    type: string
-                  data:
-                    type: object
-                    properties:
-                      url:
-                        type: string
-                        description: 'Returned in synchronous mode (`mode: 0`); empty in asynchronous mode.'
-                      file_download_id:
-                        type: string
-                        description: |-
-                          Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
-                      ticket_id:
-                        type: string
-                        description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
-              example:
-                code: 0
-                message: success
-                data:
-                  url: https://b-api.longbridge.xyz/download/export_result.csv
-                  file_download_id: ''
-                  ticket_id: ''
-        '400':
-          description: Bad request. Check the business error code in `code` and the error details in `message`.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
-        '401':
-          description: The user is not authenticated, or the login session has expired.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
-        '403':
-          description: The current account is not authorized to use this feature. Grant the required permission to the account in User Permission.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
-        '408':
-          description: The request timed out. Check the business error code in `code` and the error details in `message`.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
-      x-dataset-parent:
-        method: GET
-        path: /v1/datasets/billing_item_for_secondary_item
-        operationId: billing_item_for_secondary_item
 components:
   schemas:
     BrokerGatewayErrorEnvelope:

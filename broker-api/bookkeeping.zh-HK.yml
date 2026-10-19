@@ -82,7 +82,10 @@ paths:
                     endpoint: GET /v1/datasets/refs/book_business_types_by_source
                 aaid:
                   type: string
-                  description: 關聯賬戶 AAID（部分場景不適用，可不傳）
+                  description: |-
+                    關聯賬戶 AAID（部分場景不適用，可不傳）
+
+                    此處傳客戶證券賬戶的內部數字編號 `aaid`，並非證券賬號 `account_no`（如 `H00000000`），亦非客戶編號 `member_id`；一個客戶可擁有多個 `aaid`。
                 txNo:
                   type: string
                   description: 用於指定「交易流水號」。此字段為必填項。
@@ -137,6 +140,8 @@ paths:
                   type: string
                   description: |-
                     用於指定「對象類型」。
+
+                    **可選值：** `0` 未知、`1` 現金、`2` 股票、`3` 基金
                   enum:
                     - '0'
                     - '1'
@@ -400,7 +405,10 @@ paths:
                     endpoint: GET /v1/datasets/refs/book_business_types_by_source
                 aaid:
                   type: string
-                  description: 自定義組件選取關聯賬戶；當來源為 0 時隱藏，不傳
+                  description: |-
+                    自定義組件選取關聯賬戶；當來源為 0 時隱藏，不傳
+
+                    此處傳客戶證券賬戶的內部數字編號 `aaid`，並非證券賬號 `account_no`（如 `H00000000`），亦非客戶編號 `member_id`；一個客戶可擁有多個 `aaid`。
                 txNo:
                   type: string
                   description: 用於指定「交易流水號」。此字段為必填項。
@@ -455,6 +463,8 @@ paths:
                   type: string
                   description: |-
                     用於指定「對象類型」。
+
+                    **可選值：** `0` 未知、`1` 現金、`2` 股票、`3` 基金
                   enum:
                     - '0'
                     - '1'
@@ -768,12 +778,15 @@ paths:
 
         ### 請求參數
 
-        - 必填：`id`（記錄 ID）、`remark`（備註）、`ref_no`（關聯單號）、`begin_amount`（期初金額）、`statement_adjustment`（賬單調整額）、`in_transit_adjustment`（在途調整額）、`remarks`（備註內容）
+        - 必填：`id`（記錄 ID，取 `POST /v1/datasets/booking_deposit_in_transit` 列表行的 `id`）、`ref_no`（關聯單號，取列表行的 `ref_no`，格式 `dit-{reconciliation_at}-{currency}-{bank_account}-{simple_name}`）、`begin_amount`（期初金額）、`statement_adjustment`（賬單調整額）、`in_transit_adjustment`（在途調整額）、`remarks`（備註內容）
+        - 可選：`remark`（備註；管理後台不傳此欄位）
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
 
         用於對入金在途的匯總核對結果做人工調整，涉及真實會計核對數據。
+
+        查詢目標行時請按單個賬務日期（`reconciliation_at` 起止為同一天）加 `currency` 過濾；日期範圍過寬會因數據量大（約 238 萬行）超時。
 
         ### 風險提示
 
@@ -792,7 +805,6 @@ paths:
               type: object
               required:
                 - id
-                - remark
                 - ref_no
                 - begin_amount
                 - statement_adjustment
@@ -804,10 +816,11 @@ paths:
                   description: 記錄ID，用於標識本次請求關聯的業務對象。此字段為必填項。
                 remark:
                   type: string
-                  description: 隨本次操作保存的備註。此字段為必填項。
+                  description: 隨本次操作保存的備註。可選，管理後台不傳此欄位。
                 ref_no:
                   type: string
-                  description: 用於指定「關聯單號」。此字段為必填項。
+                  description: |-
+                    關聯單號。格式為 `dit-{reconciliation_at}-{currency}-{bank_account}-{simple_name}`，各部分取自 `POST /v1/datasets/booking_deposit_in_transit` 返回行的同名字段。此字段為必填項。
                 begin_amount:
                   type: number
                   description: 用於指定「期初金額」。此字段為必填項。
@@ -822,7 +835,6 @@ paths:
                   description: 用於指定「備註內容」。此字段為必填項。
             example:
               id: '123'
-              remark: ''
               ref_no: ''
               begin_amount: 0
               statement_adjustment: 0
@@ -1027,7 +1039,10 @@ paths:
               properties:
                 source_id:
                   type: number
-                  description: 枚舉 BookkeepingSourceType
+                  description: |-
+                    枚舉 BookkeepingSourceType
+
+                    **可選值：** `1` 支付流水、`2` 銀行賬單、`3` 渠道賬單、`4` IB 應計利息、`5` IB 佣金成本、`6` 客戶收費賬單、`7` ccass 賬單、`8` 新股賬單、`9` 其他費用賬單、`10` FD 客戶收費賬單、`11` 業務統計賬單、`12` 渠道匯兌單、`13` Atomic Vaults 賬單、`14` 交收合約、`15` IFAST 賬單、`16` OB 賬戶支付流水、`17` OB 賬戶交收合約
                   enum:
                     - '1'
                     - '2'
@@ -1568,7 +1583,6 @@ paths:
 
         - `mode: 0`：同步匯出，成功後直接返回下載地址。
         - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -1726,8 +1740,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。
+                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路徑中的 id，用於獲取最終下載地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
@@ -2011,7 +2024,6 @@ paths:
 
         - `mode: 0`：同步匯出，成功後直接返回下載地址。
         - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -2192,8 +2204,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。
+                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路徑中的 id，用於獲取最終下載地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
@@ -2278,7 +2289,10 @@ paths:
                       example: '48123822'
                     origin:
                       type: string
-                      description: 用於按「來源」篩選結果。
+                      description: |-
+                        用於按「來源」篩選結果。
+
+                        **可選值：** `1` 人工、`0` 自動、`2` 人工修改
                       enum:
                         - '1'
                         - '0'
@@ -2544,7 +2558,10 @@ paths:
                       example: '1744646400'
                     in_transit:
                       type: string
-                      description: 用於按「是否在途」篩選結果。
+                      description: |-
+                        用於按「是否在途」篩選結果。
+
+                        **可選值：** `0` 是、`1` 否
                       enum:
                         - '0'
                         - '1'
@@ -2772,7 +2789,6 @@ paths:
 
         - `mode: 0`：同步匯出，成功後直接返回下載地址。
         - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -2946,8 +2962,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。
+                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路徑中的 id，用於獲取最終下載地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
@@ -3007,6 +3022,9 @@ paths:
         - 每條記錄按銀行賬號、幣種與賬務日期彙總，包含期初/期末金額、入金金額、已到賬金額、在途金額、在途差異、在途調整與賬單調整、核對結果（一致 / 不一致）及備註等。
         - 常用於財務對賬，識別在途差異並跟進調整，直至核對結果一致。
 
+        - 數據量很大（約 238 萬行），請用單個賬務日期（`reconciliation_at` 的 `gte` 與 `lte` 相同）加 `currency` 過濾；日期範圍過寬會超時（504/500）。
+        - 行數據包含 `ref_no`（格式 `dit-{reconciliation_at}-{currency}-{bank_account}-{simple_name}`），可直接用於 `modify_summary_recon_items`。
+
         ### 返回結果
 
         成功時返回匹配的記錄列表及分頁信息。返回列含義見響應定義。
@@ -3046,7 +3064,10 @@ paths:
                       example: HKD
                     state:
                       type: string
-                      description: 用於按「核對結果」篩選結果。
+                      description: |-
+                        用於按「核對結果」篩選結果。
+
+                        **可選值：** `1` 一致、`2` 不一致
                       enum:
                         - '1'
                         - '2'
@@ -3250,7 +3271,6 @@ paths:
 
         - `mode: 0`：同步匯出，成功後直接返回下載地址。
         - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -3424,8 +3444,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。
+                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路徑中的 id，用於獲取最終下載地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
@@ -3709,7 +3728,6 @@ paths:
 
         - `mode: 0`：同步匯出，成功後直接返回下載地址。
         - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -3911,8 +3929,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。
+                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路徑中的 id，用於獲取最終下載地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
@@ -4207,7 +4224,6 @@ paths:
 
         - `mode: 0`：同步匯出，成功後直接返回下載地址。
         - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -4372,8 +4388,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。
+                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路徑中的 id，用於獲取最終下載地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
@@ -4649,7 +4664,6 @@ paths:
 
         - `mode: 0`：同步匯出，成功後直接返回下載地址。
         - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -4823,8 +4837,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。
+                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路徑中的 id，用於獲取最終下載地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
@@ -5127,7 +5140,6 @@ paths:
 
         - `mode: 0`：同步匯出，成功後直接返回下載地址。
         - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -5152,7 +5164,7 @@ paths:
                       description: 用於按「業務流水號」篩選結果。
                     counter_id:
                       type: string
-                      description: 用於按「股票代碼」篩選結果。
+                      description: 用於按「股票代碼」篩選結果。格式為 `{類型}/{市場}/{代碼}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期權 `OP/US/AAPL270319C320000`。
                     created_at:
                       type: object
                       description: 用於按「創建時間」篩選結果。
@@ -5343,8 +5355,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。
+                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路徑中的 id，用於獲取最終下載地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
@@ -5434,7 +5445,7 @@ paths:
                       description: 用於按「業務流水號」篩選結果。
                     counter_id:
                       type: string
-                      description: 用於按「股票代碼」篩選結果。
+                      description: 用於按「股票代碼」篩選結果。格式為 `{類型}/{市場}/{代碼}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期權 `OP/US/AAPL270319C320000`。
                     created_at:
                       type: object
                       description: 用於按「創建時間」篩選結果。
@@ -5700,7 +5711,6 @@ paths:
 
         - `mode: 0`：同步匯出，成功後直接返回下載地址。
         - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -5881,8 +5891,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。
+                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路徑中的 id，用於獲取最終下載地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
@@ -5976,7 +5985,10 @@ paths:
                       example: '682391'
                     state:
                       type: string
-                      description: 用於按「狀態」篩選結果。
+                      description: |-
+                        用於按「狀態」篩選結果。
+
+                        **可選值：** `1` 未處理、`2` 已處理
                       enum:
                         - '1'
                         - '2'
@@ -6179,7 +6191,6 @@ paths:
 
         - `mode: 0`：同步匯出，成功後直接返回下載地址。
         - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -6432,8 +6443,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。
+                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路徑中的 id，用於獲取最終下載地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
@@ -6859,7 +6869,6 @@ paths:
 
         - `mode: 0`：同步匯出，成功後直接返回下載地址。
         - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -7012,8 +7021,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。
+                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路徑中的 id，用於獲取最終下載地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
@@ -7294,7 +7302,6 @@ paths:
 
         - `mode: 0`：同步匯出，成功後直接返回下載地址。
         - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -7461,8 +7468,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。
+                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路徑中的 id，用於獲取最終下載地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
@@ -7555,7 +7561,10 @@ paths:
                           description: 篩選範圍的上限，匹配值包含該值。
                     business_type:
                       type: string
-                      description: 用於按「業務類型」篩選結果。
+                      description: |-
+                        用於按「業務類型」篩選結果。
+
+                        **可選值：** `ChannelExchange` 渠道匯兌出賬、`ChannelExchangeEntry` 渠道匯兌入賬、`ExchangeGains` 匯兌收益、`ExchangeLoss` 匯兌損失
                       enum:
                         - ChannelExchange
                         - ChannelExchangeEntry
@@ -7738,7 +7747,6 @@ paths:
 
         - `mode: 0`：同步匯出，成功後直接返回下載地址。
         - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -7890,8 +7898,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。
+                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路徑中的 id，用於獲取最終下載地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
@@ -8153,7 +8160,6 @@ paths:
 
         - `mode: 0`：同步匯出，成功後直接返回下載地址。
         - `mode: 1`：非同步匯出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要匯出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -8343,8 +8349,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。
+                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路徑中的 id，用於獲取最終下載地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
@@ -8654,7 +8659,6 @@ paths:
 
         - `mode: 0`：同步導出，成功後直接返回下載地址。
         - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
 
         ### 處理結果
 
@@ -8803,8 +8807,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。
+                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路徑中的 id，用於獲取最終下載地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
@@ -8891,7 +8894,10 @@ paths:
                       example: '20260715'
                     source:
                       type: string
-                      description: 用於按「來源」篩選結果。
+                      description: |-
+                        用於按「來源」篩選結果。
+
+                        **可選值：** `1` 人工輸入、`0` API
                       enum:
                         - '1'
                         - '0'
@@ -9050,7 +9056,6 @@ paths:
 
         - `mode: 0`：同步導出，成功後直接返回下載地址。
         - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
 
         ### 處理結果
 
@@ -9200,8 +9205,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。
+                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路徑中的 id，用於獲取最終下載地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
@@ -9455,7 +9459,6 @@ paths:
 
         - `mode: 0`：同步導出，成功後直接返回下載地址。
         - `mode: 1`：異步導出，先返回 `file_download_id`；隨後調用 `GET /v1/datasets/download/{id}` 獲取下載地址。
-        - 不再需要導出記錄時，可調用 `DELETE /v1/datasets/download/{id}` 刪除。
 
         ### 處理結果
 
@@ -9604,8 +9607,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路徑中的 id：GET 獲取最終下載地址，DELETE 刪除該導出記錄。
+                          異步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路徑中的 id，用於獲取最終下載地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 審批工單 ID。僅在本次操作觸發審批流程時返回。'
@@ -9694,7 +9696,10 @@ paths:
                       description: 用於按「銀行賬號」篩選結果。
                     state:
                       type: string
-                      description: 用於按「狀態」篩選結果。
+                      description: |-
+                        用於按「狀態」篩選結果。
+
+                        **可選值：** `1` 對賬失敗、`2` 對賬成功
                       enum:
                         - '1'
                         - '2'

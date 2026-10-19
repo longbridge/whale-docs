@@ -53,6 +53,8 @@ paths:
                   type: string
                   description: |-
                     Remark Type.
+
+                    **Allowed values:** `1` Deposit, `2` Bank bill, `3` Bank card, `102` Deposit match, `103` Transfer-out position, `104` Rollover-in detail, `105` Withdrawal application, `200` Rollover-in, `202` Transfer-out detail, `203` Cross-broker transfer, `204` Cross-broker authorization, `207` Deposit user detail
                   enum:
                     - '1'
                     - '2'
@@ -1175,7 +1177,10 @@ paths:
                     type: string
                 audit_state:
                   type: number
-                  description: Audit State. Specifies Audit State. This field is required.
+                  description: |-
+                    Audit State. Specifies Audit State. This field is required.
+
+                    **Allowed values:** `1` Approve, `2` Reject
                   enum:
                     - '1'
                     - '2'
@@ -1301,6 +1306,8 @@ paths:
                   type: string
                   description: |-
                     Transfer type.
+
+                    **Allowed values:** `1` Bank-to-bank transfer, `2` Settlement account recharge, `3` Settlement account withdrawal, `4` Settlement-to-settlement transfer
                   enum:
                     - '1'
                     - '2'
@@ -1320,6 +1327,8 @@ paths:
                   type: string
                   description: |-
                     Source party type.
+
+                    **Allowed values:** `1` Bank, `2` Whale settlement channel
                   enum:
                     - '1'
                     - '2'
@@ -1343,6 +1352,8 @@ paths:
                   type: string
                   description: |-
                     Target party type.
+
+                    **Allowed values:** `1` Bank, `2` Whale settlement channel
                   enum:
                     - '1'
                     - '2'
@@ -1492,7 +1503,10 @@ paths:
                   description: Record ID. Record ID associated with this request.
                 action:
                   type: number
-                  description: Audit Action. Specifies Audit Action. This field is required.
+                  description: |-
+                    Audit Action. Specifies Audit Action. This field is required.
+
+                    **Allowed values:** `1` Mark success, `2` Mark failed
                   enum:
                     - '1'
                     - '2'
@@ -1936,6 +1950,8 @@ paths:
                   type: integer
                   description: |-
                     Bill Type.
+
+                    **Allowed values:** `1` Credit, `2` Debit
                   enum:
                     - 1
                     - 2
@@ -2086,6 +2102,8 @@ paths:
                       type: integer
                       description: |-
                         Deposit type.
+
+                        **Allowed values:** `0` Client deposit
                       enum:
                         - 0
                       x-enum-details:
@@ -2132,10 +2150,16 @@ paths:
                   description: Not-ToB flag. Specifies Not-ToB flag.
                 member_id:
                   type: string
-                  description: Member id. Specifies Member id. This field is required.
+                  description: |-
+                    Member id. Specifies Member id. This field is required.
+
+                    `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                 aaid:
                   type: string
-                  description: Account id. Specifies Account id. This field is required.
+                  description: |-
+                    Account id. Specifies Account id. This field is required.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 id:
                   type: string
                   description: Deposit application id (for edit). Specifies Deposit application id (for edit).
@@ -2384,7 +2408,10 @@ paths:
                   description: Application ID. Application ID associated with this request.
                 state:
                   type: number
-                  description: State. Target state to set through this request. This field is required.
+                  description: |-
+                    State. Target state to set through this request. This field is required.
+
+                    **Allowed values:** `0` Processing, `1` Credited, `2` Failed, `3` Cancelled, `4` Voided
                   enum:
                     - '0'
                     - '1'
@@ -2536,6 +2563,8 @@ paths:
                   type: integer
                   description: |-
                     Field To Modify Type.
+
+                    **Allowed values:** `0` None, `1` Bank Account Name, `2` Bank A/C No., `3` Bank Account Name And No
                   enum:
                     - 0
                     - 1
@@ -2947,23 +2976,26 @@ paths:
   /v2/atm/withdraw/audit:
     post:
       operationId: withdraw_audit
-      summary: Audit Single Withdrawal Application
+      summary: Approve Single Withdrawal Application
       tags:
         - Cash Management
       x-permission-key:
         - atm.withdraw_audit
       x-lbonly: false
       description: |-
-        Review a single withdrawal application, approving or rejecting it.
+        Approves a single withdrawal application. Rejection uses a separate endpoint, `POST /v1/atm/withdraw/reject` (this endpoint does not reject).
 
         ### Request parameters
 
-        - Required: `id` (application ID), `state` (review result)
+        - Required: `id` (application ID), `status` (review result; always `1` approve)
+        - Optional: `desc` (review remark), `admin_remark_config_type` (remark type config), `audit_frontend_resource` (caller audit context)
         - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Business notes
 
-        The application is approved or rejected; approval releases a real withdrawal of funds, so verify the application details.
+        Approval releases a real withdrawal of funds, so verify the application details.
+
+        Eligible records: applications whose `status_val` is `0` (pending review) in the withdrawal application list and whose risk (anti-fraud) check is not "risk processing". The body field is `status`, not `state`; sending `state` returns `203400`.
 
         ### Risk warning
 
@@ -2982,27 +3014,36 @@ paths:
               type: object
               required:
                 - id
-                - state
+                - status
               properties:
                 id:
                   type: string
                   description: Application ID. Application ID associated with this request.
-                state:
+                status:
                   type: integer
                   description: |-
-                    Audit State.
+                    Review result. This endpoint only approves; always pass `1`. To reject, use `POST /v1/atm/withdraw/reject`.
+
+                    **Allowed values:** `1` Approved
                   enum:
                     - 1
-                    - 2
                   x-enum-details:
                     - value: 1
                       label: Approved
-                    - value: 2
-                      label: Rejected
                   example: 1
+                desc:
+                  type: string
+                  description: Review remark. Optional.
+                admin_remark_config_type:
+                  type: string
+                  description: Remark type config. Optional; usually omitted.
+                audit_frontend_resource:
+                  type: object
+                  description: |-
+                    Caller audit context, for example `{"$behavior": "approve", "$action": "add"}`.
             example:
               id: '123'
-              state: 1
+              status: 1
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.
@@ -3059,7 +3100,7 @@ paths:
       x-mint:
         href: /en/api-reference/withdraw_audit
         metadata:
-          sidebarTitle: Audit Single Withdrawal Application
+          sidebarTitle: Approve Single Withdrawal Application
   /v1/portfolio/atm/direct/withdraw:
     post:
       operationId: atm_direct_withdraw
@@ -3113,7 +3154,7 @@ paths:
                 bank_channels_id:
                   type: string
                   description: |-
-                    Withdrawal channel ID. After selecting a receiving bank account, choose a channel ID from the channels available to that account.
+                    Withdrawal channel ID. After selecting a receiving bank account, choose a channel ID from the channels available to that account. Take the `key` from `GET /v1/datasets/refs/withdraw_company_bank_channels` whose name starts with the chosen account's short name (e.g. `ICBC0012-HKD_网银_FPS`).
                 details:
                   type: array
                   description: |-
@@ -3121,7 +3162,16 @@ paths:
                     withdraw_detail_serial_no: bank channel serial number}, from the rows selected in the
                     dialog.
                   items:
-                    type: string
+                    type: object
+                    required:
+                      - withdraw_detail_id
+                    properties:
+                      withdraw_detail_id:
+                        type: string
+                        description: Withdraw detail id (`id` of a row in `atm_withdraw_pending_details`).
+                      withdraw_detail_serial_no:
+                        type: string
+                        description: Bank channel serial number of the detail (`bank_channel_serial_no`); may be empty.
                 audit_frontend_resource:
                   type: object
                   description: |-
@@ -3440,7 +3490,10 @@ paths:
                   description: Bank card id (pass when editing, omit when adding). Specifies Bank card id (pass when editing, omit when adding).
                 member_id:
                   type: integer
-                  description: Member id. Specifies Member id. This field is required.
+                  description: |-
+                    Member id. Specifies Member id. This field is required.
+
+                    `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                 bank_code:
                   type: string
                   description: Bank code. Specifies Bank code.
@@ -3569,7 +3622,10 @@ paths:
               properties:
                 member_id:
                   type: integer
-                  description: Member id. Specifies Member id. This field is required.
+                  description: |-
+                    Member id. Specifies Member id. This field is required.
+
+                    `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                 bank_id:
                   type: integer
                   description: Bank id. Specifies Bank id.
@@ -3802,6 +3858,8 @@ paths:
 
         - Required: `id` (bank card ID), `region` (region code), `name_en` (English name), `account` (bank account), `country` (country name), `bank_en` (bank English name)
         - Optional: `bank_id` (bank ID), `swift_code` (SWIFT code), `account_type` (account type, e.g. `ALL`/`HKD`/`USD`), `address` (address), `bank_code` (bank code, for HK banks), `fps_id` (FPS ID: phone/email/FPS ID), `review_urls` (review document upload URLs), `account_no` (account number)
+        - The admin frontend always sends `bank_id` (chosen from the banks of the selected region) and `review_urls` (upload keys of the bank-card proof files, not signed URLs). It also sends `member_id`, `name` (same value as `name_en`), `account_channel`, `remark`, `front_payload`, and `audit_frontend_resource`.
+        - `id` is the `id` of the card row in the `atm_withdraw_cards` list. The admin frontend service definition marks this endpoint as `discard`.
         - See the field definitions for each field's format, allowed values, and business meaning.
 
         ### Business notes
@@ -3830,6 +3888,8 @@ paths:
                 - account
                 - country
                 - bank_en
+                - bank_id
+                - review_urls
               properties:
                 id:
                   type: integer
@@ -3873,6 +3933,24 @@ paths:
                   description: Audit data upload urls. Specifies Audit data upload urls.
                   items:
                     type: string
+                member_id:
+                  type: string
+                  description: Customer ID that owns the card. The admin frontend sends it from the card record.
+                name:
+                  type: string
+                  description: Account holder name. The admin frontend sets it to the value of `name_en`.
+                account_channel:
+                  type: string
+                  description: Account channel of the current admin session. The admin frontend fills it in automatically.
+                remark:
+                  type: string
+                  description: Customer remark.
+                front_payload:
+                  type: object
+                  description: Field-change summary for the audit log (`type` is `data_diff`), built by the admin frontend.
+                audit_frontend_resource:
+                  type: object
+                  description: Audit context submitted by the admin frontend.
             example:
               id: 0
               bank_id: 0
@@ -3996,7 +4074,10 @@ paths:
                   description: Card ID. Card ID associated with this request.
                 member_id:
                   type: string
-                  description: Member ID. Member ID associated with this request.
+                  description: |-
+                    Member ID. Member ID associated with this request.
+
+                    `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                 from_wbo:
                   type: boolean
                   description: |-
@@ -4213,7 +4294,10 @@ paths:
               properties:
                 member_id:
                   type: string
-                  description: Member id. Specifies Member id. This field is required.
+                  description: |-
+                    Member id. Specifies Member id. This field is required.
+
+                    `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                 names:
                   type: string
                   description: Addition name(s). Specifies Addition name(s). This field is required.
@@ -4579,7 +4663,10 @@ paths:
                   description: Target amount. Specifies Target amount.
                 aaid:
                   type: integer
-                  description: Account aaid. Specifies Account aaid.
+                  description: |-
+                    Account aaid. Specifies Account aaid.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 origin:
                   type: integer
                   description: Origin. Specifies Origin.
@@ -5158,6 +5245,8 @@ paths:
                   type: integer
                   description: |-
                     Guide Type.
+
+                    **Allowed values:** `1` Common guide, `2` Bank-specific guide
                   enum:
                     - 1
                     - 2
@@ -5528,6 +5617,8 @@ paths:
                   type: string
                   description: |-
                     Auth state.
+
+                    **Allowed values:** `0` Not enabled, `1` Unauthenticated/Pending authentication, `2` Authenticated
                   enum:
                     - '0'
                     - '1'
@@ -5723,6 +5814,8 @@ paths:
                   type: string
                   description: |-
                     Auth state.
+
+                    **Allowed values:** `0` Not enabled, `1` Unauthenticated/Pending authentication, `2` Authenticated
                   enum:
                     - '0'
                     - '1'
@@ -6039,7 +6132,9 @@ paths:
 
         ### Request parameters
 
-        - Required: `account_channel`, `company_id`, `region_id`, `region_bank_id` (region bank type), `bank_operation_types_id`
+        - Required: `company_id`, `region_id`, `region_bank_ids` (region bank ids), `bank_operation_types_id`, `currency_banks` (currency-bank configs)
+        - Optional: `org_id`, `weight`, `auth_state` (used on LBHK), `ids` (config ids to exclude self when editing)
+        - `region_bank_ids` values: specified banks: the selected region bank ids; other banks: `[0]`; all banks: `[999999999]`. The backend reads only `region_bank_ids`; it does not read a scalar `region_bank_id` and does not need `account_channel`.
         - When editing, pass `ids` to exclude the record itself. See the field definitions for each field's format, value range, and business meaning.
 
         ### Returns
@@ -6054,37 +6149,26 @@ paths:
             schema:
               type: object
               required:
-                - account_channel
                 - company_id
                 - region_id
-                - region_bank_id
+                - region_bank_ids
                 - bank_operation_types_id
+                - currency_banks
               properties:
-                account_channel:
-                  type: string
-                  description: Account channel. Specifies Account channel. This field is required.
                 company_id:
                   type: integer
                   description: Company id. Specifies Company id. This field is required.
                 region_id:
                   type: integer
                   description: Region id. Specifies Region id. This field is required.
-                region_bank_id:
-                  type: integer
-                  description: |-
-                    Region bank type.
-                  enum:
-                    - -1
+                region_bank_ids:
+                  type: array
+                  minItems: 1
+                  description: 'Region bank ids. This field is required, with at least 1 item. Specified banks: the selected region bank ids; other banks: `[0]`; all banks: `[999999999]`.'
+                  items:
+                    type: integer
+                  example:
                     - 0
-                    - 999999999
-                  x-enum-details:
-                    - value: -1
-                      label: Specified banks
-                    - value: 0
-                      label: Other
-                    - value: 999999999
-                      label: All banks
-                  example: -1
                 bank_operation_types_id:
                   type: integer
                   description: |-
@@ -6093,6 +6177,8 @@ paths:
                   type: string
                   description: |-
                     Auth state.
+
+                    **Allowed values:** `0` Not enabled, `1` Unauthenticated/Pending authentication, `2` Authenticated
                   enum:
                     - '0'
                     - '1'
@@ -6105,9 +6191,13 @@ paths:
                     - value: '2'
                       label: Authenticated
                   example: '0'
+                weight:
+                  type: integer
+                  description: Weight. Specifies Weight; pass `0` when not set.
+                  example: 0
                 currency_banks:
                   type: array
-                  description: Currency-bank configs. Specifies Currency-bank configs.
+                  description: Currency-bank configs. Specifies Currency-bank configs. This field is required.
                   items:
                     type: object
                     properties:
@@ -6118,9 +6208,12 @@ paths:
                         type: string
                         description: Remittance bank. Specifies Remittance bank.
                       priority:
+                        type: integer
+                        description: Priority. An integer; provide the actual business value.
+                        example: 2
+                      open_lb_bank_account_id:
                         type: string
-                        description: |-
-                          Priority. A free-form value (not an enum); provide the actual business value.
+                        description: Account-opening deposit bank account id. Specifies the receiving bank account for account-opening deposits; omit when not used.
                 ids:
                   type: array
                   description: Config ids to exclude self (on edit). Specifies Config ids to exclude self (on edit).
@@ -6130,15 +6223,18 @@ paths:
                   type: integer
                   description: Org id. Specifies Org id.
             example:
-              account_channel: ''
-              company_id: 0
-              region_id: 0
-              region_bank_id: 0
-              bank_operation_types_id: 0
-              auth_state: ''
-              currency_banks: []
-              ids: []
-              org_id: 0
+              company_id: 34
+              org_id: 34
+              region_id: 1
+              region_bank_ids:
+                - 0
+              bank_operation_types_id: 100
+              auth_state: '0'
+              weight: 0
+              currency_banks:
+                - currencies: HKD
+                  lb_bank_account_id: '172'
+                  priority: 2
       responses:
         '200':
           description: The request was processed successfully. `data` is the result.
@@ -6323,11 +6419,13 @@ paths:
         - lb_hk_depositconfig.depositconfig_group_update
       x-lbonly: false
       description: |-
-        Deletes a group deposit parameter configuration identified by `id`.
+        Deletes the group deposit parameter configurations identified by `ids`.
 
         ### Request parameters
 
-        - Required: `id` (configuration ID)
+        - Required: `ids` (configuration IDs)
+        - Optional: `audit_frontend_resource` (audit context)
+        - Send the configuration IDs as an array in `ids`. In the admin frontend, each row of the group deposit configuration list carries a comma-separated `ids` value, which is split into this array.
 
         ### Risk warning
 
@@ -6345,13 +6443,19 @@ paths:
             schema:
               type: object
               required:
-                - id
+                - ids
               properties:
-                id:
-                  type: string
-                  description: Config ID. Config ID associated with this request.
+                ids:
+                  type: array
+                  description: Configuration IDs to delete.
+                  items:
+                    type: string
+                audit_frontend_resource:
+                  type: object
+                  description: Audit context submitted by the admin frontend, for example `$behavior` and `$action`.
             example:
-              id: '123'
+              ids:
+                - '123'
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.
@@ -6649,7 +6753,10 @@ paths:
                   description: Record ID. Record ID associated with this request.
                 isBindCard:
                   type: number
-                  description: Is Bind Card Allowed. Specifies Is Bind Card Allowed. This field is required.
+                  description: |-
+                    Is Bind Card Allowed. Specifies Is Bind Card Allowed. This field is required.
+
+                    **Allowed values:** `0` Disallow, `1` Allow
                   enum:
                     - '0'
                     - '1'
@@ -7330,10 +7437,16 @@ paths:
                       description: Deposit Bill ID. Filters results by Deposit Bill ID.
                     member_id:
                       type: string
-                      description: Client ID. Filters results by Client ID.
+                      description: |-
+                        Client ID. Filters results by Client ID.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     channel_account:
                       type: string
-                      description: A/C No.. Filters results by A/C No..
+                      description: |-
+                        A/C No.. Filters results by A/C No..
+
+                        `channel_account` is the customer's securities account number (such as `H00000000`). It differs from the customer ID `member_id` and the internal securities account ID `aaid`.
                     detail_id:
                       type: string
                       description: Deposit Detail ID. Filters results by Deposit Detail ID.
@@ -7360,6 +7473,8 @@ paths:
                         Match State. Filters results by Match State.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `1` Matched, `2` Unmatch, `4` Manually Match, `5` Pending Transfer Audit, `6` Frozen
                       example: 1,2
                       enum:
                         - '1'
@@ -7380,7 +7495,10 @@ paths:
                           label: Frozen
                     state:
                       type: string
-                      description: Deposit Status. Filters results by Deposit Status.
+                      description: |-
+                        Deposit Status. Filters results by Deposit Status.
+
+                        **Allowed values:** `3` Match, `4` Counter Deal, `5` Load Completed, `8` Failed, `9` Deleted, `100` Pending Release, `200` Pending Release Review, `6` Rejected
                       enum:
                         - '3'
                         - '4'
@@ -7458,7 +7576,10 @@ paths:
                       description: Bank. Filters results by Bank.
                     invisible:
                       type: string
-                      description: Is Hidden. Filters results by Is Hidden.
+                      description: |-
+                        Is Hidden. Filters results by Is Hidden.
+
+                        **Allowed values:** `0` Visible, `1` Invisible
                       enum:
                         - '0'
                         - '1'
@@ -7748,10 +7869,16 @@ paths:
                       description: Withdrawal Bill ID. Filters results by Withdrawal Bill ID.
                     member_id:
                       type: string
-                      description: Client ID. Filters results by Client ID.
+                      description: |-
+                        Client ID. Filters results by Client ID.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     channel_account:
                       type: string
-                      description: A/C No.. Filters results by A/C No..
+                      description: |-
+                        A/C No.. Filters results by A/C No..
+
+                        `channel_account` is the customer's securities account number (such as `H00000000`). It differs from the customer ID `member_id` and the internal securities account ID `aaid`.
                     order_id:
                       type: string
                       description: Application Number. Filters results by Application Number.
@@ -7778,6 +7905,8 @@ paths:
                         Match State. Filters results by Match State.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `1` Matched, `2` Unmatch, `4` Manually Match, `5` Pending Transfer Audit, `6` Frozen
                       example: 1,2
                       enum:
                         - '1'
@@ -8089,7 +8218,10 @@ paths:
                       description: Name of Payer. Filters results by Name of Payer.
                     state:
                       type: string
-                      description: Marking State. Filters results by Marking State.
+                      description: |-
+                        Marking State. Filters results by Marking State.
+
+                        **Allowed values:** `1` Unprocess, `2` Pending Audit
                       enum:
                         - '1'
                         - '2'
@@ -8117,7 +8249,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/tenant_currencies_by_channel
                     bill_type:
                       type: string
-                      description: Fund Flow. Filters results by Fund Flow.
+                      description: |-
+                        Fund Flow. Filters results by Fund Flow.
+
+                        **Allowed values:** `1` In, `2` Out
                       enum:
                         - '1'
                         - '2'
@@ -8153,7 +8288,10 @@ paths:
                           format: date
                     key:
                       type: string
-                      description: Deposit Status. Filters results by Deposit Status.
+                      description: |-
+                        Deposit Status. Filters results by Deposit Status.
+
+                        **Allowed values:** `3` Match, `4` Counter Deal, `5` Load Completed, `8` Failed, `9` Deleted, `100` Pending Release, `200` Pending Release Review, `6` Rejected
                       enum:
                         - '3'
                         - '4'
@@ -8187,6 +8325,8 @@ paths:
                         Match Status. Filters results by Match Status.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `1` Matched, `2` Unmatch, `4` Manually Match, `5` Pending Transfer Audit, `6` Frozen
                       example: 1,2
                       enum:
                         - '1'
@@ -8731,7 +8871,10 @@ paths:
                       description: Chnl Ref No.. Filters results by Chnl Ref No..
                     transfer_type:
                       type: string
-                      description: Allocation Type. Filters results by Allocation Type.
+                      description: |-
+                        Allocation Type. Filters results by Allocation Type.
+
+                        **Allowed values:** `1` Interbank transfer, `2` Settlement account recharge, `3` Settlement account withdrawal, `4` Inter-settlement account transfer
                       enum:
                         - '1'
                         - '2'
@@ -8749,7 +8892,10 @@ paths:
                       example: '1'
                     status:
                       type: string
-                      description: Status. Filters results by Status.
+                      description: |-
+                        Status. Filters results by Status.
+
+                        **Allowed values:** `1,3` In Channel Processing, `2` Pending Approval, `4` Success, `5` Failed, `6` Abnormal, `7` Rejected
                       enum:
                         - 1,3
                         - '2'
@@ -8773,7 +8919,10 @@ paths:
                       example: 1,3
                     currency_type:
                       type: string
-                      description: Currency Type. Filters results by Currency Type.
+                      description: |-
+                        Currency Type. Filters results by Currency Type.
+
+                        **Allowed values:** `fiat`, `crypto`
                       enum:
                         - fiat
                         - crypto
@@ -9380,7 +9529,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/fund_business_type
                     bill_type:
                       type: string
-                      description: Fund Flow. Filters results by Fund Flow.
+                      description: |-
+                        Fund Flow. Filters results by Fund Flow.
+
+                        **Allowed values:** `1` In, `2` Out
                       enum:
                         - '1'
                         - '2'
@@ -9648,7 +9800,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/tenant_currencies
                     state:
                       type: string
-                      description: State. Filters results by State.
+                      description: |-
+                        State. Filters results by State.
+
+                        **Allowed values:** `0` Unassociated, `1` Associated and Recorded, `2` Rejected After Association, `3` Associated, `4,5` Cancelled
                       enum:
                         - '0'
                         - '1'
@@ -9672,7 +9827,10 @@ paths:
                       description: Company Bank Name. Filters results by Company Bank Name.
                     bill_type:
                       type: string
-                      description: Bill Type. Filters results by Bill Type.
+                      description: |-
+                        Bill Type. Filters results by Bill Type.
+
+                        **Allowed values:** `1` Deposit, `2` Withdraw
                       enum:
                         - '1'
                         - '2'
@@ -9995,7 +10153,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/tenant_currencies
                     status:
                       type: string
-                      description: Status. Filters results by Status.
+                      description: |-
+                        Status. Filters results by Status.
+
+                        **Allowed values:** `0` Not Pushed (Pending Auto Processing), `1` Pushed, `2` Pending Push Review, `3` Not Pushed (Pending Manual Processing)
                       enum:
                         - '0'
                         - '1'
@@ -10013,7 +10174,10 @@ paths:
                       example: '0'
                     dr:
                       type: string
-                      description: Fund Flows. Filters results by Fund Flows.
+                      description: |-
+                        Fund Flows. Filters results by Fund Flows.
+
+                        **Allowed values:** `2` Deposit, `1` Withdraw
                       enum:
                         - '2'
                         - '1'
@@ -10247,7 +10411,10 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     search_member_id:
                       type: string
                       description: Member ID. Filters results by Member ID.
@@ -10261,13 +10428,19 @@ paths:
                         endpoint: GET /v1/datasets/refs/tenant_currencies_by_channel
                     channel_account:
                       type: string
-                      description: A/C No.. Filters results by A/C No..
+                      description: |-
+                        A/C No.. Filters results by A/C No..
+
+                        `channel_account` is the customer's securities account number (such as `H00000000`). It differs from the customer ID `member_id` and the internal securities account ID `aaid`.
                     id:
                       type: string
                       description: Deposit Request ID. Filters results by Deposit Request ID.
                     ref_state:
                       type: string
-                      description: Match State. Filters results by Match State.
+                      description: |-
+                        Match State. Filters results by Match State.
+
+                        **Allowed values:** `0` Not Matched, `1` Already Matched
                       enum:
                         - '0'
                         - '1'
@@ -10283,6 +10456,8 @@ paths:
                         Status. Filters results by Status.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `0` Processing, `1` Load Completed, `2` Failed, `3` Canceled, `5` Rejected, `6` Modify to be approved, `7` Delete pending approval, `8` Deleted, `9` Reject pending approval, `100` Pending Release, `200` Pending Release Review
                       example: 0,1
                       enum:
                         - '0'
@@ -10321,7 +10496,10 @@ paths:
                           label: Pending Release Review
                     deposit_type:
                       type: string
-                      description: Deposit Type. Filters results by Deposit Type.
+                      description: |-
+                        Deposit Type. Filters results by Deposit Type.
+
+                        **Allowed values:** `0` Client Deposit, `1` Account Opening Deposit
                       enum:
                         - '0'
                         - '1'
@@ -10388,7 +10566,7 @@ paths:
                       description: |-
                         Requestor. Filters results by Requestor.
 
-                        **Allowed values:** `APP` (User), `system` (System), `AUTO`
+                        **Allowed values:** `APP` User, `system`, `AUTO`
                       enum:
                         - APP
                         - system
@@ -10396,7 +10574,10 @@ paths:
                       example: APP
                     sub_state:
                       type: string
-                      description: Deposit Expedited. Filters results by Deposit Expedited.
+                      description: |-
+                        Deposit Expedited. Filters results by Deposit Expedited.
+
+                        **Allowed values:** `0` None, `1` Pending, `2` Confirm
                       enum:
                         - '0'
                         - '1'
@@ -10779,6 +10960,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             custom_remark:
                               type: string
                               description: Remark
@@ -10802,7 +10986,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - custom_remark: string
+                    - id: '123'
+                      custom_remark: string
                       operate_type: string
                       operate_type_val: string
                       author: string
@@ -10866,7 +11051,10 @@ paths:
                       description: Business ID
                     busi_type:
                       type: string
-                      description: User
+                      description: |-
+                        User
+
+                        **Allowed values:** `rollover_notify` Transfer-in notice, `transfer_out_notify` Transfer-out notice
                       enum:
                         - rollover_notify
                         - transfer_out_notify
@@ -10918,6 +11106,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             admin:
                               type: string
                               description: Operator
@@ -10950,7 +11141,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - admin: string
+                    - id: '123'
+                      admin: string
                       admin_val: string
                       state: string
                       state_val: string
@@ -11714,7 +11906,10 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: Client
+                      description: |-
+                        Client
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     from_currency:
                       type: string
                       description: Currency. Values are dynamically queried from global_currency_filter_by_account_channel (not fixed); fetch them live via GET /v1/datasets/refs/tenant_currencies_by_channel.
@@ -11722,7 +11917,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/tenant_currencies_by_channel
                     channel_account:
                       type: string
-                      description: A/C No.
+                      description: |-
+                        A/C No.
+
+                        `channel_account` is the customer's securities account number (such as `H00000000`). It differs from the customer ID `member_id` and the internal securities account ID `aaid`.
                     lb_bank_account:
                       type: string
                       description: Bank Account
@@ -11986,7 +12184,10 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     from_currency:
                       type: string
                       description: |-
@@ -11997,7 +12198,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/tenant_currencies_by_channel
                     channel_account:
                       type: string
-                      description: A/C No.. Filters results by A/C No..
+                      description: |-
+                        A/C No.. Filters results by A/C No..
+
+                        `channel_account` is the customer's securities account number (such as `H00000000`). It differs from the customer ID `member_id` and the internal securities account ID `aaid`.
                     lb_bank_account:
                       type: string
                       description: Bank Account. Filters results by Bank Account.
@@ -12307,10 +12511,16 @@ paths:
                       description: ID
                     member_id:
                       type: string
-                      description: Client ID
+                      description: |-
+                        Client ID
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     channel_account:
                       type: string
-                      description: A/C No.
+                      description: |-
+                        A/C No.
+
+                        `channel_account` is the customer's securities account number (such as `H00000000`). It differs from the customer ID `member_id` and the internal securities account ID `aaid`.
                     currency:
                       type: string
                       description: Currency. Values are dynamically queried from global_currency_filter_by_account_channel (not fixed); fetch them live via GET /v1/datasets/refs/tenant_currencies_by_channel.
@@ -12587,7 +12797,10 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: Client
+                      description: |-
+                        Client
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     from_currency:
                       type: string
                       description: Currency. Values are dynamically queried from global_currency_filter_by_account_channel (not fixed); fetch them live via GET /v1/datasets/refs/tenant_currencies_by_channel.
@@ -12595,7 +12808,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/tenant_currencies_by_channel
                     channel_account:
                       type: string
-                      description: A/C No.
+                      description: |-
+                        A/C No.
+
+                        `channel_account` is the customer's securities account number (such as `H00000000`). It differs from the customer ID `member_id` and the internal securities account ID `aaid`.
                     lb_bank_account:
                       type: string
                       description: Bank Account
@@ -12868,7 +13084,10 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     from_currency:
                       type: string
                       description: |-
@@ -12879,7 +13098,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/tenant_currencies_by_channel
                     channel_account:
                       type: string
-                      description: A/C No.. Filters results by A/C No..
+                      description: |-
+                        A/C No.. Filters results by A/C No..
+
+                        `channel_account` is the customer's securities account number (such as `H00000000`). It differs from the customer ID `member_id` and the internal securities account ID `aaid`.
                     lb_bank_account:
                       type: string
                       description: Bank Account. Filters results by Bank Account.
@@ -13168,7 +13390,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/tenant_currencies_by_channel
                     state:
                       type: string
-                      description: Reconciliation Results. Filters results by Reconciliation Results.
+                      description: |-
+                        Reconciliation Results. Filters results by Reconciliation Results.
+
+                        **Allowed values:** `1` Reconciled, `2` Unreconciled
                       enum:
                         - '1'
                         - '2'
@@ -13372,7 +13597,10 @@ paths:
                   properties:
                     trade_type:
                       type: string
-                      description: Business Type. Filters results by Business Type.
+                      description: |-
+                        Business Type. Filters results by Business Type.
+
+                        **Allowed values:** `deposit` Client Deposit, `deposit_register` Account Opening Deposit, `transfer_in` Deposit Refund (credit), `transfer_out` Deposit Refund (debit), `withdraw` Client Withdrawal
                       enum:
                         - deposit
                         - deposit_register
@@ -13409,7 +13637,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/tenant_currencies_by_channel
                     mis_type:
                       type: string
-                      description: Reconciliation Results. Filters results by Reconciliation Results.
+                      description: |-
+                        Reconciliation Results. Filters results by Reconciliation Results.
+
+                        **Allowed values:** `1` Reconciled, `2` Unreconciled, `3` External side does not exist, `4` Internal side does not exist
                       enum:
                         - '1'
                         - '2'
@@ -13656,10 +13887,16 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: Client ID. Filters results by Client ID.
+                      description: |-
+                        Client ID. Filters results by Client ID.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     channel_account:
                       type: string
-                      description: A/C No.. Filters results by A/C No..
+                      description: |-
+                        A/C No.. Filters results by A/C No..
+
+                        `channel_account` is the customer's securities account number (such as `H00000000`). It differs from the customer ID `member_id` and the internal securities account ID `aaid`.
                     lb_bank_account:
                       type: string
                       description: Company Bank Account No.. Filters results by Company Bank Account No..
@@ -13697,6 +13934,8 @@ paths:
                         Deposit Status. Filters results by Deposit Status.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `3` Match, `4` Counter Deal, `5` Load Completed, `8` Failed, `9` Deleted, `100` Pending Release, `200` Pending Release Review, `6` Rejected
                       example: 3,4
                       enum:
                         - '3'
@@ -13742,6 +13981,8 @@ paths:
                         Deposit Type. Filters results by Deposit Type.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `1` Add Money, `2` Withdrawal refund, `7` Deposit refund, `8` Register
                       example: 1,2
                       enum:
                         - '1'
@@ -14144,7 +14385,10 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     id:
                       type: string
                       description: Application Number. Filters results by Application Number.
@@ -14154,6 +14398,8 @@ paths:
                         Application Status. Filters results by Application Status.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `0 99` To be Submitted, `7` Submitted, `1` Processing, `2` Rejected, `3` Cancelled, `4` Done, `5` Failed, `6` Returned, `9` Modification pending approval, `10` Delete pending approval, `11` Deleted, `12` Reject pending approval, `13` Pending Review
                       example: 0 99,7
                       enum:
                         - 0 99
@@ -14198,7 +14444,10 @@ paths:
                           label: Pending Review
                     origin:
                       type: string
-                      description: Withdrawal Type. Filters results by Withdrawal Type.
+                      description: |-
+                        Withdrawal Type. Filters results by Withdrawal Type.
+
+                        **Allowed values:** `0` Client Withdrawal, `1` Manual Withdrawal, `2` Bank Withdrawal
                       enum:
                         - '0'
                         - '1'
@@ -14221,7 +14470,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/tenant_currencies
                     state:
                       type: string
-                      description: Packing Status. Filters results by Packing Status.
+                      description: |-
+                        Packing Status. Filters results by Packing Status.
+
+                        **Allowed values:** `0` Packed, `1` Pending Approval, `2` Approved, `4` Done, `5` Cancelled
                       enum:
                         - '0'
                         - '1'
@@ -14281,7 +14533,10 @@ paths:
                           format: date
                     anti_cheat_task_status:
                       type: string
-                      description: Risk Status. Filters results by Risk Status.
+                      description: |-
+                        Risk Status. Filters results by Risk Status.
+
+                        **Allowed values:** `=,` Unknown, `~waiting_request/waiting_response` Risk Control In Progress, `finish,=` Not Targeted, `finish,!=` Targeted
                       enum:
                         - =,
                         - ~waiting_request/waiting_response
@@ -14747,6 +15002,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             record:
                               type: string
                               description: Record
@@ -14770,7 +15028,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - record: string
+                    - id: '123'
+                      record: string
                       operate_type: string
                       operate_type_val: string
                       author: string
@@ -14833,7 +15092,10 @@ paths:
                       description: Application Number. Filters results by Application Number.
                     member_id:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     to_currency:
                       type: string
                       description: |-
@@ -14844,7 +15106,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/tenant_currencies
                     to_bank_region:
                       type: string
-                      description: To Bank Region. Filters results by To Bank Region.
+                      description: |-
+                        To Bank Region. Filters results by To Bank Region.
+
+                        **Allowed values:** `HONGKONG` Banks In Hong Kong, `SINGAPORE` Banks In Singapore, `ABROAD` Banks In Other Regions, `USA` Banks In The U. S, `AUSTRALIA` Banks In Australia, `MALAYSIA` Banks In Malaysia
                       enum:
                         - HONGKONG
                         - SINGAPORE
@@ -14877,7 +15142,10 @@ paths:
                       description: Remark. Filters results by Remark.
                     withdraw_type:
                       type: string
-                      description: Withdraw Type. Filters results by Withdraw Type.
+                      description: |-
+                        Withdraw Type. Filters results by Withdraw Type.
+
+                        **Allowed values:** `1,` Client Withdrawal, `3,` Set As Withdrawal, `7,` Refund, `,1` Manual Withdrawal, `6,` Bank Withdrawal
                       enum:
                         - 1,
                         - 3,
@@ -15527,7 +15795,10 @@ paths:
                       description: Application Number. Filters results by Application Number.
                     member_id:
                       type: string
-                      description: Member ID. Filters results by Member ID.
+                      description: |-
+                        Member ID. Filters results by Member ID.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     to_currency:
                       type: string
                       description: |-
@@ -15556,6 +15827,8 @@ paths:
                         Withdrawal Status. Filters results by Withdrawal Status.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `0` Unknown, `1` Unprocessed, `2` Processing, `3` Success, `4` Failed, `5` Cancelled, `6` Backed, `7` Update result pending approval, `8` Deleted
                       example: 0,1
                       enum:
                         - '0'
@@ -15588,7 +15861,10 @@ paths:
                           label: Deleted
                     withdraw_type:
                       type: string
-                      description: Withdrawal Type. Filters results by Withdrawal Type.
+                      description: |-
+                        Withdrawal Type. Filters results by Withdrawal Type.
+
+                        **Allowed values:** `1,` Client Withdrawal, `3,` Set As Withdrawal, `7,` Refund, `,1` Manual Withdrawal, `6,` Bank Withdrawal
                       enum:
                         - 1,
                         - 3,
@@ -15700,7 +15976,10 @@ paths:
                       description: Withdraw Status. Filters results by Withdraw Status.
                     batch_state:
                       type: string
-                      description: Batch Status. Filters results by Batch Status.
+                      description: |-
+                        Batch Status. Filters results by Batch Status.
+
+                        **Allowed values:** `0` Packed, `1` Pending Approval, `2` Approved, `4` Done, `5` Cancelled
                       enum:
                         - '0'
                         - '1'
@@ -16135,7 +16414,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/tenant_currencies_by_channel
                     state:
                       type: string
-                      description: Reconciliation Results. Filters results by Reconciliation Results.
+                      description: |-
+                        Reconciliation Results. Filters results by Reconciliation Results.
+
+                        **Allowed values:** `1` Reconciled, `2` Unreconciled
                       enum:
                         - '1'
                         - '2'
@@ -16339,7 +16621,10 @@ paths:
                   properties:
                     trade_type:
                       type: string
-                      description: Business Type. Filters results by Business Type.
+                      description: |-
+                        Business Type. Filters results by Business Type.
+
+                        **Allowed values:** `deposit` Client Deposit, `deposit_register` Account Opening Deposit, `transfer_in` Deposit Refund (credit), `transfer_out` Deposit Refund (debit), `withdraw` Client Withdrawal
                       enum:
                         - deposit
                         - deposit_register
@@ -16376,7 +16661,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/tenant_currencies_by_channel
                     mis_type:
                       type: string
-                      description: Reconciliation Results. Filters results by Reconciliation Results.
+                      description: |-
+                        Reconciliation Results. Filters results by Reconciliation Results.
+
+                        **Allowed values:** `1` Reconciled, `2` Unreconciled, `3` External side does not exist, `4` Internal side does not exist
                       enum:
                         - '1'
                         - '2'
@@ -16619,7 +16907,10 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     created_at:
                       type: object
                       description: Created Date. Filters results by Created Date.
@@ -16651,7 +16942,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/tenant_currencies_by_channel
                     state:
                       type: string
-                      description: Withdraw Status. Filters results by Withdraw Status.
+                      description: |-
+                        Withdraw Status. Filters results by Withdraw Status.
+
+                        **Allowed values:** `0` Unknown, `1` Unprocessed, `2` Processing, `3` Success, `4` Failed, `5` Cancelled, `6` Backed, `7` Update result pending approval, `8` Deleted
                       enum:
                         - '0'
                         - '1'
@@ -16756,6 +17050,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             detail_id:
                               type: string
                               description: Withdraw Detail ID. **Returned value:** Withdraw Detail ID.
@@ -16860,7 +17157,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - detail_id: '170073'
+                    - id: '123'
+                      detail_id: '170073'
                       created_at: '1784142664'
                       member_id: '101456715'
                       member_id_val: ''
@@ -16967,7 +17265,10 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: Client
+                      description: |-
+                        Client
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     created_at:
                       type: object
                       description: Start Date. Range filter; both bounds are optional (omit a bound to leave that side unbounded).
@@ -17059,6 +17360,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             detail_id:
                               type: string
                               description: Withdraw Detail ID
@@ -17169,7 +17473,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - detail_id: string
+                    - id: '123'
+                      detail_id: string
                       operation_id: string
                       operation_id_val: string
                       description: string
@@ -17376,7 +17681,10 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     user_bank_card_no:
                       type: string
                       description: Client's Linked Bank Card No.. Filters results by Client's Linked Bank Card No..
@@ -17390,7 +17698,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/receiving_bank_accounts_with_names
                     state:
                       type: string
-                      description: Status. Filters results by Status.
+                      description: |-
+                        Status. Filters results by Status.
+
+                        **Allowed values:** `0` Pending Review, `1` Activating, `2` Activated, `3` Denied, `4` Closed, `5` Expired, `8` Canceled
                       enum:
                         - '0'
                         - '1'
@@ -17432,7 +17743,10 @@ paths:
                           format: date
                     busi_type:
                       type: string
-                      description: Approval Status. Filters results by Approval Status.
+                      description: |-
+                        Approval Status. Filters results by Approval Status.
+
+                        **Allowed values:** `0` Initial, `46` Approved Pending, `45` Activate Pending, `50` Rejected Pending, `49` Deactivate Pending
                       enum:
                         - '0'
                         - '46'
@@ -17697,7 +18011,10 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     sub_account_no:
                       type: string
                       description: Sub Account No.. Filters results by Sub Account No..
@@ -17711,7 +18028,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/company_bank_account_config
                     state:
                       type: string
-                      description: Activation Status. Filters results by Activation Status.
+                      description: |-
+                        Activation Status. Filters results by Activation Status.
+
+                        **Allowed values:** `0` Opening, `1` Opened, `2` Deleting, `3` Deleted, `4` Closed
                       enum:
                         - '0'
                         - '1'
@@ -18097,7 +18417,10 @@ paths:
                       description: ID. Filters results by ID.
                     member_id:
                       type: string
-                      description: Member ID. Filters results by Member ID.
+                      description: |-
+                        Member ID. Filters results by Member ID.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     mandate_identification:
                       type: string
                       description: Authorization No.. Filters results by Authorization No..
@@ -18126,7 +18449,10 @@ paths:
                           format: date
                     state:
                       type: string
-                      description: Status. Filters results by Status.
+                      description: |-
+                        Status. Filters results by Status.
+
+                        **Allowed values:** `0` Pending Review, `1` Activating, `2` Activated, `3` Denied, `4` Closed, `5` Expired, `8` Canceled
                       enum:
                         - '0'
                         - '1'
@@ -18153,7 +18479,10 @@ paths:
                       example: '0'
                     verify_state:
                       type: string
-                      description: Manual Confirmation. Filters results by Manual Confirmation.
+                      description: |-
+                        Manual Confirmation. Filters results by Manual Confirmation.
+
+                        **Allowed values:** `0` Processing not required, `1` Pending Processing, `3` Confirmed, `4` Expired
                       enum:
                         - '0'
                         - '1'
@@ -18180,14 +18509,17 @@ paths:
                       description: |-
                         Auth Currency. Filters results by Auth Currency.
 
-                        **Allowed values:** `HKD`, `CNH`
+                        **Allowed values:** `HKD` Hong Kong dollar, `CNH` Offshore RMB
                       enum:
                         - HKD
                         - CNH
                       example: HKD
                     auth_type:
                       type: string
-                      description: Authorization Type. Filters results by Authorization Type.
+                      description: |-
+                        Authorization Type. Filters results by Authorization Type.
+
+                        **Allowed values:** `0` Unmatched, `1` App Direct Initiation, `2` Initiated Via Online Banking, `3` Initiated Via Bank Counter
                       enum:
                         - '0'
                         - '1'
@@ -18220,7 +18552,10 @@ paths:
                           format: date
                     app_show:
                       type: string
-                      description: Display to Client. Filters results by Display to Client.
+                      description: |-
+                        Display to Client. Filters results by Display to Client.
+
+                        **Allowed values:** `0` NO, `1` YES
                       enum:
                         - '0'
                         - '1'
@@ -18232,7 +18567,10 @@ paths:
                       example: '0'
                     busi_type:
                       type: string
-                      description: Approval Status. Filters results by Approval Status.
+                      description: |-
+                        Approval Status. Filters results by Approval Status.
+
+                        **Allowed values:** `0` Initial, `45` Activate Pending, `49` Deactivate Pending, `37` Pending Review, `36` Delete To Approve
                       enum:
                         - '0'
                         - '45'
@@ -18535,7 +18873,10 @@ paths:
                       description: ID
                     member_id:
                       type: string
-                      description: Member ID
+                      description: |-
+                        Member ID
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     mandate_identification:
                       type: string
                       description: Authorization No.
@@ -18549,7 +18890,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/receiving_bank_accounts_with_names
                     auth_type:
                       type: string
-                      description: Authorization Type
+                      description: |-
+                        Authorization Type
+
+                        **Allowed values:** `0` Unmatched, `1` Initiated in app, `2` Initiated via customer online banking, `3` Authorized at bank counter
                       enum:
                         - '0'
                         - '1'
@@ -18558,7 +18902,10 @@ paths:
                       example: '0'
                     state:
                       type: string
-                      description: Status
+                      description: |-
+                        Status
+
+                        **Allowed values:** `0` Pending review, `1` Activating, `2` Activated, `3` Rejected, `4` Closed, `5` Expired, `8` Canceled
                       enum:
                         - '0'
                         - '1'
@@ -18570,7 +18917,10 @@ paths:
                       example: '0'
                     verify_state:
                       type: string
-                      description: Approval Status
+                      description: |-
+                        Approval Status
+
+                        **Allowed values:** `0` No action required, `1` Pending, `3` Confirmed, `4` Invalidated
                       enum:
                         - '0'
                         - '1'
@@ -18612,7 +18962,10 @@ paths:
                           format: date
                     app_show:
                       type: string
-                      description: Display to Client
+                      description: |-
+                        Display to Client
+
+                        **Allowed values:** `0` No, `1` Yes
                       enum:
                         - '0'
                         - '1'
@@ -18852,7 +19205,10 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     member_id_list:
                       type: string
                       description: Client List. Filters results by Client List.
@@ -18872,7 +19228,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/company_account_types
                     status:
                       type: string
-                      description: Verification Status. Filters results by Verification Status.
+                      description: |-
+                        Verification Status. Filters results by Verification Status.
+
+                        **Allowed values:** `0` Without Authentication, `1` Authentication In Progress, `2` Authentication Succeeded
                       enum:
                         - '0'
                         - '1'
@@ -19190,10 +19549,16 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: Client
+                      description: |-
+                        Client
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     state:
                       type: string
-                      description: Status
+                      description: |-
+                        Status
+
+                        **Allowed values:** `0` Success, `1` New pending review, `2` Waiting Edit Review, `3` Delete pending approval
                       enum:
                         - '0'
                         - '1'
@@ -19380,7 +19745,10 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: Client
+                      description: |-
+                        Client
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     raw_member_id:
                       type: string
                       description: Client ID
@@ -19397,7 +19765,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/company_account_types
                     status:
                       type: string
-                      description: Verification Status
+                      description: |-
+                        Verification Status
+
+                        **Allowed values:** `0` Without Authentication, `1` Authentication In Progress, `2` Authentication Succeeded
                       enum:
                         - '0'
                         - '1'
@@ -19674,7 +20045,10 @@ paths:
                       description: Channel Exchange Order ID. Filters results by Channel Exchange Order ID.
                     member_id:
                       type: string
-                      description: Client ID. Filters results by Client ID.
+                      description: |-
+                        Client ID. Filters results by Client ID.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     forex_type:
                       type: string
                       description: |-
@@ -19727,7 +20101,10 @@ paths:
                           format: date-time
                     audit_status:
                       type: string
-                      description: Review Status. Filters results by Review Status.
+                      description: |-
+                        Review Status. Filters results by Review Status.
+
+                        **Allowed values:** `WAIT_AUDIT` Pending Review, `REJECTED_AUDIT` Rejected, `APPROVED_AUDIT` Reviewed
                       enum:
                         - WAIT_AUDIT
                         - REJECTED_AUDIT
@@ -19742,7 +20119,10 @@ paths:
                       example: WAIT_AUDIT
                     origin:
                       type: string
-                      description: Requestor. Filters results by Requestor.
+                      description: |-
+                        Requestor. Filters results by Requestor.
+
+                        **Allowed values:** `0` User, `1` Manual, `2` WAS, `3` Auto, `4` Force
                       enum:
                         - '0'
                         - '1'
@@ -19816,6 +20196,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             forex_id:
                               type: string
                               description: Conversion Order No.. **Returned value:** Conversion Order No..
@@ -19926,7 +20309,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - forex_id: '1284943380'
+                    - id: '123'
+                      forex_id: '1284943380'
                       client_ordid: ''
                       member_id: '101456715'
                       member_id_val: ''
@@ -20205,7 +20589,7 @@ paths:
                       description: |-
                         Rate Type. Filters results by Rate Type.
 
-                        **Allowed values:** `ACCOUNT` (Ledger rate), `CCASS`, `CURRENT` (Spot rate)
+                        **Allowed values:** `ACCOUNT` Ledger rate, `CCASS`, `CURRENT` Spot rate
                       enum:
                         - ACCOUNT
                         - CCASS
@@ -20216,7 +20600,7 @@ paths:
                       description: |-
                         Source. Filters results by Source.
 
-                        **Allowed values:** `FILE`, `MANUEL_CREATE` (MANUEL CREATE), `AUTO`, `COPY`, `CCASS` (Auto Follow HKEX)
+                        **Allowed values:** `FILE`, `MANUEL_CREATE` MANUEL CREATE, `AUTO`, `COPY`, `CCASS` Auto Follow HKEX
                       enum:
                         - FILE
                         - MANUEL_CREATE
@@ -20709,7 +21093,10 @@ paths:
                           format: date-time
                     channel_status:
                       type: string
-                      description: Channel Exchange Status. Filters results by Channel Exchange Status.
+                      description: |-
+                        Channel Exchange Status. Filters results by Channel Exchange Status.
+
+                        **Allowed values:** `SUBMITTED` Submitted, `PENDING` Pending, `APPROVED` Approved, `FAILED` Failed, `REJECTED` Rejected, `CANCELED` Canceled
                       enum:
                         - SUBMITTED
                         - PENDING
@@ -20733,7 +21120,10 @@ paths:
                       example: SUBMITTED
                     abnormal_status:
                       type: string
-                      description: Exception Status. Filters results by Exception Status.
+                      description: |-
+                        Exception Status. Filters results by Exception Status.
+
+                        **Allowed values:** `UNPROCESSED` Unprocessed, `WAIT_REVIEW` Pending Review, `TURN_SUCCESS` Set as Successful, `TURN_FAILURE` Set as Failed, `TURN_RETRY` Re Exchange
                       enum:
                         - UNPROCESSED
                         - WAIT_REVIEW
@@ -20967,7 +21357,10 @@ paths:
                       description: Record ID. Filters results by Record ID.
                     change_type:
                       type: string
-                      description: Business Type. Filters results by Business Type.
+                      description: |-
+                        Business Type. Filters results by Business Type.
+
+                        **Allowed values:** `plus` Manual Increase, `minus` Manual Reduce, `exchange_in` Exchange & Deposit, `exchange_out` Exchange & Withdrawal
                       enum:
                         - plus
                         - minus
@@ -21288,6 +21681,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             forex_id:
                               type: string
                               description: Conversion Order No.. **Returned value:** Conversion Order No..
@@ -21338,7 +21734,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - forex_id: '1165216940'
+                    - id: '123'
+                      forex_id: '1165216940'
                       client_ordid: '2011650017047'
                       channel_name: HSB
                       forex_type: FROM
@@ -21432,7 +21829,10 @@ paths:
                       format: date
                     member_id:
                       type: string
-                      description: Client ID. Filters results by Client ID.
+                      description: |-
+                        Client ID. Filters results by Client ID.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                 page:
                   type: integer
                   description: Page. Page number to retrieve, starting from `1`.
@@ -21641,7 +22041,10 @@ paths:
                   properties:
                     guide_type:
                       type: string
-                      description: Guideline Type. Filters results by Guideline Type.
+                      description: |-
+                        Guideline Type. Filters results by Guideline Type.
+
+                        **Allowed values:** `1` General Guidelines, `2` Specific Bank
                       enum:
                         - '1'
                         - '2'
@@ -21659,7 +22062,10 @@ paths:
                       description: Name Of Deposit Guideline. Filters results by Name Of Deposit Guideline.
                     language:
                       type: string
-                      description: Language. Filters results by Language.
+                      description: |-
+                        Language. Filters results by Language.
+
+                        **Allowed values:** `en` English, `zh-CN` Simplified Chinese, `zh-HK` Traditional Chinese
                       enum:
                         - en
                         - zh-CN
@@ -21891,7 +22297,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/deposit_channel_types
                     language:
                       type: string
-                      description: Language. Filters results by Language.
+                      description: |-
+                        Language. Filters results by Language.
+
+                        **Allowed values:** `en` English, `zh-CN` Simplified Chinese, `zh-HK` Traditional Chinese
                       enum:
                         - en
                         - zh-CN
@@ -21914,7 +22323,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/member_organizations
                     audit_status:
                       type: string
-                      description: Approval Status. Filters results by Approval Status.
+                      description: |-
+                        Approval Status. Filters results by Approval Status.
+
+                        **Allowed values:** `new_pending_review` New to approve, `delete_pending_review` Delete to approve, `update_pending_review` Edit to approve, `on_pending_review` List to approve, `off_pending_review` Delist to approve, `init` Initial
                       enum:
                         - new_pending_review
                         - delete_pending_review
@@ -21938,7 +22350,10 @@ paths:
                       example: new_pending_review
                     state:
                       type: string
-                      description: Publish Status. Filters results by Publish Status.
+                      description: |-
+                        Publish Status. Filters results by Publish Status.
+
+                        **Allowed values:** `1` Active, `2` Inactive, `99` New
                       enum:
                         - '1'
                         - '2'
@@ -22457,7 +22872,10 @@ paths:
                       description: Country/region - English. Filters results by Country/region - English.
                     is_allow_bind_card:
                       type: string
-                      description: Whether Card Binding Is Allowed. Filters results by Whether Card Binding Is Allowed.
+                      description: |-
+                        Whether Card Binding Is Allowed. Filters results by Whether Card Binding Is Allowed.
+
+                        **Allowed values:** `0` Not Allowed, `1` Allowed
                       enum:
                         - '0'
                         - '1'
