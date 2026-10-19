@@ -97,5 +97,7 @@ export function allTradingOperations(): TradingOperationRecord[] {
 
 export function tradingOperationRoutePath(method: string, path: string): string {
   const resourcePath = operationPath(path);
-  return (methodCounts.get(path) ?? 0) > 1 ? `${resourcePath}/${method.toLowerCase()}` : resourcePath;
+  // Astro collapses a trailing `/index` route segment, so such paths also get the method suffix.
+  const needsMethod = (methodCounts.get(path) ?? 0) > 1 || /(^|\/)index$/.test(resourcePath);
+  return needsMethod ? `${resourcePath}/${method.toLowerCase()}` : resourcePath;
 }

@@ -8,9 +8,13 @@ interface Props {
   document: OpenApiDocument;
   locale: "en" | "zh-CN" | "zh-HK";
   childrenOpen?: boolean;
+  ancestorRefs?: string[];
 }
 
-const { schema: rawSchema, document, locale, childrenOpen = true } = Astro.props;
+const { schema: rawSchema, document, locale, childrenOpen = true, ancestorRefs = [] } = Astro.props;
+// Collect the component refs a schema points at, so recursive schemas stop expanding.
+const schemaRefs = (value: any): string[] =>
+  value ? [value.$ref, ...(value.allOf ?? []).map((part: any) => part?.$ref)].filter(Boolean) : [];
 const schema = resolveSchema(document, rawSchema) ?? {};
 const properties = Object.entries(schema.properties ?? {}) as [string, any][];
 const required = new Set<string>(schema.required ?? []);
@@ -25,7 +29,9 @@ const enumLabel = locale === "en" ? "Values" : locale === "zh-CN" ? "可选值" 
     const childSchema = field?.type === "array"
       ? resolveSchema(document, field.items) ?? field.items
       : field;
-    const hasChildren = Boolean(childSchema?.properties && Object.keys(childSchema.properties).length);
+    const childRefs = schemaRefs(field?.type === "array" ? unresolved?.items ?? field.items : unresolved);
+    const isCycle = childRefs.some((ref) => ancestorRefs.includes(ref));
+    const hasChildren = !isCycle && Boolean(childSchema?.properties && Object.keys(childSchema.properties).length);
     const type = field?.type === "array" ? `array<${childSchema?.type ?? "object"}>` : field?.type ?? "object";
     return (
       <div class="api-schema-field" data-slot="api-schema-field">
@@ -60,7 +66,7 @@ const enumLabel = locale === "en" ? "Values" : locale === "zh-CN" ? "可选值" 
               <span>{childLabel}</span>
               <span class="api-schema-chevron" aria-hidden="true"></span>
             </summary>
-            <Astro.self schema={childSchema} document={document} locale={locale} childrenOpen={childrenOpen} />
+            <Astro.self schema={childSchema} document={document} locale={locale} childrenOpen={childrenOpen} ancestorRefs={[...ancestorRefs, ...childRefs]} />
           </details>
         )}
       </div>

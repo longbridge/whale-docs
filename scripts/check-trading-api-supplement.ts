@@ -113,6 +113,25 @@ for (const locale of LOCALES) {
   }
 }
 
+// Operation, parameter, and response copy is rendered as Markdown, so it must be a string.
+for (const locale of LOCALES) {
+  for (const [path, pathItem] of Object.entries(supplements.get(locale)!.paths ?? {})) {
+    for (const [method, operation] of Object.entries(pathItem)) {
+      if (!HTTP_METHODS.includes(method)) continue;
+      const key = `${method.toUpperCase()} ${path}`;
+      const copy: [string, unknown][] = [
+        ["summary", operation.summary],
+        ["description", operation.description],
+        ...(operation.parameters ?? []).map((p: any) => [`parameter ${p?.name} description`, p?.description] as [string, unknown]),
+        ...Object.entries(operation.responses ?? {}).map(([code, r]: [string, any]) => [`response ${code} description`, r?.description] as [string, unknown]),
+      ];
+      for (const [label, value] of copy) {
+        if (value !== undefined && typeof value !== "string") errors.push(`${locale}: ${key} ${label} is not a string`);
+      }
+    }
+  }
+}
+
 const operationIds = new Map<string, string>();
 for (const spec of [upstreams.get("zh-CN")!, supplements.get("zh-CN")!]) {
   for (const [path, pathItem] of Object.entries(spec.paths ?? {})) {
