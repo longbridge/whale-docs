@@ -750,19 +750,41 @@ paths:
                   description: 公告ID，用于标识本次请求关联的业务对象。此字段为必填项。
                 items:
                   type: array
-                  description: 调整明细列表，以 JSON 数组形式提交。此字段为必填项。
+                  description: 调整明细列表，每项是一个对象（不是 JSON 字符串；传字符串会返回 `500`）。此字段为必填项。
                   items:
-                    type: string
+                    type: object
+                    required:
+                      - group_id
+                      - event_id
+                    properties:
+                      group_id:
+                        type: string
+                        description: 子仓分组 ID，取 `sub_position_view_detail` 返回的分组 `id`。
+                      event_id:
+                        type: string
+                        description: 方案 ID，取 `corp_action_stock_events`（同一 `ann_id`）返回行的 `id`。
+                      expected_amount_total:
+                        type: string
+                        description: 预计调整的转入金额。`expected_amount_total`、`expected_quantity_total`、`expected_fee_total` 至少传一个。
+                      expected_quantity_total:
+                        type: string
+                        description: 预计调整的转入份额。
+                      expected_fee_total:
+                        type: string
+                        description: 预计调整的代扣税费。
                 remark:
                   type: string
                   description: 随本次操作保存的备注。
             example:
               ann_id: '123'
-              items: []
+              items:
+                - group_id: '1177'
+                  event_id: '153593'
+                  expected_amount_total: '1'
               remark: ''
       responses:
         '200':
-          description: 请求处理成功。响应的 `data` 不包含额外业务字段。
+          description: 请求处理成功。`data.adjustment_id` 为新建的调整 ID，可用于 `update_post_adjust_detail`、`confirm_post_adjust`、`delete_post_adjust_detail`。
           content:
             application/json:
               schema:
@@ -784,10 +806,15 @@ paths:
                     type: string
                   data:
                     type: object
+                    properties:
+                      adjustment_id:
+                        type: string
+                        description: 新建的事后调整 ID。
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  adjustment_id: '2013'
         '400':
           description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
           content:
