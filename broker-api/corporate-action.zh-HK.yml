@@ -718,7 +718,7 @@ paths:
 
         ### 請求參數
 
-        - 必填：`ann_id`（關聯的公告 ID）、`items`（調整明細列表，以 JSON 陣列形式提交）
+        - 必填：`ann_id`（關聯的公告 ID）、`items`（調整明細列表，每項是物件）
         - 可選：`remark`（備註）
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
@@ -732,7 +732,7 @@ paths:
 
         ### 處理結果
 
-        成功時完成事後調整；後續狀態和返回數據以 `200` 響應定義為準。
+        成功時新建一條待處理（Pending）的事後調整並返回 `adjustment_id`；調整尚未生效，需調用 `confirm_post_adjust` 確認後才會入賬。確認前可用 `update_post_adjust_detail` 修改明細或用 `delete_post_adjust_detail` 刪除。
       security:
         - bearerAuth: []
       requestBody:
@@ -18063,7 +18063,9 @@ paths:
 
         ### 請求參數
 
-        - `filters.ann_id`（公告 ID）、`filters.adjustment_id`（調整 ID）、`filters.group_id`（子倉分組 ID）實際均需傳入：`group_id` 不傳時按 `-1` 過濾，不返回任何行。
+        - `filters.ann_id`（公告 ID）實際必須傳入，不傳會掃描全部公告。
+        - `filters.adjustment_id`（調整 ID）只決定各項調整明細（`*_item_id`、`*_confirmed`）取自哪一次調整，需與 `ann_id` 一起使用；不會排除該公告下的其他登記賬戶。
+        - `filters.group_id`（子倉分組 ID）把結果限定為該分組子倉下的賬戶；不傳時返回該公告下全部登記賬戶。
         - `adjustment_id` 取 `post_adjust` 返回的 `adjustment_id` 或 `corp_action_post_adjust_records` 行的 `id`；`group_id` 取 `sub_position_view_detail` 返回的分組 `id`。
         - 使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
 
@@ -18089,16 +18091,16 @@ paths:
                   properties:
                     ann_id:
                       type: string
-                      description: '公告 ID。'
+                      description: '公告 ID。實際必須傳入。'
                     adjustment_id:
                       type: string
-                      description: '調整 ID，取 `post_adjust` 返回的 `adjustment_id` 或 `corp_action_post_adjust_records` 行的 `id`。'
+                      description: '調整 ID，取 `post_adjust` 返回的 `adjustment_id` 或 `corp_action_post_adjust_records` 行的 `id`。需與 `ann_id` 一起使用，只影響調整明細欄。'
                     counterpart_account:
                       type: string
                       description: '子倉。'
                     group_id:
                       type: string
-                      description: '子倉分組 ID，取 `sub_position_view_detail` 返回的分組 `id`。不傳時按 `-1` 過濾，不返回任何行。'
+                      description: '子倉分組 ID，取 `sub_position_view_detail` 返回的分組 `id`。傳入後只返回該分組子倉下的賬戶；不傳時返回該公告下全部登記賬戶。'
                 page:
                   type: integer
                   description: 要查詢的頁碼，從 `1` 開始。
@@ -18106,7 +18108,10 @@ paths:
                   type: integer
                   description: 每頁返回的記錄數量。
             example:
-              filters: {}
+              filters:
+                ann_id: '143362'
+                adjustment_id: '2013'
+                group_id: '1177'
               page: 1
               page_size: 20
       responses:
@@ -18279,16 +18284,16 @@ paths:
                   properties:
                     ann_id:
                       type: string
-                      description: '公告 ID。'
+                      description: '公告 ID。實際必須傳入。'
                     adjustment_id:
                       type: string
-                      description: '調整 ID，取 `post_adjust` 返回的 `adjustment_id` 或 `corp_action_post_adjust_records` 行的 `id`。'
+                      description: '調整 ID，取 `post_adjust` 返回的 `adjustment_id` 或 `corp_action_post_adjust_records` 行的 `id`。需與 `ann_id` 一起使用，只影響調整明細欄。'
                     counterpart_account:
                       type: string
                       description: '子倉。'
                     group_id:
                       type: string
-                      description: '子倉分組 ID，取 `sub_position_view_detail` 返回的分組 `id`。不傳時按 `-1` 過濾，不返回任何行。'
+                      description: '子倉分組 ID，取 `sub_position_view_detail` 返回的分組 `id`。傳入後只返回該分組子倉下的賬戶；不傳時返回該公告下全部登記賬戶。'
                 mode:
                   type: integer
                   default: 0
@@ -18362,7 +18367,10 @@ paths:
                       label: 隱藏
                   example: 0
             example:
-              filters: {}
+              filters:
+                ann_id: '143362'
+                adjustment_id: '2013'
+                group_id: '1177'
               mode: 0
               ext: csv
               file_name: ''

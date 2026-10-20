@@ -718,7 +718,7 @@ paths:
 
         ### 请求参数
 
-        - 必填：`ann_id`（关联的公告 ID）、`items`（调整明细列表，以 JSON 数组形式提交）
+        - 必填：`ann_id`（关联的公告 ID）、`items`（调整明细列表，每项是对象）
         - 可选：`remark`（备注）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
@@ -732,7 +732,7 @@ paths:
 
         ### 处理结果
 
-        成功时完成事后调整；后续状态和返回数据以 `200` 响应定义为准。
+        成功时新建一条待处理（Pending）的事后调整并返回 `adjustment_id`；调整尚未生效，需调用 `confirm_post_adjust` 确认后才会入账。确认前可用 `update_post_adjust_detail` 修改明细或用 `delete_post_adjust_detail` 删除。
       security:
         - bearerAuth: []
       requestBody:
@@ -18063,7 +18063,9 @@ paths:
 
         ### 请求参数
 
-        - `filters.ann_id`（公告 ID）、`filters.adjustment_id`（调整 ID）、`filters.group_id`（子仓分组 ID）实际均需传入：`group_id` 不传时按 `-1` 过滤，不返回任何行。
+        - `filters.ann_id`（公告 ID）实际必须传入，不传会扫描全部公告。
+        - `filters.adjustment_id`（调整 ID）只决定各项调整明细（`*_item_id`、`*_confirmed`）取自哪一次调整，需与 `ann_id` 一起使用；不会排除该公告下的其他登记账户。
+        - `filters.group_id`（子仓分组 ID）把结果限定为该分组子仓下的账户；不传时返回该公告下全部登记账户。
         - `adjustment_id` 取 `post_adjust` 返回的 `adjustment_id` 或 `corp_action_post_adjust_records` 行的 `id`；`group_id` 取 `sub_position_view_detail` 返回的分组 `id`。
         - 使用 `page`、`page_size`、`orderBy` 控制分页与排序。
 
@@ -18089,16 +18091,16 @@ paths:
                   properties:
                     ann_id:
                       type: string
-                      description: '公告 ID。'
+                      description: '公告 ID。实际必须传入。'
                     adjustment_id:
                       type: string
-                      description: '调整 ID，取 `post_adjust` 返回的 `adjustment_id` 或 `corp_action_post_adjust_records` 行的 `id`。'
+                      description: '调整 ID，取 `post_adjust` 返回的 `adjustment_id` 或 `corp_action_post_adjust_records` 行的 `id`。需与 `ann_id` 一起使用，只影响调整明细列。'
                     counterpart_account:
                       type: string
                       description: '子仓。'
                     group_id:
                       type: string
-                      description: '子仓分组 ID，取 `sub_position_view_detail` 返回的分组 `id`。不传时按 `-1` 过滤，不返回任何行。'
+                      description: '子仓分组 ID，取 `sub_position_view_detail` 返回的分组 `id`。传入后只返回该分组子仓下的账户；不传时返回该公告下全部登记账户。'
                 page:
                   type: integer
                   description: 要查询的页码，从 `1` 开始。
@@ -18106,7 +18108,10 @@ paths:
                   type: integer
                   description: 每页返回的记录数量。
             example:
-              filters: {}
+              filters:
+                ann_id: '143362'
+                adjustment_id: '2013'
+                group_id: '1177'
               page: 1
               page_size: 20
       responses:
@@ -18279,16 +18284,16 @@ paths:
                   properties:
                     ann_id:
                       type: string
-                      description: '公告 ID。'
+                      description: '公告 ID。实际必须传入。'
                     adjustment_id:
                       type: string
-                      description: '调整 ID，取 `post_adjust` 返回的 `adjustment_id` 或 `corp_action_post_adjust_records` 行的 `id`。'
+                      description: '调整 ID，取 `post_adjust` 返回的 `adjustment_id` 或 `corp_action_post_adjust_records` 行的 `id`。需与 `ann_id` 一起使用，只影响调整明细列。'
                     counterpart_account:
                       type: string
                       description: '子仓。'
                     group_id:
                       type: string
-                      description: '子仓分组 ID，取 `sub_position_view_detail` 返回的分组 `id`。不传时按 `-1` 过滤，不返回任何行。'
+                      description: '子仓分组 ID，取 `sub_position_view_detail` 返回的分组 `id`。传入后只返回该分组子仓下的账户；不传时返回该公告下全部登记账户。'
                 mode:
                   type: integer
                   default: 0
@@ -18362,7 +18367,10 @@ paths:
                       label: 隐藏
                   example: 0
             example:
-              filters: {}
+              filters:
+                ann_id: '143362'
+                adjustment_id: '2013'
+                group_id: '1177'
               mode: 0
               ext: csv
               file_name: ''
