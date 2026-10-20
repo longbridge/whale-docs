@@ -18049,6 +18049,401 @@ paths:
         method: POST
         path: /v1/datasets/corp_action_post_adjust_detail_announcements
         operationId: corp_action_post_adjust_detail_announcements
+  /v1/datasets/corp_action_post_adjust_detail_items:
+    post:
+      operationId: corp_action_post_adjust_detail_items
+      summary: '执行后调整 - 用户明细'
+      tags:
+        - 公司行动 (Corporate Action)
+      x-permission-key:
+        - corporate.after_event_adjustment_query
+      x-lbonly: false
+      description: |-
+        查询某笔执行后调整（事后调整）涉及的客户明细，每行对应一个客户在一个方案上的转入金额、转入份额和代扣税，以及各项的调整明细项 ID。
+
+        ### 请求参数
+
+        - `filters.ann_id`（公告 ID）、`filters.adjustment_id`（调整 ID）、`filters.group_id`（子仓分组 ID）实际均需传入：`group_id` 不传时按 `-1` 过滤，不返回任何行。
+        - `adjustment_id` 取 `post_adjust` 返回的 `adjustment_id` 或 `corp_action_post_adjust_records` 行的 `id`；`group_id` 取 `sub_position_view_detail` 返回的分组 `id`。
+        - 使用 `page`、`page_size`、`orderBy` 控制分页与排序。
+
+        ### 业务说明
+
+        `amount_item_id`、`quantity_item_id`、`fee_item_id` 分别是该客户金额、份额、代扣税调整项的 ID，即 `update_post_adjust_detail` 的 `item_id`；为空表示该项尚无明细。`*_origin` 为原值，`*_confirmed` 为当前确认值。
+
+        ### 返回结果
+
+        成功时返回匹配的记录列表及分页信息。返回列含义见响应定义。
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 组合业务过滤条件。省略某个过滤字段时，不按该字段筛选。
+                  properties:
+                    ann_id:
+                      type: string
+                      description: '公告 ID。'
+                    adjustment_id:
+                      type: string
+                      description: '调整 ID，取 `post_adjust` 返回的 `adjustment_id` 或 `corp_action_post_adjust_records` 行的 `id`。'
+                    counterpart_account:
+                      type: string
+                      description: '子仓。'
+                    group_id:
+                      type: string
+                      description: '子仓分组 ID，取 `sub_position_view_detail` 返回的分组 `id`。不传时按 `-1` 过滤，不返回任何行。'
+                page:
+                  type: integer
+                  description: 要查询的页码，从 `1` 开始。
+                page_size:
+                  type: integer
+                  description: 每页返回的记录数量。
+            example:
+              filters: {}
+              page: 1
+              page_size: 20
+      responses:
+        '200':
+          description: 成功时分页返回「执行后调整 - 用户明细」记录，以及页码、每页数量和总记录数等分页信息。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - message
+                  - data
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code` 判断具体结果。
+
+                      - `401`：未登录。
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。
+                    x-enum-details:
+                      - value: 0
+                        label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    required:
+                      - list
+                      - total
+                    properties:
+                      list:
+                        type: array
+                        description: '**返回值：** 列表列表。'
+                        items:
+                          type: object
+                          properties:
+                            aaid:
+                              type: string
+                              description: '**返回值：** 证券账户内部编号 `aaid`。'
+                            account_no:
+                              type: string
+                              description: '**返回值：** 证券账号。'
+                            real_name:
+                              type: string
+                              description: '**返回值：** 姓名。'
+                            event_id:
+                              type: string
+                              description: '**返回值：** 方案 ID。'
+                            event_type:
+                              type: string
+                              description: '**返回值：** 方案类型。'
+                            event_type_val:
+                              type: string
+                              description: '**返回值：** 字段 event_type 的原始值。'
+                            quantity:
+                              type: string
+                              description: '**返回值：** 持仓数量。'
+                            amount_item_id:
+                              type: string
+                              description: '**返回值：** 金额调整项 ID，即 `update_post_adjust_detail` 的 `item_id`；为空表示尚无该项。'
+                            amount_origin:
+                              type: string
+                              description: '**返回值：** 原转入金额。'
+                            amount_confirmed:
+                              type: string
+                              description: '**返回值：** 调整后转入金额。'
+                            fee_item_id:
+                              type: string
+                              description: '**返回值：** 代扣税调整项 ID，即 `update_post_adjust_detail` 的 `item_id`；为空表示尚无该项。'
+                            fee_origin:
+                              type: string
+                              description: '**返回值：** 原代扣税。'
+                            fee_confirmed:
+                              type: string
+                              description: '**返回值：** 调整后代扣税。'
+                            quantity_item_id:
+                              type: string
+                              description: '**返回值：** 份额调整项 ID，即 `update_post_adjust_detail` 的 `item_id`；为空表示尚无该项。'
+                            quantity_origin:
+                              type: string
+                              description: '**返回值：** 原转入持仓。'
+                            quantity_confirmed:
+                              type: string
+                              description: '**返回值：** 调整后转入持仓。'
+                      total:
+                        type: integer
+                        description: '**返回值：** 符合查询条件的记录总数，用于计算分页。'
+              example:
+                code: 0
+                message: success
+                data:
+                  list:
+                    - aaid: string
+                      account_no: string
+                      real_name: string
+                      event_id: string
+                      event_type: string
+                      event_type_val: string
+                      quantity: string
+                      amount_item_id: string
+                      amount_origin: string
+                      amount_confirmed: string
+                      fee_item_id: string
+                      fee_origin: string
+                      fee_confirmed: string
+                      quantity_item_id: string
+                      quantity_origin: string
+                      quantity_confirmed: string
+                  total: 1
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-dataset-download:
+        method: POST
+        path: /v1/datasets/corp_action_post_adjust_detail_items/download
+        operationId: corp_action_post_adjust_detail_items_download
+  /v1/datasets/corp_action_post_adjust_detail_items/download:
+    post:
+      operationId: corp_action_post_adjust_detail_items_download
+      summary: 执行后调整 - 用户明细导出
+      tags:
+        - 公司行动 (Corporate Action)
+      x-permission-key:
+        - corporate.after_event_adjustment_query
+      x-lbonly: false
+      description: |-
+        将「执行后调整 - 用户明细」数据导出为文件。`filters` 决定导出范围，`down_fields` 可限制导出字段。
+
+        ### 导出模式
+
+        - `mode: 0`：同步导出，成功后直接返回下载地址。
+        - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filters:
+                  type: object
+                  description: 字段同 corp_action_post_adjust_detail_items.yaml（query 能力）里的 filters
+                  properties:
+                    ann_id:
+                      type: string
+                      description: '公告 ID。'
+                    adjustment_id:
+                      type: string
+                      description: '调整 ID，取 `post_adjust` 返回的 `adjustment_id` 或 `corp_action_post_adjust_records` 行的 `id`。'
+                    counterpart_account:
+                      type: string
+                      description: '子仓。'
+                    group_id:
+                      type: string
+                      description: '子仓分组 ID，取 `sub_position_view_detail` 返回的分组 `id`。不传时按 `-1` 过滤，不返回任何行。'
+                mode:
+                  type: integer
+                  default: 0
+                  description: 不传时默认 0（同步）
+                  enum:
+                    - 0
+                    - 1
+                  x-enum-details:
+                    - value: 0
+                      label: 同步
+                    - value: 1
+                      label: 异步
+                  example: 0
+                ext:
+                  type: string
+                  description: 下载文件格式。不传时默认为 `csv`。
+                  enum:
+                    - csv
+                    - xlsx
+                  x-enum-details:
+                    - value: csv
+                      label: CSV
+                    - value: xlsx
+                      label: Excel
+                  example: csv
+                file_name:
+                  type: string
+                  description: 导出文件名称。不传时由服务端生成。
+                remark:
+                  type: string
+                  description: 与本次操作一并保存的备注。
+                down_fields:
+                  type: array
+                  description: 不传时导出全部字段；取值范围见 items.enum（同查询接口 data.list.items 的字段列表）
+                  items:
+                    type: string
+                    enum:
+                      - aaid
+                      - account_no
+                      - real_name
+                      - event_id
+                      - event_type
+                      - event_type_val
+                      - quantity
+                      - amount_item_id
+                      - amount_origin
+                      - amount_confirmed
+                      - fee_item_id
+                      - fee_origin
+                      - fee_confirmed
+                      - quantity_item_id
+                      - quantity_origin
+                      - quantity_confirmed
+                    example: aaid
+                ticket_content:
+                  type: string
+                  description: 模板配置了下载审核工单时，供审批人查看
+                ticket_preview_url:
+                  type: string
+                  description: 导出审批详情地址；仅在导出需要审批时使用。
+                hide:
+                  type: integer
+                  description: 是否在下载记录列表中隐藏本次导出记录。
+                  enum:
+                    - 0
+                    - 1
+                  x-enum-details:
+                    - value: 0
+                      label: 不隐藏
+                    - value: 1
+                      label: 隐藏
+                  example: 0
+            example:
+              filters: {}
+              mode: 0
+              ext: csv
+              file_name: ''
+              remark: ''
+              down_fields: []
+              ticket_content: ''
+              ticket_preview_url: ''
+              hide: 0
+      responses:
+        '200':
+          description: 成功时返回「执行后调整 - 用户明细导出」任务信息。同步导出直接提供下载地址；异步导出提供用于后续查询的 `file_download_id`。
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - message
+                  - data
+                properties:
+                  code:
+                    type: integer
+                    description: |-
+                      0 表示成功；非 0 为业务错误码，此时 `data` 通常为空。
+
+                      HTTP status 使用标准语义：成功时通常为 `200`，异常时可能为 `400`、`401`、`403`、`408` 等，需结合业务 `code` 判断具体结果。
+
+                      - `401`：未登录。
+                      - `403`：当前账号未获得该功能授权，需通过 User Permission 授权。
+                    x-enum-details:
+                      - value: 0
+                        label: 成功
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        description: '同步模式（`mode: 0`）下返回，异步模式下为空'
+                      file_download_id:
+                        type: string
+                        description: '异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。'
+                      ticket_id:
+                        type: string
+                        description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
+              example:
+                code: 0
+                message: success
+                data:
+                  url: https://b-api.longbridge.xyz/download/export_result.csv
+                  file_download_id: ''
+                  ticket_id: ''
+        '400':
+          description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登录或登录状态已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 当前账号未获得该功能授权。请在 User Permission 中为该账号开通相应权限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 请求处理超时。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-dataset-parent:
+        method: POST
+        path: /v1/datasets/corp_action_post_adjust_detail_items
+        operationId: corp_action_post_adjust_detail_items
   /v1/datasets/corp_action_scrip_fee:
     post:
       operationId: corp_action_scrip_fee
@@ -19355,7 +19750,7 @@ paths:
         - 必填：`adjustment_id`（调整 ID）、`confirmed_value`（确认值）
         - 可选：`item_id`（明细项 ID）、`event_id`（事件 ID）、`aaid`（证券账号）、`target`（调整目标）
         - `adjustment_id` 取 `POST /v1/datasets/corp_action_post_adjust_records` 列表行的 `id`（仅状态为 Pending 的记录可编辑），或 `post_adjust` 返回的 `adjustment_id`。
-        - `item_id` 取明细行的 `amount_item_id`、`fee_item_id` 或 `quantity_item_id`（按要修改的金额、费用或数量选择）；明细行目前没有公开接口可查询。
+        - `item_id` 取明细行的 `amount_item_id`、`fee_item_id` 或 `quantity_item_id`（按要修改的金额、费用或数量选择）；明细行用 `POST /v1/datasets/corp_action_post_adjust_detail_items` 查询（传同一 `ann_id`、`adjustment_id` 和 `group_id`）。
         - `item_id` 为 `0`（该项尚无明细）时，需同时传 `aaid`、`target`、`event_id`（取同一明细行的值）；`item_id` 非 `0` 时不传这三个字段。
         - `confirmed_value` 精度：数量保留 4 位小数，金额和费用保留 2 位小数。
         - 示例：`{"adjustment_id":"45","confirmed_value":"1200.5","item_id":"8812"}`；`{"adjustment_id":"45","confirmed_value":"100","item_id":"0","aaid":"50208322","target":"ADJUSTMENT_TARGET_QUANTITY","event_id":"9001"}`。
@@ -19396,7 +19791,7 @@ paths:
                 item_id:
                   type: string
                   description: |-
-                    明细项 ID，取明细行的 `amount_item_id`、`fee_item_id` 或 `quantity_item_id`（按要修改的金额、费用或数量选择）；明细行目前没有公开接口可查询。
+                    明细项 ID，取明细行的 `amount_item_id`、`fee_item_id` 或 `quantity_item_id`（按要修改的金额、费用或数量选择）；明细行用 `POST /v1/datasets/corp_action_post_adjust_detail_items` 查询（传同一 `ann_id`、`adjustment_id` 和 `group_id`）。
 
                     该项尚无明细时传 `0`，并同时传 `aaid`、`target`、`event_id`。
                 aaid:
