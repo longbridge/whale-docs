@@ -1297,7 +1297,7 @@ paths:
               counter_id: ''
       responses:
         '200':
-          description: 請求處理成功。響應的 `data` 不包含額外業務字段。
+          description: '請求處理成功。`data.result` 為 `true` 表示刪除完成。'
           content:
             application/json:
               schema:
@@ -1317,10 +1317,15 @@ paths:
                     type: string
                   data:
                     type: object
+                    properties:
+                      result:
+                        type: boolean
+                        description: '是否處理成功。'
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  result: true
         '400':
           description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
           content:
@@ -1349,6 +1354,116 @@ paths:
         href: /zh-HK/api-reference/ipo_payable_delete
         metadata:
           sidebarTitle: 刪除認購列表項
+  /v1/ipo/payable/parse:
+    post:
+      operationId: ipo_payable_parse
+      summary: 解析認購列表文件
+      tags:
+        - 新股认购
+      x-permission-key:
+        - ipo.subscription_manage
+      x-lbonly: false
+      description: |-
+        解析已上傳的認購列表文件，為後續導入生成解析批次。
+
+        ### 請求參數
+
+        - 必填：`counter_id`（標的 ID）、`file_path`（文件地址）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        導入認購列表的第 2 步：
+
+        1. 調用 `GET /file/upload_url?service=lb.ipo.service` 獲取預簽名上傳地址和 `key`，再用 PUT 上傳 CSV 文件；該 `key` 即 `file_path`。CSV 首行為表頭 `股數,金額`，之後每行一檔認購股數及對應應繳金額。
+        2. 調用本接口解析，返回解析成功和失敗的行數。
+        3. 用同一 `counter_id` 和 `file_path` 調用 `POST /v1/ipo/payable/import` 導入。
+
+        本接口只解析文件，不改動認購列表。
+
+        ### 處理結果
+
+        成功時返回解析成功行數 `success_cnt` 和失敗行數 `fail_cnt`。
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - counter_id
+                - file_path
+              properties:
+                counter_id:
+                  type: string
+                  description: '標的 ID。格式為 `{類型}/{市場}/{代碼}`，如 `ST/HK/700`。此字段為必填項。'
+                file_path:
+                  type: string
+                  description: '文件地址。`GET /file/upload_url?service=lb.ipo.service` 返回的 `key`。此字段為必填項。'
+            example:
+              counter_id: ST/HK/700
+              file_path: 3KwOkJHWAsYNJZfETKl0dWi5tB8
+      responses:
+        '200':
+          description: '請求處理成功。`data` 返回解析成功和失敗的行數。'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      success_cnt:
+                        type: integer
+                        description: '解析成功的行數。'
+                      fail_cnt:
+                        type: integer
+                        description: '解析失敗的行數。'
+              example:
+                code: 0
+                message: success
+                data:
+                  success_cnt: 2
+                  fail_cnt: 0
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-mint:
+        href: /zh-HK/api-reference/ipo_payable_import
+        metadata:
+          sidebarTitle: 導入認購列表
+      x-mint:
+        href: /zh-HK/api-reference/ipo_payable_parse
+        metadata:
+          sidebarTitle: 解析認購列表文件
   /v1/ipo/payable/import:
     post:
       operationId: ipo_payable_import
@@ -1405,7 +1520,7 @@ paths:
               file_path: ''
       responses:
         '200':
-          description: 請求處理成功。響應的 `data` 不包含額外業務字段。
+          description: '請求處理成功。`data.result` 為 `true` 表示導入完成。'
           content:
             application/json:
               schema:
@@ -1425,10 +1540,15 @@ paths:
                     type: string
                   data:
                     type: object
+                    properties:
+                      result:
+                        type: boolean
+                        description: '是否處理成功。'
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  result: true
         '400':
           description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
           content:
