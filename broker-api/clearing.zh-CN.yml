@@ -3981,6 +3981,12 @@ paths:
                       next_ledger_date:
                         type: number
                         description: 下一个账务日期，格式为 `YYYYMMDD`。
+                      available:
+                        type: boolean
+                        description: 当前账务日期是否可用（布尔值）。
+                      change_avaliable:
+                        type: boolean
+                        description: 是否允许变更账务日期（布尔值）；字段名按后端原样拼写为 `change_avaliable`。
               example:
                 code: 0
                 message: success
@@ -4172,6 +4178,7 @@ paths:
                               description: 流程编号
                             steps:
                               type: array
+                              description: 该流程的日终清算步骤列表
                               items:
                                 type: object
                                 properties:
@@ -4180,13 +4187,16 @@ paths:
                                     description: 任务 id
                                   busin_no:
                                     type: integer
+                                    description: 所属流程编号
                                   step_no:
                                     type: integer
                                     description: 步骤号
                                   method:
                                     type: string
+                                    description: 步骤对应的后端方法名
                                   method_name:
                                     type: string
+                                    description: 步骤名称
                                   status:
                                     type: integer
                                     description: 0 未执行，1 执行中，2 成功，3 失败
@@ -4195,8 +4205,10 @@ paths:
                                     description: 详情
                                   params:
                                     type: string
+                                    description: 步骤执行参数（JSON 字符串），可能为空字符串
                                   url:
                                     type: string
+                                    description: 执行该步骤的接口路径
                                   start_time:
                                     type: string
                                     description: 任务开始时间
@@ -4211,9 +4223,11 @@ paths:
                                     description: 失败任务的建议
                             ready:
                               type: object
+                              description: 清算前准备检查信息
                               properties:
                                 method_name:
                                   type: string
+                                  description: 准备阶段名称
                                 status:
                                   type: integer
                                   description: 0 未执行，2 成功，3 失败，4 手动通过
@@ -4222,6 +4236,7 @@ paths:
                                   description: 任务结束时间
                                 suggestion:
                                   type: string
+                                  description: 准备阶段的提示或建议
                                 items:
                                   type: array
                                   items:
@@ -4229,8 +4244,10 @@ paths:
                                     properties:
                                       item_code:
                                         type: string
+                                        description: 检查项编码
                                       item_name:
                                         type: string
+                                        description: 检查项名称
                                       status:
                                         type: integer
                                         description: 1 通过，2 失败
@@ -4242,15 +4259,20 @@ paths:
                                         description: 任务失败的建议
                                       item_id:
                                         type: string
+                                        description: 检查项记录 ID
                                 ticket_id:
                                   type: string
+                                  description: 关联工单 ID，无工单时为 `0`
                             auto_clearing:
                               type: object
+                              description: 一键清算执行状态
                               properties:
                                 ledger_date:
                                   type: integer
+                                  description: 账务日，格式 `YYYYMMDD`（整数）
                                 busin_no:
                                   type: integer
+                                  description: 流程编号
                                 task_total:
                                   type: integer
                                   description: 任务总数
@@ -4262,6 +4284,7 @@ paths:
                                   description: 一键清算状态：0 未执行 1 执行中，2 执行完毕，3 执行失败，4 停止执行
                       account_channel:
                         type: string
+                        description: 账户渠道
               example:
                 code: 0
                 message: success
@@ -6386,6 +6409,7 @@ paths:
   /billing/settle_stock_exchange_contract_task/expected_settlement_date:
     post:
       operationId: expected_settlement_date
+      deprecated: true
       summary: 修改预计交收日
       x-verified: verified
       tags:
@@ -6395,6 +6419,10 @@ paths:
       x-lbonly: false
       description: |-
         修改某笔交收任务的预计交收日。
+
+        ### 可用性
+
+        后端已永久关闭此功能，所有市场和操作类型调用都会返回错误码 `2821014`。
 
         ### 请求参数
 
@@ -7771,7 +7799,7 @@ paths:
         - bearerAuth: []
       responses:
         '200':
-          description: 请求处理成功。响应的 `data` 不包含额外业务字段。
+          description: 请求处理成功。业务结果位于 `data`。
           content:
             application/json:
               schema:
@@ -7797,25 +7825,39 @@ paths:
                     properties:
                       progress:
                         type: array
+                        description: 结单发送进度列表。
                         items:
                           type: object
                           properties:
                             dt:
                               type: string
+                              description: 结单日期，单日为 `YYYYMMDD`，区间为 `YYYYMMDD-YYYYMMDD`。
                             statement_type:
                               type: integer
+                              description: 结单类型：`0` 日结单、`1` 月结单、`2` 临时结单。
                             send_status:
                               type: integer
+                              description: 发送状态编码（整数）。
                             total:
                               type: string
+                              description: 待发送总数（字符串）。
                             sent_count:
                               type: string
+                              description: 已发送数量（字符串）。
                             progress:
                               type: string
+                              description: 进度文本，格式 `已发送数/总数`。
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  progress:
+                    - dt: '20260101'
+                      statement_type: 0
+                      send_status: 1
+                      total: '1'
+                      sent_count: '0'
+                      progress: 0/1
         '400':
           description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
           content:
@@ -8580,6 +8622,24 @@ paths:
                       hk:
                         type: object
                         description: 繁体中文文案内容。
+                      company_email:
+                        type: string
+                        description: 结单上展示的公司邮箱，未配置时为空字符串。
+                      company_fax:
+                        type: string
+                        description: 结单上展示的公司传真号码，未配置时为空字符串。
+                      company_tel:
+                        type: string
+                        description: 结单上展示的公司电话，未配置时为空字符串。
+                      social_media:
+                        type: string
+                        description: 结单上展示的公司社交媒体信息，未配置时为空字符串。
+                      lang:
+                        type: string
+                        description: 结单文案语言（展示值），原始编码见 `lang_val`；未配置时为空字符串。
+                      lang_val:
+                        type: string
+                        description: 字段 `lang` 的原始编码值。
         '400':
           description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
           content:
@@ -9332,6 +9392,7 @@ paths:
   /ob_file/send_downstream_file:
     post:
       operationId: send_downstream_file
+      deprecated: true
       summary: 发送单个租户清算文件
       x-verified: verified
       tags:
@@ -9605,7 +9666,7 @@ paths:
               file_codes: []
       responses:
         '200':
-          description: 请求处理成功。响应的 `data` 不包含额外业务字段。
+          description: 请求处理成功。业务结果位于 `data`。
           content:
             application/json:
               schema:
@@ -9631,10 +9692,12 @@ paths:
                     properties:
                       count:
                         type: integer
+                        description: 未发送的清算文件数量。
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  count: 0
         '400':
           description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
           content:
@@ -9996,16 +10059,34 @@ paths:
                   description: 用于指定「操作员邮箱」。此字段为必填项。
                 accounts:
                   type: array
-                  description: 每项含 aaid/parent_aaid
-                  items:
-                    type: string
-                configs:
-                  type: array
+                  description: 子账户列表，每项是对象。
                   items:
                     type: object
-                    properties: {}
-                  description: |-
-                    文件配置数组，每项含 file_code、market
+                    required:
+                      - aaid
+                      - parent_aaid
+                    properties:
+                      aaid:
+                        type: string
+                        description: 子账户 `aaid`。
+                      parent_aaid:
+                        type: string
+                        description: 所属主账户 `aaid`；主账户本身传自己的 `aaid`。
+                configs:
+                  type: array
+                  description: 文件配置列表，每项是对象。
+                  items:
+                    type: object
+                    required:
+                      - file_code
+                      - market
+                    properties:
+                      file_code:
+                        type: string
+                        description: 文件类型编码。
+                      market:
+                        type: string
+                        description: 市场，如 `US`、`HK`。
                 audit_frontend_resource:
                   type: object
                   properties: {}
@@ -11747,7 +11828,7 @@ paths:
         - bearerAuth: []
       responses:
         '200':
-          description: 请求处理成功。响应的 `data` 不包含额外业务字段。
+          description: 请求处理成功。业务结果位于 `data`。
           content:
             application/json:
               schema:
@@ -11773,10 +11854,12 @@ paths:
                     properties:
                       ticket_id:
                         type: string
+                        description: 审批工单 ID（字符串）。
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  ticket_id: '0'
         '400':
           description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
           content:
@@ -13416,23 +13499,28 @@ paths:
                               description: 记录 ID. **返回值：** 记录 ID（行主键），编辑或删除该记录的接口用它定位记录。
                             file_type:
                               type: string
+                              description: 文件类型. **返回值：** 可导入的文件类型（展示值；原始编码见同名 `_val` 字段）。
                             file_type_val:
                               type: string
                               description: 字段 file_type 的原始值：file_type 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             admin_id:
                               type: string
+                              description: 更新人. **返回值：** 最后更新该配置的后台用户（展示值；原始编码见同名 `_val` 字段）。
                             admin_id_val:
                               type: string
                               description: 字段 admin_id 的原始值：admin_id 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             updated_at:
                               type: string
+                              description: 更新时间. **返回值：** Unix 时间戳（秒），以字符串返回。
                             is_auto:
                               type: string
+                              description: 自动导入. **返回值：** 是否支持/开启自动导入（展示值；原始编码见同名 `_val` 字段）。
                             is_auto_val:
                               type: string
                               description: 字段 is_auto 的原始值：is_auto 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             is_show:
                               type: string
+                              description: 显示/隐藏. **返回值：** 该文件类型是否显示，取值为 `true`/`false` 字符串。
                       total:
                         type: integer
               example:
@@ -13821,28 +13909,34 @@ paths:
                           properties:
                             id:
                               type: string
+                              description: 编号. **返回值：** 接收规则记录 ID。
                             market:
                               type: string
+                              description: 市场. **返回值：** 市场（展示值；原始编码见同名 `_val` 字段）。
                             market_val:
                               type: string
                               description: 字段 market 的原始值：market 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             file_code:
                               type: string
+                              description: 文件类型. **返回值：** 上手文件类型（展示值；原始编码见同名 `_val` 字段）。
                             file_code_val:
                               type: string
                               description: 字段 file_code 的原始值：file_code 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             custodian_code:
                               type: string
+                              description: 代理商. **返回值：** 代理商（展示值；原始编码见同名 `_val` 字段）。
                             custodian_code_val:
                               type: string
                               description: 字段 custodian_code 的原始值：custodian_code 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             settlement_channel_code:
                               type: string
+                              description: 结算渠道. **返回值：** 结算渠道（展示值；原始编码见同名 `_val` 字段）。
                             settlement_channel_code_val:
                               type: string
                               description: 字段 settlement_channel_code 的原始值：settlement_channel_code 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             parent_account_channel:
                               type: string
+                              description: 上手企业编号. **返回值：** 上手企业编号（展示值；原始编码见同名 `_val` 字段）。
                             parent_account_channel_val:
                               type: string
                               description: 字段 parent_account_channel 的原始值：parent_account_channel 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。

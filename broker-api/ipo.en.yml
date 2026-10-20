@@ -200,6 +200,21 @@ paths:
                       cash_channel:
                         type: string
                         description: Cash Channel.
+                      ai:
+                        type: integer
+                        description: AI flag. Integer flag related to subscription eligibility; value meanings are defined by the backend.
+                      pi:
+                        type: integer
+                        description: PI flag. Integer flag related to professional investors (PI); value meanings are defined by the backend.
+                      require_derivatives_knowledge:
+                        type: integer
+                        description: Derivatives knowledge requirement. Integer flag for whether subscribers must have derivatives knowledge.
+                      virtual_asset:
+                        type: integer
+                        description: Virtual asset flag. Integer flag related to virtual assets; value meanings are defined by the backend.
+                      declaration:
+                        type: object
+                        description: Declaration. Declaration text as a multilingual object (same shape as the other text fields); `null` when not configured.
               example:
                 code: 0
                 message: success
@@ -721,7 +736,13 @@ paths:
                   type: array
                   items:
                     type: object
-                    properties: {}
+                    properties:
+                      min_qty:
+                        type: integer
+                        description: Lower quantity bound.
+                      max_qty:
+                        type: integer
+                        description: Upper quantity bound.
                   description: |-
                     Array of tiered rules; each item carries upper/lower quantity bounds and cluster config.
                 group:
@@ -925,7 +946,13 @@ paths:
                   type: array
                   items:
                     type: object
-                    properties: {}
+                    properties:
+                      min_qty:
+                        type: integer
+                        description: Lower quantity bound.
+                      max_qty:
+                        type: integer
+                        description: Upper quantity bound.
                   description: |-
                     Array of tiered rules; each item carries upper/lower quantity bounds and cluster config.
                 group:
@@ -1211,7 +1238,7 @@ paths:
               group_id: 0
       responses:
         '200':
-          description: The request was processed successfully. The response `data` does not contain additional business fields.
+          description: 'The request was processed successfully. `data.result` is `true` when the item is saved.'
           content:
             application/json:
               schema:
@@ -1234,10 +1261,15 @@ paths:
                     type: string
                   data:
                     type: object
+                    properties:
+                      result:
+                        type: boolean
+                        description: 'Whether the request succeeded.'
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  result: true
         '400':
           description: Bad request. Check the business error code in `code` and the error details in `message`.
           content:
@@ -1317,7 +1349,7 @@ paths:
               counter_id: ''
       responses:
         '200':
-          description: The request was processed successfully. The response `data` does not contain additional business fields.
+          description: 'The request was processed successfully. `data.result` is `true` when the item is deleted.'
           content:
             application/json:
               schema:
@@ -1340,10 +1372,15 @@ paths:
                     type: string
                   data:
                     type: object
+                    properties:
+                      result:
+                        type: boolean
+                        description: 'Whether the request succeeded.'
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  result: true
         '400':
           description: Bad request. Check the business error code in `code` and the error details in `message`.
           content:
@@ -1372,6 +1409,112 @@ paths:
         href: /en/api-reference/ipo_payable_delete
         metadata:
           sidebarTitle: Delete IPO Subscription Payable
+  /v1/ipo/payable/parse:
+    post:
+      operationId: ipo_payable_parse
+      summary: Parse Subscription List File
+      tags:
+        - IPO System
+      x-permission-key:
+        - ipo.subscription_manage
+      x-lbonly: false
+      description: |-
+        Parses an uploaded subscription list file and creates the parse batch that the import uses.
+
+        ### Request parameters
+
+        - Required: `counter_id` (instrument ID), `file_path` (file path)
+        - See each field's description for format, value range, and business meaning.
+
+        ### Business notes
+
+        Step 2 of importing a subscription list:
+
+        1. Call `GET /file/upload_url?service=lb.ipo.service` to get a presigned upload URL and a `key`, then PUT the CSV file; that `key` is the `file_path`. The first CSV row is the header `股数,金额` (shares, amount); each following row is one subscription tier with its payable amount.
+        2. Call this endpoint to parse the file; it returns how many rows parsed and failed.
+        3. Call `POST /v1/ipo/payable/import` with the same `counter_id` and `file_path` to import.
+
+        This endpoint only parses the file and does not change the subscription list.
+
+        ### Result
+
+        On success, returns the parsed row count `success_cnt` and the failed row count `fail_cnt`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - counter_id
+                - file_path
+              properties:
+                counter_id:
+                  type: string
+                  description: 'Instrument ID, in the form `{type}/{market}/{code}`, e.g. `ST/HK/700`. This field is required.'
+                file_path:
+                  type: string
+                  description: 'File path: the `key` returned by `GET /file/upload_url?service=lb.ipo.service`. This field is required.'
+            example:
+              counter_id: ST/HK/700
+              file_path: 3KwOkJHWAsYNJZfETKl0dWi5tB8
+      responses:
+        '200':
+          description: 'The request was processed successfully. `data` returns the parsed and failed row counts.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      success_cnt:
+                        type: integer
+                        description: 'Number of rows parsed successfully.'
+                      fail_cnt:
+                        type: integer
+                        description: 'Number of rows that failed to parse.'
+              example:
+                code: 0
+                message: success
+                data:
+                  success_cnt: 2
+                  fail_cnt: 0
+        '400':
+          description: Bad request. Check the business error code in `code` and the error details in `message`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: The user is not authenticated, or the login session has expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: The current account is not authorized to use this feature. Grant the required permission to the account in User Permission.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: The request timed out. Check the business error code in `code` and the error details in `message`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-mint:
+        href: /en/api-reference/ipo_payable_parse
+        metadata:
+          sidebarTitle: Parse Subscription List File
   /v1/ipo/payable/import:
     post:
       operationId: ipo_payable_import
@@ -1396,6 +1539,8 @@ paths:
         1. Call `GET /file/upload_url?service=lb.ipo.service` to get a presigned upload URL and a `key`, then PUT the CSV file; that `key` is the `file_path`.
         2. Call `POST /v1/ipo/payable/parse` with the same `counter_id` and `file_path` to create a parse batch.
         3. Call this endpoint to import. Without a prior parse it returns 400 `解析批次已失效` (parse batch expired).
+
+        Importing replaces the instrument's whole subscription list with the file contents: every existing row is replaced, rows that remain get new `id`s, and previously fetched `id`s can no longer be used with `ipo_payable_save` / `ipo_payable_delete`.
 
         ### Risk warning
 
@@ -1428,7 +1573,7 @@ paths:
               file_path: ''
       responses:
         '200':
-          description: The request was processed successfully. The response `data` does not contain additional business fields.
+          description: 'The request was processed successfully. `data.result` is `true` when the import is complete.'
           content:
             application/json:
               schema:
@@ -1451,10 +1596,15 @@ paths:
                     type: string
                   data:
                     type: object
+                    properties:
+                      result:
+                        type: boolean
+                        description: 'Whether the request succeeded.'
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  result: true
         '400':
           description: Bad request. Check the business error code in `code` and the error details in `message`.
           content:
@@ -1797,6 +1947,12 @@ paths:
                               en:
                                 type: string
                                 description: English.
+                          declaration:
+                            type: object
+                            description: Declaration. Declaration text as a multilingual object (same shape as the other text fields); `null` when not configured.
+                          subscription_statement:
+                            type: object
+                            description: Subscription statement. Subscription statement text as a multilingual object (same shape as the other text fields); `null` when not configured.
               example:
                 code: 0
                 message: success
