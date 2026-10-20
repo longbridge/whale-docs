@@ -2379,8 +2379,9 @@ paths:
 
         ### Request parameters
 
-        - Required: `name` (package name), `category` (package category), `org_id` (organization ID), `fee_rate_type` (rate type), `metric_cycle_type` (metric cycle type), `metric_type` (metric method), `granularity`, `cutoff_method`, `cutoff_digits`
-        - Optional: `maket_rule_ids` (market-rule ID list), `fees` (fee-item list), `rates` (rate-tier list), `max_metric_type`/`max_metric_rate` (cap), `min_metric_type`/`min_metric_rate` (floor), `metric_type_bill_amount_item_ids` (secondary billing-item ID list), `special_fees` (personalized-fee list), `conditions` (trigger-condition list)
+        - Required: `name` (package name), `org_package_type` (package type), `fees` (fee items)
+        - Optional: `org_id` (organization ID), `market_rule_ids` (market rule IDs)
+        - Metering, cap/floor and rate-band fields belong to each `fees` item (see `fees`); `rates` needs at least one band.
         - See the field descriptions for the format, value range, and business meaning of each field.
 
         ### Business notes
@@ -2415,12 +2416,90 @@ paths:
                   description: Org ID associated with this request.
                 fees:
                   type: array
-                  description: |-
-                    Each array item has the form `{ billing_item_id, currency, max, min, threshold }`.
-                    `billing_item_id` identifies the billing scenario, `currency` is a currency code, and
-                    `max`, `min`, and `threshold` are numeric strings.
                   items:
-                    type: string
+                    type: object
+                    required:
+                      - billing_item_id
+                      - currency
+                      - rates
+                    properties:
+                      billing_item_id:
+                        type: string
+                        description: Billing item (fee scenario) ID.
+                      currency:
+                        type: string
+                        description: Currency code, e.g. `HKD`.
+                      max:
+                        type: string
+                        description: Fee cap (numeric string).
+                      min:
+                        type: string
+                        description: Fee floor (numeric string).
+                      threshold:
+                        type: string
+                        description: Threshold (numeric string).
+                      calculation_method:
+                        type: integer
+                        description: Calculation method code.
+                      fee_rate_type:
+                        type: integer
+                        description: Fee rate type code.
+                      metric_type:
+                        type: integer
+                        description: Metering method code.
+                      metric_cycle_type:
+                        type: integer
+                        description: Metering cycle type code.
+                      granularity:
+                        type: integer
+                        description: Metering granularity code.
+                      cutoff_method:
+                        type: integer
+                        description: Rounding (cut-off) method code.
+                      cutoff_digits:
+                        type: integer
+                        description: Number of digits kept when cutting off.
+                      max_metric_type:
+                        type: integer
+                        description: Cap metering method code; `0` means no cap.
+                      max_metric_rate:
+                        type: string
+                        description: Cap rate.
+                      min_metric_type:
+                        type: integer
+                        description: Floor metering method code; `0` means no floor.
+                      min_metric_rate:
+                        type: string
+                        description: Floor rate.
+                      metric_type_bill_amount_item_ids:
+                        type: array
+                        items:
+                          type: string
+                        description: Secondary billing item IDs.
+                      special_fees:
+                        type: array
+                        items:
+                          type: object
+                        description: Custom fee list; pass an empty array when none.
+                      rates:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            gt:
+                              type: string
+                              description: Lower bound of the band (exclusive).
+                            lte:
+                              type: string
+                              description: Upper bound of the band (inclusive); `0` means no upper bound.
+                            fee_rate:
+                              type: string
+                              description: Fee rate for the band.
+                            min:
+                              type: string
+                              description: Minimum fee for the band.
+                        description: Rate bands, at least one; missing or invalid bands return `Abnormal rate range configuration`.
+                  description: Fee items; each is an object (fields below).
                 org_package_type:
                   type: string
                   description: |-
@@ -2439,11 +2518,29 @@ paths:
               maket_rule_ids:
                 - 1
               fees:
-                - billing_item_id: 1
-                  currency: USD
-                  max: '100'
+                - billing_item_id: '3'
+                  currency: HKD
+                  max: '999999999'
                   min: '0'
-                  threshold: '10'
+                  threshold: '0'
+                  calculation_method: 1
+                  cutoff_digits: 2
+                  cutoff_method: 1
+                  fee_rate_type: 1
+                  granularity: 1
+                  metric_cycle_type: 0
+                  metric_type: 1
+                  max_metric_type: 0
+                  min_metric_type: 0
+                  max_metric_rate: '0'
+                  min_metric_rate: '0'
+                  metric_type_bill_amount_item_ids: []
+                  special_fees: []
+                  rates:
+                    - gt: '0'
+                      lte: '0'
+                      fee_rate: '0.1'
+                      min: '0'
               rates:
                 - gt: '0'
                   lte: '100000'
@@ -2875,6 +2972,106 @@ paths:
             schema:
               type: object
               properties:
+                name:
+                  type: string
+                  description: Package name.
+                org_package_type:
+                  type: string
+                  description: Package type.
+                org_id:
+                  type: number
+                  description: Organization ID.
+                fees:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - billing_item_id
+                      - currency
+                      - rates
+                    properties:
+                      billing_item_id:
+                        type: string
+                        description: Billing item (fee scenario) ID.
+                      currency:
+                        type: string
+                        description: Currency code, e.g. `HKD`.
+                      max:
+                        type: string
+                        description: Fee cap (numeric string).
+                      min:
+                        type: string
+                        description: Fee floor (numeric string).
+                      threshold:
+                        type: string
+                        description: Threshold (numeric string).
+                      calculation_method:
+                        type: integer
+                        description: Calculation method code.
+                      fee_rate_type:
+                        type: integer
+                        description: Fee rate type code.
+                      metric_type:
+                        type: integer
+                        description: Metering method code.
+                      metric_cycle_type:
+                        type: integer
+                        description: Metering cycle type code.
+                      granularity:
+                        type: integer
+                        description: Metering granularity code.
+                      cutoff_method:
+                        type: integer
+                        description: Rounding (cut-off) method code.
+                      cutoff_digits:
+                        type: integer
+                        description: Number of digits kept when cutting off.
+                      max_metric_type:
+                        type: integer
+                        description: Cap metering method code; `0` means no cap.
+                      max_metric_rate:
+                        type: string
+                        description: Cap rate.
+                      min_metric_type:
+                        type: integer
+                        description: Floor metering method code; `0` means no floor.
+                      min_metric_rate:
+                        type: string
+                        description: Floor rate.
+                      metric_type_bill_amount_item_ids:
+                        type: array
+                        items:
+                          type: string
+                        description: Secondary billing item IDs.
+                      special_fees:
+                        type: array
+                        items:
+                          type: object
+                        description: Custom fee list; pass an empty array when none.
+                      rates:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            gt:
+                              type: string
+                              description: Lower bound of the band (exclusive).
+                            lte:
+                              type: string
+                              description: Upper bound of the band (inclusive); `0` means no upper bound.
+                            fee_rate:
+                              type: string
+                              description: Fee rate for the band.
+                            min:
+                              type: string
+                              description: Minimum fee for the band.
+                        description: Rate bands, at least one; missing or invalid bands return `Abnormal rate range configuration`.
+                  description: Fee items; each is an object (fields below).
+                market_rule_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: Market rule IDs.
                 audit_frontend_resource:
                   type: object
                   description: Provides audit context for this operation.

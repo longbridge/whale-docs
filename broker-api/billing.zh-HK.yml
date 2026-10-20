@@ -2295,8 +2295,9 @@ paths:
 
         ### 請求參數
 
-        - 必填：`name`（套餐名稱）、`category`（套餐分類）、`org_id`（機構 ID）、`fee_rate_type`（費率類型）、`metric_cycle_type`（計費週期類型）、`metric_type`（計費方式）、`granularity`（計費精度）、`cutoff_method`（截取方式）、`cutoff_digits`（截取位數）
-        - 可選：`maket_rule_ids`（市場規則 ID 列表）、`fees`（收費項列表）、`rates`（費率區間列表）、`max_metric_type`（封頂計費方式）、`max_metric_rate`（封頂費率）、`min_metric_type`（保底計費方式）、`min_metric_rate`（保底費率）、`metric_type_bill_amount_item_ids`（二級計費項 ID 列表）、`special_fees`（個性化收費列表）、`conditions`（觸發條件列表）
+        - 必填：`name`（套餐名稱）、`org_package_type`（套餐類型）、`fees`（收費項列表）
+        - 可選：`org_id`（機構 ID）、`market_rule_ids`（市場規則 ID 列表）
+        - `fees` 每項的計費方式、封頂/保底、費率區間等欄位見 `fees` 的欄位說明；`rates` 至少一項。
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
@@ -2331,11 +2332,90 @@ paths:
                   description: 機構ID，用於標識本次請求關聯的業務對象。此字段為必填項。
                 fees:
                   type: array
-                  description: |-
-                    數組元素 { billing_item_id, currency, max, min, threshold }：billing_item_id
-                    關聯收費場景ID，currency 為幣種代碼，max/min/threshold 均為字符串數字
                   items:
-                    type: string
+                    type: object
+                    required:
+                      - billing_item_id
+                      - currency
+                      - rates
+                    properties:
+                      billing_item_id:
+                        type: string
+                        description: 收費場景 ID。
+                      currency:
+                        type: string
+                        description: 幣種代碼，如 `HKD`。
+                      max:
+                        type: string
+                        description: 收費上限（字符串數字）。
+                      min:
+                        type: string
+                        description: 收費下限（字符串數字）。
+                      threshold:
+                        type: string
+                        description: 起徵閾值（字符串數字）。
+                      calculation_method:
+                        type: integer
+                        description: 計算方式編碼。
+                      fee_rate_type:
+                        type: integer
+                        description: 費率類型編碼。
+                      metric_type:
+                        type: integer
+                        description: 計費方式編碼。
+                      metric_cycle_type:
+                        type: integer
+                        description: 計費週期類型編碼。
+                      granularity:
+                        type: integer
+                        description: 計費精度編碼。
+                      cutoff_method:
+                        type: integer
+                        description: 截取方式編碼。
+                      cutoff_digits:
+                        type: integer
+                        description: 截取位數。
+                      max_metric_type:
+                        type: integer
+                        description: 封頂計費方式編碼，`0` 表示不封頂。
+                      max_metric_rate:
+                        type: string
+                        description: 封頂費率。
+                      min_metric_type:
+                        type: integer
+                        description: 保底計費方式編碼，`0` 表示不保底。
+                      min_metric_rate:
+                        type: string
+                        description: 保底費率。
+                      metric_type_bill_amount_item_ids:
+                        type: array
+                        items:
+                          type: string
+                        description: 二級計費項 ID 列表。
+                      special_fees:
+                        type: array
+                        items:
+                          type: object
+                        description: 個性化收費列表，沒有時傳空數組。
+                      rates:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            gt:
+                              type: string
+                              description: 區間下限（不含）。
+                            lte:
+                              type: string
+                              description: 區間上限（含），`0` 表示不設上限。
+                            fee_rate:
+                              type: string
+                              description: 該區間的費率。
+                            min:
+                              type: string
+                              description: 該區間的最低收費。
+                        description: 費率區間列表，至少一項；缺少或區間不合法時返回 `Abnormal rate range configuration`。
+                  description: 收費項列表，每項是一個物件（欄位見下）。
                 org_package_type:
                   type: string
                   description: |-
@@ -2354,11 +2434,29 @@ paths:
               maket_rule_ids:
                 - 1
               fees:
-                - billing_item_id: 1
-                  currency: USD
-                  max: '100'
+                - billing_item_id: '3'
+                  currency: HKD
+                  max: '999999999'
                   min: '0'
-                  threshold: '10'
+                  threshold: '0'
+                  calculation_method: 1
+                  cutoff_digits: 2
+                  cutoff_method: 1
+                  fee_rate_type: 1
+                  granularity: 1
+                  metric_cycle_type: 0
+                  metric_type: 1
+                  max_metric_type: 0
+                  min_metric_type: 0
+                  max_metric_rate: '0'
+                  min_metric_rate: '0'
+                  metric_type_bill_amount_item_ids: []
+                  special_fees: []
+                  rates:
+                    - gt: '0'
+                      lte: '0'
+                      fee_rate: '0.1'
+                      min: '0'
               rates:
                 - gt: '0'
                   lte: '100000'
@@ -2778,6 +2876,106 @@ paths:
             schema:
               type: object
               properties:
+                name:
+                  type: string
+                  description: 套餐名稱。
+                org_package_type:
+                  type: string
+                  description: 套餐類型。
+                org_id:
+                  type: number
+                  description: 機構 ID。
+                fees:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - billing_item_id
+                      - currency
+                      - rates
+                    properties:
+                      billing_item_id:
+                        type: string
+                        description: 收費場景 ID。
+                      currency:
+                        type: string
+                        description: 幣種代碼，如 `HKD`。
+                      max:
+                        type: string
+                        description: 收費上限（字符串數字）。
+                      min:
+                        type: string
+                        description: 收費下限（字符串數字）。
+                      threshold:
+                        type: string
+                        description: 起徵閾值（字符串數字）。
+                      calculation_method:
+                        type: integer
+                        description: 計算方式編碼。
+                      fee_rate_type:
+                        type: integer
+                        description: 費率類型編碼。
+                      metric_type:
+                        type: integer
+                        description: 計費方式編碼。
+                      metric_cycle_type:
+                        type: integer
+                        description: 計費週期類型編碼。
+                      granularity:
+                        type: integer
+                        description: 計費精度編碼。
+                      cutoff_method:
+                        type: integer
+                        description: 截取方式編碼。
+                      cutoff_digits:
+                        type: integer
+                        description: 截取位數。
+                      max_metric_type:
+                        type: integer
+                        description: 封頂計費方式編碼，`0` 表示不封頂。
+                      max_metric_rate:
+                        type: string
+                        description: 封頂費率。
+                      min_metric_type:
+                        type: integer
+                        description: 保底計費方式編碼，`0` 表示不保底。
+                      min_metric_rate:
+                        type: string
+                        description: 保底費率。
+                      metric_type_bill_amount_item_ids:
+                        type: array
+                        items:
+                          type: string
+                        description: 二級計費項 ID 列表。
+                      special_fees:
+                        type: array
+                        items:
+                          type: object
+                        description: 個性化收費列表，沒有時傳空數組。
+                      rates:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            gt:
+                              type: string
+                              description: 區間下限（不含）。
+                            lte:
+                              type: string
+                              description: 區間上限（含），`0` 表示不設上限。
+                            fee_rate:
+                              type: string
+                              description: 該區間的費率。
+                            min:
+                              type: string
+                              description: 該區間的最低收費。
+                        description: 費率區間列表，至少一項；缺少或區間不合法時返回 `Abnormal rate range configuration`。
+                  description: 收費項列表，每項是一個物件（欄位見下）。
+                market_rule_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: 市場規則 ID 列表。
                 audit_frontend_resource:
                   type: object
                   description: 調用方提交的審計上下文，用於記錄本次操作。
