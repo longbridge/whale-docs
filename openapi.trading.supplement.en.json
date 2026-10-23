@@ -2349,12 +2349,16 @@
               "C",
               "P"
             ]
+          },
+          "contract_multiplier": {
+            "type": "string",
+            "description": "Contract multiplier: the number of underlying shares per contract"
           }
         }
       },
       "OrderWidgetOrderParams": {
         "type": "object",
-        "description": "Order parameters of an order card. After validation, the service returns the normalized parameters, which are submitted unchanged as the order request body.",
+        "description": "Normalized order parameters in the order submission format. `POST /v1/trade/widget/validate` and `POST /v1/trade/us/widget/validate` return them; pass them unchanged to the matching pre-order confirmation operation and build the order submission request from them.",
         "properties": {
           "counter_id": {
             "type": "string",
@@ -2429,20 +2433,49 @@
           },
           "statistics_entry": {
             "type": "string",
-            "description": "Order entry identifier used to attribute the order source"
+            "description": "Order entry identifier used to attribute the order source. Order cards use `ai_widget`"
           },
           "stock_contract": {
             "$ref": "#/components/schemas/OrderWidgetStockContract"
           },
           "multiLeg": {
             "$ref": "#/components/schemas/OrderMultiLeg"
+          },
+          "trend": {
+            "type": "integer",
+            "description": "Trigger direction of a `LIT`, `MIT`, or `TSL` order",
+            "format": "int32"
+          },
+          "market_price": {
+            "type": "string",
+            "description": "Market price when the order card was validated, for `LIT`, `MIT`, and `TSL` orders. The service fetches it from quotes"
+          },
+          "limit_depth_level": {
+            "type": "integer",
+            "description": "Order book level that prices a `TSL` order after it triggers: `0` uses the market price adjusted by `limit_offset`, `-1` to `-5` use bid 1 to bid 5, and `1` to `5` use ask 1 to ask 5",
+            "format": "int32",
+            "minimum": -5,
+            "maximum": 5
+          },
+          "expire_time": {
+            "type": "integer",
+            "description": "Expiry time as a Unix timestamp in seconds, derived from `expire_date`. Present only when `time_in_force` is `6`",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "description": "Localized security name for display"
           }
         },
         "required": [
           "counter_id",
           "action",
           "order_type",
-          "quantity"
+          "price",
+          "quantity",
+          "settlement_currency",
+          "force_only_rth",
+          "statistics_entry"
         ]
       },
       "OrderWidgetCheckItem": {
@@ -16441,6 +16474,255 @@
             }
           }
         }
+      },
+      "OrderWidgetCardParams": {
+        "type": "object",
+        "description": "Order card parameters for a Hong Kong or Singapore stock account, in the format that the order card carries them. The service resolves them into the normalized order parameters in `OrderWidgetOrderParams`.",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Security symbol in `{Code}.{Market}` format, for example `700.HK`"
+          },
+          "order_type": {
+            "type": "string",
+            "description": "Order type:\n\n- `LO` - Limit order\n- `MO` - Market order\n- `MOC` - Market on close\n- `LIT` - Limit if touched\n- `MIT` - Market if touched\n- `TSL` - Trailing stop limit",
+            "enum": [
+              "LO",
+              "MO",
+              "MOC",
+              "LIT",
+              "MIT",
+              "TSL"
+            ]
+          },
+          "side": {
+            "type": "integer",
+            "description": "Order side:\n\n- `1` - Buy\n- `2` - Sell",
+            "format": "int32",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "submitted_price": {
+            "type": "string",
+            "description": "Order price. Required when `order_type` is `LO` or `LIT`"
+          },
+          "submitted_quantity": {
+            "type": "string",
+            "description": "Order quantity, for example `100`"
+          },
+          "time_in_force": {
+            "type": "integer",
+            "description": "Time in force:\n\n- `0` - Day\n- `1` - Good till canceled (GTC)\n- `3` - Immediate or cancel (IOC)\n- `5` - Fill or kill (FOK)\n- `6` - Good till date (GTD); `expire_date` is also required",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              3,
+              5,
+              6
+            ]
+          },
+          "trigger_price": {
+            "type": "string",
+            "description": "Trigger price. Required when `order_type` is `LIT` or `MIT`"
+          },
+          "limit_offset": {
+            "type": "string",
+            "description": "Price offset added to or subtracted from the market price to form the order price after a `TSL` order triggers. Required for `TSL` when `limit_depth_level` is `0` or omitted; ignored otherwise"
+          },
+          "tailing_amount": {
+            "type": "string",
+            "description": "Trailing amount. For `TSL`, set exactly one of `tailing_amount` and `tailing_percent`"
+          },
+          "tailing_percent": {
+            "type": "string",
+            "description": "Trailing percentage. For `TSL`, set exactly one of `tailing_amount` and `tailing_percent`"
+          },
+          "expire_date": {
+            "type": "string",
+            "description": "Expiry date in `YYYY-MM-DD` format. Required when `time_in_force` is `6`",
+            "format": "date"
+          },
+          "outside_rth": {
+            "type": "string",
+            "description": "Trading session:\n\n- `ANY_TIME` - Any session\n- `RTH_ONLY` - Regular trading hours only\n- `OVERNIGHT` - Overnight",
+            "enum": [
+              "ANY_TIME",
+              "RTH_ONLY",
+              "OVERNIGHT"
+            ]
+          },
+          "remark": {
+            "type": "string",
+            "description": "Order remark, up to 64 characters",
+            "maxLength": 64
+          },
+          "multileg_strategy": {
+            "type": "integer",
+            "description": "Multi-leg option strategy:\n\n- `0` - CoveredCall\n- `1` - CoveredPut\n- `2` - VerticalCallSpread\n- `3` - VerticalPutSpread\n- `4` - Collar\n- `5` - Straddle\n- `6` - Strangle",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          "legs": {
+            "type": "array",
+            "description": "Leg symbols of a multi-leg option order. Use only for multi-leg orders; exactly 2 legs are required",
+            "items": {
+              "type": "string"
+            }
+          },
+          "trend": {
+            "type": "integer",
+            "description": "Trigger direction. Required for `TSL`. For `LIT` and `MIT`, the service derives it from `trigger_price` and `monitor_price` and ignores the value you send",
+            "format": "int32"
+          },
+          "monitor_price": {
+            "type": "string",
+            "description": "Price used to monitor the trigger condition. Required for `LIT`, `MIT`, and `TSL`"
+          },
+          "security_type": {
+            "type": "string",
+            "description": "Security type. Optional; when provided, it must match the security type resolved from `symbol`:\n\n- `CS` - Common stock\n- `OPT` - Option\n- `WAR` - Warrant\n- `VA` - Virtual asset\n- `MLEG` - Multi-leg",
+            "enum": [
+              "CS",
+              "OPT",
+              "WAR",
+              "VA",
+              "MLEG"
+            ]
+          },
+          "trigger_count": {
+            "type": "integer",
+            "description": "Number of times the trigger condition can fire per minute for `LIT`, `MIT`, and `TSL`. Defaults to `1`",
+            "format": "int32"
+          },
+          "limit_depth_level": {
+            "type": "integer",
+            "description": "Order book level that prices a `TSL` order after it triggers. Defaults to `0`:\n\n- `0` - Market price adjusted by `limit_offset`\n- `-1` to `-5` - Bid 1 to bid 5\n- `1` to `5` - Ask 1 to ask 5",
+            "format": "int32",
+            "minimum": -5,
+            "maximum": 5
+          }
+        },
+        "required": [
+          "symbol",
+          "side",
+          "order_type",
+          "time_in_force",
+          "outside_rth"
+        ]
+      },
+      "OrderWidgetCardParamsUs": {
+        "type": "object",
+        "description": "Order card parameters for a US stock account, in the format that the order card carries them. The service resolves them into the normalized order parameters in `OrderWidgetOrderParams`.",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Security symbol in `{Code}.{Market}` format. For a stock or single-leg option order, use the traded symbol, for example `AAPL.US` or `TSLA260613C350000.US`. For a multi-leg order, use the underlying stock, for example `TSLA.US`; it provides market and currency context only and does not count as a leg"
+          },
+          "order_type": {
+            "type": "string",
+            "description": "Order type:\n\n- `LO` - Limit order\n- `MO` - Market order\n- `SO_LIT` - Limit if touched\n- `SO_MIT` - Market if touched"
+          },
+          "side": {
+            "type": "integer",
+            "description": "Order side:\n\n- `1` - Buy\n- `2` - Sell",
+            "format": "int32",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "submitted_price": {
+            "type": "string",
+            "description": "Order price, for example `388.5`. Required when `order_type` is `LO` or `SO_LIT`; not used for `MO` or `SO_MIT`"
+          },
+          "submitted_quantity": {
+            "type": "string",
+            "description": "Order quantity, for example `100`"
+          },
+          "time_in_force": {
+            "type": "integer",
+            "description": "Time in force:\n\n- `0` - Day\n- `1` - Good till canceled (GTC)\n- `6` - Good till date (GTD); `expire_date` is also required",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              6
+            ]
+          },
+          "trigger_price": {
+            "type": "string",
+            "description": "Trigger price, for example `388.5`. Required when `order_type` is `SO_LIT` or `SO_MIT`; not used for `LO` or `MO`"
+          },
+          "limit_offset": {
+            "type": "string",
+            "description": "Limit offset amount. Required for trailing stop limit orders (`TSLPAMT` and `TSLPPCT`)"
+          },
+          "trailing_amount": {
+            "type": "string",
+            "description": "Trailing amount. Required for `TSLPAMT`"
+          },
+          "trailing_percent": {
+            "type": "string",
+            "description": "Trailing percentage. Required for `TSLPPCT`"
+          },
+          "expire_date": {
+            "type": "string",
+            "description": "Expiry date in `YYYY-MM-DD` format. Required when `time_in_force` is `6`",
+            "format": "date"
+          },
+          "outside_rth": {
+            "type": "integer",
+            "description": "Trading session:\n\n- `0` - Any session (`ANY_TIME`)\n- `1` - Regular trading hours only (`RTH_ONLY`)\n- `4` - Overnight (`OVERNIGHT`)",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              4
+            ]
+          },
+          "remark": {
+            "type": "string",
+            "description": "Order remark, up to 64 characters",
+            "maxLength": 64
+          },
+          "multileg_strategy": {
+            "type": "integer",
+            "description": "Multi-leg option strategy. Required when `legs` is not empty:\n\n- `0` - CoveredCall\n- `1` - CoveredPut\n- `4` - Collar\n- `5` - Straddle\n- `6` - Strangle",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              4,
+              5,
+              6
+            ]
+          },
+          "legs": {
+            "type": "array",
+            "description": "Leg symbols of a multi-leg option order; exactly 2 legs are required. Leave it empty for stock orders and single-leg option orders. Option symbols use the `{Underlying}{YYMMDD}{C/P}{strike × 1000, 8 digits}.{Market}` format, for example `TSLA260613C350000.US`. For a strategy that involves stock (`CoveredCall`, `CoveredPut`, or `Collar`), include the stock symbol as a leg, for example `[\"TSLA.US\", \"TSLA260613C350000.US\"]`",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "symbol",
+          "side",
+          "order_type",
+          "time_in_force",
+          "outside_rth"
+        ]
       }
     }
   },
@@ -25670,25 +25952,23 @@
           "Trading"
         ],
         "summary": "Validate Order Card (Hong Kong and Singapore)",
-        "description": "Validates the order parameters of an order card generated in an AI conversation (for Hong Kong and Singapore stock accounts). If validation passes, the service returns normalized order parameters that you can use to render the card and submit the order. If validation fails, use the business code to guide the Client through the prerequisite, such as opening an account, depositing funds, enabling options or crypto permissions, or verifying the trade password, and then validate again.\n\nA validation result becomes stale when the password, funds, or permissions change. Validate again if the Client returns to the card after a long pause. Before placing the order, call `POST /v1/trade/widget/submit/check` to get the items the Client must confirm. Numeric fields in the request body can also be sent as strings. For US stock accounts, use `POST /v1/trade/us/widget/validate`.\n\nWhen you call this operation through WhaleCore `requestService()`, you do not need to set `requiresTradeToken` to `true`. If the trade password has not been verified, the operation returns business code `402000` so that you can guide the Client to verify it.\n",
+        "description": "Validates an order card generated in an AI conversation for a Hong Kong or Singapore stock account. Send the card parameters, such as `symbol`, `side`, `order_type`, and `submitted_quantity`, not the order submission fields such as `counter_id`, `action`, and `quantity`; a request without `symbol` fails. If validation passes, `data` contains the normalized order parameters in the order submission format. Use them to render the card, and pass them unchanged to `POST /v1/trade/widget/submit/check`. If validation fails, use the business code to guide the Client through the prerequisite, such as opening an account, depositing funds, enabling options or crypto permissions, or verifying the trade password, and then validate again.\n\nA validation result becomes stale when the password, funds, or permissions change. Validate again if the Client returns to the card after a long pause. Numeric fields in the request body can also be sent as strings. For US stock accounts, use `POST /v1/trade/us/widget/validate`.\n\nWhen you call this operation through WhaleCore `requestService()`, you do not need to set `requiresTradeToken` to `true`. If the trade password has not been verified, the operation returns business code `402000` so that you can guide the Client to verify it.\n",
         "operationId": "postV1TradeWidgetValidate",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/OrderWidgetOrderParams"
+                "$ref": "#/components/schemas/OrderWidgetCardParams"
               },
               "example": {
-                "counter_id": "ST/US/AAPL",
-                "action": 1,
+                "symbol": "700.HK",
+                "side": 1,
                 "order_type": "LO",
-                "price": "228.50",
-                "quantity": "10",
-                "settlement_currency": "USD",
-                "force_only_rth": 1,
+                "submitted_price": "388.00",
+                "submitted_quantity": "100",
                 "time_in_force": 0,
-                "statistics_entry": "order_widget"
+                "outside_rth": "RTH_ONLY"
               }
             }
           }
@@ -25717,15 +25997,16 @@
                   "code": 0,
                   "message": "success",
                   "data": {
-                    "counter_id": "ST/US/AAPL",
+                    "counter_id": "ST/HK/700",
                     "action": 1,
                     "order_type": "LO",
-                    "price": "228.50",
-                    "quantity": "10",
-                    "settlement_currency": "USD",
+                    "price": "388.00",
+                    "quantity": "100",
+                    "settlement_currency": "HKD",
                     "force_only_rth": 1,
                     "time_in_force": 0,
-                    "statistics_entry": "order_widget"
+                    "statistics_entry": "ai_widget",
+                    "name": "Tencent Holdings"
                   }
                 },
                 "x-example-kind": "illustrative"
@@ -25777,25 +26058,23 @@
           "Trading"
         ],
         "summary": "Validate Order Card (US)",
-        "description": "Validates the order parameters of an order card generated in an AI conversation (for US stock accounts). If validation passes, the service returns normalized order parameters that you can use to render the card and submit the order. If validation fails, use the business code to guide the Client through the prerequisite, such as opening an account, depositing funds, enabling options or crypto permissions, or verifying the trade password, and then validate again.\n\nA validation result becomes stale when the password, funds, or permissions change. Validate again if the Client returns to the card after a long pause. Before placing the order, call `POST /v1/trade/us/widget/submit/check` to get the items the Client must confirm. Numeric fields in the request body can also be sent as strings. For Hong Kong and Singapore stock accounts, use `POST /v1/trade/widget/validate`.\n\nWhen you call this operation through WhaleCore `requestService()`, you do not need to set `requiresTradeToken` to `true`. If the trade password has not been verified, the operation returns business code `402000` so that you can guide the Client to verify it.\n",
+        "description": "Validates an order card generated in an AI conversation for a US stock account. Send the card parameters, such as `symbol`, `side`, `order_type`, and `submitted_quantity`, not the order submission fields such as `counter_id`, `action`, and `quantity`; a request without `symbol` fails. If validation passes, `data` contains the normalized order parameters in the order submission format. Use them to render the card, and pass them unchanged to `POST /v1/trade/us/widget/submit/check`. If validation fails, use the business code to guide the Client through the prerequisite, such as opening an account, depositing funds, enabling options or crypto permissions, or verifying the trade password, and then validate again.\n\nA validation result becomes stale when the password, funds, or permissions change. Validate again if the Client returns to the card after a long pause. Numeric fields in the request body can also be sent as strings. For Hong Kong and Singapore stock accounts, use `POST /v1/trade/widget/validate`.\n\nWhen you call this operation through WhaleCore `requestService()`, you do not need to set `requiresTradeToken` to `true`. If the trade password has not been verified, the operation returns business code `402000` so that you can guide the Client to verify it.\n",
         "operationId": "postV1TradeUsWidgetValidate",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/OrderWidgetOrderParams"
+                "$ref": "#/components/schemas/OrderWidgetCardParamsUs"
               },
               "example": {
-                "counter_id": "ST/US/AAPL",
-                "action": 1,
+                "symbol": "AAPL.US",
+                "side": 1,
                 "order_type": "LO",
-                "price": "228.50",
-                "quantity": "10",
-                "settlement_currency": "USD",
-                "force_only_rth": 1,
+                "submitted_price": "228.50",
+                "submitted_quantity": "10",
                 "time_in_force": 0,
-                "statistics_entry": "order_widget"
+                "outside_rth": 1
               }
             }
           }
@@ -25832,7 +26111,7 @@
                     "settlement_currency": "USD",
                     "force_only_rth": 1,
                     "time_in_force": 0,
-                    "statistics_entry": "order_widget"
+                    "statistics_entry": "ai_widget"
                   }
                 },
                 "x-example-kind": "illustrative"
@@ -25894,15 +26173,16 @@
                 "$ref": "#/components/schemas/OrderWidgetOrderParams"
               },
               "example": {
-                "counter_id": "ST/US/AAPL",
+                "counter_id": "ST/HK/700",
                 "action": 1,
                 "order_type": "LO",
-                "price": "228.50",
-                "quantity": "10",
-                "settlement_currency": "USD",
+                "price": "388.00",
+                "quantity": "100",
+                "settlement_currency": "HKD",
                 "force_only_rth": 1,
                 "time_in_force": 0,
-                "statistics_entry": "order_widget"
+                "statistics_entry": "ai_widget",
+                "name": "Tencent Holdings"
               }
             }
           }
@@ -25981,7 +26261,7 @@
                 "settlement_currency": "USD",
                 "force_only_rth": 1,
                 "time_in_force": 0,
-                "statistics_entry": "order_widget"
+                "statistics_entry": "ai_widget"
               }
             }
           }

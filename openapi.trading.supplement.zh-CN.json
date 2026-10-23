@@ -2349,12 +2349,16 @@
               "C",
               "P"
             ]
+          },
+          "contract_multiplier": {
+            "type": "string",
+            "description": "合约乘数，即每张合约对应的正股数量"
           }
         }
       },
       "OrderWidgetOrderParams": {
         "type": "object",
-        "description": "下单卡片的订单参数。校验通过后由服务端返回标准化结果，提交时原样作为下单请求体。",
+        "description": "下单字段格式的标准化订单参数，由 `POST /v1/trade/widget/validate` 和 `POST /v1/trade/us/widget/validate` 返回；原样传给对应的下单前确认接口，并据此构造下单请求。",
         "properties": {
           "counter_id": {
             "type": "string",
@@ -2429,20 +2433,49 @@
           },
           "statistics_entry": {
             "type": "string",
-            "description": "下单入口标识，用于统计订单来源"
+            "description": "下单入口标识，用于统计订单来源；下单卡片固定为 `ai_widget`"
           },
           "stock_contract": {
             "$ref": "#/components/schemas/OrderWidgetStockContract"
           },
           "multiLeg": {
             "$ref": "#/components/schemas/OrderMultiLeg"
+          },
+          "trend": {
+            "type": "integer",
+            "description": "`LIT`、`MIT`、`TSL` 订单的触发方向",
+            "format": "int32"
+          },
+          "market_price": {
+            "type": "string",
+            "description": "校验下单卡片时的市场价格，适用于 `LIT`、`MIT`、`TSL` 订单，由服务端从行情获取"
+          },
+          "limit_depth_level": {
+            "type": "integer",
+            "description": "`TSL` 订单触发后确定委托价所用的盘口档位：`0` 按市场价格加减 `limit_offset`，`-1` 至 `-5` 为买一至买五，`1` 至 `5` 为卖一至卖五",
+            "format": "int32",
+            "minimum": -5,
+            "maximum": 5
+          },
+          "expire_time": {
+            "type": "integer",
+            "description": "到期时间，Unix 时间戳（秒），由 `expire_date` 换算；仅 `time_in_force` 为 `6` 时返回",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string",
+            "description": "本地化的标的显示名称"
           }
         },
         "required": [
           "counter_id",
           "action",
           "order_type",
-          "quantity"
+          "price",
+          "quantity",
+          "settlement_currency",
+          "force_only_rth",
+          "statistics_entry"
         ]
       },
       "OrderWidgetCheckItem": {
@@ -16441,6 +16474,255 @@
             }
           }
         }
+      },
+      "OrderWidgetCardParams": {
+        "type": "object",
+        "description": "港股、新加坡股账户的下单卡片参数，即下单卡片携带的原始格式。服务端会将其解析为 `OrderWidgetOrderParams` 中的标准化订单参数。",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "标的代码，格式为 `{Code}.{Market}`，如 `700.HK`"
+          },
+          "order_type": {
+            "type": "string",
+            "description": "订单类型：\n\n- `LO` - 限价单\n- `MO` - 市价单\n- `MOC` - 收盘市价单\n- `LIT` - 到价限价单\n- `MIT` - 到价市价单\n- `TSL` - 跟踪止损限价单",
+            "enum": [
+              "LO",
+              "MO",
+              "MOC",
+              "LIT",
+              "MIT",
+              "TSL"
+            ]
+          },
+          "side": {
+            "type": "integer",
+            "description": "买卖方向：\n\n- `1` - 买入\n- `2` - 卖出",
+            "format": "int32",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "submitted_price": {
+            "type": "string",
+            "description": "委托价；`order_type` 为 `LO` 或 `LIT` 时必传"
+          },
+          "submitted_quantity": {
+            "type": "string",
+            "description": "委托数量，如 `100`"
+          },
+          "time_in_force": {
+            "type": "integer",
+            "description": "订单有效期类型：\n\n- `0` - 当日有效（Day）\n- `1` - 撤单前有效（GTC）\n- `3` - 部成剩余转撤（IOC）\n- `5` - 全成或撤单（FOK）\n- `6` - 到期前有效（GTD），需同时传 `expire_date`",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              3,
+              5,
+              6
+            ]
+          },
+          "trigger_price": {
+            "type": "string",
+            "description": "触发价；`order_type` 为 `LIT` 或 `MIT` 时必传"
+          },
+          "limit_offset": {
+            "type": "string",
+            "description": "`TSL` 订单触发后在市场价格基础上加减的价差，用于确定委托价；`TSL` 订单的 `limit_depth_level` 为 `0` 或不传时必传，其他情况忽略"
+          },
+          "tailing_amount": {
+            "type": "string",
+            "description": "跟踪金额；`TSL` 订单须在 `tailing_amount` 与 `tailing_percent` 中二选一"
+          },
+          "tailing_percent": {
+            "type": "string",
+            "description": "跟踪百分比；`TSL` 订单须在 `tailing_amount` 与 `tailing_percent` 中二选一"
+          },
+          "expire_date": {
+            "type": "string",
+            "description": "到期日，格式为 `YYYY-MM-DD`；`time_in_force` 为 `6` 时必传",
+            "format": "date"
+          },
+          "outside_rth": {
+            "type": "string",
+            "description": "交易时段：\n\n- `ANY_TIME` - 不限时段\n- `RTH_ONLY` - 仅盘中\n- `OVERNIGHT` - 夜盘",
+            "enum": [
+              "ANY_TIME",
+              "RTH_ONLY",
+              "OVERNIGHT"
+            ]
+          },
+          "remark": {
+            "type": "string",
+            "description": "订单备注，最多 64 个字符",
+            "maxLength": 64
+          },
+          "multileg_strategy": {
+            "type": "integer",
+            "description": "多腿期权策略：\n\n- `0` - CoveredCall\n- `1` - CoveredPut\n- `2` - VerticalCallSpread\n- `3` - VerticalPutSpread\n- `4` - Collar\n- `5` - Straddle\n- `6` - Strangle",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          "legs": {
+            "type": "array",
+            "description": "多腿期权订单各腿的标的代码；仅多腿订单使用，且必须恰好 2 条腿",
+            "items": {
+              "type": "string"
+            }
+          },
+          "trend": {
+            "type": "integer",
+            "description": "触发方向；`TSL` 订单必传。`LIT`、`MIT` 订单由服务端根据 `trigger_price` 与 `monitor_price` 得出，传入的值会被忽略",
+            "format": "int32"
+          },
+          "monitor_price": {
+            "type": "string",
+            "description": "用于监控触发条件的价格；`LIT`、`MIT`、`TSL` 订单必传"
+          },
+          "security_type": {
+            "type": "string",
+            "description": "证券类型；可选，传入时须与 `symbol` 解析出的证券类型一致：\n\n- `CS` - 普通股\n- `OPT` - 期权\n- `WAR` - 窝轮\n- `VA` - 虚拟资产\n- `MLEG` - 多腿组合",
+            "enum": [
+              "CS",
+              "OPT",
+              "WAR",
+              "VA",
+              "MLEG"
+            ]
+          },
+          "trigger_count": {
+            "type": "integer",
+            "description": "`LIT`、`MIT`、`TSL` 订单每分钟可触发的次数，默认为 `1`",
+            "format": "int32"
+          },
+          "limit_depth_level": {
+            "type": "integer",
+            "description": "`TSL` 订单触发后确定委托价所用的盘口档位，默认为 `0`：\n\n- `0` - 按市场价格加减 `limit_offset`\n- `-1` 至 `-5` - 买一至买五\n- `1` 至 `5` - 卖一至卖五",
+            "format": "int32",
+            "minimum": -5,
+            "maximum": 5
+          }
+        },
+        "required": [
+          "symbol",
+          "side",
+          "order_type",
+          "time_in_force",
+          "outside_rth"
+        ]
+      },
+      "OrderWidgetCardParamsUs": {
+        "type": "object",
+        "description": "美股账户的下单卡片参数，即下单卡片携带的原始格式。服务端会将其解析为 `OrderWidgetOrderParams` 中的标准化订单参数。",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "标的代码，格式为 `{Code}.{Market}`。股票或单腿期权订单传交易的标的，如 `AAPL.US`、`TSLA260613C350000.US`；多腿订单传正股，如 `TSLA.US`，仅用于确定市场和币种，不计为一条腿"
+          },
+          "order_type": {
+            "type": "string",
+            "description": "订单类型：\n\n- `LO` - 限价单\n- `MO` - 市价单\n- `SO_LIT` - 到价限价单\n- `SO_MIT` - 到价市价单"
+          },
+          "side": {
+            "type": "integer",
+            "description": "买卖方向：\n\n- `1` - 买入\n- `2` - 卖出",
+            "format": "int32",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "submitted_price": {
+            "type": "string",
+            "description": "委托价，如 `388.5`；`order_type` 为 `LO` 或 `SO_LIT` 时必传，`MO`、`SO_MIT` 不使用"
+          },
+          "submitted_quantity": {
+            "type": "string",
+            "description": "委托数量，如 `100`"
+          },
+          "time_in_force": {
+            "type": "integer",
+            "description": "订单有效期类型：\n\n- `0` - 当日有效（Day）\n- `1` - 撤单前有效（GTC）\n- `6` - 到期前有效（GTD），需同时传 `expire_date`",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              6
+            ]
+          },
+          "trigger_price": {
+            "type": "string",
+            "description": "触发价，如 `388.5`；`order_type` 为 `SO_LIT` 或 `SO_MIT` 时必传，`LO`、`MO` 不使用"
+          },
+          "limit_offset": {
+            "type": "string",
+            "description": "指定价差；跟踪止损限价单（`TSLPAMT`、`TSLPPCT`）必传"
+          },
+          "trailing_amount": {
+            "type": "string",
+            "description": "跟踪金额；`TSLPAMT` 订单必传"
+          },
+          "trailing_percent": {
+            "type": "string",
+            "description": "跟踪百分比；`TSLPPCT` 订单必传"
+          },
+          "expire_date": {
+            "type": "string",
+            "description": "到期日，格式为 `YYYY-MM-DD`；`time_in_force` 为 `6` 时必传",
+            "format": "date"
+          },
+          "outside_rth": {
+            "type": "integer",
+            "description": "交易时段：\n\n- `0` - 不限时段（`ANY_TIME`）\n- `1` - 仅盘中（`RTH_ONLY`）\n- `4` - 夜盘（`OVERNIGHT`）",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              4
+            ]
+          },
+          "remark": {
+            "type": "string",
+            "description": "订单备注，最多 64 个字符",
+            "maxLength": 64
+          },
+          "multileg_strategy": {
+            "type": "integer",
+            "description": "多腿期权策略；`legs` 非空时必传：\n\n- `0` - CoveredCall\n- `1` - CoveredPut\n- `4` - Collar\n- `5` - Straddle\n- `6` - Strangle",
+            "format": "int32",
+            "enum": [
+              0,
+              1,
+              4,
+              5,
+              6
+            ]
+          },
+          "legs": {
+            "type": "array",
+            "description": "多腿期权订单各腿的标的代码，必须恰好 2 条腿；股票订单和单腿期权订单留空。期权代码格式为 `{Underlying}{YYMMDD}{C/P}{行权价 × 1000，8 位}.{Market}`，如 `TSLA260613C350000.US`。含正股的策略（`CoveredCall`、`CoveredPut`、`Collar`）须把正股作为一条腿传入，如 `[\"TSLA.US\", \"TSLA260613C350000.US\"]`",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "symbol",
+          "side",
+          "order_type",
+          "time_in_force",
+          "outside_rth"
+        ]
       }
     }
   },
@@ -25670,25 +25952,23 @@
           "交易"
         ],
         "summary": "校验下单卡片（港股、新加坡股）",
-        "description": "校验 AI 对话中生成的下单卡片参数（适用于港股和新加坡股账户），通过时返回服务端标准化后的订单参数，可直接用于展示卡片和提交订单。未通过时按业务码引导客户完成开户、入金、开通期权或加密货币权限、验证交易密码等前置步骤，完成后重新校验。\n\n校验结果会随密码、资金、权限变化而失效；客户长时间停留后再下单时，应重新校验。下单前再调用 `POST /v1/trade/widget/submit/check` 获取需要客户确认的校验项。请求体中的数值字段也可以字符串形式传入。美股账户使用 `POST /v1/trade/us/widget/validate`。\n\n经 WhaleCore `requestService()` 调用时无需将 `requiresTradeToken` 设为 `true`：交易密码未验证时接口返回业务码 `402000`，由你引导客户验证。\n",
+        "description": "校验 AI 对话中生成的下单卡片（适用于港股和新加坡股账户）。请求体传卡片参数，如 `symbol`、`side`、`order_type`、`submitted_quantity`，而不是 `counter_id`、`action`、`quantity` 等下单字段；缺少 `symbol` 时请求失败。通过时 `data` 返回服务端标准化后的订单参数（下单字段格式），可用于展示卡片，并原样传给 `POST /v1/trade/widget/submit/check`。未通过时按业务码引导客户完成开户、入金、开通期权或加密货币权限、验证交易密码等前置步骤，完成后重新校验。\n\n校验结果会随密码、资金、权限变化而失效；客户长时间停留后再下单时，应重新校验。请求体中的数值字段也可以字符串形式传入。美股账户使用 `POST /v1/trade/us/widget/validate`。\n\n经 WhaleCore `requestService()` 调用时无需将 `requiresTradeToken` 设为 `true`：交易密码未验证时接口返回业务码 `402000`，由你引导客户验证。\n",
         "operationId": "postV1TradeWidgetValidate",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/OrderWidgetOrderParams"
+                "$ref": "#/components/schemas/OrderWidgetCardParams"
               },
               "example": {
-                "counter_id": "ST/US/AAPL",
-                "action": 1,
+                "symbol": "700.HK",
+                "side": 1,
                 "order_type": "LO",
-                "price": "228.50",
-                "quantity": "10",
-                "settlement_currency": "USD",
-                "force_only_rth": 1,
+                "submitted_price": "388.00",
+                "submitted_quantity": "100",
                 "time_in_force": 0,
-                "statistics_entry": "order_widget"
+                "outside_rth": "RTH_ONLY"
               }
             }
           }
@@ -25717,15 +25997,16 @@
                   "code": 0,
                   "message": "success",
                   "data": {
-                    "counter_id": "ST/US/AAPL",
+                    "counter_id": "ST/HK/700",
                     "action": 1,
                     "order_type": "LO",
-                    "price": "228.50",
-                    "quantity": "10",
-                    "settlement_currency": "USD",
+                    "price": "388.00",
+                    "quantity": "100",
+                    "settlement_currency": "HKD",
                     "force_only_rth": 1,
                     "time_in_force": 0,
-                    "statistics_entry": "order_widget"
+                    "statistics_entry": "ai_widget",
+                    "name": "腾讯控股"
                   }
                 },
                 "x-example-kind": "illustrative"
@@ -25777,25 +26058,23 @@
           "交易"
         ],
         "summary": "校验下单卡片（美股）",
-        "description": "校验 AI 对话中生成的下单卡片参数（适用于美股账户），通过时返回服务端标准化后的订单参数，可直接用于展示卡片和提交订单。未通过时按业务码引导客户完成开户、入金、开通期权或加密货币权限、验证交易密码等前置步骤，完成后重新校验。\n\n校验结果会随密码、资金、权限变化而失效；客户长时间停留后再下单时，应重新校验。下单前再调用 `POST /v1/trade/us/widget/submit/check` 获取需要客户确认的校验项。请求体中的数值字段也可以字符串形式传入。港股和新加坡股账户使用 `POST /v1/trade/widget/validate`。\n\n经 WhaleCore `requestService()` 调用时无需将 `requiresTradeToken` 设为 `true`：交易密码未验证时接口返回业务码 `402000`，由你引导客户验证。\n",
+        "description": "校验 AI 对话中生成的下单卡片（适用于美股账户）。请求体传卡片参数，如 `symbol`、`side`、`order_type`、`submitted_quantity`，而不是 `counter_id`、`action`、`quantity` 等下单字段；缺少 `symbol` 时请求失败。通过时 `data` 返回服务端标准化后的订单参数（下单字段格式），可用于展示卡片，并原样传给 `POST /v1/trade/us/widget/submit/check`。未通过时按业务码引导客户完成开户、入金、开通期权或加密货币权限、验证交易密码等前置步骤，完成后重新校验。\n\n校验结果会随密码、资金、权限变化而失效；客户长时间停留后再下单时，应重新校验。请求体中的数值字段也可以字符串形式传入。港股和新加坡股账户使用 `POST /v1/trade/widget/validate`。\n\n经 WhaleCore `requestService()` 调用时无需将 `requiresTradeToken` 设为 `true`：交易密码未验证时接口返回业务码 `402000`，由你引导客户验证。\n",
         "operationId": "postV1TradeUsWidgetValidate",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/OrderWidgetOrderParams"
+                "$ref": "#/components/schemas/OrderWidgetCardParamsUs"
               },
               "example": {
-                "counter_id": "ST/US/AAPL",
-                "action": 1,
+                "symbol": "AAPL.US",
+                "side": 1,
                 "order_type": "LO",
-                "price": "228.50",
-                "quantity": "10",
-                "settlement_currency": "USD",
-                "force_only_rth": 1,
+                "submitted_price": "228.50",
+                "submitted_quantity": "10",
                 "time_in_force": 0,
-                "statistics_entry": "order_widget"
+                "outside_rth": 1
               }
             }
           }
@@ -25832,7 +26111,7 @@
                     "settlement_currency": "USD",
                     "force_only_rth": 1,
                     "time_in_force": 0,
-                    "statistics_entry": "order_widget"
+                    "statistics_entry": "ai_widget"
                   }
                 },
                 "x-example-kind": "illustrative"
@@ -25894,15 +26173,16 @@
                 "$ref": "#/components/schemas/OrderWidgetOrderParams"
               },
               "example": {
-                "counter_id": "ST/US/AAPL",
+                "counter_id": "ST/HK/700",
                 "action": 1,
                 "order_type": "LO",
-                "price": "228.50",
-                "quantity": "10",
-                "settlement_currency": "USD",
+                "price": "388.00",
+                "quantity": "100",
+                "settlement_currency": "HKD",
                 "force_only_rth": 1,
                 "time_in_force": 0,
-                "statistics_entry": "order_widget"
+                "statistics_entry": "ai_widget",
+                "name": "腾讯控股"
               }
             }
           }
@@ -25981,7 +26261,7 @@
                 "settlement_currency": "USD",
                 "force_only_rth": 1,
                 "time_in_force": 0,
-                "statistics_entry": "order_widget"
+                "statistics_entry": "ai_widget"
               }
             }
           }
