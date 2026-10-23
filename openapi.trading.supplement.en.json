@@ -16395,6 +16395,52 @@
             "description": "Currencies supported by this deposit method"
           }
         }
+      },
+      "VerificationCaptcha": {
+        "type": "object",
+        "description": "Human verification result. Send only the field for the verification provider used in this attempt. When the provider's switch field in the human verification configuration (`tencent_switch` or `google_switch`) is `true`, the server has turned off human verification for that provider; send an empty object for it, such as `{\"tencent\": {}}`.",
+        "properties": {
+          "tencent": {
+            "type": "object",
+            "description": "Result from Tencent Cloud Captcha",
+            "properties": {
+              "ticket": {
+                "type": "string",
+                "description": "The `ticket` returned after successful verification"
+              },
+              "rand_str": {
+                "type": "string",
+                "description": "The random string `randstr` returned after successful verification"
+              },
+              "tencent_id": {
+                "type": "string",
+                "description": "Captcha AppId used for this attempt, taken from `tencent_ids` in the human verification configuration"
+              },
+              "sid": {
+                "type": "string",
+                "description": "The session ID `sid` returned after successful verification"
+              }
+            }
+          },
+          "google": {
+            "type": "object",
+            "description": "Result from Google reCAPTCHA Enterprise",
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "Token returned by the verification"
+              },
+              "action": {
+                "type": "string",
+                "description": "Action passed when running the verification. It is the same as `type` in the request"
+              },
+              "site_key": {
+                "type": "string",
+                "description": "Decrypted site key, which is the plaintext of `google_key` in the human verification configuration"
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -17491,7 +17537,7 @@
           "Account"
         ],
         "summary": "Submit SMS Verification for Trade Unlock",
-        "description": "Completes SMS second-factor verification for trade unlock. After Verify Trade Password returns `need_two_factors: true`, send a trade-unlock SMS verification code to the Client (the send-code operation is outside the scope of this document), and then submit the code with the same trade password. On success, returns the trade token: `data.token.token` maps to `tradeToken` and `data.token.refresh_token` maps to `tradeRefreshToken` of `updateTradeToken`.\n\nIf `tfa_switch` is provided, this call also changes whether later trade unlocks for the Client require an SMS verification code. If verification fails, show `message` and let the Client re-enter the code or request a new one.\n\nPassword fields carry the MD5 digest of the 6-digit trade password as a 32-character lowercase hexadecimal string. Never send the plaintext password.\n\nThis operation obtains the trade token, so do not set `requiresTradeToken` to `true` when you call it through WhaleCore `requestService()`.\n",
+        "description": "Completes SMS second-factor verification for trade unlock. After Verify Trade Password returns `need_two_factors: true`, send a trade-unlock SMS verification code to the Client by calling `POST /v1/auth/send_code` with `type` = `trade_auth_2fa` and check it with `POST /v1/member/check_mobile`, and then submit the code with the same trade password. On success, returns the trade token: `data.token.token` maps to `tradeToken` and `data.token.refresh_token` maps to `tradeRefreshToken` of `updateTradeToken`.\n\nIf `tfa_switch` is provided, this call also changes whether later trade unlocks for the Client require an SMS verification code. If verification fails, show `message` and let the Client re-enter the code or request a new one.\n\nPassword fields carry the MD5 digest of the 6-digit trade password as a 32-character lowercase hexadecimal string. Never send the plaintext password.\n\nThis operation obtains the trade token, so do not set `requiresTradeToken` to `true` when you call it through WhaleCore `requestService()`.\n",
         "operationId": "postV1MemberTradeAuthTwoFactors",
         "requestBody": {
           "required": true,
@@ -17895,7 +17941,7 @@
           "Account"
         ],
         "summary": "Set Trade Password",
-        "description": "Sets a trade password for a Client who has not set one. The Client must first complete identity verification with a phone or email verification code to obtain `verify_credentials` (the operation that issues the credential is outside the scope of this document). After a successful call, the Client can use the password to verify the trade password and obtain trade tokens. If the call fails, show `message`; if the credential is no longer valid, ask the Client to complete identity verification again.\n\nPassword fields carry the MD5 digest of the 6-digit trade password as a 32-character lowercase hexadecimal string. Never send the plaintext password.\n",
+        "description": "Sets a trade password for a Client who has not set one. The Client must first complete identity verification with a phone or email verification code to obtain `verify_credentials`: call `POST /v1/auth/send_code` or `POST /v1/auth/email/send_code` with `type` = `set_trade_password` to send a code, then call `POST /v1/member/check_mobile` or `POST /v1/member/check_email` to check it and take the credential from `data.verify_credentials`. After a successful call, the Client can use the password to verify the trade password and obtain trade tokens. If the call fails, show `message`; if the credential is no longer valid, ask the Client to complete identity verification again.\n\nPassword fields carry the MD5 digest of the 6-digit trade password as a 32-character lowercase hexadecimal string. Never send the plaintext password.\n",
         "operationId": "postV2MemberTradeSetPassword",
         "requestBody": {
           "required": true,
@@ -17962,7 +18008,7 @@
           "Account"
         ],
         "summary": "Reset Trade Password",
-        "description": "Sets a new trade password after identity verification when the Client has forgotten it, usually entered from **Forgot password** on the trade unlock screen. The Client must first verify the account-opening ID number and the contact phone or email to obtain `verify_credentials` (the related verification operations are outside the scope of this document). After a successful reset, later trade unlocks must use the new password. If the call fails, show `message`; if the credential is no longer valid, ask the Client to complete identity verification again.\n\nPassword fields carry the MD5 digest of the 6-digit trade password as a 32-character lowercase hexadecimal string. Never send the plaintext password.\n",
+        "description": "Sets a new trade password after identity verification when the Client has forgotten it, usually entered from **Forgot password** on the trade unlock screen. The Client must first complete identity verification to obtain `verify_credentials`:\n\n1. Call `POST /v1/account/verify_id_card` with `scene` = `3` to verify the account-opening ID number.\n2. Call `GET /v2/member/info` to get the Client's phone number. If no phone number is bound, use the verified email.\n3. Call `POST /v1/auth/send_code` or `POST /v1/auth/email/send_code` with `type` = `reset_trade_password` to send a code. Complete human verification through `GET /v2/auth/captcha` before sending.\n4. Call `POST /v1/member/check_mobile` or `POST /v1/member/check_email` to check the code the Client enters, and take the credential from `data.verify_credentials`.\n\n After a successful reset, later trade unlocks must use the new password. If the call fails, show `message`; if the credential is no longer valid, ask the Client to complete identity verification again.\n\nPassword fields carry the MD5 digest of the 6-digit trade password as a 32-character lowercase hexadecimal string. Never send the plaintext password.\n",
         "operationId": "postV2MemberTradeResetPassword",
         "requestBody": {
           "required": true,
@@ -68567,7 +68613,7 @@
           "Account"
         ],
         "summary": "Verify Account-Opening ID Number",
-        "description": "Checks whether the account-opening ID number entered by the Client matches the account-opening records under the specified Broker channel. It is the identity verification step in flows such as setting or resetting the trade password. Common flows:\n\n- Reset trade password (`scene` = `3`): after verification, send a code to the Client’s contact phone and verify it, then call `POST /v2/member/trade/reset_password` to set the new password.\n- Set trade password (`scene` = `4`): after verification, send a code to the Client’s contact phone and verify it, then set the trade password.\n\nPass the Broker channel where the Client opened the account in `account_channel`. If verification fails, show `message` and let the Client re-enter the number; if the Client repeatedly fails, direct them to customer service.\n\nNever send `card_id` in plaintext. Encryption: compute the MD5 of the `x-timestamp` header value (a millisecond timestamp string) as a 32-character lowercase hexadecimal string. Use the UTF-8 bytes of that string as the AES key and its first 16 bytes as the IV, encrypt the plaintext with AES-CBC (PKCS#7 padding), and Base64-encode the ciphertext as `k`. Then Base64-encode the JSON string `{\"rd\":\"<x-timestamp>\",\"k\":\"<k>\"}` and send it as the field value. `rd` must match the `x-timestamp` header, which the server uses for decryption.\n",
+        "description": "Checks whether the account-opening ID number entered by the Client matches the account-opening records under the specified Broker channel. It is the identity verification step in flows such as setting or resetting the trade password. Common flows:\n\n- Reset trade password (`scene` = `3`): after verification, call `POST /v1/auth/send_code` with `type` = `reset_trade_password` to send a code to the Client’s phone, call `POST /v1/member/check_mobile` to check it and obtain `verify_credentials`, and then call `POST /v2/member/trade/reset_password` to set the new password. If the Client has no bound phone number, use `POST /v1/auth/email/send_code` and `POST /v1/member/check_email` instead.\n- Set trade password (`scene` = `4`): after verification, check a code in the same way with `type` = `set_trade_password`, and then call `POST /v2/member/trade/set_password` to set the trade password.\n\nPass the Broker channel where the Client opened the account in `account_channel`. If verification fails, show `message` and let the Client re-enter the number; if the Client repeatedly fails, direct them to customer service.\n\nNever send `card_id` in plaintext. Encryption: compute the MD5 of the `x-timestamp` header value (a millisecond timestamp string) as a 32-character lowercase hexadecimal string. Use the UTF-8 bytes of that string as the AES key and its first 16 bytes as the IV, encrypt the plaintext with AES-CBC (PKCS#7 padding), and Base64-encode the ciphertext as `k`. Then Base64-encode the JSON string `{\"rd\":\"<x-timestamp>\",\"k\":\"<k>\"}` and send it as the field value. `rd` must match the `x-timestamp` header, which the server uses for decryption.\n",
         "operationId": "postV1AccountVerifyIdCard",
         "parameters": [
           {
@@ -68644,6 +68690,480 @@
                       }
                     }
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/auth/captcha": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Get Human Verification Configuration",
+        "description": "Returns the human verification configuration required before sending an SMS or email verification code. The client uses it to initialize Tencent Cloud Captcha or Google reCAPTCHA Enterprise, then puts the verification result in `captcha` of `POST /v1/auth/send_code` or `POST /v1/auth/email/send_code`.\n\nPass `common` in `type` to get the configuration for every scene. When sending a code, take the AppId for the scene that matches `type` in that request from `tencent_ids`:\n\n- `sms` - `reset_trade_password`, `set_trade_password`, `trade_auth_2fa`, `totp`, and `change_mobile` (whether the code is sent by SMS or email)\n- `email` - `change_email`, `bind_email`, and `verify_email`\n\n`google_key` is the encrypted site key. Decrypt it by reversing the `card_id` encryption described in “Verify Account-Opening ID Number”: Base64-decode it to get `{\"rd\":\"...\",\"k\":\"...\"}`, use the MD5 hexadecimal string of `rd` as the AES key and IV, and decrypt `k` with AES-CBC.\n\nWhen `tencent_switch` or `google_switch` is `true`, the server has turned off human verification for that provider. Do not show the verification widget; send an empty object for that provider in `captcha`.\n\nIf sending a code returns `401017` or `401074`, get this configuration again and complete human verification again before resending.\n\nThis configuration is used by the same features as sending SMS and email verification codes.\n\nWhen you call this operation through WhaleCore `requestService()`, you do not need to set `requiresTradeToken` to `true`.\n",
+        "operationId": "getV2AuthCaptcha",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": true,
+            "description": "Verification scene type. Pass `common` to get the configuration for all scenes:\n\n- `common` - General\n- `sms` - SMS verification code scene\n- `email` - Email verification code scene",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "common",
+                "sms",
+                "email"
+              ]
+            },
+            "example": "common"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Get Human Verification Configuration” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "captcha": {
+                              "type": "object",
+                              "description": "Human verification configuration",
+                              "properties": {
+                                "tencent_ids": {
+                                  "type": "object",
+                                  "description": "Tencent Cloud Captcha AppIds indexed by scene type (`common`, `sms`, `email`)",
+                                  "additionalProperties": {
+                                    "type": "string"
+                                  }
+                                },
+                                "tencent_switch": {
+                                  "type": "boolean",
+                                  "description": "Whether human verification with Tencent Cloud Captcha is turned off. When `true`, do not show the widget and send `{\"tencent\": {}}`"
+                                },
+                                "google_key": {
+                                  "type": "string",
+                                  "description": "Encrypted Google reCAPTCHA Enterprise site key. See the operation description for decryption"
+                                },
+                                "google_switch": {
+                                  "type": "boolean",
+                                  "description": "Whether human verification with Google reCAPTCHA Enterprise is turned off. When `true`, send `{\"google\": {}}`"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "captcha": {
+                      "tencent_ids": {
+                        "common": "<TENCENT_CAPTCHA_APP_ID>",
+                        "sms": "<TENCENT_CAPTCHA_APP_ID>",
+                        "email": "<TENCENT_CAPTCHA_APP_ID>"
+                      },
+                      "tencent_switch": false,
+                      "google_key": "<ENCRYPTED_GOOGLE_SITE_KEY>",
+                      "google_switch": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/send_code": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Send SMS Verification Code",
+        "description": "Sends an SMS or voice verification code to the Client's phone number for account security flows that require phone verification. Complete human verification first: call `GET /v2/auth/captcha` to get the configuration, complete verification with Tencent Cloud Captcha or Google reCAPTCHA Enterprise, and put the result in `captcha`.\n\nAfter the code is sent, ask the Client to enter it, then call `POST /v1/member/check_mobile` with the same `type` to check it and obtain `verify_credentials`.\n\nFeatures that use this operation:\n\n- Account › Trade password › Reset trade password (`reset_trade_password`): call `POST /v2/member/trade/reset_password` with the credential\n- Account › Trade password › Set trade password (`set_trade_password`): call `POST /v2/member/trade/set_password` with the credential\n- Trade › Trade unlock › SMS two-factor verification (`trade_auth_2fa`): after the check, call `POST /v1/member/trade/auth_two_factors`\n- Account › Security settings › Turn the token on or off (`totp`): call `POST /v1/account/totp/setting` with the credential\n- Account › Contact details › Change phone number, change email (`change_mobile`, `change_email`)\n- Account › Close account (`identity_verify`)\n- Account opening contact verification and account-opening information changes, as well as phone login and login password recovery before sign-in, also use this operation, but those flows are outside TradingAPI\n\n`401043` means human verification failed: complete human verification again before resending. If you used Google reCAPTCHA Enterprise, you can retry with Tencent Cloud Captcha. For other failures, show `message`.\n\nWhen you call this operation through WhaleCore `requestService()`, you do not need to set `requiresTradeToken` to `true`.\n",
+        "operationId": "postV1AuthSendCode",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "captcha": {
+                    "$ref": "#/components/schemas/VerificationCaptcha"
+                  },
+                  "country_code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "International dialing code of the phone number, without `+`, such as `852`"
+                  },
+                  "mobile": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Client's phone number without the dialing code. You can take it from `member.mobile` returned by “Get User Information”"
+                  },
+                  "send_type": {
+                    "type": "string",
+                    "enum": [
+                      "sms",
+                      "voice"
+                    ],
+                    "description": "Delivery method:\n\n- `sms` - SMS\n- `voice` - Voice call"
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Purpose of the code. Send the same value when sending and checking the same code:\n\n- `reset_trade_password` - Reset the trade password\n- `set_trade_password` - Set the trade password\n- `trade_auth_2fa` - SMS two-factor verification for trade unlock\n- `totp` - Verify the phone before turning the token on or off\n- `change_mobile` - Verify the current phone before changing the phone number\n- `change_email` - Verify the phone before changing the email\n- `identity_verify` - Verify identity before closing the account"
+                  }
+                },
+                "required": [
+                  "captcha",
+                  "country_code",
+                  "mobile",
+                  "send_type",
+                  "type"
+                ]
+              },
+              "example": {
+                "captcha": {
+                  "tencent": {
+                    "ticket": "<CAPTCHA_TICKET>",
+                    "rand_str": "<CAPTCHA_RANDSTR>",
+                    "tencent_id": "<TENCENT_CAPTCHA_APP_ID>",
+                    "sid": "<CAPTCHA_SID>"
+                  }
+                },
+                "country_code": "852",
+                "mobile": "<MOBILE>",
+                "send_type": "sms",
+                "type": "reset_trade_password"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Send SMS Verification Code” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "No business fields"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/email/send_code": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Send Email Verification Code",
+        "description": "Sends a verification code to the Client's email for account security flows that require email verification. Complete human verification first, in the same way as for `POST /v1/auth/send_code`, and put the result in `captcha`. Encrypt `email` before sending it, and pass the timestamp used for encryption in the `x-timestamp` header.\n\nAfter the code is sent, ask the Client to enter it, then call `POST /v1/member/check_email` with the same `type` to check it and obtain `verify_credentials`.\n\nFeatures that use this operation:\n\n- Account › Trade password › Reset trade password (`reset_trade_password`): email verification when the Client has no bound phone number\n- Account › Trade password › Set trade password (`set_trade_password`): email verification when the Client has no bound phone number\n- Account › Contact details › Bind email, change email, verify email (`bind_email`, `change_email`, `verify_email`)\n- Account opening contact verification and account-opening information changes, as well as email registration, login, and login password recovery before sign-in, also use this operation, but those flows are outside TradingAPI\n\n`401043` means human verification failed; handle it in the same way as for sending SMS codes. For other failures, show `message`.\n\nWhen you call this operation through WhaleCore `requestService()`, you do not need to set `requiresTradeToken` to `true`.\n",
+        "operationId": "postV1AuthEmailSendCode",
+        "parameters": [
+          {
+            "name": "x-timestamp",
+            "in": "header",
+            "required": true,
+            "description": "Millisecond timestamp string. It must match `rd` in the encrypted field",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "1760601600000"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "captcha": {
+                    "$ref": "#/components/schemas/VerificationCaptcha"
+                  },
+                  "email": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Encrypted email address. Never send it in plaintext. Use the same encryption as `card_id` in “Verify Account-Opening ID Number”, with the `x-timestamp` header as `rd`"
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Purpose of the code. Send the same value when sending and checking the same code:\n\n- `reset_trade_password` - Reset the trade password\n- `set_trade_password` - Set the trade password\n- `change_email` - Verify the current email before changing it\n- `bind_email` - Bind an email\n- `verify_email` - Verify an email"
+                  }
+                },
+                "required": [
+                  "captcha",
+                  "email",
+                  "type"
+                ]
+              },
+              "example": {
+                "captcha": {
+                  "tencent": {
+                    "ticket": "<CAPTCHA_TICKET>",
+                    "rand_str": "<CAPTCHA_RANDSTR>",
+                    "tencent_id": "<TENCENT_CAPTCHA_APP_ID>",
+                    "sid": "<CAPTCHA_SID>"
+                  }
+                },
+                "email": "<ENCRYPTED_EMAIL>",
+                "type": "reset_trade_password"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Send Email Verification Code” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "No business fields"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/check_mobile": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Check SMS Verification Code",
+        "description": "Checks the SMS verification code entered by the Client and, when it is valid, returns `verify_credentials` as the identity verification credential for the next sensitive operation. Call `POST /v1/auth/send_code` first. `country_code`, `mobile`, and `type` must match the values used when sending the code.\n\nHow the credential is used depends on `type`:\n\n- `reset_trade_password` - Pass it to `POST /v2/member/trade/reset_password`\n- `set_trade_password` - Pass it to `POST /v2/member/trade/set_password`\n- `totp` - Pass it to `POST /v1/account/totp/setting`\n- `trade_auth_2fa` - After the check succeeds, submit the same code to `POST /v1/member/trade/auth_two_factors`\n\nThis operation is used by the same features as sending SMS codes, including resetting and setting the trade password, SMS two-factor verification for trade unlock, turning the token on or off, changing the phone number or email, and closing the account. Account opening contact verification and login password recovery before sign-in also use it, but those flows are outside TradingAPI.\n\nIf the check fails, show `message` and let the Client re-enter the code or request a new one. When the credential is no longer valid, send and check a new code. The server determines how long the credential remains valid.\n\nWhen you call this operation through WhaleCore `requestService()`, you do not need to set `requiresTradeToken` to `true`.\n",
+        "operationId": "postV1MemberCheckMobile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Verification code received by the Client"
+                  },
+                  "country_code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "International dialing code of the phone number, without `+`, such as `852`"
+                  },
+                  "mobile": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Client's phone number without the dialing code. It must match the number used when sending the code"
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Purpose of the code. Send the same value when sending and checking the same code:\n\n- `reset_trade_password` - Reset the trade password\n- `set_trade_password` - Set the trade password\n- `trade_auth_2fa` - SMS two-factor verification for trade unlock\n- `totp` - Verify the phone before turning the token on or off\n- `change_mobile` - Verify the current phone before changing the phone number\n- `change_email` - Verify the phone before changing the email\n- `identity_verify` - Verify identity before closing the account"
+                  }
+                },
+                "required": [
+                  "code",
+                  "country_code",
+                  "mobile",
+                  "type"
+                ]
+              },
+              "example": {
+                "code": "<SMS_CODE>",
+                "country_code": "852",
+                "mobile": "<MOBILE>",
+                "type": "reset_trade_password"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Check SMS Verification Code” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "verify_credentials": {
+                              "type": "string",
+                              "description": "Verification credential issued after the check succeeds"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "verify_credentials": "<VERIFY_CREDENTIALS>"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/check_email": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Check Email Verification Code",
+        "description": "Checks the email verification code entered by the Client and, when it is valid, returns `verify_credentials` as the identity verification credential for the next sensitive operation. Call `POST /v1/auth/email/send_code` first. `email` (before encryption) and `type` must match the values used when sending the code. Encrypt `email` before sending it, and pass the timestamp used for encryption in the `x-timestamp` header.\n\nWhen `type` is `reset_trade_password` or `set_trade_password`, pass the credential to `POST /v2/member/trade/reset_password` or `POST /v2/member/trade/set_password` respectively.\n\nFeatures that use this operation: resetting and setting the trade password, binding or changing the email, verifying the email before changing the phone number, and closing the account. Account opening contact verification and email registration and login before sign-in also use it, but those flows are outside TradingAPI.\n\nIf the check fails, show `message` and let the Client re-enter the code or request a new one. When the credential is no longer valid, send and check a new code. The server determines how long the credential remains valid.\n\nWhen you call this operation through WhaleCore `requestService()`, you do not need to set `requiresTradeToken` to `true`.\n",
+        "operationId": "postV1MemberCheckEmail",
+        "parameters": [
+          {
+            "name": "x-timestamp",
+            "in": "header",
+            "required": true,
+            "description": "Millisecond timestamp string. It must match `rd` in the encrypted field",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "1760601600000"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Verification code received by the Client"
+                  },
+                  "email": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Encrypted email address. Never send it in plaintext. Use the same encryption as `card_id` in “Verify Account-Opening ID Number”, with the `x-timestamp` header as `rd`"
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Purpose of the code. Send the same value when sending and checking the same code:\n\n- `reset_trade_password` - Reset the trade password\n- `set_trade_password` - Set the trade password\n- `change_email` - Verify the current email before changing it\n- `bind_email` - Bind an email\n- `verify_email` - Verify an email\n- `change_mobile` - Verify the email before changing the phone number\n- `identity_verify` - Verify identity before closing the account"
+                  }
+                },
+                "required": [
+                  "code",
+                  "email",
+                  "type"
+                ]
+              },
+              "example": {
+                "code": "<EMAIL_CODE>",
+                "email": "<ENCRYPTED_EMAIL>",
+                "type": "reset_trade_password"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. The response body contains the result of the “Check Email Verification Code” operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "verify_credentials": {
+                              "type": "string",
+                              "description": "Verification credential issued after the check succeeds"
+                            },
+                            "member_exist": {
+                              "type": "boolean",
+                              "description": "Whether the email is already associated with another user. It is used in the bind email flow and can be ignored in trade password flows"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "verify_credentials": "<VERIFY_CREDENTIALS>",
+                    "member_exist": false
+                  }
                 }
               }
             }
@@ -71239,7 +71759,7 @@
           "Account"
         ],
         "summary": "Set Authenticator Two-Factor Verification",
-        "description": "Turns the Client's third-party authenticator (TOTP) two-factor verification on or off. Once it is on, verifying the trade password during trade unlock may return `need_totp_two_factors: true`; then call Submit Authenticator Code for Trade Unlock.\n\n- To turn it on: pass `YES` in `totp_2fa_auth` and the code currently shown in the Client's authenticator in `verify_code` to confirm the binding.\n- To turn it off: pass `NO` in `totp_2fa_auth`. `verify_code` is not needed.\n\nBoth actions require the Client to pass SMS verification of the bound mobile number first. Put the credential returned by that check in `verify_credentials` (the check operation is outside the scope of this document). If the credential has expired, business code `403046` is returned; in the turn-on flow, have the Client complete SMS verification again. If the code is wrong, show `message` and let the Client enter it again. On success, refresh the two-factor verification settings shown to the Client.\n\nWhen you call this operation through WhaleCore `requestService()`, you do not need to set `requiresTradeToken` to `true`.\n",
+        "description": "Turns the Client's third-party authenticator (TOTP) two-factor verification on or off. Once it is on, verifying the trade password during trade unlock may return `need_totp_two_factors: true`; then call Submit Authenticator Code for Trade Unlock.\n\n- To turn it on: pass `YES` in `totp_2fa_auth` and the code currently shown in the Client's authenticator in `verify_code` to confirm the binding.\n- To turn it off: pass `NO` in `totp_2fa_auth`. `verify_code` is not needed.\n\nBoth actions require the Client to pass SMS verification of the bound mobile number first. Put the credential returned by that check in `verify_credentials` (send the code with `POST /v1/auth/send_code` and check it with `POST /v1/member/check_mobile`, both with `type` = `totp`). If the credential has expired, business code `403046` is returned; in the turn-on flow, have the Client complete SMS verification again. If the code is wrong, show `message` and let the Client enter it again. On success, refresh the two-factor verification settings shown to the Client.\n\nWhen you call this operation through WhaleCore `requestService()`, you do not need to set `requiresTradeToken` to `true`.\n",
         "operationId": "postV1AccountTotpSetting",
         "requestBody": {
           "required": true,

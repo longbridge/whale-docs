@@ -16395,6 +16395,52 @@
             "description": "该入金方式支持的币种"
           }
         }
+      },
+      "VerificationCaptcha": {
+        "type": "object",
+        "description": "人机验证结果。按本次使用的验证服务商只传其中一个字段。人机验证配置中对应服务商的开关字段（`tencent_switch` 或 `google_switch`）为 `true` 时，表示服务端已关闭该服务商的人机验证，传该服务商的空对象，如 `{\"tencent\": {}}`。",
+        "properties": {
+          "tencent": {
+            "type": "object",
+            "description": "腾讯云天御验证码的验证结果",
+            "properties": {
+              "ticket": {
+                "type": "string",
+                "description": "验证成功后返回的票据 `ticket`"
+              },
+              "rand_str": {
+                "type": "string",
+                "description": "验证成功后返回的随机串 `randstr`"
+              },
+              "tencent_id": {
+                "type": "string",
+                "description": "本次使用的验证码 AppId，取自人机验证配置的 `tencent_ids`"
+              },
+              "sid": {
+                "type": "string",
+                "description": "验证成功后返回的会话 ID `sid`"
+              }
+            }
+          },
+          "google": {
+            "type": "object",
+            "description": "Google reCAPTCHA Enterprise 的验证结果",
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "执行验证后返回的 token"
+              },
+              "action": {
+                "type": "string",
+                "description": "执行验证时传入的 action，与请求中的 `type` 相同"
+              },
+              "site_key": {
+                "type": "string",
+                "description": "解密后的 site key，即人机验证配置中 `google_key` 的明文"
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -17491,7 +17537,7 @@
           "账户"
         ],
         "summary": "提交交易解锁短信验证",
-        "description": "完成交易解锁的短信验证码二次验证。验证交易密码返回 `need_two_factors: true` 后，先向客户发送交易解锁短信验证码（发送验证码的接口不在本文范围内），再提交验证码与同一交易密码。验证通过后返回交易令牌：`data.token.token` 对应 `updateTradeToken` 的 `tradeToken`，`data.token.refresh_token` 对应 `tradeRefreshToken`。\n\n传入 `tfa_switch` 时，会同时修改该客户之后交易解锁是否需要短信验证码。验证失败时展示 `message`，让客户重新输入或重新获取验证码。\n\n密码字段传 6 位数字交易密码的 MD5 摘要（32 位小写十六进制字符串），不要传明文。\n\n本接口用于取得交易令牌，经 WhaleCore `requestService()` 调用时不要将 `requiresTradeToken` 设为 `true`。\n",
+        "description": "完成交易解锁的短信验证码二次验证。验证交易密码返回 `need_two_factors: true` 后，先调用 `POST /v1/auth/send_code`（`type` = `trade_auth_2fa`）向客户发送短信验证码，并调用 `POST /v1/member/check_mobile` 校验，再提交验证码与同一交易密码。验证通过后返回交易令牌：`data.token.token` 对应 `updateTradeToken` 的 `tradeToken`，`data.token.refresh_token` 对应 `tradeRefreshToken`。\n\n传入 `tfa_switch` 时，会同时修改该客户之后交易解锁是否需要短信验证码。验证失败时展示 `message`，让客户重新输入或重新获取验证码。\n\n密码字段传 6 位数字交易密码的 MD5 摘要（32 位小写十六进制字符串），不要传明文。\n\n本接口用于取得交易令牌，经 WhaleCore `requestService()` 调用时不要将 `requiresTradeToken` 设为 `true`。\n",
         "operationId": "postV1MemberTradeAuthTwoFactors",
         "requestBody": {
           "required": true,
@@ -17895,7 +17941,7 @@
           "账户"
         ],
         "summary": "设置交易密码",
-        "description": "为尚未设置交易密码的客户设置交易密码。客户需先通过手机或邮箱验证码完成身份验证并取得 `verify_credentials`（获取凭证的接口不在本文范围内）。设置成功后，客户即可用该密码验证交易密码、取得交易令牌；失败时展示 `message`，凭证失效时让客户重新完成身份验证。\n\n密码字段传 6 位数字交易密码的 MD5 摘要（32 位小写十六进制字符串），不要传明文。\n",
+        "description": "为尚未设置交易密码的客户设置交易密码。客户需先通过手机或邮箱验证码完成身份验证并取得 `verify_credentials`：调用 `POST /v1/auth/send_code` 或 `POST /v1/auth/email/send_code`（`type` = `set_trade_password`）发送验证码，再调用 `POST /v1/member/check_mobile` 或 `POST /v1/member/check_email` 校验，从 `data.verify_credentials` 取得凭证。设置成功后，客户即可用该密码验证交易密码、取得交易令牌；失败时展示 `message`，凭证失效时让客户重新完成身份验证。\n\n密码字段传 6 位数字交易密码的 MD5 摘要（32 位小写十六进制字符串），不要传明文。\n",
         "operationId": "postV2MemberTradeSetPassword",
         "requestBody": {
           "required": true,
@@ -17962,7 +18008,7 @@
           "账户"
         ],
         "summary": "重置交易密码",
-        "description": "客户忘记交易密码时，完成身份验证后设置新的交易密码，通常从交易解锁界面的“忘记密码”进入。客户需先完成开户证件号及联系手机或邮箱的验证并取得 `verify_credentials`（相关验证接口不在本文范围内）。重置成功后，后续交易解锁需使用新密码；失败时展示 `message`，凭证失效时让客户重新完成身份验证。\n\n密码字段传 6 位数字交易密码的 MD5 摘要（32 位小写十六进制字符串），不要传明文。\n",
+        "description": "客户忘记交易密码时，完成身份验证后设置新的交易密码，通常从交易解锁界面的“忘记密码”进入。客户需先完成身份验证并取得 `verify_credentials`：\n\n1. 调用 `POST /v1/account/verify_id_card`（`scene` = `3`）验证开户证件号。\n2. 调用 `GET /v2/member/info` 取得客户的手机号；未绑定手机号时使用已验证的邮箱。\n3. 调用 `POST /v1/auth/send_code` 或 `POST /v1/auth/email/send_code`（`type` = `reset_trade_password`）发送验证码。发送前须先通过 `GET /v2/auth/captcha` 完成人机验证。\n4. 调用 `POST /v1/member/check_mobile` 或 `POST /v1/member/check_email` 校验客户输入的验证码，从 `data.verify_credentials` 取得凭证。\n\n重置成功后，后续交易解锁需使用新密码；失败时展示 `message`，凭证失效时让客户重新完成身份验证。\n\n密码字段传 6 位数字交易密码的 MD5 摘要（32 位小写十六进制字符串），不要传明文。\n",
         "operationId": "postV2MemberTradeResetPassword",
         "requestBody": {
           "required": true,
@@ -68567,7 +68613,7 @@
           "账户"
         ],
         "summary": "验证开户证件号",
-        "description": "校验客户输入的开户证件号码是否与指定 Broker 渠道下的开户资料一致，作为设置或重置交易密码等流程的身份核验步骤。常见流程：\n\n- 重置交易密码（`scene` = `3`）：验证通过后，向客户的联系手机发送验证码并完成验证，再调用 `POST /v2/member/trade/reset_password` 设置新密码。\n- 设置交易密码（`scene` = `4`）：验证通过后，向客户的联系手机发送验证码并完成验证，再设置交易密码。\n\n`account_channel` 传客户开户所在的 Broker 渠道。验证失败时展示 `message`，让客户重新输入；多次无法通过时引导客户联系客服。\n\n`card_id` 不传明文。加密方式：取请求头 `x-timestamp` 的值（毫秒时间戳字符串）计算 MD5，得到 32 位小写十六进制字符串；以该字符串的 UTF-8 字节作为 AES 密钥、其前 16 个字节作为 IV，对明文做 AES-CBC（PKCS#7 填充）加密并 Base64 编码，记为 `k`；再将 JSON 字符串 `{\"rd\":\"<x-timestamp>\",\"k\":\"<k>\"}` 做 Base64 编码，作为字段值。`rd` 与请求头 `x-timestamp` 必须一致，服务端据此解密。\n",
+        "description": "校验客户输入的开户证件号码是否与指定 Broker 渠道下的开户资料一致，作为设置或重置交易密码等流程的身份核验步骤。常见流程：\n\n- 重置交易密码（`scene` = `3`）：验证通过后，调用 `POST /v1/auth/send_code`（`type` = `reset_trade_password`）向客户的手机号发送验证码，再调用 `POST /v1/member/check_mobile` 校验并取得 `verify_credentials`，最后调用 `POST /v2/member/trade/reset_password` 设置新密码。客户未绑定手机号时，改用 `POST /v1/auth/email/send_code` 和 `POST /v1/member/check_email`。\n- 设置交易密码（`scene` = `4`）：验证通过后，按同样方式（`type` = `set_trade_password`）完成验证码校验，再调用 `POST /v2/member/trade/set_password` 设置交易密码。\n\n`account_channel` 传客户开户所在的 Broker 渠道。验证失败时展示 `message`，让客户重新输入；多次无法通过时引导客户联系客服。\n\n`card_id` 不传明文。加密方式：取请求头 `x-timestamp` 的值（毫秒时间戳字符串）计算 MD5，得到 32 位小写十六进制字符串；以该字符串的 UTF-8 字节作为 AES 密钥、其前 16 个字节作为 IV，对明文做 AES-CBC（PKCS#7 填充）加密并 Base64 编码，记为 `k`；再将 JSON 字符串 `{\"rd\":\"<x-timestamp>\",\"k\":\"<k>\"}` 做 Base64 编码，作为字段值。`rd` 与请求头 `x-timestamp` 必须一致，服务端据此解密。\n",
         "operationId": "postV1AccountVerifyIdCard",
         "parameters": [
           {
@@ -68644,6 +68690,480 @@
                       }
                     }
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/auth/captcha": {
+      "get": {
+        "tags": [
+          "账户"
+        ],
+        "summary": "获取人机验证配置",
+        "description": "返回发送短信或邮箱验证码前所需的人机验证配置。客户端据此初始化腾讯云天御验证码或 Google reCAPTCHA Enterprise，取得验证结果后放入 `POST /v1/auth/send_code` 或 `POST /v1/auth/email/send_code` 的 `captcha`。\n\n`type` 传 `common` 即可取得各场景的配置。发送验证码时，按请求中的 `type` 从 `tencent_ids` 取对应场景的 AppId：\n\n- `sms` - `reset_trade_password`、`set_trade_password`、`trade_auth_2fa`、`totp`、`change_mobile`（无论通过短信还是邮箱发送）\n- `email` - `change_email`、`bind_email`、`verify_email`\n\n`google_key` 是加密后的 site key，按“验证开户证件号”中 `card_id` 加密方式的逆过程解密：Base64 解码得到 `{\"rd\":\"...\",\"k\":\"...\"}`，以 `rd` 的 MD5 十六进制字符串作为 AES 密钥和 IV，对 `k` 做 AES-CBC 解密。\n\n`tencent_switch` 或 `google_switch` 为 `true` 时，表示服务端已关闭对应服务商的人机验证，无需拉起验证组件，在 `captcha` 中传该服务商的空对象。\n\n发送验证码返回 `401017` 或 `401074` 时，重新获取本配置并重新完成人机验证后再发送。\n\n使用此配置的功能与发送短信验证码、发送邮箱验证码相同。\n\n经 WhaleCore `requestService()` 调用时无需将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "getV2AuthCaptcha",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": true,
+            "description": "验证码场景类型。传 `common` 可取得所有场景的配置：\n\n- `common` - 通用\n- `sms` - 短信验证码场景\n- `email` - 邮箱验证码场景",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "common",
+                "sms",
+                "email"
+              ]
+            },
+            "example": "common"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“获取人机验证配置”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "captcha": {
+                              "type": "object",
+                              "description": "人机验证配置",
+                              "properties": {
+                                "tencent_ids": {
+                                  "type": "object",
+                                  "description": "按场景类型（`common`、`sms`、`email`）索引的腾讯云天御验证码 AppId",
+                                  "additionalProperties": {
+                                    "type": "string"
+                                  }
+                                },
+                                "tencent_switch": {
+                                  "type": "boolean",
+                                  "description": "是否已关闭腾讯云天御验证码的人机验证；为 `true` 时无需拉起验证组件，传 `{\"tencent\": {}}`"
+                                },
+                                "google_key": {
+                                  "type": "string",
+                                  "description": "加密后的 Google reCAPTCHA Enterprise site key，解密方式见接口说明"
+                                },
+                                "google_switch": {
+                                  "type": "boolean",
+                                  "description": "是否已关闭 Google reCAPTCHA Enterprise 的人机验证；为 `true` 时传 `{\"google\": {}}`"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "captcha": {
+                      "tencent_ids": {
+                        "common": "<TENCENT_CAPTCHA_APP_ID>",
+                        "sms": "<TENCENT_CAPTCHA_APP_ID>",
+                        "email": "<TENCENT_CAPTCHA_APP_ID>"
+                      },
+                      "tencent_switch": false,
+                      "google_key": "<ENCRYPTED_GOOGLE_SITE_KEY>",
+                      "google_switch": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/send_code": {
+      "post": {
+        "tags": [
+          "账户"
+        ],
+        "summary": "发送短信验证码",
+        "description": "向客户的手机号发送短信或语音验证码，用于需要验证手机号的账户安全流程。发送前须先完成人机验证：调用 `GET /v2/auth/captcha` 获取配置，用腾讯云天御验证码或 Google reCAPTCHA Enterprise 完成验证，再把结果放入 `captcha`。\n\n发送成功后，让客户输入收到的验证码，再调用 `POST /v1/member/check_mobile`（`type` 与本次相同）校验并取得 `verify_credentials`。\n\n使用此接口的功能：\n\n- 账户 › 交易密码 › 重置交易密码（`reset_trade_password`）：取得凭证后调用 `POST /v2/member/trade/reset_password`\n- 账户 › 交易密码 › 设置交易密码（`set_trade_password`）：取得凭证后调用 `POST /v2/member/trade/set_password`\n- 交易 › 交易解锁 › 短信二次验证（`trade_auth_2fa`）：校验后调用 `POST /v1/member/trade/auth_two_factors`\n- 账户 › 安全设置 › 开启或关闭令牌（`totp`）：取得凭证后调用 `POST /v1/account/totp/setting`\n- 账户 › 联系方式 › 更换手机号、更换邮箱（`change_mobile`、`change_email`）\n- 账户 › 注销账户（`identity_verify`）\n- 开户 › 联系方式验证与开户资料修改，以及未登录时的手机号登录和找回登录密码，也使用本接口，但这些流程不在 TradingAPI 范围内\n\n返回 `401043` 表示人机验证未通过：重新完成人机验证后再发送；使用 Google reCAPTCHA Enterprise 时，可改用腾讯云天御验证码重试。其他失败时展示 `message`。\n\n经 WhaleCore `requestService()` 调用时无需将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "postV1AuthSendCode",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "captcha": {
+                    "$ref": "#/components/schemas/VerificationCaptcha"
+                  },
+                  "country_code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "手机号的国际区号，不含 `+`，如 `852`"
+                  },
+                  "mobile": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "客户的手机号，不含区号。可取自“获取用户信息”返回的 `member.mobile`"
+                  },
+                  "send_type": {
+                    "type": "string",
+                    "enum": [
+                      "sms",
+                      "voice"
+                    ],
+                    "description": "发送方式：\n\n- `sms` - 短信\n- `voice` - 语音"
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "验证码用途。发送和校验同一个验证码时须传相同的值：\n\n- `reset_trade_password` - 重置交易密码\n- `set_trade_password` - 设置交易密码\n- `trade_auth_2fa` - 交易解锁短信二次验证\n- `totp` - 开启或关闭令牌前验证手机号\n- `change_mobile` - 更换手机号前验证当前手机号\n- `change_email` - 更换邮箱前验证手机号\n- `identity_verify` - 注销账户前验证身份"
+                  }
+                },
+                "required": [
+                  "captcha",
+                  "country_code",
+                  "mobile",
+                  "send_type",
+                  "type"
+                ]
+              },
+              "example": {
+                "captcha": {
+                  "tencent": {
+                    "ticket": "<CAPTCHA_TICKET>",
+                    "rand_str": "<CAPTCHA_RANDSTR>",
+                    "tencent_id": "<TENCENT_CAPTCHA_APP_ID>",
+                    "sid": "<CAPTCHA_SID>"
+                  }
+                },
+                "country_code": "852",
+                "mobile": "<MOBILE>",
+                "send_type": "sms",
+                "type": "reset_trade_password"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“发送短信验证码”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "无业务字段"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/email/send_code": {
+      "post": {
+        "tags": [
+          "账户"
+        ],
+        "summary": "发送邮箱验证码",
+        "description": "向客户的邮箱发送验证码，用于需要验证邮箱的账户安全流程。发送前须先完成人机验证，方式与 `POST /v1/auth/send_code` 相同，结果放入 `captcha`。`email` 须加密后传入，并在请求头 `x-timestamp` 中传加密时使用的时间戳。\n\n发送成功后，让客户输入收到的验证码，再调用 `POST /v1/member/check_email`（`type` 与本次相同）校验并取得 `verify_credentials`。\n\n使用此接口的功能：\n\n- 账户 › 交易密码 › 重置交易密码（`reset_trade_password`）：客户未绑定手机号时改用邮箱验证\n- 账户 › 交易密码 › 设置交易密码（`set_trade_password`）：客户未绑定手机号时改用邮箱验证\n- 账户 › 联系方式 › 绑定邮箱、更换邮箱、验证邮箱（`bind_email`、`change_email`、`verify_email`）\n- 开户 › 联系方式验证与开户资料修改，以及未登录时的邮箱注册、登录和找回登录密码，也使用本接口，但这些流程不在 TradingAPI 范围内\n\n返回 `401043` 表示人机验证未通过，处理方式与发送短信验证码相同。其他失败时展示 `message`。\n\n经 WhaleCore `requestService()` 调用时无需将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "postV1AuthEmailSendCode",
+        "parameters": [
+          {
+            "name": "x-timestamp",
+            "in": "header",
+            "required": true,
+            "description": "毫秒时间戳字符串，须与加密字段中的 `rd` 一致",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "1760601600000"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "captcha": {
+                    "$ref": "#/components/schemas/VerificationCaptcha"
+                  },
+                  "email": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "加密后的邮箱地址。不传明文，加密方式与“验证开户证件号”中 `card_id` 的加密方式相同，以请求头 `x-timestamp` 作为 `rd`"
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "验证码用途。发送和校验同一个验证码时须传相同的值：\n\n- `reset_trade_password` - 重置交易密码\n- `set_trade_password` - 设置交易密码\n- `change_email` - 更换邮箱前验证当前邮箱\n- `bind_email` - 绑定邮箱\n- `verify_email` - 验证邮箱"
+                  }
+                },
+                "required": [
+                  "captcha",
+                  "email",
+                  "type"
+                ]
+              },
+              "example": {
+                "captcha": {
+                  "tencent": {
+                    "ticket": "<CAPTCHA_TICKET>",
+                    "rand_str": "<CAPTCHA_RANDSTR>",
+                    "tencent_id": "<TENCENT_CAPTCHA_APP_ID>",
+                    "sid": "<CAPTCHA_SID>"
+                  }
+                },
+                "email": "<ENCRYPTED_EMAIL>",
+                "type": "reset_trade_password"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“发送邮箱验证码”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "无业务字段"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/check_mobile": {
+      "post": {
+        "tags": [
+          "账户"
+        ],
+        "summary": "校验短信验证码",
+        "description": "校验客户输入的短信验证码，通过后返回 `verify_credentials`，作为后续敏感操作的身份验证凭证。请先调用 `POST /v1/auth/send_code` 发送验证码，`country_code`、`mobile` 和 `type` 须与发送时相同。\n\n凭证的用途按 `type` 区分：\n\n- `reset_trade_password` - 传给 `POST /v2/member/trade/reset_password`\n- `set_trade_password` - 传给 `POST /v2/member/trade/set_password`\n- `totp` - 传给 `POST /v1/account/totp/setting`\n- `trade_auth_2fa` - 校验通过后，把同一验证码提交到 `POST /v1/member/trade/auth_two_factors`\n\n使用此接口的功能与发送短信验证码相同，包括重置交易密码、设置交易密码、交易解锁短信二次验证、开启或关闭令牌、更换手机号、更换邮箱和注销账户。开户联系方式验证和未登录时找回登录密码也使用本接口，但不在 TradingAPI 范围内。\n\n校验失败时展示 `message`，让客户重新输入或重新获取验证码。凭证失效后需重新发送并校验验证码；凭证有效期以服务端为准。\n\n经 WhaleCore `requestService()` 调用时无需将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "postV1MemberCheckMobile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "客户收到的验证码"
+                  },
+                  "country_code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "手机号的国际区号，不含 `+`，如 `852`"
+                  },
+                  "mobile": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "客户的手机号，不含区号，须与发送验证码时相同"
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "验证码用途。发送和校验同一个验证码时须传相同的值：\n\n- `reset_trade_password` - 重置交易密码\n- `set_trade_password` - 设置交易密码\n- `trade_auth_2fa` - 交易解锁短信二次验证\n- `totp` - 开启或关闭令牌前验证手机号\n- `change_mobile` - 更换手机号前验证当前手机号\n- `change_email` - 更换邮箱前验证手机号\n- `identity_verify` - 注销账户前验证身份"
+                  }
+                },
+                "required": [
+                  "code",
+                  "country_code",
+                  "mobile",
+                  "type"
+                ]
+              },
+              "example": {
+                "code": "<SMS_CODE>",
+                "country_code": "852",
+                "mobile": "<MOBILE>",
+                "type": "reset_trade_password"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“校验短信验证码”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "verify_credentials": {
+                              "type": "string",
+                              "description": "验证通过后签发的验证凭证"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "verify_credentials": "<VERIFY_CREDENTIALS>"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/check_email": {
+      "post": {
+        "tags": [
+          "账户"
+        ],
+        "summary": "校验邮箱验证码",
+        "description": "校验客户输入的邮箱验证码，通过后返回 `verify_credentials`，作为后续敏感操作的身份验证凭证。请先调用 `POST /v1/auth/email/send_code` 发送验证码，`email`（加密前的明文）和 `type` 须与发送时相同。`email` 须加密后传入，并在请求头 `x-timestamp` 中传加密时使用的时间戳。\n\n`type` 为 `reset_trade_password` 或 `set_trade_password` 时，把凭证分别传给 `POST /v2/member/trade/reset_password` 或 `POST /v2/member/trade/set_password`。\n\n使用此接口的功能：重置交易密码、设置交易密码、绑定或更换邮箱、更换手机号前验证邮箱，以及注销账户。开户联系方式验证和未登录时的邮箱注册、登录也使用本接口，但不在 TradingAPI 范围内。\n\n校验失败时展示 `message`，让客户重新输入或重新获取验证码。凭证失效后需重新发送并校验验证码；凭证有效期以服务端为准。\n\n经 WhaleCore `requestService()` 调用时无需将 `requiresTradeToken` 设为 `true`。\n",
+        "operationId": "postV1MemberCheckEmail",
+        "parameters": [
+          {
+            "name": "x-timestamp",
+            "in": "header",
+            "required": true,
+            "description": "毫秒时间戳字符串，须与加密字段中的 `rd` 一致",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "1760601600000"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "客户收到的验证码"
+                  },
+                  "email": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "加密后的邮箱地址。不传明文，加密方式与“验证开户证件号”中 `card_id` 的加密方式相同，以请求头 `x-timestamp` 作为 `rd`"
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "验证码用途。发送和校验同一个验证码时须传相同的值：\n\n- `reset_trade_password` - 重置交易密码\n- `set_trade_password` - 设置交易密码\n- `change_email` - 更换邮箱前验证当前邮箱\n- `bind_email` - 绑定邮箱\n- `verify_email` - 验证邮箱\n- `change_mobile` - 更换手机号前验证邮箱\n- `identity_verify` - 注销账户前验证身份"
+                  }
+                },
+                "required": [
+                  "code",
+                  "email",
+                  "type"
+                ]
+              },
+              "example": {
+                "code": "<EMAIL_CODE>",
+                "email": "<ENCRYPTED_EMAIL>",
+                "type": "reset_trade_password"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“校验邮箱验证码”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "verify_credentials": {
+                              "type": "string",
+                              "description": "验证通过后签发的验证凭证"
+                            },
+                            "member_exist": {
+                              "type": "boolean",
+                              "description": "该邮箱是否已关联其他用户，用于绑定邮箱流程；交易密码相关流程可忽略"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "verify_credentials": "<VERIFY_CREDENTIALS>",
+                    "member_exist": false
+                  }
                 }
               }
             }
@@ -71239,7 +71759,7 @@
           "账户"
         ],
         "summary": "设置身份验证器双重验证",
-        "description": "开启或关闭客户的第三方身份验证器（TOTP）双重验证。开启后，客户交易解锁时验证交易密码可能返回 `need_totp_two_factors: true`，此时调用“提交交易解锁动态码验证”。\n\n- 开启：`totp_2fa_auth` 传 `YES`，`verify_code` 传客户身份验证器当前显示的动态码，用于确认绑定成功。\n- 关闭：`totp_2fa_auth` 传 `NO`，无需 `verify_code`。\n\n两种操作都要先完成客户已绑定手机号的短信验证码校验，并把校验通过后得到的凭证放入 `verify_credentials`（校验接口不在本文范围内）。凭证过期返回业务码 `403046`，开启流程应让客户重新完成短信验证；动态码错误时展示 `message`，让客户重新输入。成功后刷新双重验证设置的展示状态。\n\n经 WhaleCore `requestService()` 调用时无需将 `requiresTradeToken` 设为 `true`。\n",
+        "description": "开启或关闭客户的第三方身份验证器（TOTP）双重验证。开启后，客户交易解锁时验证交易密码可能返回 `need_totp_two_factors: true`，此时调用“提交交易解锁动态码验证”。\n\n- 开启：`totp_2fa_auth` 传 `YES`，`verify_code` 传客户身份验证器当前显示的动态码，用于确认绑定成功。\n- 关闭：`totp_2fa_auth` 传 `NO`，无需 `verify_code`。\n\n两种操作都要先完成客户已绑定手机号的短信验证码校验，并把校验通过后得到的凭证放入 `verify_credentials`（先调用 `POST /v1/auth/send_code` 发送验证码，再调用 `POST /v1/member/check_mobile` 校验，`type` 均为 `totp`）。凭证过期返回业务码 `403046`，开启流程应让客户重新完成短信验证；动态码错误时展示 `message`，让客户重新输入。成功后刷新双重验证设置的展示状态。\n\n经 WhaleCore `requestService()` 调用时无需将 `requiresTradeToken` 设为 `true`。\n",
         "operationId": "postV1AccountTotpSetting",
         "requestBody": {
           "required": true,

@@ -16395,6 +16395,52 @@
             "description": "該入金方式支援的幣種"
           }
         }
+      },
+      "VerificationCaptcha": {
+        "type": "object",
+        "description": "人機驗證結果。按本次使用的驗證服務商只傳其中一個欄位。人機驗證配置中對應服務商的開關欄位（`tencent_switch` 或 `google_switch`）為 `true` 時，表示伺服器已關閉該服務商的人機驗證，傳該服務商的空物件，如 `{\"tencent\": {}}`。",
+        "properties": {
+          "tencent": {
+            "type": "object",
+            "description": "騰訊雲天御驗證碼的驗證結果",
+            "properties": {
+              "ticket": {
+                "type": "string",
+                "description": "驗證成功後返回的票據 `ticket`"
+              },
+              "rand_str": {
+                "type": "string",
+                "description": "驗證成功後返回的隨機串 `randstr`"
+              },
+              "tencent_id": {
+                "type": "string",
+                "description": "本次使用的驗證碼 AppId，取自人機驗證配置的 `tencent_ids`"
+              },
+              "sid": {
+                "type": "string",
+                "description": "驗證成功後返回的會話 ID `sid`"
+              }
+            }
+          },
+          "google": {
+            "type": "object",
+            "description": "Google reCAPTCHA Enterprise 的驗證結果",
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "執行驗證後返回的 token"
+              },
+              "action": {
+                "type": "string",
+                "description": "執行驗證時傳入的 action，與請求中的 `type` 相同"
+              },
+              "site_key": {
+                "type": "string",
+                "description": "解密後的 site key，即人機驗證配置中 `google_key` 的明文"
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -17491,7 +17537,7 @@
           "帳戶"
         ],
         "summary": "提交交易解鎖短信驗證",
-        "description": "完成交易解鎖的短信驗證碼二次驗證。驗證交易密碼返回 `need_two_factors: true` 後，先向客戶發送交易解鎖短信驗證碼（發送驗證碼的接口不在本文範圍內），再提交驗證碼與同一交易密碼。驗證通過後返回交易令牌：`data.token.token` 對應 `updateTradeToken` 的 `tradeToken`，`data.token.refresh_token` 對應 `tradeRefreshToken`。\n\n傳入 `tfa_switch` 時，會同時修改該客戶之後交易解鎖是否需要短信驗證碼。驗證失敗時顯示 `message`，讓客戶重新輸入或重新獲取驗證碼。\n\n密碼欄位傳 6 位數字交易密碼的 MD5 摘要（32 位小寫十六進制字串），不要傳明文。\n\n本接口用於取得交易令牌，經 WhaleCore `requestService()` 調用時不要將 `requiresTradeToken` 設為 `true`。\n",
+        "description": "完成交易解鎖的短信驗證碼二次驗證。驗證交易密碼返回 `need_two_factors: true` 後，先調用 `POST /v1/auth/send_code`（`type` = `trade_auth_2fa`）向客戶發送短信驗證碼，並調用 `POST /v1/member/check_mobile` 校驗，再提交驗證碼與同一交易密碼。驗證通過後返回交易令牌：`data.token.token` 對應 `updateTradeToken` 的 `tradeToken`，`data.token.refresh_token` 對應 `tradeRefreshToken`。\n\n傳入 `tfa_switch` 時，會同時修改該客戶之後交易解鎖是否需要短信驗證碼。驗證失敗時顯示 `message`，讓客戶重新輸入或重新獲取驗證碼。\n\n密碼欄位傳 6 位數字交易密碼的 MD5 摘要（32 位小寫十六進制字串），不要傳明文。\n\n本接口用於取得交易令牌，經 WhaleCore `requestService()` 調用時不要將 `requiresTradeToken` 設為 `true`。\n",
         "operationId": "postV1MemberTradeAuthTwoFactors",
         "requestBody": {
           "required": true,
@@ -17895,7 +17941,7 @@
           "帳戶"
         ],
         "summary": "設定交易密碼",
-        "description": "為尚未設定交易密碼的客戶設定交易密碼。客戶需先透過手機或電郵驗證碼完成身份驗證並取得 `verify_credentials`（獲取憑證的接口不在本文範圍內）。設定成功後，客戶即可用該密碼驗證交易密碼、取得交易令牌；失敗時顯示 `message`，憑證失效時讓客戶重新完成身份驗證。\n\n密碼欄位傳 6 位數字交易密碼的 MD5 摘要（32 位小寫十六進制字串），不要傳明文。\n",
+        "description": "為尚未設定交易密碼的客戶設定交易密碼。客戶需先透過手機或電郵驗證碼完成身份驗證並取得 `verify_credentials`：調用 `POST /v1/auth/send_code` 或 `POST /v1/auth/email/send_code`（`type` = `set_trade_password`）發送驗證碼，再調用 `POST /v1/member/check_mobile` 或 `POST /v1/member/check_email` 校驗，從 `data.verify_credentials` 取得憑證。設定成功後，客戶即可用該密碼驗證交易密碼、取得交易令牌；失敗時顯示 `message`，憑證失效時讓客戶重新完成身份驗證。\n\n密碼欄位傳 6 位數字交易密碼的 MD5 摘要（32 位小寫十六進制字串），不要傳明文。\n",
         "operationId": "postV2MemberTradeSetPassword",
         "requestBody": {
           "required": true,
@@ -17962,7 +18008,7 @@
           "帳戶"
         ],
         "summary": "重設交易密碼",
-        "description": "客戶忘記交易密碼時，完成身份驗證後設定新的交易密碼，通常由交易解鎖介面的「忘記密碼」進入。客戶需先完成開戶證件號碼及聯絡手機或電郵的驗證並取得 `verify_credentials`（相關驗證接口不在本文範圍內）。重設成功後，其後交易解鎖需使用新密碼；失敗時顯示 `message`，憑證失效時讓客戶重新完成身份驗證。\n\n密碼欄位傳 6 位數字交易密碼的 MD5 摘要（32 位小寫十六進制字串），不要傳明文。\n",
+        "description": "客戶忘記交易密碼時，完成身份驗證後設定新的交易密碼，通常由交易解鎖介面的「忘記密碼」進入。客戶需先完成身份驗證並取得 `verify_credentials`：\n\n1. 調用 `POST /v1/account/verify_id_card`（`scene` = `3`）驗證開戶證件號碼。\n2. 調用 `GET /v2/member/info` 取得客戶的手機號碼；未綁定手機號碼時使用已驗證的電郵。\n3. 調用 `POST /v1/auth/send_code` 或 `POST /v1/auth/email/send_code`（`type` = `reset_trade_password`）發送驗證碼。發送前須先透過 `GET /v2/auth/captcha` 完成人機驗證。\n4. 調用 `POST /v1/member/check_mobile` 或 `POST /v1/member/check_email` 校驗客戶輸入的驗證碼，從 `data.verify_credentials` 取得憑證。\n\n重設成功後，其後交易解鎖需使用新密碼；失敗時顯示 `message`，憑證失效時讓客戶重新完成身份驗證。\n\n密碼欄位傳 6 位數字交易密碼的 MD5 摘要（32 位小寫十六進制字串），不要傳明文。\n",
         "operationId": "postV2MemberTradeResetPassword",
         "requestBody": {
           "required": true,
@@ -68567,7 +68613,7 @@
           "帳戶"
         ],
         "summary": "驗證開戶證件號碼",
-        "description": "校驗客戶輸入的開戶證件號碼是否與指定 Broker 渠道下的開戶資料一致，作為設定或重設交易密碼等流程的身份核驗步驟。常見流程：\n\n- 重設交易密碼（`scene` = `3`）：驗證通過後，向客戶的聯絡手機發送驗證碼並完成驗證，再調用 `POST /v2/member/trade/reset_password` 設定新密碼。\n- 設定交易密碼（`scene` = `4`）：驗證通過後，向客戶的聯絡手機發送驗證碼並完成驗證，再設定交易密碼。\n\n`account_channel` 傳客戶開戶所在的 Broker 渠道。驗證失敗時顯示 `message`，讓客戶重新輸入；多次未能通過時引導客戶聯絡客服。\n\n`card_id` 不傳明文。加密方式：取請求頭 `x-timestamp` 的值（毫秒時間戳字串）計算 MD5，得到 32 位小寫十六進制字串；以該字串的 UTF-8 位元組作為 AES 密鑰、其前 16 個位元組作為 IV，對明文做 AES-CBC（PKCS#7 填充）加密並 Base64 編碼，記為 `k`；再將 JSON 字串 `{\"rd\":\"<x-timestamp>\",\"k\":\"<k>\"}` 做 Base64 編碼，作為欄位值。`rd` 與請求頭 `x-timestamp` 必須一致，伺服器據此解密。\n",
+        "description": "校驗客戶輸入的開戶證件號碼是否與指定 Broker 渠道下的開戶資料一致，作為設定或重設交易密碼等流程的身份核驗步驟。常見流程：\n\n- 重設交易密碼（`scene` = `3`）：驗證通過後，調用 `POST /v1/auth/send_code`（`type` = `reset_trade_password`）向客戶的手機號碼發送驗證碼，再調用 `POST /v1/member/check_mobile` 校驗並取得 `verify_credentials`，最後調用 `POST /v2/member/trade/reset_password` 設定新密碼。客戶未綁定手機號碼時，改用 `POST /v1/auth/email/send_code` 和 `POST /v1/member/check_email`。\n- 設定交易密碼（`scene` = `4`）：驗證通過後，按同樣方式（`type` = `set_trade_password`）完成驗證碼校驗，再調用 `POST /v2/member/trade/set_password` 設定交易密碼。\n\n`account_channel` 傳客戶開戶所在的 Broker 渠道。驗證失敗時顯示 `message`，讓客戶重新輸入；多次未能通過時引導客戶聯絡客服。\n\n`card_id` 不傳明文。加密方式：取請求頭 `x-timestamp` 的值（毫秒時間戳字串）計算 MD5，得到 32 位小寫十六進制字串；以該字串的 UTF-8 位元組作為 AES 密鑰、其前 16 個位元組作為 IV，對明文做 AES-CBC（PKCS#7 填充）加密並 Base64 編碼，記為 `k`；再將 JSON 字串 `{\"rd\":\"<x-timestamp>\",\"k\":\"<k>\"}` 做 Base64 編碼，作為欄位值。`rd` 與請求頭 `x-timestamp` 必須一致，伺服器據此解密。\n",
         "operationId": "postV1AccountVerifyIdCard",
         "parameters": [
           {
@@ -68644,6 +68690,480 @@
                       }
                     }
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v2/auth/captcha": {
+      "get": {
+        "tags": [
+          "帳戶"
+        ],
+        "summary": "獲取人機驗證配置",
+        "description": "返回發送短信或電郵驗證碼前所需的人機驗證配置。客戶端據此初始化騰訊雲天御驗證碼或 Google reCAPTCHA Enterprise，取得驗證結果後放入 `POST /v1/auth/send_code` 或 `POST /v1/auth/email/send_code` 的 `captcha`。\n\n`type` 傳 `common` 即可取得各場景的配置。發送驗證碼時，按請求中的 `type` 從 `tencent_ids` 取對應場景的 AppId：\n\n- `sms` - `reset_trade_password`、`set_trade_password`、`trade_auth_2fa`、`totp`、`change_mobile`（無論透過短信還是電郵發送）\n- `email` - `change_email`、`bind_email`、`verify_email`\n\n`google_key` 是加密後的 site key，按「驗證開戶證件號碼」中 `card_id` 加密方式的逆過程解密：Base64 解碼得到 `{\"rd\":\"...\",\"k\":\"...\"}`，以 `rd` 的 MD5 十六進制字串作為 AES 密鑰和 IV，對 `k` 做 AES-CBC 解密。\n\n`tencent_switch` 或 `google_switch` 為 `true` 時，表示伺服器已關閉對應服務商的人機驗證，無需拉起驗證元件，在 `captcha` 中傳該服務商的空物件。\n\n發送驗證碼返回 `401017` 或 `401074` 時，重新獲取本配置並重新完成人機驗證後再發送。\n\n使用此配置的功能與發送短信驗證碼、發送電郵驗證碼相同。\n\n經 WhaleCore `requestService()` 調用時無需將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "getV2AuthCaptcha",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": true,
+            "description": "驗證碼場景類型。傳 `common` 可取得所有場景的配置：\n\n- `common` - 通用\n- `sms` - 短信驗證碼場景\n- `email` - 電郵驗證碼場景",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "common",
+                "sms",
+                "email"
+              ]
+            },
+            "example": "common"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「獲取人機驗證配置」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "captcha": {
+                              "type": "object",
+                              "description": "人機驗證配置",
+                              "properties": {
+                                "tencent_ids": {
+                                  "type": "object",
+                                  "description": "按場景類型（`common`、`sms`、`email`）索引的騰訊雲天御驗證碼 AppId",
+                                  "additionalProperties": {
+                                    "type": "string"
+                                  }
+                                },
+                                "tencent_switch": {
+                                  "type": "boolean",
+                                  "description": "是否已關閉騰訊雲天御驗證碼的人機驗證；為 `true` 時無需拉起驗證元件，傳 `{\"tencent\": {}}`"
+                                },
+                                "google_key": {
+                                  "type": "string",
+                                  "description": "加密後的 Google reCAPTCHA Enterprise site key，解密方式見接口說明"
+                                },
+                                "google_switch": {
+                                  "type": "boolean",
+                                  "description": "是否已關閉 Google reCAPTCHA Enterprise 的人機驗證；為 `true` 時傳 `{\"google\": {}}`"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "captcha": {
+                      "tencent_ids": {
+                        "common": "<TENCENT_CAPTCHA_APP_ID>",
+                        "sms": "<TENCENT_CAPTCHA_APP_ID>",
+                        "email": "<TENCENT_CAPTCHA_APP_ID>"
+                      },
+                      "tencent_switch": false,
+                      "google_key": "<ENCRYPTED_GOOGLE_SITE_KEY>",
+                      "google_switch": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/send_code": {
+      "post": {
+        "tags": [
+          "帳戶"
+        ],
+        "summary": "發送短信驗證碼",
+        "description": "向客戶的手機號碼發送短信或語音驗證碼，用於需要驗證手機號碼的帳戶安全流程。發送前須先完成人機驗證：調用 `GET /v2/auth/captcha` 獲取配置，用騰訊雲天御驗證碼或 Google reCAPTCHA Enterprise 完成驗證，再把結果放入 `captcha`。\n\n發送成功後，讓客戶輸入收到的驗證碼，再調用 `POST /v1/member/check_mobile`（`type` 與本次相同）校驗並取得 `verify_credentials`。\n\n使用此接口的功能：\n\n- 帳戶 › 交易密碼 › 重設交易密碼（`reset_trade_password`）：取得憑證後調用 `POST /v2/member/trade/reset_password`\n- 帳戶 › 交易密碼 › 設定交易密碼（`set_trade_password`）：取得憑證後調用 `POST /v2/member/trade/set_password`\n- 交易 › 交易解鎖 › 短信二次驗證（`trade_auth_2fa`）：校驗後調用 `POST /v1/member/trade/auth_two_factors`\n- 帳戶 › 安全設定 › 開啟或關閉令牌（`totp`）：取得憑證後調用 `POST /v1/account/totp/setting`\n- 帳戶 › 聯絡方式 › 更換手機號碼、更換電郵（`change_mobile`、`change_email`）\n- 帳戶 › 註銷帳戶（`identity_verify`）\n- 開戶 › 聯絡方式驗證與開戶資料修改，以及未登入時的手機號碼登入和找回登入密碼，亦使用本接口，但這些流程不在 TradingAPI 範圍內\n\n返回 `401043` 表示人機驗證未通過：重新完成人機驗證後再發送；使用 Google reCAPTCHA Enterprise 時，可改用騰訊雲天御驗證碼重試。其他失敗時顯示 `message`。\n\n經 WhaleCore `requestService()` 調用時無需將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "postV1AuthSendCode",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "captcha": {
+                    "$ref": "#/components/schemas/VerificationCaptcha"
+                  },
+                  "country_code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "手機號碼的國際區號，不含 `+`，如 `852`"
+                  },
+                  "mobile": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "客戶的手機號碼，不含區號。可取自「獲取用戶資訊」返回的 `member.mobile`"
+                  },
+                  "send_type": {
+                    "type": "string",
+                    "enum": [
+                      "sms",
+                      "voice"
+                    ],
+                    "description": "發送方式：\n\n- `sms` - 短信\n- `voice` - 語音"
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "驗證碼用途。發送和校驗同一個驗證碼時須傳相同的值：\n\n- `reset_trade_password` - 重設交易密碼\n- `set_trade_password` - 設定交易密碼\n- `trade_auth_2fa` - 交易解鎖短信二次驗證\n- `totp` - 開啟或關閉令牌前驗證手機號碼\n- `change_mobile` - 更換手機號碼前驗證目前手機號碼\n- `change_email` - 更換電郵前驗證手機號碼\n- `identity_verify` - 註銷帳戶前驗證身份"
+                  }
+                },
+                "required": [
+                  "captcha",
+                  "country_code",
+                  "mobile",
+                  "send_type",
+                  "type"
+                ]
+              },
+              "example": {
+                "captcha": {
+                  "tencent": {
+                    "ticket": "<CAPTCHA_TICKET>",
+                    "rand_str": "<CAPTCHA_RANDSTR>",
+                    "tencent_id": "<TENCENT_CAPTCHA_APP_ID>",
+                    "sid": "<CAPTCHA_SID>"
+                  }
+                },
+                "country_code": "852",
+                "mobile": "<MOBILE>",
+                "send_type": "sms",
+                "type": "reset_trade_password"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「發送短信驗證碼」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "無業務欄位"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/email/send_code": {
+      "post": {
+        "tags": [
+          "帳戶"
+        ],
+        "summary": "發送電郵驗證碼",
+        "description": "向客戶的電郵發送驗證碼，用於需要驗證電郵的帳戶安全流程。發送前須先完成人機驗證，方式與 `POST /v1/auth/send_code` 相同，結果放入 `captcha`。`email` 須加密後傳入，並在請求頭 `x-timestamp` 中傳加密時使用的時間戳。\n\n發送成功後，讓客戶輸入收到的驗證碼，再調用 `POST /v1/member/check_email`（`type` 與本次相同）校驗並取得 `verify_credentials`。\n\n使用此接口的功能：\n\n- 帳戶 › 交易密碼 › 重設交易密碼（`reset_trade_password`）：客戶未綁定手機號碼時改用電郵驗證\n- 帳戶 › 交易密碼 › 設定交易密碼（`set_trade_password`）：客戶未綁定手機號碼時改用電郵驗證\n- 帳戶 › 聯絡方式 › 綁定電郵、更換電郵、驗證電郵（`bind_email`、`change_email`、`verify_email`）\n- 開戶 › 聯絡方式驗證與開戶資料修改，以及未登入時的電郵註冊、登入和找回登入密碼，亦使用本接口，但這些流程不在 TradingAPI 範圍內\n\n返回 `401043` 表示人機驗證未通過，處理方式與發送短信驗證碼相同。其他失敗時顯示 `message`。\n\n經 WhaleCore `requestService()` 調用時無需將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "postV1AuthEmailSendCode",
+        "parameters": [
+          {
+            "name": "x-timestamp",
+            "in": "header",
+            "required": true,
+            "description": "毫秒時間戳字串，須與加密欄位中的 `rd` 一致",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "1760601600000"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "captcha": {
+                    "$ref": "#/components/schemas/VerificationCaptcha"
+                  },
+                  "email": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "加密後的電郵地址。不傳明文，加密方式與「驗證開戶證件號碼」中 `card_id` 的加密方式相同，以請求頭 `x-timestamp` 作為 `rd`"
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "驗證碼用途。發送和校驗同一個驗證碼時須傳相同的值：\n\n- `reset_trade_password` - 重設交易密碼\n- `set_trade_password` - 設定交易密碼\n- `change_email` - 更換電郵前驗證目前電郵\n- `bind_email` - 綁定電郵\n- `verify_email` - 驗證電郵"
+                  }
+                },
+                "required": [
+                  "captcha",
+                  "email",
+                  "type"
+                ]
+              },
+              "example": {
+                "captcha": {
+                  "tencent": {
+                    "ticket": "<CAPTCHA_TICKET>",
+                    "rand_str": "<CAPTCHA_RANDSTR>",
+                    "tencent_id": "<TENCENT_CAPTCHA_APP_ID>",
+                    "sid": "<CAPTCHA_SID>"
+                  }
+                },
+                "email": "<ENCRYPTED_EMAIL>",
+                "type": "reset_trade_password"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「發送電郵驗證碼」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "無業務欄位"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/check_mobile": {
+      "post": {
+        "tags": [
+          "帳戶"
+        ],
+        "summary": "校驗短信驗證碼",
+        "description": "校驗客戶輸入的短信驗證碼，通過後返回 `verify_credentials`，作為後續敏感操作的身份驗證憑證。請先調用 `POST /v1/auth/send_code` 發送驗證碼，`country_code`、`mobile` 和 `type` 須與發送時相同。\n\n憑證的用途按 `type` 區分：\n\n- `reset_trade_password` - 傳給 `POST /v2/member/trade/reset_password`\n- `set_trade_password` - 傳給 `POST /v2/member/trade/set_password`\n- `totp` - 傳給 `POST /v1/account/totp/setting`\n- `trade_auth_2fa` - 校驗通過後，把同一驗證碼提交到 `POST /v1/member/trade/auth_two_factors`\n\n使用此接口的功能與發送短信驗證碼相同，包括重設交易密碼、設定交易密碼、交易解鎖短信二次驗證、開啟或關閉令牌、更換手機號碼、更換電郵和註銷帳戶。開戶聯絡方式驗證和未登入時找回登入密碼亦使用本接口，但不在 TradingAPI 範圍內。\n\n校驗失敗時顯示 `message`，讓客戶重新輸入或重新獲取驗證碼。憑證失效後需重新發送並校驗驗證碼；憑證有效期以伺服器為準。\n\n經 WhaleCore `requestService()` 調用時無需將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "postV1MemberCheckMobile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "客戶收到的驗證碼"
+                  },
+                  "country_code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "手機號碼的國際區號，不含 `+`，如 `852`"
+                  },
+                  "mobile": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "客戶的手機號碼，不含區號，須與發送驗證碼時相同"
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "驗證碼用途。發送和校驗同一個驗證碼時須傳相同的值：\n\n- `reset_trade_password` - 重設交易密碼\n- `set_trade_password` - 設定交易密碼\n- `trade_auth_2fa` - 交易解鎖短信二次驗證\n- `totp` - 開啟或關閉令牌前驗證手機號碼\n- `change_mobile` - 更換手機號碼前驗證目前手機號碼\n- `change_email` - 更換電郵前驗證手機號碼\n- `identity_verify` - 註銷帳戶前驗證身份"
+                  }
+                },
+                "required": [
+                  "code",
+                  "country_code",
+                  "mobile",
+                  "type"
+                ]
+              },
+              "example": {
+                "code": "<SMS_CODE>",
+                "country_code": "852",
+                "mobile": "<MOBILE>",
+                "type": "reset_trade_password"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「校驗短信驗證碼」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "verify_credentials": {
+                              "type": "string",
+                              "description": "驗證通過後簽發的驗證憑證"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "verify_credentials": "<VERIFY_CREDENTIALS>"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/member/check_email": {
+      "post": {
+        "tags": [
+          "帳戶"
+        ],
+        "summary": "校驗電郵驗證碼",
+        "description": "校驗客戶輸入的電郵驗證碼，通過後返回 `verify_credentials`，作為後續敏感操作的身份驗證憑證。請先調用 `POST /v1/auth/email/send_code` 發送驗證碼，`email`（加密前的明文）和 `type` 須與發送時相同。`email` 須加密後傳入，並在請求頭 `x-timestamp` 中傳加密時使用的時間戳。\n\n`type` 為 `reset_trade_password` 或 `set_trade_password` 時，把憑證分別傳給 `POST /v2/member/trade/reset_password` 或 `POST /v2/member/trade/set_password`。\n\n使用此接口的功能：重設交易密碼、設定交易密碼、綁定或更換電郵、更換手機號碼前驗證電郵，以及註銷帳戶。開戶聯絡方式驗證和未登入時的電郵註冊、登入亦使用本接口，但不在 TradingAPI 範圍內。\n\n校驗失敗時顯示 `message`，讓客戶重新輸入或重新獲取驗證碼。憑證失效後需重新發送並校驗驗證碼；憑證有效期以伺服器為準。\n\n經 WhaleCore `requestService()` 調用時無需將 `requiresTradeToken` 設為 `true`。\n",
+        "operationId": "postV1MemberCheckEmail",
+        "parameters": [
+          {
+            "name": "x-timestamp",
+            "in": "header",
+            "required": true,
+            "description": "毫秒時間戳字串，須與加密欄位中的 `rd` 一致",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "example": "1760601600000"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "客戶收到的驗證碼"
+                  },
+                  "email": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "加密後的電郵地址。不傳明文，加密方式與「驗證開戶證件號碼」中 `card_id` 的加密方式相同，以請求頭 `x-timestamp` 作為 `rd`"
+                  },
+                  "type": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "驗證碼用途。發送和校驗同一個驗證碼時須傳相同的值：\n\n- `reset_trade_password` - 重設交易密碼\n- `set_trade_password` - 設定交易密碼\n- `change_email` - 更換電郵前驗證目前電郵\n- `bind_email` - 綁定電郵\n- `verify_email` - 驗證電郵\n- `change_mobile` - 更換手機號碼前驗證電郵\n- `identity_verify` - 註銷帳戶前驗證身份"
+                  }
+                },
+                "required": [
+                  "code",
+                  "email",
+                  "type"
+                ]
+              },
+              "example": {
+                "code": "<EMAIL_CODE>",
+                "email": "<ENCRYPTED_EMAIL>",
+                "type": "reset_trade_password"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功。響應體包含「校驗電郵驗證碼」操作的結果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "verify_credentials": {
+                              "type": "string",
+                              "description": "驗證通過後簽發的驗證憑證"
+                            },
+                            "member_exist": {
+                              "type": "boolean",
+                              "description": "該電郵是否已關聯其他用戶，用於綁定電郵流程；交易密碼相關流程可忽略"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "x-example-kind": "illustrative",
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {
+                    "verify_credentials": "<VERIFY_CREDENTIALS>",
+                    "member_exist": false
+                  }
                 }
               }
             }
@@ -71239,7 +71759,7 @@
           "帳戶"
         ],
         "summary": "設定身份驗證器雙重驗證",
-        "description": "開啟或關閉客戶的第三方身份驗證器（TOTP）雙重驗證。開啟後，客戶交易解鎖時驗證交易密碼可能返回 `need_totp_two_factors: true`，此時調用「提交交易解鎖動態碼驗證」。\n\n- 開啟：`totp_2fa_auth` 傳 `YES`，`verify_code` 傳客戶身份驗證器目前顯示的動態碼，用於確認綁定成功。\n- 關閉：`totp_2fa_auth` 傳 `NO`，無需 `verify_code`。\n\n兩種操作都要先完成客戶已綁定手機號碼的短信驗證碼校驗，並把校驗通過後取得的憑證放入 `verify_credentials`（校驗介面不在本文範圍內）。憑證過期返回業務碼 `403046`，開啟流程應讓客戶重新完成短信驗證；動態碼錯誤時顯示 `message`，讓客戶重新輸入。成功後刷新雙重驗證設定的顯示狀態。\n\n經 WhaleCore `requestService()` 調用時無需將 `requiresTradeToken` 設為 `true`。\n",
+        "description": "開啟或關閉客戶的第三方身份驗證器（TOTP）雙重驗證。開啟後，客戶交易解鎖時驗證交易密碼可能返回 `need_totp_two_factors: true`，此時調用「提交交易解鎖動態碼驗證」。\n\n- 開啟：`totp_2fa_auth` 傳 `YES`，`verify_code` 傳客戶身份驗證器目前顯示的動態碼，用於確認綁定成功。\n- 關閉：`totp_2fa_auth` 傳 `NO`，無需 `verify_code`。\n\n兩種操作都要先完成客戶已綁定手機號碼的短信驗證碼校驗，並把校驗通過後取得的憑證放入 `verify_credentials`（先調用 `POST /v1/auth/send_code` 發送驗證碼，再調用 `POST /v1/member/check_mobile` 校驗，`type` 均為 `totp`）。憑證過期返回業務碼 `403046`，開啟流程應讓客戶重新完成短信驗證；動態碼錯誤時顯示 `message`，讓客戶重新輸入。成功後刷新雙重驗證設定的顯示狀態。\n\n經 WhaleCore `requestService()` 調用時無需將 `requiresTradeToken` 設為 `true`。\n",
         "operationId": "postV1AccountTotpSetting",
         "requestBody": {
           "required": true,
