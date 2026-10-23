@@ -189,15 +189,16 @@ WhaleCoreService.logoutAndDestroy()
 
 | Module | Entry point | Capabilities |
 | --- | --- | --- |
-| Quotes | `WhaleCoreService.quoteService()` | Quote subscriptions (chained data-type selection), option chain/detail subscriptions, kline and timeshare/tick history queries, quote snapshots, quote level and device eviction |
+| Quotes | `WhaleCoreService.quoteService()` | Quote subscriptions (four entry points: single-counter detail, instrument list (excluding options), option list, and option chain; chained data-type selection; batch entry points support whole-group replacement), kline and timeshare/tick history queries, quote snapshots, quote level and device eviction |
 | Orders | `WhaleCoreService.orderService()` | Submitting, querying, canceling, and replacing orders; conditional and attached orders; take-profit/stop-loss on positions; pre-trade validation; order preview; trade card selection; batch cancellation; and real-time push |
 | Portfolio | `WhaleCoreService.portfolioService()` | Portfolio subscriptions, cash detail and position-quote toggles, member portfolio settings, and profit-and-loss analysis |
 | Watchlist | `WhaleCoreService.watchlistService()` | Group and stock mutations, sorting, pinning, invalid-ticker cleanup, and real-time push |
 | Pass-through requests | `WhaleCoreService.requestService()` | Pass-through calls to any endpoint, with common parameters and authentication headers attached automatically and recovery retry on expired authentication |
 | Option calculator | `WhaleCoreOptionCalculator` (static utility) | Local Black-Scholes calculations: Greeks, theoretical price, intrinsic/time value, days to expiry, and probability of profit |
+| Warrant calculator | `WhaleCoreWarrantCalculator` (static utility) | Local calculation of derived metrics for Hong Kong warrants and CBBCs: premium, leverage ratio, effective leverage, breakeven point, moneyness, distance to call price, conversion price, and delta |
 
 <Note>
-  Except for the option calculator, accessing these services before initialization or after `logoutAndDestroy()` throws `appNotReady`. Pre-trade validation has moved into `orderService()`; the historical standalone entry point `WhaleCoreService.orderValidationService` still works but is deprecated.
+  Except for the option calculator and the warrant calculator, accessing these services before initialization or after `logoutAndDestroy()` throws `appNotReady`. Pre-trade validation has moved into `orderService()`; the historical standalone entry point `WhaleCoreService.orderValidationService` still works but is deprecated.
 </Note>
 
 ## Core concepts {/* core-concepts */}
@@ -205,6 +206,8 @@ WhaleCoreService.logoutAndDestroy()
 The following rules apply across several modules; understand them once and the rest of this page does not repeat them.
 
 **Counter ID encoding** always uses the format `"{type}/{market}/{code}"`: for example `"ST/US/AAPL"` or `"ST/HK/00700"` for stocks. Options additionally encode the strike price, expiry date, and direction, for example `"OP/US/AAPL240119C190000"`. Every counter-scoped API — quotes, orders, watchlist, and profit-and-loss analysis — uses this same encoding.
+
+The first segment is the **type segment**: `ST` for stocks, `ETF`, `OP` for options, `WT` for warrants, and `IX` / `BK` for indexes. The batch quote subscription entry points are split by type segment (options use `subscribeOptionList`; everything else uses `subscribeQuoteList`), so group a mixed set by type segment first, which you can read with `counterId.split(separator: "/").first`. Passing the wrong type does not raise an error, but that channel's response structure cannot carry the other type's fields (option fields such as strike price and implied volatility come back empty).
 
 **Account channel** `WhaleCoreConfig.defaultAccountChannel` is fixed at initialization, and the order service and portfolio subscriptions fall back to it by default. Most order methods accept an `accountChannel` override (omit it to use the default channel); portfolio subscriptions require an explicit `WhaleCoreAccountInfo`, which the host constructs from its own channel and `aaid`:
 
@@ -232,11 +235,15 @@ The quotes service type is `WhaleCoreQuotesService`. Select the data types you n
 
 ### Quote subscription {/* quote-subscription */}
 
+Subscription entry points are split four ways by "one counter or a batch" and "stock or option": use `subscribeQuoteDetail` for a single counter (shared by stocks and options, with the most complete snapshot fields); use `subscribeQuoteList` for a batch of non-option counters; for option lists and option chains, see [Option quote subscription](#option-quote-subscription). Group a mixed set by the counter ID type segment and subscribe to each group separately; see [Core concepts](#core-concepts).
+
 ```swift
 let svc = try WhaleCoreService.quoteService()
 
+// Single-counter detail subscription: the most complete snapshot plus a subscription; chain-select data
+// types, then call .start, and the callback keeps delivering the latest quotes
 let subscription = try await svc
-    .subscribe(counterIds: ["ST/US/AAPL", "ST/HK/00700"])
+    .subscribeQuoteDetail(counterId: "ST/US/AAPL")
     .detail        // Detail quotes (OHLC, market cap, PE/PB, 52-week high/low)
     .depth         // Order-book depth
     .trade         // Tick-by-tick trades
@@ -250,10 +257,20 @@ let subscription = try await svc
 
 // Unsubscribe
 await subscription.cancel()
+
+// List subscription: a set of non-option counters; the set can be replaced as a whole (switching groups, infinite scrolling)
+// .start waits for the first-screen subscription to land and throws on failure; later updateCounterIds calls do not wait and do not throw
+let listSub = try await svc
+    .subscribeQuoteList(counterIds: ["ST/US/AAPL", "ST/HK/00700"])
+    .list
+    .start { updates in /* Each batch contains only counters in the currently active set */ }
+
+listSub.updateCounterIds(newCounterIds)   // Whole-group replacement: counters removed from the set stop receiving callbacks
+await listSub.cancel()
 ```
 
 <Note>
-  `.start` throws only when the subscription itself fails to establish (the SDK is not ready or the initial fetch fails); once established, the running subscription no longer produces errors and delivers data continuously through the callback. Selectable data types: `list`, `detail`, `depth`, `trade`, `broker`, `preTrade`, `postTrade`, `nightTrade`, `totalView`, and `totalViewBrief`.
+  `.start` throws only when the subscription itself fails to establish (the SDK is not ready or the initial fetch fails); once established, the running subscription no longer produces errors and delivers data continuously through the callback. Selectable data types for `subscribeQuoteDetail` and `subscribeQuoteList`: `list`, `detail`, `depth`, `trade`, `broker`, `preTrade`, `postTrade`, `nightTrade`, `totalView`, and `totalViewBrief` (the last four produce no data for options). `subscribeOptionList` offers only the first six, which options support (excluding `broker`). After a single-counter detail subscription is established, it first delivers one snapshot callback (including when the user re-enters the same counter), so the first screen is not blank outside trading hours.
 </Note>
 
 ### Query snapshots and historical data {/* quote-history-queries */}
@@ -269,15 +286,30 @@ let klines = try await svc.getKlines(counterId: "ST/US/AAPL", klineType: .perDay
 klines.forEach { print("\($0.timestamp): \($0.close)") }
 ```
 
-Other query capabilities: `getTimeshares(counterId:fiveDays:...)` fetches the current or the last five days of timeshare data (use this for timeshare charts instead of approximating with one-minute klines); `getTrades(counterId:count:...)` pages through historical tick-by-tick trades; `observeQuoteEvents(counterIds:onUpdate:)` and `observeKlineUpdates(counterIds:onUpdate:)` observe quote or kline events that another caller already subscribed to without creating a new subscription; `getInterestRate()` reads the SDK's built-in risk-free rate for display in the option calculator.
+Other query capabilities: `getTimeshares(counterId:fiveDays:...)` fetches the current or the last five days of timeshare data (use this for timeshare charts instead of approximating with one-minute klines); `getTrades(counterId:count:...)` pages through historical tick-by-tick trades; `observeQuoteEvents(counterIds:onUpdate:)` observes quote events that another caller already subscribed to without creating a new subscription; `getInterestRate()` and `getWarrantInterestRate()` read the risk-free rate for options and for warrants, respectively.
+
+The SDK updates the latest kline bar and the latest timeshare point locally in real time from quote pushes. Once the counter has a `detail` subscription and you have fetched the latest page of klines for that period (or the timeshare data for that scope), the `klines(klineType:adjustType:)` and `timeshares(fiveDays:klineSession:)` accessors on the `getStock(counterId:)` snapshot already include the latest data. Events from `observeKlineUpdates(counterIds:onUpdate:)` and `observeTimeshareUpdates(counterIds:onUpdate:)` carry the changed latest kline bar or latest minute point directly (timeshare covers regular hours, pre-market, post-market, and overnight), so no further query is needed.
 
 ### Option quote subscription {/* option-quote-subscription */}
 
-Option quotes support two subscription shapes; extended data (strike price, IV, direction, open interest, order book) always comes from `optionData`:
+Option quotes support three subscription shapes (single-contract detail, contract list, and option chain); extended data (strike price, IV, direction, open interest, order book) always comes from `optionData`:
 
 ```swift
-// Option-chain batch subscription: subscribes to a set of contracts as a group, replacing the whole
-// group as the user interacts (changing expiry, scrolling the visible range).
+// Single-contract detail: the most complete snapshot fields with one level of order book, sharing the same entry point as stocks
+let detailSub = try await svc.subscribeQuoteDetail(counterId: "OP/US/AAPL240119C190000")
+    .list.detail.trade
+    .start { updates in
+        let opt = updates.first?.stock.optionData   // Strike price / IV / direction / OI / order book
+    }
+await detailSub.cancel()
+
+// Option list: a set of contracts; the snapshot has no order book, and the set can be replaced as a whole
+let optionListSub = try await svc.subscribeOptionList(counterIds: contracts)
+    .list
+    .start { updates in /* ... */ }
+
+// Option chain: the whole contract group is replaced as the user interacts (changing expiry, scrolling the
+// visible range); the snapshot includes one level of order book, and no chained type selection is needed
 let chainSub = try svc.subscribeOptionChain(counterIds: visibleContracts) { updates in
     for u in updates {
         let opt = u.stock.optionData
@@ -285,18 +317,10 @@ let chainSub = try svc.subscribeOptionChain(counterIds: visibleContracts) { upda
 }
 chainSub.updateCounterIds(newVisibleContracts)  // Replace the whole group (scrolling or changing expiry)
 await chainSub.cancel()                          // Unsubscribe when leaving the screen
-
-// Option-detail subscription: a single contract, with subtypes chosen by the host through chaining
-let detailSub = try await svc.subscribeOptionDetail(counterId: "OP/US/AAPL240119C190000")
-    .list.detail.trade
-    .start { updates in
-        let opt = updates.first?.stock.optionData
-    }
-await detailSub.cancel()
 ```
 
 <Note>
-  Greeks are not delivered with quote pushes — the host subscribes to the underlying stock separately, takes its price, and feeds it into `WhaleCoreOptionCalculator` for local calculation. See [Option calculator](#option-calculator).
+  For options, only the `subscribeQuoteDetail` and `subscribeOptionChain` snapshots provide the first-screen order book; `subscribeOptionList` does not. **Subsequent order-book pushes** require explicitly chaining `.depth` (built into the option chain). Greeks are not delivered with quote pushes — the host subscribes to the underlying stock separately, takes its price, and feeds it into `WhaleCoreOptionCalculator` for local calculation. See [Option calculator](#option-calculator).
 </Note>
 
 ### Quote level and device eviction {/* quote-level-and-eviction */}
@@ -326,24 +350,29 @@ Banner presentation and policies such as "don't show again today" are up to the 
 
 | Method | Description |
 | --- | --- |
-| `subscribe(counterIds:)` | Creates a quote subscription builder; chain-select data types, then call `.start` |
-| `observeQuoteEvents(counterIds:`<br />`onUpdate:)` | Listens to quote events without creating a new subscription, reusing one established by another caller |
-| `observeKlineUpdates(counterIds:`<br />`onUpdate:)` | Listens to kline update events without creating a new subscription |
-| `getStock(counterId:)` | Synchronously reads a quote snapshot from the in-memory cache |
+| `subscribeQuoteDetail(counterId:)` | Creates a single-counter subscription builder (shared by stocks and options, with the most complete snapshot fields); chain-select data types, then call `.start` |
+| `subscribeQuoteList(counterIds:)` | Creates a batch subscription builder for non-option counters; the set can be replaced as a whole |
+| `subscribeOptionList(counterIds:)` | Creates a batch subscription builder for options; the set can be replaced as a whole (the snapshot has no order book) |
+| `observeQuoteEvents(counterIds:`<br />`onUpdate:)` | Listens to quote events without creating a new subscription, reusing one established by another caller; delivers the existing snapshot once when it starts |
+| `observeKlineUpdates(counterIds:`<br />`onUpdate:)` | Listens to kline update events without creating a new subscription. Requires an existing `detail` subscription for the counter and a fetched latest page for that period; each event carries the changed latest bar, so no further query is needed |
+| `observeTimeshareUpdates(counterIds:`<br />`onUpdate:)` | Listens to timeshare update events without creating a new subscription. Requires an existing `detail` subscription for the counter and fetched timeshare data for that scope; each event carries the changed latest minute point, covering regular hours, pre-market, post-market, and overnight |
+| `getStock(counterId:)` | Synchronously reads a quote snapshot from the in-memory cache. Its `klines(klineType:adjustType:)` and `timeshares(fiveDays:klineSession:)` already include the latest bar or point as quotes change |
 | `getKlines(counterId:`<br />`klineType:`<br />`count:`<br />`timestamp:`<br />`klineSession:`<br />`adjustType:`<br />`completion:)` | Fetches kline history |
 | `getKlines(counterId:`<br />`klineType:`<br />`count:`<br />`timestamp:`<br />`klineSession:`<br />`adjustType:)` | Swift async convenience overload of the previous method (with default arguments) |
 | `getTimeshares(counterId:`<br />`fiveDays:`<br />`klineSession:`<br />`completion:)` | Fetches timeshare data for the current day or the last five days (use this for timeshare charts instead of approximating with one-minute klines) |
 | `getTimeshares(counterId:`<br />`fiveDays:`<br />`klineSession:)` | Swift async convenience overload of the previous method (with default arguments) |
 | `getTrades(counterId:`<br />`count:`<br />`lastSequenceID:`<br />`lastTradeSession:`<br />`tradeType:`<br />`completion:)` | Fetches historical tick-by-tick trades with pagination; accounts without real-time quote entitlement receive an empty list |
 | `getTrades(counterId:`<br />`count:`<br />`lastSequenceID:`<br />`lastTradeSession:`<br />`tradeType:)` | Swift async convenience overload of the previous method (with default arguments; `tradeType` defaults to `0` for regular hours — pass `3` for pre/post-market and overnight) |
-| `subscribeOptionChain(counterIds:`<br />`onUpdate:)` | Batch option-chain subscription (whole-group replacement plus 300ms debouncing) |
-| `subscribeOptionDetail(counterId:)` | Creates an option-detail subscription builder (single contract) |
-| `getInterestRate()` | Reads the SDK's built-in risk-free rate (annualized decimal) for display in the option calculator |
+| `subscribeOptionChain(counterIds:`<br />`onUpdate:)` | Batch option-chain subscription (whole-group replacement plus 300ms debouncing; the snapshot includes one level of order book, and data types are fixed) |
+| `getInterestRate()` | Reads the risk-free rate for options (annualized decimal; the average Treasury yield) |
+| `getWarrantInterestRate()` | Reads the risk-free rate for warrants (annualized decimal; the value delivered by the quote configuration) |
 | `quoteLevelInfo` (property) | Current quote-level and eviction snapshot (synchronous read; `nil` before the first authentication) |
 | `addQuoteLevelDelegate(_:)` | Registers a quote-level observer (the latest snapshot is delivered on the main thread after every successful authentication) |
 | `removeQuoteLevelDelegate(_:)` | Removes a quote-level observer |
 | `reclaimQuoteAccess()` | Takes the quote entitlement back to this device ("restart quotes"); re-authenticates automatically on success |
 | `reclaimQuoteAccess(completion:)` | Objective-C convenience entry point for the previous method (completion fires on the main thread) |
+
+Each of the four subscription entry points has its own handle. The single-counter `WhaleCoreQuoteSubscription` has only `cancel()` and `isCancelled`. The batch handles `WhaleCoreQuoteListSubscription`, `WhaleCoreOptionListSubscription`, and `WhaleCoreOptionChainSubscription` also provide `updateCounterIds(_:)`: it replaces the whole group, merges changes with 300ms debouncing, stops callbacks immediately for counters removed from the set, and releases the underlying subscriptions as a group on `cancel()`.
 
 ## Option calculator {/* option-calculator */}
 
@@ -374,8 +403,12 @@ let days = WhaleCoreOptionCalculator.daysToExpire(
 Also available: `intrinsicValue(underlyingPrice:strikePrice:isCall:)` (intrinsic value: call = max(0, price − strike), put is the opposite), `timeValue(optionPrice:intrinsicValue:)` (time value = premium − intrinsic value), and `profitProbability(...)` (probability of profit at expiry, using Black-Scholes risk-neutral semantics).
 
 <Note>
-  Invalid input always returns `nil` (display "--" in the UI): IV ≤ 0, days &lt; 0, underlying price after dividends ≤ 0, strike price or breakeven point ≤ 0, or an interest rate of 0 (including an unavailable built-in rate). Passing `nil` for `interestRate` reads the SDK's built-in risk-free rate (a server-side configuration that becomes available automatically after sign-in). `daysToExpire(expireDate:timeZone:)` returns 0 on the expiry date and a negative value once expired; passing a negative value into the calculation APIs returns `nil`.
+  Invalid input always returns `nil` (display "--" in the UI): IV ≤ 0, days &lt; 0, underlying price after dividends ≤ 0, strike price or breakeven point ≤ 0, or an interest rate of 0 (including an unavailable built-in rate). Passing `nil` for `interestRate` reads the built-in risk-free rate for options (available automatically after sign-in; to display it, read it yourself with `getInterestRate()`). `daysToExpire(expireDate:timeZone:)` returns 0 on the expiry date and a negative value once expired; passing a negative value into the calculation APIs returns `nil`.
 </Note>
+
+<Warning>
+  **There are two risk-free rates. Do not mix them.** The server publishes two different risk-free rates (measured at the same moment, they differ by about 0.2 percentage points). Option Greeks and theoretical prices use `getInterestRate()` (the average Treasury yield, which is the default when you pass `nil` for this calculator's `interestRate`). **Warrant delta and effective leverage use `getWarrantInterestRate()`** (the value delivered by the quote configuration, from the same source as the rate the official client uses to calculate warrant parameters). Using the wrong rate does not raise an error; it only makes the metrics disagree with the official client. The warrant rate is fetched over the network, so the first call may return `nil` while a background fetch runs; read it again later to get the value.
+</Warning>
 
 **Method overview:**
 
@@ -387,6 +420,55 @@ Also available: `intrinsicValue(underlyingPrice:strikePrice:isCall:)` (intrinsic
 | `daysToExpire(expireDate:`<br />`timeZone:)` | Computes the number of whole calendar days to expiry (the "N days left" display convention) |
 | `fractionalDaysToExpire(expireDate:`<br />`timeZone:`<br />`holidays:`<br />`dayOffset:)` | Computes fractional days to expiry: expiry is taken as 20:00 on the expiry date and prorated by the hour; passing a holiday table switches to trading-day semantics |
 | `profitProbability(underlyingPrice:`<br />`breakevenPoint:`<br />`impliedVolatility:`<br />`daysToExpire:`<br />`isCall:`<br />`dividendToExpire:`<br />`interestRate:)` | Computes the probability of profit at expiry (Black-Scholes risk-neutral semantics) |
+
+## Warrant calculator {/* warrant-calculator */}
+
+`WhaleCoreWarrantCalculator` is a stateless, pure calculation utility (entirely static methods, not registered with `WhaleCoreService`, no network access) that calculates derived metrics for Hong Kong warrants and CBBCs (warrants, callable bull/bear contracts, and inline warrants).
+
+Warrant quotes deliver only the contract's raw fields (strike price, conversion ratio, call price, upper and lower strike prices, implied volatility, and days to expiry). **They do not deliver derived metrics such as premium, leverage, breakeven point, or delta.** Single-counter scenarios such as a warrant detail screen or the reference data on an order screen must calculate these metrics locally, which is what this utility provides.
+
+Contract fields come from `warrantData` in the warrant quote snapshot, which **requires a `subscribeQuoteDetail(counterId:)` subscription**; the batch list entry points do not provide it. As with the option calculator, the host subscribes to the underlying stock itself to get the underlying price.
+
+```swift
+// Warrant snapshot + underlying price → input (saves copying fields one by one; returns nil when warrantData is missing)
+guard let input = WhaleCoreWarrantMetricsInput(
+    warrant: warrantStock,                                   // Obtained from subscribeQuoteDetail
+    underlyingPrice: NSDecimalNumber(string: "441.4"),       // Latest price from your own underlying subscription
+    daysToExpire: NSDecimalNumber(value: warrantData.dayToExpire)  // See below for the day-count convention
+) else { return }
+
+let m = WhaleCoreWarrantCalculator.metrics(input)
+print(m.premium, m.leverageRatio, m.effectiveLeverage, m.breakevenPoint,
+      m.moneyness, m.moneynessPercent, m.distanceToCallPrice, m.conversionPrice, m.delta)
+```
+
+Each category has a different set of applicable metrics. Metrics that do not apply return `nil` (display "--" in the UI), never 0:
+
+| Category | Applicable | Not applicable |
+| --- | --- | --- |
+| Call warrant / put warrant | Premium, leverage ratio, effective leverage, breakeven point, moneyness, conversion price, delta | Distance to call price (no call price) |
+| Bull contract / bear contract | Premium, leverage ratio, breakeven point, moneyness, conversion price, distance to call price | Delta, effective leverage |
+| Inline warrant | Premium, leverage ratio, in-range/out-of-range determination | Breakeven point, conversion price, distance to call price, delta, effective leverage, moneyness percentage |
+
+<Note>
+  Ratio results are **decimals** (`0.2164` = 21.64%), so multiply by 100 for display. **Delta and effective leverage are negative for put warrants and bear contracts. Do not take the absolute value.** A missing input makes only the affected metric `nil`, and the rest are still calculated. For example, when the conversion ratio is missing, premium, leverage, breakeven point, and conversion price are empty, but distance to call price and moneyness are still returned.
+</Note>
+
+<Warning>
+  The caller chooses two conventions; WhaleCore does not choose them for you:
+
+  - **Days to expiry** (`daysToExpire`, required): pass `warrantData.dayToExpire` to match the official client's warrant parameters (trading-day convention), or pass the calendar days from `WhaleCoreOptionCalculator.daysToExpire(expireDate:timeZone:)` to most closely match the delta delivered by the warrant list endpoint.
+  - **Risk-free rate** (passing `nil` for `interestRate` uses the warrant rate, that is, `getWarrantInterestRate()`): this is not the same value as `getInterestRate()`, which options use. Do not mix them.
+
+  Locally calculated values and the same-named columns delivered by the warrant list endpoint are taken at different points in time, so they are never equal (the list values are calculated by the server at a particular snapshot time). Do not use either to validate the other, and avoid showing them side by side on the same screen.
+</Warning>
+
+**Method overview:**
+
+| Method | Description |
+| --- | --- |
+| `category(fromRaw:)` | Converts the category field delivered by quotes (`Call` / `Put` / `Bull` / `Bear` / `Inline`) to an enum |
+| `metrics(_:)` | Calculates all eight derived metrics at once (delta is calculated only once internally and reused for effective leverage) |
 
 ## Order service {/* orders */}
 
@@ -1046,6 +1128,7 @@ Errors with a server response (`serverError`, `businessError`, `unauthorized`) c
 | Quotes | `WhaleCoreStock` / `WhaleCoreStockData` / `WhaleCoreQuoteData` / `WhaleCoreQuoteDepth` / `WhaleCoreQuoteTrade` / `WhaleCoreTrade` / `WhaleCoreKline` / `WhaleCoreTimeShares` / `WhaleCoreTimeShare` / `WhaleCoreMinute` / `WhaleCoreOptionData` / `WhaleCoreWarrantData` / `WhaleCoreAhPremium` / `WhaleCoreAdrRate` / `WhaleCoreHkDual` / `WhaleCoreChannelItem` / `WhaleCoreEtfReference` / `WhaleCoreOptionChainSubscription` / `WhaleCoreQuoteLevelInfo` / `WhaleCoreSubMarketQuote` / `WhaleCorePriceLevel` / `WhaleCoreDepthLevel` / `WhaleCoreEvictedLevelDetail` |
 | Quote enums | `WhaleCoreKlineType` / `WhaleCoreKlineSession` / `WhaleCoreAdjustType` / `WhaleCoreTradeStatus` / `WhaleCoreStockTemplate` / `WhaleCoreTimeshareType` / `WhaleCoreOptionDirection` |
 | Option calculation | `WhaleCoreOptionPricingInput` / `WhaleCoreOptionGreeks` |
+| Warrant calculation | `WhaleCoreWarrantMetricsInput` / `WhaleCoreWarrantMetrics` / `WhaleCoreWarrantCategory` / `WhaleCoreWarrantMoneyness` |
 | Orders | `WhaleCoreOrder` / `WhaleCoreOrderDetail` / `WhaleCoreOrderSubmitRequest` / `WhaleCoreOrderSubmitResult` / `WhaleCoreReplaceOrderRequest` / `WhaleCoreTradeCapacity` / `WhaleCoreTradeCapacityRequest` / `WhaleCoreOptionOpenMargin` / `WhaleCoreEstimateBuyLimit` / `WhaleCoreEstimateBuyLimitRequest` / `WhaleCoreTradeDetail` / `WhaleCoreEstimatedCostResult` / `WhaleCoreTriggerRule` / `WhaleCoreOrderInfo` / `WhaleCoreOrderTypeConfigItem` / `WhaleCoreOptionContractModel` / `WhaleCoreTPSLOrderIntent` / `WhaleCoreSubmitTPSLOrderRequest` / `WhaleCoreTPSLValidationResult` / `WhaleCoreSubmitTPSLOrderResult` / `WhaleCoreTPSLLegOrder` / `WhaleCoreOrderPloyType` / `WhaleCoreOrderOperateDirection` / `WhaleCoreTradeCard` / `WhaleCoreTradeCards` / `WhaleCoreTradeCardCategory` / `WhaleCoreSuggestedTradeCard` |
 | Order validation | `WhaleCoreOrderIntent` / `WhaleCoreAttachedIntent` / `WhaleCoreOrderConstraints` / `WhaleCoreOrderValidationResult` / `WhaleCoreOrderValidationIssue` / `WhaleCoreOrderValidationRule` / `WhaleCoreOrderField` / `WhaleCoreValidationScope` / `WhaleCoreQualificationStatus` / `WhaleCoreQualificationType` / `WhaleCoreQualificationState` / `WhaleCoreDerivExperience` |
 | Order preview | `WhaleCoreOrderPreviewResult` / `WhaleCoreOrderPreviewContext` / `WhaleCoreOrderPreviewFields` / `WhaleCoreOrderPreviewFeeFields` / `WhaleCoreOrderPreviewFees` / `WhaleCoreDiscountedAmount` / `WhaleCoreAmountChange` / `WhaleCoreOrderPreviewFreeze` / `WhaleCoreOrderPreviewPostCost` / `WhaleCoreOrderPreviewRiskHint` / `WhaleCorePositionAction` |
