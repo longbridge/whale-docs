@@ -203,12 +203,16 @@ paths:
                   type: array
                   description: '聯繫電話. 數組，每項為 { contact_phone: string }，可動態增刪多個聯繫電話，格式需匹配正則 ^[A-Za-z0-9,.\-+\s]+$'
                   items:
-                    type: string
+                    type: object
+                    properties:
+                      contact_phone:
+                        type: string
+                        description: 聯繫電話。
                 audit_frontend_resource:
                   type: object
                   description: 審計上下文. 審計留痕字段，由調用方生成並隨提交請求，含 $action/$behavior 及編輯前的原始字段值，非業務參數
             example:
-              market: HK
+              market: hk
               code: HKG001
               name: 長橋證券
               company_name: 長橋證券
@@ -216,7 +220,7 @@ paths:
               contact: 张三
               contact_email: user@example.com
               contact_phones:
-                - contact_phone: 85200000000
+                - contact_phone: '85200000000'
       responses:
         '200':
           description: 請求處理成功。響應的 `data` 不包含額外業務字段。
@@ -426,7 +430,20 @@ paths:
               type: object
               required:
                 - market
-                - name
+                - name_en
+                - name_cn
+                - name_hk
+                - app_name_en
+                - app_name_cn
+                - app_name_hk
+                - stock_limit
+                - code
+                - contact
+                - is_has_attachment
+                - tpl_email
+                - show_name
+                - priority
+                - state
               properties:
                 id:
                   type: string
@@ -550,14 +567,32 @@ paths:
                   description: 審計上下文. 由調用方生成並隨提交請求，用於審計日誌展示，非業務字段
                 name:
                   type: object
-                  properties: {}
+                  properties:
+                    zh-CN:
+                      type: string
+                      description: 渠道券商名稱（簡體中文）
+                    zh-HK:
+                      type: string
+                      description: 渠道券商名稱（繁體中文）
+                    en:
+                      type: string
+                      description: 渠道券商名稱（英文）
                   description: |-
-                    多語言名稱對象，含 `zh-CN`、`zh-HK`、`en`，同時展開為 `name_cn`/`name_hk`/`name_en`。
+                    多語言名稱對象，含 `zh-CN`、`zh-HK`、`en`，同時展開為 `name_cn`/`name_hk`/`name_en`；對象與展開字段一併傳入，取值保持一致。
                 app_name:
                   type: object
-                  properties: {}
+                  properties:
+                    zh-CN:
+                      type: string
+                      description: 券商 App 名稱（簡體中文）
+                    zh-HK:
+                      type: string
+                      description: 券商 App 名稱（繁體中文）
+                    en:
+                      type: string
+                      description: 券商 App 名稱（英文）
                   description: |-
-                    多語言 App 名稱對象，含 `zh-CN`、`zh-HK`、`en`，同時展開為 `app_name_cn`/`app_name_hk`/`app_name_en`。
+                    多語言 App 名稱對象，含 `zh-CN`、`zh-HK`、`en`，同時展開為 `app_name_cn`/`app_name_hk`/`app_name_en`；對象與展開字段一併傳入，取值保持一致。
                 account_limit:
                   type: string
                   description: |-
@@ -567,18 +602,26 @@ paths:
                   description: |-
                     圖標類型，可選值來自後端數據字典。
             example:
-              market: HK
-              name_en: 長橋證券
-              name_cn: 長橋證券
+              market: hk
+              name:
+                zh-CN: 长桥证券
+                zh-HK: 長橋證券
+                en: Longbridge Securities
+              app_name:
+                zh-CN: 长桥
+                zh-HK: 長橋
+                en: Longbridge
+              name_en: Longbridge Securities
+              name_cn: 长桥证券
               name_hk: 長橋證券
-              app_name_en: 長橋
-              app_name_cn: 長橋
+              app_name_en: Longbridge
+              app_name_cn: 长桥
               app_name_hk: 長橋
               stock_limit: 100
               code: HKG001
               contact: 李四
               is_has_attachment: '1'
-              contact_phone: 85200000000
+              contact_phone: '85200000000'
               contact_email: user@example.com
               tpl_email: user@example.com
               icon: https://example.com/logo.png
@@ -820,6 +863,12 @@ paths:
                           en:
                             type: string
                             description: 英文. 用於指定「英文」。
+                          zh_cn:
+                            type: string
+                            description: 簡體中文. 簡體中文名稱（實際返回的鍵名為 `zh_cn`）。
+                          zh_hk:
+                            type: string
+                            description: 繁體中文. 繁體中文名稱（實際返回的鍵名為 `zh_hk`）。
                       region:
                         type: string
                         description: 地區. 用於指定「地區」。
@@ -908,6 +957,9 @@ paths:
                       icon:
                         type: string
                         description: Icon. 用於指定「Icon」。
+                      stock_template:
+                        type: integer
+                        description: 證券模板. 證券詳情所用模板的整數編碼。
               example:
                 code: 0
                 message: success
@@ -1394,6 +1446,18 @@ paths:
                           payment_frequency_unit:
                             type: string
                             description: 付息頻率單位. 用於指定「付息頻率單位」。
+                          id:
+                            type: string
+                            description: 債券資訊 ID. 債券資訊記錄 ID。
+                          counter_id:
+                            type: string
+                            description: 標的代碼. 債券對應的標的代碼，格式為 `{類型}/{市場}/{代碼}`。
+                          group_name:
+                            type: string
+                            description: 分組名. 債券所屬分組名稱，可能為空字串。
+                      board:
+                        type: string
+                        description: 板塊. 標的所屬板塊，可能為空字串。
               example:
                 code: 0
                 message: success
@@ -3263,7 +3327,7 @@ paths:
                       code: B02222123
                       account: '12345454646'
                       contact: Settlement Team01
-                      contact_phone: 85200000000
+                      contact_phone: '85200000000'
                       contact_email: user@example.com
                       created_at: '1667984954'
                       updated_at: '1783964812'
@@ -3542,6 +3606,15 @@ paths:
                             updated_at:
                               type: string
                               description: 更新時間. **返回值：** 更新時間；時間或日期格式以接口實際返回值為準。
+                            app_name_cn:
+                              type: string
+                              description: 券商 App 名稱（簡體中文）. **返回值：** 券商 App 的簡體中文名稱。
+                            app_name_hk:
+                              type: string
+                              description: 券商 App 名稱（繁體中文）. **返回值：** 券商 App 的繁體中文名稱。
+                            app_name_en:
+                              type: string
+                              description: 券商 App 名稱（英文）. **返回值：** 券商 App 的英文名稱。
                       total:
                         type: integer
                         description: 總條數. **返回值：** 符合查詢條件的記錄總數，用於計算分頁。
@@ -3558,7 +3631,7 @@ paths:
                       code: B01130
                       us_code: B01130
                       contact: clearing operation
-                      contact_phone: 85200000000
+                      contact_phone: '85200000000'
                       contact_email: user@example.com
                       tpl_email: user@example.com
                       stock_limit: '5'
@@ -4311,11 +4384,11 @@ paths:
                             description: 標的代碼. 由選中的 counter_id 自動帶出
             example:
               aaid: H00000000
-              member_id: '101456715'
+              member_id: '10000000'
               from: bo
               params:
                 broker_id: '0'
-                name_en: 長橋證券
+                name_en: Longbridge Securities
                 code: '12345'
                 name: test_user
                 account: ACC0001

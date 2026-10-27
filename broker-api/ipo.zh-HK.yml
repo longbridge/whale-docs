@@ -197,6 +197,21 @@ paths:
                       cash_channel:
                         type: string
                         description: 現金渠道. 用於指定「現金渠道」。
+                      ai:
+                        type: integer
+                        description: AI 標記. 認購資格相關的整數標記，取值含義以後端為準。
+                      pi:
+                        type: integer
+                        description: PI 標記. 與專業投資者（PI）相關的整數標記，取值含義以後端為準。
+                      require_derivatives_knowledge:
+                        type: integer
+                        description: 衍生品知識要求. 是否要求認購人具備衍生品知識的整數標記。
+                      virtual_asset:
+                        type: integer
+                        description: 虛擬資產標記. 與虛擬資產相關的整數標記，取值含義以後端為準。
+                      declaration:
+                        type: object
+                        description: 聲明. 聲明文案，多語言對象（結構同其他文案欄位）；未配置時為 `null`。
               example:
                 code: 0
                 message: success
@@ -627,8 +642,9 @@ paths:
 
         ### 請求參數
 
-        - 必填：`id`（批次索引號）、`financing_limit`（用戶單筆融資上限）、`cost_charge_value`（計費值）、`rate_day_count`（年利率天數）
-        - 可選：`cost_rate`（成本費率）、`interest_start_at`（計息開始時間）、`interest_end_at`（計息結束時間）、`interest_days`（計息天數）、`financing_multiple`（用戶融資倍數）、`label`（特殊標籤）、`parent`（父節點 ID）、`ended_at`（截止時間戳）、`lb_interest_days`（長橋成本計息天數）、`minimum_amount`（最低可用融資金額）、`display_label`（專屬融資池展示名稱）、`start_at`（融資池啟用時間）、`financing_min`（融資下限）、`cost_charge_mode`（成本計費方式）、`cost_charge_note`（成本計費備註）、`bank_ratio`（銀行融資比例）、`minimum_cash`（最低認購本金）
+        - 必填：`id`（批次索引號）、`type`（融資池類型）、`amount`（融資額度）、`channel`（融資渠道）、`ratio`（融資比例）、`rate_id`（利率 ID）、`start_at`（啟用時間戳）、`ended_at`（截止時間戳）、`currency`（幣種）
+        - 實際還需傳：`group`（客戶群體）與非空的 `rules`（認購數量規則，如 `[{"min_qty":0,"max_qty":1000}]`），否則報 `group rule empty`；`min_cash`、`threshold` 須為數字字符串（如 `"0.00"`），留空會報格式錯誤
+        - 可選：`bank_ratio`（銀行融資比例）、`financing_base_type`（融資基數類型）、`remark`（備註）、`audit_frontend_resource`（審計上下文）
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
@@ -676,7 +692,7 @@ paths:
                 type:
                   type: string
                   description: |-
-                    融資池類型，可選值來自後端數據字典。
+                    融資池類型，取值同 `ipo_margin_new` 的 `type`（`0` 融資認購、`3` 0 本金認購），但本接口以字符串傳入（如 `"0"`）。
                 amount:
                   type: string
                   description: |-
@@ -687,8 +703,9 @@ paths:
                     融資渠道標識，可選值來自後端數據字典。
                 ratio:
                   type: number
+                  minimum: 1
                   description: |-
-                    融資比例百分比（1-100）。
+                    融資比例百分比，取 1–99；本接口以數字傳入，`ipo_margin_new` 以字符串傳入。`100` 在 `ipo_margin_new` 上會被拒絕（報 `100% 融资请选择 0 成本类型: (ratio must less then 100)`），本接口未實測，同樣按小於 `100` 傳；改用 `type` `3`（0 本金認購）能否放行 `100` 未驗證。
                 rate_id:
                   type: string
                   description: |-
@@ -711,15 +728,22 @@ paths:
                     最低現金要求，保留兩位小數以字符串提交。
                 rules:
                   type: array
+                  minItems: 1
                   items:
                     type: object
-                    properties: {}
+                    properties:
+                      min_qty:
+                        type: integer
+                        description: 數量下限。
+                      max_qty:
+                        type: integer
+                        description: 數量上限。
                   description: |-
-                    階梯規則數組，每項含上下限數量及集羣配置。
+                    認購數量規則數組，每項含 `min_qty`、`max_qty`（下限、上限），不能為空。
                 group:
                   type: string
                   description: |-
-                    規則所屬分組標識。
+                    客戶群體。`ALL` 表示全部客戶（TEST 實測可用）；其他取值未在文檔中列出。
                 remark:
                   type: object
                   properties: {}
@@ -731,27 +755,21 @@ paths:
                   description: |-
                     調用方附帶的審計上下文對象。
             example:
-              id: 0
-              cost_rate: ''
-              interest_start_at: 0
-              interest_end_at: 0
-              interest_days: 0
-              financing_multiple: ''
-              financing_limit: ''
-              label: ''
-              parent: 0
-              ended_at: 0
-              lb_interest_days: 0
-              minimum_amount: ''
-              display_label: ''
-              start_at: 0
-              financing_min: ''
-              cost_charge_mode: 0
-              cost_charge_value: ''
-              cost_charge_note: ''
-              rate_day_count: 0
-              bank_ratio: ''
-              minimum_cash: ''
+              id: 1
+              type: '0'
+              amount: '1000000.00'
+              channel: '1'
+              ratio: 90
+              rate_id: '1'
+              start_at: 1767225600
+              ended_at: 1767830400
+              currency: HKD
+              group: ALL
+              rules:
+                - min_qty: 0
+                  max_qty: 1000
+              min_cash: '0.00'
+              threshold: '0.00'
       responses:
         '200':
           description: 請求處理成功。`data.id` 為被修改融資批次的 ID。
@@ -824,13 +842,14 @@ paths:
 
         ### 請求參數
 
-        - 必填：`channel`（渠道號）、`counter_id`（標的 ID）、`batch_no`（批次號）、`currency`（貨幣單位）、`financing_limit`（用戶單筆融資上限）、`applicant`（申請人）、`cost_charge_value`（計費值）、`rate_day_count`（年利率天數）
-        - 可選：`amount`（調增額度）、`is_infinite`（是否無限額）、`cost_rate`（成本費率）、`interest_start_at`（計息開始時間）、`interest_end_at`（計息結束時間）、`interest_days`（計息天數）、`financing_multiple`（用戶融資倍數）、`label`（特殊標籤）、`parent`（父節點 ID）、`ended_at`（截止時間戳）、`lb_interest_days`（長橋成本計息天數）、`minimum_amount`（最低可用融資金額）、`display_label`（專屬融資池展示名稱）、`start_at`（啟動時間）、`financing_min`（融資下限）、`type`（融資池類型）、`account_channel`（櫃檯）、`cost_charge_mode`（成本計費方式）、`cost_charge_note`（成本計費備註）、`ratio`（融資比例）、`multiple_text`（融資倍數文案）、`bank_ratio`（銀行融資比例）、`minimum_cash`（最低認購本金）
+        - 必填：`counter_id`（標的 ID）、`type`（融資池類型）、`amount`（融資額度）、`channel`（融資渠道）、`ratio`（融資比例）、`rate_id`（利率 ID）、`start_at`（啟用時間戳）、`ended_at`（截止時間戳）、`currency`（幣種）
+        - 實際還需傳：`group`（客戶群體）與非空的 `rules`（認購數量規則，如 `[{"min_qty":0,"max_qty":1000}]`），否則報 `group rule empty`；`ratio` 取 1–99，`100` 會報 `100% 融资请选择 0 成本类型: (ratio must less then 100)`（改用 `type` `3` 0 本金認購能否放行 `100` 未驗證）
+        - 可選：`bank_ratio`（銀行融資比例）、`financing_base_type`（融資基數類型）、`threshold`、`min_cash`、`remark`（備註）、`audit_frontend_resource`（審計上下文）
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
 
-        為指定標的和渠道創建融資池；傳入 `parent` 時作為該父節點下的調增額度節點創建。
+        為指定標的和渠道創建融資池。
 
         ### 風險提示
 
@@ -881,7 +900,7 @@ paths:
                   description: |-
                     融資池類型. 用於指定「融資池類型」。
 
-                    **可選值：** `0` 融資認購、`3` 0 本金認購
+                    **可選值：** `0` 融資認購、`3` 0 本金認購。本接口以整數傳入，`ipo_margin_edit` 以字符串傳入；枚舉中的 `1`、`2` 未在控制台列出含義，不要使用。
                   enum:
                     - 0
                     - 1
@@ -890,7 +909,7 @@ paths:
                   example: 0
                 ratio:
                   type: string
-                  description: 融資比例. 用於指定「融資比例」。
+                  description: '融資比例百分比，取 1–99；本接口以字符串傳入（如 `"90"`），`ipo_margin_edit` 以數字傳入。`100` 會被拒絕，報 `100% 融资请选择 0 成本类型: (ratio must less then 100)`；未驗證改用 `type` `3`（0 本金認購）能否放行 `100`。'
                 bank_ratio:
                   type: string
                   description: 銀行融資比例. 用於指定「銀行融資比例」。
@@ -912,15 +931,22 @@ paths:
                     最低現金要求，保留兩位小數以字符串提交。
                 rules:
                   type: array
+                  minItems: 1
                   items:
                     type: object
-                    properties: {}
+                    properties:
+                      min_qty:
+                        type: integer
+                        description: 數量下限。
+                      max_qty:
+                        type: integer
+                        description: 數量上限。
                   description: |-
-                    階梯規則數組，每項含上下限數量及集羣配置。
+                    認購數量規則數組，每項含 `min_qty`、`max_qty`（下限、上限），不能為空。
                 group:
                   type: string
                   description: |-
-                    規則所屬分組標識。
+                    客戶群體。`ALL` 表示全部客戶（TEST 實測可用）；其他取值未在文檔中列出。
                 remark:
                   type: object
                   properties: {}
@@ -932,37 +958,19 @@ paths:
                   description: |-
                     調用方附帶的審計上下文對象。
             example:
-              channel: ''
-              counter_id: ''
-              batch_no: ''
-              amount: ''
-              is_infinite: false
-              currency: ''
-              cost_rate: ''
-              interest_start_at: 0
-              interest_end_at: 0
-              interest_days: 0
-              financing_multiple: ''
-              financing_limit: ''
-              applicant: ''
-              label: ''
-              parent: 0
-              ended_at: 0
-              lb_interest_days: 0
-              minimum_amount: ''
-              display_label: ''
-              start_at: 0
-              financing_min: ''
+              channel: '1'
+              counter_id: ST/HK/700
+              amount: '1000000.00'
+              currency: HKD
+              start_at: 1767225600
+              ended_at: 1767830400
               type: 0
-              account_channel: ''
-              cost_charge_mode: 0
-              cost_charge_value: ''
-              cost_charge_note: ''
-              rate_day_count: 0
-              ratio: ''
-              multiple_text: ''
-              bank_ratio: ''
-              minimum_cash: ''
+              ratio: '90'
+              rate_id: '1'
+              group: ALL
+              rules:
+                - min_qty: 0
+                  max_qty: 1000
       responses:
         '200':
           description: 請求處理成功。`data.id` 為新建融資批次的 ID。
@@ -1194,7 +1202,7 @@ paths:
               group_id: 0
       responses:
         '200':
-          description: 請求處理成功。響應的 `data` 不包含額外業務字段。
+          description: '請求處理成功。`data.result` 為 `true` 表示保存完成。'
           content:
             application/json:
               schema:
@@ -1214,10 +1222,15 @@ paths:
                     type: string
                   data:
                     type: object
+                    properties:
+                      result:
+                        type: boolean
+                        description: '是否處理成功。'
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  result: true
         '400':
           description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
           content:
@@ -1297,7 +1310,7 @@ paths:
               counter_id: ''
       responses:
         '200':
-          description: 請求處理成功。響應的 `data` 不包含額外業務字段。
+          description: '請求處理成功。`data.result` 為 `true` 表示刪除完成。'
           content:
             application/json:
               schema:
@@ -1317,10 +1330,15 @@ paths:
                     type: string
                   data:
                     type: object
+                    properties:
+                      result:
+                        type: boolean
+                        description: '是否處理成功。'
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  result: true
         '400':
           description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
           content:
@@ -1349,6 +1367,112 @@ paths:
         href: /zh-HK/api-reference/ipo_payable_delete
         metadata:
           sidebarTitle: 刪除認購列表項
+  /v1/ipo/payable/parse:
+    post:
+      operationId: ipo_payable_parse
+      summary: 解析認購列表文件
+      tags:
+        - 新股认购
+      x-permission-key:
+        - ipo.subscription_manage
+      x-lbonly: false
+      description: |-
+        解析已上傳的認購列表文件，為後續導入生成解析批次。
+
+        ### 請求參數
+
+        - 必填：`counter_id`（標的 ID）、`file_path`（文件地址）
+        - 各字段的格式、取值範圍和業務含義見對應字段說明。
+
+        ### 業務說明
+
+        導入認購列表的第 2 步：
+
+        1. 調用 `GET /file/upload_url?service=lb.ipo.service` 獲取預簽名上傳地址和 `key`，再用 PUT 上傳 CSV 文件；該 `key` 即 `file_path`。CSV 首行為表頭 `股數,金額`，之後每行一檔認購股數及對應應繳金額。
+        2. 調用本接口解析，返回解析成功和失敗的行數。
+        3. 用同一 `counter_id` 和 `file_path` 調用 `POST /v1/ipo/payable/import` 導入。
+
+        本接口只解析文件，不改動認購列表。
+
+        ### 處理結果
+
+        成功時返回解析成功行數 `success_cnt` 和失敗行數 `fail_cnt`。
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - counter_id
+                - file_path
+              properties:
+                counter_id:
+                  type: string
+                  description: '標的 ID。格式為 `{類型}/{市場}/{代碼}`，如 `ST/HK/700`。此字段為必填項。'
+                file_path:
+                  type: string
+                  description: '文件地址。`GET /file/upload_url?service=lb.ipo.service` 返回的 `key`。此字段為必填項。'
+            example:
+              counter_id: ST/HK/700
+              file_path: 3KwOkJHWAsYNJZfETKl0dWi5tB8
+      responses:
+        '200':
+          description: '請求處理成功。`data` 返回解析成功和失敗的行數。'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      success_cnt:
+                        type: integer
+                        description: '解析成功的行數。'
+                      fail_cnt:
+                        type: integer
+                        description: '解析失敗的行數。'
+              example:
+                code: 0
+                message: success
+                data:
+                  success_cnt: 2
+                  fail_cnt: 0
+        '400':
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: 未登錄或登錄狀態已失效。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-mint:
+        href: /zh-HK/api-reference/ipo_payable_parse
+        metadata:
+          sidebarTitle: 解析認購列表文件
   /v1/ipo/payable/import:
     post:
       operationId: ipo_payable_import
@@ -1373,6 +1497,8 @@ paths:
         1. 調用 `GET /file/upload_url?service=lb.ipo.service` 獲取預簽名上傳地址和 `key`，再用 PUT 上傳 CSV 文件；該 `key` 即 `file_path`。
         2. 用同一 `counter_id` 和 `file_path` 調用 `POST /v1/ipo/payable/parse` 生成解析批次。
         3. 調用本接口導入。未先解析時返回 400 `解析批次已失效`。
+
+        導入會用文件內容整表替換該標的現有的認購列表：原有行全部被替換，保留下來的檔位也會獲得新的 `id`，之前查到的 `id` 不可再用於 `ipo_payable_save` / `ipo_payable_delete`。
 
         ### 風險提示
 
@@ -1405,7 +1531,7 @@ paths:
               file_path: ''
       responses:
         '200':
-          description: 請求處理成功。響應的 `data` 不包含額外業務字段。
+          description: '請求處理成功。`data.result` 為 `true` 表示導入完成。'
           content:
             application/json:
               schema:
@@ -1425,10 +1551,15 @@ paths:
                     type: string
                   data:
                     type: object
+                    properties:
+                      result:
+                        type: boolean
+                        description: '是否處理成功。'
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  result: true
         '400':
           description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`。
           content:
@@ -1765,6 +1896,12 @@ paths:
                               en:
                                 type: string
                                 description: 英文. 用於指定「英文」。
+                          declaration:
+                            type: object
+                            description: 聲明. 聲明文案，多語言對象（結構同其他文案欄位）；未配置時為 `null`。
+                          subscription_statement:
+                            type: object
+                            description: 認購說明. 認購說明文案，多語言對象（結構同其他文案欄位）；未配置時為 `null`。
               example:
                 code: 0
                 message: success

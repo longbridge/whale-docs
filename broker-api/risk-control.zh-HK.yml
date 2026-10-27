@@ -410,8 +410,7 @@ paths:
 
         ### 請求參數
 
-        - 本接口無必填參數，可選參數見下方字段說明。
-        - 傳入 `aaid` 時按該證券賬號過濾命中的 FPS 規則。
+        - `aaid`（證券賬號）為必填參數，用於指定要查詢的證券賬號；未傳時後端返回 400。
 
         ### 返回結果
 
@@ -446,10 +445,13 @@ paths:
                     properties:
                       original_fps:
                         type: string
+                        description: 原始 FPS 值（字符串數字）。
                       final_fps:
                         type: string
+                        description: 最終 FPS 值（字符串數字）。
                       list:
                         type: array
+                        description: 已命中的 FPS 規則列表，可能為空數組。
                         items:
                           type: object
                           properties:
@@ -462,7 +464,10 @@ paths:
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  original_fps: '0.3'
+                  final_fps: '0.3'
+                  list: []
         '400': *id001
         '401': *id002
         '403': *id003
@@ -605,7 +610,7 @@ paths:
 
         ### 請求參數
 
-        - 本接口無必填參數，具體請求字段見下方字段說明。
+        - 必填：`name`、`business_type`、`group_credit`
 
         ### 業務說明
 
@@ -620,6 +625,38 @@ paths:
         成功時生成待審核的新建授信組申請；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - business_type
+                - group_credit
+              properties:
+                name:
+                  type: string
+                  description: '授信組名稱。'
+                business_type:
+                  type: string
+                  description: '業務類型，須為已有取值（可參考 `risk_credit_groups` 返回的業務類型）。'
+                country:
+                  type: string
+                  description: '國家或地區，如 `CHINA`。'
+                group_credit:
+                  type: string
+                  description: '授信組總額度。'
+                remark:
+                  type: string
+                  description: '備註。'
+            example:
+              name: 'group-a'
+              business_type: 'auto-test'
+              country: 'CHINA'
+              group_credit: '100000'
+              remark: ''
       responses:
         '200':
           description: 未實調，響應字段以真實接口為準。
@@ -1148,6 +1185,9 @@ paths:
                 trade_credit_map:
                   type: object
                   description: 幣種額度映射. 幣種->額度鍵值對，如 {"HKD":"100000"}；trade_credit_type=0 時僅含單一幣種，=1 時可含多幣種。
+                  additionalProperties:
+                    type: string
+                    description: 該幣種的額度（字符串數字），鍵為幣種代碼，如 `HKD`。
                 expired_at:
                   type: number
                   description: 到期時間. unix 時間戳（秒），date-picker 選擇日期後，時分秒取提交時的當前時間
@@ -1309,14 +1349,33 @@ paths:
                     properties:
                       cash_books:
                         type: object
+                        description: 各幣種現金餘額，鍵為幣種、值為帶千分位的金額字符串。
                       debt_amount:
                         type: string
+                        description: 欠款金額。
                       exchange_amount:
                         type: string
+                        description: 可換匯金額。
+                      cash_books_val:
+                        type: object
+                        description: '`cash_books` 的原始值對象，可能為空對象。'
+                      debt_amount_val:
+                        type: string
+                        description: '`debt_amount` 的原始值，可能為空字符串。'
+                      exchange_amount_val:
+                        type: string
+                        description: '`exchange_amount` 的原始值，可能為空字符串。'
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  cash_books:
+                    HKD: 1,000.00
+                  cash_books_val: {}
+                  debt_amount: '0.00'
+                  debt_amount_val: ''
+                  exchange_amount: 1,000.00
+                  exchange_amount_val: ''
         '400': *id001
         '401': *id002
         '403': *id003
@@ -1381,12 +1440,16 @@ paths:
                     properties:
                       exchange_rate_map:
                         type: object
+                        description: 幣種匯率映射，可能為空對象。
                       default_currency:
                         type: string
+                        description: 默認幣種，如 `HKD`。
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  exchange_rate_map: {}
+                  default_currency: HKD
         '400': *id001
         '401': *id002
         '403': *id003
@@ -1554,7 +1617,7 @@ paths:
         ### 請求參數
 
         - 必填：`aaid`（賬戶 ID）、`exchange_books`（換匯明細列表）。每條明細必填 `from_currency`、`to_currency`，並且 `from_amount` 與 `to_amount` 二者只能傳其一。
-        - 請求體結構：`{"aaid": 57036919, "exchange_books": [{"from_currency": "USD", "to_currency": "HKD", "from_amount": "100.00"}]}`。
+        - 請求體結構：`{"aaid": 10000000, "exchange_books": [{"from_currency": "USD", "to_currency": "HKD", "from_amount": "100.00"}]}`。
         - 各字段的格式、取值範圍和業務含義見對應字段說明。
 
         ### 業務說明
@@ -1610,7 +1673,7 @@ paths:
                         type: string
                         description: 兌入金額，即兌入的 `to_currency` 金額。與 `from_amount` 互斥，僅提交其一。
             example:
-              aaid: 57036919
+              aaid: 10000000
               exchange_books:
                 - from_currency: USD
                   to_currency: HKD
@@ -1724,13 +1787,52 @@ paths:
                     properties:
                       data:
                         type: object
+                        description: 換匯推送通知歷史。
                         properties:
                           push_msg_item:
                             type: array
+                            description: 推送消息列表。
+                            items:
+                              type: object
+                              properties:
+                                post_id:
+                                  type: string
+                                  description: 消息 ID，可作為 `risk_message_detail` 的 `id` 傳入。
+                                title:
+                                  type: string
+                                  description: 消息標題，可能為空字符串。
+                                msg_type:
+                                  type: string
+                                  description: 推送渠道，如 `app`、`email`。
+                                content:
+                                  type: string
+                                  description: 消息內容；`email` 渠道為 HTML 正文，可能為空字符串。
+                                status:
+                                  type: integer
+                                  description: 推送狀態編碼（整數）。
+                                push_by_user:
+                                  type: string
+                                  description: 推送發起方，如 `risk-monitoring`。
+                                push_time:
+                                  type: string
+                                  description: 推送時間，Unix 時間戳（秒）。
+                                language:
+                                  type: string
+                                  description: 消息語言，如 `zh-CN`。
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  data:
+                    push_msg_item:
+                      - post_id: '1000001'
+                        title: ''
+                        msg_type: app
+                        content: 示例消息内容
+                        status: 7
+                        push_by_user: risk-monitoring
+                        push_time: '1792000000'
+                        language: zh-CN
         '400': *id001
         '401': *id002
         '403': *id003
@@ -1790,14 +1892,20 @@ paths:
                     properties:
                       content:
                         type: string
+                        description: 消息內容。
                       op_time:
                         type: string
+                        description: 操作時間，Unix 時間戳（秒）。
                       member_id:
                         type: string
+                        description: 賬號標識；實測返回證券賬號（如 `H00000000`），而非客戶編號。
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  content: 示例消息内容
+                  op_time: '1792000000'
+                  member_id: H00000000
         '400': *id001
         '401': *id002
         '403': *id003
@@ -1868,41 +1976,67 @@ paths:
                     properties:
                       data:
                         type: object
+                        description: 訂單信息。
                         properties:
                           force_close_order:
                             type: array
+                            description: 平倉訂單列表，可能為空數組。
                             items:
                               type: object
                           today_deal_order:
                             type: array
+                            description: 當日成交訂單列表，可能為空數組。
                             items:
                               type: object
                           tips:
                             type: object
+                            description: 追繳金額提示（格式化金額）。
                             properties:
                               val_in_process:
                                 type: string
+                                description: 處理中的金額（帶千分位的金額字符串）。
                               est_reduce_warning_val:
                                 type: string
+                                description: 預計可減少的應追繳保證金（帶千分位的金額字符串）。
                               remain_warning_val:
                                 type: string
+                                description: 剩餘應追繳保證金（帶千分位的金額字符串）。
                               warning_val:
                                 type: string
+                                description: 應追繳保證金（帶千分位的金額字符串）。
                           origin_tips:
                             type: object
+                            description: 追繳金額提示（原始數字）。
                             properties:
                               val_in_process:
                                 type: string
+                                description: 處理中的金額（不帶千分位的數字字符串）。
                               est_reduce_warning_val:
                                 type: string
+                                description: 預計可減少的應追繳保證金（不帶千分位的數字字符串）。
                               remain_warning_val:
                                 type: string
+                                description: 剩餘應追繳保證金（不帶千分位的數字字符串）。
                               warning_val:
                                 type: string
+                                description: 應追繳保證金（不帶千分位的數字字符串）。
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  data:
+                    force_close_order: []
+                    today_deal_order: []
+                    tips:
+                      val_in_process: '0.00'
+                      est_reduce_warning_val: '0.00'
+                      remain_warning_val: 1,000.00
+                      warning_val: 1,000.00
+                    origin_tips:
+                      val_in_process: '0.00'
+                      est_reduce_warning_val: '0.00'
+                      remain_warning_val: '1000.00'
+                      warning_val: '1000.00'
         '400': *id001
         '401': *id002
         '403': *id003
@@ -1973,66 +2107,201 @@ paths:
                     properties:
                       data:
                         type: object
+                        description: 持倉詳情。
                         properties:
                           position_info_list:
                             type: array
+                            description: 股票持倉列表。
                             items:
                               type: object
                               properties:
                                 counter_id:
                                   type: string
+                                  description: 證券代碼，如 `ST/HK/700`。
                                 quantity:
                                   type: string
+                                  description: 持倉數量。
                                 available_quantity:
                                   type: string
+                                  description: 可用數量。
                                 last_price:
                                   type: string
+                                  description: 最新價。
                                 position_value:
                                   type: string
+                                  description: 持倉市值（證券幣種）。
                                 mm_margin_percentage:
                                   type: string
+                                  description: 維持保證金比例（百分比數值）。
                                 need_close_position_value:
                                   type: string
+                                  description: 需平倉市值。
                                 min_need_close_position_qty:
                                   type: string
+                                  description: 最少需平倉數量。
                                 counter_name:
                                   type: string
+                                  description: 證券名稱。
                                 market:
                                   type: string
+                                  description: 市場，如 `HK`、`US`。
                                 currency:
                                   type: string
+                                  description: 證券交易幣種。
                                 is_ipo_stock:
                                   type: string
+                                  description: IPO 股票標記（字符串），如 `0`。
                                 position_value_hkd:
                                   type: string
+                                  description: 持倉市值（港幣）。
                                 rate:
                                   type: string
+                                  description: 比例（百分比字符串，如 `50%`）。
                                 pending_order_amount:
                                   type: string
+                                  description: 掛單金額。
                                 mm_margin:
                                   type: string
+                                  description: 維持保證金金額。
                                 per_reduce_val:
                                   type: string
+                                  description: '`per_reduce_val` 金額（證券幣種）。'
                                 per_reduce_val_hkd:
                                   type: string
+                                  description: '`per_reduce_val` 金額（港幣）。'
                                 account_channel_currency:
                                   type: string
+                                  description: 櫃台渠道幣種。
                                 need_close_position_value_currency:
                                   type: string
+                                  description: 換算後的需平倉市值。
                                 mcm_margin:
                                   type: string
+                                  description: Margin Call 保證金比例（百分比數值）。
                           option_info_list:
                             type: array
+                            description: 期權持倉列表。
                             items:
                               type: object
+                              properties:
+                                option_id:
+                                  type: string
+                                  description: 期權代碼，如 `OP/US/AAPL261023C200000`。
+                                underlying_counter_id:
+                                  type: string
+                                  description: 正股代碼。
+                                PCStatus:
+                                  type: string
+                                  description: 看漲/看跌標識，如 `C`。
+                                position_side:
+                                  type: string
+                                  description: 持倉方向，如 `LONG`。
+                                holding_quantity:
+                                  type: string
+                                  description: 持倉數量。
+                                avail_holding_quantity:
+                                  type: string
+                                  description: 可用持倉數量。
+                                end_time:
+                                  type: string
+                                  description: 到期日，格式 `YYYY-MM-DD`。
+                                exercise_value:
+                                  type: string
+                                  description: 行權價。
+                                market_price:
+                                  type: string
+                                  description: 期權市價。
+                                stock_price:
+                                  type: string
+                                  description: 正股價格。
+                                market_value:
+                                  type: string
+                                  description: 持倉市值。
+                                is_exercise_prepare:
+                                  type: boolean
+                                  description: 行權準備標記。
+                                min_need_close_position_qty:
+                                  type: string
+                                  description: 最少需平倉數量。
+                                mm_margin:
+                                  type: string
+                                  description: 維持保證金金額。
+                                mm_margin_percentage:
+                                  type: string
+                                  description: 維持保證金比例（百分比數值）。
+                                pending_order_amount:
+                                  type: string
+                                  description: 掛單金額。
+                                per_reduce_val:
+                                  type: string
+                                  description: '`per_reduce_val` 金額（證券幣種）。'
+                                per_reduce_val_hkd:
+                                  type: string
+                                  description: '`per_reduce_val` 金額（港幣）。'
+                                per_release_value:
+                                  type: string
+                                  description: '`per_release_value` 金額。'
+                                account_channel_currency:
+                                  type: string
+                                  description: 櫃台渠道幣種。
+                                settlement_channel:
+                                  type: string
+                                  description: 結算渠道，如 `ib_hk`。
                           short_position_info_list:
                             type: array
+                            description: 空頭持倉列表，可能為空數組。
                             items:
                               type: object
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  data:
+                    position_info_list:
+                      - counter_id: ST/HK/700
+                        quantity: '100'
+                        available_quantity: '100'
+                        last_price: '100.00'
+                        position_value: 10,000.00
+                        mm_margin_percentage: '50.00'
+                        need_close_position_value: 10,000.00
+                        min_need_close_position_qty: '100'
+                        counter_name: 腾讯控股
+                        market: HK
+                        currency: HKD
+                        is_ipo_stock: '0'
+                        position_value_hkd: 10,000.00
+                        rate: 50%
+                        pending_order_amount: '0.0000'
+                        mm_margin: 5,000.00
+                        per_reduce_val: '100.00'
+                        per_reduce_val_hkd: '100.00'
+                        account_channel_currency: HKD
+                        need_close_position_value_currency: 10,000.00
+                        mcm_margin: '70.00'
+                    option_info_list:
+                      - option_id: OP/US/AAPL261023C200000
+                        underlying_counter_id: ST/US/AAPL
+                        PCStatus: C
+                        position_side: LONG
+                        holding_quantity: '1'
+                        avail_holding_quantity: '1.00'
+                        end_time: '2026-01-01'
+                        exercise_value: '200.00'
+                        market_price: '1.00'
+                        stock_price: '200.00'
+                        market_value: 1,000.00
+                        is_exercise_prepare: false
+                        min_need_close_position_qty: '1'
+                        mm_margin: 1,000.00
+                        mm_margin_percentage: '100.00'
+                        pending_order_amount: '0.0000'
+                        per_reduce_val: '100.00'
+                        per_reduce_val_hkd: '100.00'
+                        per_release_value: '100.00'
+                        account_channel_currency: HKD
+                        settlement_channel: ib_hk
+                    short_position_info_list: []
         '400': *id001
         '401': *id002
         '403': *id003
@@ -2101,12 +2370,14 @@ paths:
                     properties:
                       fund_details:
                         type: array
+                        description: 基金明細列表，可能為空數組。
                         items:
                           type: object
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  fund_details: []
         '400': *id001
         '401': *id002
         '403': *id003
@@ -2172,25 +2443,43 @@ paths:
                     properties:
                       cash_books:
                         type: array
+                        description: 按幣種列出的現金明細。
                         items:
                           type: object
                           properties:
                             currency:
                               type: string
+                              description: 幣種。
                             ledger_balance:
                               type: string
+                              description: 賬面餘額（帶千分位的金額字符串）。
                             settled_balance:
                               type: string
+                              description: 已交收餘額。
                             unsettled_balance:
                               type: string
+                              description: 未交收餘額。
                             settled_frozen_balance:
                               type: string
+                              description: 已交收凍結金額。
                             unsettled_frozen_balance:
                               type: string
+                              description: 未交收凍結金額。
+                            to_currency_ledger_balance:
+                              type: string
+                              description: 換算後的賬面餘額（不帶千分位的數字字符串）。
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  cash_books:
+                    - currency: HKD
+                      ledger_balance: 1,000.00
+                      settled_balance: 1,000.00
+                      unsettled_balance: '0.00'
+                      settled_frozen_balance: '0.00'
+                      unsettled_frozen_balance: '0.00'
+                      to_currency_ledger_balance: '1000.00'
         '400': *id001
         '401': *id002
         '403': *id003
@@ -2261,65 +2550,121 @@ paths:
                     properties:
                       data:
                         type: object
+                        description: 預警記錄對應用戶的基本信息。
                         properties:
                           account_channel:
                             type: string
+                            description: 櫃台渠道，如 `lb`。
                           aaid:
                             type: string
+                            description: 證券賬戶內部編號 `aaid`。
                           display_no:
                             type: string
+                            description: 證券賬號，如 `H00000000`。
                           warning_value:
                             type: string
+                            description: 應追繳保證金（帶千分位的金額字符串）。
                           manager_name:
                             type: string
+                            description: 客戶經理名稱，可能為空字符串。
                           available_cash:
                             type: string
+                            description: 可用現金。
                           position_value:
                             type: string
+                            description: 持倉總市值。
                           total_asset:
                             type: string
+                            description: 含貸權益值。
                           mm_margin:
                             type: string
+                            description: 維持保證金。
                           fm_margin:
                             type: string
+                            description: 平倉保證金。
                           option_asset_ratio:
                             type: string
+                            description: 期權資產佔比（百分比字符串）。
                           alert_type:
                             type: string
+                            description: 預警類型編碼，如 `ForceCall`、`OptionExerciseMarginCall`，取值同 `risk_alert_logs` 的預警類型。
                           end_alert_date:
                             type: string
+                            description: 預警截止時間，格式 `YYYY-MM-DD HH:mm:ss`。
                           net_asset_ratio:
                             type: string
+                            description: 淨資產比率（百分比字符串）。
                           member_id:
                             type: string
+                            description: 客戶編號 `member_id`。
                           status:
                             type: string
+                            description: 預警狀態編碼（字符串），取值同 `risk_alert_logs` 的狀態。
                           real_name:
                             type: string
+                            description: 客戶姓名。
                           im_margin:
                             type: string
+                            description: 初始保證金。
                           book_cash:
                             type: string
+                            description: 賬面現金。
                           nav_margin:
                             type: string
+                            description: '`nav_margin` 金額（帶千分位的金額字符串）。'
                           exceed_loan_amount:
                             type: string
+                            description: 超額融資金額。
                           currency:
                             type: string
+                            description: 金額字段的幣種，如 `HKD`。
                           mcm_margin:
                             type: string
+                            description: Margin Call 保證金。
                           in_debt:
                             type: string
+                            description: 欠款金額。
                           fund_market_value:
                             type: string
+                            description: 基金市值。
                           last_force_close_time:
                             type: string
+                            description: 最近一次平倉時間，Unix 時間戳（秒）。
                           force_close_count:
                             type: string
+                            description: 平倉次數（字符串）。
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  data:
+                    account_channel: lb
+                    aaid: '10000000'
+                    display_no: H00000000
+                    warning_value: 1,000.00
+                    manager_name: ''
+                    available_cash: 1,000.00
+                    position_value: 1,000.00
+                    total_asset: 1,000.00
+                    mm_margin: 1,000.00
+                    fm_margin: 1,000.00
+                    option_asset_ratio: 0.00%
+                    alert_type: ForceCall
+                    end_alert_date: '2026-01-01 14:00:00'
+                    net_asset_ratio: 100%
+                    member_id: '1000000000'
+                    status: '0'
+                    real_name: ZHANG SAN
+                    im_margin: 1,000.00
+                    book_cash: 1,000.00
+                    nav_margin: '0.00'
+                    exceed_loan_amount: '0.00'
+                    currency: HKD
+                    mcm_margin: 1,000.00
+                    in_debt: '0.00'
+                    fund_market_value: '0.00'
+                    last_force_close_time: '1792000000'
+                    force_close_count: '1'
         '400': *id001
         '401': *id002
         '403': *id003
@@ -2383,10 +2728,12 @@ paths:
                     properties:
                       hit:
                         type: boolean
+                        description: 是否命中 margin call。
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  hit: false
         '400': *id001
         '401': *id002
         '403': *id003
@@ -2408,7 +2755,7 @@ paths:
         ### 請求參數
 
         - 本接口無必填參數，可選參數見下方字段說明。
-        - 可通過 `account_channel`（賬戶渠道）、`member_id`（用戶 ID）、`aaid`（證券賬號）定位目標用戶。
+        - 可通過 `account_channel`（賬戶渠道）、`member_id`（用戶 ID）、`aaid`（證券賬號）定位目標用戶；建議至少傳入 `member_id` 或 `aaid`。
 
         ### 返回結果
 
@@ -2424,7 +2771,7 @@ paths:
             type: string
         - name: member_id
           in: query
-          required: true
+          required: false
           description: |-
             用戶 ID
 
@@ -2433,7 +2780,7 @@ paths:
             type: string
         - name: aaid
           in: query
-          required: true
+          required: false
           description: |-
             證券賬號
 
@@ -2458,10 +2805,12 @@ paths:
                     properties:
                       list:
                         type: array
+                        description: 資產信息列表，可能為空數組。
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  list: []
         '400': *id001
         '401': *id002
         '403': *id003
@@ -2530,37 +2879,52 @@ paths:
                     type: object
                     properties:
                       data:
-                        type: object
-                        properties:
-                          data:
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                post_id:
-                                  type: string
-                                title:
-                                  type: string
-                                msg_type:
-                                  type: string
-                                content:
-                                  type: string
-                                status:
-                                  type: integer
-                                push_by_user:
-                                  type: string
-                                push_time:
-                                  type: string
-                                language:
-                                  type: string
-                          total:
-                            type: string
+                        type: array
+                        description: 消息推送記錄列表。
+                        items:
+                          type: object
+                          properties:
+                            post_id:
+                              type: string
+                              description: 消息 ID，可作為 `risk_message_detail` 的 `id` 傳入。
+                            title:
+                              type: string
+                              description: 消息標題，可能為空字符串。
+                            msg_type:
+                              type: string
+                              description: 推送渠道，如 `app`、`email`。
+                            content:
+                              type: string
+                              description: 消息內容；`email` 渠道為 HTML 正文，可能為空字符串。
+                            status:
+                              type: integer
+                              description: 推送狀態編碼（整數）。
+                            push_by_user:
+                              type: string
+                              description: 推送發起方，如 `risk-monitoring`。
+                            push_time:
+                              type: string
+                              description: 推送時間，Unix 時間戳（秒）。
+                            language:
+                              type: string
+                              description: 消息語言，如 `zh-CN`。
                       total:
                         type: string
+                        description: 記錄總數（字符串）。
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  data:
+                    - post_id: '1000001'
+                      title: ''
+                      msg_type: app
+                      content: 示例消息内容
+                      status: 7
+                      push_by_user: risk-monitoring
+                      push_time: '1792000000'
+                      language: zh-CN
+                  total: '1'
         '400': *id001
         '401': *id002
         '403': *id003
@@ -3124,7 +3488,7 @@ paths:
                   type: integer
                   description: 交易時段，取自數據字典 `rth`；僅在 `order_type` 為 `LO` 時生效，前端默認 `1`。
             example:
-              aaid: '57036919'
+              aaid: '10000000'
               counter_id: ST/HK/700
               order_type: LO
               price: 400
@@ -3220,7 +3584,7 @@ paths:
                     - value: 2
                       label: 郵件消息
             example:
-              aaid: '57036919'
+              aaid: '10000000'
               counter_id: ST/HK/700
               push_msg_type: 1
       responses:
@@ -3309,7 +3673,7 @@ paths:
                     - value: 2
                       label: 郵件消息
             example:
-              aaid: '57036919'
+              aaid: '10000000'
               counter_id: ST/HK/700
               push_msg_type: 1
       responses:
@@ -3598,31 +3962,146 @@ paths:
                     properties:
                       margin_call_info:
                         type: object
+                        description: 追收記錄基本信息。
                         properties:
                           member_name:
                             type: string
+                            description: 客戶姓名。
                           display_no:
                             type: string
+                            description: 證券賬號，如 `H00000000`。
                           end_date:
                             type: string
+                            description: 截止日期，格式 `YYYY-MM-DD`。
                           account_channel:
                             type: string
+                            description: 櫃台渠道，如 `lb`。
                           symbol:
                             type: string
+                            description: 代碼，可能為空字符串。
                           stock_counter_id:
                             type: string
+                            description: 追收股票代碼，如 `ST/US/AAPL`。
                           warning_quantity:
-                            type: integer
+                            type: string
+                            description: 應追繳數量（字符串數字）。
                           currency:
                             type: string
+                          aaid:
+                            type: string
+                            description: 證券賬戶內部編號 `aaid`。
+                          warning_type:
+                            type: string
+                            description: 預警類型編碼，如 `ExerciseStockMarginCall`。
+                          holding_stock_quantity:
+                            type: string
+                            description: 正股持倉數量，可能為空字符串。
+                          holding_stock_frozen_quantity:
+                            type: string
+                            description: 正股凍結數量，可能為空字符串。
+                          option_holding_covered_need_qty:
+                            type: string
+                            description: 期權持倉備兌所需數量，可能為空字符串。
+                          option_open_order_covered_need_qty:
+                            type: string
+                            description: 期權未成交訂單備兌所需數量，可能為空字符串。
                       position_info_list:
                         type: array
+                        description: 相關期權持倉列表。
                         items:
                           type: object
+                          properties:
+                            option_counter_id:
+                              type: string
+                              description: 期權代碼。
+                            stock_counter_id:
+                              type: string
+                              description: 正股代碼。
+                            attribute:
+                              type: string
+                              description: 持倉屬性，如 `Long Put`、`Short Call`。
+                            direction:
+                              type: string
+                              description: 看漲/看跌標識，如 `C`、`P`。
+                            quantity:
+                              type: string
+                              description: 持倉數量，空頭為負數。
+                            available_quantity:
+                              type: string
+                              description: 可用數量，空頭為負數。
+                            min_close_quantity:
+                              type: string
+                              description: 最少平倉數量。
+                            end_date:
+                              type: string
+                              description: 到期日，格式 `YYYY-MM-DD`。
+                            strike_price:
+                              type: string
+                              description: 行權價。
+                            option_price:
+                              type: string
+                              description: 期權價格。
+                            last_price:
+                              type: string
+                              description: 正股最新價。
+                            ratio_of_in_the_money:
+                              type: string
+                              description: 價內程度（百分比字符串）。
+                            option_in_money_type:
+                              type: integer
+                              description: 價內外類型編碼（整數）。
+                            exercise_need_stock_quantity:
+                              type: string
+                              description: 行權所需股票數量。
+                            stock_available_quantity:
+                              type: string
+                              description: 正股可用數量。
+                            frozen_status:
+                              type: string
+                              description: 凍結狀態（展示文本），如 `未凍結`。
+                            settlement_channel:
+                              type: string
+                              description: 結算渠道，如 `ib_hk`。
+                            symbol:
+                              type: string
+                              description: 代碼，可能為空字符串。
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  margin_call_info:
+                    aaid: '10000000'
+                    member_name: ZHANG SAN
+                    display_no: H00000000
+                    end_date: '2026-01-01'
+                    account_channel: lb
+                    symbol: ''
+                    stock_counter_id: ST/US/AAPL
+                    warning_quantity: '100.00'
+                    warning_type: ExerciseStockMarginCall
+                    holding_stock_quantity: ''
+                    holding_stock_frozen_quantity: ''
+                    option_holding_covered_need_qty: ''
+                    option_open_order_covered_need_qty: ''
+                  position_info_list:
+                    - option_counter_id: OP/US/AAPL261023P200000
+                      stock_counter_id: ST/US/AAPL
+                      attribute: Long Put
+                      direction: P
+                      quantity: '1.00'
+                      available_quantity: '1.00'
+                      min_close_quantity: '1.00'
+                      end_date: '2026-01-01'
+                      strike_price: '200'
+                      option_price: '1.00'
+                      last_price: '200.00'
+                      ratio_of_in_the_money: -1.00%
+                      option_in_money_type: 1
+                      exercise_need_stock_quantity: '100.00'
+                      stock_available_quantity: '0'
+                      frozen_status: 未冻结
+                      settlement_channel: ib_hk
+                      symbol: ''
         '400': *id001
         '401': *id002
         '403': *id003
@@ -3782,7 +4261,7 @@ paths:
                   type: integer
                   description: 空頭股票追收記錄 ID：`holding_short_stock_margin_logs`（空頭股票追收記錄）返回行的 `id`。需與同一行的 `aaid` 一起傳入；缺少時後端無法定位追收記錄，返回 `30020049`。
             example:
-              aaid: '57036919'
+              aaid: '10000000'
               log_id: 123
       responses:
         '200':
@@ -3870,7 +4349,7 @@ paths:
                   type: integer
                   description: 空頭股票追收記錄 ID：`holding_short_stock_margin_logs`（空頭股票追收記錄）返回行的 `id`。需與同一行的 `aaid` 一起傳入；缺少時後端無法定位追收記錄，返回 `30020049`。
             example:
-              aaid: '57036919'
+              aaid: '10000000'
               log_id: 123
       responses:
         '200':
@@ -4029,7 +4508,7 @@ paths:
                   type: integer
                   description: 空頭股票追收記錄 ID：`holding_short_stock_margin_logs`（空頭股票追收記錄）返回行的 `id`。需與同一行的 `aaid` 一起傳入；缺少時後端無法定位追收記錄，返回 `30020049`。
             example:
-              aaid: '57036919'
+              aaid: '10000000'
               log_id: 123
       responses:
         '200':
@@ -19073,7 +19552,7 @@ paths:
 
         ### 請求參數
 
-        - 本接口無必填參數約束，可選參數見下方欄位說明。
+        - 必填：`aaid`、`counter_id`；通常需同時提供 `im_factor`、`mm_factor`、`fm_factor`、`mcm_factor` 和 `expire_at`。
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
@@ -19089,6 +19568,45 @@ paths:
         成功時完成保證金記錄的新建；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - counter_id
+              properties:
+                aaid:
+                  type: integer
+                  description: '客戶證券賬戶內部編號 `aaid`（數字），不是證券帳號 `account_no`。'
+                counter_id:
+                  type: string
+                  description: '證券代碼，格式 `{類型}/{市場}/{代碼}`，如 `ST/US/AAPL`。'
+                im_factor:
+                  type: number
+                  description: '初始保證金率，0–1 之間的小數，如 `0.5` 表示 50%。'
+                mm_factor:
+                  type: number
+                  description: '維持保證金率，0–1 之間的小數。'
+                fm_factor:
+                  type: number
+                  description: '強平保證金率，0–1 之間的小數。'
+                mcm_factor:
+                  type: number
+                  description: 'Margin Call 保證金率，0–1 之間的小數。'
+                expire_at:
+                  type: integer
+                  description: '失效時間，Unix 秒級時間戳。'
+            example:
+              aaid: 10000000
+              counter_id: 'ST/US/AAPL'
+              im_factor: 0.9
+              mm_factor: 0.5
+              fm_factor: 0.1
+              mcm_factor: 0.7
+              expire_at: 1794624728
       responses:
         '200':
           description: 未實調，響應字段以真實接口為準。
@@ -19133,7 +19651,7 @@ paths:
 
         ### 請求參數
 
-        - 本接口無必填參數約束，可選參數見下方欄位說明。
+        - 必填：`aaid`、`counter_id`；定位記錄：傳 `expire_at`，或傳 `member_id` 與 `account_type`。
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
@@ -19149,6 +19667,35 @@ paths:
         成功時完成記錄失效；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - counter_id
+              properties:
+                aaid:
+                  type: integer
+                  description: '客戶證券賬戶內部編號 `aaid`（數字），不是證券帳號 `account_no`。'
+                counter_id:
+                  type: string
+                  description: '證券代碼，格式 `{類型}/{市場}/{代碼}`，如 `ST/US/AAPL`。'
+                expire_at:
+                  type: integer
+                  description: '失效時間，Unix 秒級時間戳。'
+                member_id:
+                  type: string
+                  description: '客戶編號 `member_id`。'
+                account_type:
+                  type: integer
+                  description: '賬戶類型編碼，與 `member_id` 一起用於定位記錄。'
+            example:
+              aaid: 10000000
+              counter_id: 'ST/US/AAPL'
+              expire_at: 1792037200
       responses:
         '200':
           description: 未實調，響應字段以真實接口為準。
@@ -19628,7 +20175,7 @@ paths:
 
         ### 請求參數
 
-        - 本接口無必填參數，可選參數見下方欄位說明。
+        - 必填：`aaid`、`counter_id`；通常需同時提供 `im_factor`、`mm_factor`、`fm_factor`、`mcm_factor` 和 `expire_at`。
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
@@ -19644,6 +20191,45 @@ paths:
         成功時完成新建操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - counter_id
+              properties:
+                aaid:
+                  type: integer
+                  description: '客戶證券賬戶內部編號 `aaid`（數字），不是證券帳號 `account_no`。'
+                counter_id:
+                  type: string
+                  description: '證券代碼，格式 `{類型}/{市場}/{代碼}`，如 `ST/US/AAPL`。'
+                im_factor:
+                  type: number
+                  description: '初始保證金率，0–1 之間的小數，如 `0.5` 表示 50%。'
+                mm_factor:
+                  type: number
+                  description: '維持保證金率，0–1 之間的小數。'
+                fm_factor:
+                  type: number
+                  description: '強平保證金率，0–1 之間的小數。'
+                mcm_factor:
+                  type: number
+                  description: 'Margin Call 保證金率，0–1 之間的小數。'
+                expire_at:
+                  type: integer
+                  description: '失效時間，Unix 秒級時間戳。'
+            example:
+              aaid: 10000000
+              counter_id: 'ST/US/AAPL'
+              im_factor: 0.9
+              mm_factor: 0.5
+              fm_factor: 0.1
+              mcm_factor: 0.7
+              expire_at: 1794624728
       responses:
         '200':
           description: 未實調，響應字段以真實接口為準。
@@ -19688,7 +20274,7 @@ paths:
 
         ### 請求參數
 
-        - 本接口無必填參數，可選參數見下方欄位說明。
+        - 必填：`aaid`、`counter_id`；定位記錄：傳 `expire_at`，或傳 `member_id` 與 `account_type`。
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
@@ -19704,6 +20290,36 @@ paths:
         成功時完成失效操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - counter_id
+              properties:
+                aaid:
+                  type: integer
+                  description: '客戶證券賬戶內部編號 `aaid`（數字），不是證券帳號 `account_no`。'
+                counter_id:
+                  type: string
+                  description: '證券代碼，格式 `{類型}/{市場}/{代碼}`，如 `ST/US/AAPL`。'
+                expire_at:
+                  type: integer
+                  description: '失效時間，Unix 秒級時間戳。'
+                member_id:
+                  type: string
+                  description: '客戶編號 `member_id`。'
+                account_type:
+                  type: integer
+                  description: '賬戶類型編碼，與 `member_id` 一起用於定位記錄。'
+            example:
+              aaid: 10000000
+              counter_id: 'ST/US/AAPL'
+              member_id: '10000000'
+              account_type: 2
       responses:
         '200':
           description: 未實調，響應字段以真實接口為準。
@@ -20502,7 +21118,7 @@ paths:
 
         ### 請求參數
 
-        - 本接口無必填參數，可選參數見下方欄位說明。
+        - 必填：`aaid`、`counter_id`；通常需同時提供三組係數的上下限。
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
@@ -20518,6 +21134,53 @@ paths:
         成功時完成新建操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aaid
+                - counter_id
+              properties:
+                aaid:
+                  type: integer
+                  description: '客戶證券賬戶內部編號 `aaid`（數字），不是證券帳號 `account_no`。'
+                counter_id:
+                  type: string
+                  description: '證券代碼，格式 `{類型}/{市場}/{代碼}`，如 `ST/US/AAPL`。'
+                max_im_factor:
+                  type: number
+                  description: '初始保證金係數上限。'
+                min_im_factor:
+                  type: number
+                  description: '初始保證金係數下限。'
+                max_mm_factor:
+                  type: number
+                  description: '維持保證金係數上限。'
+                min_mm_factor:
+                  type: number
+                  description: '維持保證金係數下限。'
+                max_fm_factor:
+                  type: number
+                  description: '強平保證金係數上限。'
+                min_fm_factor:
+                  type: number
+                  description: '強平保證金係數下限。'
+                remark:
+                  type: string
+                  description: '備註。'
+            example:
+              aaid: 10000000
+              counter_id: 'ST/US/AAPL'
+              max_im_factor: 0.5
+              min_im_factor: 0.2
+              max_mm_factor: 0.4
+              min_mm_factor: 0.15
+              max_fm_factor: 0.3
+              min_fm_factor: 0.1
+              remark: ''
       responses:
         '200':
           description: 未實調，響應字段以真實接口為準。
@@ -20564,7 +21227,7 @@ paths:
 
         - 必填：`user_stock_opt_margin_ratios`（要刪除的客戶級股票期權保證金配置列表，至少 1 項）。每項必填 `counter_id`（正股標的，格式為 `{類型}/{市場}/{代碼}`，如 `ST/US/AAPL`）和 `aaid`（客戶證券賬戶內部編號，取 `POST /v1/datasets/risk_member_option_margin_ratios` 列表行的 `aaid_val`，不是 `account_no`）。
         - 可選：`audit_frontend_resource`（調用方提交的審計上下文）。
-        - 示例：`{"user_stock_opt_margin_ratios":[{"counter_id":"ST/US/AAPL","aaid":"50208322"}]}`。
+        - 示例：`{"user_stock_opt_margin_ratios":[{"counter_id":"ST/US/AAPL","aaid":"10000000"}]}`。
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
@@ -20606,14 +21269,14 @@ paths:
                       aaid:
                         type: string
                         description: 客戶證券賬戶內部編號，取列表行的 `aaid_val`；不是證券賬號 `account_no`。
-                        example: '50208322'
+                        example: '10000000'
                 audit_frontend_resource:
                   type: object
                   description: 調用方提交的審計上下文，用於記錄本次操作。
             example:
               user_stock_opt_margin_ratios:
                 - counter_id: ST/US/AAPL
-                  aaid: '50208322'
+                  aaid: '10000000'
       responses:
         '200':
           description: 未實調，響應字段以真實接口為準。
@@ -21189,7 +21852,7 @@ paths:
 
         ### 請求參數
 
-        - 本接口無必填參數，可選參數見下方欄位說明。
+        - 必填：`counter_id`；通常需同時提供三組係數的上下限和 `un_covered_min`。
         - 各欄位的格式、取值範圍和業務含義見對應欄位說明。
 
         ### 業務說明
@@ -21205,6 +21868,52 @@ paths:
         成功時完成新建操作；後續狀態和返回數據以 `200` 響應定義為準。
       security:
         - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - counter_id
+              properties:
+                counter_id:
+                  type: string
+                  description: '證券代碼，格式 `{類型}/{市場}/{代碼}`，如 `ST/US/AAPL`。'
+                max_im_factor:
+                  type: number
+                  description: '初始保證金係數上限。'
+                min_im_factor:
+                  type: number
+                  description: '初始保證金係數下限。'
+                max_mm_factor:
+                  type: number
+                  description: '維持保證金係數上限。'
+                min_mm_factor:
+                  type: number
+                  description: '維持保證金係數下限。'
+                max_fm_factor:
+                  type: number
+                  description: '強平保證金係數上限。'
+                min_fm_factor:
+                  type: number
+                  description: '強平保證金係數下限。'
+                un_covered_min:
+                  type: number
+                  description: '未備兌最低係數。'
+                remark:
+                  type: string
+                  description: '備註。'
+            example:
+              counter_id: 'ST/US/AAPL'
+              max_im_factor: 1
+              min_im_factor: 0.5
+              max_mm_factor: 1
+              min_mm_factor: 0.5
+              max_fm_factor: 1
+              min_fm_factor: 0.5
+              un_covered_min: 0.1
+              remark: ''
       responses:
         '200':
           description: 未實調，響應字段以真實接口為準。
@@ -24293,7 +25002,7 @@ paths:
         ### 請求參數
 
         - 透過 `filters` 組合業務篩選條件（可選欄位見下方 filters 欄位說明），並使用 `page`、`page_size`、`orderBy` 控制分頁與排序。
-        - 通常需傳入 `task_id` 定位某一次測試任務，可再按客戶或股票進一步篩選。
+        - 可按客戶（`aaid`）或股票（`counter_id`）篩選；本接口不支援按測試任務（`task_id`）篩選，返回的是持倉快照明細。
 
         ### 業務說明
 

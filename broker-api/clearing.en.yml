@@ -1350,7 +1350,9 @@ paths:
                   description: Number of records to return per page.
             example:
               filters:
-                updated_at: 20260614-20260714
+                updated_at:
+                  gte: '2026-06-14'
+                  lte: '2026-07-14'
               page: 1
               page_size: 20
       responses:
@@ -4006,6 +4008,12 @@ paths:
                       next_ledger_date:
                         type: number
                         description: Next ledger date in `YYYYMMDD` format.
+                      available:
+                        type: boolean
+                        description: Whether the current ledger date is available (boolean).
+                      change_avaliable:
+                        type: boolean
+                        description: Whether the ledger date may be changed (boolean); the field name is spelled `change_avaliable` exactly as returned by the backend.
         '400':
           description: Bad request. Check the business error code in `code` and the error details in `message`.
           content:
@@ -4196,6 +4204,7 @@ paths:
                               description: Busin no
                             steps:
                               type: array
+                              description: End-of-day clearing steps of this flow
                               items:
                                 type: object
                                 properties:
@@ -4204,13 +4213,16 @@ paths:
                                     description: Step id
                                   busin_no:
                                     type: integer
+                                    description: Flow number the step belongs to
                                   step_no:
                                     type: integer
                                     description: Step no
                                   method:
                                     type: string
+                                    description: Backend method name of the step
                                   method_name:
                                     type: string
+                                    description: Step name
                                   status:
                                     type: integer
                                     description: Status
@@ -4219,8 +4231,10 @@ paths:
                                     description: Remark
                                   params:
                                     type: string
+                                    description: Step execution parameters (JSON string); may be an empty string
                                   url:
                                     type: string
+                                    description: API path that executes the step
                                   start_time:
                                     type: string
                                     description: Start time
@@ -4235,9 +4249,11 @@ paths:
                                     description: Suggestion
                             ready:
                               type: object
+                              description: Pre-clearing readiness check information
                               properties:
                                 method_name:
                                   type: string
+                                  description: Name of the readiness stage
                                 status:
                                   type: integer
                                   description: Status
@@ -4246,6 +4262,7 @@ paths:
                                   description: End time
                                 suggestion:
                                   type: string
+                                  description: Hint or suggestion for the readiness stage
                                 items:
                                   type: array
                                   items:
@@ -4253,8 +4270,10 @@ paths:
                                     properties:
                                       item_code:
                                         type: string
+                                        description: Check item code
                                       item_name:
                                         type: string
+                                        description: Check item name
                                       status:
                                         type: integer
                                         description: Status
@@ -4266,15 +4285,20 @@ paths:
                                         description: Suggestion
                                       item_id:
                                         type: string
+                                        description: Check item record ID
                                 ticket_id:
                                   type: string
+                                  description: Associated ticket ID; `0` when there is none
                             auto_clearing:
                               type: object
+                              description: One-click clearing execution status
                               properties:
                                 ledger_date:
                                   type: integer
+                                  description: Ledger date, formatted `YYYYMMDD` (integer)
                                 busin_no:
                                   type: integer
+                                  description: Flow number
                                 task_total:
                                   type: integer
                                   description: Task total
@@ -4286,6 +4310,7 @@ paths:
                                   description: Status
                       account_channel:
                         type: string
+                        description: Account channel
               example:
                 code: 0
                 message: success
@@ -6450,6 +6475,7 @@ paths:
   /billing/settle_stock_exchange_contract_task/expected_settlement_date:
     post:
       operationId: expected_settlement_date
+      deprecated: true
       summary: Edit Expected Settlement Date
       x-verified: verified
       tags:
@@ -6459,6 +6485,10 @@ paths:
       x-lbonly: false
       description: |-
         Modify the expected settlement date of a settlement task.
+
+        ### Availability
+
+        The backend has permanently disabled this feature; every market and action returns error code `2821014`.
 
         ### Request parameters
 
@@ -7857,7 +7887,7 @@ paths:
         - bearerAuth: []
       responses:
         '200':
-          description: The request was processed successfully. The response `data` does not contain additional business fields.
+          description: The request was processed successfully. The business result is in `data`.
           content:
             application/json:
               schema:
@@ -7886,25 +7916,39 @@ paths:
                     properties:
                       progress:
                         type: array
+                        description: Statement sending progress list.
                         items:
                           type: object
                           properties:
                             dt:
                               type: string
+                              description: 'Statement date: `YYYYMMDD` for a single day or `YYYYMMDD-YYYYMMDD` for a range.'
                             statement_type:
                               type: integer
+                              description: 'Statement type: `0` daily, `1` monthly, `2` ad hoc.'
                             send_status:
                               type: integer
+                              description: Sending status code (integer).
                             total:
                               type: string
+                              description: Total number to send (string).
                             sent_count:
                               type: string
+                              description: Number sent (string).
                             progress:
                               type: string
+                              description: Progress text in `sent/total` format.
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  progress:
+                    - dt: '20260101'
+                      statement_type: 0
+                      send_status: 1
+                      total: '1'
+                      sent_count: '0'
+                      progress: 0/1
         '400':
           description: Bad request. Check the business error code in `code` and the error details in `message`.
           content:
@@ -8683,6 +8727,24 @@ paths:
                       hk:
                         type: object
                         description: Traditional Chinese text content.
+                      company_email:
+                        type: string
+                        description: Company email shown on statements; empty string when not configured.
+                      company_fax:
+                        type: string
+                        description: Company fax number shown on statements; empty string when not configured.
+                      company_tel:
+                        type: string
+                        description: Company phone number shown on statements; empty string when not configured.
+                      social_media:
+                        type: string
+                        description: Company social media information shown on statements; empty string when not configured.
+                      lang:
+                        type: string
+                        description: Statement text language (display value); the raw code is in `lang_val`. Empty string when not configured.
+                      lang_val:
+                        type: string
+                        description: Raw code of the `lang` field.
         '400':
           description: Bad request. Check the business error code in `code` and the error details in `message`.
           content:
@@ -9444,6 +9506,7 @@ paths:
   /ob_file/send_downstream_file:
     post:
       operationId: send_downstream_file
+      deprecated: true
       summary: Send Downstream File
       x-verified: verified
       tags:
@@ -9723,7 +9786,7 @@ paths:
               file_codes: []
       responses:
         '200':
-          description: The request was processed successfully. The response `data` does not contain additional business fields.
+          description: The request was processed successfully. The business result is in `data`.
           content:
             application/json:
               schema:
@@ -9752,10 +9815,12 @@ paths:
                     properties:
                       count:
                         type: integer
+                        description: Number of unsent clearing files.
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  count: 0
         '400':
           description: Bad request. Check the business error code in `code` and the error details in `message`.
           content:
@@ -10121,30 +10186,50 @@ paths:
                   description: This field is required.
                 accounts:
                   type: array
-                  description: Each item contains aaid/parent_aaid.
-                  items:
-                    type: string
-                configs:
-                  type: array
+                  description: Sub-accounts; each item is an object.
                   items:
                     type: object
-                    properties: {}
-                  description: |-
-                    Array of file configs; each item has file_code and market
+                    required:
+                      - aaid
+                      - parent_aaid
+                    properties:
+                      aaid:
+                        type: string
+                        description: Sub-account `aaid`.
+                      parent_aaid:
+                        type: string
+                        description: Parent account `aaid`; for the main account pass its own `aaid`.
+                configs:
+                  type: array
+                  description: File configs; each item is an object.
+                  items:
+                    type: object
+                    required:
+                      - file_code
+                      - market
+                    properties:
+                      file_code:
+                        type: string
+                        description: File type code.
+                      market:
+                        type: string
+                        description: Market, e.g. `US`, `HK`.
                 audit_frontend_resource:
                   type: object
                   properties: {}
                   description: |-
                     Caller-provided audit context
             example:
-              member_id: '101456715'
-              org_account_channel: ''
-              status: 1
+              member_id: '100000000'
+              org_account_channel: longport_test
               remark: ''
-              op_email: ''
+              op_email: user@example.com
               accounts:
-                - aaid: H00000000
-                  parent_aaid: H00000000
+                - aaid: '10000000'
+                  parent_aaid: '10000000'
+              configs:
+                - file_code: F001
+                  market: US
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.
@@ -11905,7 +11990,7 @@ paths:
         - bearerAuth: []
       responses:
         '200':
-          description: The request was processed successfully. The response `data` does not contain additional business fields.
+          description: The request was processed successfully. The business result is in `data`.
           content:
             application/json:
               schema:
@@ -11934,10 +12019,12 @@ paths:
                     properties:
                       ticket_id:
                         type: string
+                        description: Approval ticket ID (string).
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  ticket_id: '0'
         '400':
           description: Bad request. Check the business error code in `code` and the error details in `message`.
           content:
@@ -13594,23 +13681,28 @@ paths:
                               description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             file_type:
                               type: string
+                              description: File type. **Returned value:** Importable file type (display value; the raw code is in the matching `_val` field).
                             file_type_val:
                               type: string
                               description: Raw value of `file_type`. The `file_type` field contains the display value resolved through a dictionary or related record; this field contains the underlying code or ID.
                             admin_id:
                               type: string
+                              description: Updated by. **Returned value:** Back-office user who last updated the config (display value; the raw code is in the matching `_val` field).
                             admin_id_val:
                               type: string
                               description: Raw value of `admin_id`. The `admin_id` field contains the display value resolved through a dictionary or related record; this field contains the underlying code or ID.
                             updated_at:
                               type: string
+                              description: Updated at. **Returned value:** Unix timestamp in seconds, returned as a string.
                             is_auto:
                               type: string
+                              description: Auto import. **Returned value:** Whether auto import is supported/enabled (display value; the raw code is in the matching `_val` field).
                             is_auto_val:
                               type: string
                               description: 'Raw value behind field is_auto: is_auto returns the human-readable display value resolved via a dictionary/join mapping, while this field returns the underlying code/ID before that mapping.'
                             is_show:
                               type: string
+                              description: Show/Hide. **Returned value:** Whether the file type is shown, as the string `true` or `false`.
                       total:
                         type: integer
               example:
@@ -14002,28 +14094,34 @@ paths:
                           properties:
                             id:
                               type: string
+                              description: ID. **Returned value:** Receiving rule record ID.
                             market:
                               type: string
+                              description: Market. **Returned value:** Market (display value; the raw code is in the matching `_val` field).
                             market_val:
                               type: string
                               description: Raw value of `market`. The `market` field contains the display value resolved through a dictionary or related record; this field contains the underlying code or ID.
                             file_code:
                               type: string
+                              description: File type. **Returned value:** Upstream file type (display value; the raw code is in the matching `_val` field).
                             file_code_val:
                               type: string
                               description: 'Raw value behind field file_code: file_code returns the human-readable display value resolved via a dictionary/join mapping, while this field returns the underlying code/ID before that mapping.'
                             custodian_code:
                               type: string
+                              description: Broker. **Returned value:** Broker (display value; the raw code is in the matching `_val` field).
                             custodian_code_val:
                               type: string
                               description: 'Raw value behind field custodian_code: custodian_code returns the human-readable display value resolved via a dictionary/join mapping, while this field returns the underlying code/ID before that mapping.'
                             settlement_channel_code:
                               type: string
+                              description: Settlement channel. **Returned value:** Settlement channel (display value; the raw code is in the matching `_val` field).
                             settlement_channel_code_val:
                               type: string
                               description: Raw value of `settlement_channel_code`. The `settlement_channel_code` field contains the display value resolved through a dictionary or related record; this field contains the underlying code or ID.
                             parent_account_channel:
                               type: string
+                              description: Upstream business number. **Returned value:** Upstream business number (display value; the raw code is in the matching `_val` field).
                             parent_account_channel_val:
                               type: string
                               description: 'Raw value behind field parent_account_channel: parent_account_channel returns the human-readable display value resolved via a dictionary/join mapping, while this field returns the underlying code/ID before that mapping.'
