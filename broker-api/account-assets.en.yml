@@ -26771,6 +26771,670 @@ paths:
         href: /en/api-reference/atm_omnibus_holding_transfers_download
         metadata:
           sidebarTitle: Internal Stock Transfer Query (support Approval) Export
+  /v1/whaleapi/account/accesskeys:
+    post:
+      operationId: whale_create_access_key
+      summary: Create Access Key
+      tags:
+        - Account Assets
+      x-lbonly: false
+      x-source: WhaleAPI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                account_no:
+                  type: string
+                  description: |-
+                    Account Number
+
+                    `account_no` is the securities account number (such as `L6VQEU00121996`). It differs from the customer ID `member_id` and the internal securities account ID `aaid`.
+                token_expired_at:
+                  type: string
+                  format: date-time
+                  description: Expiration time of the token issued with the Access Key, in RFC 3339 format, such as `2026-10-21T10:00:00+08:00` or `2026-10-21T10:00:00Z`. Optional.
+                  example: '2026-10-21T10:00:00+08:00'
+                ip_whitelist:
+                  type: array
+                  uniqueItems: true
+                  items:
+                    type: string
+                    description: IP address or CIDR subnet, such as `215.1.2.0/24`.
+                  description: IP addresses or subnets allowed to call OpenAPI with this Access Key. Optional.
+              required:
+                - account_no
+            example:
+              account_no: L6VQEU00121996
+              token_expired_at: '2026-10-21T10:00:00+08:00'
+              ip_whitelist:
+                - 215.1.2.0/24
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '`0` indicates success.'
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      access_key:
+                        $ref: '#/components/schemas/AccessKey'
+                      token:
+                        $ref: '#/components/schemas/AccessToken'
+                    required:
+                      - access_key
+                      - token
+                required:
+                  - code
+                  - message
+                  - data
+          description: Success. `data` contains the Access Key and its current token.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: Bad request. Check the business error code in `code` and the error details in `message`.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The user is not authenticated, or the login session has expired.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The current account is not authorized to use this feature. Grant the required permission to the account in User Permission.
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The request timed out. Check the business error code in `code` and the error details in `message`.
+      description: |-
+        Creates an OpenAPI Access Key for a securities account. The Client uses the Access Key and its token to call Longbridge OpenAPI.
+
+        ### Idempotency
+
+        Each securities account has at most one Access Key. Repeated calls for the same account do not create another key; if an Access Key already exists, it is returned.
+
+        ### Security
+
+        The response contains `access_key_secret` and `token`. Treat them as credentials: transmit them only over trusted channels and never write them to logs.
+      x-mint:
+        href: /en/api-reference/whale_create_access_key
+        metadata:
+          sidebarTitle: Create Access Key
+    get:
+      operationId: whale_list_access_keys
+      summary: List Access Keys
+      tags:
+        - Account Assets
+      x-lbonly: false
+      x-source: WhaleAPI
+      parameters:
+        - name: account_no
+          in: query
+          required: true
+          schema:
+            type: string
+          description: |-
+            Account Number
+
+            `account_no` is the securities account number (such as `L6VQEU00121996`). It differs from the customer ID `member_id` and the internal securities account ID `aaid`.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '`0` indicates success.'
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      access_keys:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AccessKey'
+                        description: Access Keys of the securities account.
+                    required:
+                      - access_keys
+                required:
+                  - code
+                  - message
+                  - data
+          description: Success. `data.access_keys` lists the Access Keys.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: Bad request. Check the business error code in `code` and the error details in `message`.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The user is not authenticated, or the login session has expired.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The current account is not authorized to use this feature. Grant the required permission to the account in User Permission.
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The request timed out. Check the business error code in `code` and the error details in `message`.
+      description: Lists the OpenAPI Access Keys of a securities account, including each key's tokens.
+      x-mint:
+        href: /en/api-reference/whale_list_access_keys
+        metadata:
+          sidebarTitle: List Access Keys
+  /v1/whaleapi/account/accesskeys/{access_key_id}:
+    get:
+      operationId: whale_get_access_key
+      summary: Get Access Key
+      tags:
+        - Account Assets
+      x-lbonly: false
+      x-source: WhaleAPI
+      parameters:
+        - name: access_key_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Access Key ID.
+        - name: include_disabled_tokens
+          in: query
+          required: false
+          schema:
+            type: boolean
+          example: true
+          description: Whether to include disabled or expired tokens in `tokens`.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '`0` indicates success.'
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      access_key:
+                        $ref: '#/components/schemas/AccessKey'
+                required:
+                  - code
+                  - message
+                  - data
+          description: Success. `data.access_key` contains the Access Key details.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: Bad request. Check the business error code in `code` and the error details in `message`.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The user is not authenticated, or the login session has expired.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The current account is not authorized to use this feature. Grant the required permission to the account in User Permission.
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The request timed out. Check the business error code in `code` and the error details in `message`.
+      description: Returns the details of an OpenAPI Access Key, including its IP whitelist and tokens. Only active tokens are returned unless `include_disabled_tokens` is `true`.
+      x-mint:
+        href: /en/api-reference/whale_get_access_key
+        metadata:
+          sidebarTitle: Get Access Key
+    put:
+      operationId: whale_update_access_key
+      summary: Update Access Key
+      tags:
+        - Account Assets
+      x-lbonly: false
+      x-source: WhaleAPI
+      parameters:
+        - name: access_key_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Access Key ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ip_whitelist:
+                  type: array
+                  items:
+                    type: string
+                    format: ipv4
+                  description: New IP whitelist. It replaces the existing whitelist in full.
+              required:
+                - ip_whitelist
+            example:
+              ip_whitelist:
+                - 215.1.2.10
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '`0` indicates success.'
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      access_key:
+                        $ref: '#/components/schemas/AccessKey'
+                    required:
+                      - access_key
+                required:
+                  - code
+                  - message
+                  - data
+          description: Success. `data.access_key` contains the updated Access Key. `tokens` is empty in this response.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: Bad request. Check the business error code in `code` and the error details in `message`.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The user is not authenticated, or the login session has expired.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The current account is not authorized to use this feature. Grant the required permission to the account in User Permission.
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The request timed out. Check the business error code in `code` and the error details in `message`.
+      description: |-
+        Updates the IP whitelist of an OpenAPI Access Key.
+
+        The submitted `ip_whitelist` overwrites the existing whitelist. To keep existing entries, include them in the request.
+      x-mint:
+        href: /en/api-reference/whale_update_access_key
+        metadata:
+          sidebarTitle: Update Access Key
+  /v1/whaleapi/account/accesskeys/{access_key_id}/disable:
+    post:
+      operationId: whale_disable_access_key
+      summary: Disable Access Key
+      tags:
+        - Account Assets
+      x-lbonly: false
+      x-source: WhaleAPI
+      parameters:
+        - name: access_key_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Access Key ID.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '`0` indicates success.'
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      access_key:
+                        $ref: '#/components/schemas/AccessKey'
+                    required:
+                      - access_key
+                required:
+                  - code
+                  - message
+                  - data
+          description: Success. `data.access_key` contains the disabled Access Key.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: Bad request. Check the business error code in `code` and the error details in `message`.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The user is not authenticated, or the login session has expired.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The current account is not authorized to use this feature. Grant the required permission to the account in User Permission.
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The request timed out. Check the business error code in `code` and the error details in `message`.
+      description: |-
+        Disables an OpenAPI Access Key. All tokens of the Access Key are disabled at the same time.
+
+        Enabling the Access Key again does not restore these tokens. See Enable Access Key.
+      x-mint:
+        href: /en/api-reference/whale_disable_access_key
+        metadata:
+          sidebarTitle: Disable Access Key
+  /v1/whaleapi/account/accesskeys/{access_key_id}/enable:
+    post:
+      operationId: whale_enable_access_key
+      summary: Enable Access Key
+      tags:
+        - Account Assets
+      x-lbonly: false
+      x-source: WhaleAPI
+      parameters:
+        - name: access_key_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Access Key ID.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token_expired_at:
+                  type: string
+                  format: date-time
+                  description: Token expiration time in RFC 3339 format, such as `2026-10-21T10:00:00+08:00` or `2026-10-21T10:00:00Z`. Optional.
+                  example: '2026-10-21T10:00:00Z'
+            example:
+              token_expired_at: '2026-10-21T10:00:00Z'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '`0` indicates success.'
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      access_key:
+                        $ref: '#/components/schemas/AccessKey'
+                    required:
+                      - access_key
+                required:
+                  - code
+                  - message
+                  - data
+          description: Success. `data.access_key` contains the enabled Access Key and its new token.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: Bad request. Check the business error code in `code` and the error details in `message`.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The user is not authenticated, or the login session has expired.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The current account is not authorized to use this feature. Grant the required permission to the account in User Permission.
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The request timed out. Check the business error code in `code` and the error details in `message`.
+      description: |-
+        Enables a disabled OpenAPI Access Key.
+
+        Enabling does not restore tokens that were disabled with the Access Key. Instead, it issues a new token and returns it in `data.access_key.tokens`; `token_expired_at` sets the new token's expiration time.
+      x-mint:
+        href: /en/api-reference/whale_enable_access_key
+        metadata:
+          sidebarTitle: Enable Access Key
+  /v1/whaleapi/account/accesskeys/{access_key_id}/token:
+    post:
+      operationId: whale_renew_access_token
+      summary: Renew Access Token
+      tags:
+        - Account Assets
+      x-lbonly: false
+      x-source: WhaleAPI
+      parameters:
+        - name: access_key_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Access Key ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: Current token to replace.
+                expired_at:
+                  type: string
+                  format: date-time
+                  description: Expiration time of the new token in RFC 3339 format, such as `2026-10-21T10:00:00+08:00` or `2026-10-21T10:00:00Z`.
+                  example: '2026-10-21T10:00:00+08:00'
+              required:
+                - token
+                - expired_at
+            example:
+              token: <CURRENT_TOKEN>
+              expired_at: '2026-10-21T10:00:00+08:00'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '`0` indicates success.'
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        $ref: '#/components/schemas/AccessToken'
+                    required:
+                      - token
+                required:
+                  - code
+                  - message
+                  - data
+          description: Success. `data.token` contains the new token.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: Bad request. Check the business error code in `code` and the error details in `message`.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The user is not authenticated, or the login session has expired.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The current account is not authorized to use this feature. Grant the required permission to the account in User Permission.
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The request timed out. Check the business error code in `code` and the error details in `message`.
+      description: |-
+        Issues a new token for an OpenAPI Access Key and replaces the token passed in `token`.
+
+        The old token is disabled immediately. Update the Client's stored token before the next OpenAPI call.
+      x-mint:
+        href: /en/api-reference/whale_renew_access_token
+        metadata:
+          sidebarTitle: Renew Access Token
+    delete:
+      operationId: whale_revoke_access_token
+      summary: Revoke Access Token
+      tags:
+        - Account Assets
+      x-lbonly: false
+      x-source: WhaleAPI
+      parameters:
+        - name: access_key_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Access Key ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: Token to revoke.
+              required:
+                - token
+            example:
+              token: <TOKEN_TO_REVOKE>
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '`0` indicates success.'
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    description: Empty object on success.
+                required:
+                  - code
+                  - message
+                  - data
+          description: Success. The token is revoked and `data` is empty.
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: Bad request. Check the business error code in `code` and the error details in `message`.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The user is not authenticated, or the login session has expired.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The current account is not authorized to use this feature. Grant the required permission to the account in User Permission.
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: The request timed out. Check the business error code in `code` and the error details in `message`.
+      description: Revokes a token of an OpenAPI Access Key. The revoked token can no longer be used to call OpenAPI.
+      x-mint:
+        href: /en/api-reference/whale_revoke_access_token
+        metadata:
+          sidebarTitle: Revoke Access Token
 components:
   schemas:
     BrokerGatewayErrorEnvelope:
@@ -26813,6 +27477,69 @@ components:
         message:
           type: string
         data: {}
+    AccessKey:
+      type: object
+      description: OpenAPI Access Key of a securities account.
+      properties:
+        access_key_id:
+          type: string
+          description: Access Key ID.
+        access_key_secret:
+          type: string
+          description: Access Key secret. Treat it as a credential and never write it to logs.
+        disable:
+          type: boolean
+          description: Whether the Access Key is disabled.
+        ipwhitelist:
+          type: object
+          description: IP whitelist of the Access Key.
+          properties:
+            net:
+              type: array
+              items:
+                type: string
+              description: Allowed IP addresses or CIDR subnets.
+          required:
+            - net
+        created_at:
+          type: string
+          description: Creation time in RFC 3339 format.
+        tokens:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessToken'
+          description: Tokens of the Access Key.
+      required:
+        - access_key_id
+        - access_key_secret
+        - disable
+        - created_at
+        - tokens
+    AccessToken:
+      type: object
+      description: Token issued for an OpenAPI Access Key.
+      properties:
+        access_key_id:
+          type: string
+          description: Access Key ID.
+        token:
+          type: string
+          description: Token value. Treat it as a credential and never write it to logs.
+        expired_at:
+          type: string
+          description: Expiration time in RFC 3339 format.
+        disable:
+          type: boolean
+          description: Whether the token is disabled.
+        created_at:
+          type: string
+          description: Creation time in RFC 3339 format.
+      required:
+        - access_key_id
+        - token
+        - expired_at
+        - disable
+        - created_at
   securitySchemes:
     bearerAuth:
       type: http
