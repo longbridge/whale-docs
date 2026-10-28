@@ -185,15 +185,16 @@ WhaleCoreService.logoutAndDestroy()
 
 | 模块 | 入口 | 能力 |
 | --- | --- | --- |
-| 行情 | `WhaleCoreService.quoteService()` | 行情订阅（链式选择数据类型）、期权链 / 详情订阅、K 线与分时 / 逐笔历史查询、行情快照、行情等级与设备占用 |
+| 行情 | `WhaleCoreService.quoteService()` | 行情订阅（单标的详情 / 标的列表（期权除外） / 期权列表 / 期权链四个入口，链式选择数据类型，批量入口支持整组替换）、K 线与分时 / 逐笔历史查询、行情快照、行情等级与设备占用 |
 | 订单 | `WhaleCoreService.orderService()` | 下单、查单、撤单、改单、条件单、附加单、持仓止盈止损、下单前置校验、订单预览、交易卡券选券、批量撤单与实时推送 |
 | 资产 | `WhaleCoreService.portfolioService()` | 资产订阅、现金明细与持仓行情开关、会员资产设置、盈亏分析 |
 | 自选股 | `WhaleCoreService.watchlistService()` | 分组与股票的增删改查、排序、置顶、失效标的清理与实时推送 |
 | 透传请求 | `WhaleCoreService.requestService()` | 任意业务接口透传，自动附加公共参数与鉴权头，鉴权失效自动恢复重试 |
 | 期权计算 | `WhaleCoreOptionCalculator`（静态工具） | 本地 Black-Scholes 计算：Greeks、理论价、内在 / 时间价值、到期天数、到期盈利概率 |
+| 轮证计算 | `WhaleCoreWarrantCalculator`（静态工具） | 本地计算港股轮证衍生指标：溢价率、杠杆比率、有效杠杆、打和点、价内价外、距收回价、换股价、对冲值 |
 
 <Note>
-  除期权计算器外，以上服务在 SDK 未初始化或已调用 `logoutAndDestroy()` 时访问会抛出 `appNotReady`。下单前置校验能力已并入 `orderService()`，历史独立入口 `WhaleCoreService.orderValidationService` 仍可用但已弃用。
+  除期权计算器与轮证计算器外，以上服务在 SDK 未初始化或已调用 `logoutAndDestroy()` 时访问会抛出 `appNotReady`。下单前置校验能力已并入 `orderService()`，历史独立入口 `WhaleCoreService.orderValidationService` 仍可用但已弃用。
 </Note>
 
 ## 核心概念 {/* core-concepts */}
@@ -201,6 +202,8 @@ WhaleCoreService.logoutAndDestroy()
 以下规则贯穿多个模块，先建立一次认知，后文不再重复解释。
 
 **标的编码（counterId）** 格式统一为 `"{type}/{market}/{code}"`：股票如 `"ST/US/AAPL"`、`"ST/HK/00700"`；期权额外编码行权价、到期日与方向，如 `"OP/US/AAPL240119C190000"`。行情、订单、自选、盈亏分析等所有按标的定位的接口均使用这一套编码。
+
+第一段是**类型段**：`ST` 个股、`ETF`、`OP` 期权、`WT` 权证、`IX` / `BK` 指数。行情的批量订阅入口按类型段分设（期权走 `subscribeOptionList`，其余走 `subscribeQuoteList`），混合集合需先按类型段分组，取 `counterId.split(separator: "/").first` 即可。传错类型不会报错，但该通道的响应结构承载不了另一类标的的字段（期权的行权价、隐含波动率等会落空）。
 
 **账户渠道** `WhaleCoreConfig.defaultAccountChannel` 在初始化时确定，订单服务与资产订阅默认落在该渠道。订单相关方法普遍提供 `accountChannel` 覆盖参数（不传即走默认渠道）；资产订阅则要求显式传入 `WhaleCoreAccountInfo`，由宿主用自身的渠道与 `aaid` 构造：
 
@@ -228,11 +231,14 @@ let account = WhaleCoreAccountInfo(accountChannel: "lb_hk", aaid: "your_aaid")
 
 ### 订阅行情 {/* quote-subscription */}
 
+订阅入口按「一个标的还是一批标的」「个股还是期权」分为四个：单标的用 `subscribeQuoteDetail`（个股与期权通用，快照字段最全）；一批非期权标的用 `subscribeQuoteList`；期权列表与期权链见 [期权行情订阅](#option-quote-subscription)。混合集合按 counterId 类型段分组后分别订阅，见 [核心概念](#core-concepts)。
+
 ```swift
 let svc = try WhaleCoreService.quoteService()
 
+// 单标的详情订阅：字段最全的快照 + 订阅，链式选择数据类型后 .start，回调持续下发最新行情
 let subscription = try await svc
-    .subscribe(counterIds: ["ST/US/AAPL", "ST/HK/00700"])
+    .subscribeQuoteDetail(counterId: "ST/US/AAPL")
     .detail        // 详情行情（OHLC、市值、PE/PB、52 周高低）
     .depth         // 买卖盘
     .trade         // 逐笔成交
@@ -246,10 +252,20 @@ let subscription = try await svc
 
 // 退订
 await subscription.cancel()
+
+// 列表订阅：一组非期权标的，集合可整组替换（分组切换 / 滚动加载）
+// .start 等待首屏订阅落地，失败抛出；之后 updateCounterIds 不等待、失败不抛
+let listSub = try await svc
+    .subscribeQuoteList(counterIds: ["ST/US/AAPL", "ST/HK/00700"])
+    .list
+    .start { updates in /* 每批只含当前生效集合内的标的 */ }
+
+listSub.updateCounterIds(newCounterIds)   // 整组替换：移出集合的标的停止回调
+await listSub.cancel()
 ```
 
 <Note>
-  订阅建立失败（SDK 未就绪、首次拉取失败）时 `.start` 抛出；建立成功后运行期不再产生错误，数据经回调持续下发。可选数据类型：`list`、`detail`、`depth`、`trade`、`broker`、`preTrade`、`postTrade`、`nightTrade`、`totalView`、`totalViewBrief`。
+  订阅建立失败（SDK 未就绪、首次拉取失败）时 `.start` 抛出；建立成功后运行期不再产生错误，数据经回调持续下发。`subscribeQuoteDetail` 与 `subscribeQuoteList` 可选数据类型：`list`、`detail`、`depth`、`trade`、`broker`、`preTrade`、`postTrade`、`nightTrade`、`totalView`、`totalViewBrief`（后四种对期权不产生数据）；`subscribeOptionList` 只提供期权支持的前六种（不含 `broker`）。单标的详情订阅建立后会先回调一次快照（含再次进入同一标的的场景），非交易时段首屏也不会空白。
 </Note>
 
 ### 查询快照与历史数据 {/* quote-history-queries */}
@@ -265,14 +281,29 @@ let klines = try await svc.getKlines(counterId: "ST/US/AAPL", klineType: .perDay
 klines.forEach { print("\($0.timestamp): \($0.close)") }
 ```
 
-其余查询能力：`getTimeshares(counterId:fiveDays:...)` 拉取当日或五日分时数据（绘制分时图请用本接口，不要用 1 分钟 K 线近似）；`getTrades(counterId:count:...)` 翻页拉取历史逐笔成交；`observeQuoteEvents(counterIds:onUpdate:)` / `observeKlineUpdates(counterIds:onUpdate:)` 在不建立新订阅的前提下旁听其他调用方已建立的行情 / K 线事件；`getInterestRate()` 读取 SDK 内置无风险利率，供期权计算器展示使用。
+其余查询能力：`getTimeshares(counterId:fiveDays:...)` 拉取当日或五日分时数据（绘制分时图请用本接口，不要用 1 分钟 K 线近似）；`getTrades(counterId:count:...)` 翻页拉取历史逐笔成交；`observeQuoteEvents(counterIds:onUpdate:)` 在不建立新订阅的前提下旁听其他调用方已建立的行情事件；`getInterestRate()` / `getWarrantInterestRate()` 分别读取期权口径与轮证口径的无风险利率。
+
+K 线与分时的最新一根 / 最新一点由 SDK 根据行情推送在本地实时更新：该标的已有 `detail` 订阅、且已拉取过对应周期的最新一页 K 线（或对应口径的分时）后，`getStock(counterId:)` 快照的 `klines(klineType:adjustType:)` / `timeshares(fiveDays:klineSession:)` 已包含最新数据；`observeKlineUpdates(counterIds:onUpdate:)` / `observeTimeshareUpdates(counterIds:onUpdate:)` 的事件直接携带变动后的最新一根 K 线 / 最新一个分钟点（分时覆盖盘中、盘前、盘后与夜盘），无需再次查询。
 
 ### 期权行情订阅 {/* option-quote-subscription */}
 
-期权行情分两种订阅形态，扩展数据（行权价、IV、方向、OI、盘口）均从 `optionData` 读取：
+期权行情有三种订阅形态（单合约详情、合约列表、期权链），扩展数据（行权价、IV、方向、OI、盘口）均从 `optionData` 读取：
 
 ```swift
-// 期权链批量订阅：一组合约整体订阅，随交互整组替换（切到期日 / 滚动可见区）
+// 单合约详情：快照字段最全且自带一档盘口，与个股共用同一入口
+let detailSub = try await svc.subscribeQuoteDetail(counterId: "OP/US/AAPL240119C190000")
+    .list.detail.trade
+    .start { updates in
+        let opt = updates.first?.stock.optionData   // 行权价 / IV / 方向 / OI / 盘口
+    }
+await detailSub.cancel()
+
+// 期权列表：一组合约，快照不含盘口，集合可整组替换
+let optionListSub = try await svc.subscribeOptionList(counterIds: contracts)
+    .list
+    .start { updates in /* ... */ }
+
+// 期权链：整组合约随交互整组替换（切到期日 / 滚动可见区），快照含一档盘口，无需链式选类型
 let chainSub = try svc.subscribeOptionChain(counterIds: visibleContracts) { updates in
     for u in updates {
         let opt = u.stock.optionData
@@ -280,18 +311,10 @@ let chainSub = try svc.subscribeOptionChain(counterIds: visibleContracts) { upda
 }
 chainSub.updateCounterIds(newVisibleContracts)  // 整组替换（滚动 / 切到期日）
 await chainSub.cancel()                          // 离开页面退订
-
-// 期权详情订阅：单合约，subtypes 由宿主链式自选
-let detailSub = try await svc.subscribeOptionDetail(counterId: "OP/US/AAPL240119C190000")
-    .list.detail.trade
-    .start { updates in
-        let opt = updates.first?.stock.optionData
-    }
-await detailSub.cancel()
 ```
 
 <Note>
-  Greeks 不随行情推送下发——宿主自订正股取正股价，喂给 `WhaleCoreOptionCalculator` 本地计算，见 [期权计算器](#option-calculator)。
+  期权的首屏盘口只有 `subscribeQuoteDetail` 与 `subscribeOptionChain` 的快照提供，`subscribeOptionList` 不含；**后续盘口推送**需显式链式选择 `.depth`（期权链已内置）。Greeks 不随行情推送下发——宿主自订正股取正股价，喂给 `WhaleCoreOptionCalculator` 本地计算，见 [期权计算器](#option-calculator)。
 </Note>
 
 ### 行情等级与设备占用 {/* quote-level-and-eviction */}
@@ -321,24 +344,29 @@ try await svc.reclaimQuoteAccess()
 
 | 方法 | 说明 |
 | --- | --- |
-| `subscribe(counterIds:)` | 创建行情订阅构建器，链式选择数据类型后调用 `.start` 启动 |
-| `observeQuoteEvents(counterIds:`<br />`onUpdate:)` | 旁听行情事件（不建立新订阅，复用其他调用方已建立的订阅） |
-| `observeKlineUpdates(counterIds:`<br />`onUpdate:)` | 旁听 K 线更新事件（不建立新订阅） |
-| `getStock(counterId:)` | 同步读取行情快照（内存缓存） |
+| `subscribeQuoteDetail(counterId:)` | 创建单标的订阅构建器（个股与期权通用，快照字段最全），链式选择数据类型后调用 `.start` 启动 |
+| `subscribeQuoteList(counterIds:)` | 创建非期权标的批量订阅构建器，集合可整组替换 |
+| `subscribeOptionList(counterIds:)` | 创建期权批量订阅构建器，集合可整组替换（快照不含盘口） |
+| `observeQuoteEvents(counterIds:`<br />`onUpdate:)` | 旁听行情事件（不建立新订阅，复用其他调用方已建立的订阅；开始时先回调一次已有快照） |
+| `observeKlineUpdates(counterIds:`<br />`onUpdate:)` | 旁听 K 线更新事件（不建立新订阅）。需该标的已有 `detail` 订阅、且已拉取过该周期的最新一页；事件携带变动后的最新一根，无需再次查询 |
+| `observeTimeshareUpdates(counterIds:`<br />`onUpdate:)` | 旁听分时更新事件（不建立新订阅）。需该标的已有 `detail` 订阅、且已拉取过该口径的分时；事件携带变动后的最新一个分钟点，覆盖盘中、盘前、盘后与夜盘 |
+| `getStock(counterId:)` | 同步读取行情快照（内存缓存）。其 `klines(klineType:adjustType:)` / `timeshares(fiveDays:klineSession:)` 已包含随行情变动的最新一根 / 最新一点 |
 | `getKlines(counterId:`<br />`klineType:`<br />`count:`<br />`timestamp:`<br />`klineSession:`<br />`adjustType:`<br />`completion:)` | 拉取 K 线历史 |
 | `getKlines(counterId:`<br />`klineType:`<br />`count:`<br />`timestamp:`<br />`klineSession:`<br />`adjustType:)` | 上一方法的 Swift async 便捷重载（带默认参数） |
 | `getTimeshares(counterId:`<br />`fiveDays:`<br />`klineSession:`<br />`completion:)` | 拉取分时数据，当日或五日（绘制分时图请用本接口，不要用 1 分钟 K 线近似） |
 | `getTimeshares(counterId:`<br />`fiveDays:`<br />`klineSession:)` | 上一方法的 Swift async 便捷重载（带默认参数） |
 | `getTrades(counterId:`<br />`count:`<br />`lastSequenceID:`<br />`lastTradeSession:`<br />`tradeType:`<br />`completion:)` | 拉取历史逐笔成交，翻页；无实时行情权限的账户返回空列表 |
 | `getTrades(counterId:`<br />`count:`<br />`lastSequenceID:`<br />`lastTradeSession:`<br />`tradeType:)` | 上一方法的 Swift async 便捷重载（带默认参数；`tradeType` 默认 `0` 仅盘中，需盘前盘后 / 夜盘传 `3`） |
-| `subscribeOptionChain(counterIds:`<br />`onUpdate:)` | 期权链批量订阅（整组替换 + 300ms 防抖） |
-| `subscribeOptionDetail(counterId:)` | 创建期权详情订阅构建器（单合约） |
-| `getInterestRate()` | 读取 SDK 内置无风险利率（年化小数），供期权计算器展示使用 |
+| `subscribeOptionChain(counterIds:`<br />`onUpdate:)` | 期权链批量订阅（整组替换 + 300ms 防抖，快照含一档盘口，数据类型固定） |
+| `getInterestRate()` | 读取期权口径的无风险利率（年化小数，国债平均收益率） |
+| `getWarrantInterestRate()` | 读取轮证口径的无风险利率（年化小数，行情配置下发值） |
 | `quoteLevelInfo`（属性） | 当前行情等级与占用状态快照（同步读；首次鉴权前为 `nil`） |
 | `addQuoteLevelDelegate(_:)` | 注册行情等级观察者（每次鉴权成功后主线程回调最新快照） |
 | `removeQuoteLevelDelegate(_:)` | 移除行情等级观察者 |
 | `reclaimQuoteAccess()` | 把行情使用权抢回本设备（「重启行情」）；成功后自动重新鉴权 |
 | `reclaimQuoteAccess(completion:)` | 上一方法的 Objective-C 便捷入口（completion 主线程回调） |
+
+四个订阅入口各有自己的句柄：单标的的 `WhaleCoreQuoteSubscription` 只有 `cancel()` 与 `isCancelled`；批量的 `WhaleCoreQuoteListSubscription` / `WhaleCoreOptionListSubscription` / `WhaleCoreOptionChainSubscription` 另有 `updateCounterIds(_:)`（整组替换、300ms 防抖合并、移出集合的标的立即停止回调、底层订阅随 `cancel()` 整组释放）。
 
 ## 期权计算器 {/* option-calculator */}
 
@@ -369,8 +397,12 @@ let days = WhaleCoreOptionCalculator.daysToExpire(
 另有 `intrinsicValue(underlyingPrice:strikePrice:isCall:)`（内在价值：Call = max(0, 现价 − 行权价)，Put 相反）、`timeValue(optionPrice:intrinsicValue:)`（时间价值 = 权利金 − 内在价值）、`profitProbability(...)`（到期盈利概率，Black-Scholes 风险中性口径）。
 
 <Note>
-  非法输入统一返回 `nil`（UI 按 "--" 展示）：IV ≤ 0、天数 < 0、减分红后正股价 ≤ 0、行权价 / 盈亏平衡点 ≤ 0、利率为 0（含内置利率不可用）。`interestRate` 传 `nil` 时读 SDK 内置无风险利率（服务端配置，登录后自动就绪）；`daysToExpire(expireDate:timeZone:)` 到期当天为 0、已过期为负，负数传入计算 API 即返回 `nil`。
+  非法输入统一返回 `nil`（UI 按 "--" 展示）：IV ≤ 0、天数 < 0、减分红后正股价 ≤ 0、行权价 / 盈亏平衡点 ≤ 0、利率为 0（含内置利率不可用）。`interestRate` 传 `nil` 时读期权口径的内置无风险利率（登录后自动就绪，展示用可经 `getInterestRate()` 自读）；`daysToExpire(expireDate:timeZone:)` 到期当天为 0、已过期为负，负数传入计算 API 即返回 `nil`。
 </Note>
+
+<Warning>
+  **无风险利率有两个口径，不要混用。** 服务端发布了两个数值不同的无风险利率（同一时刻实测相差约 0.2 个百分点）。期权的 Greeks 与理论价用 `getInterestRate()`（国债平均收益率，即本计算器 `interestRate` 传 `nil` 时的默认值）；**轮证的对冲值、有效杠杆用 `getWarrantInterestRate()`**（行情配置下发值，与官方客户端计算轮证参数所用的利率同源）。取错不会报错，只会让指标与官方客户端对不上。轮证口径的值经网络取得，首次调用可能返回 `nil` 并在后台补拉，稍后再读即有值。
+</Warning>
 
 **方法一览：**
 
@@ -382,6 +414,55 @@ let days = WhaleCoreOptionCalculator.daysToExpire(
 | `daysToExpire(expireDate:`<br />`timeZone:)` | 计算距到期整数自然日数（「剩 N 天」类展示口径） |
 | `fractionalDaysToExpire(expireDate:`<br />`timeZone:`<br />`holidays:`<br />`dayOffset:)` | 计算距到期小数天：到期时刻取到期日 20:00、按小时折算；传节假日表时为交易日口径 |
 | `profitProbability(underlyingPrice:`<br />`breakevenPoint:`<br />`impliedVolatility:`<br />`daysToExpire:`<br />`isCall:`<br />`dividendToExpire:`<br />`interestRate:)` | 计算到期盈利概率（Black-Scholes 风险中性口径） |
+
+## 轮证计算器 {/* warrant-calculator */}
+
+`WhaleCoreWarrantCalculator` 是无状态纯计算工具（全静态方法，不注册进 `WhaleCoreService`、无网络），用于计算港股轮证（窝轮、牛熊证、界内证）的衍生指标。
+
+轮证行情只下发合约原始字段（行使价、换股比率、收回价、上下限价、隐含波动率、距到期天数），**不下发溢价率、杠杆、打和点、对冲值等衍生指标**。轮证详情页、下单页参考数据等单标的场景需要在本地计算，本工具即为此提供。
+
+合约字段取自轮证行情快照的 `warrantData`，**必须通过 `subscribeQuoteDetail(counterId:)` 订阅**，批量列表入口拿不到；正股价需宿主自行订阅正股，与期权计算器一致。
+
+```swift
+// 轮证快照 + 正股价 → 输入（省去逐字段搬运；缺 warrantData 时返回 nil）
+guard let input = WhaleCoreWarrantMetricsInput(
+    warrant: warrantStock,                                   // subscribeQuoteDetail 取得
+    underlyingPrice: NSDecimalNumber(string: "441.4"),       // 自订正股取最新价
+    daysToExpire: NSDecimalNumber(value: warrantData.dayToExpire)  // 口径见下
+) else { return }
+
+let m = WhaleCoreWarrantCalculator.metrics(input)
+print(m.premium, m.leverageRatio, m.effectiveLeverage, m.breakevenPoint,
+      m.moneyness, m.moneynessPercent, m.distanceToCallPrice, m.conversionPrice, m.delta)
+```
+
+各类别适用的指标不同，不适用的指标返回 `nil`（UI 按 "--" 展示），不会返回 0：
+
+| 类别 | 适用 | 不适用 |
+| --- | --- | --- |
+| 认购证 / 认沽证 | 溢价率、杠杆比率、有效杠杆、打和点、价内价外、换股价、对冲值 | 距收回价（无收回价） |
+| 牛证 / 熊证 | 溢价率、杠杆比率、打和点、价内价外、换股价、距收回价 | 对冲值、有效杠杆 |
+| 界内证 | 溢价率、杠杆比率、界内 / 界外判定 | 打和点、换股价、距收回价、对冲值、有效杠杆、价内价外幅度 |
+
+<Note>
+  比率类结果是**小数**（`0.2164` = 21.64%），展示时需乘以 100。**认沽证 / 熊证的对冲值与有效杠杆为负值，不要取绝对值。** 单项缺输入只会让该项为 `nil`，其余照算（例如缺换股比率时溢价率、杠杆、打和点、换股价为空，但距收回价与价内价外照常给出）。
+</Note>
+
+<Warning>
+  两个口径由调用方选定，WhaleCore 不替你选：
+
+  - **距到期天数**（`daysToExpire` 必填）：传 `warrantData.dayToExpire` 与官方客户端的轮证参数一致（交易日口径）；传 `WhaleCoreOptionCalculator.daysToExpire(expireDate:timeZone:)` 的自然日则与轮证列表接口下发的对冲值最接近。
+  - **无风险利率**（`interestRate` 传 `nil` 时取轮证口径，即 `getWarrantInterestRate()`）：与期权用的 `getInterestRate()` 不是同一个值，不要混用。
+
+  本地算出的值与轮证列表接口下发的同名列不是同一时点，必然不相等（列表值是服务端在某一快照时刻算出的）。两者不可互相校验，也不建议在同一屏并排展示。
+</Warning>
+
+**方法一览：**
+
+| 方法 | 说明 |
+| --- | --- |
+| `category(fromRaw:)` | 把行情下发的类别字段（`Call` / `Put` / `Bull` / `Bear` / `Inline`）转成枚举 |
+| `metrics(_:)` | 一次算出全部八项衍生指标（对冲值内部只算一次，并复用给有效杠杆） |
 
 ## 订单服务 {/* orders */}
 
@@ -1026,6 +1107,7 @@ let tradeResponse = try await WhaleCoreService.requestService().send(tradeReques
 | 行情 | `WhaleCoreStock` / `WhaleCoreStockData` / `WhaleCoreQuoteData` / `WhaleCoreQuoteDepth` / `WhaleCoreQuoteTrade` / `WhaleCoreTrade` / `WhaleCoreKline` / `WhaleCoreTimeShares` / `WhaleCoreTimeShare` / `WhaleCoreMinute` / `WhaleCoreOptionData` / `WhaleCoreWarrantData` / `WhaleCoreAhPremium` / `WhaleCoreAdrRate` / `WhaleCoreHkDual` / `WhaleCoreChannelItem` / `WhaleCoreEtfReference` / `WhaleCoreOptionChainSubscription` / `WhaleCoreQuoteLevelInfo` / `WhaleCoreSubMarketQuote` / `WhaleCorePriceLevel` / `WhaleCoreDepthLevel` / `WhaleCoreEvictedLevelDetail` |
 | 行情枚举 | `WhaleCoreKlineType` / `WhaleCoreKlineSession` / `WhaleCoreAdjustType` / `WhaleCoreTradeStatus` / `WhaleCoreStockTemplate` / `WhaleCoreTimeshareType` / `WhaleCoreOptionDirection` |
 | 期权计算 | `WhaleCoreOptionPricingInput` / `WhaleCoreOptionGreeks` |
+| 轮证计算 | `WhaleCoreWarrantMetricsInput` / `WhaleCoreWarrantMetrics` / `WhaleCoreWarrantCategory` / `WhaleCoreWarrantMoneyness` |
 | 订单 | `WhaleCoreOrder` / `WhaleCoreOrderDetail` / `WhaleCoreOrderSubmitRequest` / `WhaleCoreOrderSubmitResult` / `WhaleCoreReplaceOrderRequest` / `WhaleCoreTradeCapacity` / `WhaleCoreTradeCapacityRequest` / `WhaleCoreOptionOpenMargin` / `WhaleCoreEstimateBuyLimit` / `WhaleCoreEstimateBuyLimitRequest` / `WhaleCoreTradeDetail` / `WhaleCoreEstimatedCostResult` / `WhaleCoreTriggerRule` / `WhaleCoreOrderInfo` / `WhaleCoreOrderTypeConfigItem` / `WhaleCoreOptionContractModel` / `WhaleCoreTPSLOrderIntent` / `WhaleCoreSubmitTPSLOrderRequest` / `WhaleCoreTPSLValidationResult` / `WhaleCoreSubmitTPSLOrderResult` / `WhaleCoreTPSLLegOrder` / `WhaleCoreOrderPloyType` / `WhaleCoreOrderOperateDirection` / `WhaleCoreTradeCard` / `WhaleCoreTradeCards` / `WhaleCoreTradeCardCategory` / `WhaleCoreSuggestedTradeCard` |
 | 下单校验 | `WhaleCoreOrderIntent` / `WhaleCoreAttachedIntent` / `WhaleCoreOrderConstraints` / `WhaleCoreOrderValidationResult` / `WhaleCoreOrderValidationIssue` / `WhaleCoreOrderValidationRule` / `WhaleCoreOrderField` / `WhaleCoreValidationScope` / `WhaleCoreQualificationStatus` / `WhaleCoreQualificationType` / `WhaleCoreQualificationState` / `WhaleCoreDerivExperience` |
 | 订单预览 | `WhaleCoreOrderPreviewResult` / `WhaleCoreOrderPreviewContext` / `WhaleCoreOrderPreviewFields` / `WhaleCoreOrderPreviewFeeFields` / `WhaleCoreOrderPreviewFees` / `WhaleCoreDiscountedAmount` / `WhaleCoreAmountChange` / `WhaleCoreOrderPreviewFreeze` / `WhaleCoreOrderPreviewPostCost` / `WhaleCoreOrderPreviewRiskHint` / `WhaleCorePositionAction` |

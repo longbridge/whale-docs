@@ -54,7 +54,7 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: Stock Code. Corresponds to the request field counter-id field.
+                  description: Stock Code. Corresponds to the request field counter-id field. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
             example:
               counter_id: ST/US/AAPL
       responses:
@@ -165,7 +165,10 @@ paths:
                   description: Broker Record ID. Provided only when editing an existing record; not sent when creating.
                 market:
                   type: string
-                  description: Market. Dropdown selection. This field is disabled and cannot be modified when editing.
+                  description: |-
+                    Market. Dropdown selection. This field is disabled and cannot be modified when editing.
+
+                    **Allowed values:** `us` US market, `cn` Shanghai/Shenzhen market, `hk` Hong Kong market, `sg` Singapore market
                   enum:
                     - us
                     - cn
@@ -205,7 +208,11 @@ paths:
                     Contact Phone. An array of { contact_phone: string }; multiple contact phones can be added or removed
                     dynamically, and each must match the regex ^[A-Za-z0-9,.\-+\s]+$.
                   items:
-                    type: string
+                    type: object
+                    properties:
+                      contact_phone:
+                        type: string
+                        description: Contact phone number.
                 audit_frontend_resource:
                   type: object
                   description: |-
@@ -213,7 +220,7 @@ paths:
                     $action/$behavior and the original field values prior to editing; not a business
                     parameter.
             example:
-              market: HK
+              market: hk
               code: HKG001
               name: Longbridge Securities
               company_name: Longbridge Securities
@@ -221,7 +228,7 @@ paths:
               contact: 张三
               contact_email: user@example.com
               contact_phones:
-                - contact_phone: 85200000000
+                - contact_phone: '85200000000'
       responses:
         '200':
           description: The request was processed successfully. The response `data` does not contain additional business fields.
@@ -437,7 +444,20 @@ paths:
               type: object
               required:
                 - market
-                - name
+                - name_en
+                - name_cn
+                - name_hk
+                - app_name_en
+                - app_name_cn
+                - app_name_hk
+                - stock_limit
+                - code
+                - contact
+                - is_has_attachment
+                - tpl_email
+                - show_name
+                - priority
+                - state
               properties:
                 id:
                   type: string
@@ -446,6 +466,8 @@ paths:
                   type: string
                   description: |-
                     Market of the counterparty broker. Options are provided by the backend market data dictionary; use the options the service returns. Locked to `us` and read-only for US tenants.
+
+                    **Allowed values:** `us` US market, `cn` Shanghai/Shenzhen market, `hk` Hong Kong market, `sg` Singapore market
                   enum:
                     - us
                     - cn
@@ -491,10 +513,11 @@ paths:
                 is_has_attachment:
                   type: string
                   description: |-
-                    Any Attachment. A radio field whose value comes from the keys of ref atm_brokers_attachment (e.g.
-                    1=has attachment / 0=no attachment; the exact enum is determined by the ref). When it
+                    Any Attachment. A radio field whose value comes from the keys of ref atm_brokers_attachment. When it
                     is 1, website is optional and contact_phone/contact_email are required; for other
                     values, the opposite applies.
+
+                    **Allowed values:** `1` Yes, `0` No
                   enum:
                     - '1'
                     - '0'
@@ -518,7 +541,10 @@ paths:
                   description: Broker Logo. Specifies Broker Logo.
                 show_name:
                   type: string
-                  description: Display Name of Our Broker. A radio field.
+                  description: |-
+                    Display Name of Our Broker. A radio field.
+
+                    **Allowed values:** `1` Name of Counter Company, `0` Name of channel broker
                   enum:
                     - '1'
                     - '0'
@@ -556,14 +582,32 @@ paths:
                   description: Audit Context. Auto-appended by the client for audit-log display; not a business field.
                 name:
                   type: object
-                  properties: {}
+                  properties:
+                    zh-CN:
+                      type: string
+                      description: Channel broker name (Simplified Chinese).
+                    zh-HK:
+                      type: string
+                      description: Channel broker name (Traditional Chinese).
+                    en:
+                      type: string
+                      description: Channel broker name (English).
                   description: |-
-                    Localized name object with `zh-CN`, `zh-HK`, `en`; also flattened into `name_cn`/`name_hk`/`name_en`.
+                    Localized name object with `zh-CN`, `zh-HK`, `en`; also flattened into `name_cn`/`name_hk`/`name_en`. Send the object together with the flattened fields, using the same values.
                 app_name:
                   type: object
-                  properties: {}
+                  properties:
+                    zh-CN:
+                      type: string
+                      description: Broker app name (Simplified Chinese).
+                    zh-HK:
+                      type: string
+                      description: Broker app name (Traditional Chinese).
+                    en:
+                      type: string
+                      description: Broker app name (English).
                   description: |-
-                    Localized app-name object with `zh-CN`, `zh-HK`, `en`; also flattened into `app_name_cn`/`app_name_hk`/`app_name_en`.
+                    Localized app-name object with `zh-CN`, `zh-HK`, `en`; also flattened into `app_name_cn`/`app_name_hk`/`app_name_en`. Send the object together with the flattened fields, using the same values.
                 account_limit:
                   type: string
                   description: |-
@@ -573,18 +617,26 @@ paths:
                   description: |-
                     Icon type. Options come from a backend data dictionary.
             example:
-              market: HK
+              market: hk
+              name:
+                zh-CN: 长桥证券
+                zh-HK: 長橋證券
+                en: Longbridge Securities
+              app_name:
+                zh-CN: 长桥
+                zh-HK: 長橋
+                en: Longbridge
               name_en: Longbridge Securities
-              name_cn: Longbridge Securities
-              name_hk: Longbridge Securities
+              name_cn: 长桥证券
+              name_hk: 長橋證券
               app_name_en: Longbridge
-              app_name_cn: Longbridge
-              app_name_hk: Longbridge
+              app_name_cn: 长桥
+              app_name_hk: 長橋
               stock_limit: 100
               code: HKG001
-              contact: 李四
+              contact: Li Si
               is_has_attachment: '1'
-              contact_phone: 85200000000
+              contact_phone: '85200000000'
               contact_email: user@example.com
               tpl_email: user@example.com
               icon: https://example.com/logo.png
@@ -835,6 +887,12 @@ paths:
                           en:
                             type: string
                             description: English. Specifies English.
+                          zh_cn:
+                            type: string
+                            description: Simplified Chinese. Simplified Chinese name (the key actually returned is `zh_cn`).
+                          zh_hk:
+                            type: string
+                            description: Traditional Chinese. Traditional Chinese name (the key actually returned is `zh_hk`).
                       region:
                         type: string
                         description: Region. Specifies Region.
@@ -923,6 +981,9 @@ paths:
                       icon:
                         type: string
                         description: Icon. Specifies Icon.
+                      stock_template:
+                        type: integer
+                        description: Stock template. Integer code of the template used for the security details.
               example:
                 code: 0
                 message: success
@@ -979,7 +1040,7 @@ paths:
         - name: counter_id
           in: query
           required: true
-          description: Specifies Counter id. This field is required.
+          description: Specifies Counter id. This field is required. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
           schema:
             type: string
       responses:
@@ -1418,6 +1479,18 @@ paths:
                           payment_frequency_unit:
                             type: string
                             description: Payment frequency unit. Specifies Payment frequency unit.
+                          id:
+                            type: string
+                            description: Bond info ID. Bond info record ID.
+                          counter_id:
+                            type: string
+                            description: Counter ID. Counter ID of the bond, formatted `{type}/{market}/{code}`.
+                          group_name:
+                            type: string
+                            description: Group name. Name of the group the bond belongs to; may be an empty string.
+                      board:
+                        type: string
+                        description: Board. Board the security belongs to; may be an empty string.
               example:
                 code: 0
                 message: success
@@ -1496,13 +1569,16 @@ paths:
                   description: Record ID. Record ID associated with this request.
                 counter_id:
                   type: string
-                  description: Stock Code. Corresponds to the request field close_price_stock_code field; read-only after creation.
+                  description: Stock Code. Corresponds to the request field close_price_stock_code field; read-only after creation. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 trade_day:
                   type: string
                   description: Trade Day. Format YYYY-MM-DD.
                 suspension_indicator:
                   type: string
-                  description: Suspension Indicator. Suspension indicator. Defaults to `N`; see the options below.
+                  description: |-
+                    Suspension Indicator. Suspension indicator. Defaults to `N`.
+
+                    **Allowed values:** `Y` Yes, `N` No
                   enum:
                     - Y
                     - N
@@ -1764,7 +1840,10 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     id:
                       type: string
                       description: Transfer-in Request ID. Filters results by Transfer-in Request ID.
@@ -1829,7 +1908,10 @@ paths:
                       example: US
                     origin:
                       type: string
-                      description: Origin. Filters results by Origin.
+                      description: |-
+                        Origin. Filters results by Origin.
+
+                        **Allowed values:** `0` User, `1` Operator, `2` WAS
                       enum:
                         - '0'
                         - '1'
@@ -2070,7 +2152,10 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: Member ID. Filters results by Member ID.
+                      description: |-
+                        Member ID. Filters results by Member ID.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     id:
                       type: string
                       description: Transfer-In Record ID. Filters results by Transfer-In Record ID.
@@ -2082,7 +2167,10 @@ paths:
                       description: A/C No. Filters results by A/C No.
                     apply_state:
                       type: string
-                      description: Approval Status. Filters results by Approval Status.
+                      description: |-
+                        Approval Status. Filters results by Approval Status.
+
+                        **Allowed values:** `0` Init, `1` Pending Success Review, `2` Pending Fail Review, `3` Pending Edit Review, `4` Pending Release Review, `5` Pending Release, `6` Delete pending approval
                       enum:
                         - '0'
                         - '1'
@@ -2113,6 +2201,8 @@ paths:
                         Status. Filters results by Status.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `0` Pending, `1` Success, `2` Fail, `3` Deleted
                       example: 0,1
                       enum:
                         - '0'
@@ -2130,7 +2220,7 @@ paths:
                           label: Deleted
                     counter_id:
                       type: string
-                      description: Stock. Filters results by Stock.
+                      description: Stock. Filters results by Stock. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                     created_at:
                       type: object
                       description: Created At. Filters results by Created At.
@@ -2160,7 +2250,10 @@ paths:
                       description: SI Report Name. Filters results by SI Report Name.
                     is_reality:
                       type: string
-                      description: Physical Scrip?. Filters results by Physical Scrip?.
+                      description: |-
+                        Physical Scrip?. Filters results by Physical Scrip?.
+
+                        **Allowed values:** `0` NO, `1` YES
                       enum:
                         - '0'
                         - '1'
@@ -2641,7 +2734,7 @@ paths:
                       description: Restricted Stock ID. Filters results by Restricted Stock ID.
                     counter_id:
                       type: string
-                      description: Stock. Filters results by Stock.
+                      description: Stock. Filters results by Stock. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                     updated_at:
                       type: object
                       description: Updated At. Filters results by Updated At.
@@ -3288,7 +3381,7 @@ paths:
                       code: B02222123
                       account: '12345454646'
                       contact: Settlement Team01
-                      contact_phone: 85200000000
+                      contact_phone: '85200000000'
                       contact_email: user@example.com
                       created_at: '1667984954'
                       updated_at: '1783964812'
@@ -3385,7 +3478,7 @@ paths:
                       description: |-
                         Market. Filters results by Market.
 
-                        **Allowed values:** `HK`, `US`, `CN` (CN Market), `SG`
+                        **Allowed values:** `HK` HK Market, `US` US Market, `CN` CN Market, `SG` SG Market
                       enum:
                         - HK
                         - US
@@ -3394,7 +3487,10 @@ paths:
                       example: HK
                     ticket_operation:
                       type: string
-                      description: Audit Status. Filters results by Audit Status.
+                      description: |-
+                        Audit Status. Filters results by Audit Status.
+
+                        **Allowed values:** `0` Initial, `1` New to approve, `2` Edit to approve, `3` Delete to approve
                       enum:
                         - '0'
                         - '1'
@@ -3412,7 +3508,10 @@ paths:
                       example: '0'
                     state:
                       type: string
-                      description: Status. Filters results by Status.
+                      description: |-
+                        Status. Filters results by Status.
+
+                        **Allowed values:** `1` Enabled, `2` Disabled
                       enum:
                         - '1'
                         - '2'
@@ -3555,6 +3654,15 @@ paths:
                             updated_at:
                               type: string
                               description: Update Time. **Returned value:** Update Time. The date or time format follows the value returned by the API.
+                            app_name_cn:
+                              type: string
+                              description: Broker app name (Simplified Chinese). **Returned value:** Simplified Chinese name of the broker app.
+                            app_name_hk:
+                              type: string
+                              description: Broker app name (Traditional Chinese). **Returned value:** Traditional Chinese name of the broker app.
+                            app_name_en:
+                              type: string
+                              description: Broker app name (English). **Returned value:** English name of the broker app.
                       total:
                         type: integer
                         description: Total. **Returned value:** Total number of matching records, used for pagination.
@@ -3571,7 +3679,7 @@ paths:
                       code: B01130
                       us_code: B01130
                       contact: clearing operation
-                      contact_phone: 85200000000
+                      contact_phone: '85200000000'
                       contact_email: user@example.com
                       tpl_email: user@example.com
                       stock_limit: '5'
@@ -3662,7 +3770,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Security Name/Symbol. Filters results by Security Name/Symbol.
+                      description: Security Name/Symbol. Filters results by Security Name/Symbol. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                     market:
                       type: string
                       description: |-
@@ -3831,7 +3939,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Symbol Name/Ticker. Filters results by Symbol Name/Ticker.
+                      description: Symbol Name/Ticker. Filters results by Symbol Name/Ticker. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                     market:
                       type: string
                       description: |-
@@ -3842,7 +3950,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/underlying_markets
                     security_type:
                       type: string
-                      description: Security Type. Filters results by Security Type.
+                      description: |-
+                        Security Type. Filters results by Security Type.
+
+                        **Allowed values:** `STOCK` Stock, `BOND` Bond, `OTHER` Other
                       enum:
                         - STOCK
                         - BOND
@@ -4034,7 +4145,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Security Name/Symbol. Filters results by Security Name/Symbol.
+                      description: Security Name/Symbol. Filters results by Security Name/Symbol. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                     trade_day:
                       type: string
                       description: Trade Day. Filters results by Trade Day.
@@ -4213,114 +4324,131 @@ paths:
                 - aaid
                 - member_id
                 - from
-                - params.name_en
-                - params.code
-                - params.name
-                - params.account_channel
-                - params.stocks
-                - params.stocks[].counter_id
-                - params.stocks[].is_reality
-                - params.stocks[].custodian
-                - params.stocks[].sub_position_no
-                - params.stocks[].amount
+                - params
               properties:
                 aaid:
                   type: string
-                  description: Asset Account ID. Asset Account ID associated with this request.
+                  description: |-
+                    Asset Account ID. Asset Account ID associated with this request.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 member_id:
                   type: string
-                  description: Member ID. Member ID associated with this request.
+                  description: |-
+                    Member ID. Member ID associated with this request.
+
+                    `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                 from:
                   type: string
                   description: Source Flag. Always sends 'bo' (back office).
-                params.broker_id:
-                  type: string
-                  description: Receiving Broker. Broker dropdown with an additional `id = 0` option representing Other Broker.
-                params.name_en:
-                  type: string
-                  description: |-
-                    Name of Receiving Broker. Must be filled in manually when broker_id = '0' (other broker); otherwise
-                    auto-populated from the selected broker record.
-                params.code:
-                  type: string
-                  description: |-
-                    CCASS / DTC No.. Must be filled in manually when broker_id = '0' (other broker); otherwise
-                    auto-populated from the selected broker record.
-                params.name:
-                  type: string
-                  description: Account Name. An enumerated value; the data source is the list of client names.
-                params.account:
-                  type: string
-                  description: A/C No.. Specifies A/C No..
-                params.broker:
-                  type: string
-                  description: 'Broker Name (submit). A computed field: when broker_id ≠ ''0'' it takes the selected broker''s name, otherwise it takes name_en.'
-                params.account_channel:
-                  type: string
-                  description: Account Channel. The currently logged-in channel, obtained automatically; not manually entered by the user.
-                params.stocks:
-                  type: array
-                  description: Transfer Out Stock List. Multiple groups can be added/removed dynamically; each group's structure is described by the stocks[] fields below.
-                  items:
-                    type: string
-                params.stocks[].counter_id:
-                  type: string
-                  description: Stock (Counter ID). Select the instrument; upon selection, market/name_en/code and custodian-holding info are populated in cascade.
-                params.stocks[].is_reality:
-                  type: integer
-                  description: Whether It Is a Physical Stock. Specifies Whether It Is a Physical Stock. This field is required.
-                  enum:
-                    - '1'
-                    - '0'
-                  x-enum-details:
-                    - value: '1'
-                      label: 'Yes'
-                    - value: '0'
-                      label: 'No'
-                  example: '1'
-                params.stocks[].custodian:
-                  type: string
-                  description: |-
-                    Custodian. An enumerated value; after an instrument is selected, options are provided by the
-                    holdings-query result or the clear_custodian_no_all dynamic enumeration.
+                params:
+                  type: object
+                  description: Transfer-out request parameters. Include the receiving broker, account details, and securities to transfer out.
+                  required:
+                    - name_en
+                    - code
+                    - name
+                    - account_channel
+                    - stocks
+                  properties:
+                    broker_id:
+                      type: string
+                      description: Receiving Broker. Broker dropdown with an additional `id = 0` option representing Other Broker.
+                    name_en:
+                      type: string
+                      description: |-
+                        Name of Receiving Broker. Must be filled in manually when broker_id = '0' (other broker); otherwise
+                        auto-populated from the selected broker record.
+                    code:
+                      type: string
+                      description: |-
+                        CCASS / DTC No.. Must be filled in manually when broker_id = '0' (other broker); otherwise
+                        auto-populated from the selected broker record.
+                    name:
+                      type: string
+                      description: Account Name. An enumerated value; the data source is the list of client names.
+                    account:
+                      type: string
+                      description: A/C No.. Specifies A/C No..
+                    broker:
+                      type: string
+                      description: 'Broker Name (submit). A computed field: when broker_id ≠ ''0'' it takes the selected broker''s name, otherwise it takes name_en.'
+                    account_channel:
+                      type: string
+                      description: Account Channel. The currently logged-in channel, obtained automatically; not manually entered by the user.
+                    stocks:
+                      type: array
+                      description: Transfer Out Stock List. Multiple groups can be added/removed dynamically; each group's structure is described by the stocks[] fields below.
+                      items:
+                        type: object
+                        required:
+                          - counter_id
+                          - is_reality
+                          - custodian
+                          - sub_position_no
+                          - amount
+                        properties:
+                          counter_id:
+                            type: string
+                            description: Stock (Counter ID). Select the instrument; upon selection, market/name_en/code and custodian-holding info are populated in cascade. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
+                          is_reality:
+                            type: integer
+                            description: |-
+                              Whether It Is a Physical Stock. Specifies Whether It Is a Physical Stock. This field is required.
 
-                    Call `GET /v1/datasets/refs/clearing_custodians` to retrieve the current data dictionary, and use the returned entry's `key` as this field's value.
-                  x-value-source:
-                    endpoint: GET /v1/datasets/refs/clearing_custodians
-                params.stocks[].sub_position_no:
-                  type: string
-                  description: |-
-                    Depot. An enumerated value, sourced from holdings information or the clear_sub_position_no_all dynamic enumeration.
+                              **Allowed values:** `1` Yes, `0` No
+                            enum:
+                              - '1'
+                              - '0'
+                            x-enum-details:
+                              - value: '1'
+                                label: 'Yes'
+                              - value: '0'
+                                label: 'No'
+                            example: '1'
+                          custodian:
+                            type: string
+                            description: |-
+                              Custodian. An enumerated value; after an instrument is selected, options are provided by the
+                              holdings-query result or the clear_custodian_no_all dynamic enumeration.
 
-                    Call `GET /v1/datasets/refs/custodian_sub_positions` to retrieve the current data dictionary, and use the returned entry's `key` as this field's value.
-                  x-value-source:
-                    endpoint: GET /v1/datasets/refs/custodian_sub_positions
-                params.stocks[].street_amount:
-                  type: integer
-                  description: Street Amount. A non-negative integer, defaults to 0, populated automatically from the holdings query, editable.
-                params.stocks[].nominee_amount:
-                  type: integer
-                  description: Nominee Amount. A non-negative integer, defaults to 0, populated automatically from the holdings query, editable.
-                params.stocks[].own_amount:
-                  type: integer
-                  description: Own Amount. A non-negative integer, defaults to 0, populated automatically from the holdings query, editable.
-                params.stocks[].amount:
-                  type: string
-                  description: |-
-                    Total Amount. Auto-computed as street_amount + nominee_amount + own_amount; must be a positive
-                    integer, converted to a string on submit.
-                params.stocks[].market:
-                  type: string
-                  description: Market. Populated automatically from the selected counter_id.
-                params.stocks[].name_en:
-                  type: string
-                  description: Stock Name (English). Populated automatically from the selected counter_id.
-                params.stocks[].code:
-                  type: string
-                  description: Stock Code. Populated automatically from the selected counter_id.
+                              Call `GET /v1/datasets/refs/clearing_custodians` to retrieve the current data dictionary, and use the returned entry's `key` as this field's value.
+                            x-value-source:
+                              endpoint: GET /v1/datasets/refs/clearing_custodians
+                          sub_position_no:
+                            type: string
+                            description: |-
+                              Depot. An enumerated value, sourced from holdings information or the clear_sub_position_no_all dynamic enumeration.
+
+                              Call `GET /v1/datasets/refs/custodian_sub_positions` to retrieve the current data dictionary, and use the returned entry's `key` as this field's value.
+                            x-value-source:
+                              endpoint: GET /v1/datasets/refs/custodian_sub_positions
+                          street_amount:
+                            type: integer
+                            description: Street Amount. A non-negative integer, defaults to 0, populated automatically from the holdings query, editable.
+                          nominee_amount:
+                            type: integer
+                            description: Nominee Amount. A non-negative integer, defaults to 0, populated automatically from the holdings query, editable.
+                          own_amount:
+                            type: integer
+                            description: Own Amount. A non-negative integer, defaults to 0, populated automatically from the holdings query, editable.
+                          amount:
+                            type: string
+                            description: |-
+                              Total Amount. Auto-computed as street_amount + nominee_amount + own_amount; must be a positive
+                              integer, converted to a string on submit.
+                          market:
+                            type: string
+                            description: Market. Populated automatically from the selected counter_id.
+                          name_en:
+                            type: string
+                            description: Stock Name (English). Populated automatically from the selected counter_id.
+                          code:
+                            type: string
+                            description: Stock Code. Populated automatically from the selected counter_id.
             example:
               aaid: H00000000
-              member_id: '101456715'
+              member_id: '10000000'
               from: bo
               params:
                 broker_id: '0'
@@ -4586,7 +4714,10 @@ paths:
                   description: Transfer-out Request ID. Attached by the client as record?.id on submission; not a request field.
                 is_show:
                   type: number
-                  description: Remark Visible to User. Corresponds to the request field `Radio.Group`; `1` means visible.
+                  description: |-
+                    Remark Visible to User. Visibility flag.
+
+                    **Allowed values:** `1` Visible, `0` Hidden
                   enum:
                     - '1'
                     - '0'
@@ -4694,6 +4825,8 @@ paths:
 
         Advances transfer-out processing in batch at the security-detail granularity. `remark` is recorded according to `remark_config_type`.
 
+        Only rows whose current state is `0` (initialized) and that have no pending approval ticket are accepted. Rows already in a final state (`1` succeeded, `2` failed) or with a pending ticket return the generic error `203500`.
+
         ### Risk warning
 
         This operation changes the live status of withdrawal detail items and affects transfer-out processing progress. Confirm the target items and target status before calling.
@@ -4715,12 +4848,16 @@ paths:
               properties:
                 ids:
                   type: array
-                  description: Transfer-out Stock Detail IDs. An array of the ids of the batch-selected rows.
+                  description: |-
+                    Transfer-out detail ID list. IDs of the batch-selected rows; only rows in state `0` (initialized) can be updated.
                   items:
                     type: string
                 state:
                   type: number
-                  description: Resulting State. 1 = success, 2 = failure; in the "Update" dialog, send 1 when confirming success and 2 when confirming failure.
+                  description: |-
+                    Resulting State. Target state after the batch update; in the "Update" dialog, send 1 when confirming success and 2 when confirming failure.
+
+                    **Allowed values:** `1` Success, `2` Failed
                   enum:
                     - '1'
                     - '2'
@@ -4838,7 +4975,10 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     id:
                       type: string
                       description: Transfer-out Request ID. Filters results by Transfer-out Request ID.
@@ -4856,10 +4996,13 @@ paths:
                           format: date
                     counter_id:
                       type: string
-                      description: Stock. Filters results by Stock.
+                      description: Stock. Filters results by Stock. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                     from:
                       type: string
-                      description: Source. Filters results by Source.
+                      description: |-
+                        Source. Filters results by Source.
+
+                        **Allowed values:** `app` Client, `bo` Manual, `was`
                       enum:
                         - app
                         - bo
@@ -5110,7 +5253,10 @@ paths:
                       description: Transfer-Out Record ID. Filters results by Transfer-Out Record ID.
                     is_reality:
                       type: string
-                      description: Physical Script. Filters results by Physical Script.
+                      description: |-
+                        Physical Script. Filters results by Physical Script.
+
+                        **Allowed values:** `0` NO, `1` YES
                       enum:
                         - '0'
                         - '1'
@@ -5126,6 +5272,8 @@ paths:
                         Transfer-Out Status. Filters results by Transfer-Out Status.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `0` Initialize, `1` Success, `2` Fail, `3` Deleted
                       example: 0,1
                       enum:
                         - '0'
@@ -5159,6 +5307,8 @@ paths:
                         Approval Status. Filters results by Approval Status.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `0` Init, `1` Pending Success Review, `2` Pending Fail Review, `3` Pending Edit Review, `6` Delete pending approval
                       example: 0,1
                       enum:
                         - '0'
@@ -5179,7 +5329,10 @@ paths:
                           label: Delete pending approval
                     member_id:
                       type: string
-                      description: Client ID. Filters results by Client ID.
+                      description: |-
+                        Client ID. Filters results by Client ID.
+
+                        `member_id` is the customer ID. It differs from the securities account number `account_no` and the internal securities account ID `aaid`; one customer can have multiple securities accounts.
                     market:
                       type: string
                       description: |-
@@ -5211,7 +5364,7 @@ paths:
                       example: US
                     counter_id:
                       type: string
-                      description: Stock. Filters results by Stock.
+                      description: Stock. Filters results by Stock. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                     settled_at:
                       type: object
                       description: Settled At. Filters results by Settled At.
@@ -5226,7 +5379,10 @@ paths:
                           format: date
                     cheat_state:
                       type: string
-                      description: Risk Status. Filters results by Risk Status.
+                      description: |-
+                        Risk Status. Filters results by Risk Status.
+
+                        **Allowed values:** `0` Risk Control In Progress, `1` Not Targeted, `2` Targeted
                       enum:
                         - '0'
                         - '1'

@@ -86,7 +86,10 @@ paths:
                     endpoint: GET /v1/datasets/refs/book_business_types_by_source
                 aaid:
                   type: string
-                  description: The associated account AAID (not applicable in some scenarios; may be omitted).
+                  description: |-
+                    The associated account AAID (not applicable in some scenarios; may be omitted).
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 txNo:
                   type: string
                   description: Specifies Transaction No.. This field is required.
@@ -157,6 +160,8 @@ paths:
                   example: '0'
                   description: |-
                     objectType.
+
+                    **Allowed values:** `0` Unknown, `1` Cash, `2` Stock, `3` Fund
                 audit_frontend_resource:
                   type: object
                   description: |-
@@ -415,7 +420,10 @@ paths:
                     endpoint: GET /v1/datasets/refs/book_business_types_by_source
                 aaid:
                   type: string
-                  description: A custom component selects the associated account; hidden and not submitted when the source is 0.
+                  description: |-
+                    A custom component selects the associated account; hidden and not submitted when the source is 0.
+
+                    Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                 txNo:
                   type: string
                   description: Specifies Transaction No.. This field is required.
@@ -495,6 +503,8 @@ paths:
                   example: '0'
                   description: |-
                     objectType.
+
+                    **Allowed values:** `0` Unknown, `1` Cash, `2` Stock, `3` Fund
                 audit_frontend_resource:
                   type: object
                   description: A snapshot of the original data fetched before editing, used for backend audit comparison; not a user-editable field.
@@ -802,12 +812,15 @@ paths:
 
         ### Request parameters
 
-        - Required: `id` (record ID), `remark` (remark), `ref_no` (related reference number), `begin_amount` (opening balance), `statement_adjustment` (statement adjustment), `in_transit_adjustment` (in-transit adjustment), and `remarks` (remark content).
+        - Required: `id` (record ID; use the `id` of a row returned by `POST /v1/datasets/booking_deposit_in_transit`), `ref_no` (related reference number; the list row's `ref_no`, formatted `dit-{reconciliation_at}-{currency}-{bank_account}-{simple_name}`), `begin_amount` (opening balance), `statement_adjustment` (statement adjustment), `in_transit_adjustment` (in-transit adjustment), and `remarks` (remark content).
+        - Optional: `remark` (remark; the admin console does not send this field).
         - See the individual field docs for each field's format, allowed values, and meaning.
 
         ### Business notes
 
         Used to make manual adjustments to the deposit-in-transit summary reconciliation result. This affects real accounting reconciliation data.
+
+        When looking up the target row, filter by a single ledger date (`reconciliation_at` start and end on the same day) plus `currency`; wider date ranges time out on the large table (about 2.38 million rows).
 
         ### Risk warning
 
@@ -826,7 +839,6 @@ paths:
               type: object
               required:
                 - id
-                - remark
                 - ref_no
                 - begin_amount
                 - statement_adjustment
@@ -838,10 +850,11 @@ paths:
                   description: Record ID associated with this request.
                 remark:
                   type: string
-                  description: This field is required.
+                  description: Remark saved with this operation. Optional; the admin console does not send this field.
                 ref_no:
                   type: string
-                  description: Specifies Ref No.. This field is required.
+                  description: |-
+                    Related reference number. Formatted `dit-{reconciliation_at}-{currency}-{bank_account}-{simple_name}`, built from the same-named fields of the `POST /v1/datasets/booking_deposit_in_transit` row. This field is required.
                 begin_amount:
                   type: number
                   description: This field is required.
@@ -856,7 +869,6 @@ paths:
                   description: Remarks saved with this operation. This field is required.
             example:
               id: '123'
-              remark: ''
               ref_no: ''
               begin_amount: 0
               statement_adjustment: 0
@@ -1067,7 +1079,10 @@ paths:
               properties:
                 source_id:
                   type: number
-                  description: Enum BookkeepingSourceType.
+                  description: |-
+                    Enum BookkeepingSourceType.
+
+                    **Allowed values:** `1` Payment flow, `2` Bank bill, `3` Channel bill, `4` IB accrued interest, `5` IB commission cost, `6` Client fee bill, `7` CCASS bill, `8` IPO bill, `9` Other fee bill, `10` FD client fee bill, `11` Business statistics bill, `12` Channel exchange order, `13` Atomic Vaults bill, `14` Settlement contract, `15` IFAST bill, `16` OB account payment transactions, `17` OB account settlement contract
                   enum:
                     - '1'
                     - '2'
@@ -1625,7 +1640,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -1789,8 +1803,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -2077,7 +2090,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -2264,8 +2276,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -2350,7 +2361,10 @@ paths:
                       example: '48123822'
                     origin:
                       type: string
-                      description: Filters results by Source.
+                      description: |-
+                        Filters results by Source.
+
+                        **Allowed values:** `1` Manual, `0` Auto, `2` Manual Modification
                       enum:
                         - '1'
                         - '0'
@@ -2619,7 +2633,10 @@ paths:
                       example: '1744646400'
                     in_transit:
                       type: string
-                      description: Filters results by In Transit.
+                      description: |-
+                        Filters results by In Transit.
+
+                        **Allowed values:** `0` Yes, `1` No
                       enum:
                         - '0'
                         - '1'
@@ -2850,7 +2867,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -3030,8 +3046,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -3091,6 +3106,9 @@ paths:
         - Each record is aggregated by bank account, currency, and accounting date, carrying opening/closing amounts, deposit amount, received amount, in-transit amount, in-transit discrepancy, in-transit and statement adjustments, reconciliation result (consistent / inconsistent), and remarks.
         - Typically used for finance reconciliation to spot in-transit discrepancies and follow up on adjustments until the result is consistent.
 
+        - The table is large (about 2.38 million rows). Filter by a single ledger date (`reconciliation_at` with equal `gte` and `lte`) plus `currency`; wider date ranges time out (504/500).
+        - Rows include `ref_no` (formatted `dit-{reconciliation_at}-{currency}-{bank_account}-{simple_name}`), which can be passed directly to `modify_summary_recon_items`.
+
         ### Returns
 
         On success, returns the matched record list with pagination. See the response definition for column meanings.
@@ -3130,7 +3148,10 @@ paths:
                       example: HKD
                     state:
                       type: string
-                      description: Filters results by Check the results.
+                      description: |-
+                        Filters results by Check the results.
+
+                        **Allowed values:** `1` Consistent, `2` Inconsistent
                       enum:
                         - '1'
                         - '2'
@@ -3337,7 +3358,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -3517,8 +3537,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -3805,7 +3824,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -4013,8 +4031,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -4312,7 +4329,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -4483,8 +4499,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -4763,7 +4778,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -4943,8 +4957,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -5250,7 +5263,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -5275,7 +5287,7 @@ paths:
                       description: Filters results by Business Serial No..
                     counter_id:
                       type: string
-                      description: Filters results by Stock Code.
+                      description: Filters results by Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                     created_at:
                       type: object
                       description: Filters results by Created Time.
@@ -5472,8 +5484,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -5563,7 +5574,7 @@ paths:
                       description: Filters results by Business Serial No..
                     counter_id:
                       type: string
-                      description: Filters results by Stock Code.
+                      description: Filters results by Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                     created_at:
                       type: object
                       description: Filters results by Created Time.
@@ -5832,7 +5843,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -6019,8 +6029,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -6114,7 +6123,10 @@ paths:
                       example: '682391'
                     state:
                       type: string
-                      description: Filters results by State.
+                      description: |-
+                        Filters results by State.
+
+                        **Allowed values:** `1` Unprocessed, `2` Processed
                       enum:
                         - '1'
                         - '2'
@@ -6320,7 +6332,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -6579,8 +6590,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -7009,7 +7019,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -7168,8 +7177,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -7453,7 +7461,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -7626,8 +7633,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -7720,7 +7726,10 @@ paths:
                           description: Inclusive upper bound of the filter range.
                     business_type:
                       type: string
-                      description: Filters results by Business Type.
+                      description: |-
+                        Filters results by Business Type.
+
+                        **Allowed values:** `ChannelExchange` Channel Exchange, `ChannelExchangeEntry` Channel Exchange Entry, `ExchangeGains` Exchange Gains, `ExchangeLoss` Exchange Loss
                       enum:
                         - ChannelExchange
                         - ChannelExchangeEntry
@@ -7906,7 +7915,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -8064,8 +8072,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -8330,7 +8337,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; returns a `file_download_id` first, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export record once it is no longer needed.
       security:
         - bearerAuth: []
       requestBody:
@@ -8526,8 +8532,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -8840,7 +8845,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; first returns a `file_download_id`, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export you no longer need.
 
         ### Result
 
@@ -8995,8 +8999,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -9083,7 +9086,10 @@ paths:
                       example: '20260715'
                     source:
                       type: string
-                      description: Filters results by Source.
+                      description: |-
+                        Filters results by Source.
+
+                        **Allowed values:** `1` Manual Input, `0` API
                       enum:
                         - '1'
                         - '0'
@@ -9245,7 +9251,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; first returns a `file_download_id`, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export you no longer need.
 
         ### Result
 
@@ -9401,8 +9406,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -9659,7 +9663,6 @@ paths:
 
         - `mode: 0`: synchronous export; returns the download URL directly on success.
         - `mode: 1`: asynchronous export; first returns a `file_download_id`, then call `GET /v1/datasets/download/{id}` to obtain the download URL.
-        - Call `DELETE /v1/datasets/download/{id}` to remove an export you no longer need.
 
         ### Result
 
@@ -9814,8 +9817,7 @@ paths:
                         type: string
                         description: |-
                           Returned in async mode (`mode: 1`); it is the `{id}` in
-                          `GET /v1/datasets/download/{id}` / `DELETE /v1/datasets/download/{id}`: GET
-                          obtains the final download URL, DELETE deletes the export record.
+                          `GET /v1/datasets/download/{id}`, which returns the final download URL.
                       ticket_id:
                         type: string
                         description: '**Returned value:** Approval ticket ID. Returned only when the operation starts an approval workflow.'
@@ -9904,7 +9906,10 @@ paths:
                       description: Filters results by Bank Account.
                     state:
                       type: string
-                      description: Filters results by State.
+                      description: |-
+                        Filters results by State.
+
+                        **Allowed values:** `1` Reconciliation Failed, `2` Reconciliation Successful
                       enum:
                         - '1'
                         - '2'

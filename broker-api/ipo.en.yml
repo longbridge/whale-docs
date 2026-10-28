@@ -39,7 +39,7 @@ paths:
         - name: counter_id
           in: query
           required: true
-          description: This field is required.
+          description: This field is required. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
           schema:
             type: string
       responses:
@@ -200,6 +200,21 @@ paths:
                       cash_channel:
                         type: string
                         description: Cash Channel.
+                      ai:
+                        type: integer
+                        description: AI flag. Integer flag related to subscription eligibility; value meanings are defined by the backend.
+                      pi:
+                        type: integer
+                        description: PI flag. Integer flag related to professional investors (PI); value meanings are defined by the backend.
+                      require_derivatives_knowledge:
+                        type: integer
+                        description: Derivatives knowledge requirement. Integer flag for whether subscribers must have derivatives knowledge.
+                      virtual_asset:
+                        type: integer
+                        description: Virtual asset flag. Integer flag related to virtual assets; value meanings are defined by the backend.
+                      declaration:
+                        type: object
+                        description: Declaration. Declaration text as a multilingual object (same shape as the other text fields); `null` when not configured.
               example:
                 code: 0
                 message: success
@@ -263,7 +278,7 @@ paths:
         - name: counter_id
           in: query
           required: true
-          description: This field is required.
+          description: This field is required. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
           schema:
             type: string
         - name: account_channels
@@ -453,7 +468,7 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: Counter ID. This field is required.
+                  description: Counter ID. This field is required. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 tags:
                   type: object
                   description: Tags.
@@ -635,8 +650,9 @@ paths:
 
         ### Request parameters
 
-        - Required: `id` (batch index number), `financing_limit` (per-user single financing cap), `cost_charge_value` (charge value), `rate_day_count` (annual-rate day count)
-        - Optional: `cost_rate`, `interest_start_at`, `interest_end_at`, `interest_days`, `financing_multiple`, `label`, `parent`, `ended_at`, `lb_interest_days`, `minimum_amount`, `display_label`, `start_at`, `financing_min`, `cost_charge_mode`, `cost_charge_note`, `bank_ratio`, `minimum_cash`
+        - Required: `id` (batch index), `type` (pool type), `amount` (financing amount), `channel` (financing channel), `ratio` (financing ratio), `rate_id` (rate ID), `start_at` (start timestamp), `ended_at` (end timestamp), `currency`
+        - Also needed in practice: `group` (client group) and a non-empty `rules` list (subscription quantity rules, e.g. `[{"min_qty":0,"max_qty":1000}]`), otherwise the call fails with `group rule empty`; `min_cash` and `threshold` must be numeric strings (e.g. `"0.00"`), empty values fail with a format error
+        - Optional: `bank_ratio`, `financing_base_type`, `remark`, `audit_frontend_resource`
         - See each field description for its format, value range, and business meaning.
 
         ### Business notes
@@ -684,7 +700,7 @@ paths:
                 type:
                   type: string
                   description: |-
-                    Financing pool type. Options come from a backend data dictionary.
+                    Financing pool type, same values as `type` on `ipo_margin_new` (`0` financing subscription, `3` zero-cost subscription), but sent as a string here (e.g. `"0"`).
                 amount:
                   type: string
                   description: |-
@@ -695,8 +711,9 @@ paths:
                     Financing channel identifier. Options come from a backend data dictionary.
                 ratio:
                   type: number
+                  minimum: 1
                   description: |-
-                    Financing ratio as a percentage (1-100).
+                    Financing ratio as a percentage, 1–99; sent as a number here and as a string on `ipo_margin_new`. `100` is rejected on `ipo_margin_new` with `100% 融资请选择 0 成本类型: (ratio must less then 100)`; not tested here, so keep it below `100` as well; whether `type` `3` (zero-cost subscription) allows `100` is unverified.
                 rate_id:
                   type: string
                   description: |-
@@ -719,15 +736,22 @@ paths:
                     Minimum cash requirement, submitted as a string with two decimal places.
                 rules:
                   type: array
+                  minItems: 1
                   items:
                     type: object
-                    properties: {}
+                    properties:
+                      min_qty:
+                        type: integer
+                        description: Lower quantity bound.
+                      max_qty:
+                        type: integer
+                        description: Upper quantity bound.
                   description: |-
-                    Array of tiered rules; each item carries upper/lower quantity bounds and cluster config.
+                    Subscription quantity rules; each item has `min_qty` and `max_qty` (lower and upper bound). Must not be empty.
                 group:
                   type: string
                   description: |-
-                    Group identifier the rules belong to.
+                    Client group. `ALL` means all clients (confirmed on TEST); other values are not documented.
                 remark:
                   type: object
                   properties: {}
@@ -739,27 +763,21 @@ paths:
                   description: |-
                     Caller-provided audit context object.
             example:
-              id: 0
-              cost_rate: ''
-              interest_start_at: 0
-              interest_end_at: 0
-              interest_days: 0
-              financing_multiple: ''
-              financing_limit: ''
-              label: ''
-              parent: 0
-              ended_at: 0
-              lb_interest_days: 0
-              minimum_amount: ''
-              display_label: ''
-              start_at: 0
-              financing_min: ''
-              cost_charge_mode: 0
-              cost_charge_value: ''
-              cost_charge_note: ''
-              rate_day_count: 0
-              bank_ratio: ''
-              minimum_cash: ''
+              id: 1
+              type: '0'
+              amount: '1000000.00'
+              channel: '1'
+              ratio: 90
+              rate_id: '1'
+              start_at: 1767225600
+              ended_at: 1767830400
+              currency: HKD
+              group: ALL
+              rules:
+                - min_qty: 0
+                  max_qty: 1000
+              min_cash: '0.00'
+              threshold: '0.00'
       responses:
         '200':
           description: The request was processed successfully. `data.id` is the ID of the modified financing batch.
@@ -835,13 +853,14 @@ paths:
 
         ### Request parameters
 
-        - Required: `channel`, `counter_id` (security ID), `batch_no`, `currency`, `financing_limit` (per-user single financing cap), `applicant`, `cost_charge_value` (charge value), `rate_day_count` (annual-rate day count)
-        - Optional: `amount`, `is_infinite`, `cost_rate`, `interest_start_at`, `interest_end_at`, `interest_days`, `financing_multiple`, `label`, `parent`, `ended_at`, `lb_interest_days`, `minimum_amount`, `display_label`, `start_at`, `financing_min`, `type`, `account_channel`, `cost_charge_mode`, `cost_charge_note`, `ratio`, `multiple_text`, `bank_ratio`, `minimum_cash`
+        - Required: `counter_id` (security ID), `type` (pool type), `amount` (financing amount), `channel` (financing channel), `ratio` (financing ratio), `rate_id` (rate ID), `start_at` (start timestamp), `ended_at` (end timestamp), `currency`
+        - Also needed in practice: `group` (client group) and a non-empty `rules` list (subscription quantity rules, e.g. `[{"min_qty":0,"max_qty":1000}]`), otherwise the call fails with `group rule empty`; `ratio` must be 1–99, `100` fails with `100% 融资请选择 0 成本类型: (ratio must less then 100)` (whether `type` `3`, zero-cost subscription, allows `100` is unverified)
+        - Optional: `bank_ratio`, `financing_base_type`, `threshold`, `min_cash`, `remark`, `audit_frontend_resource`
         - See each field description for its format, value range, and business meaning.
 
         ### Business notes
 
-        Creates a financing pool for the specified security and channel. When `parent` is provided, the record is created as a limit top-up node under that parent node.
+        Creates a financing pool for the specified security and channel.
 
         ### Risk warning
 
@@ -874,7 +893,7 @@ paths:
                   description: Channel. This field is required.
                 counter_id:
                   type: string
-                  description: Counter ID. This field is required.
+                  description: Counter ID. This field is required. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 amount:
                   type: string
                   description: Amount.
@@ -889,7 +908,10 @@ paths:
                   description: Start At.
                 type:
                   type: integer
-                  description: Type.
+                  description: |-
+                    Type. Financing pool type.
+
+                    **Allowed values:** `0` Financing subscription, `3` Zero-cost subscription. Sent as an integer here, as a string on `ipo_margin_edit`; the enum also lists `1` and `2`, which the console does not label, so do not use them.
                   enum:
                     - 0
                     - 1
@@ -898,7 +920,7 @@ paths:
                   example: 0
                 ratio:
                   type: string
-                  description: Ratio.
+                  description: 'Financing ratio as a percentage, 1–99; sent as a string here (e.g. `"90"`) and as a number on `ipo_margin_edit`. `100` is rejected with `100% 融资请选择 0 成本类型: (ratio must less then 100)`; whether `type` `3` (zero-cost subscription) allows `100` has not been verified.'
                 bank_ratio:
                   type: string
                   description: Bank Ratio.
@@ -920,15 +942,22 @@ paths:
                     Minimum cash requirement, submitted as a string with two decimal places.
                 rules:
                   type: array
+                  minItems: 1
                   items:
                     type: object
-                    properties: {}
+                    properties:
+                      min_qty:
+                        type: integer
+                        description: Lower quantity bound.
+                      max_qty:
+                        type: integer
+                        description: Upper quantity bound.
                   description: |-
-                    Array of tiered rules; each item carries upper/lower quantity bounds and cluster config.
+                    Subscription quantity rules; each item has `min_qty` and `max_qty` (lower and upper bound). Must not be empty.
                 group:
                   type: string
                   description: |-
-                    Group identifier the rules belong to.
+                    Client group. `ALL` means all clients (confirmed on TEST); other values are not documented.
                 remark:
                   type: object
                   properties: {}
@@ -940,37 +969,19 @@ paths:
                   description: |-
                     Caller-provided audit context object.
             example:
-              channel: ''
-              counter_id: ''
-              batch_no: ''
-              amount: ''
-              is_infinite: false
-              currency: ''
-              cost_rate: ''
-              interest_start_at: 0
-              interest_end_at: 0
-              interest_days: 0
-              financing_multiple: ''
-              financing_limit: ''
-              applicant: ''
-              label: ''
-              parent: 0
-              ended_at: 0
-              lb_interest_days: 0
-              minimum_amount: ''
-              display_label: ''
-              start_at: 0
-              financing_min: ''
+              channel: '1'
+              counter_id: ST/HK/700
+              amount: '1000000.00'
+              currency: HKD
+              start_at: 1767225600
+              ended_at: 1767830400
               type: 0
-              account_channel: ''
-              cost_charge_mode: 0
-              cost_charge_value: ''
-              cost_charge_note: ''
-              rate_day_count: 0
-              ratio: ''
-              multiple_text: ''
-              bank_ratio: ''
-              minimum_cash: ''
+              ratio: '90'
+              rate_id: '1'
+              group: ALL
+              rules:
+                - min_qty: 0
+                  max_qty: 1000
       responses:
         '200':
           description: The request was processed successfully. `data.id` is the ID of the new financing batch.
@@ -1190,7 +1201,7 @@ paths:
                   description: Payable ID.
                 counter_id:
                   type: string
-                  description: Counter ID. This field is required.
+                  description: Counter ID. This field is required. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 apply_num_sub:
                   type: string
                   description: Shares. This field is required.
@@ -1208,7 +1219,7 @@ paths:
               group_id: 0
       responses:
         '200':
-          description: The request was processed successfully. The response `data` does not contain additional business fields.
+          description: 'The request was processed successfully. `data.result` is `true` when the item is saved.'
           content:
             application/json:
               schema:
@@ -1231,10 +1242,15 @@ paths:
                     type: string
                   data:
                     type: object
+                    properties:
+                      result:
+                        type: boolean
+                        description: 'Whether the request succeeded.'
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  result: true
         '400':
           description: Bad request. Check the business error code in `code` and the error details in `message`.
           content:
@@ -1308,13 +1324,13 @@ paths:
                   description: Payable ID. This field is required.
                 counter_id:
                   type: string
-                  description: Counter ID. This field is required.
+                  description: Counter ID. This field is required. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
             example:
               id: 0
               counter_id: ''
       responses:
         '200':
-          description: The request was processed successfully. The response `data` does not contain additional business fields.
+          description: 'The request was processed successfully. `data.result` is `true` when the item is deleted.'
           content:
             application/json:
               schema:
@@ -1337,10 +1353,15 @@ paths:
                     type: string
                   data:
                     type: object
+                    properties:
+                      result:
+                        type: boolean
+                        description: 'Whether the request succeeded.'
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  result: true
         '400':
           description: Bad request. Check the business error code in `code` and the error details in `message`.
           content:
@@ -1369,6 +1390,112 @@ paths:
         href: /en/api-reference/ipo_payable_delete
         metadata:
           sidebarTitle: Delete IPO Subscription Payable
+  /v1/ipo/payable/parse:
+    post:
+      operationId: ipo_payable_parse
+      summary: Parse Subscription List File
+      tags:
+        - IPO System
+      x-permission-key:
+        - ipo.subscription_manage
+      x-lbonly: false
+      description: |-
+        Parses an uploaded subscription list file and creates the parse batch that the import uses.
+
+        ### Request parameters
+
+        - Required: `counter_id` (instrument ID), `file_path` (file path)
+        - See each field's description for format, value range, and business meaning.
+
+        ### Business notes
+
+        Step 2 of importing a subscription list:
+
+        1. Call `GET /file/upload_url?service=lb.ipo.service` to get a presigned upload URL and a `key`, then PUT the CSV file; that `key` is the `file_path`. The first CSV row is the header `股数,金额` (shares, amount); each following row is one subscription tier with its payable amount.
+        2. Call this endpoint to parse the file; it returns how many rows parsed and failed.
+        3. Call `POST /v1/ipo/payable/import` with the same `counter_id` and `file_path` to import.
+
+        This endpoint only parses the file and does not change the subscription list.
+
+        ### Result
+
+        On success, returns the parsed row count `success_cnt` and the failed row count `fail_cnt`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - counter_id
+                - file_path
+              properties:
+                counter_id:
+                  type: string
+                  description: 'Instrument ID, in the form `{type}/{market}/{code}`, e.g. `ST/HK/700`. This field is required.'
+                file_path:
+                  type: string
+                  description: 'File path: the `key` returned by `GET /file/upload_url?service=lb.ipo.service`. This field is required.'
+            example:
+              counter_id: ST/HK/700
+              file_path: 3KwOkJHWAsYNJZfETKl0dWi5tB8
+      responses:
+        '200':
+          description: 'The request was processed successfully. `data` returns the parsed and failed row counts.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      success_cnt:
+                        type: integer
+                        description: 'Number of rows parsed successfully.'
+                      fail_cnt:
+                        type: integer
+                        description: 'Number of rows that failed to parse.'
+              example:
+                code: 0
+                message: success
+                data:
+                  success_cnt: 2
+                  fail_cnt: 0
+        '400':
+          description: Bad request. Check the business error code in `code` and the error details in `message`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '401':
+          description: The user is not authenticated, or the login session has expired.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '403':
+          description: The current account is not authorized to use this feature. Grant the required permission to the account in User Permission.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+        '408':
+          description: The request timed out. Check the business error code in `code` and the error details in `message`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+      x-mint:
+        href: /en/api-reference/ipo_payable_parse
+        metadata:
+          sidebarTitle: Parse Subscription List File
   /v1/ipo/payable/import:
     post:
       operationId: ipo_payable_import
@@ -1388,7 +1515,13 @@ paths:
 
         ### Business notes
 
-        The file referenced by `file_path` is parsed and its subscription list items are written to the security in bulk.
+        Writes the subscription list items of the instrument from the file at `file_path`. Importing takes three steps:
+
+        1. Call `GET /file/upload_url?service=lb.ipo.service` to get a presigned upload URL and a `key`, then PUT the CSV file; that `key` is the `file_path`.
+        2. Call `POST /v1/ipo/payable/parse` with the same `counter_id` and `file_path` to create a parse batch.
+        3. Call this endpoint to import. Without a prior parse it returns 400 `解析批次已失效` (parse batch expired).
+
+        Importing replaces the instrument's whole subscription list with the file contents: every existing row is replaced, rows that remain get new `id`s, and previously fetched `id`s can no longer be used with `ipo_payable_save` / `ipo_payable_delete`.
 
         ### Risk warning
 
@@ -1411,16 +1544,17 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: Counter ID. This field is required.
+                  description: Counter ID. This field is required. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 file_path:
                   type: string
-                  description: File Path. This field is required.
+                  description: |-
+                    File path. The `key` returned by `GET /file/upload_url?service=lb.ipo.service`. Call `POST /v1/ipo/payable/parse` with the same `counter_id` and `file_path` first, or the import returns 400 `解析批次已失效` (parse batch expired). This field is required.
             example:
               counter_id: ''
               file_path: ''
       responses:
         '200':
-          description: The request was processed successfully. The response `data` does not contain additional business fields.
+          description: 'The request was processed successfully. `data.result` is `true` when the import is complete.'
           content:
             application/json:
               schema:
@@ -1443,10 +1577,15 @@ paths:
                     type: string
                   data:
                     type: object
+                    properties:
+                      result:
+                        type: boolean
+                        description: 'Whether the request succeeded.'
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  result: true
         '400':
           description: Bad request. Check the business error code in `code` and the error details in `message`.
           content:
@@ -1517,13 +1656,16 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: Counter ID. This field is required.
+                  description: Counter ID. This field is required. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 account_channel:
                   type: string
                   description: Account Channel.
                 status:
                   type: integer
-                  description: Status.
+                  description: |-
+                    Status. Order status.
+
+                    **Allowed values:** `1` Pending deduction (funds frozen), `3` Deducted (allotment result pending), `4` Announced (allotted), `5` Announced (not allotted)
                   enum:
                     - 1
                     - 3
@@ -1627,7 +1769,7 @@ paths:
         - name: counter_id
           in: query
           required: true
-          description: This field is required.
+          description: This field is required. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
           schema:
             type: string
       responses:
@@ -1786,6 +1928,12 @@ paths:
                               en:
                                 type: string
                                 description: English.
+                          declaration:
+                            type: object
+                            description: Declaration. Declaration text as a multilingual object (same shape as the other text fields); `null` when not configured.
+                          subscription_statement:
+                            type: object
+                            description: Subscription statement. Subscription statement text as a multilingual object (same shape as the other text fields); `null` when not configured.
               example:
                 code: 0
                 message: success
@@ -1843,7 +1991,7 @@ paths:
         - name: counter_id
           in: query
           required: true
-          description: This field is required.
+          description: This field is required. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
           schema:
             type: string
         - name: market
@@ -1859,6 +2007,10 @@ paths:
         - name: flag
           in: query
           required: false
+          description: |-
+            Specifies the subscription type.
+
+            **Allowed values:** `0` Ordinary subscription, `2` International placing
           schema:
             type: integer
             enum:
@@ -2007,7 +2159,7 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: Counter ID. This field is required.
+                  description: Counter ID. This field is required. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 tags:
                   type: object
                   description: Tags.
@@ -2216,7 +2368,7 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: Counter ID. Counter ID associated with this request.
+                  description: Counter ID. Counter ID associated with this request. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
             example:
               counter_id: 'ST/US/AAPL'
       responses:
@@ -2302,7 +2454,7 @@ paths:
         - name: counter_id
           in: query
           required: true
-          description: This field is required.
+          description: This field is required. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
           schema:
             type: string
       responses:
@@ -2531,7 +2683,7 @@ paths:
         - name: counter_id
           in: query
           required: true
-          description: This field is required.
+          description: This field is required. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
           schema:
             type: string
         - name: market
@@ -2547,6 +2699,10 @@ paths:
         - name: flag
           in: query
           required: false
+          description: |-
+            Specifies the subscription type.
+
+            **Allowed values:** `0` Ordinary subscription, `2` International placing
           schema:
             type: integer
             enum:
@@ -2695,11 +2851,13 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: Counter ID. This field is required.
+                  description: Counter ID. This field is required. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 can_subscribe:
                   type: integer
                   description: |-
                     Can Subscribe.
+
+                    **Allowed values:** `1` Subscribable, `0` Not subscribable
                   enum:
                     - 1
                     - 0
@@ -2950,6 +3108,7 @@ paths:
         ### Request parameters
 
         - Required: `counter_id` (security code), `records` (sync record list), `records[].channel` (source channel), `records[].method` (subscription method), `records[].ratio` (subscription ratio), `records[].target_method` (target subscription method), `records[].target_ratio` (target subscription ratio), `is_retry` (whether this is a retry)
+        - `records[].channel` must come from the `origin_channel` of the security's existing subscription records; it is not a fixed `lb`.
         - See each field description for its format, value range, default behavior, and business meaning.
 
         ### Business notes
@@ -2974,16 +3133,11 @@ paths:
               required:
                 - counter_id
                 - records
-                - records[].channel
-                - records[].method
-                - records[].ratio
-                - records[].target_method
-                - records[].target_ratio
                 - is_retry
               properties:
                 counter_id:
                   type: string
-                  description: Counter ID. Counter ID associated with this request.
+                  description: Counter ID. Counter ID associated with this request. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 records:
                   type: array
                   description: |-
@@ -2991,42 +3145,53 @@ paths:
                     with an empty channel filtered out), and on retry it is a single-element array of the
                     current row's data.
                   items:
-                    type: string
-                records[].channel:
-                  type: string
-                  description: Origin Channel. This field is required.
-                records[].method:
-                  type: integer
-                  description: |-
-                    Subscription Method.
-                  enum:
-                    - 1
-                    - 2
-                  x-enum-details:
-                    - value: 1
-                      label: Financing
-                    - value: 2
-                      label: Cash
-                  example: 1
-                records[].ratio:
-                  type: string
-                  description: Ratio. A percentage value; sent as a string without the % sign, e.g. "100" means 100%.
-                records[].target_method:
-                  type: integer
-                  description: |-
-                    Target Method.
-                  enum:
-                    - 1
-                    - 2
-                  x-enum-details:
-                    - value: 1
-                      label: Financing
-                    - value: 2
-                      label: Cash
-                  example: 1
-                records[].target_ratio:
-                  type: string
-                  description: Target Ratio. Target subscription ratio, a percentage value; sent as a string without the % sign.
+                    type: object
+                    required:
+                      - channel
+                      - method
+                      - ratio
+                      - target_method
+                      - target_ratio
+                    properties:
+                      channel:
+                        type: string
+                        description: Origin Channel. This field is required. Must be the record's `origin_channel` (from the OB subscription sync record rows filtered by `counter_id`), not a fixed value such as `lb`.
+                      method:
+                        type: integer
+                        description: |-
+                          Subscription Method.
+
+                          **Allowed values:** `1` Financing, `2` Cash
+                        enum:
+                          - 1
+                          - 2
+                        x-enum-details:
+                          - value: 1
+                            label: Financing
+                          - value: 2
+                            label: Cash
+                        example: 1
+                      ratio:
+                        type: string
+                        description: Ratio. A percentage value; sent as a string without the % sign, e.g. "100" means 100%.
+                      target_method:
+                        type: integer
+                        description: |-
+                          Target Method.
+
+                          **Allowed values:** `1` Financing, `2` Cash
+                        enum:
+                          - 1
+                          - 2
+                        x-enum-details:
+                          - value: 1
+                            label: Financing
+                          - value: 2
+                            label: Cash
+                        example: 1
+                      target_ratio:
+                        type: string
+                        description: Target Ratio. Target subscription ratio, a percentage value; sent as a string without the % sign.
                 is_retry:
                   type: boolean
                   description: Is Retry. Send false for a create operation; send true for a "Retry" operation.
@@ -3138,7 +3303,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Stock Code. Filters results by Stock Code.
+                      description: Stock Code. Filters results by Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/HK/1377
                 page:
                   type: integer
@@ -3195,6 +3360,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             counter_id:
                               type: string
                               description: Stock Code. **Returned value:** Stock Code.
@@ -3230,7 +3398,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - counter_id: ST/HK/1377
+                    - id: '123'
+                      counter_id: ST/HK/1377
                       counter_id_val: ''
                       name_locales: DTECH
                       stage: Result
@@ -3339,14 +3508,20 @@ paths:
                           format: date
                     aaid:
                       type: string
-                      description: Client. Filters results by Client.
+                      description: |-
+                        Client. Filters results by Client.
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     counter_id:
                       type: string
-                      description: Stock. Filters results by Stock.
+                      description: Stock. Filters results by Stock. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/HK/1377
                     success:
                       type: string
-                      description: Success. Filters results by Success.
+                      description: |-
+                        Success. Filters results by Success.
+
+                        **Allowed values:** `false` Failed, `true` Successful, `=*`
                       enum:
                         - 'false'
                         - 'true'
@@ -3361,7 +3536,10 @@ paths:
                       example: 'false'
                     status:
                       type: string
-                      description: Local Order Status. Filters results by Local Order Status.
+                      description: |-
+                        Local Order Status. Filters results by Local Order Status.
+
+                        **Allowed values:** `1` Pending deduction,Funds are freezing, `2` Deduction failed, `3` Deducted,To be allotment, `4` Allotment,Successful, `5` Allotment,Failed, `6` Revoked, `7` Cancel, `8` Refused, `100`
                       enum:
                         - '1'
                         - '2'
@@ -3423,7 +3601,10 @@ paths:
                       example: HK
                     mark:
                       type: string
-                      description: Subscription Methods. Filters results by Subscription Methods.
+                      description: |-
+                        Subscription Methods. Filters results by Subscription Methods.
+
+                        **Allowed values:** `0` Normal Order
                       enum:
                         - '0'
                       x-enum-details:
@@ -3445,6 +3626,8 @@ paths:
                         Kind. Filters results by Kind.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `1` Margin, `2` Cash, `4` Placement, `5` 0 Cost
                       example: Cash
                       enum:
                         - '1'
@@ -3698,7 +3881,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Stock Code. Filters results by Stock Code.
+                      description: Stock Code. Filters results by Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/HK/2652
                 page:
                   type: integer
@@ -3755,6 +3938,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             counter_id:
                               type: string
                               description: Stock Code. **Returned value:** Stock Code.
@@ -3781,7 +3967,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - counter_id: ST/HK/2652
+                    - id: '123'
+                      counter_id: ST/HK/2652
                       counter_id_val: ''
                       name_locales: CF PHARMTECH
                       updated_at: '1781056479'
@@ -3862,11 +4049,14 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter Id. Filters results by Counter Id.
+                      description: Counter Id. Filters results by Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/HK/2523
                     state:
                       type: string
-                      description: State. Filters results by State.
+                      description: |-
+                        State. Filters results by State.
+
+                        **Allowed values:** `0` Pending, `1` Approved, `2` Rejected
                       enum:
                         - '0'
                         - '1'
@@ -3934,6 +4124,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             counter_id:
                               type: string
                               description: Counter Id. **Returned value:** Counter Id.
@@ -4002,7 +4195,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - counter_id: ST/HK/2523
+                    - id: '123'
+                      counter_id: ST/HK/2523
                       counter_id_val: ''
                       name_locales: EKH
                       operator: Zhang San
@@ -4097,7 +4291,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Securities Code. Filters results by Securities Code.
+                      description: Securities Code. Filters results by Securities Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/US/CRAN
                 page:
                   type: integer
@@ -4154,6 +4348,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             counter_id:
                               type: string
                               description: Counter Id. **Returned value:** Counter Id.
@@ -4189,7 +4386,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - counter_id: ST/US/CRAN
+                    - id: '123'
+                      counter_id: ST/US/CRAN
                       counter_id_val: ''
                       ipo_date: '1875844800'
                       name_locales: CRANE HBR ACQUISITION CORP II
@@ -4273,11 +4471,14 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Stock Code. Filters results by Stock Code.
+                      description: Stock Code. Filters results by Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/HK/1377
                     status:
                       type: string
-                      description: Review Status. Filters results by Review Status.
+                      description: |-
+                        Review Status. Filters results by Review Status.
+
+                        **Allowed values:** `1` Pending, `2` Passed, `3` Rejected, `4` Closed
                       enum:
                         - '1'
                         - '2'
@@ -4487,11 +4688,14 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter Id. Filters results by Counter Id.
+                      description: Counter Id. Filters results by Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/HK/1377
                     status:
                       type: string
-                      description: Status. Filters results by Status.
+                      description: |-
+                        Status. Filters results by Status.
+
+                        **Allowed values:** `1` Pending, `2` Passed, `3` Rejected, `4` Closed
                       enum:
                         - '1'
                         - '2'
@@ -4758,6 +4962,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             counter_id:
                               type: string
                               description: Stock Code. **Returned value:** Stock Code.
@@ -4799,7 +5006,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - counter_id: ST/HK/1377
+                    - id: '123'
+                      counter_id: ST/HK/1377
                       counter_id_val: ''
                       name_locales: DTECH
                       operator: Zhang San
@@ -4885,7 +5093,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Stock. Filters results by Stock.
+                      description: Stock. Filters results by Stock. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/HK/1377
                     subscription_method:
                       type: string
@@ -4893,6 +5101,8 @@ paths:
                         Subscription Method. Filters results by Subscription Method.
 
                         Multiple values are supported. Join them with commas (`,`). Omit the field to disable this filter.
+
+                        **Allowed values:** `1` Margin, `2` Cash, `4` Placement, `5` 0 Cost
                       example: Cash
                       enum:
                         - '1'
@@ -5114,7 +5324,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter Id. Filters results by Counter Id.
+                      description: Counter Id. Filters results by Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/HK/2672
                     batch_no:
                       type: string
@@ -5470,7 +5680,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter ID. Filters results by Counter ID.
+                      description: Counter ID. Filters results by Counter ID. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 page:
                   type: integer
                   description: Page. Page number to retrieve, starting from `1`.
@@ -5641,11 +5851,14 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter Id. Filters results by Counter Id.
+                      description: Counter Id. Filters results by Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/HK/2652
                     state:
                       type: string
-                      description: Sync Status. Filters results by Sync Status.
+                      description: |-
+                        Sync Status. Filters results by Sync Status.
+
+                        **Allowed values:** `1,2` Pending Synchronization, `3,4` Synchronized, awaiting result, `5` Failed, please try again, `6,7` Result Returned
                       enum:
                         - 1,2
                         - 3,4
@@ -5922,6 +6135,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             ob_channel:
                               type: string
                               description: OB Channel. **Returned value:** OB Channel.
@@ -5942,7 +6158,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - ob_channel: lb
+                    - id: '123'
+                      ob_channel: lb
                       account_no: H00000000
                       support_method: '{CASH,FINANCING}'
                       remark: ''
@@ -6021,7 +6238,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter Id. Filters results by Counter Id.
+                      description: Counter Id. Filters results by Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/HK/3388
                     ob_channel:
                       type: string
@@ -6029,7 +6246,10 @@ paths:
                       example: lb_sg
                     status:
                       type: string
-                      description: Status. Filters results by Status.
+                      description: |-
+                        Status. Filters results by Status.
+
+                        **Allowed values:** `1` Pending Order Generation, `3` Generation failed, pending synchronization, `4` Generation successful, pending synchronization, `2,5` Generation failed, synchronized, `6` Successful, synchronized
                       enum:
                         - '1'
                         - '3'
@@ -6232,7 +6452,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter Id. Filters results by Counter Id.
+                      description: Counter Id. Filters results by Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                       example: ST/HK/3625
                     ob_channel:
                       type: string
@@ -6424,7 +6644,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter Id
+                      description: Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 page:
                   type: integer
                   description: Page
@@ -6579,7 +6799,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter ID
+                      description: Counter ID. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 page:
                   type: integer
                   description: Page
@@ -6627,6 +6847,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             apply_num_sub:
                               type: string
                               description: Shares
@@ -6647,7 +6870,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - apply_num_sub: string
+                    - id: '123'
+                      apply_num_sub: string
                       payable: string
                       group_id: string
                       group_id_val: string
@@ -6709,7 +6933,10 @@ paths:
                       description: A/C No.
                     method:
                       type: string
-                      description: Subscription Method
+                      description: |-
+                        Subscription Method
+
+                        **Allowed values:** `1` Margin financing, `2` Cash, `4` International placing, `5` Zero-cost IPO subscription
                       enum:
                         - '1'
                         - '2'
@@ -6718,7 +6945,10 @@ paths:
                       example: '1'
                     status:
                       type: string
-                      description: Status
+                      description: |-
+                        Status
+
+                        **Allowed values:** `1` Processing, `2` Subscription succeeded, `3` Subscription failed
                       enum:
                         - '1'
                         - '2'
@@ -6771,6 +7001,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             batch_no:
                               type: string
                               description: Batch No.
@@ -6815,7 +7048,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - batch_no: string
+                    - id: '123'
+                      batch_no: string
                       counter_id: string
                       account_no: string
                       method: string
@@ -6882,7 +7116,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter Id
+                      description: Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 page:
                   type: integer
                   description: Page
@@ -7013,7 +7247,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter Id
+                      description: Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 page:
                   type: integer
                   description: Page
@@ -7061,6 +7295,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             multiple_text:
                               type: string
                               description: Financing
@@ -7111,7 +7348,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - multiple_text: string
+                    - id: '123'
+                      multiple_text: string
                       multiple_text_val: string
                       status: string
                       status_val: string
@@ -7180,7 +7418,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Stock Code
+                      description: Stock Code. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 page:
                   type: integer
                   description: Page
@@ -7228,6 +7466,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             multiple_text:
                               type: string
                               description: Financing
@@ -7281,7 +7522,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - multiple_text: string
+                    - id: '123'
+                      multiple_text: string
                       status: string
                       status_val: string
                       total_amount: string
@@ -7351,7 +7593,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter Id
+                      description: Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 page:
                   type: integer
                   description: Page
@@ -7399,6 +7641,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             channel:
                               type: string
                               description: Channel
@@ -7419,7 +7664,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - channel: string
+                    - id: '123'
+                      channel: string
                       tratio: string
                       interest_days: string
                       lb_interest_days: string
@@ -7526,6 +7772,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             channel:
                               type: string
                               description: Channel
@@ -7546,7 +7795,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - channel: string
+                    - id: '123'
+                      channel: string
                       tratio: string
                       interest_days: string
                       lb_interest_days: string
@@ -7653,6 +7903,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             account_no:
                               type: string
                               description: A/C No.
@@ -7691,7 +7944,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - account_no: string
+                    - id: '123'
+                      account_no: string
                       ledger_date: string
                       method: string
                       method_val: string
@@ -7887,10 +8141,16 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: Client
+                      description: |-
+                        Client
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     status:
                       type: string
-                      description: Status
+                      description: |-
+                        Status
+
+                        **Allowed values:** `1` Pending deduction (funds frozen), `2` Deduction failed, `3` Deducted (awaiting allotment results), `4` Announced (allotted), `5` Announced (not allotted), `6` Revoked, `7` Canceled, `8` Rejected, `100`
                       enum:
                         - '1'
                         - '2'
@@ -8116,10 +8376,16 @@ paths:
                           format: date
                     aaid:
                       type: string
-                      description: Client
+                      description: |-
+                        Client
+
+                        Pass the internal numeric ID of the customer's securities account (`aaid`), not the securities account number `account_no` (such as `H00000000`) or the customer ID `member_id`. One customer can have multiple `aaid` values.
                     status:
                       type: string
-                      description: Local Order Status
+                      description: |-
+                        Local Order Status
+
+                        **Allowed values:** `1` Funds frozen, awaiting allotment results, `4` Allotment,Successful, `5` Allotment,Failed, `6` Revoked, `7` Cancel, `8` Refused
                       enum:
                         - '1'
                         - '4'
@@ -8354,6 +8620,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             order_id:
                               type: string
                               description: Order ID
@@ -8386,7 +8655,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - order_id: string
+                    - id: '123'
+                      order_id: string
                       reason: string
                       sub_qty: string
                       sub_amount: string
@@ -8449,7 +8719,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter Id
+                      description: Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 page:
                   type: integer
                   description: Page
@@ -8596,7 +8866,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter Id
+                      description: Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 page:
                   type: integer
                   description: Page
@@ -8755,7 +9025,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: Counter Id
+                      description: Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                     status:
                       type: string
                       description: Status. When omitted, defaults to filtering by '1' — without this filter the endpoint returns only data matching that value.
@@ -9015,7 +9285,7 @@ paths:
                       description: OB Channel. not a fixed set.
                     counter_id:
                       type: string
-                      description: Counter Id
+                      description: Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 page:
                   type: integer
                   description: Page
@@ -9063,6 +9333,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             account_no:
                               type: string
                               description: A/C No.
@@ -9104,7 +9377,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - account_no: string
+                    - id: '123'
+                      account_no: string
                       ob_order_id: string
                       sub_method: string
                       sub_method_val: string
@@ -9171,7 +9445,7 @@ paths:
                       description: OB Channel. not a fixed set.
                     counter_id:
                       type: string
-                      description: Counter Id
+                      description: Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 page:
                   type: integer
                   description: Page
@@ -9372,6 +9646,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: Record ID. **Returned value:** Record ID (row primary key); write operations on this record take it as their id.
                             account_no:
                               type: string
                               description: A/C No.
@@ -9422,7 +9699,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - account_no: string
+                    - id: '123'
+                      account_no: string
                       order_id: string
                       channel: string
                       method: string
@@ -9492,7 +9770,7 @@ paths:
                       description: OB Channel
                     counter_id:
                       type: string
-                      description: Counter Id
+                      description: Counter Id. Format is `{type}/{market}/{code}`, for example, stock `ST/HK/700` or `ST/US/AAPL`, and option `OP/US/AAPL270319C320000`.
                 page:
                   type: integer
                   description: Page

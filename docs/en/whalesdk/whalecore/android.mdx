@@ -77,7 +77,7 @@ val config = WhaleCoreConfig(
 )
 
 withContext(Dispatchers.IO) {
-    WhaleCore.initialize(application, config, isDebug = BuildConfig.DEBUG)
+    WhaleCore.initialize(application, config)
 }
 ```
 
@@ -169,22 +169,26 @@ The following rules apply across services. Read them once; later sections do not
 
 A three-part format, `ST/MARKET/CODE`, such as `"ST/US/AAPL"` or `"ST/HK/00700"`. Options additionally encode the strike price, expiry date, and direction. Quotes, orders, the watchlist, and profit-and-loss analysis all locate instruments with this format.
 
+The first part is the **type segment**: `ST` for stocks, `ETF`, `OP` for options, `WT` for warrants, and `IX` / `BK` for indexes. Batch quote subscription entry points are split by type segment (options use `subscribeOptionList`; everything else uses `subscribeQuoteList`), so group a mixed set by type segment first, using `counterId.substringBefore('/')`. Passing the wrong type raises no error, but that channel's response structure cannot carry the other instrument type's fields (for options, the strike price, implied volatility, and similar fields come back empty).
+
 ### Coroutines and callbacks {/* coroutines-and-callbacks */}
 
 Every capability offers a coroutine `suspend fun` and a callback-based `*Async(..., AsyncCallback<T>?)` variant; choose whichever fits the call site (Java callers, or contexts where coroutines are inconvenient, use the callback variant). Method tables in this document list only the coroutine signature; the callback variant adds the `Async` suffix and keeps the same parameters.
 
 ```kotlin
 // Coroutine variant
-val stock = WhaleCore.getQuoteService().getStock("ST/US/AAPL")
+val klines = WhaleCore.getQuoteService().getKlines("ST/US/AAPL", KlineType.PER_DAY, count = 100)
 
 // Callback variant
-WhaleCore.getQuoteService().getStockAsync("ST/US/AAPL", object : AsyncCallback<Stock> {
-    override fun onSuccess(result: Stock?) { /* ... */ }
+WhaleCore.getQuoteService().getKlinesAsync("ST/US/AAPL", KlineType.PER_DAY, count = 100, callback = object : AsyncCallback<List<Kline>> {
+    override fun onSuccess(result: List<Kline>?) { /* ... */ }
     override fun onError(error: Throwable) { /* ... */ }
 })
 ```
 
-`*Async` calls and observation callbacks all fire on a **non-main thread**; switch back to the main thread before updating UI. A cancelled coroutine task (for example, after the session is destroyed) triggers no callback and never calls `onError` either. `OptionCalculator` is the exception: it is purely synchronous, involves no coroutines, and has no `*Async` variant.
+`*Async` calls and observation callbacks (`XxxEventCallback`) all fire on the **main thread**, so you can update UI directly. Do not run long operations inside a callback, and do not block the main thread waiting for a callback (it deadlocks). A cancelled coroutine task (for example, after the session is destroyed) triggers no callback and never calls `onError` either; after you cancel an observation subscription on the main thread, no further callbacks arrive. Flow-based `observeXxx()` methods dispatch on the collector's thread. `LogSink` is the exception: it is called synchronously on the thread that writes the log.
+
+Synchronous methods have no `*Async` variant and can be called directly on the main thread: the pure computations of `OptionCalculator` and `WarrantCalculator`, and in-memory snapshot reads such as `getStock`, `getQuoteLevelInfo`, and `getInterestRate`.
 
 ### Event stream subscription {/* event-stream-subscription */}
 
@@ -210,83 +214,109 @@ With trade-password verification enabled (`tradePasswordEnabled = true` at initi
 
 | Method | Service | Main capability |
 | --- | --- | --- |
-| `getQuoteService()` | `QuoteService` | Quote subscriptions, option chain/detail subscriptions, K-lines, snapshots, timeshares, historical trades, and quote level with device eviction (multi-device eviction and reclaim) |
+| `getQuoteService()` | `QuoteService` | Quote subscriptions (four entry points: single-instrument detail, instrument list (excluding options), option list, and option chain), K-lines and timeshares (updated live from quote pushes), snapshots, historical trades, and quote level with device eviction (multi-device eviction and reclaim) |
 | `getOrderService()` | `OrderService` | Submit, replace, cancel, attached orders, position take-profit/stop-loss, order preview, capacity estimates, pre-submit validation, and order events |
-| `getPortfoliosService()` | `PortfolioService` | Portfolio subscriptions, cash detail, member settings, and profit-and-loss analysis |
+| `getPortfolioService()` | `PortfolioService` | Portfolio subscriptions, cash detail, member settings, and profit-and-loss analysis |
 | `getWatchlistService()` | `WatchlistService` | Watchlist groups, stocks, ordering, pinning, and events |
 | `getRequestService()` | `RequestService` | Pass-through authenticated HTTP requests |
 | `WhaleCore.updateTradeToken()` / `hasTradeToken()` | — | Supplying a trade token and checking whether one is held; needed only in trade-password verification mode — see [trade tokens](#trade-token) |
 
-Getting a service before initialization throws `WhaleCoreException.NotReady`. `OptionCalculator` is a stateless utility class you call directly, not through `WhaleCore`; see [Option calculator](#option-calculator).
+Getting a service before initialization throws `WhaleCoreException.NotReady`. `OptionCalculator` and `WarrantCalculator` are stateless utility classes you call directly, not through `WhaleCore`; see [Option calculator](#option-calculator) and [Warrant calculator](#warrant-calculator).
 
 <Note>
-  The earlier standalone entry point `WhaleCore.getOrderValidationService()` is deprecated. For pre-submit validation, call the same-named methods on `WhaleCore.getOrderService()` directly.
+  The earlier standalone entry point `WhaleCore.getOrderValidationService()` has been removed. For pre-submit validation, call the same-named methods on `WhaleCore.getOrderService()`. The portfolio service entry point `getPortfoliosService()` has been renamed to `getPortfolioService()`.
 </Note>
 
 ## Quotes {/* quotes */}
 
-Fetch a snapshot, or use `subscribe` to open a live subscription that keeps delivering updates:
+Quote subscriptions have four entry points, split by "one instrument or a batch" and "stocks or options": use `subscribeQuoteDetail` for a single instrument (stocks and options alike, with the most complete snapshot fields); use `subscribeQuoteList` for a batch of non-option instruments; for option lists and option chains, see [Option quotes](#option-quotes). Group a mixed set by the CounterId type segment and subscribe to each group separately; see [Counter IDs](#counter-id).
 
 ```kotlin
 val quotes = WhaleCore.getQuoteService()
 
-// Snapshot: fetch once
+// Snapshot: synchronously reads the latest in-memory quote; null when not subscribed or not yet received
 val stock = quotes.getStock("ST/US/AAPL")
 
-// Live subscription: subscribe() opens it, chain the channels you need, then start(); onChange keeps delivering the latest quote
-val subscription = quotes.subscribe(
-    counterIds = listOf("ST/US/AAPL", "ST/HK/00700"),
+// Single-instrument detail subscription: the most complete snapshot + subscription; chain the channels you need, then start(); onChange keeps delivering the latest quote
+val subscription = quotes.subscribeQuoteDetail(
+    counterId = "ST/US/AAPL",
     callback = object : QuoteEventCallback {
         override fun onChange(stock: Stock) { updateRow(stock) }
     },
 ).detail().depth().trade().start()
 
 subscription.cancel()   // Cancel when the screen is destroyed
+
+// List subscription: a set of non-option instruments; the set can be replaced wholesale (switching groups / loading on scroll)
+// start() suspends until the first-screen subscription is in place and throws WhaleCoreException on failure; later updateCounterIds calls do not suspend
+val listSub = quotes.subscribeQuoteList(listOf("ST/US/AAPL", "ST/HK/00700"), callback)
+    .list()
+    .start()
+
+listSub.updateCounterIds(newCounterIds)   // Wholesale replacement: instruments removed from the set stop receiving callbacks
+listSub.cancel()
 ```
 
 If the quote is already subscribed through another path, such as `WatchlistService`, use `observeQuoteEvents(...)` to observe the quote stream without opening a duplicate subscription.
 
 ### K-lines {/* klines */}
 
-```kotlin
-val klines = quotes.getKlines("ST/US/AAPL", KlineType.PER_DAY, count = 200)
+The SDK updates the latest K-line bar locally from quote pushes: once you subscribe with `subscribeQuoteDetail` including `.detail()` and have fetched the latest page for that period (`timestamp` defaults to `0`), the latest bar updates with each quote push.
 
-// A K-line update event requires an existing quote subscription for that instrument (even just .list()); the event
-// only identifies which instrument changed, so fetch the latest series again with getKlines
+```kotlin
+val klines = quotes.getKlines("ST/US/AAPL", KlineType.PER_MINUTE, count = 200)
+
 lifecycleScope.launch {
     quotes.observeKlineUpdates(listOf("ST/US/AAPL")).collect { update ->
-        val latest = quotes.getKlines(update.counterId, KlineType.PER_DAY, count = 200)
+        // update.kline is the latest bar after the change: append it when isNewBar is true, otherwise replace the last bar;
+        // you can also read the full series from the snapshot without fetching again
+        val series = quotes.getStock(update.counterId)?.klines(update.klineType, update.adjustType)
         // Redraw the K-line chart
     }
 }
 ```
 
+Update events for the same series are emitted at most once every 500 milliseconds, and immediately when a new bar opens. Historical data fetched by paging is not updated.
+
 ### Timeshares {/* timeshares */}
 
-Use this endpoint for an intraday price chart; do not approximate it with 1-minute K-lines. Timeshares are grouped by trading day and carry the previous close and a running average price, while K-lines are a continuous series counted back from an anchor. On markets with few bars per day, such as Hong Kong or A-shares, approximating timeshares with K-lines mixes in data from the previous trading day.
+Use this endpoint for an intraday price chart; do not approximate it with 1-minute K-lines. Timeshares are grouped by trading day and session and carry the previous close and a running average price, while K-lines are a continuous series counted back from an anchor. On markets with few bars per day, such as Hong Kong or A-shares, approximating timeshares with K-lines mixes in data from the previous trading day.
 
 ```kotlin
-val today = quotes.getTimeshares("ST/US/AAPL").timeshares.lastOrNull()
-today?.minutes?.forEach { minute -> /* price via minute.price, average via minute.avgPrice */ }
+// When fetching all sessions, the same day is split into several groups by session (regular / pre-market / after-hours / overnight; sessions not yet started are empty groups); tell them apart by tradeSession
+val shares = quotes.getTimeshares("ST/US/AAPL")
+val latestDate = shares.timeshares.maxOfOrNull { it.date }
+shares.timeshares.filter { it.date == latestDate }.flatMap { it.minutes }.forEach { minute -> /* price via minute.price, average via minute.avgPrice */ }
+
+// The latest point updates with quote pushes, under the same prerequisites as K-lines
+lifecycleScope.launch {
+    quotes.observeTimeshareUpdates(listOf("ST/US/AAPL")).collect { update ->
+        // update.minute belongs to the update.tradeSession group: append it when isNewPoint is true, otherwise replace that group's last point
+        val latest = quotes.getStock(update.counterId)?.timeshares(update.fiveDays, update.klineSession)
+    }
+}
 ```
 
 ### Option quotes {/* option-quotes */}
 
-Choose either a single-contract detail subscription or a batch chain subscription:
+Choose one of three forms: single-contract detail, contract list, or option chain:
 
 ```kotlin
-// Option detail subscription: single-contract snapshot + subscription, chain the data types you need
-val optionSub = quotes.subscribeOptionDetail("OP/US/AAPL240119C190000", callback)
+// Single-contract detail: the most complete snapshot fields with one level of depth; shares its entry point with stocks
+val optionSub = quotes.subscribeQuoteDetail("OP/US/AAPL240119C190000", callback)
     .detail().depth().trade().start()
 
-// Option chain subscription: a whole set of contracts, replaced wholesale on interaction (switching expiry, scrolling
-// the visible range); no chained type selection needed
+// Option list: a set of contracts; the snapshot carries no depth
+val optionListSub = quotes.subscribeOptionList(counterIds, callback).list().start()
+
+// Option chain: a whole set of contracts replaced wholesale on interaction (switching expiry, scrolling the visible range);
+// the snapshot carries one level of depth; no chained type selection needed
 val chainSub = quotes.subscribeOptionChain(visibleCounterIds, callback)
 chainSub.updateCounterIds(newVisibleCounterIds)   // Wholesale replacement, not incremental; hold a strong reference to the handle
 chainSub.cancel()
 ```
 
-Options have no separate depth-subscription channel: the snapshot from `start()` carries one level of depth, but subsequent pushes still need an explicit `.depth()` in the chain — without it, only the first frame carries depth. Greeks are not part of the quote push; subscribe to the underlying separately, take its price, and pass it to [`OptionCalculator`](#option-calculator) for local computation.
+For options, only the snapshots from `subscribeQuoteDetail` and `subscribeOptionChain` provide first-screen depth; `subscribeOptionList` does not. **Subsequent depth pushes** require an explicit `.depth()` in the chain. Greeks are not part of the quote push; subscribe to the underlying separately, take its price, and pass it to [`OptionCalculator`](#option-calculator) for local computation.
 
 ### Quote level and device eviction {/* quote-level-and-eviction */}
 
@@ -317,21 +347,24 @@ Per-sub-market level detail lives in `QuoteLevelInfo.subMarketQuote`: the raw le
 
 | Method | Description |
 | --- | --- |
-| `getInterestRate()` | Reads the SDK's built-in risk-free rate (annualized decimal) for display in the option calculator; returns `null` when unavailable |
-| `getStock(counterId)` | Gets the current quote snapshot for an instrument; returns `null` when not subscribed or not yet received |
-| `getTrades(counterId,`<br />`count = 100,`<br />`lastSequenceId = 0,`<br />`lastTradeSession = 0,`<br />`tradeType = 0)` | Fetches historical trade-by-trade data (paged, query-only, no subscription); combine with `subscribe(...).trade()` for the live increment |
+| `getInterestRate()` | Reads the option risk-free rate (annualized decimal, the average US Treasury yield), the same source as the option calculator's default; returns `null` and fetches it in the background if not yet available, so a later call returns a value |
+| `getWarrantInterestRate()` | Reads the warrant risk-free rate (annualized decimal, the value in the quote configuration), the same source as the warrant calculator's default; returns `null` and fetches it in the background if not yet available, so a later call returns a value |
+| `getStock(counterId)` | Synchronously reads the current quote snapshot for an instrument and can be called on the main thread; returns `null` when not subscribed or not yet received |
+| `getTrades(counterId,`<br />`count = 100,`<br />`lastSequenceId = 0,`<br />`lastTradeSession = 0,`<br />`tradeType = 0)` | Fetches historical trade-by-trade data (paged, query-only, no subscription); combine with `.trade()` on a subscription entry point for the live increment |
 | `getKlines(counterId,`<br />`klineType,`<br />`count,`<br />`timestamp = 0,`<br />`adjustType = FORWARD_ADJUST,`<br />`klineSession = ALL)` | Gets K-line data in ascending time order |
-| `getTimeshares(counterId,`<br />`fiveDays = false,`<br />`klineSession = ALL)` | Gets timeshare data grouped by trading day |
-| `subscribe(counterIds, callback)` | Creates a general quote subscription builder; chain the types you need, then call `start()` |
-| `subscribeOptionDetail(counterId, callback)` | Creates an option detail subscription builder (single contract) |
+| `getTimeshares(counterId,`<br />`fiveDays = false,`<br />`klineSession = ALL)` | Gets timeshare data grouped by trading day and session |
+| `subscribeQuoteDetail(counterId,`<br />`callback)` | Creates a single-instrument subscription builder (stocks and options alike, with the most complete snapshot fields); chain the types you need, then call `start()` |
+| `subscribeQuoteList(counterIds,`<br />`callback)` | Creates a batch subscription builder for non-option instruments; the set can be replaced wholesale |
+| `subscribeOptionList(counterIds,`<br />`callback)` | Creates a batch subscription builder for options; the set can be replaced wholesale |
 | `subscribeOptionChain(counterIds, callback)` | Creates a batch option chain subscription (wholesale replacement, push types fixed and not selectable) |
 | `observeQuoteEvents(counterIds)` | Observes the quote event stream without opening an underlying subscription; pair it with a subscription entry point |
-| `observeKlineUpdates(counterIds)` | Observes the K-line update event stream |
+| `observeKlineUpdates(counterIds)` | Observes the K-line update event stream; each event carries the latest bar after the change |
+| `observeTimeshareUpdates(counterIds)` | Observes the timeshare update event stream; each event carries the latest point after the change |
 | `getQuoteLevelInfo()` | Reads the quote-level and device-eviction snapshot; returns `null` before the first quote-entitlement check |
 | `observeQuoteLevel()` | Observes quote level and device eviction (the current snapshot arrives on subscription) |
 | `reclaimQuoteAccess()` | Takes the quote entitlement back to this device ("restart quotes"); the refreshed level arrives through the observer callback |
 
-Chained type-selection methods on the subscription builders returned by `subscribe` / `subscribeOptionDetail`: `list()`, `detail()`, `depth()`, `trade()`, `preTrade()`, `postTrade()`; `subscribe` also offers `broker()`, `nightTrade()`, `totalView()`, and `totalViewBrief()` (the option data path does not support these four). Both builders support calling `start()` with no type selected at all, which fetches one snapshot and opens no push subscription — useful as a one-off snapshot call. The `QuoteSubscription` returned by `start()` has only `cancel()`; `OptionChainSubscription` additionally has `updateCounterIds(counterIds)` and an `isCancelled` property.
+Chained type-selection methods on the subscription builders: `list()`, `detail()`, `depth()`, `trade()`, `preTrade()`, `postTrade()`; `subscribeQuoteDetail` and `subscribeQuoteList` also offer `broker()`, `nightTrade()`, `totalView()`, and `totalViewBrief()` (the option data path does not support these four). All three builders (`subscribeQuoteDetail`, `subscribeQuoteList`, and `subscribeOptionList`) support calling `start()` with no type selected at all, which fetches one snapshot and opens no push subscription — useful as a one-off snapshot call. Each of the four entry points has its own subscription handle type: the single-instrument `QuoteDetailSubscription` has only `cancel()`; the batch `QuoteListSubscription`, `OptionListSubscription`, and `OptionChainSubscription` additionally have `updateCounterIds(counterIds)` and an `isCancelled` property.
 
 <Accordion title="Advanced quote and option-calculator details">
 
@@ -376,14 +409,14 @@ val input = OptionPricingInput(
     daysToExpire = days,
     isCall = OptionDirection.fromQuoteDirection(optionData.direction) == OptionDirection.CALL,
     dividendToExpire = optionData.dividendToExpire,
-    // Leave interestRate unset to use the SDK's built-in rate (same source as QuoteService.getInterestRate())
+    // Leave interestRate unset to use the SDK's built-in option rate (same source as QuoteService.getInterestRate())
 )
 
 val greeks = OptionCalculator.greeks(input)  // Returns null on invalid input; show a placeholder in the UI
 ```
 
 <Warning>
-  Invalid input always returns `null` (show "--" in the UI): implied volatility ≤ 0, days < 0, underlying price or strike price ≤ 0, or an unavailable interest rate. Both day-conversion APIs return a negative number once expired (`daysToExpire` returns `0` on the expiry day, which is valid) — a negative value cannot be passed to `greeks` or `profitProbability`; it is treated as invalid input and returns `null`. `interestRate` is an annualized decimal (for example, `0.045` for 4.5%), not a percentage; passing the wrong unit skews Greeks by a factor of 100.
+  Invalid input always returns `null` (show "--" in the UI): implied volatility ≤ 0, days < 0, underlying price or strike price ≤ 0, or an unavailable interest rate. When `interestRate` is `null`, the SDK's built-in option rate is used (the same source as `getInterestRate()`). Both day-conversion APIs return a negative number once expired (`daysToExpire` returns `0` on the expiry day, which is valid) — a negative value cannot be passed to `greeks` or `profitProbability`; it is treated as invalid input and returns `null`. `interestRate` is an annualized decimal (for example, `0.045` for 4.5%), not a percentage; passing the wrong unit skews Greeks by a factor of 100.
 </Warning>
 
 **Method overview:**
@@ -396,6 +429,46 @@ val greeks = OptionCalculator.greeks(input)  // Returns null on invalid input; s
 | `daysToExpire(expireDate, timeZone)` | Converts an expiry date (`yyyyMMdd`) to whole calendar days remaining, for "N days left" displays |
 | `fractionalDaysToExpire(expireDate,`<br />`timeZone,`<br />`holidays = emptyList(),`<br />`dayOffset = 0)` | Converts an expiry date to fractional days remaining (expiry at 20:00, prorated by the hour); use this as the input to Greeks and probability of profit to match the official client's option calculator |
 | `profitProbability(underlyingPrice,`<br />`breakevenPoint,`<br />`impliedVolatility,`<br />`daysToExpire,`<br />`isCall,`<br />`dividendToExpire = null,`<br />`interestRate = null)` | Computes the probability of profit at expiry, using the breakeven point rather than the strike price, under Black-Scholes risk-neutral assumptions |
+
+## Warrant calculator {/* warrant-calculator */}
+
+`WarrantCalculator` is a stateless, pure computation utility (it is not registered on any service, performs no network calls, and has no `*Async` variant); the caller supplies all input. Derived metrics for warrants (derivative warrants, callable bull/bear contracts, and inline warrants) are not part of the quote push, and every metric shown on a detail screen needs the current underlying price; one call computes them all. Contract terms come from `ExtraData.WarrantData` in the warrant quote, and the underlying price comes from your own underlying quote subscription (the underlying CounterId is in `WarrantData.underlyingCounterId`).
+
+<Note>
+  Only the `subscribeQuoteDetail` snapshot carries warrant terms. When you subscribe to a warrant with `subscribeQuoteList`, `extraData` degrades to `Underlying` and `stockTemplate` is `Unknown`, so no metric can be computed.
+</Note>
+
+```kotlin
+val warrantData = stock.extraData as ExtraData.WarrantData
+val underlyingPrice = underlyingStock.lastPrice ?: return
+
+val input = WarrantMetricsInput.fromStock(
+    warrant = stock,                                             // Contract fields and the warrant's last price come from the snapshot
+    underlyingPrice = underlyingPrice,
+    daysToExpire = BigDecimal.valueOf(warrantData.dayToExpire),  // The caller chooses the day-count basis; see below
+) ?: return
+val metrics = WarrantCalculator.metrics(input)
+metrics.delta          // null for items that do not apply to the category or lack input; other items still have values
+metrics.premium
+metrics.moneyness      // WarrantMoneyness: in the money / out of the money / at the money / in range / out of range / undetermined
+```
+
+Metric applicability by category: delta and effective leverage apply only to call and put warrants; distance to call price applies only to callable bull/bear contracts; inline warrants have only premium, gearing, and the in-range / out-of-range result. Items that do not apply are `null`; see the KDoc of `WarrantMetrics` for the full per-category table. Ratio results are always decimals (`0.05` means 5%); formatting and precision are up to the caller.
+
+<Warning>
+  The caller chooses two bases:
+
+  - **Days to expiry**: delta and effective leverage are sensitive to it. Passing `dayToExpire` (trading days) matches the official client's warrant parameters; passing the calendar days from `OptionCalculator.daysToExpire(expireDate, Hong Kong time zone)` comes closest to the delta returned by the warrant list endpoint.
+  - **Risk-free rate**: unlike `OptionCalculator`, a `null` `interestRate` reads the warrant rate (the same value as `getWarrantInterestRate()`); do not pass in the value of `getInterestRate()`. When the risk-free rate is unavailable (an explicit `0` or a missing built-in rate), delta and effective leverage are `null`; no assumed rate is used as a fallback.
+</Warning>
+
+**Method overview:**
+
+| Method | Description |
+| --- | --- |
+| `metrics(input)` | Computes premium, gearing, effective leverage, breakeven point, moneyness and its magnitude, distance to call price, conversion price, and delta in one call |
+| `category(raw)` | Converts `WarrantData.category` (`Call` / `Put` / `Bull` / `Bear` / `Inline`, case-insensitive) to `WarrantCategory` |
+| `WarrantMetricsInput.fromStock(warrant,`<br />`underlyingPrice,`<br />`daysToExpire,`<br />`interestRate = null)` | Builds input from a warrant quote snapshot; returns `null` when the snapshot lacks `WarrantData` or the last price |
 
 ## Orders and validation {/* orders-and-validation */}
 
@@ -540,10 +613,6 @@ if (unresolved != null && unresolved.acceptableViaApi) {
 
 Items with `acceptableViaApi == true` — disclosure and entitlement items such as US overnight trading, options overnight trading, odd lots, US short selling, penny stocks, OTC trading, warrants and CBBCs, CAR-CKA, and virtual-asset ETF assessment and additional risk disclosure, plus the options risk agreement and the listed-derivatives ETF assessment — can be accepted in one call with `acceptAgreement(type)`, or, for the assessment only, answered with `submitListedDerivAssessment(experience)` (choosing `DerivExperience.NONE` records a failed assessment and keeps the block in place). The virtual-asset ETF assessment and its additional risk disclosure share a single signature: accepting either one sets both server-side, so present both to the user and obtain confirmation before calling. Items with `acceptableViaApi == false` — assessment or certification items such as PI, VA, W-8BEN, and Hong Kong margin short selling — must be handled with the broker directly; the SDK exposes no handling link, and calling `acceptAgreement` on one of these throws `IllegalArgumentException` (a programming error, not one of the `WhaleCoreException` types). Both methods invalidate the internal qualification cache on success, so re-running validation picks up the new state.
 
-<Note>
-  The earlier standalone entry point `WhaleCore.getOrderValidationService()` is deprecated. New code should call the same-named methods on `WhaleCore.getOrderService()` directly.
-</Note>
-
 <Accordion title="Full validation rule reference">
 
 `OrderValidationRule.code` is segmented by stage (stage number × 100) and only ever grows across versions, never gets renumbered. Treat an unrecognized code as "block and show a generic message":
@@ -551,8 +620,9 @@ Items with `acceptableViaApi == true` — disclosure and entitlement items such 
 | Stage | Code range | Scope | Covers |
 | --- | --- | --- | --- |
 | Before entering the order screen | `1001`–`1005` | ENTRY | Empty instrument, account not opened or suspended, index sectors not tradable, server-side tradability determination |
-| Screen button state | `1101`–`1115` | DRAFT+SUBMISSION | Channel/direction restrictions, required price/quantity/trigger price/trailing value/monitor price, order-type support, amount-based order applicability and minimum amount, stock cash card incompatible with sell |
+| Screen button state | `1101`–`1115` | DRAFT+SUBMISSION | Channel/direction restrictions, required price/quantity/trigger price/trailing value/monitor price, order-type support, TSL order-leg pricing (choose one) and order price level out of range, amount-based order applicability and minimum amount, stock cash card incompatible with sell |
 | Agreement | `1201` | SUBMISSION | Options risk agreement not accepted |
+| Parameter reasonableness | `1302` | SUBMISSION only | US fractional-share amount-based buy below the channel minimum amount (the minimum amount is carried in `referenceValue`) |
 | Session and time-in-force | `1401`–`1403` | DRAFT+SUBMISSION | Order-type session support, time-in-force support, GTD expiry required |
 | Qualifications and disclosures | `1501`–`1512` | SUBMISSION only | ETF assessment, short-selling/margin qualification, W-8BEN, US/options overnight disclosures, odd-lot disclosure and session, OTC trading entitlement, warrant trading entitlement, CAR/CKA certification, virtual-asset ETF trading assessment and additional risk disclosure |
 | Attached orders | `1601`–`1608` | DRAFT+SUBMISSION | Required take-profit/stop-loss trigger and submit prices, GTD expiry, whether the order type supports attached orders |
@@ -695,6 +765,7 @@ When you build `SubmitOrderRequest` directly through the factories, pass cards t
 | `getOrderInfo(counterId, orderId = null)` | Basic instrument info and account channel permissions before submitting; pass `orderId` when replacing to get the fields that can be changed |
 | `getEstimateBuyLimit(request)` | Queries the maximum buy limit (stocks only; see `getTradeCapacity` for options) |
 | `getTradeDetail(counterId, settlementCurrency)` | Queries position detail (total quantity, sellable quantity, cost, cash) |
+| `getEstimatedCost(request)` | Queries estimated fees (commission, platform fee, third-party fees) |
 | `getTradeCapacity(request)` | Queries the trade capacity snapshot (the recommended entry point for capacity data) |
 | `submitOrder(request)` | Submits an order |
 | `replaceOrder(request)` | Replaces an order (a shared entry for plain, conditional, and option parent orders, routed automatically by type) |
@@ -722,7 +793,7 @@ A standalone utility, `OrderPreviewCalculator.compute(fields)` (synchronous pure
 ## Portfolio {/* portfolio */}
 
 ```kotlin
-val portfolios = WhaleCore.getPortfoliosService()
+val portfolios = WhaleCore.getPortfolioService()
 
 // Register the listener before subscribing to accounts, so you don't miss the first frame
 portfolios.observePortfolioEvents(this, object : PortfolioEventCallback {
@@ -811,6 +882,7 @@ Models mirror the server response: amounts, ratios, and timestamps are always ra
 | Method | Description |
 | --- | --- |
 | `setSubscribedAccounts(accountChannels, currency)` | Sets the subscribed account channels and display currency, replacing the current subscription scope entirely; an empty list cancels all subscriptions |
+| `currentAccount()` | Gets the account the SDK currently uses, including its account type (cash or margin); use it to control whether margin-related information is shown by account type |
 | `observePortfolioEvents()` | Observes the portfolio event stream |
 | `refresh()` | Manually refreshes the currently subscribed portfolio data |
 | `enableCashDetail(enabled)` / `isEnableCashDetail()` | Toggles cash detail display |
@@ -828,7 +900,7 @@ val watchlist = WhaleCore.getWatchlistService()
 lifecycleScope.launch {
     watchlist.observeWatchlistEvents().collect { event ->
         when (event) {
-            is WatchlistEvent.Groups -> renderGroups(event.groups, event.stockInfo, event.ties)
+            is WatchlistEvent.Groups -> renderGroups(event.groups, event.stocks, event.ties)
             is WatchlistEvent.SortGroups -> applySort(event.sortGroups)
             else -> Unit
         }
@@ -1020,9 +1092,10 @@ Both methods are pure in-memory reads and writes — no network, no suspension �
 
 | Model category | Main types |
 | --- | --- |
-| Quotes | `Stock` / `StockTemplate` / `TradeStatus` / `KlineUpdate` / `Kline` / `TimeShares` / `QuoteLevelInfo` / `SubMarketQuote` / `PriceLevel` / `DepthLevel` / `EvictedLevelDetail` |
+| Quotes | `Stock` / `StockTemplate` / `TradeStatus` / `KlineUpdate` / `TimeshareUpdate` / `Kline` / `TimeShares` / `QuoteLevelInfo` / `SubMarketQuote` / `PriceLevel` / `DepthLevel` / `EvictedLevelDetail` |
 | Option calculator | `OptionPricingInput` / `OptionGreeks` |
-| Orders | `Order` / `OrderIntent` / `SubmitOrderRequest` / `SubmitOrderResult` / `ReplaceOrderRequest` / `OrderConstraints` / `OrderInfo` / `OrderValidationResult` / `TradeCapacity` / `TradeCapacityRequest` / `QualificationStatus` / `TPSLOrderIntent` / `SubmitTPSLOrderRequest` / `TPSLValidationResult` / `HistoryOrdersRequest` / `HistoryOrdersResult` / `TradeCard` / `TradeCards` / `TradeCardCategory` / `SuggestedTradeCard` |
+| Warrant calculator | `WarrantMetricsInput` / `WarrantMetrics` / `WarrantCategory` / `WarrantMoneyness` |
+| Orders | `Order` / `OrderIntent` / `SubmitOrderRequest` / `SubmitOrderResult` / `ReplaceOrderRequest` / `OrderConstraints` / `OrderInfo` / `OrderValidationResult` / `TradeCapacity` / `TradeCapacityRequest` / `QualificationStatus` / `TPSLOrderIntent` / `SubmitTPSLOrderRequest` / `TPSLValidationResult` / `HistoryOrdersRequest` / `HistoryStatusFilter` / `HistoryOrdersResult` / `TradeCard` / `TradeCards` / `TradeCardCategory` / `SuggestedTradeCard` |
 | Portfolio | `Portfolio` / `AccountInfo` / `PortfolioMemberSettingInfo` / `PortfolioCostType` |
 | Profit and loss | `PLAnalysisMeta` / `ProfitOverview` / `ProfitTrend` / `PLCalendar` / `ProfitRanking` / `CurrencyAssetFlow` / `StockCumulativePL` / `MarketStocksPL` / `PLPeriod` |
 | Watchlist | `WatchlistGroup` / `WatchlistStock` / `WatchlistFund` / `WatchlistSortField` / `WatchlistSortGroup` / `WatchlistEvent` |
@@ -1050,7 +1123,7 @@ Every public API fails through a subtype of `WhaleCoreException`, so the host ca
 
 ```kotlin
 try {
-    val stock = WhaleCore.getQuoteService().getStock("ST/US/AAPL")
+    val klines = WhaleCore.getQuoteService().getKlines("ST/US/AAPL", KlineType.PER_DAY, count = 100)
 } catch (e: WhaleCoreException.NetworkUnavailable) {
     // Show a network hint and retry
 } catch (e: WhaleCoreException) {

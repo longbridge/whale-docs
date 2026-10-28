@@ -197,7 +197,10 @@ paths:
               properties:
                 aaid:
                   type: string
-                  description: 本次请求关联的证券账号。此字段为必填项。
+                  description: |-
+                    本次请求关联的证券账号。此字段为必填项。
+
+                    此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
                 trigger_indicator:
                   type: string
                   description: 用于指定「触发指标」。
@@ -283,8 +286,10 @@ paths:
 
         ### 请求参数
 
-        - 必填：`event_id`（事件 ID，标识待编辑的可疑事件）、`aaid`（关联的证券账号）、`trigger_indicator`（触发指标）、`trigger_remark`（触发备注）、`last_alert_date`（最近预警日期）。
-        - 可选：`audit_frontend_resource`（调用方提供的审计上下文）。
+        - 必填：`event_id`（可疑事件记录 ID）、`aaid`（关联的证券账户）、`tigger_indicator`（触发指标）、`last_alert_date`（最近预警日期）。
+        - 可选：`tigger_indicator_remark`（触发指标备注）、`remark`（事件备注）、`audit_frontend_resource`（调用方提供的审计上下文）。
+        - 字段名 `tigger_indicator`、`tigger_indicator_remark` 的拼写即如所示；管理后台前端传的是这两个字段名，不是 `trigger_indicator` 或 `trigger_remark`。
+        - `event_id` 为可疑事件列表中该事件行的 `id`，不是 `event_no`；`aaid` 为同一行的 `aaid`。`aml_suspicious_events` 列表的响应定义目前未列出 `id` 和 `aaid`。
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 业务说明
@@ -309,34 +314,40 @@ paths:
               required:
                 - event_id
                 - aaid
-                - trigger_indicator
-                - trigger_remark
+                - tigger_indicator
                 - last_alert_date
               properties:
                 event_id:
                   type: string
-                  description: 事件ID，用于标识本次请求关联的业务对象。此字段为必填项。
+                  description: 可疑事件记录 ID，即可疑事件列表中该事件行的 `id`（不是 `event_no`）。
                 aaid:
                   type: string
-                  description: 本次请求关联的证券账号。此字段为必填项。
-                trigger_indicator:
+                  description: |-
+                    事件关联的证券账户。管理后台前端从事件行中取值，且不允许修改。
+
+                    此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
+                tigger_indicator:
                   type: string
-                  description: 用于指定「触发指标」。此字段为必填项。
-                trigger_remark:
+                  description: 触发指标，取值来自引用选项 `kyc_suspicious_event_tigger_indicator`。
+                tigger_indicator_remark:
                   type: string
-                  description: 用于指定「触发备注」。此字段为必填项。
+                  description: 触发指标备注。
+                remark:
+                  type: string
+                  description: 事件备注。
                 last_alert_date:
-                  type: string
-                  description: 本次请求对应的最近预警日期。请按接口约定的日期格式提交。此字段为必填项。
+                  type: integer
+                  description: 最近预警日期，Unix 时间戳（秒）。
                 audit_frontend_resource:
                   type: object
                   description: 调用方提交的审计上下文，用于记录本次操作。
             example:
               event_id: '123'
-              aaid: H00000000
-              trigger_indicator: ''
-              trigger_remark: ''
-              last_alert_date: 2026-07-10
+              aaid: '1000001'
+              tigger_indicator: ''
+              tigger_indicator_remark: ''
+              remark: ''
+              last_alert_date: 1783641600
               audit_frontend_resource: {}
       responses:
         '200':
@@ -412,7 +423,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -432,7 +442,10 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: 用于按「客户」筛选结果。
+                      description: |-
+                        用于按「客户」筛选结果。
+
+                        `member_id` 为客户编号，与证券账号 `account_no` 及证券账户内部编号 `aaid` 不同；一个客户可有多个证券账户。
                     tigger_indicator:
                       type: string
                       description: |-
@@ -618,8 +631,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -700,13 +712,18 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: 用于按「客户」筛选结果。
+                      description: |-
+                        用于按「客户」筛选结果。
+
+                        `member_id` 为客户编号，与证券账号 `account_no` 及证券账户内部编号 `aaid` 不同；一个客户可有多个证券账户。
                     tigger_indicator:
                       type: string
                       description: |-
                         用于按「触发指标」筛选结果。
 
                         支持多选；提交时使用英文逗号（`,`）拼接多个值。不传时不按此字段筛选。
+
+                        **可选值：** `1` 出入金异常、`2` 交易异常、`3` 其他
                       example: Trading Anomaly
                       enum:
                         - '1'
@@ -725,6 +742,8 @@ paths:
                         用于按「审核状态」筛选结果。
 
                         支持多选；提交时使用英文逗号（`,`）拼接多个值。不传时不按此字段筛选。
+
+                        **可选值：** `1` 待跟进、`2` 跟进中、`3` 待审批、`4` 已完成
                       example: Pending Follow-up
                       enum:
                         - '1'
@@ -815,6 +834,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: 记录 ID. **返回值：** 记录 ID（行主键），编辑或删除该记录的接口用它定位记录。
                             event_no:
                               type: string
                               description: '**返回值：** 事件编号。'
@@ -892,7 +914,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - event_no: S2026063043342047
+                    - id: '123'
+                      event_no: S2026063043342047
                       member_id: '101456715'
                       real_name: 张三
                       en_name: FANG GULU

@@ -77,7 +77,7 @@ val config = WhaleCoreConfig(
 )
 
 withContext(Dispatchers.IO) {
-    WhaleCore.initialize(application, config, isDebug = BuildConfig.DEBUG)
+    WhaleCore.initialize(application, config)
 }
 ```
 
@@ -169,22 +169,26 @@ val appTokenRefreshCallback = object : TokenRefreshCallback {
 
 三段式格式 `ST/MARKET/CODE`，如 `"ST/US/AAPL"`、`"ST/HK/00700"`；期權額外編碼行使價、到期日與方向。行情、訂單、自選、盈虧分析等所有按標的定位的介面均使用這一套編碼。
 
+第一段是**類型段**：`ST` 個股、`ETF`、`OP` 期權、`WT` 輪證、`IX` / `BK` 指數。行情的批量訂閱入口按類型段分設（期權走 `subscribeOptionList`，其餘走 `subscribeQuoteList`），混合集合需先按類型段分組，取 `counterId.substringBefore('/')` 即可。傳錯類型不會報錯，但該通道的回應結構無法承載另一類標的的欄位（期權的行使價、隱含波動率等會落空）。
+
 ### 協程與回呼 {/* coroutines-and-callbacks */}
 
 每個能力都提供協程版 `suspend fun` 與回呼版 `*Async(..., AsyncCallback<T>?)`，按呼叫場景任選（Java 呼叫方或不便使用協程的場景用回呼版）。本文件的方法一覽只列協程版簽章，回呼版方法名加 `Async` 後綴、其餘參數一致。
 
 ```kotlin
 // 協程版
-val stock = WhaleCore.getQuoteService().getStock("ST/US/AAPL")
+val klines = WhaleCore.getQuoteService().getKlines("ST/US/AAPL", KlineType.PER_DAY, count = 100)
 
 // 回呼版
-WhaleCore.getQuoteService().getStockAsync("ST/US/AAPL", object : AsyncCallback<Stock> {
-    override fun onSuccess(result: Stock?) { /* ... */ }
+WhaleCore.getQuoteService().getKlinesAsync("ST/US/AAPL", KlineType.PER_DAY, count = 100, callback = object : AsyncCallback<List<Kline>> {
+    override fun onSuccess(result: List<Kline>?) { /* ... */ }
     override fun onError(error: Throwable) { /* ... */ }
 })
 ```
 
-`*Async` 與各類觀察回呼均在**非主執行緒**觸發，更新 UI 需自行切回主執行緒；協程任務被取消（如會話已銷毀）時不觸發任何回呼，也不會呼叫 `onError`。`OptionCalculator` 是例外——純同步計算，不涉及協程，也沒有 `*Async` 版本。
+`*Async` 與各類觀察回呼（`XxxEventCallback`）均在**主執行緒**觸發，可直接更新 UI；回呼內不要執行耗時操作，也不要在主執行緒阻塞等待回呼（會死鎖）。協程任務被取消（如會話已銷毀）時不觸發任何回呼，也不會呼叫 `onError`；在主執行緒取消觀察訂閱後，不會再有回呼。Flow 形態的 `observeXxx()` 在收集方所在的執行緒分派；`LogSink` 是例外，在寫入日誌的執行緒同步呼叫。
+
+同步方法沒有 `*Async` 版本，可直接在主執行緒呼叫：`OptionCalculator`、`WarrantCalculator` 的純計算，以及讀取記憶體快照的 `getStock`、`getQuoteLevelInfo`、`getInterestRate` 等。
 
 ### 事件流訂閱方式 {/* event-stream-subscription */}
 
@@ -210,82 +214,108 @@ WhaleCore.getQuoteService().getStockAsync("ST/US/AAPL", object : AsyncCallback<S
 
 | 方法 | 服務 | 主要能力 |
 | --- | --- | --- |
-| `getQuoteService()` | `QuoteService` | 行情訂閱、期權鏈/期權詳情訂閱、K 線、快照、分時數據、歷史逐筆成交、行情等級與裝置佔用（多裝置搶佔與搶回） |
+| `getQuoteService()` | `QuoteService` | 行情訂閱（單標的詳情 / 標的清單（期權除外） / 期權清單 / 期權鏈四個入口）、K 線與分時（隨行情推送即時更新）、快照、歷史逐筆成交、行情等級與裝置佔用（多裝置搶佔與搶回） |
 | `getOrderService()` | `OrderService` | 下單、改單、撤單、附加單、持倉止盈止損、訂單預覽、預估資訊、下單前置校驗、訂單事件 |
-| `getPortfoliosService()` | `PortfolioService` | 資產訂閱、現金明細、會員資產設定、盈虧分析 |
+| `getPortfolioService()` | `PortfolioService` | 資產訂閱、現金明細、會員資產設定、盈虧分析 |
 | `getWatchlistService()` | `WatchlistService` | 自選分組、股票、排序、置頂、事件 |
 | `getRequestService()` | `RequestService` | 透傳鑑權 HTTP 請求 |
 | `WhaleCore.updateTradeToken()` / `hasTradeToken()` | — | 交易權杖的送入與判有無，僅交易密碼驗證模式需要，見[交易權杖](#trade-token) |
 
-未初始化時取得服務會拋出 `WhaleCoreException.NotReady`。`OptionCalculator` 是無狀態純計算工具類別，不透過 `WhaleCore` 取得，直接呼叫即可，詳見[期權計算器](#option-calculator)。
+未初始化時取得服務會拋出 `WhaleCoreException.NotReady`。`OptionCalculator` 與 `WarrantCalculator` 是無狀態純計算工具類別，不透過 `WhaleCore` 取得，直接呼叫即可，詳見[期權計算器](#option-calculator)與[輪證計算器](#warrant-calculator)。
 
 <Note>
-  歷史獨立入口 `WhaleCore.getOrderValidationService()` 已棄用，下單前置校驗請直接呼叫 `WhaleCore.getOrderService()` 上的同名方法。
+  歷史獨立入口 `WhaleCore.getOrderValidationService()` 已移除，下單前置校驗請呼叫 `WhaleCore.getOrderService()` 上的同名方法；資產服務入口 `getPortfoliosService()` 已更名為 `getPortfolioService()`。
 </Note>
 
 ## 行情 {/* quotes */}
 
-拉取快照，或用 `subscribe` 建立即時訂閱持續接收更新：
+訂閱入口按「一個標的還是一批標的」「個股還是期權」分為四個：單標的用 `subscribeQuoteDetail`（個股與期權通用，快照欄位最齊全）；一批非期權標的用 `subscribeQuoteList`；期權清單與期權鏈見[期權訂閱](#option-quotes)。混合集合按 CounterId 類型段分組後分別訂閱，見[標的編碼](#counter-id)。
 
 ```kotlin
 val quotes = WhaleCore.getQuoteService()
 
-// 快照：一次性取得
+// 快照：同步讀取記憶體中的最新行情，未訂閱或數據未到達時為 null
 val stock = quotes.getStock("ST/US/AAPL")
 
-// 即時訂閱：subscribe 建立訂閱，鏈式選擇行情通道後 start()，onChange 持續回呼最新行情
-val subscription = quotes.subscribe(
-    counterIds = listOf("ST/US/AAPL", "ST/HK/00700"),
+// 單標的詳情訂閱：欄位最齊全的快照 + 訂閱，鏈式選擇行情通道後 start()，onChange 持續回呼最新行情
+val subscription = quotes.subscribeQuoteDetail(
+    counterId = "ST/US/AAPL",
     callback = object : QuoteEventCallback {
         override fun onChange(stock: Stock) { updateRow(stock) }
     },
 ).detail().depth().trade().start()
 
 subscription.cancel()   // 頁面銷毀時取消
+
+// 清單訂閱：一組非期權標的，集合可整組取代（分組切換 / 捲動載入）
+// start() 掛起至首屏訂閱生效，失敗拋出 WhaleCoreException；後續 updateCounterIds 不掛起
+val listSub = quotes.subscribeQuoteList(listOf("ST/US/AAPL", "ST/HK/00700"), callback)
+    .list()
+    .start()
+
+listSub.updateCounterIds(newCounterIds)   // 整組取代：移出集合的標的停止回呼
+listSub.cancel()
 ```
 
 若行情已由其他途徑（如自選 `WatchlistService`）訂閱，用 `observeQuoteEvents(...)` 僅觀察行情流、不重複建立訂閱。
 
 ### K 線 {/* klines */}
 
-```kotlin
-val klines = quotes.getKlines("ST/US/AAPL", KlineType.PER_DAY, count = 200)
+K 線的最新一根由 SDK 根據行情推送在本機即時更新：用 `subscribeQuoteDetail` 訂閱了 `.detail()`，並拉取過該週期的最新一頁（`timestamp` 預設 `0`）後，最新一根會隨行情推送更新。
 
-// K 線更新事件依賴該標的已有的行情訂閱（哪怕只是 .list()）才會觸發；事件只標識發生更新的標的，
-// 最新序列仍需呼叫 getKlines 拉取
+```kotlin
+val klines = quotes.getKlines("ST/US/AAPL", KlineType.PER_MINUTE, count = 200)
+
 lifecycleScope.launch {
     quotes.observeKlineUpdates(listOf("ST/US/AAPL")).collect { update ->
-        val latest = quotes.getKlines(update.counterId, KlineType.PER_DAY, count = 200)
+        // update.kline 是變化後的最新一根：isNewBar 為 true 時追加，否則取代最後一根；
+        // 也可從快照讀取完整序列，無需再次拉取
+        val series = quotes.getStock(update.counterId)?.klines(update.klineType, update.adjustType)
         // 重新整理 K 線圖
     }
 }
 ```
 
+同一序列的更新事件最多每 500 毫秒發出一次，新開一根時立即發出；翻頁拉取的歷史數據不會更新。
+
 ### 分時數據 {/* timeshares */}
 
-繪製分時走勢圖請使用本介面，不要用 1 分鐘 K 線近似——分時按交易日分組、自帶昨收與逐點均價，而 K 線是「從錨點往前 N 根」的連續序列，港股、A 股這類單日根數少的市場用 K 線湊分時會跨交易日混入前一日數據。
+繪製分時走勢圖請使用本介面，不要用 1 分鐘 K 線近似——分時按交易日與時段分組、自帶昨收與逐點均價，而 K 線是「從錨點往前 N 根」的連續序列，港股、A 股這類單日根數少的市場用 K 線湊分時會跨交易日混入前一日數據。
 
 ```kotlin
-val today = quotes.getTimeshares("ST/US/AAPL").timeshares.lastOrNull()
-today?.minutes?.forEach { minute -> /* 價格 minute.price、均價 minute.avgPrice */ }
+// 按全部時段拉取時，同一天按時段分為多組（盤中 / 盤前 / 盤後 / 夜盤，尚未開始的時段為空組），按 tradeSession 區分
+val shares = quotes.getTimeshares("ST/US/AAPL")
+val latestDate = shares.timeshares.maxOfOrNull { it.date }
+shares.timeshares.filter { it.date == latestDate }.flatMap { it.minutes }.forEach { minute -> /* 價格 minute.price、均價 minute.avgPrice */ }
+
+// 最新一個點隨行情推送更新，前提與 K 線相同
+lifecycleScope.launch {
+    quotes.observeTimeshareUpdates(listOf("ST/US/AAPL")).collect { update ->
+        // update.minute 屬於 update.tradeSession 那一組：isNewPoint 為 true 時追加，否則取代該組最後一個點
+        val latest = quotes.getStock(update.counterId)?.timeshares(update.fiveDays, update.klineSession)
+    }
+}
 ```
 
 ### 期權訂閱 {/* option-quotes */}
 
-單合約詳情訂閱與多合約批量訂閱二選一：
+單合約詳情、合約清單、期權鏈三種形態任選其一：
 
 ```kotlin
-// 期權詳情訂閱：單合約快照 + 訂閱，鏈式選擇數據類型
-val optionSub = quotes.subscribeOptionDetail("OP/US/AAPL240119C190000", callback)
+// 單合約詳情：快照欄位最齊全且自帶一檔盤口，與個股共用同一入口
+val optionSub = quotes.subscribeQuoteDetail("OP/US/AAPL240119C190000", callback)
     .detail().depth().trade().start()
 
-// 期權鏈批量訂閱：整組合約，隨互動整組取代（切到期日 / 捲動可見區），無需鏈式選類型
+// 期權清單：一組合約，快照不含盤口
+val optionListSub = quotes.subscribeOptionList(counterIds, callback).list().start()
+
+// 期權鏈：整組合約隨互動整組取代（切到期日 / 捲動可見區），快照含一檔盤口，無需鏈式選類型
 val chainSub = quotes.subscribeOptionChain(visibleCounterIds, callback)
 chainSub.updateCounterIds(newVisibleCounterIds)   // 整組取代，非增量；handle 需強參考保活
 chainSub.cancel()
 ```
 
-期權沒有獨立的盤口訂閱通道：`start()` 拉取的快照自帶一檔盤口，但後續推送仍需明確鏈式呼叫 `.depth()`，不選則只有首幀帶盤口。Greeks 不在行情推送中——宿主自訂正股取正股價，傳給 [`OptionCalculator`](#option-calculator) 本機計算。
+期權的首屏盤口只有 `subscribeQuoteDetail` 與 `subscribeOptionChain` 的快照提供，`subscribeOptionList` 不含；**後續盤口推送**需明確鏈式呼叫 `.depth()`。Greeks 不在行情推送中——宿主自訂正股取正股價，傳給 [`OptionCalculator`](#option-calculator) 本機計算。
 
 ### 行情等級與裝置佔用 {/* quote-level-and-eviction */}
 
@@ -314,21 +344,24 @@ quotes.reclaimQuoteAccess()
 
 | 方法 | 說明 |
 | --- | --- |
-| `getInterestRate()` | 讀取 SDK 內建無風險利率（年化小數），供期權計算器展示用；不可用時傳回 `null` |
-| `getStock(counterId)` | 取得指定標的目前行情快照；未訂閱或數據未到達時傳回 `null` |
-| `getTrades(counterId,`<br />`count = 100,`<br />`lastSequenceId = 0,`<br />`lastTradeSession = 0,`<br />`tradeType = 0)` | 拉取歷史逐筆成交（分頁，純查詢不建訂閱），即時增量需配合 `subscribe(...).trade()` 疊加 |
+| `getInterestRate()` | 讀取期權口徑的無風險利率（年化小數，美國國債平均收益率），與期權計算器預設值同源；尚未取得時傳回 `null` 並在後台補取，稍後再次呼叫即有值 |
+| `getWarrantInterestRate()` | 讀取輪證口徑的無風險利率（年化小數，行情設定中的值），與輪證計算器預設值同源；尚未取得時傳回 `null` 並在後台補取，稍後再次呼叫即有值 |
+| `getStock(counterId)` | 同步讀取指定標的目前行情快照，可在主執行緒呼叫；未訂閱或數據未到達時傳回 `null` |
+| `getTrades(counterId,`<br />`count = 100,`<br />`lastSequenceId = 0,`<br />`lastTradeSession = 0,`<br />`tradeType = 0)` | 拉取歷史逐筆成交（分頁，純查詢不建訂閱），即時增量需配合訂閱入口的 `.trade()` 疊加 |
 | `getKlines(counterId,`<br />`klineType,`<br />`count,`<br />`timestamp = 0,`<br />`adjustType = FORWARD_ADJUST,`<br />`klineSession = ALL)` | 取得 K 線數據，按時間升序排列 |
-| `getTimeshares(counterId,`<br />`fiveDays = false,`<br />`klineSession = ALL)` | 取得分時數據（按交易日分組） |
-| `subscribe(counterIds, callback)` | 建立普通行情訂閱建構器，鏈式選擇訂閱類型後 `start()` |
-| `subscribeOptionDetail(counterId, callback)` | 建立期權詳情訂閱建構器（單合約） |
+| `getTimeshares(counterId,`<br />`fiveDays = false,`<br />`klineSession = ALL)` | 取得分時數據（按交易日與時段分組） |
+| `subscribeQuoteDetail(counterId,`<br />`callback)` | 建立單標的訂閱建構器（個股與期權通用，快照欄位最齊全），鏈式選擇訂閱類型後 `start()` |
+| `subscribeQuoteList(counterIds,`<br />`callback)` | 建立非期權標的批量訂閱建構器，集合可整組取代 |
+| `subscribeOptionList(counterIds,`<br />`callback)` | 建立期權批量訂閱建構器，集合可整組取代 |
 | `subscribeOptionChain(counterIds, callback)` | 建立期權鏈批量訂閱（整組取代，推送類型固定不可選） |
 | `observeQuoteEvents(counterIds)` | 觀察行情事件流（不建立底層訂閱，需配合某個訂閱入口使用） |
-| `observeKlineUpdates(counterIds)` | 觀察 K 線更新事件流 |
+| `observeKlineUpdates(counterIds)` | 觀察 K 線更新事件流，事件攜帶變化後的最新一根 |
+| `observeTimeshareUpdates(counterIds)` | 觀察分時更新事件流，事件攜帶變化後的最新一個點 |
 | `getQuoteLevelInfo()` | 讀取行情等級與裝置佔用狀態快照；首次行情權限確認前傳回 `null` |
 | `observeQuoteLevel()` | 觀察行情等級與裝置佔用狀態（訂閱即收到目前快照） |
 | `reclaimQuoteAccess()` | 把行情使用權搶回本裝置（「重啟行情」）；傳回後等級刷新以觀察回呼為準 |
 
-訂閱建構器（`subscribe` / `subscribeOptionDetail` 傳回）的鏈式類型選擇方法：`list()` / `detail()` / `depth()` / `trade()` / `preTrade()` / `postTrade()`；`subscribe` 額外提供 `broker()` / `nightTrade()` / `totalView()` / `totalViewBrief()`（期權數據鏈路不支援這四種）。兩個訂閱建構器都支援不選任何類型直接呼叫 `start()`，此時只拉一次快照、不建立任何推送訂閱，可當一次性 snapshot 用。`start()` 傳回的 `QuoteSubscription` 只有一個 `cancel()`；`OptionChainSubscription` 另有 `updateCounterIds(counterIds)` 與 `isCancelled` 屬性。
+訂閱建構器的鏈式類型選擇方法：`list()` / `detail()` / `depth()` / `trade()` / `preTrade()` / `postTrade()`；`subscribeQuoteDetail` 與 `subscribeQuoteList` 額外提供 `broker()` / `nightTrade()` / `totalView()` / `totalViewBrief()`（期權數據鏈路不支援這四種）。`subscribeQuoteDetail` / `subscribeQuoteList` / `subscribeOptionList` 三個訂閱建構器都支援不選任何類型直接呼叫 `start()`，此時只拉一次快照、不建立任何推送訂閱，可當一次性快照使用。四個入口各有自己的訂閱 handle 類型：單標的的 `QuoteDetailSubscription` 只有一個 `cancel()`；批量的 `QuoteListSubscription` / `OptionListSubscription` / `OptionChainSubscription` 另有 `updateCounterIds(counterIds)` 與 `isCancelled` 屬性。
 
 <Accordion title="行情與期權計算進階細節">
 
@@ -373,14 +406,14 @@ val input = OptionPricingInput(
     daysToExpire = days,
     isCall = OptionDirection.fromQuoteDirection(optionData.direction) == OptionDirection.CALL,
     dividendToExpire = optionData.dividendToExpire,
-    // interestRate 留空則使用 SDK 內建利率（QuoteService.getInterestRate() 同源）
+    // interestRate 留空則使用 SDK 內建的期權口徑利率（與 QuoteService.getInterestRate() 同源）
 )
 
 val greeks = OptionCalculator.greeks(input)  // 非法輸入傳回 null，UI 顯示佔位符
 ```
 
 <Warning>
-  非法輸入統一傳回 `null`（UI 按 "--" 展示）：隱含波動率 ≤ 0、天數 < 0、正股價或行使價 ≤ 0、利率不可用。天數換算 API 已過期均傳回負數（`daysToExpire` 到期當天為 `0`，合法）——負數不能再傳入 `greeks` / `profitProbability`，會被判定為非法輸入傳回 `null`。`interestRate` 是年化小數（如 `0.045` 表示 4.5%），不是百分數，單位傳錯會讓 Greeks 整體偏差 100 倍。
+  非法輸入統一傳回 `null`（UI 按 "--" 展示）：隱含波動率 ≤ 0、天數 < 0、正股價或行使價 ≤ 0、利率不可用。`interestRate` 傳 `null` 時讀取 SDK 內建的期權口徑利率（與 `getInterestRate()` 同源）。天數換算 API 已過期均傳回負數（`daysToExpire` 到期當天為 `0`，合法）——負數不能再傳入 `greeks` / `profitProbability`，會被判定為非法輸入傳回 `null`。`interestRate` 是年化小數（如 `0.045` 表示 4.5%），不是百分數，單位傳錯會讓 Greeks 整體偏差 100 倍。
 </Warning>
 
 **方法一覽：**
@@ -393,6 +426,46 @@ val greeks = OptionCalculator.greeks(input)  // 非法輸入傳回 null，UI 顯
 | `daysToExpire(expireDate, timeZone)` | 由到期日（`yyyyMMdd`）換算距到期整數自然日，供「剩 N 天」類展示 |
 | `fractionalDaysToExpire(expireDate,`<br />`timeZone,`<br />`holidays = emptyList(),`<br />`dayOffset = 0)` | 由到期日換算距到期小數天（到期 20:00、按小時折算），Greeks / 盈利概率的計算入參用它才與官方用戶端期權計算器對齊 |
 | `profitProbability(underlyingPrice,`<br />`breakevenPoint,`<br />`impliedVolatility,`<br />`daysToExpire,`<br />`isCall,`<br />`dividendToExpire = null,`<br />`interestRate = null)` | 計算到期盈利機率（以盈虧平衡點而非行使價為界，Black-Scholes 風險中性口徑） |
+
+## 輪證計算器 {/* warrant-calculator */}
+
+`WarrantCalculator` 是無狀態純計算工具（不註冊進任何 Service，無網絡，無 `*Async` 版本），數據全部由呼叫方傳入。輪證（窩輪、牛熊證、界內證）的衍生指標不在行情推送中，詳情頁展示的指標都需要正股現價參與計算，一次呼叫即可全部算出。合約條款取自輪證行情的 `ExtraData.WarrantData`，正股價來自宿主自訂的正股行情（正股 CounterId 見 `WarrantData.underlyingCounterId`）。
+
+<Note>
+  輪證條款只有 `subscribeQuoteDetail` 的快照攜帶。用 `subscribeQuoteList` 訂閱輪證時，`extraData` 會退化為 `Underlying`、`stockTemplate` 為 `Unknown`，無法算出任何指標。
+</Note>
+
+```kotlin
+val warrantData = stock.extraData as ExtraData.WarrantData
+val underlyingPrice = underlyingStock.lastPrice ?: return
+
+val input = WarrantMetricsInput.fromStock(
+    warrant = stock,                                             // 合約欄位與輪證最新價取自快照
+    underlyingPrice = underlyingPrice,
+    daysToExpire = BigDecimal.valueOf(warrantData.dayToExpire),  // 口徑由呼叫方選定，見下方說明
+) ?: return
+val metrics = WarrantCalculator.metrics(input)
+metrics.delta          // 不適用該類別或輸入不足的項目為 null，其餘項目照常給值
+metrics.premium
+metrics.moneyness      // WarrantMoneyness：價內 / 價外 / 貼價 / 界內 / 界外 / 無法判定
+```
+
+各指標的適用類別：對沖值與實際槓桿只適用於認購證 / 認沽證；距收回價只適用於牛熊證；界內證只有溢價、槓桿比率與界內 / 界外判定。不適用的項目為 `null`，逐類適用表見 `WarrantMetrics` 的 KDoc。比率類結果一律為小數（`0.05` 表示 5%），格式化與精度由呼叫方決定。
+
+<Warning>
+  以下兩個口徑由呼叫方選定：
+
+  - **距到期天數**：對沖值與實際槓桿對它敏感。傳 `dayToExpire`（交易日）與官方用戶端的輪證參數一致；傳 `OptionCalculator.daysToExpire(expireDate, 香港時區)` 的自然日與輪證清單介面傳回的對沖值最接近。
+  - **無風險利率**：與 `OptionCalculator` 不同，`interestRate` 傳 `null` 時讀取輪證口徑利率（與 `getWarrantInterestRate()` 同值），不要把 `getInterestRate()` 的值傳進來。無風險利率不可用（明確傳 `0` 或內建利率缺失）時，對沖值與實際槓桿為 `null`，不會以假定利率兜底。
+</Warning>
+
+**方法一覽：**
+
+| 方法 | 說明 |
+| --- | --- |
+| `metrics(input)` | 一次算出溢價、槓桿比率、實際槓桿、打和點、價內價外判定與幅度、距收回價、換股價、對沖值 |
+| `category(raw)` | 把 `WarrantData.category`（`Call` / `Put` / `Bull` / `Bear` / `Inline`，不區分大小寫）轉成 `WarrantCategory` |
+| `WarrantMetricsInput.fromStock(warrant,`<br />`underlyingPrice,`<br />`daysToExpire,`<br />`interestRate = null)` | 從輪證行情快照建構輸入；快照缺 `WarrantData` 或最新價時傳回 `null` |
 
 ## 訂單與校驗 {/* orders-and-validation */}
 
@@ -535,10 +608,6 @@ if (unresolved != null && unresolved.acceptableViaApi) {
 
 `acceptableViaApi == true` 的項目（聲明與權限類如美股夜盤、期權夜盤、碎股、美股沽空、低價股、OTC 場外交易、渦輪牛熊、CAR-CKA、虛擬資產 ETF 測評與附加風險披露，以及期權協議、上市衍生品 ETF 評估）可經 `acceptAgreement(type)` 一鍵同意，或（僅認知評估項目）經 `submitListedDerivAssessment(experience)` 作答，選 `DerivExperience.NONE` 記為不通過、繼續攔截。虛擬資產 ETF 的測評與附加風險披露共用同一次簽署：同意任一項，伺服端同時置位兩項，因此呼叫前須把兩項內容都展示給用戶並取得確認。`acceptableViaApi == false` 的項目（評估/認證類如 PI、VA、W-8BEN、港股融券）須在券商方辦理，SDK 不暴露辦理連結，對這類項目呼叫 `acceptAgreement` 會拋出 `IllegalArgumentException`（程式錯誤，不佔用 `WhaleCoreException` 通道）。兩個方法成功後都會自動失效內部資格快取，宿主重走校驗即可。
 
-<Note>
-  歷史獨立入口 `WhaleCore.getOrderValidationService()` 已棄用，新程式碼請直接呼叫 `WhaleCore.getOrderService()` 上的同名方法。
-</Note>
-
 <Accordion title="校驗規則完整列表">
 
 `OrderValidationRule.code` 按階段分段（階段編號 × 100），跨版本只追加不重排，遇到未識別 code 應「攔截 + 通用提示」兜底：
@@ -546,8 +615,9 @@ if (unresolved != null && unresolved.acceptableViaApi) {
 | 階段 | 編號段 | 作用域 | 涵蓋內容 |
 | --- | --- | --- | --- |
 | 進交易頁前 | `1001`–`1005` | ENTRY | 標的為空、帳戶未開戶/暫停、指數板塊不可交易、伺服端可交易性判定 |
-| 頁面按鈕狀態 | `1101`–`1115` | DRAFT+SUBMISSION | 渠道/買賣限制、價格/數量/觸發價/跟蹤值/監控價必填、訂單類型支援性、按金額下單適用性與金額過低、股票現金卡與賣出方向不相容 |
+| 頁面按鈕狀態 | `1101`–`1115` | DRAFT+SUBMISSION | 渠道/買賣限制、價格/數量/觸發價/跟蹤值/監控價必填、訂單類型支援性、TSL 委託腿定價二選一與掛單檔位越界、按金額下單適用性與金額過低、股票現金卡與賣出方向不相容 |
 | 協議 | `1201` | SUBMISSION | 期權風險協議未同意 |
+| 參數合理性 | `1302` | 僅 SUBMISSION | 美股碎股按金額買入低於渠道最低金額（最低金額經 `referenceValue` 攜帶） |
 | 時段與有效期 | `1401`–`1403` | DRAFT+SUBMISSION | 訂單類型時段支援性、有效期支援性、GTD 到期時間必填 |
 | 權限資格與聲明 | `1501`–`1512` | 僅 SUBMISSION | ETF 認知評估、沽空/融券資格、W-8BEN、美股/期權夜盤聲明、碎股聲明與時段、OTC 場外交易權限、權證交易權限、CAR/CKA 認證、虛擬資產 ETF 交易測評與附加風險披露 |
 | 附加單 | `1601`–`1608` | DRAFT+SUBMISSION | 止盈/止損觸發價與委託價必填、GTD 到期時間、訂單類型是否支援附加單 |
@@ -689,6 +759,7 @@ service.replaceAttachedOrder(
 | `getOrderInfo(counterId, orderId = null)` | 下單前的標的基礎資訊與帳戶渠道權限設定；改單場景傳 `orderId` 取得允許修改的欄位約束 |
 | `getEstimateBuyLimit(request)` | 查詢最大可買額度（僅股票；期權見 `getTradeCapacity`） |
 | `getTradeDetail(counterId, settlementCurrency)` | 查詢持倉明細（總量 / 可賣數量 / 成本 / 現金） |
+| `getEstimatedCost(request)` | 查詢預估費用（佣金 / 平台費 / 第三方費用） |
 | `getTradeCapacity(request)` | 查詢交易額度快照（建議的額度區取數入口） |
 | `submitOrder(request)` | 提交訂單 |
 | `replaceOrder(request)` | 改單（普通單 / 條件單 / 期權主單共用入口，按類型自動路由） |
@@ -716,7 +787,7 @@ service.replaceAttachedOrder(
 ## 資產 {/* portfolio */}
 
 ```kotlin
-val portfolios = WhaleCore.getPortfoliosService()
+val portfolios = WhaleCore.getPortfolioService()
 
 // 先註冊監聽，再訂閱帳戶（避免錯過第一幀數據）
 portfolios.observePortfolioEvents(this, object : PortfolioEventCallback {
@@ -805,6 +876,7 @@ renderTrendChart(trend.selfSeries, trend.indexSeries)  // 兩序列等長逐位�
 | 方法 | 說明 |
 | --- | --- |
 | `setSubscribedAccounts(accountChannels, currency)` | 設定訂閱的帳戶渠道與展示貨幣，整體取代目前訂閱範圍；傳空清單即取消全部訂閱 |
+| `currentAccount()` | 取得 SDK 目前使用的帳戶，含帳戶類型（現金 / 融資），可用於按帳戶類型控制融資相關資訊的展示 |
 | `observePortfolioEvents()` | 觀察資產事件流 |
 | `refresh()` | 手動重新整理目前訂閱的資產數據 |
 | `enableCashDetail(enabled)` / `isEnableCashDetail()` | 現金明細展示開關 |
@@ -821,7 +893,7 @@ val watchlist = WhaleCore.getWatchlistService()
 lifecycleScope.launch {
     watchlist.observeWatchlistEvents().collect { event ->
         when (event) {
-            is WatchlistEvent.Groups -> renderGroups(event.groups, event.stockInfo, event.ties)
+            is WatchlistEvent.Groups -> renderGroups(event.groups, event.stocks, event.ties)
             is WatchlistEvent.SortGroups -> applySort(event.sortGroups)
             else -> Unit
         }
@@ -1012,9 +1084,10 @@ suspend fun verifyTradePassword(accountChannel: String): Boolean = lockOf(accoun
 
 | 模型分類 | 主要類型 |
 | --- | --- |
-| 行情 | `Stock` / `StockTemplate` / `TradeStatus` / `KlineUpdate` / `Kline` / `TimeShares` / `QuoteLevelInfo` / `SubMarketQuote` / `PriceLevel` / `DepthLevel` / `EvictedLevelDetail` |
+| 行情 | `Stock` / `StockTemplate` / `TradeStatus` / `KlineUpdate` / `TimeshareUpdate` / `Kline` / `TimeShares` / `QuoteLevelInfo` / `SubMarketQuote` / `PriceLevel` / `DepthLevel` / `EvictedLevelDetail` |
 | 期權計算 | `OptionPricingInput` / `OptionGreeks` |
-| 訂單 | `Order` / `OrderIntent` / `SubmitOrderRequest` / `SubmitOrderResult` / `ReplaceOrderRequest` / `OrderConstraints` / `OrderInfo` / `OrderValidationResult` / `TradeCapacity` / `TradeCapacityRequest` / `QualificationStatus` / `TPSLOrderIntent` / `SubmitTPSLOrderRequest` / `TPSLValidationResult` / `HistoryOrdersRequest` / `HistoryOrdersResult` / `TradeCard` / `TradeCards` / `TradeCardCategory` / `SuggestedTradeCard` |
+| 輪證計算 | `WarrantMetricsInput` / `WarrantMetrics` / `WarrantCategory` / `WarrantMoneyness` |
+| 訂單 | `Order` / `OrderIntent` / `SubmitOrderRequest` / `SubmitOrderResult` / `ReplaceOrderRequest` / `OrderConstraints` / `OrderInfo` / `OrderValidationResult` / `TradeCapacity` / `TradeCapacityRequest` / `QualificationStatus` / `TPSLOrderIntent` / `SubmitTPSLOrderRequest` / `TPSLValidationResult` / `HistoryOrdersRequest` / `HistoryStatusFilter` / `HistoryOrdersResult` / `TradeCard` / `TradeCards` / `TradeCardCategory` / `SuggestedTradeCard` |
 | 資產 | `Portfolio` / `AccountInfo` / `PortfolioMemberSettingInfo` / `PortfolioCostType` |
 | 盈虧分析 | `PLAnalysisMeta` / `ProfitOverview` / `ProfitTrend` / `PLCalendar` / `ProfitRanking` / `CurrencyAssetFlow` / `StockCumulativePL` / `MarketStocksPL` / `PLPeriod` |
 | 自選 | `WatchlistGroup` / `WatchlistStock` / `WatchlistFund` / `WatchlistSortField` / `WatchlistSortGroup` / `WatchlistEvent` |
@@ -1042,7 +1115,7 @@ suspend fun verifyTradePassword(accountChannel: String): Boolean = lockOf(accoun
 
 ```kotlin
 try {
-    val stock = WhaleCore.getQuoteService().getStock("ST/US/AAPL")
+    val klines = WhaleCore.getQuoteService().getKlines("ST/US/AAPL", KlineType.PER_DAY, count = 100)
 } catch (e: WhaleCoreException.NetworkUnavailable) {
     // 網絡提示與重試
 } catch (e: WhaleCoreException) {

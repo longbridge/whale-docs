@@ -61,7 +61,10 @@ paths:
                   description: 提交时取当前行记录的 task_code 字段值（展示名），与请求只读输入框内容一致。
                 process_mode:
                   type: string
-                  description: 清算前检查失败后的处理方式。
+                  description: |-
+                    清算前检查失败后的处理方式。
+
+                    **可选值：** `0` 仅提醒、`1` 工单审核、`2` 强制校验
                   enum:
                     - '0'
                     - '1'
@@ -293,6 +296,68 @@ paths:
                 lb_bank_account_info:
                   type: object
                   description: 字段结构同「新增公司银行账户」接口的请求参数，此处不再重复展开
+                  properties:
+                    nature_type:
+                      type: string
+                      description: 账户性质。
+                    currency:
+                      type: string
+                      description: 币种代码。
+                    account_name:
+                      type: string
+                      description: 账户名称。
+                    region:
+                      type: string
+                      description: 地区。
+                    bank_id:
+                      type: string
+                      description: 银行 ID。
+                    bank_account:
+                      type: string
+                      description: 银行账号。
+                    bank_name:
+                      type: string
+                      description: 银行名称。
+                    bank_region:
+                      type: string
+                      description: 银行所在地区。
+                    swift_code:
+                      type: string
+                      description: Swift Code。
+                    bank_addr:
+                      type: string
+                      description: 银行地址。
+                    simple_name:
+                      type: string
+                      description: 简称。
+                    deposit_types:
+                      type: array
+                      description: 入金方式列表，数组元素 {name, id}。
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            description: 名称
+                          id:
+                            description: 方式 ID（字符串或数字）
+                    withdraw_types:
+                      type: array
+                      description: 出金方式列表，数组元素 {name, id, support_bank}。
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            description: 名称
+                          id:
+                            description: 方式 ID（字符串或数字）
+                          support_bank:
+                            type: string
+                            description: 支持的银行
+                    version:
+                      type: number
+                      description: 固定传入 1，兼容老接口。
                 audit_frontend_resource:
                   type: object
                   description: 取自编辑前的详情数据，非业务字段
@@ -469,12 +534,27 @@ paths:
                   type: array
                   description: 数组元素 {name, id}，提交前过滤掉 name/id 为空的项
                   items:
-                    type: string
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        description: 名称
+                      id:
+                        description: 方式 ID（字符串或数字）
                 withdraw_types:
                   type: array
                   description: 数组元素 {name, id, support_bank}，提交前过滤掉 name/id 为空的项
                   items:
-                    type: string
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        description: 名称
+                      id:
+                        description: 方式 ID（字符串或数字）
+                      support_bank:
+                        type: string
+                        description: 支持的银行
                 support_exchange:
                   type: string
                   description: 用于指定「是否支持换汇」。
@@ -717,6 +797,15 @@ paths:
                       bank_code:
                         type: string
                         description: 银行代码（如 ABA 路由号），可能为空。
+                      province:
+                        type: string
+                        description: 银行账户所在省份/州，可能为空字符串。
+                      city:
+                        type: string
+                        description: 银行账户所在城市，可能为空字符串。
+                      postal_code:
+                        type: string
+                        description: 银行账户地址邮编，可能为空字符串。
               example:
                 code: 0
                 message: success
@@ -1633,8 +1722,9 @@ paths:
 
         ### 请求参数
 
-        - 必填：`transfer_type`（转账类型）、`from_type`（转出方类型）、`from_main_account`（转出主账户）、`from_main_account_type`（转出主账户类型）、`from_account_id`（转出账户 ID）、`to_type`（转入方类型）、`to_main_account`（转入主账户）、`to_main_account_type`（转入主账户类型）、`to_account_id`（转入账户 ID）、`allocation_channel`（调拨渠道）、`transfer_strategy`（转账策略）、`package_type`（套餐类型 / 频率）、`currency`（币种）、`amount`（金额）、`status`（状态）
-        - 可选：`service_time`（服务时间）、`postscript`（附言）
+        - 必填：`transfer_type`（调拨类型）、`from_type`（转出方类型）、`to_type`（转入方类型）、`transfer_strategy`（调拨策略）、`package_type`（频率）、`currency`（币种）、`amount`（金额）、`postscript`（附言）、`status`（状态）、`priority`（优先级）
+        - 视通道而定：`from_main_account`、`from_main_account_type`、`from_account_id`、`to_main_account`、`to_main_account_type`、`to_account_id`、`allocation_channel`；HashKey 结算渠道调拨还需 `currency_type`
+        - 可选：`service_time`（服务时间；系统计算金额的频率不传）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 业务说明
@@ -1657,24 +1747,40 @@ paths:
             schema:
               type: object
               required:
-                - id
                 - transfer_type
                 - from_type
                 - to_type
                 - transfer_strategy
                 - package_type
+                - currency
+                - amount
                 - postscript
                 - status
+                - priority
               properties:
-                id:
-                  type: string
-                  description: 规则 ID
                 transfer_type:
                   type: string
-                  description: 划拨类型
+                  description: |-
+                    调拨类型。传 `atm_whale_transfer_type` 数据字典（`GET /v1/datasets/refs/atm_whale_transfer_type`）中条目的 `key`。
+
+                    管理后台中，`1`（银行间调拨）会把 `from_type` 和 `to_type` 都固定为 `1`；`2`（结算账户充值）会把 `from_type` 固定为 `1`；`3`（结算账户提现）会把 `to_type` 固定为 `1`。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_transfer_type
                 from_type:
                   type: string
-                  description: 出账通道
+                  description: |-
+                    转出通道类型。管理后台提交时，银行传 `1`，结算渠道传 `2`。
+
+                    **可选值：** `1` 银行、`2` 结算渠道
+                  enum:
+                    - '1'
+                    - '2'
+                  x-enum-details:
+                    - value: '1'
+                      label: 银行
+                    - value: '2'
+                      label: 结算渠道
+                  example: '1'
                 from_main_account:
                   type: string
                   description: 大账号（出账，出账通道非银行时必填）
@@ -1686,7 +1792,19 @@ paths:
                   description: 银行账号（出账，出账通道为银行或非加密币种时必填）
                 to_type:
                   type: string
-                  description: 入账通道
+                  description: |-
+                    转入通道类型。管理后台提交时，银行传 `1`，结算渠道传 `2`。
+
+                    **可选值：** `1` 银行、`2` 结算渠道
+                  enum:
+                    - '1'
+                    - '2'
+                  x-enum-details:
+                    - value: '1'
+                      label: 银行
+                    - value: '2'
+                      label: 结算渠道
+                  example: '1'
                 to_main_account:
                   type: string
                   description: 大账号（入账，入账通道非银行时必填）
@@ -1701,25 +1819,55 @@ paths:
                   description: 划拨渠道（出账通道为银行时必填）
                 transfer_strategy:
                   type: string
-                  description: 划拨策略
+                  description: |-
+                    调拨策略。传 `atm_whale_transfer_strategy` 数据字典（`GET /v1/datasets/refs/atm_whale_transfer_strategy`）中条目的 `key`。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_transfer_strategy
                 package_type:
                   type: string
-                  description: 频率
+                  description: |-
+                    频率。传 `atm_whale_package_type` 数据字典（`GET /v1/datasets/refs/atm_whale_package_type`）中条目的 `key`。
+
+                    - `week` 使用 `service_time.week_rule`；其他按时间触发的频率使用 `service_time.time_rule`。
+                    - `balance`、`coin_withdraw_quantity_submit`、`coin_withdraw_fee_submit`、`coin_withdraw_quantity_fail`、`coin_withdraw_fee_fail`、`coin_deposit_success` 由系统计算金额：`currency` 和 `amount` 均传 `system`，管理后台不传 `service_time`。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_package_type
                 currency:
                   type: string
-                  description: 币种（金额非系统计算时必填）
+                  description: 币种，取 `global_currency` 数据字典中的代码（虚拟资产取 `global_coin`）。金额由系统计算时传 `system`（见 `package_type`）。
+                currency_type:
+                  type: string
+                  description: |-
+                    币种类别。仅当 `transfer_type` 为 `4` 且转出通道为 `settlement_hashkey_hk` 时传。传 `atm_ref_currency_type` 数据字典中条目的 `key`；为 `crypto` 时 `currency` 改用币种代码。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_ref_currency_type
                 amount:
                   type: string
-                  description: 金额（金额非系统计算时必填）
+                  description: 调拨金额。金额由系统计算时传 `system`（见 `package_type`）。
                 service_time:
                   type: string
-                  description: 服务时间（JSON 序列化对象）
+                  description: |-
+                    执行时间，JSON 字符串。时间为整点或半点的 `HH:mm`（`00:00` 至 `23:30`）。
+
+                    - `week` 以外按时间触发的频率：`{"time_rule":["09:00","15:30"]}`。
+                    - `week`：`{"week_rule":[{"week":1,"time":["09:00"]}]}`，`week` 为 `1`（周一）至 `7`（周日）。
                 postscript:
                   type: string
                   description: 转账附言
                 status:
                   type: string
-                  description: 状态
+                  description: |-
+                    规则状态。传 `atm_status` 数据字典（`GET /v1/datasets/refs/atm_status`）中条目的 `key`，管理后台传 `1` 或 `2`。
+                  enum:
+                    - '1'
+                    - '2'
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_status
+                priority:
+                  type: integer
+                  minimum: 0
+                  maximum: 999
+                  description: 规则优先级，0 至 999 的整数。管理后台表单必填。
       responses:
         '200':
           description: 请求处理成功。响应的 `data` 不包含额外业务字段。
@@ -1786,7 +1934,7 @@ paths:
 
         ### 请求参数
 
-        - 必填：`id`（规则 ID）
+        - 必填：`id`（规则 ID）。该 ID 目前没有公开接口可查询。
         - 其余字段结构同「新增资金调拨规则」，各字段的格式、取值范围、默认行为和业务含义见对应字段说明。
 
         ### 业务说明
@@ -1815,18 +1963,38 @@ paths:
                 - to_type
                 - transfer_strategy
                 - package_type
+                - currency
+                - amount
                 - postscript
                 - status
+                - priority
               properties:
                 id:
                   type: string
                   description: 规则 ID
                 transfer_type:
                   type: string
-                  description: 划拨类型
+                  description: |-
+                    调拨类型。传 `atm_whale_transfer_type` 数据字典（`GET /v1/datasets/refs/atm_whale_transfer_type`）中条目的 `key`。
+
+                    管理后台中，`1`（银行间调拨）会把 `from_type` 和 `to_type` 都固定为 `1`；`2`（结算账户充值）会把 `from_type` 固定为 `1`；`3`（结算账户提现）会把 `to_type` 固定为 `1`。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_transfer_type
                 from_type:
                   type: string
-                  description: 出账通道
+                  description: |-
+                    转出通道类型。管理后台提交时，银行传 `1`，结算渠道传 `2`。
+
+                    **可选值：** `1` 银行、`2` 结算渠道
+                  enum:
+                    - '1'
+                    - '2'
+                  x-enum-details:
+                    - value: '1'
+                      label: 银行
+                    - value: '2'
+                      label: 结算渠道
+                  example: '1'
                 from_main_account:
                   type: string
                   description: 大账号（出账，出账通道非银行时必填）
@@ -1838,7 +2006,19 @@ paths:
                   description: 银行账号（出账，出账通道为银行或非加密币种时必填）
                 to_type:
                   type: string
-                  description: 入账通道
+                  description: |-
+                    转入通道类型。管理后台提交时，银行传 `1`，结算渠道传 `2`。
+
+                    **可选值：** `1` 银行、`2` 结算渠道
+                  enum:
+                    - '1'
+                    - '2'
+                  x-enum-details:
+                    - value: '1'
+                      label: 银行
+                    - value: '2'
+                      label: 结算渠道
+                  example: '1'
                 to_main_account:
                   type: string
                   description: 大账号（入账，入账通道非银行时必填）
@@ -1853,25 +2033,55 @@ paths:
                   description: 划拨渠道（出账通道为银行时必填）
                 transfer_strategy:
                   type: string
-                  description: 划拨策略
+                  description: |-
+                    调拨策略。传 `atm_whale_transfer_strategy` 数据字典（`GET /v1/datasets/refs/atm_whale_transfer_strategy`）中条目的 `key`。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_transfer_strategy
                 package_type:
                   type: string
-                  description: 频率
+                  description: |-
+                    频率。传 `atm_whale_package_type` 数据字典（`GET /v1/datasets/refs/atm_whale_package_type`）中条目的 `key`。
+
+                    - `week` 使用 `service_time.week_rule`；其他按时间触发的频率使用 `service_time.time_rule`。
+                    - `balance`、`coin_withdraw_quantity_submit`、`coin_withdraw_fee_submit`、`coin_withdraw_quantity_fail`、`coin_withdraw_fee_fail`、`coin_deposit_success` 由系统计算金额：`currency` 和 `amount` 均传 `system`，管理后台不传 `service_time`。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_whale_package_type
                 currency:
                   type: string
-                  description: 币种（金额非系统计算时必填）
+                  description: 币种，取 `global_currency` 数据字典中的代码（虚拟资产取 `global_coin`）。金额由系统计算时传 `system`（见 `package_type`）。
+                currency_type:
+                  type: string
+                  description: |-
+                    币种类别。仅当 `transfer_type` 为 `4` 且转出通道为 `settlement_hashkey_hk` 时传。传 `atm_ref_currency_type` 数据字典中条目的 `key`；为 `crypto` 时 `currency` 改用币种代码。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_ref_currency_type
                 amount:
                   type: string
-                  description: 金额（金额非系统计算时必填）
+                  description: 调拨金额。金额由系统计算时传 `system`（见 `package_type`）。
                 service_time:
                   type: string
-                  description: 服务时间（JSON 序列化对象）
+                  description: |-
+                    执行时间，JSON 字符串。时间为整点或半点的 `HH:mm`（`00:00` 至 `23:30`）。
+
+                    - `week` 以外按时间触发的频率：`{"time_rule":["09:00","15:30"]}`。
+                    - `week`：`{"week_rule":[{"week":1,"time":["09:00"]}]}`，`week` 为 `1`（周一）至 `7`（周日）。
                 postscript:
                   type: string
                   description: 转账附言
                 status:
                   type: string
-                  description: 状态
+                  description: |-
+                    规则状态。传 `atm_status` 数据字典（`GET /v1/datasets/refs/atm_status`）中条目的 `key`，管理后台传 `1` 或 `2`。
+                  enum:
+                    - '1'
+                    - '2'
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/atm_status
+                priority:
+                  type: integer
+                  minimum: 0
+                  maximum: 999
+                  description: 规则优先级，0 至 999 的整数。管理后台表单必填。
       responses:
         '200':
           description: 请求处理成功。响应的 `data` 不包含额外业务字段。
@@ -3489,9 +3699,6 @@ paths:
               type: object
               required:
                 - UpdateSupportCurrency
-                - UpdateSupportCurrency[].from_currency
-                - UpdateSupportCurrency[].to_currency
-                - UpdateSupportCurrency[].action
               properties:
                 UpdateSupportCurrency:
                   type: array
@@ -3500,38 +3707,46 @@ paths:
                     to_currency 的项 action=2、被移除的旧项 action=3； 中固定传单项 action=2 并附加 default_currency=true
                     用于设为默认目标币种
                   items:
-                    type: string
-                UpdateSupportCurrency[].id:
-                  type: string
-                  description: 已存在的目标币种记录 ID，新增（action=1）时为空
-                UpdateSupportCurrency[].from_currency:
-                  type: string
-                  description: 用于指定「源币种」，三位货币代码。候选值来自 ref `tenant_currencies_for_exchange`。此字段为必填项。
-                  x-value-source:
-                    endpoint: GET /v1/datasets/refs/tenant_currencies_for_exchange
-                UpdateSupportCurrency[].to_currency:
-                  type: string
-                  description: 用于指定「目标币种」，三位货币代码。候选值来自 ref `tenant_currencies_for_exchange`。此字段为必填项。
-                  x-value-source:
-                    endpoint: GET /v1/datasets/refs/tenant_currencies_for_exchange
-                UpdateSupportCurrency[].action:
-                  type: number
-                  description: 操作类型。
-                  enum:
-                    - '1'
-                    - '2'
-                    - '3'
-                  x-enum-details:
-                    - value: '1'
-                      label: 新增
-                    - value: '2'
-                      label: 修改/设为默认
-                    - value: '3'
-                      label: 删除
-                  example: '1'
-                UpdateSupportCurrency[].default_currency:
-                  type: boolean
-                  description: 仅 「设为默认」场景会传 true
+                    type: object
+                    required:
+                      - from_currency
+                      - to_currency
+                      - action
+                    properties:
+                      id:
+                        type: string
+                        description: 已存在的目标币种记录 ID，新增（action=1）时为空
+                      from_currency:
+                        type: string
+                        description: 用于指定「源币种」，三位货币代码。候选值来自 ref `tenant_currencies_for_exchange`。此字段为必填项。
+                        x-value-source:
+                          endpoint: GET /v1/datasets/refs/tenant_currencies_for_exchange
+                      to_currency:
+                        type: string
+                        description: 用于指定「目标币种」，三位货币代码。候选值来自 ref `tenant_currencies_for_exchange`。此字段为必填项。
+                        x-value-source:
+                          endpoint: GET /v1/datasets/refs/tenant_currencies_for_exchange
+                      action:
+                        type: number
+                        description: |-
+                          操作类型。
+
+                          **可选值：** `1` 新增、`2` 修改/设为默认、`3` 删除
+                        enum:
+                          - '1'
+                          - '2'
+                          - '3'
+                        x-enum-details:
+                          - value: '1'
+                            label: 新增
+                          - value: '2'
+                            label: 修改/设为默认
+                          - value: '3'
+                            label: 删除
+                        example: '1'
+                      default_currency:
+                        type: boolean
+                        description: 仅 「设为默认」场景会传 true
                 audit_frontend_resource:
                   type: object
                   description: 仅 编辑场景传入，包含 before/after 两个目标币种数组，用于后台审计留痕
@@ -3880,6 +4095,8 @@ paths:
                   type: string
                   description: |-
                     用于指定「变动类型」。
+
+                    **可选值：** `0` 全部、`1` 大额换汇、`2` 小额换汇（在换汇池内）、`3` 小额换汇（超出换汇池）
                   enum:
                     - '0'
                     - '1'
@@ -4011,8 +4228,8 @@ paths:
 
         ### 请求参数
 
-        - 本接口无必填参数，可选参数见下方字段说明。
-        - 可选：`is_default`（是否默认策略）、`change_type`（变动类型）、`service_strategy`（服务策略）、`channel_name`（渠道名称）、`support_currency`（支持币种对（拼装后））、`support_currencies`（支持币种对（请求原始值））、`service_time`（服务时间配置）、`is_combine`（是否合并）、`forex_mode`（换汇模式）、`bear_wave`（承担波动方式）、`currency_prefix`（币种前缀）、`currency_suffix`（币种后缀）
+        - 必填：`is_default`、`service_strategy`、`change_type`、`support_currency`、`support_currencies`、`support_currencies_keys`、`service_time`。`service_strategy` 不为 `BATCH` 时，`channel_name` 也必填。
+        - 可选：`is_combine`（是否合并）、`forex_mode`（换汇模式）、`bear_wave`（承担波动方式）、`currency_prefix`（币种前缀）、`currency_suffix`（币种后缀）
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 业务说明
@@ -4034,19 +4251,29 @@ paths:
           application/json:
             schema:
               type: object
+              required:
+                - is_default
+                - service_strategy
+                - change_type
+                - support_currency
+                - support_currencies
+                - support_currencies_keys
+                - service_time
               properties:
                 is_default:
-                  type: boolean
+                  type: string
                   description: |-
-                    是否默认策略。
+                    是否默认策略。传 `forex_is_default` 数据字典（`GET /v1/datasets/refs/forex_is_default`）中条目的 `key`，不是布尔值。
 
-                    **布尔值：**
-                    - `true` - 表示条件成立
-                    - `false` - 表示条件不成立
+                    `DEFAULT` 表示默认策略，此时管理后台会把 `change_type` 固定为 `0`。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/forex_is_default
                 change_type:
                   type: string
                   description: |-
                     用于指定「变动类型」。
+
+                    **可选值：** `0` 全部、`1` 大额换汇、`2` 小额换汇（在换汇池内）、`3` 小额换汇（超出换汇池）
                   enum:
                     - '0'
                     - '1'
@@ -4064,10 +4291,18 @@ paths:
                   example: '0'
                 service_strategy:
                   type: string
-                  description: 用于指定「服务策略」。
+                  description: |-
+                    服务策略。传 `forex_service_strategy` 数据字典（`GET /v1/datasets/refs/forex_service_strategy`）中条目的 `key`。
+
+                    取值为 `BATCH` 时，管理后台不传 `channel_name`。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/forex_service_strategy
                 channel_name:
                   type: string
-                  description: 非默认策略且需要区分渠道时必填
+                  description: |-
+                    换汇渠道。传 `can_exchange_channel_configs` 数据字典（`GET /v1/datasets/refs/can_exchange_channel_configs`）中条目的 `key`。`service_strategy` 不为 `BATCH` 时必填。
+                  x-value-source:
+                    endpoint: GET /v1/datasets/refs/can_exchange_channel_configs
                 support_currency:
                   type: array
                   description: |-
@@ -4080,12 +4315,34 @@ paths:
                     endpoint: POST /forex/query_support_currency
                 support_currencies:
                   type: array
-                  description: 请求字段 support_currency 原始数组，提交前被整体挪到 support_currencies 键下
+                  description: |-
+                    与 `support_currency` 相同、顺序一致的币种对，以对象形式传入。币种代码来自 `global_currency_for_exchange` 数据字典。
                   items:
-                    type: string
+                    type: object
+                    required:
+                      - currency_prefix
+                      - currency_suffix
+                    properties:
+                      currency_prefix:
+                        type: string
+                        description: 币种对的源币种，例如 `USD`。
+                      currency_suffix:
+                        type: string
+                        description: 币种对的目标币种，例如 `HKD`。
+                support_currencies_keys:
+                  type: array
+                  description: |-
+                    `support_currencies` 中每一项的下标，从 0 开始。两个币种对时传 `[0, 1]`。
+                  items:
+                    type: integer
                 service_time:
                   type: string
-                  description: JSON 字符串，由请求 service_time.time_zones/time_rule/time_rule_0 等分段字段组装，结构较复杂（含时区、时间段规则），未逐一穷举内层字段
+                  description: |-
+                    服务时间，JSON 字符串，包含 `time_zones` 和 `time_rule`：
+
+                    - `time_zones`：`hk_trade_day`（香港交易日）、`calendar_day`（自然日）或 `week`（按星期）。
+                    - `hk_trade_day` 和 `calendar_day` 时，`time_rule` 为字符串，由一个或多个 `HH:mm:ss-HH:mm:ss` 时间段以 `&` 连接，例如 `"09:00:00-12:00:00&13:00:00-16:00:00"`。
+                    - `week` 时，`time_rule` 为 `{week_interval, time_interval}` 对象数组。`week_interval` 格式为 `起-止`，`1`（周一）至 `7`（周日），例如 `"1-5"`；`time_interval` 格式同上。
                 is_combine:
                   type: boolean
                   description: |-
@@ -4109,21 +4366,17 @@ paths:
                   type: string
                   description: 用于指定「币种后缀」。
             example:
-              is_default: false
-              change_type: ''
-              service_strategy: ''
-              channel_name: ''
+              is_default: DEFAULT
+              change_type: '0'
+              service_strategy: BATCH
               support_currency:
                 - USD/HKD
               support_currencies:
                 - currency_prefix: USD
                   currency_suffix: HKD
+              support_currencies_keys:
+                - 0
               service_time: '{"time_zones":"hk_trade_day","time_rule":"09:00:00-16:00:00"}'
-              is_combine: false
-              forex_mode: ''
-              bear_wave: ''
-              currency_prefix: ''
-              currency_suffix: ''
       responses:
         '200':
           description: 请求处理成功。响应的 `data` 不包含额外业务字段。
@@ -4332,6 +4585,19 @@ paths:
                 params:
                   type: object
                   description: 同「新增换汇大额配置」，含 currency（编辑时禁用不可改）、alarm_amount、remaining_amount、remark
+                  properties:
+                    currency:
+                      type: string
+                      description: 币种（编辑时不可改）。
+                    alarm_amount:
+                      type: number
+                      description: 警戒线金额。
+                    remaining_amount:
+                      type: number
+                      description: 剩余额度调整。
+                    remark:
+                      type: string
+                      description: 备注。
                 audit_frontend_resource:
                   type: object
                   description: 取自编辑前的行数据 record，非业务字段
@@ -4339,8 +4605,8 @@ paths:
               id: '1'
               params:
                 currency: USD
-                alarm_amount: '10000'
-                remaining_amount: '50000'
+                alarm_amount: 10000
+                remaining_amount: 50000
                 remark: ''
               audit_frontend_resource: {}
       responses:
@@ -4411,8 +4677,7 @@ paths:
 
         ### 请求参数
 
-        - 必填：`id`（记录 ID）
-        - 可选：`business_type`（业务类型）
+        - 必填：`id`（记录 ID）、`business_type`。删除换汇池额度记录传 `exchange`，删除银行日限额记录传 `cash`。
         - 各字段的格式、取值范围和业务含义见对应字段说明。
 
         ### 业务说明
@@ -4436,16 +4701,29 @@ paths:
               type: object
               required:
                 - id
+                - business_type
               properties:
                 id:
                   type: string
                   description: 记录ID，用于标识本次请求关联的业务对象。此字段为必填项。
                 business_type:
                   type: string
-                  description: 用于区分本次请求适用的业务场景。
+                  description: |-
+                    要删除的记录类型。
+
+                    **可选值：** `exchange` 换汇池额度、`cash` 银行日限额
+                  enum:
+                    - exchange
+                    - cash
+                  x-enum-details:
+                    - value: exchange
+                      label: 换汇池额度
+                    - value: cash
+                      label: 银行日限额
+                  example: exchange
             example:
               id: '123'
-              business_type: ''
+              business_type: exchange
       responses:
         '200':
           description: 请求处理成功。响应的 `data` 不包含额外业务字段。
@@ -5584,7 +5862,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
       security:
         - bearerAuth: []
       requestBody:
@@ -5703,8 +5980,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -5828,6 +6104,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: 记录 ID. **返回值：** 记录 ID（行主键），编辑或删除该记录的接口用它定位记录。
                             busin_no:
                               type: string
                               description: '**返回值：** 流程编号。'
@@ -5854,7 +6133,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - busin_no: '1'
+                    - id: '123'
+                      busin_no: '1'
                       flow_name: 欧美市场
                       markets: '{US}'
                       operator: 张三
@@ -5905,7 +6185,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
       security:
         - bearerAuth: []
       requestBody:
@@ -6063,8 +6342,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -6149,7 +6427,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/clearing_ready_tasks
                     flow:
                       type: string
-                      description: 用于按「检查阶段」筛选结果。
+                      description: |-
+                        用于按「检查阶段」筛选结果。
+
+                        **可选值：** `1` 交易清算、`2` 日终清结算
                       enum:
                         - '1'
                         - '2'
@@ -6161,7 +6442,10 @@ paths:
                       example: '1'
                     process_mode:
                       type: string
-                      description: 用于按「失败后处理」筛选结果。
+                      description: |-
+                        用于按「失败后处理」筛选结果。
+
+                        **可选值：** `0` 仅提醒、`1` 工单审核、`2` 强制校验
                       enum:
                         - '0'
                         - '1'
@@ -6319,7 +6603,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
       security:
         - bearerAuth: []
       requestBody:
@@ -6444,8 +6727,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -6572,6 +6854,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: 记录 ID. **返回值：** 记录 ID（行主键），编辑或删除该记录的接口用它定位记录。
                             config_code:
                               type: string
                               description: '**返回值：** 配置项目。'
@@ -6607,7 +6892,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - config_code: Deposit interest switch
+                    - id: '123'
+                      config_code: Deposit interest switch
                       config_code_val: '1001'
                       enable: '0'
                       config_type: Switch
@@ -6661,7 +6947,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
       security:
         - bearerAuth: []
       requestBody:
@@ -6840,8 +7125,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -6950,7 +7234,10 @@ paths:
                       description: 用于按「银行账号」筛选结果。
                     support_exchange:
                       type: string
-                      description: 用于按「是否支持换汇」筛选结果。
+                      description: |-
+                        用于按「是否支持换汇」筛选结果。
+
+                        **可选值：** `0` 不支持、`1` 支持
                       enum:
                         - '0'
                         - '1'
@@ -7535,7 +7822,10 @@ paths:
                   properties:
                     currency_type:
                       type: string
-                      description: 用于按「币种类型」筛选结果。
+                      description: |-
+                        用于按「币种类型」筛选结果。
+
+                        **可选值：** `fiat` 法币、`crypto` 加密货币
                       enum:
                         - fiat
                         - crypto
@@ -7778,7 +8068,10 @@ paths:
                       example: '2105'
                     currency_type:
                       type: string
-                      description: 用于按「币种类型」筛选结果。
+                      description: |-
+                        用于按「币种类型」筛选结果。
+
+                        **可选值：** `fiat` 法币、`crypto` 加密货币
                       enum:
                         - fiat
                         - crypto
@@ -7799,7 +8092,10 @@ paths:
                       example: HKD
                     transfer_type:
                       type: string
-                      description: 用于按「划拨类型」筛选结果。
+                      description: |-
+                        用于按「划拨类型」筛选结果。
+
+                        **可选值：** `1` 银行间调拨、`2` 结算账户充值、`3` 结算账户提现、`4` 结算账户间划转
                       enum:
                         - '1'
                         - '2'
@@ -7817,7 +8113,10 @@ paths:
                       example: Interbank transfer
                     status:
                       type: string
-                      description: 用于按「状态」筛选结果。
+                      description: |-
+                        用于按「状态」筛选结果。
+
+                        **可选值：** `1` 已启用、`2` 已停用
                       enum:
                         - '1'
                         - '2'
@@ -8113,7 +8412,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
       security:
         - bearerAuth: []
       requestBody:
@@ -8272,8 +8570,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -8354,7 +8651,10 @@ paths:
                       example: BTC
                     pi_verify:
                       type: string
-                      description: 用于按「PI 认证」筛选结果。
+                      description: |-
+                        用于按「PI 认证」筛选结果。
+
+                        **可选值：** `yes` 需要、`no` 不需要
                       enum:
                         - 'yes'
                         - 'no'
@@ -8599,7 +8899,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
       security:
         - bearerAuth: []
       requestBody:
@@ -8778,8 +9077,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -8875,7 +9173,10 @@ paths:
                           description: 筛选范围的上限，匹配值包含该值。
                     lookup_category:
                       type: string
-                      description: 用于按「备注使用方」筛选结果。
+                      description: |-
+                        用于按「备注使用方」筛选结果。
+
+                        **可选值：** `setting_remark_deposit` 入金、`setting_remark_withdrawal` 出金、`setting_remark_securitiesdeposit` 证券存入、`setting_remark_securitieswithdrawal` 证券取出、`setting_remark_accountadjustment` 调账、`setting_remark_withdrawal_reject` 出金拒绝理由、`setting_remark_deposit_reject` 入金拒绝理由、`setting_remark_withdrawal_card_reject` 拒绝客户绑卡、`setting_remark_fund` 基金、`setting_remark_otc_derivatives` 场外衍生品、`setting_remark_deposit_matching` 入金匹配
                       enum:
                         - setting_remark_deposit
                         - setting_remark_withdrawal
@@ -9050,7 +9351,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
       security:
         - bearerAuth: []
       requestBody:
@@ -9231,8 +9531,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -9321,7 +9620,10 @@ paths:
                       example: '["ALL/ALL"]'
                     change_type:
                       type: string
-                      description: 用于按「汇兑类型」筛选结果。
+                      description: |-
+                        用于按「汇兑类型」筛选结果。
+
+                        **可选值：** `0` 无、`1` 大额换汇、`2` 小额换汇（汇兑池内）、`3` 小额换汇（超汇兑池）
                       enum:
                         - '0'
                         - '1'
@@ -9339,7 +9641,10 @@ paths:
                       example: Small Amount Exchange (beyond exchange pool)
                     service_strategy:
                       type: string
-                      description: 用于按「汇兑策略」筛选结果。
+                      description: |-
+                        用于按「汇兑策略」筛选结果。
+
+                        **可选值：** `SINGLE` 渠道换汇、`BATCH` 汇兑池换汇
                       enum:
                         - SINGLE
                         - BATCH
@@ -9351,7 +9656,10 @@ paths:
                       example: Pool exchange
                     enable_flag:
                       type: string
-                      description: 用于按「状态」筛选结果。
+                      description: |-
+                        用于按「状态」筛选结果。
+
+                        **可选值：** `true` 启用、`false` 停用
                       enum:
                         - 'true'
                         - 'false'
@@ -9523,7 +9831,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
       security:
         - bearerAuth: []
       requestBody:
@@ -9668,8 +9975,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -9907,7 +10213,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
       security:
         - bearerAuth: []
       requestBody:
@@ -10056,8 +10361,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -10143,7 +10447,10 @@ paths:
                       example: MANUAL_CURRENT
                     spread_mode:
                       type: string
-                      description: 用于按「加点方式」筛选结果。
+                      description: |-
+                        用于按「加点方式」筛选结果。
+
+                        **可选值：** `VALUE` 值、`RATE` 比率
                       enum:
                         - VALUE
                         - RATE
@@ -10311,7 +10618,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
       security:
         - bearerAuth: []
       requestBody:
@@ -10459,8 +10765,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -10546,7 +10851,10 @@ paths:
                       example: HSB
                     spread_mode:
                       type: string
-                      description: 用于按「加点方式」筛选结果。
+                      description: |-
+                        用于按「加点方式」筛选结果。
+
+                        **可选值：** `VALUE` 值、`RATE` 比率
                       enum:
                         - VALUE
                         - RATE
@@ -10718,7 +11026,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
       security:
         - bearerAuth: []
       requestBody:
@@ -10837,8 +11144,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -11080,7 +11386,10 @@ paths:
               properties:
                 original_limit:
                   type: string
-                  description: 仅特定站点展示的单选项，标识是否使用「原始限额出金账户」维度；新增时可编辑，编辑态禁用。
+                  description: |-
+                    仅特定站点展示的单选项，标识是否使用「原始限额出金账户」维度；新增时可编辑，编辑态禁用。
+
+                    **可选值：** `0` 不限定、`1` 限定
                   enum:
                     - '0'
                     - '1'
@@ -11102,7 +11411,10 @@ paths:
                     endpoint: GET /v1/datasets/refs/withdraw_methods
                 package_type:
                   type: string
-                  description: 打包类型。
+                  description: |-
+                    打包类型。
+
+                    **可选值：** `1` 单笔实时、`2` 定时打包人工审核、`3` 手工打包、`4` 批量自动
                   enum:
                     - '1'
                     - '2'
@@ -11148,7 +11460,9 @@ paths:
                   x-value-source:
                     endpoint: GET /v1/datasets/refs/tenant_currencies_by_channel
                 single_quota_currency_amount_keys:
-                  type: string
+                  type: array
+                  items:
+                    type: integer
                   description: 值为 single_quota_currency_amount 数组的下标序列（如 [0,1,...]），用于标识行顺序。
                 currency:
                   type: string
@@ -11162,11 +11476,16 @@ paths:
                   x-value-source:
                     endpoint: GET /v1/datasets/refs/withdraw_rule_bank_regions
                 support_bank_ids:
-                  type: string
+                  type: array
+                  items:
+                    type: string
                   description: 多选，候选项来自按 support_region 联动查询 atm_region_banks_pick_exclude_default 返回的银行列表。
                 sec_auth:
                   type: string
-                  description: 是否支持证券鉴权。
+                  description: |-
+                    是否支持证券鉴权。
+
+                    **可选值：** `0` 不支持、`1` 支持
                   enum:
                     - '0'
                     - '1'
@@ -11181,7 +11500,10 @@ paths:
                   description: 整数，范围 0-999。
                 status:
                   type: string
-                  description: 单选，取值：'1'=启用，'2'=禁用。
+                  description: |-
+                    单选。
+
+                    **可选值：** `1` 启用、`2` 禁用
                   enum:
                     - '1'
                     - '2'
@@ -11195,7 +11517,9 @@ paths:
                   type: string
                   description: 随本次操作保存的备注。
                 rule_codes:
-                  type: string
+                  type: array
+                  items:
+                    type: string
                   description: |-
                     仅特定站点展示，多选，候选值随业务变化（含 all=全部，选 all 会互斥清空其它选项）；请调用 `GET /v1/datasets/refs/risk_rule_indicators_withdraw` 获取当前可用取值。
 
@@ -11203,25 +11527,18 @@ paths:
                   x-value-source:
                     endpoint: GET /v1/datasets/refs/risk_rule_indicators_withdraw
                 original_limit_bank_accounts:
-                  type: string
+                  type: array
+                  items:
+                    type: string
                   description: 仅特定站点且 original_limit='1' 时展示，按银行分组多选账户，候选项来自动态查询 atm_lb_bank_accounts_package_rule 的结果。
                 service_time:
                   type: string
                   description: |-
-                    由 time_zones(枚举: hk_trade_day/calendar_day/week) + time_rule 拼装的 JSON
-                    字符串；time_zones='week' 时 time_rule 为多组 {week_interval, time_interval}。
-                  enum:
-                    - hk_trade_day
-                    - calendar_day
-                    - week
-                  x-enum-details:
-                    - value: hk_trade_day
-                      label: 港股交易日
-                    - value: calendar_day
-                      label: 自然日
-                    - value: week
-                      label: 星期
-                  example: hk_trade_day
+                    服务时间，JSON 字符串，包含 `time_zones` 和 `time_rule`：
+
+                    - `time_zones`：`hk_trade_day`（香港交易日）、`calendar_day`（自然日）或 `week`（按星期）。
+                    - `hk_trade_day` 和 `calendar_day` 时，`time_rule` 为 `HH:mm:ss-HH:mm:ss` 字符串，例如 `"09:00:00-18:00:00"`。
+                    - `week` 时，`time_rule` 为 `{week_interval, time_interval}` 对象数组。`week_interval` 格式为 `起-止`，`1`（周一）至 `7`（周日），例如 `"1-5"`；`time_interval` 为 `HH:mm:ss-HH:mm:ss` 字符串。
                 lb_service_time:
                   type: string
                   description: 结构同 service_time，另一套独立的时间窗口配置，JSON 字符串。
@@ -11249,7 +11566,9 @@ paths:
                 - 0
               currency: USD
               support_region: hk,us
-              support_bank_ids: 101,102
+              support_bank_ids:
+                - '101'
+                - '102'
               sec_auth: '1'
               priority: 10
               status: '1'
@@ -12218,6 +12537,8 @@ paths:
                   type: string
                   description: |-
                     用于指定「规则状态」。
+
+                    **可选值：** `1` 启用、`2` 禁用
                   enum:
                     - '1'
                     - '2'
@@ -12790,7 +13111,10 @@ paths:
                   description: 用于指定「预支已用预警阈值」。此字段为必填项。
                 margin_type:
                   type: string
-                  description: 由外部 marginType prop 传入，非请求字段，具体枚举值未在本组件内确认
+                  description: |-
+                    保证金类型。
+
+                    **可选值：** `NormalMargin` 保证金融资授信、`IntradayMargin` 日内融交易授信
                   enum:
                     - NormalMargin
                     - IntradayMargin
@@ -13262,7 +13586,10 @@ paths:
                     - `false` - 表示条件不成立
                 aaid:
                   type: string
-                  description: 本次请求关联的证券账号。此字段为必填项。
+                  description: |-
+                    本次请求关联的证券账号。此字段为必填项。
+
+                    此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
                 remark:
                   type: string
                   description: 随本次操作保存的备注。
@@ -13369,7 +13696,10 @@ paths:
                   description: 用于指定「股票组名称」。此字段为必填项。
                 application:
                   type: string
-                  description: 应用场景。
+                  description: |-
+                    应用场景。
+
+                    **可选值：** `1` 压力测试关联股票、`2` 股票组监控报表、`3` 风控参数、`4` 集中度限额、`5` 期权卖空白名单
                   enum:
                     - '1'
                     - '2'
@@ -13489,7 +13819,10 @@ paths:
                   description: 用于指定「股票组名称」。此字段为必填项。
                 application:
                   type: string
-                  description: 应用场景。
+                  description: |-
+                    应用场景。
+
+                    **可选值：** `1` 压力测试关联股票、`2` 股票组监控报表、`3` 风控参数、`4` 集中度限额、`5` 期权卖空白名单
                   enum:
                     - '1'
                     - '2'
@@ -13955,6 +14288,15 @@ paths:
                       shareholder_amount:
                         type: string
                         description: 股东资本金调整额，以 `credit_currency` 计价。返回为字符串数值；未配置时可能为 `0`。
+                      ffr_fund:
+                        type: string
+                        description: '`ffr_fund` 资金金额，以 `credit_currency` 计价。返回为字符串数值；未配置时可能为 `0`。'
+                      sfc_sub_ordinated:
+                        type: string
+                        description: SFC 后偿（次级）资本金额，以 `credit_currency` 计价。返回为字符串数值；未配置时可能为 `0`。
+                      tmlcr:
+                        type: string
+                        description: '`tmlcr` 配置值。返回为字符串数值；未配置时可能为 `0`。'
         '400':
           description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
           content:
@@ -14278,7 +14620,10 @@ paths:
                   example: ignore_margin_call
                 status:
                   type: number
-                  description: 单选，1=启用，2=停用
+                  description: |-
+                    单选。
+
+                    **可选值：** `1` 启用、`2` 停用
                   enum:
                     - '1'
                     - '2'
@@ -14290,7 +14635,10 @@ paths:
                   example: '1'
                 aaid:
                   type: string
-                  description: 仅当规则类型为「个性化-单账户」时提交，为选中客户的 AAID
+                  description: |-
+                    仅当规则类型为「个性化-单账户」时提交，为选中客户的 AAID
+
+                    此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
                 group_id:
                   type: string
                   description: |-
@@ -14427,11 +14775,17 @@ paths:
               properties:
                 member_id:
                   type: string
-                  description: 目标客户的会员 ID，用于定位被授信的客户。此字段为必填项。
+                  description: |-
+                    目标客户的会员 ID，用于定位被授信的客户。此字段为必填项。
+
+                    `member_id` 为客户编号，与证券账号 `account_no` 及证券账户内部编号 `aaid` 不同；一个客户可有多个证券账户。
                   example: '101456715'
                 aaid:
                   type: string
-                  description: 目标客户的证券账号。此字段为必填项。
+                  description: |-
+                    目标客户的证券账号。此字段为必填项。
+
+                    此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
                   example: H00000000
                 credit_type:
                   type: string
@@ -14460,6 +14814,10 @@ paths:
                   type: number
                   description: 账户基础信息分析系数（FPS），取值范围 `0`–`1`。仅当 `credit_type` 为 `1`（保证金授信额度）时需要提供。
                   example: 0.3
+                credit_coefficient:
+                  type: number
+                  description: 账户的授信系数，以小数提交。
+                  example: 1.5
                 ccf:
                   type: number
                   description: 信用转换因子（CCF），以小数形式传入。界面按百分比录入（`0`–`100`），提交时须除以 `100` 转换为小数，例如界面填 `100%` 时传 `1`。此字段为必填项。
@@ -14854,10 +15212,16 @@ paths:
               properties:
                 aaid:
                   type: string
-                  description: 本次请求关联的证券账号。此字段为必填项。
+                  description: |-
+                    本次请求关联的证券账号。此字段为必填项。
+
+                    此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
                 member_id:
                   type: string
-                  description: 会员ID，用于标识本次请求关联的业务对象。此字段为必填项。
+                  description: |-
+                    会员ID，用于标识本次请求关联的业务对象。此字段为必填项。
+
+                    `member_id` 为客户编号，与证券账号 `account_no` 及证券账户内部编号 `aaid` 不同；一个客户可有多个证券账户。
                 credit_type:
                   type: string
                   description: |-
@@ -14941,7 +15305,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -15183,8 +15546,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -15273,7 +15635,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/company_bank_channels
                     package_type:
                       type: string
-                      description: 用于按「出金策略」筛选结果。
+                      description: |-
+                        用于按「出金策略」筛选结果。
+
+                        **可选值：** `1` 单笔实时、`2` 定时打包人工审核、`3` 手工打包、`4` 批量自动
                       enum:
                         - '1'
                         - '2'
@@ -15307,7 +15672,10 @@ paths:
                         endpoint: GET /v1/datasets/refs/cash_notice_region_bank_name
                     status:
                       type: string
-                      description: 用于按「状态」筛选结果。
+                      description: |-
+                        用于按「状态」筛选结果。
+
+                        **可选值：** `1` 已启用、`2` 已停用
                       enum:
                         - '1'
                         - '2'
@@ -15319,7 +15687,10 @@ paths:
                       example: Enabled
                     audit_status:
                       type: string
-                      description: 用于按「审核状态」筛选结果。
+                      description: |-
+                        用于按「审核状态」筛选结果。
+
+                        **可选值：** `0` 初始、`1` 新增待审核、`2` 编辑待审核、`3` 删除待审核
                       enum:
                         - '0'
                         - '1'
@@ -15337,7 +15708,10 @@ paths:
                       example: Init
                     original_limit:
                       type: string
-                      description: 用于按「原路出金」筛选结果。
+                      description: |-
+                        用于按「原路出金」筛选结果。
+
+                        **可选值：** `0` 不限定、`1` 限定
                       enum:
                         - '0'
                         - '1'
@@ -15587,7 +15961,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -15748,8 +16121,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -16014,7 +16386,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -16191,8 +16562,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -16273,7 +16643,10 @@ paths:
                       example: '264031'
                     change_type:
                       type: string
-                      description: 用于按「业务类型」筛选结果。
+                      description: |-
+                        用于按「业务类型」筛选结果。
+
+                        **可选值：** `plus` 人工调增、`minus` 人工调减、`withdraw` 用户出金占用、`withdraw_failed` 用户出金失败
                       enum:
                         - plus
                         - minus
@@ -16493,7 +16866,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -16651,8 +17023,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -16729,7 +17100,10 @@ paths:
                   properties:
                     biz_type:
                       type: string
-                      description: 用于按「业务类型」筛选结果。
+                      description: |-
+                        用于按「业务类型」筛选结果。
+
+                        **可选值：** `1` 提现、`2` 汇兑
                       enum:
                         - '1'
                         - '2'
@@ -16741,7 +17115,10 @@ paths:
                       example: Forex
                     rule_status:
                       type: string
-                      description: 用于按「状态」筛选结果。
+                      description: |-
+                        用于按「状态」筛选结果。
+
+                        **可选值：** `1` 启用、`2` 禁用
                       enum:
                         - '1'
                         - '2'
@@ -16807,6 +17184,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: 记录 ID. **返回值：** 记录 ID（行主键），编辑或删除该记录的接口用它定位记录。
                             bank_code:
                               type: string
                               description: '**返回值：** 银行代码。'
@@ -16848,7 +17228,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - bank_code: '072'
+                    - id: '123'
+                      bank_code: '072'
                       bank_account: 张三
                       biz_type: Forex
                       biz_type_val: '2'
@@ -16929,7 +17310,10 @@ paths:
                       description: 用于按「编号」筛选结果。
                     rule_status:
                       type: string
-                      description: 用于按「状态」筛选结果。
+                      description: |-
+                        用于按「状态」筛选结果。
+
+                        **可选值：** `1` 已启用、`2` 已停用
                       enum:
                         - '1'
                         - '2'
@@ -17097,7 +17481,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -17222,8 +17605,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -17437,7 +17819,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -17457,7 +17838,10 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: 用于按「客户」筛选结果。
+                      description: |-
+                        用于按「客户」筛选结果。
+
+                        此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
                 mode:
                   type: integer
                   default: 0
@@ -17565,8 +17949,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -17643,7 +18026,10 @@ paths:
                   properties:
                     aaid:
                       type: string
-                      description: 用于按「客户」筛选结果。
+                      description: |-
+                        用于按「客户」筛选结果。
+
+                        此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
                 page:
                   type: integer
                   description: 要查询的页码，从 `1` 开始。
@@ -17783,7 +18169,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -17919,8 +18304,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -18147,7 +18531,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -18166,6 +18549,7 @@ paths:
                   description: 字段同 stock_group_details.yaml（query 能力）里的 filters
                   properties:
                     counter_id:
+                      description: 格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                       type: string
                 mode:
                   type: integer
@@ -18260,7 +18644,7 @@ paths:
                         description: 同步模式（mode:0）下返回，异步模式下为空
                       file_download_id:
                         type: string
-                        description: 异步模式（mode:1）下返回，即 GET/DELETE /v1/datasets/download/{id} 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                        description: 异步模式（mode:1）下返回，即 GET /v1/datasets/download/{id} 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
               example:
@@ -18337,6 +18721,8 @@ paths:
                       type: string
                       description: |-
                         股票代码. 用于按「股票代码」筛选结果。
+
+                        格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 page:
                   type: integer
                 page_size:
@@ -18378,24 +18764,33 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: 记录 ID. **返回值：** 记录 ID（行主键），编辑或删除该记录的接口用它定位记录。
                             counter_id:
                               type: string
+                              description: 股票代码. **返回值：** 标的代码，格式为 `{类型}/{市场}/{代码}`（展示值；原始编码见同名 `_val` 字段）。
                             counter_id_val:
                               type: string
                               description: 字段 counter_id 的原始值：counter_id 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             stock_name:
                               type: string
+                              description: 股票名称. **返回值：** 股票名称。
                             market:
                               type: string
+                              description: 市场. **返回值：** 市场（展示值；原始编码见同名 `_val` 字段）。
                             market_val:
                               type: string
                               description: 字段 market 的原始值：market 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             stock_count:
                               type: string
+                              description: 股票数量. **返回值：** 股票组内的股票数量。
                             updated_at:
                               type: string
+                              description: 更新时间. **返回值：** Unix 时间戳（秒），以字符串返回。
                             operator:
                               type: string
+                              description: 更新人. **返回值：** 最后更新的后台账号。
                       total:
                         type: integer
               example:
@@ -18403,7 +18798,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - counter_id: string
+                    - id: '123'
+                      counter_id: string
                       counter_id_val: string
                       stock_name: string
                       market: string
@@ -18441,7 +18837,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -18488,7 +18883,10 @@ paths:
                       example: global
                     aaid:
                       type: string
-                      description: 用于按「客户」筛选结果。
+                      description: |-
+                        用于按「客户」筛选结果。
+
+                        此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
                 mode:
                   type: integer
                   default: 0
@@ -18600,8 +18998,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -18682,7 +19079,10 @@ paths:
                       example: test 20260204
                     group_name:
                       type: string
-                      description: 用于按「风控场景」筛选结果。
+                      description: |-
+                        用于按「风控场景」筛选结果。
+
+                        **可选值：** `ignore_margin_call` MarginCall 豁免、`over_financing_margin_call_ignore` 超额融资 MarginCall 豁免
                       enum:
                         - ignore_margin_call
                         - over_financing_margin_call_ignore
@@ -18694,7 +19094,10 @@ paths:
                       example: MarginCall Exemption
                     rule_type:
                       type: string
-                      description: 用于按「规则类型」筛选结果。
+                      description: |-
+                        用于按「规则类型」筛选结果。
+
+                        **可选值：** `global` 全局、`personalise` 个性化
                       enum:
                         - global
                         - personalise
@@ -18706,7 +19109,10 @@ paths:
                       example: Personalise
                     aaid:
                       type: string
-                      description: 用于按「客户」筛选结果。
+                      description: |-
+                        用于按「客户」筛选结果。
+
+                        此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
                 page:
                   type: integer
                   description: 要查询的页码，从 `1` 开始。
@@ -18862,7 +19268,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`；随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -18882,7 +19287,10 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: 用于按「客户」筛选结果。
+                      description: |-
+                        用于按「客户」筛选结果。
+
+                        `member_id` 为客户编号，与证券账号 `account_no` 及证券账户内部编号 `aaid` 不同；一个客户可有多个证券账户。
                 mode:
                   type: integer
                   default: 0
@@ -19001,8 +19409,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -19079,7 +19486,10 @@ paths:
                   properties:
                     member_id:
                       type: string
-                      description: 用于按「客户」筛选结果。
+                      description: |-
+                        用于按「客户」筛选结果。
+
+                        `member_id` 为客户编号，与证券账号 `account_no` 及证券账户内部编号 `aaid` 不同；一个客户可有多个证券账户。
                 page:
                   type: integer
                   description: 要查询的页码，从 `1` 开始。
@@ -19129,6 +19539,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: 记录 ID. **返回值：** 记录 ID（行主键），编辑或删除该记录的接口用它定位记录。
                             member_id:
                               type: string
                               description: '**返回值：** 客户。'
@@ -19194,7 +19607,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - member_id: ''
+                    - id: '123'
+                      member_id: ''
                       member_id_val: ''
                       member_real_name: 张三
                       aaid: ''
@@ -19289,7 +19703,10 @@ paths:
                   description: 用于指定「视图名称」。此字段为必填项。
                 usage_scene:
                   type: number
-                  description: 子仓视图的使用场景，单选且必填。
+                  description: |-
+                    子仓视图的使用场景，单选且必填。
+
+                    **可选值：** `1` 尾差调整、`2` 退税、`3` 事后调整
                   enum:
                     - 1
                     - 2
@@ -19561,6 +19978,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: '分组 ID，即 `post_adjust` 和 `corp_action_post_adjust_detail_items` 所需的 `group_id`。'
                             group_name:
                               type: string
                               description: 分组名称。
@@ -19579,7 +19999,8 @@ paths:
                     usage_scene: 1
                     remark: 用于日终尾差调整
                   groups:
-                    - group_name: 分组1
+                    - id: '1000'
+                      group_name: 分组1
                       sub_position_scope:
                         - '1001'
                         - '1002'
@@ -19784,7 +20205,10 @@ paths:
                   description: 「全部账户」传 all；「指定账户」传多个证券账号，以逗号分隔
                 broker_allocate_states:
                   type: string
-                  description: 经纪人分配状态，多选；提交时以英文逗号 `,` 拼接。
+                  description: |-
+                    经纪人分配状态，多选；提交时以英文逗号 `,` 拼接。
+
+                    **可选值：** `4` 成功、`5` 失败、`6` 异常、`7` 已驳回
                   example: 4,5
                   enum:
                     - '4'
@@ -19809,10 +20233,27 @@ paths:
                   x-value-source:
                     endpoint: GET /v1/datasets/refs/tenant_crypto_currencies
                   items:
-                    type: string
+                    type: object
+                    properties:
+                      coin:
+                        type: string
+                        description: '币种代码。'
+                      quantity_min:
+                        type: string
+                        description: '最小数量（字符串数字）。'
+                      quantity_max:
+                        type: string
+                        description: '最大数量（字符串数字）。'
                 equivalent_usd:
                   type: object
                   description: '{ amount_min, amount_max }，可选数值范围'
+                  properties:
+                    amount_min:
+                      type: string
+                      description: 等值美元金额下限（字符串数字）。
+                    amount_max:
+                      type: string
+                      description: 等值美元金额上限（字符串数字）。
                 delay_time:
                   type: number
                   description: 单位分钟，取值范围 1-999
@@ -20079,7 +20520,10 @@ paths:
                   description: 调用方为「全部账户」/「指定账户」二选一：全部账户传 all；指定账户传多个证券账号，以逗号分隔
                 broker_allocate_states:
                   type: string
-                  description: 经纪人分配状态，多选；提交时以英文逗号 `,` 拼接。
+                  description: |-
+                    经纪人分配状态，多选；提交时以英文逗号 `,` 拼接。
+
+                    **可选值：** `4` 成功、`5` 失败、`6` 异常、`7` 已驳回
                   example: 4,5
                   enum:
                     - '4'
@@ -20104,10 +20548,27 @@ paths:
                   x-value-source:
                     endpoint: GET /v1/datasets/refs/tenant_crypto_currencies
                   items:
-                    type: string
+                    type: object
+                    properties:
+                      coin:
+                        type: string
+                        description: '币种代码。'
+                      quantity_min:
+                        type: string
+                        description: '最小数量（字符串数字）。'
+                      quantity_max:
+                        type: string
+                        description: '最大数量（字符串数字）。'
                 equivalent_usd:
                   type: object
                   description: '{ amount_min: string, amount_max: string }，调用方为可选数值范围输入'
+                  properties:
+                    amount_min:
+                      type: string
+                      description: 等值美元金额下限（字符串数字）。
+                    amount_max:
+                      type: string
+                      description: 等值美元金额上限（字符串数字）。
                 delay_time:
                   type: number
                   description: 单位分钟，取值范围 1-999
@@ -20310,7 +20771,10 @@ paths:
                   example: enabled
                 time_zone:
                   type: string
-                  description: 计算出币日限额所使用的时区。此字段为必填项。
+                  description: |-
+                    计算出币日限额所使用的时区。此字段为必填项。
+
+                    **可选值：** `ET` 美国东部时间、`CT` 美国中部时间、`HKT` 香港时间
                   enum:
                     - ET
                     - CT
@@ -20637,25 +21101,22 @@ paths:
         - lb_hk_clearing.clearing_busin_step_edit
       x-lbonly: false
       description: |-
-        创建或编辑日终清算任务流，为一组市场配置一条按名称标识的日终清算流程。
+        在一次请求中新增、编辑、删除日终清算流程并调整其顺序。请求体为 `flows` 数组，每一项各自携带 `action_in`。
 
         ### 请求参数
 
-        - 必填：`flow_name`（流程名称）、`markets`（市场）。
-        - 编辑已有流程时传入 `id`（流程编号）；新建时省略。
-        - 各字段的取值范围和业务含义见对应字段说明。
-
-        ### 业务说明
-
-        同一接口同时承担新建与编辑：不传 `id` 为新建，传入已有 `id` 为覆盖更新。`markets` 声明该任务流覆盖的市场范围。
+        - 必填：`flows`。每一项必填 `flow_name`（流程名称）、`busin_no`（执行顺序，从 1 开始）、`action_in`（`1` 新增、`2` 删除、`3` 修改）。
+        - `id`：新增流程传空字符串；修改或删除已有流程传该流程 ID。
+        - 管理后台会按页面显示顺序提交全部流程，`busin_no` 从 1 重新编号。
+        - 流程 `id` 取 `POST /v1/datasets/clearing_busin_flows` 返回行的 `id`。市场与流程的绑定通过 `POST /clearing/markets` 的 `busin_flow_id` 完成，不在本接口中设置。
 
         ### 风险提示
 
-        此配置影响日终清算流程的执行范围，请在调用前确认流程名称与市场组合无误。
+        此配置会变更日终清算流程及其执行顺序，请在调用前确认流程列表无误。
 
         ### 处理结果
 
-        成功时创建或更新对应的日终清算任务流，返回数据以 `200` 响应定义为准。
+        成功时按请求新增、更新或删除对应流程，返回数据以 `200` 响应定义为准。
       security:
         - bearerAuth: []
       requestBody:
@@ -20665,28 +21126,56 @@ paths:
             schema:
               type: object
               required:
-                - flow_name
-                - markets
+                - flows
               properties:
-                flow_name:
-                  type: string
-                  description: 日终清算任务流的名称。此字段为必填项。
-                  example: HK-EOD-Flow
-                markets:
+                flows:
                   type: array
+                  description: 日终流程列表。
                   items:
-                    type: string
-                  description: 该任务流覆盖的市场代码列表。此字段为必填项。
-                  example:
-                    - GTMMF
-                id:
-                  type: integer
-                  description: 日终清算任务流的编号。编辑已有流程时传入以指定要更新的流程；新建流程时省略。
-                  example: 1001
+                    type: object
+                    required:
+                      - id
+                      - flow_name
+                      - busin_no
+                      - action_in
+                    properties:
+                      id:
+                        type: string
+                        description: 流程 ID。新增流程传空字符串。
+                      flow_name:
+                        type: string
+                        description: 流程名称。
+                      busin_no:
+                        type: integer
+                        minimum: 1
+                        description: 流程执行顺序，从 1 开始。
+                      action_in:
+                        type: string
+                        description: |-
+                          对该流程执行的操作。
+
+                          **可选值：** `1` 新增、`2` 删除、`3` 修改
+                        enum:
+                          - '1'
+                          - '2'
+                          - '3'
+                        x-enum-details:
+                          - value: '1'
+                            label: 新增
+                          - value: '2'
+                            label: 删除
+                          - value: '3'
+                            label: 修改
             example:
-              flow_name: HK-EOD-Flow
-              markets:
-                - GTMMF
+              flows:
+                - id: '1'
+                  flow_name: HK-EOD-Flow
+                  busin_no: 1
+                  action_in: '3'
+                - id: ''
+                  flow_name: US-EOD-Flow
+                  busin_no: 2
+                  action_in: '1'
       responses:
         '200':
           description: |-
@@ -20794,10 +21283,7 @@ paths:
                 - US
       responses:
         '200':
-          description: |-
-            请求处理成功。
-
-            前端以 `any` 类型接收本接口返回值，未在调用处读取固定业务字段，因此此处仅按响应体的通用结构（`code`、`message`、`data`）声明，`data` 的具体字段未经核实。
+          description: 请求处理成功。业务结果位于 `data`。
           content:
             application/json:
               schema:
@@ -20823,17 +21309,23 @@ paths:
                     properties:
                       data:
                         type: array
+                        description: 各市场的日历初始化状态。
                         items:
                           type: object
                           properties:
                             market:
                               type: string
+                              description: 市场代码，如 `HK`、`US`。
                             is_init:
                               type: boolean
+                              description: 该年份日历是否已初始化。
               example:
                 code: 0
                 message: success
-                data: {}
+                data:
+                  data:
+                    - market: HK
+                      is_init: true
         '400':
           description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
           content:
@@ -20902,7 +21394,10 @@ paths:
               properties:
                 action_in:
                   type: string
-                  description: 本次请求要执行的操作类型。此字段为必填项。
+                  description: |-
+                    本次请求要执行的操作类型。此字段为必填项。
+
+                    **可选值：** `1` 新增、`2` 删除、`3` 修改
                   enum:
                     - '1'
                     - '2'
@@ -20920,7 +21415,10 @@ paths:
                   description: 账户级别交收规则记录的编号。新增时可不传；编辑或删除时须传入已有记录的编号。
                 aaid:
                   type: string
-                  description: 用于指定规则所属的客户证券账号。
+                  description: |-
+                    用于指定规则所属的客户证券账号。
+
+                    此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
                 market:
                   type: string
                   description: 用于指定「市场」。
@@ -20934,6 +21432,8 @@ paths:
                   type: string
                   description: |-
                     用于指定「业务类型」。
+
+                    **可选值：** `1` 股票、`5` 期权
                   enum:
                     - '1'
                     - '5'
@@ -20947,6 +21447,8 @@ paths:
                   type: string
                   description: |-
                     用于指定「买卖方向」。
+
+                    **可选值：** `1` 买入、`2` 卖出
                   enum:
                     - '1'
                     - '2'
@@ -20963,6 +21465,8 @@ paths:
                   type: string
                   description: |-
                     用于指定「指令类型」。
+
+                    **可选值：** `A` ATI、`T` STI、`S` SI、`I` ISI
                   enum:
                     - A
                     - T
@@ -20982,6 +21486,8 @@ paths:
                   type: string
                   description: |-
                     用于指定「交收方式」。
+
+                    **可选值：** `F` FOP、`D` DVP、`R` RDP
                   enum:
                     - F
                     - D
@@ -21114,7 +21620,10 @@ paths:
               properties:
                 action_in:
                   type: string
-                  description: 本次请求要执行的操作类型。此字段为必填项。
+                  description: |-
+                    本次请求要执行的操作类型。此字段为必填项。
+
+                    **可选值：** `1` 新增、`2` 删除、`3` 修改
                   enum:
                     - '1'
                     - '2'
@@ -21158,6 +21667,8 @@ paths:
                   type: string
                   description: |-
                     用于指定「指令类型」。
+
+                    **可选值：** `A` ATI、`T` STI、`S` SI、`I` ISI
                   enum:
                     - A
                     - T
@@ -21177,6 +21688,8 @@ paths:
                   type: string
                   description: |-
                     用于指定「交收方式」。
+
+                    **可选值：** `F` FOP、`D` DVP、`R` RDP
                   enum:
                     - F
                     - D
@@ -21283,9 +21796,16 @@ paths:
 
         ### 请求参数
 
-        - 必填：`action_in`（操作类型）、`id`（市场记录 ID，新增时可传 `0`）。
-        - 可选：`market`（市场）、`currency`（币种）、`overnight_flag`（隔夜市场标识）、`custodian_id`（托管商编号）、`sub_position_no`（托管商子仓）、`balance_back_n`（钱交收 Tn）、`equity_back_n`（券交收 Tn）、`main_flag`（本位市场）、`otc_flag`（OTC 市场标记）、`use_public_stock_info`（使用公有库标的信息）、`busin_flow_id`（日终流程 ID）。
+        - 必填：`action_in`（操作类型）、`market`（市场，必须是 `POST /v1/datasets/clearing_markets` 列表中已存在的市场）、`time_zone_name`（市场的 IANA 时区名，如 `Asia/Tokyo`；新增和修改时后端必需）。
+        - `id`：修改（`3`）/删除（`2`）时必填，取 `clearing_markets` 列表行的 `id`；新增（`1`）时不传，并选择该列表中 `otc_flag` 为 `99`（未启用）的市场。
+        - `otc_flag` 为 `0`（普通日终流程）时需传 `busin_flow_id`；`otc_flag` 不为 `99` 时，管理后台会同时提交 `currency`、`overnight_flag`、`balance_back_n`、`equity_back_n`、`custodian_id`、`sub_position_no`、`main_flag`、`use_public_stock_info`。
+        - 可选：`market`（市场）、`currency`（币种）、`overnight_flag`（隔夜市场标识）、`custodian_id`（托管商编号）、`sub_position_no`（托管商子仓）、`balance_back_n`（钱交收 Tn）、`equity_back_n`（券交收 Tn）、`main_flag`（本位市场）、`otc_flag`（OTC 市场标记）、`use_public_stock_info`（使用公有库标的信息）、`busin_flow_id`（日终流程 ID）、`allow_manual_order`（是否允许手工下单，`0`/`1`）。
         - 各字段的格式、取值范围、默认行为和业务含义见对应字段说明。
+
+        ### 业务说明
+
+        - `time_zone_name` 为必填参数，需传入市场的 IANA 时区名（如 `Asia/Hong_Kong`），后端不会根据市场推导该值。
+        - 修改已有市场时，请传入该市场各字段的现有值。
 
         ### 风险提示
 
@@ -21304,11 +21824,15 @@ paths:
               type: object
               required:
                 - action_in
-                - id
+                - market
+                - time_zone_name
               properties:
                 action_in:
                   type: string
-                  description: 枚举：1-新增 2-删除 3-修改
+                  description: |-
+                    本次请求要执行的操作类型。
+
+                    **可选值：** `1` 新增、`2` 删除、`3` 修改
                   enum:
                     - '1'
                     - '2'
@@ -21322,16 +21846,16 @@ paths:
                       label: 修改
                   example: '1'
                 id:
-                  type: number
-                  description: 新增时为 0，可不传；编辑/删除时为已有记录 ID
+                  type: integer
+                  description: 修改（`3`）/删除（`2`）时必填，取 `POST /v1/datasets/clearing_markets` 列表行的 `id`；新增（`1`）时不传。
                 market:
                   type: string
                   description: |-
-                    候选值随业务变化；请调用 `GET /v1/datasets/refs/clearing_markets_all` 获取当前可用取值
+                    必须是 `POST /v1/datasets/clearing_markets` 列表中已存在的市场；新增时选择该列表中 `otc_flag` 为 `99`（未启用）的市场。
 
-                    请调用 `GET /v1/datasets/refs/clearing_markets_all` 获取当前可用的数据字典，并使用返回项的 `key` 作为本字段值。
+                    请调用 `GET /v1/datasets/refs/clearing_markets` 获取当前可用的数据字典，并使用返回项的 `key` 作为本字段值。
                   x-value-source:
-                    endpoint: GET /v1/datasets/refs/clearing_markets_all
+                    endpoint: GET /v1/datasets/refs/clearing_markets
                 currency:
                   type: string
                   description: 币种。
@@ -21366,19 +21890,22 @@ paths:
                       label: 离岸人民币
                   example: USD
                 overnight_flag:
-                  type: number
-                  description: 是否为隔夜市场。
+                  type: integer
+                  description: |-
+                    是否为隔夜市场。
+
+                    **可选值：** `0` 非隔夜、`1` 隔夜
                   enum:
-                    - '0'
-                    - '1'
+                    - 0
+                    - 1
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: 非隔夜
-                    - value: '1'
+                    - value: 1
                       label: 隔夜
-                  example: '0'
+                  example: 0
                 custodian_id:
-                  type: number
+                  type: integer
                   description: |-
                     候选值随业务变化；请调用 `GET /v1/datasets/refs/clearing_custodians` 获取当前可用取值
 
@@ -21390,103 +21917,126 @@ paths:
                   description: |-
                     候选值随业务变化；请调用 `GET /v1/datasets/refs/custodian_sub_positions` 获取当前可用取值
 
-                    请调用 `GET /v1/datasets/refs/custodian_sub_positions` 获取当前可用的数据字典，并使用返回项的 `key` 作为本字段值。
+                    请调用 `GET /v1/datasets/refs/custodian_sub_positions` 获取当前可用的数据字典，并使用返回项的 `key` 作为本字段值。调用时传 `key=<custodian_id>`，按托管商筛选子仓。
                   x-value-source:
                     endpoint: GET /v1/datasets/refs/custodian_sub_positions
                 balance_back_n:
-                  type: number
+                  type: integer
                   description: 结算回退天数。
                   enum:
-                    - '0'
-                    - '1'
-                    - '2'
-                    - '3'
+                    - 0
+                    - 1
+                    - 2
+                    - 3
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: '0'
-                    - value: '1'
+                    - value: 1
                       label: '1'
-                    - value: '2'
+                    - value: 2
                       label: '2'
-                    - value: '3'
+                    - value: 3
                       label: '3'
-                  example: '0'
+                  example: 0
                 equity_back_n:
-                  type: number
+                  type: integer
                   description: 结算回退天数。
                   enum:
-                    - '0'
-                    - '1'
-                    - '2'
-                    - '3'
+                    - 0
+                    - 1
+                    - 2
+                    - 3
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: '0'
-                    - value: '1'
+                    - value: 1
                       label: '1'
-                    - value: '2'
+                    - value: 2
                       label: '2'
-                    - value: '3'
+                    - value: 3
                       label: '3'
-                  example: '0'
+                  example: 0
                 main_flag:
-                  type: number
-                  description: 是否为本位市场。
+                  type: integer
+                  description: |-
+                    是否为本位市场。
+
+                    **可选值：** `0` 否、`1` 是
                   enum:
-                    - '0'
-                    - '1'
+                    - 0
+                    - 1
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: 否
-                    - value: '1'
+                    - value: 1
                       label: 是
-                  example: '0'
+                  example: 0
                 otc_flag:
-                  type: number
-                  description: 日终流程类型。
+                  type: integer
+                  description: |-
+                    日终流程类型。
+
+                    **可选值：** `0` 普通日终流程、`1` OTC 简化版日终流程、`2` 非日终流程、`99` 未启用
                   enum:
-                    - '0'
-                    - '1'
-                    - '2'
-                    - '99'
+                    - 0
+                    - 1
+                    - 2
+                    - 99
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: 普通日终流程
-                    - value: '1'
+                    - value: 1
                       label: OTC 简化版日终流程
-                    - value: '2'
+                    - value: 2
                       label: 非日终流程
-                    - value: '99'
+                    - value: 99
                       label: 未启用
-                  example: '0'
+                  example: 0
                 use_public_stock_info:
-                  type: number
-                  description: 是否依赖公有标的库。
+                  type: integer
+                  description: |-
+                    是否依赖公有标的库。
+
+                    **可选值：** `0` 不依赖公有标的库、`1` 依赖公有库
                   enum:
-                    - '0'
-                    - '1'
+                    - 0
+                    - 1
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: 不依赖公有标的库
-                    - value: '1'
+                    - value: 1
                       label: 依赖公有库
-                  example: '0'
+                  example: 0
                 busin_flow_id:
-                  type: number
-                  description: 当选择日终流程时填写，非日终流程时该字段为空
+                  type: integer
+                  description: 日终流程 ID。`otc_flag` 为 `0`（普通日终流程）时必填，取 `POST /v1/datasets/clearing_busin_flows` 返回行的 `id`；其他情况不传。
+                time_zone_name:
+                  type: string
+                  description: '市场的 IANA 时区名，如 `Asia/Tokyo`、`Asia/Hong_Kong`、`America/New_York`。新增（`1`）和修改（`3`）时后端必需，缺少时返回 `800001`（`InvalidField=Time Zone Name`）。`POST /v1/datasets/clearing_markets` 目前不返回该字段。'
+                  example: Asia/Tokyo
+                allow_manual_order:
+                  type: integer
+                  description: '是否允许手工下单：`0` 否，`1` 是。'
+                  enum:
+                    - 0
+                    - 1
+                  example: 0
             example:
-              action_in: '1'
-              id: 0
+              action_in: '3'
+              id: 12
               market: US
-              currency: USD
-              overnight_flag: 0
-              custodian_id: 1001
-              sub_position_no: SUB01
-              balance_back_n: 1
-              equity_back_n: 2
-              main_flag: 1
+              main_flag: 0
               otc_flag: 0
-              use_public_stock_info: 1
+              busin_flow_id: 1
+              overnight_flag: 0
+              equity_back_n: 1
+              balance_back_n: 1
+              custodian_id: 626
+              sub_position_no: OTC01
+              currency: USD
+              use_public_stock_info: 0
+              time_zone_name: America/New_York
+              allow_manual_order: 0
       responses:
         '200':
           description: 请求处理成功。响应的 `data` 不包含额外业务字段。
@@ -21585,7 +22135,10 @@ paths:
               properties:
                 action_in:
                   type: string
-                  description: 本次请求要执行的操作类型。此字段为必填项。
+                  description: |-
+                    本次请求要执行的操作类型。此字段为必填项。
+
+                    **可选值：** `1` 新增、`2` 删除、`3` 修改
                   enum:
                     - '1'
                     - '2'
@@ -21629,6 +22182,8 @@ paths:
                   type: string
                   description: |-
                     用于指定「是否主服务商」。
+
+                    **可选值：** `1` 是（主服务商）、`0` 否
                   enum:
                     - '1'
                     - '0'
@@ -21640,7 +22195,10 @@ paths:
                   example: '1'
                 custodian_type:
                   type: string
-                  description: 用于指定「服务商类型」。
+                  description: |-
+                    用于指定「服务商类型」。
+
+                    **可选值：** `1` 代理商/托管商、`2` 代理商、`3` 托管商
                   enum:
                     - '1'
                     - '2'
@@ -21800,7 +22358,10 @@ paths:
               properties:
                 action_in:
                   type: string
-                  description: 本次请求要执行的操作类型。此字段为必填项。
+                  description: |-
+                    本次请求要执行的操作类型。此字段为必填项。
+
+                    **可选值：** `1` 新增、`2` 删除、`3` 修改
                   enum:
                     - '1'
                     - '2'
@@ -21830,6 +22391,8 @@ paths:
                   type: string
                   description: |-
                     用于指定「席位号筛选」。
+
+                    **可选值：** `0` 无、`1` 包含、`2` 排除
                   enum:
                     - '0'
                     - '1'
@@ -21968,7 +22531,10 @@ paths:
               properties:
                 action_in:
                   type: string
-                  description: 本次请求要执行的操作类型。此字段为必填项。
+                  description: |-
+                    本次请求要执行的操作类型。此字段为必填项。
+
+                    **可选值：** `1` 新增、`2` 删除、`3` 修改
                   enum:
                     - '1'
                     - '2'
@@ -22361,7 +22927,7 @@ paths:
               properties:
                 counter_id:
                   type: string
-                  description: 证券或基金标的代码，用于定位本次请求处理的标的。此字段为必填项。
+                  description: 证券或基金标的代码，用于定位本次请求处理的标的。此字段为必填项。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 type:
                   type: string
                   description: |-
@@ -22458,7 +23024,7 @@ paths:
 
         ### 请求参数
 
-        - 必填：`id`（配置 ID）。
+        - 必填：`id`（配置 ID）。取 `POST /v1/datasets/ipo_buy_powers` 返回行的 `id`。
         - 可选：`audit_frontend_resource`（审计上下文）。
         - 各字段的格式和业务含义见对应字段说明。
 
@@ -22584,7 +23150,7 @@ paths:
                   description: 配置ID
                 counter_id:
                   type: string
-                  description: 股票
+                  description: 股票。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 type:
                   type: string
                   description: 类型
@@ -23105,34 +23671,46 @@ paths:
                     properties:
                       rate_configs:
                         type: array
+                        description: 融券利率配置列表，可能为空数组。
                         items:
                           type: object
                           properties:
                             origin:
                               type: string
+                              description: 利率来源，如 `IB`。
                             rate_ratio:
                               type: string
+                              description: 利率系数（字符串数字）。
                             rate_delta:
                               type: string
+                              description: 利率调整值（字符串数字）。
                             cutoff_method:
                               type: integer
+                              description: 截取方式编码（整数）。
                             cutoff_digits:
                               type: integer
+                              description: 截取位数。
                             min_rate:
                               type: string
+                              description: 最低利率（字符串数字）。
                       price_configs:
                         type: array
+                        description: 融券结算价配置列表，可能为空数组。
                         items:
                           type: object
                           properties:
                             currency:
                               type: string
+                              description: 币种。
                             transfer_rate:
                               type: string
+                              description: '`transfer_rate` 比率（字符串数字）。'
                             cutoff_method:
                               type: integer
+                              description: 截取方式编码（整数）。
                             cutoff_digits:
                               type: integer
+                              description: 截取位数。
         '400':
           description: 请求无效。具体原因请查看响应体中的业务错误码 `code` 和错误信息 `message`。
           content:
@@ -23595,7 +24173,10 @@ paths:
                   example: '360'
                 rounding_method:
                   type: number
-                  description: 取整方式。
+                  description: |-
+                    取整方式。
+
+                    **可选值：** `1` 四舍五入、`2` 向上截取、`3` 向下截取
                   enum:
                     - '1'
                     - '2'
@@ -23751,7 +24332,10 @@ paths:
                   example: '1'
                 direction:
                   type: string
-                  description: 收付方向，仅支持单值。当 `source_id` 属于配置的 `clientFeeList` 时可不传。
+                  description: |-
+                    收付方向，仅支持单值。当 `source_id` 属于配置的 `clientFeeList` 时可不传。
+
+                    **可选值：** `Payment` 付款、`Payee` 收款
                   enum:
                     - Payment
                     - Payee
@@ -23767,7 +24351,10 @@ paths:
                     业务代码。可选项随所选数据来源 `source_id` 变化：客户费用、代理商费用、结算合同、原子金库等不同来源各自对应一份业务代码列表，由后端按所选 `source_id` 下发，请以接口返回的可选项为准。
                 is_account:
                   type: string
-                  description: 是否记账。传入 `N` 时，`account_currencies` 必须传 `['ALL']`。
+                  description: |-
+                    是否记账。传入 `N` 时，`account_currencies` 必须传 `['ALL']`。
+
+                    **可选值：** `Y` 记账、`N` 不记账
                   enum:
                     - Y
                     - N
@@ -23916,7 +24503,10 @@ paths:
                     endpoint: GET /v1/datasets/refs/book_data_source_editable
                 direction:
                   type: string
-                  description: 单选，枚举来自 ref booking_types_pay；source_id 为客户费用列表时隐藏不提交
+                  description: |-
+                    单选，枚举来自 ref booking_types_pay；source_id 为客户费用列表时隐藏不提交
+
+                    **可选值：** `Payment` 付款、`Payee` 收款
                   enum:
                     - Payment
                     - Payee
@@ -23932,7 +24522,10 @@ paths:
                     业务代码。可选项随所选数据来源 `source_id` 变化：客户费用、代理商费用、结算合同、原子金库等不同来源各自对应一份业务代码列表，由后端按所选 `source_id` 下发，请以接口返回的可选项为准。
                 is_account:
                   type: string
-                  description: 单选，枚举来自 ref booking_types_is_account
+                  description: |-
+                    单选，枚举来自 ref booking_types_is_account
+
+                    **可选值：** `Y` 记账、`N` 不记账
                   enum:
                     - Y
                     - N
@@ -24075,6 +24668,8 @@ paths:
                   type: string
                   description: |-
                     科目层级。
+
+                    **可选值：** `1` 一级科目、`2` 二级科目、`3` 三级科目
                   enum:
                     - '1'
                     - '2'
@@ -24094,6 +24689,8 @@ paths:
                   type: string
                   description: |-
                     科目方向（借贷方向）；调用方会过滤掉 `key=3`（共同）的选项。
+
+                    **可选值：** `1` 借方、`2` 贷方、`3` 共同
                   enum:
                     - '1'
                     - '2'
@@ -24314,7 +24911,10 @@ paths:
                   description: 科目属性 ID；编辑态下该字段禁用但仍随提交请求
                 level:
                   type: string
-                  description: 科目层级；编辑态下禁用但仍随提交请求。
+                  description: |-
+                    科目层级；编辑态下禁用但仍随提交请求。
+
+                    **可选值：** `1` 一级科目、`2` 二级科目、`3` 三级科目
                   enum:
                     - '1'
                     - '2'
@@ -24332,7 +24932,10 @@ paths:
                   description: 用于指定「科目名称」。此字段为必填项。
                 direct:
                   type: string
-                  description: 借贷方向。
+                  description: |-
+                    借贷方向。
+
+                    **可选值：** `1` 借方、`2` 贷方、`3` 共同
                   enum:
                     - '1'
                     - '2'
@@ -24905,22 +25508,25 @@ paths:
                   description: 文本输入，部分数据源必填
                 user_account_type:
                   type: integer
-                  description: 用户账户类型，提交前转为数字。
+                  description: |-
+                    用户账户类型，提交前转为数字。
+
+                    **可选值：** `0` 不匹配、`1` Cash、`2` Margin、`3` House
                   enum:
-                    - '0'
-                    - '1'
-                    - '2'
-                    - '3'
+                    - 0
+                    - 1
+                    - 2
+                    - 3
                   x-enum-details:
-                    - value: '0'
+                    - value: 0
                       label: 不匹配
-                    - value: '1'
+                    - value: 1
                       label: Cash
-                    - value: '2'
+                    - value: 2
                       label: Margin
-                    - value: '3'
+                    - value: 3
                       label: House
-                  example: '0'
+                  example: 0
                 currency:
                   type: array
                   description: |-
@@ -24988,12 +25594,32 @@ paths:
                   example: PLUS
                 name_types:
                   type: array
-                  description: |-
-                    分录摘要列表，每项对应一条摘要拼接规则；提交前会过滤掉类型为 0
-                    或值为空的项。子结构：name_type(string，1=固定文本/2=引用字段类型)、name(string，可选，
-                    固定文本)、name_field_type(string，可选，引用字段类型时，使用所选数据源返回的可用摘要字段类型)
+                  description: 分录摘要规则列表。管理后台会过滤 `name_type` 为 `0` 或取值为空的项。
                   items:
-                    type: string
+                    type: object
+                    required:
+                      - name_type
+                    properties:
+                      name_type:
+                        type: string
+                        description: |-
+                          摘要片段类型。
+
+                          **可选值：** `1` 固定文本、`2` 引用字段
+                        enum:
+                          - '1'
+                          - '2'
+                        x-enum-details:
+                          - value: '1'
+                            label: 固定文本
+                          - value: '2'
+                            label: 引用字段
+                      name:
+                        type: string
+                        description: 固定文本。`name_type` 为 `1` 时使用。
+                      name_field_type:
+                        type: string
+                        description: 引用字段类型。`name_type` 为 `2` 时使用，取所选数据来源可用的摘要字段类型。
                 debit_feature:
                   type: string
                   description: |-
@@ -25577,7 +26203,10 @@ paths:
                   example: 手续费
                 direct:
                   type: string
-                  description: 余额方向。
+                  description: |-
+                    余额方向。
+
+                    **可选值：** `1` 借方、`2` 贷方、`3` 共同
                   enum:
                     - '1'
                     - '2'
@@ -25791,7 +26420,10 @@ paths:
                       example: 手续费
                     direct:
                       type: string
-                      description: 余额方向。
+                      description: |-
+                        余额方向。
+
+                        **可选值：** `1` 借方、`2` 贷方、`3` 共同
                       enum:
                         - '1'
                         - '2'
@@ -26097,8 +26729,8 @@ paths:
 
         ### 请求参数
 
-        - 必填：`id`（资金类型 ID）、`name`（名称（当前语言环境））、`name_cn`（中文简体名称）、`name_en`（英文名称）、`name_hk`（中文繁体名称）。
-        - 可选：`remark`（备注）。
+        - 必填：`id`（资金类型 ID）、`record`（承载资金类型字段的对象）。`record` 内必填：`name`（名称（当前语言环境））、`name_cn`（中文简体名称）、`name_en`（英文名称）、`name_hk`（中文繁体名称）。
+        - 可选：`record.remark`（备注）。
         - 各字段的格式、取值范围、默认行为和业务含义见对应字段说明。
 
         ### 风险提示
@@ -26118,36 +26750,43 @@ paths:
               type: object
               required:
                 - id
-                - name
-                - name_cn
-                - name_en
-                - name_hk
+                - record
               properties:
                 id:
                   type: integer
                   description: 待编辑资金类型的 ID。此字段为必填项。
-                name:
-                  type: string
-                  description: 取自请求 name 字段中对应当前 UI 语言（zh-CN/zh-HK/en）的值
-                name_cn:
-                  type: string
-                  description: 用于指定「中文简体名称」。此字段为必填项。
-                name_en:
-                  type: string
-                  description: 用于指定「英文名称」。此字段为必填项。
-                name_hk:
-                  type: string
-                  description: 用于指定「中文繁体名称」。此字段为必填项。
-                remark:
-                  type: string
-                  description: 随本次操作保存的备注。
+                record:
+                  type: object
+                  description: 承载待保存资金类型字段的对象。此字段为必填项。
+                  required:
+                    - name
+                    - name_cn
+                    - name_en
+                    - name_hk
+                  properties:
+                    name:
+                      type: string
+                      description: 取自请求 name 字段中对应当前 UI 语言（zh-CN/zh-HK/en）的值
+                    name_cn:
+                      type: string
+                      description: 用于指定「中文简体名称」。此字段为必填项。
+                    name_en:
+                      type: string
+                      description: 用于指定「英文名称」。此字段为必填项。
+                    name_hk:
+                      type: string
+                      description: 用于指定「中文繁体名称」。此字段为必填项。
+                    remark:
+                      type: string
+                      description: 随本次操作保存的备注。
             example:
               id: 101
-              name: 手续费
-              name_cn: 手续费
-              name_en: Handling Fee
-              name_hk: 手續費
-              remark: 用于记录各类手续费流水
+              record:
+                name: 手续费
+                name_cn: 手续费
+                name_en: Handling Fee
+                name_hk: 手續費
+                remark: 用于记录各类手续费流水
       responses:
         '200':
           description: 请求处理成功。响应的 `data` 不包含额外业务字段。
@@ -26222,7 +26861,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -26349,8 +26987,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -26572,7 +27209,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -26738,8 +27374,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -26820,7 +27455,10 @@ paths:
                       example: 自动化测试_1784138182
                     status:
                       type: string
-                      description: 用于按「状态」筛选结果。
+                      description: |-
+                        用于按「状态」筛选结果。
+
+                        **可选值：** `enabled` 已启用、`disabled` 已停用
                       enum:
                         - enabled
                         - disabled
@@ -26832,7 +27470,10 @@ paths:
                       example: Enabled
                     audit_type:
                       type: string
-                      description: 用于按「审核规则」筛选结果。
+                      description: |-
+                        用于按「审核规则」筛选结果。
+
+                        **可选值：** `auto_pass` 自动审核通过、`auto_reject` 自动审核驳回、`manual_ticket` 工单审批
                       enum:
                         - auto_pass
                         - auto_reject
@@ -27024,7 +27665,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -27185,8 +27825,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -27269,7 +27908,10 @@ paths:
                       description: 用于按「客户编号」筛选结果。
                     status:
                       type: string
-                      description: 用于按「状态」筛选结果。
+                      description: |-
+                        用于按「状态」筛选结果。
+
+                        **可选值：** `enabled` 启用、`disabled` 禁用
                       enum:
                         - enabled
                         - disabled
@@ -27449,7 +28091,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -27607,8 +28248,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -27697,10 +28337,14 @@ paths:
                       enum: *id005
                       description: |-
                         业务类型. 用于按「业务类型」筛选结果。可选值来自后端数据字典。
+
+                        **可选值：** `!` All、`1` 股票、`5` 期权
                     aaid:
                       type: string
                       description: |-
                         客户. 用于按「客户」筛选结果。
+
+                        此处传客户证券账户的内部数字编号 `aaid`，不是证券账号 `account_no`（如 `H00000000`），也不是客户编号 `member_id`；一个客户可有多个 `aaid`。
                 page:
                   type: integer
                 page_size:
@@ -27747,6 +28391,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: 记录 ID. **返回值：** 记录 ID（行主键），编辑或删除该记录的接口用它定位记录。
                             aaid:
                               type: string
                             aaid_val:
@@ -27810,7 +28457,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - aaid: string
+                    - id: '123'
+                      aaid: string
                       aaid_val: string
                       market: string
                       market_val: string
@@ -27878,7 +28526,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -28032,8 +28679,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -28138,6 +28784,8 @@ paths:
                       enum: *id006
                       description: |-
                         类型. 用于按「类型」筛选结果。可选值来自后端数据字典。
+
+                        **可选值：** `1` 交易交收日、`2` 交易非交收日、`3` 交收非交易日、`4` 台风天、`5` 假日
                 page:
                   type: integer
                 page_size:
@@ -28184,10 +28832,15 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: 记录 ID. **返回值：** 记录 ID（行主键），编辑或删除该记录的接口用它定位记录。
                             trade_date:
                               type: string
+                              description: 交易日期. **返回值：** 日历日期，格式 `YYYYMMDD`。
                             type:
                               type: string
+                              description: 类型. **返回值：** 日期类型（展示值；原始编码见同名 `_val` 字段），取值同请求参数 `filters.type`。
                             type_val:
                               type: string
                               description: 字段 type 的原始值：type 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
@@ -28198,7 +28851,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - trade_date: string
+                    - id: '123'
+                      trade_date: string
                       type: string
                       type_val: string
                   total: 1
@@ -28246,7 +28900,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -28399,8 +29052,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -28489,6 +29141,8 @@ paths:
                       enum: *id005
                       description: |-
                         业务类型. 用于按「业务类型」筛选结果。可选值来自后端数据字典。
+
+                        **可选值：** `!` All、`1` 股票、`5` 期权
                 page:
                   type: integer
                 page_size:
@@ -28535,62 +29189,78 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: 记录 ID. **返回值：** 记录 ID（行主键），编辑或删除该记录的接口用它定位记录。
                             market:
                               type: string
+                              description: 市场. **返回值：** 市场（展示值；原始编码见同名 `_val` 字段）；`!` 表示全部。
                             market_val:
                               type: string
                               description: 字段 market 的原始值：market 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             settlement_channel:
                               type: string
+                              description: 结算渠道. **返回值：** 结算渠道（展示值；原始编码见同名 `_val` 字段）；`!` 表示全部。
                             settlement_channel_val:
                               type: string
                               description: 字段 settlement_channel 的原始值：settlement_channel 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             stage:
                               type: string
+                              description: 交易阶段. **返回值：** 交易阶段（展示值；原始编码见同名 `_val` 字段）；`!` 表示全部。
                             stage_val:
                               type: string
                               description: 字段 stage 的原始值：stage 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             account_type:
                               type: string
+                              description: 账户类型. **返回值：** 账户类型（展示值；原始编码见同名 `_val` 字段）；`!` 表示全部。
                             account_type_val:
                               type: string
                               description: 字段 account_type 的原始值：account_type 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             biz_type:
                               type: string
+                              description: 业务类型. **返回值：** 业务类型（展示值；原始编码见同名 `_val` 字段）；`!` 表示全部。
                             biz_type_val:
                               type: string
                               description: 字段 biz_type 的原始值：biz_type 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             direction:
                               type: string
+                              description: 买卖方向. **返回值：** 买卖方向（展示值；原始编码见同名 `_val` 字段）。
                             direction_val:
                               type: string
                               description: 字段 direction 的原始值：direction 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             position:
                               type: string
+                              description: 长短仓. **返回值：** 长短仓方向，可能为空字符串。
                             position_val:
                               type: string
                               description: 字段 position 的原始值：position 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             instr_type:
                               type: string
+                              description: 指令类型. **返回值：** 交收指令类型（展示值；原始编码见同名 `_val` 字段）。
                             instr_type_val:
                               type: string
                               description: 字段 instr_type 的原始值：instr_type 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             settle_method:
                               type: string
+                              description: 交收方式. **返回值：** 交收方式（展示值；原始编码见同名 `_val` 字段）。
                             settle_method_val:
                               type: string
                               description: 字段 settle_method 的原始值：settle_method 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             custodian_id:
                               type: string
+                              description: 默认托管商. **返回值：** 默认托管商（展示值；原始编码见同名 `_val` 字段）。
                             custodian_id_val:
                               type: string
                               description: 字段 custodian_id 的原始值：custodian_id 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             sub_position_no:
                               type: string
+                              description: 默认子仓. **返回值：** 默认子仓编号。
                             updated_at:
                               type: string
+                              description: 更新时间. **返回值：** Unix 时间戳（秒），以字符串返回。
                             updated_by:
                               type: string
+                              description: 更新人. **返回值：** 最后更新的后台账号。
                       total:
                         type: integer
               example:
@@ -28598,7 +29268,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - market: string
+                    - id: '123'
+                      market: string
                       market_val: string
                       settlement_channel: string
                       settlement_channel_val: string
@@ -28666,7 +29337,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -28810,8 +29480,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -28947,6 +29616,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: 记录 ID. **返回值：** 记录 ID（行主键），编辑或删除该记录的接口用它定位记录。
                             market:
                               type: string
                               description: '**返回值：** 市场。'
@@ -29003,7 +29675,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - market: US
+                    - id: '123'
+                      market: US
                       otc_flag: Normal Day-End Tasks
                       otc_flag_val: '0'
                       busin_flow_name: 欧美市场
@@ -29064,7 +29737,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -29208,8 +29880,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -29477,7 +30148,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -29609,8 +30279,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -29738,31 +30407,42 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: 记录 ID. **返回值：** 记录 ID（行主键），编辑或删除该记录的接口用它定位记录。
                             channel_type:
                               type: string
+                              description: 交易类型. **返回值：** 结算渠道的交易类型（展示值；原始编码见同名 `_val` 字段）。
                             channel_type_val:
                               type: string
                               description: 字段 channel_type 的原始值：channel_type 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             tolerance_threshold:
                               type: string
+                              description: 对账容差阈值. **返回值：** 交易对账的容差阈值（字符串数值）。
                             account_mode:
                               type: string
+                              description: 席位号筛选. **返回值：** 席位号筛选方式（展示值；原始编码见同名 `_val` 字段）。
                             account_mode_val:
                               type: string
                               description: 字段 account_mode 的原始值：account_mode 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             verify_accounts:
                               type: string
+                              description: 席位号. **返回值：** 参与筛选的席位号，可能为空字符串。
                             verified:
                               type: string
+                              description: 交易对账模式. **返回值：** 交易对账模式（展示值；原始编码见同名 `_val` 字段）。
                             verified_val:
                               type: string
                               description: 字段 verified 的原始值：verified 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             remark:
                               type: string
+                              description: 备注. **返回值：** 备注，可能为空字符串。
                             updated_at:
                               type: string
+                              description: 更新时间. **返回值：** Unix 时间戳（秒），以字符串返回。
                             updated_by:
                               type: string
+                              description: 更新人. **返回值：** 最后更新的后台账号。
                       total:
                         type: integer
               example:
@@ -29770,7 +30450,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - channel_type: string
+                    - id: '123'
+                      channel_type: string
                       channel_type_val: string
                       tolerance_threshold: string
                       account_mode: string
@@ -29826,7 +30507,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -29958,8 +30638,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -30095,21 +30774,30 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: 记录 ID. **返回值：** 记录 ID（行主键），编辑或删除该记录的接口用它定位记录。
                             'no':
                               type: string
+                              description: 子仓编号. **返回值：** 子仓编号。
                             name:
                               type: string
+                              description: 子仓名称. **返回值：** 子仓名称。
                             position_direction:
                               type: string
+                              description: 特征. **返回值：** 子仓特征（展示值；原始编码见同名 `_val` 字段）。
                             position_direction_val:
                               type: string
                               description: 字段 position_direction 的原始值：position_direction 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             remark:
                               type: string
+                              description: 备注. **返回值：** 备注，可能为空字符串。
                             updated_at:
                               type: string
+                              description: 更新时间. **返回值：** Unix 时间戳（秒），以字符串返回。
                             updated_by:
                               type: string
+                              description: 更新人. **返回值：** 最后更新的后台账号。
                       total:
                         type: integer
               example:
@@ -30117,7 +30805,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - 'no': string
+                    - id: '123'
+                      'no': string
                       name: string
                       position_direction: string
                       position_direction_val: string
@@ -30169,7 +30858,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -30294,8 +30982,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -30423,6 +31110,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: 记录 ID. **返回值：** 记录 ID（行主键），编辑或删除该记录的接口用它定位记录。
                             name:
                               type: string
                               description: '**返回值：** 渠道名称。'
@@ -30446,7 +31136,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - name: Show3
+                    - id: '123'
+                      name: Show3
                       custom_typo: ''
                       fini: 'No'
                       fini_val: '0'
@@ -30496,7 +31187,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -30516,7 +31206,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 用于按「股票」筛选结果。
+                      description: 用于按「股票」筛选结果。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                 mode:
                   type: integer
                   default: 0
@@ -30625,8 +31315,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -30703,7 +31392,7 @@ paths:
                   properties:
                     counter_id:
                       type: string
-                      description: 用于按「股票」筛选结果。
+                      description: 用于按「股票」筛选结果。格式为 `{类型}/{市场}/{代码}`，如股票 `ST/HK/700`、`ST/US/AAPL`，期权 `OP/US/AAPL270319C320000`。
                       example: ST/HK/3388
                 page:
                   type: integer
@@ -30754,6 +31443,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: 记录 ID. **返回值：** 记录 ID（行主键），编辑或删除该记录的接口用它定位记录。
                             counter_id:
                               type: string
                               description: '**返回值：** 股票。'
@@ -30789,7 +31481,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - counter_id: ST/HK/3388
+                    - id: '123'
+                      counter_id: ST/HK/3388
                       type: Subscription
                       type_val: '0'
                       hold_ipo: 'NO'
@@ -30843,7 +31536,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -30975,8 +31667,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -31103,6 +31794,9 @@ paths:
                         items:
                           type: object
                           properties:
+                            id:
+                              type: string
+                              description: 记录 ID. **返回值：** 记录 ID（行主键），编辑或删除该记录的接口用它定位记录。
                             name:
                               type: string
                               description: '**返回值：** 费率名称。'
@@ -31147,7 +31841,8 @@ paths:
                 message: success
                 data:
                   list:
-                    - name: string
+                    - id: '123'
+                      name: string
                       currency: string
                       buy_fee: string
                       financing_rate: string
@@ -31204,7 +31899,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -31337,8 +32031,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -31571,7 +32264,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -31691,8 +32383,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -31879,7 +32570,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -32157,8 +32847,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -32536,7 +33225,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -32683,8 +33371,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -32924,7 +33611,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -33088,8 +33774,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -33256,31 +33941,40 @@ paths:
                           properties:
                             id:
                               type: string
+                              description: 会计科目编号. **返回值：** 会计科目记录 ID。
                             account_channel:
                               type: string
+                              description: 账户渠道. **返回值：** 科目所属账户渠道。
                             feature:
                               type: string
+                              description: 科目属性. **返回值：** 科目属性（展示值；原始编码见同名 `_val` 字段）。
                             feature_val:
                               type: string
                               description: 字段 `feature` 的原始值：`feature` 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             level:
                               type: string
+                              description: 科目级别. **返回值：** 科目级别（展示值；原始编码见同名 `_val` 字段）。
                             level_val:
                               type: string
                               description: 字段 `level` 的原始值：`level` 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             subject_code:
                               type: string
+                              description: 科目编码. **返回值：** 科目编码。
                             out_subject_code:
                               type: string
+                              description: 外部科目编码. **返回值：** 外部科目编码。
                             full_name:
                               type: string
+                              description: 科目名称. **返回值：** 科目名称。
                             direct:
                               type: string
+                              description: 余额方向. **返回值：** 余额方向（展示值；原始编码见同名 `_val` 字段），取值同请求参数 `filters.direct`。
                             direct_val:
                               type: string
                               description: 字段 `direct` 的原始值：`direct` 返回的是经字典/关联表映射解析后的可读展示值，本字段返回映射前的原始编码/ID。
                             updated_at:
                               type: string
+                              description: 更新时间. **返回值：** Unix 时间戳（秒），以字符串返回。
                       total:
                         type: integer
               example:
@@ -33345,7 +34039,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -33572,8 +34265,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -33980,7 +34672,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -34128,8 +34819,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -34302,6 +34992,12 @@ paths:
                             updated_at:
                               type: string
                               description: '**返回值：** 更新时间；时间或日期格式以接口实际返回值为准。'
+                            payment_custom:
+                              type: string
+                              description: '**返回值：** 合并的付款业务类型的可读说明（按数据源与业务类型逐行列出的文本）。'
+                            payee_custom:
+                              type: string
+                              description: '**返回值：** 合并的收款业务类型的可读说明（按数据源与业务类型逐行列出的文本）。'
                       total:
                         type: integer
                         description: '**返回值：** 符合查询条件的记录总数，用于计算分页。'
@@ -34364,7 +35060,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -34505,8 +35200,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
@@ -34583,7 +35277,10 @@ paths:
                   properties:
                     direct:
                       type: string
-                      description: 用于按「余额方向」筛选结果。
+                      description: |-
+                        用于按「余额方向」筛选结果。
+
+                        **可选值：** `1` 借方、`2` 贷方、`3` 共同
                       enum:
                         - '1'
                         - '2'
@@ -34734,7 +35431,6 @@ paths:
 
         - `mode: 0`：同步导出，成功后直接返回下载地址。
         - `mode: 1`：异步导出，先返回 `file_download_id`，随后调用 `GET /v1/datasets/download/{id}` 获取下载地址。
-        - 不再需要导出记录时，可调用 `DELETE /v1/datasets/download/{id}` 删除。
 
         ### 返回结果
 
@@ -34870,8 +35566,7 @@ paths:
                       file_download_id:
                         type: string
                         description: |-
-                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` /
-                          `DELETE /v1/datasets/download/{id}` 路径中的 id：GET 获取最终下载地址，DELETE 删除该导出记录。
+                          异步模式（`mode: 1`）下返回，即 `GET /v1/datasets/download/{id}` 路径中的 id，用于获取最终下载地址。
                       ticket_id:
                         type: string
                         description: '**返回值：** 审批工单 ID。仅在本次操作触发审批流程时返回。'
