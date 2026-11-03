@@ -3374,7 +3374,7 @@
           },
           "order_type": {
             "type": "string",
-            "description": "Order type code. It must be a key of `channel_infos.order_type_config` in Get Order Configuration, for example:\n- `LO` - Limit order\n- `MO` - Market order\n- `ELO` - Enhanced limit order\n- `ALO` - At-auction limit order\n- `AO` - At-auction order\n- `ODD` - Odd-lot order\n- `SLO` - Special limit order\n- `LIT` - Limit if touched\n- `MIT` - Market if touched\n- `TSLPAMT` / `TSLPPCT` - Trailing stop limit (by amount / by percentage)\n- `TSMAMT` / `TSMPCT` - Trailing stop market (by amount / by percentage)\n- `MOC` - Market on close\n",
+            "description": "Order type code, determined by the keys of `channel_infos.order_type_config` in Get Order Configuration:\n- `LO` - Limit order\n- `MO` - Market order\n- `ELO` - Enhanced limit order\n- `ALO` - At-auction limit order\n- `AO` - At-auction order\n- `ODD` - Odd-lot order\n- `SLO` - Special limit order\n- `LIT` - Limit if touched\n- `MIT` - Market if touched\n- `TSLPAMT` / `TSLPPCT` - Trailing stop limit (by amount / by percentage), for the configuration key `TSL`\n- `TSMAMT` / `TSMPCT` - Trailing stop market (by amount / by percentage), for the configuration key `TS`\n- `MOC` - Market on close\n\nThe configuration key `GT` means the security supports grid trading, which is not placed through this endpoint. Hong Kong stocks do not support `LO`; use `ELO` for Hong Kong limit orders.\n",
             "minLength": 1
           },
           "price": {
@@ -26733,13 +26733,75 @@
         }
       }
     },
+    "/v2/orders/withdraw": {
+      "post": {
+        "tags": [
+          "Trading"
+        ],
+        "summary": "Cancel Order",
+        "description": "Cancels one open order, including conditional orders (`LIT`, `MIT`) and trailing stop orders that have not triggered. Used by the Cancel action on the order details and the order list. A successful response means the cancellation request has been accepted. Use the order details or order push to track the order's final status, and refresh the order list after success. On failure, show `message` and refresh the order details to confirm the order's actual status.\n\nWhen you call this endpoint through WhaleCore `requestService()`, set `requiresTradeToken` to `true`.\n\nWhaleCore's `orderService()` wraps this endpoint as the typed method `cancelOrder`. If you use WhaleCore, prefer that method.\n",
+        "operationId": "postV2OrdersWithdraw",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "order_id": {
+                    "type": "string",
+                    "description": "ID of the order to cancel"
+                  }
+                },
+                "required": [
+                  "order_id"
+                ]
+              },
+              "example": {
+                "order_id": "<ORDER_ID>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Request succeeded. The response body contains the result of the Cancel Order operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "No business fields"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/orders/batch_withdraw/order_id": {
       "post": {
         "tags": [
           "Trading"
         ],
         "summary": "Cancel Orders by ID",
-        "description": "Submits cancellation requests for the order IDs selected by the Client. A successful response means only that the cancellation requests were accepted; check the final state of each order through the order list, order details, or order push updates. On success, refresh the order list. On failure, show `message` and refresh the order list to confirm the actual state of each order.\n\nWhen you call this operation through WhaleCore `requestService()`, set `requiresTradeToken` to `true`.\n\nWhaleCore's `orderService()` wraps this endpoint as the typed method `batchCancelOrdersByIds`. If you use WhaleCore, prefer that method.\n",
+        "description": "Submits cancellation requests for the order IDs selected by the Client. A successful response means only that the cancellation requests were accepted; check the final state of each order through the order list, order details, or order push updates. On success, refresh the order list. On failure, show `message` and refresh the order list to confirm the actual state of each order.\n\nBatch cancellation by order ID does not cancel conditional orders or trailing stop orders that have not triggered: the request succeeds and the orders stay open. Cancel those orders one at a time with Cancel Order (`POST /v2/orders/withdraw`).\n\nWhen you call this operation through WhaleCore `requestService()`, set `requiresTradeToken` to `true`.\n\nWhaleCore's `orderService()` wraps this endpoint as the typed method `batchCancelOrdersByIds`. If you use WhaleCore, prefer that method.\n",
         "operationId": "postV1OrdersBatchWithdrawOrderId",
         "requestBody": {
           "required": true,

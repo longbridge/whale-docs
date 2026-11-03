@@ -3374,7 +3374,7 @@
           },
           "order_type": {
             "type": "string",
-            "description": "订单类型代码，须为「获取标的下单配置」中 `channel_infos.order_type_config` 的键，例如：\n- `LO` - 限价单\n- `MO` - 市价单\n- `ELO` - 增强限价单\n- `ALO` - 竞价限价单\n- `AO` - 竞价市价单\n- `ODD` - 碎股单\n- `SLO` - 特别限价单\n- `LIT` - 触价限价单\n- `MIT` - 触价市价单\n- `TSLPAMT` / `TSLPPCT` - 跟踪止损限价单（按金额/按比例）\n- `TSMAMT` / `TSMPCT` - 跟踪止损市价单（按金额/按比例）\n- `MOC` - 收盘市价单\n",
+            "description": "订单类型代码，由「获取标的下单配置」中 `channel_infos.order_type_config` 的键决定：\n- `LO` - 限价单\n- `MO` - 市价单\n- `ELO` - 增强限价单\n- `ALO` - 竞价限价单\n- `AO` - 竞价市价单\n- `ODD` - 碎股单\n- `SLO` - 特别限价单\n- `LIT` - 触价限价单\n- `MIT` - 触价市价单\n- `TSLPAMT` / `TSLPPCT` - 跟踪止损限价单（按金额/按比例），对应配置键 `TSL`\n- `TSMAMT` / `TSMPCT` - 跟踪止损市价单（按金额/按比例），对应配置键 `TS`\n- `MOC` - 收盘市价单\n\n配置键 `GT` 表示该标的支持网格交易，网格交易不通过该接口下单。港股不支持 `LO`，港股限价单使用 `ELO`。\n",
             "minLength": 1
           },
           "price": {
@@ -26733,13 +26733,75 @@
         }
       }
     },
+    "/v2/orders/withdraw": {
+      "post": {
+        "tags": [
+          "交易"
+        ],
+        "summary": "撤销订单",
+        "description": "撤销一笔未完成的订单，包括尚未触发的条件单（`LIT`、`MIT`）和跟踪止损单。用于订单详情和订单列表的「撤单」操作。成功只表示撤单请求已受理，订单的最终状态以订单详情或订单推送为准；成功后刷新订单列表。失败时展示 `message` 并刷新订单详情确认订单的实际状态。\n\n经 WhaleCore `requestService()` 调用时，需将 `requiresTradeToken` 设为 `true`。\n\nWhaleCore 的 `orderService()` 已通过 `cancelOrder` 类型化封装该接口，使用 WhaleCore 时建议优先调用该方法。\n",
+        "operationId": "postV2OrdersWithdraw",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "order_id": {
+                    "type": "string",
+                    "description": "要撤销的订单 ID"
+                  }
+                },
+                "required": [
+                  "order_id"
+                ]
+              },
+              "example": {
+                "order_id": "<ORDER_ID>"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "请求成功。响应体包含“撤销订单”操作的结果。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiEnvelope"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "description": "无业务字段"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/orders/batch_withdraw/order_id": {
       "post": {
         "tags": [
           "交易"
         ],
         "summary": "按订单 ID 批量撤单",
-        "description": "按客户勾选的订单 ID 批量提交撤单请求。成功只表示撤单请求已受理，各订单的最终状态以订单列表、订单详情或订单推送为准；成功后刷新订单列表。失败时展示 `message` 并刷新订单列表确认各订单的实际状态。\n\n经 WhaleCore `requestService()` 调用时，需将 `requiresTradeToken` 设为 `true`。\n\nWhaleCore 的 `orderService()` 已通过 `batchCancelOrdersByIds` 类型化封装该接口，使用 WhaleCore 时建议优先调用该方法。\n",
+        "description": "按客户勾选的订单 ID 批量提交撤单请求。成功只表示撤单请求已受理，各订单的最终状态以订单列表、订单详情或订单推送为准；成功后刷新订单列表。失败时展示 `message` 并刷新订单列表确认各订单的实际状态。\n\n按订单 ID 批量撤单不撤销尚未触发的条件单和跟踪止损单：请求返回成功，订单仍保留。撤销这类订单请逐笔调用「撤销订单」（`POST /v2/orders/withdraw`）。\n\n经 WhaleCore `requestService()` 调用时，需将 `requiresTradeToken` 设为 `true`。\n\nWhaleCore 的 `orderService()` 已通过 `batchCancelOrdersByIds` 类型化封装该接口，使用 WhaleCore 时建议优先调用该方法。\n",
         "operationId": "postV1OrdersBatchWithdrawOrderId",
         "requestBody": {
           "required": true,
