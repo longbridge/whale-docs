@@ -163,6 +163,15 @@ function groupShape(node: unknown): unknown {
 const tabShapes: string[][] = [];
 collectTradingTabs(await readJson<unknown>("docs.json"), (tab) => {
   tabShapes.push(tab.groups.map((group) => JSON.stringify(groupShape(group))));
+  // Every operation, upstream or supplement, sits in a sub-module group, never directly under a top-level group.
+  if (tabShapes.length !== 1) return;
+  for (const group of tab.groups as { group: string; pages: unknown[] }[]) {
+    for (const page of group.pages) {
+      if (typeof page === "string" && OPERATION_ENTRY.test(page)) {
+        errors.push(`docs.json TradingAPI group "${group.group}" lists ${page} directly; move it into a sub-module group`);
+      }
+    }
+  }
 });
 tabShapes.slice(1).forEach((shape, index) => {
   shape.forEach((group, groupIndex) => {
