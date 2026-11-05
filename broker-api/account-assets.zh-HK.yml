@@ -26411,6 +26411,670 @@ paths:
         href: /zh-HK/api-reference/atm_omnibus_holding_transfers_download
         metadata:
           sidebarTitle: 賬戶間轉倉查詢導出
+  /v1/whaleapi/account/accesskeys:
+    post:
+      operationId: whale_create_access_key
+      summary: 創建 Access Key
+      tags:
+        - 資產賬户
+      x-lbonly: false
+      x-source: WhaleAPI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                account_no:
+                  type: string
+                  description: |-
+                    證券賬號
+
+                    `account_no` 為證券賬號（如 `L6VQEU00121996`），與客戶編號 `member_id` 及證券賬戶內部編號 `aaid` 不同。
+                token_expired_at:
+                  type: string
+                  format: date-time
+                  description: 隨 Access Key 簽發的 Token 的到期時間，採用 RFC 3339 格式，如 `2026-10-21T10:00:00+08:00` 或 `2026-10-21T10:00:00Z`。選填。
+                  example: '2026-10-21T10:00:00+08:00'
+                ip_whitelist:
+                  type: array
+                  uniqueItems: true
+                  items:
+                    type: string
+                    description: IP 地址或 CIDR 子網，如 `215.1.2.0/24`。
+                  description: 允許使用該 Access Key 調用 OpenAPI 的 IP 地址或子網。選填。
+              required:
+                - account_no
+            example:
+              account_no: L6VQEU00121996
+              token_expired_at: '2026-10-21T10:00:00+08:00'
+              ip_whitelist:
+                - 215.1.2.0/24
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '`0` 表示成功。'
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      access_key:
+                        $ref: '#/components/schemas/AccessKey'
+                      token:
+                        $ref: '#/components/schemas/AccessToken'
+                    required:
+                      - access_key
+                      - token
+                required:
+                  - code
+                  - message
+                  - data
+          description: 成功。`data` 包含 Access Key 及其當前 Token
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 未登錄或登錄狀態已失效
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
+      description: |-
+        為證券賬戶創建 OpenAPI Access Key。Client 使用該 Access Key 及其 Token 調用 Longbridge OpenAPI。
+
+        ### 冪等性
+
+        每個證券賬戶最多只有一個 Access Key。對同一賬戶重複調用不會創建新的 Access Key；若已存在，則直接返回已有的 Access Key。
+
+        ### 安全說明
+
+        響應包含 `access_key_secret` 和 `token`，兩者均為憑證：僅通過可信渠道傳輸，切勿寫入日誌。
+      x-mint:
+        href: /zh-HK/api-reference/whale_create_access_key
+        metadata:
+          sidebarTitle: 創建 Access Key
+    get:
+      operationId: whale_list_access_keys
+      summary: 查詢 Access Key 列表
+      tags:
+        - 資產賬户
+      x-lbonly: false
+      x-source: WhaleAPI
+      parameters:
+        - name: account_no
+          in: query
+          required: true
+          schema:
+            type: string
+          description: |-
+            證券賬號
+
+            `account_no` 為證券賬號（如 `L6VQEU00121996`），與客戶編號 `member_id` 及證券賬戶內部編號 `aaid` 不同。
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '`0` 表示成功。'
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      access_keys:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AccessKey'
+                        description: 該證券賬戶的 Access Key 列表
+                    required:
+                      - access_keys
+                required:
+                  - code
+                  - message
+                  - data
+          description: 成功。`data.access_keys` 為 Access Key 列表
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 未登錄或登錄狀態已失效
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
+      description: 查詢證券賬戶的 OpenAPI Access Key 列表，包含每個 Access Key 的 Token。
+      x-mint:
+        href: /zh-HK/api-reference/whale_list_access_keys
+        metadata:
+          sidebarTitle: 查詢 Access Key 列表
+  /v1/whaleapi/account/accesskeys/{access_key_id}:
+    get:
+      operationId: whale_get_access_key
+      summary: 查詢 Access Key 詳情
+      tags:
+        - 資產賬户
+      x-lbonly: false
+      x-source: WhaleAPI
+      parameters:
+        - name: access_key_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Access Key ID
+        - name: include_disabled_tokens
+          in: query
+          required: false
+          schema:
+            type: boolean
+          example: true
+          description: '`tokens` 中是否包含已停用或已過期的 Token'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '`0` 表示成功。'
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      access_key:
+                        $ref: '#/components/schemas/AccessKey'
+                required:
+                  - code
+                  - message
+                  - data
+          description: 成功。`data.access_key` 為 Access Key 詳情
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 未登錄或登錄狀態已失效
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
+      description: 查詢 OpenAPI Access Key 詳情，包括 IP 白名單和 Token。預設僅返回有效的 Token；如需包含已停用或已過期的 Token，請將 `include_disabled_tokens` 設為 `true`。
+      x-mint:
+        href: /zh-HK/api-reference/whale_get_access_key
+        metadata:
+          sidebarTitle: 查詢 Access Key 詳情
+    put:
+      operationId: whale_update_access_key
+      summary: 更新 Access Key
+      tags:
+        - 資產賬户
+      x-lbonly: false
+      x-source: WhaleAPI
+      parameters:
+        - name: access_key_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Access Key ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ip_whitelist:
+                  type: array
+                  items:
+                    type: string
+                    format: ipv4
+                  description: 新的 IP 白名單，將整體替換現有白名單
+              required:
+                - ip_whitelist
+            example:
+              ip_whitelist:
+                - 215.1.2.10
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '`0` 表示成功。'
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      access_key:
+                        $ref: '#/components/schemas/AccessKey'
+                    required:
+                      - access_key
+                required:
+                  - code
+                  - message
+                  - data
+          description: 成功。`data.access_key` 為更新後的 Access Key，此響應中 `tokens` 為空
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 未登錄或登錄狀態已失效
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
+      description: |-
+        更新 OpenAPI Access Key 的 IP 白名單。
+
+        提交的 `ip_whitelist` 會覆蓋現有白名單。如需保留現有條目，請在請求中一併提交。
+      x-mint:
+        href: /zh-HK/api-reference/whale_update_access_key
+        metadata:
+          sidebarTitle: 更新 Access Key
+  /v1/whaleapi/account/accesskeys/{access_key_id}/disable:
+    post:
+      operationId: whale_disable_access_key
+      summary: 停用 Access Key
+      tags:
+        - 資產賬户
+      x-lbonly: false
+      x-source: WhaleAPI
+      parameters:
+        - name: access_key_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Access Key ID
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '`0` 表示成功。'
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      access_key:
+                        $ref: '#/components/schemas/AccessKey'
+                    required:
+                      - access_key
+                required:
+                  - code
+                  - message
+                  - data
+          description: 成功。`data.access_key` 為已停用的 Access Key
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 未登錄或登錄狀態已失效
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
+      description: |-
+        停用 OpenAPI Access Key，該 Access Key 下的所有 Token 將同時失效。
+
+        重新啟用 Access Key 不會恢復這些 Token，詳見「啟用 Access Key」。
+      x-mint:
+        href: /zh-HK/api-reference/whale_disable_access_key
+        metadata:
+          sidebarTitle: 停用 Access Key
+  /v1/whaleapi/account/accesskeys/{access_key_id}/enable:
+    post:
+      operationId: whale_enable_access_key
+      summary: 啟用 Access Key
+      tags:
+        - 資產賬户
+      x-lbonly: false
+      x-source: WhaleAPI
+      parameters:
+        - name: access_key_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Access Key ID
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token_expired_at:
+                  type: string
+                  format: date-time
+                  description: Token 到期時間，採用 RFC 3339 格式，如 `2026-10-21T10:00:00+08:00` 或 `2026-10-21T10:00:00Z`。選填。
+                  example: '2026-10-21T10:00:00Z'
+            example:
+              token_expired_at: '2026-10-21T10:00:00Z'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '`0` 表示成功。'
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      access_key:
+                        $ref: '#/components/schemas/AccessKey'
+                    required:
+                      - access_key
+                required:
+                  - code
+                  - message
+                  - data
+          description: 成功。`data.access_key` 為已啟用的 Access Key 及其新簽發的 Token
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 未登錄或登錄狀態已失效
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
+      description: |-
+        啟用已停用的 OpenAPI Access Key。
+
+        啟用不會恢復隨 Access Key 一同停用的 Token，而是簽發一個新 Token，並在 `data.access_key.tokens` 中返回；`token_expired_at` 用於指定新 Token 的到期時間。
+      x-mint:
+        href: /zh-HK/api-reference/whale_enable_access_key
+        metadata:
+          sidebarTitle: 啟用 Access Key
+  /v1/whaleapi/account/accesskeys/{access_key_id}/token:
+    post:
+      operationId: whale_renew_access_token
+      summary: 續期 Access Token
+      tags:
+        - 資產賬户
+      x-lbonly: false
+      x-source: WhaleAPI
+      parameters:
+        - name: access_key_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Access Key ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: 待替換的當前 Token
+                expired_at:
+                  type: string
+                  format: date-time
+                  description: 新 Token 的到期時間，採用 RFC 3339 格式，如 `2026-10-21T10:00:00+08:00` 或 `2026-10-21T10:00:00Z`。
+                  example: '2026-10-21T10:00:00+08:00'
+              required:
+                - token
+                - expired_at
+            example:
+              token: <CURRENT_TOKEN>
+              expired_at: '2026-10-21T10:00:00+08:00'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '`0` 表示成功。'
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        $ref: '#/components/schemas/AccessToken'
+                    required:
+                      - token
+                required:
+                  - code
+                  - message
+                  - data
+          description: 成功。`data.token` 為新 Token
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 未登錄或登錄狀態已失效
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
+      description: |-
+        為 OpenAPI Access Key 簽發新 Token，替換 `token` 中傳入的舊 Token。
+
+        舊 Token 立即失效。請在下一次調用 OpenAPI 前更新 Client 保存的 Token。
+      x-mint:
+        href: /zh-HK/api-reference/whale_renew_access_token
+        metadata:
+          sidebarTitle: 續期 Access Token
+    delete:
+      operationId: whale_revoke_access_token
+      summary: 撤銷 Access Token
+      tags:
+        - 資產賬户
+      x-lbonly: false
+      x-source: WhaleAPI
+      parameters:
+        - name: access_key_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Access Key ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: 待撤銷的 Token
+              required:
+                - token
+            example:
+              token: <TOKEN_TO_REVOKE>
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: '`0` 表示成功。'
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    description: 成功時為空對象
+                required:
+                  - code
+                  - message
+                  - data
+          description: 成功。Token 已撤銷，`data` 為空
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 請求無效。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 未登錄或登錄狀態已失效
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 當前賬號未獲得該功能授權。請在 User Permission 中為該賬號開通相應權限
+        '408':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerGatewayErrorEnvelope'
+          description: 請求處理超時。具體原因請查看響應體中的業務錯誤碼 `code` 和錯誤信息 `message`
+      description: 撤銷 OpenAPI Access Key 的指定 Token，撤銷後該 Token 無法再用於調用 OpenAPI。
+      x-mint:
+        href: /zh-HK/api-reference/whale_revoke_access_token
+        metadata:
+          sidebarTitle: 撤銷 Access Token
 components:
   schemas:
     BrokerGatewayErrorEnvelope:
@@ -26453,6 +27117,69 @@ components:
         message:
           type: string
         data: {}
+    AccessKey:
+      type: object
+      description: 證券賬戶的 OpenAPI Access Key
+      properties:
+        access_key_id:
+          type: string
+          description: Access Key ID
+        access_key_secret:
+          type: string
+          description: Access Key Secret，屬於憑證，切勿寫入日誌
+        disable:
+          type: boolean
+          description: Access Key 是否已停用
+        ipwhitelist:
+          type: object
+          description: Access Key 的 IP 白名單
+          properties:
+            net:
+              type: array
+              items:
+                type: string
+              description: 允許的 IP 地址或 CIDR 子網
+          required:
+            - net
+        created_at:
+          type: string
+          description: 創建時間，RFC 3339 格式
+        tokens:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessToken'
+          description: Access Key 下的 Token 列表
+      required:
+        - access_key_id
+        - access_key_secret
+        - disable
+        - created_at
+        - tokens
+    AccessToken:
+      type: object
+      description: 為 OpenAPI Access Key 簽發的 Token
+      properties:
+        access_key_id:
+          type: string
+          description: Access Key ID
+        token:
+          type: string
+          description: Token 值，屬於憑證，切勿寫入日誌
+        expired_at:
+          type: string
+          description: 到期時間，RFC 3339 格式
+        disable:
+          type: boolean
+          description: Token 是否已停用
+        created_at:
+          type: string
+          description: 創建時間，RFC 3339 格式
+      required:
+        - access_key_id
+        - token
+        - expired_at
+        - disable
+        - created_at
   securitySchemes:
     bearerAuth:
       type: http
