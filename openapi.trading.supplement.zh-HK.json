@@ -14709,7 +14709,7 @@
           "id": {
             "type": "integer",
             "format": "int64",
-            "description": "訊息 ID"
+            "description": "訊息 ID，可用於 `DELETE /v6/message/inbox/clear_unreads` 的 `ids`"
           },
           "title": {
             "type": "string",
@@ -71309,7 +71309,7 @@
           "訊息"
         ],
         "summary": "獲取訊息分組概覽",
-        "description": "返回目前 Client 的訊息分組列表：每個分組的名稱、圖示、未讀數、角標樣式、推送開關狀態和最新一則訊息。訊息中心首頁載入和下拉重新整理時調用，用於渲染分組列表。\n\n進入某個分組後，用 `group_id` 調用 `POST /v6/message/inbox/groups/{group_id}/messages` 分頁讀取訊息，並調用 `POST /v2/message/set_msg_status` 將該分組標記為已讀。\n",
+        "description": "返回目前 Client 的訊息分組列表：每個分組的名稱、圖示、未讀數、角標樣式、推送開關狀態和最新一則訊息。訊息中心首頁載入和下拉重新整理時調用，用於渲染分組列表。\n\n進入某個分組後，用 `group_id` 調用 `POST /v6/message/inbox/groups/{group_id}/messages` 分頁讀取訊息，並調用 `DELETE /v6/message/inbox/clear_unreads` 將該分組標記為已讀。\n",
         "operationId": "getV6MessageInboxGroupsSummary",
         "responses": {
           "200": {
@@ -71379,7 +71379,7 @@
           "訊息"
         ],
         "summary": "獲取分組訊息列表",
-        "description": "按游標分頁返回某個訊息分組中的訊息。進入分組和上拉載入更多時調用。首頁 `page_query.tail_mark` 傳 `0`；之後每次傳上一頁返回的 `next_page_query.tail_mark`。返回的 `list` 為空或條數少於 `page_size` 時，表示沒有更多訊息。\n\n讀取訊息不會改變已讀狀態。需要清除分組未讀時，調用 `POST /v2/message/set_msg_status`。\n\n股價提醒記錄頁亦透過本接口讀取提醒訊息分組，展示已觸發的股價提醒。\n",
+        "description": "按游標分頁返回某個訊息分組中的訊息。進入分組和上拉載入更多時調用。首頁 `page_query.tail_mark` 傳 `0`；之後每次傳上一頁返回的 `next_page_query.tail_mark`。返回的 `list` 為空或條數少於 `page_size` 時，表示沒有更多訊息。\n\n讀取訊息不會改變已讀狀態。需要清除分組未讀時，調用 `DELETE /v6/message/inbox/clear_unreads`。\n\n股價提醒記錄頁亦透過本接口讀取提醒訊息分組，展示已觸發的股價提醒。\n",
         "operationId": "postV6MessageInboxGroupsGroupIdMessages",
         "parameters": [
           {
@@ -71545,14 +71545,97 @@
         }
       }
     },
+    "/v6/message/inbox/clear_unreads": {
+      "delete": {
+        "tags": [
+          "訊息"
+        ],
+        "summary": "更新訊息已讀狀態",
+        "description": "**逐步廢棄**：本介面已標記為逐步廢棄，替代介面和停用時間尚未確定。\n\n更新訊息的已讀狀態，參數透過查詢字串傳遞。常見用法：\n\n- 全部已讀：只傳 `clear_all=true`，將目前 Client 的所有訊息標記為已讀。\n- 分組已讀：傳 `group_id` 和 `status=1`，不傳 `ids`，將該分組的訊息全部標記為已讀。進入分組時調用。\n\n成功後重新調用 `GET /v6/message/inbox/unreads_count` 和 `GET /v6/message/inbox/groups/summary` 重新整理角標與分組未讀數。失敗時保留本地未讀狀態，不要在介面上提前清除角標。\n\n透過 MR 測試代理調用時，本介面可能返回成功但未讀數不變；此時可對該分組調用 `POST /v2/message/set_msg_status`（同樣逐步廢棄）。\n",
+        "operationId": "deleteV6MessageInboxClearUnreads",
+        "parameters": [
+          {
+            "name": "clear_all",
+            "in": "query",
+            "required": false,
+            "description": "為 `true` 時將所有訊息標記為已讀，此時無需傳其他參數",
+            "schema": {
+              "type": "boolean"
+            },
+            "example": true
+          },
+          {
+            "name": "group_id",
+            "in": "query",
+            "required": false,
+            "description": "要更新的訊息分組 ID，取自 `GET /v6/message/inbox/groups/summary` 的 `list[].group_id`",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "example": 10
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "description": "要更新的訊息 ID 列表，取自訊息列表的 `list[].id`；不傳時作用於 `group_id` 指定的整個分組",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "目標狀態，與 `group_id` 一起傳：\n\n- `1` - 已讀\n- `2` - 點擊已讀\n- `-1` - 刪除",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "enum": [
+                1,
+                2,
+                -1
+              ]
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "請求成功，`code` 為 `0` 表示訊息狀態已更新。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success"
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
     "/v2/message/set_msg_status": {
       "post": {
         "tags": [
           "訊息"
         ],
         "summary": "標記訊息分組已讀",
-        "description": "將一個訊息分組內的訊息全部標記為已讀，在 Client 進入該分組時調用。需要全部已讀時，先調用 `GET /v6/message/inbox/groups/summary`，再對每個 `unreads_count` 大於 `0` 的分組分別調用本介面。\n\n成功後重新調用 `GET /v6/message/inbox/unreads_count` 和 `GET /v6/message/inbox/groups/summary` 重新整理角標與分組未讀數。失敗時保留本地未讀狀態，不要在介面上提前清除角標。\n",
+        "description": "**逐步廢棄**：本介面已標記為逐步廢棄，替代介面和停用時間尚未確定。\n\n將一個訊息分組內的訊息全部標記為已讀，效果與 `DELETE /v6/message/inbox/clear_unreads` 傳 `group_id` 和 `status=1` 相同。需要全部已讀時，先調用 `GET /v6/message/inbox/groups/summary`，再對每個 `unreads_count` 大於 `0` 的分組分別調用本介面。\n\n成功後重新調用 `GET /v6/message/inbox/unreads_count` 和 `GET /v6/message/inbox/groups/summary` 重新整理角標與分組未讀數。失敗時保留本地未讀狀態，不要在介面上提前清除角標。\n",
         "operationId": "postV2MessageSetMsgStatus",
+        "deprecated": true,
         "requestBody": {
           "required": true,
           "content": {
@@ -71611,7 +71694,7 @@
           "訊息"
         ],
         "summary": "獲取訊息推送設定",
-        "description": "返回目前 Client 每個訊息分組的推送設定：可用的推送渠道及其開關狀態，以及個人化推送設定。訊息通知設定頁和單個分組的設定頁載入時調用。\n\n`section` 把訊息分組歸入設定頁的各個分區，透過 `group_ids` 與 `list[].group_id` 對應。裝置未開啟系統通知權限時，應用程式通知類渠道（如 `app`）無法送達，可在介面上隱藏或顯示為關閉。\n\n修改設定請調用 `POST /v2/message/user_config/update`。\n",
+        "description": "返回目前 Client 每個訊息分組的推送設定：可用的推送渠道及其開關狀態，以及個人化推送設定。訊息通知設定頁和單個分組的設定頁載入時調用。\n\n`section` 把訊息分組歸入設定頁的各個分區，透過 `group_ids` 與 `list[].group_id` 對應。裝置未開啟系統通知權限時，應用程式通知類渠道（如 `app`）無法送達，可在介面上隱藏或顯示為關閉。\n\n修改設定請調用 `POST /v6/message/user_config/update`。\n",
         "operationId": "getV6MessageUserConfig",
         "responses": {
           "200": {
@@ -71689,14 +71772,103 @@
         }
       }
     },
-    "/v2/message/user_config/update": {
+    "/v6/message/user_config/update": {
       "post": {
         "tags": [
           "訊息"
         ],
         "summary": "更新訊息推送設定",
-        "description": "提交某個訊息分組的推送設定，在 Client 切換推送渠道開關或修改個人化設定後調用。\n\n`push_channel` 傳該分組所有應開啟的渠道代碼，未列出的渠道視為關閉；`personal_configs` 傳該分組每項個人化設定的 `code` 及選中的 `values`。請以 `GET /v6/message/user_config` 返回的目前設定為基礎修改後整體提交。\n\n成功後新設定用於該分組的後續推送。失敗時展示 `message`，並把介面上的開關還原為修改前的狀態。\n",
+        "description": "**逐步廢棄**：本介面已標記為逐步廢棄，替代介面和停用時間尚未確定。\n\n提交某個訊息分組的推送設定，在 Client 切換推送渠道開關或修改個人化設定後調用。\n\n`push_channel` 傳該分組所有應開啟的渠道代碼，未列出的渠道視為關閉；`personal_configs` 傳該分組每項個人化設定的 `code` 及選中的 `values`。請以 `GET /v6/message/user_config` 返回的目前設定為基礎修改後整體提交。\n\n成功後新設定用於該分組的後續推送。失敗時展示 `message`，並把介面上的開關還原為修改前的狀態。\n\n透過 MR 測試代理調用時，本介面可能返回成功但推送設定不變；此時可以同一請求體調用 `POST /v2/message/user_config/update`（同樣逐步廢棄）。\n",
+        "operationId": "postV6MessageUserConfigUpdate",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "group_id": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "訊息分組 ID，取自 `GET /v6/message/user_config` 的 `list[].group_id`"
+                  },
+                  "push_channel": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "應開啟的推送渠道代碼，取自 `available_channel[].code`；傳空陣列表示關閉該分組的全部渠道"
+                  },
+                  "personal_configs": {
+                    "type": "array",
+                    "description": "個人化推送設定；該分組沒有個人化設定時傳空陣列",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "description": "設定代碼，取自 `personal_configs[].code`"
+                        },
+                        "values": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "format": "int64"
+                          },
+                          "description": "選中的選項值，取自 `personal_configs[].channel[].value`；開關樣式的設定傳 `[1]` 或 `[0]`"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "values"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "group_id",
+                  "push_channel"
+                ]
+              },
+              "example": {
+                "group_id": 10,
+                "push_channel": [
+                  "app"
+                ],
+                "personal_configs": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "請求成功，`code` 為 `0` 表示推送設定已儲存。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success"
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/v2/message/user_config/update": {
+      "post": {
+        "tags": [
+          "訊息"
+        ],
+        "summary": "更新訊息推送設定（v2）",
+        "description": "**逐步廢棄**：本介面已標記為逐步廢棄，替代介面和停用時間尚未確定。\n\n提交某個訊息分組的推送設定，請求體與 `POST /v6/message/user_config/update` 相同。成功後調用 `GET /v6/message/user_config` 讀取並確認新設定。\n\n失敗時展示 `message`，並把介面上的開關還原為修改前的狀態。\n",
         "operationId": "postV2MessageUserConfigUpdate",
+        "deprecated": true,
         "requestBody": {
           "required": true,
           "content": {

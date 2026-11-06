@@ -14709,7 +14709,7 @@
           "id": {
             "type": "integer",
             "format": "int64",
-            "description": "Message ID"
+            "description": "Message ID. Use it in `ids` of `DELETE /v6/message/inbox/clear_unreads`"
           },
           "title": {
             "type": "string",
@@ -71309,7 +71309,7 @@
           "Messages"
         ],
         "summary": "Get Message Group Overview",
-        "description": "Returns the message groups of the current Client: each group's name, icon, unread count, badge style, push status, and latest message. Call it when the message center home page loads or refreshes to render the group list.\n\nWhen the Client opens a group, use its `group_id` to page through messages with `POST /v6/message/inbox/groups/{group_id}/messages`, and call `POST /v2/message/set_msg_status` to mark the group as read.\n",
+        "description": "Returns the message groups of the current Client: each group's name, icon, unread count, badge style, push status, and latest message. Call it when the message center home page loads or refreshes to render the group list.\n\nWhen the Client opens a group, use its `group_id` to page through messages with `POST /v6/message/inbox/groups/{group_id}/messages`, and call `DELETE /v6/message/inbox/clear_unreads` to mark the group as read.\n",
         "operationId": "getV6MessageInboxGroupsSummary",
         "responses": {
           "200": {
@@ -71379,7 +71379,7 @@
           "Messages"
         ],
         "summary": "List Messages in a Group",
-        "description": "Returns the messages in one message group with cursor pagination. Call it when the Client opens a group or scrolls to load more. Pass `0` as `page_query.tail_mark` for the first page, then pass `next_page_query.tail_mark` from the previous response. An empty `list`, or fewer items than `page_size`, means there are no more messages.\n\nReading messages does not change their read status. To clear the group's unread messages, call `POST /v2/message/set_msg_status`.\n\nThe price alert history page also uses this operation to read the alert message group and show triggered price alerts.\n",
+        "description": "Returns the messages in one message group with cursor pagination. Call it when the Client opens a group or scrolls to load more. Pass `0` as `page_query.tail_mark` for the first page, then pass `next_page_query.tail_mark` from the previous response. An empty `list`, or fewer items than `page_size`, means there are no more messages.\n\nReading messages does not change their read status. To clear the group's unread messages, call `DELETE /v6/message/inbox/clear_unreads`.\n\nThe price alert history page also uses this operation to read the alert message group and show triggered price alerts.\n",
         "operationId": "postV6MessageInboxGroupsGroupIdMessages",
         "parameters": [
           {
@@ -71545,14 +71545,97 @@
         }
       }
     },
+    "/v6/message/inbox/clear_unreads": {
+      "delete": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "Update Message Read Status",
+        "description": "**Being phased out**: this operation is marked for gradual deprecation. The replacement and the retirement date are not decided yet.\n\nUpdates the read status of messages. Pass the parameters in the query string. Common uses:\n\n- Mark all as read: pass only `clear_all=true` to mark all messages of the current Client as read.\n- Mark a group as read: pass `group_id` and `status=1` without `ids` to mark every message in the group as read. Call it when the Client opens a group.\n\nAfter success, call `GET /v6/message/inbox/unreads_count` and `GET /v6/message/inbox/groups/summary` again to refresh the badge and the per-group unread counts. On failure, keep the local unread state and do not clear the badge in advance.\n\nThrough the MR test proxy, this operation can answer success while the unread counts stay unchanged. In that case, call `POST /v2/message/set_msg_status` for the group (also being phased out).\n",
+        "operationId": "deleteV6MessageInboxClearUnreads",
+        "parameters": [
+          {
+            "name": "clear_all",
+            "in": "query",
+            "required": false,
+            "description": "When `true`, marks all messages as read. No other parameter is needed",
+            "schema": {
+              "type": "boolean"
+            },
+            "example": true
+          },
+          {
+            "name": "group_id",
+            "in": "query",
+            "required": false,
+            "description": "ID of the message group to update, from `list[].group_id` of `GET /v6/message/inbox/groups/summary`",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "example": 10
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "description": "IDs of the messages to update, from `list[].id` of the message list. When omitted, the update applies to the whole group set by `group_id`",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "Target status. Pass it with `group_id`:\n\n- `1` - Read\n- `2` - Read by opening the message\n- `-1` - Deleted",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "enum": [
+                1,
+                2,
+                -1
+              ]
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request succeeded. A `code` of `0` means the message status was updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success"
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
     "/v2/message/set_msg_status": {
       "post": {
         "tags": [
           "Messages"
         ],
         "summary": "Mark a Message Group as Read",
-        "description": "Marks every message in one message group as read. Call it when the Client opens the group. To mark everything as read, call `GET /v6/message/inbox/groups/summary` first, then call this operation for each group whose `unreads_count` is greater than `0`.\n\nAfter success, call `GET /v6/message/inbox/unreads_count` and `GET /v6/message/inbox/groups/summary` again to refresh the badge and the per-group unread counts. On failure, keep the local unread state and do not clear the badge in advance.\n",
+        "description": "**Being phased out**: this operation is marked for gradual deprecation. The replacement and the retirement date are not decided yet.\n\nMarks every message in one message group as read, with the same effect as `DELETE /v6/message/inbox/clear_unreads` with `group_id` and `status=1`. To mark everything as read, call `GET /v6/message/inbox/groups/summary` first, then call this operation for each group whose `unreads_count` is greater than `0`.\n\nAfter success, call `GET /v6/message/inbox/unreads_count` and `GET /v6/message/inbox/groups/summary` again to refresh the badge and the per-group unread counts. On failure, keep the local unread state and do not clear the badge in advance.\n",
         "operationId": "postV2MessageSetMsgStatus",
+        "deprecated": true,
         "requestBody": {
           "required": true,
           "content": {
@@ -71611,7 +71694,7 @@
           "Messages"
         ],
         "summary": "Get Message Notification Settings",
-        "description": "Returns the push settings of each message group for the current Client: the available push channels with their on/off state, and the personalized push settings. Call it when the notification settings page or the settings page of one group loads.\n\n`section` places message groups into sections of the settings page and maps to `list[].group_id` through `group_ids`. When the device has system notifications turned off, app notification channels such as `app` cannot deliver, so you can hide them or show them as off.\n\nTo change the settings, call `POST /v2/message/user_config/update`.\n",
+        "description": "Returns the push settings of each message group for the current Client: the available push channels with their on/off state, and the personalized push settings. Call it when the notification settings page or the settings page of one group loads.\n\n`section` places message groups into sections of the settings page and maps to `list[].group_id` through `group_ids`. When the device has system notifications turned off, app notification channels such as `app` cannot deliver, so you can hide them or show them as off.\n\nTo change the settings, call `POST /v6/message/user_config/update`.\n",
         "operationId": "getV6MessageUserConfig",
         "responses": {
           "200": {
@@ -71689,14 +71772,14 @@
         }
       }
     },
-    "/v2/message/user_config/update": {
+    "/v6/message/user_config/update": {
       "post": {
         "tags": [
           "Messages"
         ],
         "summary": "Update Message Notification Settings",
-        "description": "Submits the push settings of one message group. Call it after the Client turns a push channel on or off or changes a personalized setting.\n\nPass every channel code that should be on in `push_channel`; channels not listed are treated as off. Pass the `code` and selected `values` of each personalized setting of the group in `personal_configs`. Start from the current settings returned by `GET /v6/message/user_config`, apply the change, and submit the full set.\n\nAfter success, the settings apply to later notifications of the group. On failure, show `message` and restore the switches in the UI to their previous state.\n",
-        "operationId": "postV2MessageUserConfigUpdate",
+        "description": "**Being phased out**: this operation is marked for gradual deprecation. The replacement and the retirement date are not decided yet.\n\nSubmits the push settings of one message group. Call it after the Client turns a push channel on or off or changes a personalized setting.\n\nPass every channel code that should be on in `push_channel`; channels not listed are treated as off. Pass the `code` and selected `values` of each personalized setting of the group in `personal_configs`. Start from the current settings returned by `GET /v6/message/user_config`, apply the change, and submit the full set.\n\nAfter success, the settings apply to later notifications of the group. On failure, show `message` and restore the switches in the UI to their previous state.\n\nThrough the MR test proxy, this operation can answer success while the push settings stay unchanged. In that case, call `POST /v2/message/user_config/update` with the same request body (also being phased out).\n",
+        "operationId": "postV6MessageUserConfigUpdate",
         "requestBody": {
           "required": true,
           "content": {
@@ -71760,6 +71843,95 @@
         "responses": {
           "200": {
             "description": "The request succeeded. A `code` of `0` means the push settings were saved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiEnvelope"
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success"
+                },
+                "x-example-kind": "illustrative"
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
+    },
+    "/v2/message/user_config/update": {
+      "post": {
+        "tags": [
+          "Messages"
+        ],
+        "summary": "Update Message Notification Settings (v2)",
+        "description": "**Being phased out**: this operation is marked for gradual deprecation. The replacement and the retirement date are not decided yet.\n\nSubmits the push settings of one message group. The request body is the same as for `POST /v6/message/user_config/update`. After success, call `GET /v6/message/user_config` to read and confirm the new settings.\n\nOn failure, show `message` and restore the switches in the UI to their previous state.\n",
+        "operationId": "postV2MessageUserConfigUpdate",
+        "deprecated": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "group_id": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "Message group ID from `list[].group_id` of `GET /v6/message/user_config`"
+                  },
+                  "push_channel": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Codes of the channels to turn on, from `available_channel[].code`. Pass an empty array to turn off every channel of the group"
+                  },
+                  "personal_configs": {
+                    "type": "array",
+                    "description": "Personalized push settings. Pass an empty array when the group has none",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "description": "Setting code from `personal_configs[].code`"
+                        },
+                        "values": {
+                          "type": "array",
+                          "items": {
+                            "type": "integer",
+                            "format": "int64"
+                          },
+                          "description": "Selected option values from `personal_configs[].channel[].value`. For a switch-style setting, pass `[1]` or `[0]`"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "values"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "group_id",
+                  "push_channel"
+                ]
+              },
+              "example": {
+                "group_id": 10,
+                "push_channel": [
+                  "app"
+                ],
+                "personal_configs": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The request succeeded. A `code` of `0` means the push settings are saved.",
             "content": {
               "application/json": {
                 "schema": {
