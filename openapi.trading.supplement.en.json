@@ -14709,7 +14709,7 @@
           "id": {
             "type": "integer",
             "format": "int64",
-            "description": "Message ID. Use it in `ids` of `DELETE /v6/message/inbox/clear_unreads`"
+            "description": "Message ID"
           },
           "title": {
             "type": "string",
@@ -71309,7 +71309,7 @@
           "Messages"
         ],
         "summary": "Get Message Group Overview",
-        "description": "Returns the message groups of the current Client: each group's name, icon, unread count, badge style, push status, and latest message. Call it when the message center home page loads or refreshes to render the group list.\n\nWhen the Client opens a group, use its `group_id` to page through messages with `POST /v6/message/inbox/groups/{group_id}/messages`, and call `DELETE /v6/message/inbox/clear_unreads` to mark the group as read.\n",
+        "description": "Returns the message groups of the current Client: each group's name, icon, unread count, badge style, push status, and latest message. Call it when the message center home page loads or refreshes to render the group list.\n\nWhen the Client opens a group, use its `group_id` to page through messages with `POST /v6/message/inbox/groups/{group_id}/messages`, and call `POST /v2/message/set_msg_status` to mark the group as read.\n",
         "operationId": "getV6MessageInboxGroupsSummary",
         "responses": {
           "200": {
@@ -71379,7 +71379,7 @@
           "Messages"
         ],
         "summary": "List Messages in a Group",
-        "description": "Returns the messages in one message group with cursor pagination. Call it when the Client opens a group or scrolls to load more. Pass `0` as `page_query.tail_mark` for the first page, then pass `next_page_query.tail_mark` from the previous response. An empty `list`, or fewer items than `page_size`, means there are no more messages.\n\nReading messages does not change their read status. To clear the group's unread messages, call `DELETE /v6/message/inbox/clear_unreads`.\n\nThe price alert history page also uses this operation to read the alert message group and show triggered price alerts.\n",
+        "description": "Returns the messages in one message group with cursor pagination. Call it when the Client opens a group or scrolls to load more. Pass `0` as `page_query.tail_mark` for the first page, then pass `next_page_query.tail_mark` from the previous response. An empty `list`, or fewer items than `page_size`, means there are no more messages.\n\nReading messages does not change their read status. To clear the group's unread messages, call `POST /v2/message/set_msg_status`.\n\nThe price alert history page also uses this operation to read the alert message group and show triggered price alerts.\n",
         "operationId": "postV6MessageInboxGroupsGroupIdMessages",
         "parameters": [
           {
@@ -71545,71 +71545,50 @@
         }
       }
     },
-    "/v6/message/inbox/clear_unreads": {
-      "delete": {
+    "/v2/message/set_msg_status": {
+      "post": {
         "tags": [
           "Messages"
         ],
-        "summary": "Update Message Read Status",
-        "description": "Updates the read status of messages. Pass the parameters in the query string. Common uses:\n\n- Mark all as read: pass only `clear_all=true` to mark all messages of the current Client as read.\n- Mark a group as read: pass `group_id` and `status=1` without `ids` to mark every message in the group as read. Call it when the Client opens a group.\n\nAfter success, call `GET /v6/message/inbox/unreads_count` and `GET /v6/message/inbox/groups/summary` again to refresh the badge and the per-group unread counts. On failure, keep the local unread state and do not clear the badge in advance.\n",
-        "operationId": "deleteV6MessageInboxClearUnreads",
-        "parameters": [
-          {
-            "name": "clear_all",
-            "in": "query",
-            "required": false,
-            "description": "When `true`, marks all messages as read. No other parameter is needed",
-            "schema": {
-              "type": "boolean"
-            },
-            "example": true
-          },
-          {
-            "name": "group_id",
-            "in": "query",
-            "required": false,
-            "description": "ID of the message group to update, from `list[].group_id` of `GET /v6/message/inbox/groups/summary`",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "example": 10
-          },
-          {
-            "name": "ids",
-            "in": "query",
-            "required": false,
-            "style": "form",
-            "explode": true,
-            "description": "IDs of the messages to update, from `list[].id` of the message list. When omitted, the update applies to the whole group set by `group_id`",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "format": "int64"
+        "summary": "Mark a Message Group as Read",
+        "description": "Marks every message in one message group as read. Call it when the Client opens the group. To mark everything as read, call `GET /v6/message/inbox/groups/summary` first, then call this operation for each group whose `unreads_count` is greater than `0`.\n\nAfter success, call `GET /v6/message/inbox/unreads_count` and `GET /v6/message/inbox/groups/summary` again to refresh the badge and the per-group unread counts. On failure, keep the local unread state and do not clear the badge in advance.\n",
+        "operationId": "postV2MessageSetMsgStatus",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "group_id": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "Message group ID, from `list[].group_id` of `GET /v6/message/inbox/groups/summary`"
+                  },
+                  "status": {
+                    "type": "integer",
+                    "format": "int32",
+                    "enum": [
+                      1
+                    ],
+                    "description": "Target status:\n\n- `1` - Read"
+                  }
+                },
+                "required": [
+                  "group_id",
+                  "status"
+                ]
+              },
+              "example": {
+                "group_id": 10,
+                "status": 1
               }
             }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "description": "Target status. Pass it with `group_id`:\n\n- `1` - Read\n- `2` - Read by opening the message\n- `-1` - Deleted",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "enum": [
-                1,
-                2,
-                -1
-              ]
-            },
-            "example": 1
           }
-        ],
+        },
         "responses": {
           "200": {
-            "description": "The request succeeded. A `code` of `0` means the message status was updated.",
+            "description": "The request succeeded. A `code` of `0` means the messages in the group are marked as read.",
             "content": {
               "application/json": {
                 "schema": {
@@ -71632,7 +71611,7 @@
           "Messages"
         ],
         "summary": "Get Message Notification Settings",
-        "description": "Returns the push settings of each message group for the current Client: the available push channels with their on/off state, and the personalized push settings. Call it when the notification settings page or the settings page of one group loads.\n\n`section` places message groups into sections of the settings page and maps to `list[].group_id` through `group_ids`. When the device has system notifications turned off, app notification channels such as `app` cannot deliver, so you can hide them or show them as off.\n\nTo change the settings, call `POST /v6/message/user_config/update`.\n",
+        "description": "Returns the push settings of each message group for the current Client: the available push channels with their on/off state, and the personalized push settings. Call it when the notification settings page or the settings page of one group loads.\n\n`section` places message groups into sections of the settings page and maps to `list[].group_id` through `group_ids`. When the device has system notifications turned off, app notification channels such as `app` cannot deliver, so you can hide them or show them as off.\n\nTo change the settings, call `POST /v2/message/user_config/update`.\n",
         "operationId": "getV6MessageUserConfig",
         "responses": {
           "200": {
@@ -71710,14 +71689,14 @@
         }
       }
     },
-    "/v6/message/user_config/update": {
+    "/v2/message/user_config/update": {
       "post": {
         "tags": [
           "Messages"
         ],
         "summary": "Update Message Notification Settings",
         "description": "Submits the push settings of one message group. Call it after the Client turns a push channel on or off or changes a personalized setting.\n\nPass every channel code that should be on in `push_channel`; channels not listed are treated as off. Pass the `code` and selected `values` of each personalized setting of the group in `personal_configs`. Start from the current settings returned by `GET /v6/message/user_config`, apply the change, and submit the full set.\n\nAfter success, the settings apply to later notifications of the group. On failure, show `message` and restore the switches in the UI to their previous state.\n",
-        "operationId": "postV6MessageUserConfigUpdate",
+        "operationId": "postV2MessageUserConfigUpdate",
         "requestBody": {
           "required": true,
           "content": {
